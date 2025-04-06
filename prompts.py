@@ -164,11 +164,11 @@ def generate_problematic_entities_report(world: WorldState) -> str:
     entity_dicts = [world.items, world.characters, world.places]
     for entity_dict in entity_dicts:
         for entity_id, entity in entity_dict.items():
-            if not entity.is_destroyed and entity.name.startswith(warning_prefix):
+            if not entity.is_destroyed and entity.get_attribute('name', '').startswith(warning_prefix):
                 problematic.append({
                     "entity_id": entity.entity_id,
                     "entity_type": entity.entity_type,
-                    "current_name": entity.name
+                    "current_name": entity.get_attribute('name', '')
                 })
 
     # 使用修正后的包装函数

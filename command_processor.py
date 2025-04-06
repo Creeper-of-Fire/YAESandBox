@@ -1,19 +1,16 @@
 # command_processor.py
 import logging
 from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Literal, Tuple, Optional, Union, Type, cast, Set
+from typing import List, Dict, Any, Literal, Tuple, Optional, Union, Type, cast
 
 from world_state import WorldState, Item, Character, Place, AnyEntity, BaseEntity
 
 
-# --- 辅助函数 (_create_placeholder_entity, _ensure_entity_exists, _remove_from_container, _add_to_container, _update_container_lists - 保持不变) ---
-# (省略这些函数的代码，它们与上一个版本相同)
-def _create_placeholder_entity(world: WorldState, entity_type: Literal["Item", "Character", "Place"], entity_id: str, context: str) -> AnyEntity:
-    warning_prefix = "Warning: Missing"
-    placeholder_name = f"{warning_prefix} {entity_type} [{entity_id}] (Auto-created by: {context})"
-    logging.info(f"实体 '{entity_id}' 不存在或需恢复，创建/重置为占位符 ({entity_type})，名称: '{placeholder_name}'")
+# --- 辅助函数 ---
+
+def _create_entity_instance(entity_type: Literal["Item", "Character", "Place"], entity_id: str, is_placeholder: bool, context: str) -> AnyEntity:
+    """根据类型创建新的实体实例，可能是空白或占位符。"""
     model_class: Type[BaseEntity]
-    existing = world.find_entity(entity_id, include_destroyed=True)
     if entity_type == "Item":
         model_class = Item
     elif entity_type == "Character":
@@ -21,132 +18,144 @@ def _create_placeholder_entity(world: WorldState, entity_type: Literal["Item", "
     elif entity_type == "Place":
         model_class = Place
     else:
-        raise ValueError(f"无效的实体类型 '{entity_type}'")
-    if existing:
-        logging.warning(f"恢复或重置已存在实体 '{entity_id}' 为占位符 (原 is_destroyed={existing.is_destroyed})。")
-        existing.is_destroyed = False
-        existing.name = placeholder_name
-        existing.entity_type = entity_type
-        existing._dynamic_attributes = {}  # 使用新名称
-        if isinstance(existing, Item):
-            existing.location = None
-            existing.quantity = 1
-        elif isinstance(existing, Character):
-            existing.current_place = None
-            items_to_clear = list(existing.has_items)
-            for item_id in items_to_clear:
-                (item := world.find_entity(item_id)) and setattr(item, 'location', None)
-                existing.has_items = []
-        elif isinstance(existing, Place):
-            contents_to_clear = list(existing.contents)
-            for content_id in contents_to_clear:
-                content = world.find_entity(content_id)
-                if content:
-                    if isinstance(content, Item):
-                        content.location = None
-                    elif isinstance(content, Character):
-                        content.current_place = None
-            existing.contents = []
-            existing.exits = {}
-        return existing
-    else:
-        new_entity = model_class(entity_id=entity_id, entity_type=entity_type)
-        new_entity.name = placeholder_name
-        world.add_entity(new_entity)
-        return new_entity  # 设置 name property
+        raise ValueError(f"[{context}] 无效的实体类型 '{entity_type}'")
+
+    new_entity = model_class(entity_id=entity_id, entity_type=entity_type)
+
+    if is_placeholder:
+        warning_prefix = "Warning: Missing"
+        placeholder_name = f"{warning_prefix} {entity_type} [{entity_id}] (Auto-created by: {context})"
+        # 使用 set_attribute 设置占位符名称，world=None 避免不必要的副作用
+        new_entity.set_attribute('name', placeholder_name, world=None)
+        logging.info(f"[{context}] 创建了占位符实体 '{entity_id}' ({entity_type})，名称: '{placeholder_name}'")
+    else:  # 空白实体
+        logging.info(f"[{context}] 创建了新的空白实体 '{entity_id}' ({entity_type})")
+        # 空白实体不需要特殊名称，会由后续的 _apply_modifications 设置
+
+    return new_entity
 
 
-def _ensure_entity_exists(world: WorldState, entity_spec: Union[str, Tuple[str, str], None],
-                          expected_entity_type: Optional[Union[Type[BaseEntity], Tuple[Type[BaseEntity], ...]]] = None, context: str = "未知操作") -> Optional[
-    str]:
-    if entity_spec is None: return None
-    entity_id: str = ""
-    provided_type_str: Optional[Literal["Item", "Character", "Place"]] = None
-    if isinstance(entity_spec, tuple) and len(entity_spec) == 2:
-        raw_type, entity_id = entity_spec
-        if isinstance(raw_type, str) and raw_type.capitalize() in ["Item", "Character", "Place"]:
-            provided_type_str = cast(Literal["Item", "Character", "Place"], raw_type.capitalize())
-        else:
-            raise ValueError(f"{context}: 无效的实体类型 '{raw_type}' 在规范 '{entity_spec}' 中。")
-    elif isinstance(entity_spec, str):
-        entity_id = entity_spec
-    else:
-        raise TypeError(f"{context}: 无效的实体规范格式: {repr(entity_spec)}")
-    if not entity_id: raise ValueError(f"{context}: 无法从规范 '{repr(entity_spec)}' 提取有效 entity_id")
+def _ensure_entity(world: WorldState,
+                   entity_id: str,
+                   expected_type: Literal["Item", "Character", "Place"],  # Create/Modify/Transfer 都需要提供期望类型
+                   create_mode: Optional[Literal['placeholder', 'blank']] = None,  # 'blank' 用于 Create, 'placeholder' 用于 Modify/Transfer 目标
+                   context: str = "未知操作") -> BaseEntity:
+    """
+    查找实体，如果找不到则根据 create_mode 创建。
+    返回找到或创建的实体实例。如果无法查找或创建，则抛出错误。
+    现在 expected_type 是必须的。
+    """
+    logging.debug(f"[{context}] 确保实体存在: ID='{entity_id}', ExpectedType='{expected_type}', CreateMode='{create_mode}'")
+
     entity = world.find_entity(entity_id, include_destroyed=False)
+
     if entity:
-        if expected_entity_type and not isinstance(entity, expected_entity_type): logging.warning(
-            f"{context}: 找到实体 '{entity_id}' 类型 ({entity.entity_type}) 与期望不符。继续使用。")
-        if provided_type_str and entity.entity_type != provided_type_str: logging.warning(
-            f"{context}: AI 提供的类型 '{provided_type_str}' 与找到的实体 '{entity_id}' ({entity.entity_type}) 不符。使用找到的实体。")
-        logging.debug(f"{context}: 确认实体 '{entity_id}' ({entity.entity_type}) 存在。")
-        return entity_id
+        # 实体存在且未销毁
+        logging.debug(f"[{context}] 找到现有实体 '{entity_id}' ({entity.entity_type})")
+        # 强制类型检查：如果找到的实体类型与指令期望的不符，则报错
+        if entity.entity_type != expected_type:
+            logging.error(f"[{context}] 实体类型不匹配！找到的实体 '{entity_id}' 是 {entity.entity_type}，但指令期望的是 {expected_type}。")
+            raise TypeError(f"实体类型不匹配：'{entity_id}' 是 {entity.entity_type} 而非 {expected_type}")
+        return entity
     else:
-        if provided_type_str:
-            logging.info(f"{context}: 目标实体 '{entity_id}' 不存在/已销毁，尝试创建/恢复 '{provided_type_str}' 占位符。")
-            placeholder = _create_placeholder_entity(world, provided_type_str, entity_id, context)
-            if expected_entity_type and not isinstance(placeholder, expected_entity_type): logging.warning(
-                f"{context}: 创建/恢复的占位符 '{entity_id}' 类型与期望不符。")
-            return placeholder.entity_id
+        # 实体不存在或已销毁
+        logging.debug(f"[{context}] 实体 '{entity_id}' 不存在或已销毁。CreateMode='{create_mode}'")
+        if create_mode:
+            # 需要创建
+            entity_type_to_create = expected_type  # 使用指令指定的类型
+
+            # 检查是否是从已销毁状态恢复
+            destroyed_entity = world.find_entity(entity_id, include_destroyed=True)
+            if destroyed_entity:
+                logging.warning(f"[{context}] 恢复已销毁的实体 '{entity_id}' 为 '{create_mode}' 模式 (类型: {entity_type_to_create})。")
+                # 恢复核心状态
+                destroyed_entity._dynamic_attributes.clear()  # 清空旧属性
+                destroyed_entity.set_attribute('is_destroyed', False, world=None)
+                # 确保类型正确
+                if destroyed_entity.entity_type != entity_type_to_create:
+                    logging.warning(f"[{context}] 恢复实体 '{entity_id}' 时，类型从 {destroyed_entity.entity_type} 强制改为 {entity_type_to_create}。")
+                    destroyed_entity.set_attribute('entity_type', entity_type_to_create, world=None)
+
+                # 设置名称（如果是占位符模式）
+                if create_mode == 'placeholder':
+                    warning_prefix = "Warning: Missing"
+                    placeholder_name = f"{warning_prefix} {entity_type_to_create} [{entity_id}] (Auto-created by: {context})"
+                    destroyed_entity.set_attribute('name', placeholder_name, world=None)
+                else:  # blank 模式，不需要设置名称，后续 apply 会处理
+                    pass
+                return destroyed_entity
+            else:
+                # 完全新建
+                new_entity = _create_entity_instance(entity_type_to_create, entity_id, is_placeholder=(create_mode == 'placeholder'), context=context)
+                world.add_entity(new_entity)
+                return new_entity
         else:
-            logging.error(f"{context}: 目标实体 '{entity_id}' 不存在/已销毁且无类型，无法自动创建/恢复。")
-            raise ValueError(f"目标实体 '{entity_id}' 不存在/已销毁且无法自动创建/恢复")
+            # 不需要创建，但实体找不到
+            logging.error(f"[{context}] 操作失败：找不到目标实体 '{entity_id}' 且不允许创建。")
+            raise ValueError(f"[{context}] 失败: 找不到实体 '{entity_id}' 或已销毁。")
 
 
-def _remove_from_container(world: WorldState, entity_id: str, container_id: Optional[str]):
-    if not container_id:
-        return
-    container = world.find_entity(container_id, include_destroyed=False)
-    if not container:
-        logging.warning(f"尝试从无效容器 '{container_id}' 移除 '{entity_id}'，忽略。")
-        return
+def _ensure_target_id(world: WorldState,
+                      target_spec: Union[str, Tuple[str, str]],
+                      expected_container_type: Union[Type[Character], Type[Place], Tuple[Type[Character], Type[Place]]],
+                      context: str) -> str:
+    """
+    解析目标规范，确保目标容器存在（找不到时创建占位符），返回其 ID。
+    """
+    # (此函数逻辑不变)
+    logging.debug(f"[{context}] 解析并确保目标容器存在: Spec='{target_spec}'")
+    target_id: str = ""
+    provided_type_str: Optional[Literal["Character", "Place"]] = None  # 容器只能是 Character 或 Place
+    if isinstance(target_spec, tuple) and len(target_spec) == 2:
+        raw_type, target_id = target_spec
+        if isinstance(raw_type, str) and raw_type.capitalize() in ["Character", "Place"]:
+            provided_type_str = cast(Literal["Character", "Place"], raw_type.capitalize())
+        else:
+            raise ValueError(f"[{context}] 无效的目标容器类型 '{raw_type}' 在规范 '{target_spec}' 中。")
+    elif isinstance(target_spec, str):
+        target_id = target_spec
+    else:
+        raise TypeError(f"[{context}] 无效的目标规范格式: {repr(target_spec)}")
+    if not target_id: raise ValueError(f"[{context}] 无法从规范 '{repr(target_spec)}' 提取有效目标 ID")
+
+    # 使用 _ensure_entity 查找或创建占位符
     try:
-        if isinstance(container, Character):
-            if entity_id in container.has_items:
-                container.has_items.remove(entity_id)
-                logging.debug(f"从角色 '{container_id}' 移除物品 '{entity_id}'")
-            else:
-                logging.warning(f"尝试从角色 '{container_id}' 移除不存在物品 '{entity_id}'")
-        elif isinstance(container, Place):
-            if entity_id in container.contents:
-                container.contents.remove(entity_id)
-                logging.debug(f"从地点 '{container_id}' 移除实体 '{entity_id}'")
-            else:
-                logging.warning(f"尝试从地点 '{container_id}' 移除不存在实体 '{entity_id}'")
-    except ValueError:
-        logging.warning(f"移除实体 '{entity_id}' 时发生 ValueError (可能已不在容器 '{container_id}')。")
+        # 确定期望的 Pydantic 类
+        expected_pydantic_type: Optional[Literal["Character", "Place"]] = None
+        if isinstance(expected_container_type, tuple):  # (Character, Place)
+            # 如果 AI 提供了类型，用 AI 的；否则无法确定是 C 还是 P，让 ensure_entity 报错（除非找到）
+            expected_pydantic_type = provided_type_str
+        elif expected_container_type == Character:
+            expected_pydantic_type = "Character"
+        elif expected_container_type == Place:
+            expected_pydantic_type = "Place"
+
+        if not expected_pydantic_type and not world.find_entity(target_id):
+            raise ValueError(f"[{context}] 无法确定目标容器 '{target_id}' 的类型 (期望: {expected_container_type}) 且实体不存在。")
+
+        # 调用 _ensure_entity，强制创建为占位符
+        target_entity = _ensure_entity(world, target_id, expected_pydantic_type, create_mode='placeholder', context=context + " 容器")  # type: ignore
+        return target_entity.entity_id
+    except Exception as e:
+        logging.error(f"[{context}] 确保目标容器 '{target_id}' 存在时失败: {e}", exc_info=True)
+        raise e
 
 
-def _add_to_container(world: WorldState, entity_id: str, container_id: Optional[str]):
-    if not container_id:
-        return
-    container = world.find_entity(container_id, include_destroyed=False)
-    if not container: raise ValueError(f"添加失败: 目标容器 '{container_id}' 无效。")
-    entity_to_add = world.find_entity(entity_id, include_destroyed=False)
-    if not entity_to_add: raise ValueError(f"无法添加无效实体 '{entity_id}' 到容器 '{container_id}'。")
-    if isinstance(container, Character):
-        if not isinstance(entity_to_add, Item): raise TypeError(f"不能将非物品 '{entity_id}' ({entity_to_add.entity_type}) 添加到角色 '{container_id}'。")
-        if entity_id not in container.has_items:
-            container.has_items.append(entity_id)
-            logging.debug(f"物品 '{entity_id}' 添加到角色 '{container_id}'")
-        else:
-            logging.debug(f"物品 '{entity_id}' 已在角色 '{container_id}' 中。")
-    elif isinstance(container, Place):
-        if entity_id not in container.contents:
-            container.contents.append(entity_id)
-            logging.debug(f"实体 '{entity_id}' ({entity_to_add.entity_type}) 添加到地点 '{container_id}'")
-        else:
-            logging.debug(f"实体 '{entity_id}' 已在地点 '{container_id}' 中。")
-    else:
-        raise TypeError(f"目标实体 '{container_id}' (Item) 不能作为容器。")
-
-
-def _update_container_lists(world: WorldState, entity_id: str, old_container_id: Optional[str], new_container_id: Optional[str]):
-    if old_container_id == new_container_id:
-        return
-    logging.debug(f"更新容器列表: 实体='{entity_id}', 旧='{old_container_id}', 新='{new_container_id}'")
-    _remove_from_container(world, entity_id, old_container_id)
-    _add_to_container(world, entity_id, new_container_id)
+def _apply_modifications_to_entity(entity: BaseEntity, updates: Dict[str, Tuple[str, Any]], world: WorldState, command_context: str):
+    """将一系列修改应用到 *给定的* 实体实例上。"""
+    entity_id = entity.entity_id
+    logging.debug(f"[{command_context}] '{entity_id}': 开始应用修改: {updates}")
+    for key, op_value_tuple in updates.items():
+        try:
+            logging.debug(f"[{command_context}] '{entity_id}': 应用 -> {key} {op_value_tuple}")
+            entity.modify_attribute(key, op_value_tuple, world)
+        except (ValueError, TypeError) as e:
+            logging.error(f"[{command_context}] '{entity_id}': 应用 '{key}={op_value_tuple}' 时失败: {e}", exc_info=True)
+            raise e
+        except Exception as e:
+            logging.exception(f"[{command_context}] '{entity_id}': 应用 '{key}={op_value_tuple}' 时发生意外错误:")
+            raise e
+    logging.info(f"[{command_context}] '{entity_id}' 应用修改完毕。")
 
 
 # --- 指令接口和实现 ---
@@ -154,7 +163,6 @@ class ICommand(ABC):
     def __init__(self, entity_type: Literal["Item", "Character", "Place"], entity_id: str, params: Dict[str, Any]):
         self.entity_type = entity_type
         self.entity_id = entity_id
-        # params 现在总是 Dict[str, Tuple[str, Any]]
         self.params = cast(Dict[str, Tuple[str, Any]], params)
         logging.debug(f"初始化指令: {self.__class__.__name__} (Type={entity_type}, ID={entity_id}, Params={params})")
 
@@ -162,325 +170,130 @@ class ICommand(ABC):
     def execute(self, world: WorldState) -> None: pass
 
 
-class CreateCommand(ICommand):
-    """处理 @Create 指令，name 不再特殊处理"""
-
-    def __init__(self, entity_type: Literal["Item", "Character", "Place"], entity_id: str, params: Dict[str, Any]):
-        super().__init__(entity_type, entity_id, params)
-        # 确保 Create 命令至少提供了 name 参数
-        if 'name' not in self.params or self.params['name'][0] != '=':
-            raise ValueError(f"Create 命令 ({self.entity_id}) 缺少必需的 'name' 赋值参数。Params: {params}")
-
-    def execute(self, world: WorldState) -> None:
-        logging.info(f"执行 Create: Type={self.entity_type}, ID={self.entity_id}")
-        context = f"Create {self.entity_type} '{self.entity_id}'"
-
-        # --- 堆叠检查 (仅 Item) ---
-        item_quantity_spec = self.params.get("quantity")
-        if self.entity_type == "Item" and item_quantity_spec:
-            op_q, quantity_val = item_quantity_spec
-            if op_q == '=' and isinstance(quantity_val, int) and quantity_val > 0:
-                location_spec = self.params.get("location")
-                name_spec = self.params.get("name")  # name 必有
-                item_name = str(name_spec[1])
-                if location_spec and location_spec[0] == '=':
-                    loc_val = location_spec[1]
-                    try:
-                        container_id = _ensure_entity_exists(world, loc_val, (Character, Place), f"{context} 查找容器")
-                        if container_id and (container := world.find_entity(container_id)):
-                            c_list_attr = "has_items" if isinstance(container, Character) else ("contents" if isinstance(container, Place) else None)
-                            if c_list_attr:
-                                c_list = getattr(container, c_list_attr, [])
-                                for existing_item_id in c_list:
-                                    item = world.find_entity(existing_item_id)
-                                    if item and isinstance(item, Item) and item.name == item_name and not item.is_destroyed:
-                                        logging.info(f"物品堆叠: 在 '{container_id}' 的 '{item_name}' ({existing_item_id}) 增加数量 {quantity_val}")
-                                        item.set_attribute('quantity', item.quantity + quantity_val)
-                                        return  # 堆叠成功
-                    except Exception as e:
-                        logging.error(f"{context} 堆叠检查失败: {e}", exc_info=True)
-                        raise e
-
-        # --- 创建或恢复/重置实体 ---
-        existing_entity = world.find_entity(self.entity_id, include_destroyed=True)
-        model_class: Type[BaseEntity]
-        core_init_params: Dict[str, Any] = {"entity_id": self.entity_id, "entity_type": self.entity_type}
-        core_fields_in_params: Set[str] = set()  # 记录哪些核心字段从 params 设置
-
-        if self.entity_type == "Item":
-            model_class = Item
-            if (spec := self.params.get("quantity")) and spec[0] == '=' and isinstance(spec[1], int):
-                core_init_params['quantity'] = max(0, spec[1])
-                core_fields_in_params.add("quantity")
-            if (spec := self.params.get("location")) and spec[0] == '=': core_fields_in_params.add("location")  # 暂存标记
-        elif self.entity_type == "Character":
-            model_class = Character
-            if (spec := self.params.get("current_place")) and spec[0] == '=':
-                core_fields_in_params.add("current_place")
-            if (spec := self.params.get("has_items")) and spec[0] == '=' and isinstance(spec[1], list):
-                core_init_params['has_items'] = spec[1]
-            core_fields_in_params.add("has_items")  # 可以直接设置列表
-        elif self.entity_type == "Place":
-            model_class = Place
-            if (spec := self.params.get("contents")) and spec[0] == '=' and isinstance(spec[1], list):
-                core_init_params['contents'] = spec[1]
-                core_fields_in_params.add("contents")
-            if (spec := self.params.get("exits")) and spec[0] == '=' and isinstance(spec[1], dict):
-                core_init_params['exits'] = spec[1]
-                core_fields_in_params.add("exits")
-        else:
-            raise RuntimeError(f"内部错误：无效的 entity_type {self.entity_type}")
-
-        if existing_entity:
-            if not existing_entity.is_destroyed:
-                logging.warning(f"{context}: 实体 ID 已存在且未销毁，将被覆盖。")
-            else:
-                logging.info(f"{context}: 恢复并重置已销毁的实体 ID。")
-            new_entity = _create_placeholder_entity(world, self.entity_type, self.entity_id, context)
-            for key, value in core_init_params.items():  # 重新应用核心字段
-                if key not in ['entity_id', 'entity_type']:
-                    try:
-                        new_entity.set_attribute(key, value)
-                    except Exception as e:
-                        logging.error(f"{context} 重置核心字段 '{key}' 失败: {e}")
-        else:
-            new_entity = model_class(**core_init_params)
-            world.add_entity(new_entity)
-
-        # --- 使用 modify_attribute 设置所有参数 (包括 name 和其他动态属性) ---
-        location_key_to_process: Optional[str] = None
-        location_spec_to_process: Any = None
-
-        for key, op_value_tuple in self.params.items():
-            # 跳过已在 core_init_params 中处理或标记的核心结构字段
-            if key in core_fields_in_params: continue
-
-            # 检查是否是位置字段
-            is_location = (key == 'location' and isinstance(new_entity, Item)) or (key == 'current_place' and isinstance(new_entity, Character))
-
-            try:
-                op, value = op_value_tuple
-                if op != '=': logging.warning(f"{context}: 属性 '{key}' 在 Create 中使用了非 '=' 操作符 '{op}'，将尝试赋值。")
-                if is_location:  # 暂存位置信息
-                    location_key_to_process = key
-                    location_spec_to_process = ('=', value)  # 确保是赋值
-                else:  # 设置其他属性 (包括 name)
-                    new_entity.modify_attribute(key, ('=', value))  # 强制赋值
-            except Exception as e:
-                logging.error(f"{context}: 设置初始属性 '{key}' (值: {repr(op_value_tuple[1])}) 失败: {e}", exc_info=True)
-                raise e
-
-        # --- 处理位置 ---
-        if location_key_to_process and location_spec_to_process:
-            op, loc_val = location_spec_to_process  # op 必定是 '='
-            target_container_id: Optional[str] = None
-            expected_type: Optional[Union[Type, Tuple[Type, ...]]] = None
-            if isinstance(new_entity, Item):
-                expected_type = (Character, Place)
-            elif isinstance(new_entity, Character):
-                expected_type = Place
-            try:
-                target_container_id = _ensure_entity_exists(world, loc_val, expected_type, f"{context} 查找位置")
-                if target_container_id:
-                    new_entity.set_attribute(location_key_to_process, target_container_id)
-                    _add_to_container(world, self.entity_id, target_container_id)
-                    logging.info(f"实体 '{self.entity_id}' 已放置在 '{target_container_id}'")
-            except Exception as e:
-                logging.error(f"{context}: 处理位置 '{loc_val}' 失败: {e}", exc_info=True)
-                raise e
-
-
-# --- ModifyCommand ---
 class ModifyCommand(ICommand):
-    """处理 @Modify 指令"""
-
-    def __init__(self, entity_type: Literal["Item", "Character", "Place"], entity_id: str, params: Dict[str, Any]):
-        super().__init__(entity_type, entity_id, params)
-        self.updates = params  # params 就是更新内容 Dict[str, Tuple[str, Any]]
+    """处理 @Modify 指令。查找实体（找不到时报错），然后应用修改。"""
 
     def execute(self, world: WorldState) -> None:
-        logging.info(f"执行 Modify: Type={self.entity_type}, ID={self.entity_id}, Updates={self.updates}")
-        entity = world.find_entity(self.entity_id, include_destroyed=False)
-        if not entity: raise ValueError(f"Modify 失败: 找不到实体 '{self.entity_id}' 或已销毁。")
-        if entity.entity_type != self.entity_type: raise TypeError(f"Modify 失败: 实体类型不匹配 ({entity.entity_type} vs {self.entity_type})")
-
-        context = f"Modify {self.entity_type} '{self.entity_id}'"
-        old_location_or_place: Optional[str] = None
-        location_key_being_modified: Optional[str] = None
-        location_op_value: Optional[Tuple[str, Any]] = None  # 存储位置的 (op, value)
-
-        if isinstance(entity, Item):
-            old_location_or_place = entity.location
-        elif isinstance(entity, Character):
-            old_location_or_place = entity.current_place
-
-        # 应用属性更新
-        for key, op_value_tuple in self.updates.items():
-            is_location_key = (key == 'location' and isinstance(entity, Item)) or (key == 'current_place' and isinstance(entity, Character))
-
-            if is_location_key:
-                location_key_being_modified = key
-                location_op_value = op_value_tuple
-                logging.debug(f"计划修改位置属性 '{key}' (指令值: {repr(op_value_tuple)})。")
-                continue  # 位置最后处理
-
-            try:  # 处理非位置属性
-                op, value_to_use = op_value_tuple
-                # 确保 quantity 非负
-                if key == 'quantity' and isinstance(entity, Item) and isinstance(value_to_use, int):
-                    current_qty = entity.quantity
-                    tentative_qty = value_to_use
-                    if op == '+=' or op == '+':
-                        tentative_qty = current_qty + value_to_use
-                    elif op == '-=' or op == '-':
-                        tentative_qty = current_qty - value_to_use
-                    value_to_use = max(0, tentative_qty)
-                    op_value_tuple = (op, value_to_use)  # 更新 tuple 中的值
-
-                entity.modify_attribute(key, op_value_tuple)
-                logging.debug(f"Modify: 调用 entity.modify_attribute(key='{key}', update='{repr(op_value_tuple)}')")
-            except Exception as e:
-                logging.error(f"{context}: 修改属性 '{key}' (更新: {repr(op_value_tuple)}) 失败: {e}", exc_info=True)
-                raise e
-
-        # --- 统一处理位置变更 ---
-        if location_key_being_modified and location_op_value:
-            op, spec_to_process = location_op_value
-            final_new_location_id: Optional[str] = None
-            if op == '-':
-                final_new_location_id = None
-                logging.debug(f"位置操作: 移除位置 (op='-')")
-            elif op != '=':
-                raise ValueError(f"{context}: 位置属性 '{location_key_being_modified}' 不支持操作符 '{op}' (只支持 = 或 -)")
-            elif spec_to_process is not None:  # 赋值操作
-                expected_type: Optional[Union[Type, Tuple[Type, ...]]] = None
-                if isinstance(entity, Item):
-                    expected_type = (Character, Place)
-                elif isinstance(entity, Character):
-                    expected_type = Place
-                try:
-                    final_new_location_id = _ensure_entity_exists(world, spec_to_process, expected_type, f"{context} 查找新位置")
-                    logging.debug(f"位置操作: 设置新位置为 '{final_new_location_id}'")
-                except Exception as e:
-                    logging.error(f"{context}: 确定或创建新位置 '{spec_to_process}' 失败: {e}", exc_info=True)
-                    raise e
-            else:
-                final_new_location_id = None
-                logging.debug(f"位置操作: 设置位置为 None")
-
-            if old_location_or_place != final_new_location_id:
-                logging.info(f"位置变更检测: '{self.entity_id}' 从 '{old_location_or_place}' 移动到 '{final_new_location_id}'")
-                try:
-                    entity.set_attribute(location_key_being_modified, final_new_location_id)
-                    _update_container_lists(world, self.entity_id, old_location_or_place, final_new_location_id)
-                    logging.info(f"实体 '{self.entity_id}' 位置更新成功。")
-                except Exception as e:
-                    logging.error(f"应用位置变更失败: {e}", exc_info=True)
-                    raise e
-            else:
-                logging.debug(f"实体 '{self.entity_id}' 位置未改变 (仍是 '{final_new_location_id}')。")
+        context = "Modify"
+        # 查找实体，不允许创建 (create_mode=None)
+        entity = _ensure_entity(world, self.entity_id, expected_type=self.entity_type, create_mode=None, context=context)
+        _apply_modifications_to_entity(entity, self.params, world, context)
 
 
-# --- DestroyCommand ---
-class DestroyCommand(ICommand):
-    """处理 @Destroy 指令"""
-
-    def __init__(self, entity_type: Literal["Item", "Character", "Place"], entity_id: str, params: Dict[str, Any]):
-        super().__init__(entity_type, entity_id, params)
+class CreateCommand(ICommand):
+    """处理 @Create 指令。查找或创建空白实体，然后应用修改，覆盖现有属性。"""
 
     def execute(self, world: WorldState) -> None:
-        logging.info(f"执行 Destroy: Type={self.entity_type}, ID={self.entity_id}")
-        entity = world.find_entity(self.entity_id, include_destroyed=True)
-        if not entity:
-            logging.warning(f"Destroy 指令警告: 找不到实体 ID '{self.entity_id}'，跳过。")
-            return
-        if entity.is_destroyed:
-            logging.info(f"实体 '{self.entity_id}' 已被销毁，无需操作。")
-            return
-        if entity.entity_type != self.entity_type: raise TypeError(f"Destroy 指令错误: 实体类型不匹配 ({entity.entity_type} vs {self.entity_type})")
-        logging.info(f"销毁实体: {entity.entity_type} ID='{entity.entity_id}', Name='{entity.name}'")
-        entity.is_destroyed = True
-        container_id: Optional[str] = None
-        items_to_clear: List[str] = []
-        contents_to_clear: List[str] = []
-        if isinstance(entity, Item):
-            container_id = entity.location
-            entity.location = None
-        elif isinstance(entity, Character):
-            container_id = entity.current_place
-            entity.current_place = None
-            items_to_clear = list(entity.has_items)
-            entity.has_items = []
-        elif isinstance(entity, Place):
-            contents_to_clear = list(entity.contents)
-            entity.contents = []
-            entity.exits = {}
-        if container_id and isinstance(entity, (Item, Character)): _remove_from_container(world, self.entity_id, container_id)
-        if items_to_clear:
-            logging.debug(f"角色 '{self.entity_id}' 销毁，清除其 {len(items_to_clear)} 个物品的位置...")
-            for item_id in items_to_clear: (item := world.find_entity(item_id)) and isinstance(item, Item) and not item.is_destroyed and setattr(item,
-                'location', None) and logging.debug(f"物品 '{item_id}' ({item.name}) 位置清除。")
-        if contents_to_clear:
-            logging.debug(f"地点 '{self.entity_id}' 销毁，清除其 {len(contents_to_clear)} 个内容物的位置...")
-            for content_id in contents_to_clear:
-                content = world.find_entity(content_id)
-                if content and not content.is_destroyed:
-                    if isinstance(content, Item):
-                        content.location = None
-                        logging.debug(f"内容物(Item) '{content_id}' ({content.name}) 位置清除。")
-                    elif isinstance(content, Character):
-                        content.current_place = None
-                        logging.debug(f"内容物(Char) '{content_id}' ({content.name}) 位置清除。")
+        context = "Create"
+        # 查找或创建空白实体 (create_mode='blank')
+        entity = _ensure_entity(world, self.entity_id, expected_type=self.entity_type, create_mode='blank', context=context)
+        # 不再需要重置逻辑，直接应用参数覆盖
+        _apply_modifications_to_entity(entity, self.params, world, context)
 
 
-# --- TransferCommand ---
 class TransferCommand(ICommand):
-    """处理 @Transfer 指令 (只能用于 Item 或 Character)"""
+    """处理 @Transfer 指令：查找源实体，解析目标ID，然后对源实体应用位置修改。"""
 
     def __init__(self, entity_type: Literal["Item", "Character", "Place"], entity_id: str, params: Dict[str, Any]):
         if entity_type not in ["Item", "Character"]: raise TypeError(f"Transfer 指令只适用于 Item 或 Character，而非 {entity_type}")
         super().__init__(cast(Literal["Item", "Character"], entity_type), entity_id, params)
         target_spec_tuple = self.params.get('target')
-        if not target_spec_tuple or target_spec_tuple[0] != '=': raise ValueError(
-            f"Transfer 命令 ({self.entity_id}) 缺少必需的 'target' 赋值参数。Params: {params}")
-        self.target_spec = target_spec_tuple[1]  # 获取 target 的值
+        if not target_spec_tuple or target_spec_tuple[0] != '=': raise ValueError(f"Transfer 命令 ({self.entity_id}) 缺少必需的 'target' 赋值参数。")
+        self.target_spec = target_spec_tuple[1]  # 值可能是 Tuple 或 ID
         if self.target_spec is None: raise ValueError("Transfer 指令的目标不能为空。")
 
     def execute(self, world: WorldState) -> None:
-        logging.info(f"执行 Transfer: Type={self.entity_type}, ID={self.entity_id}, Target='{self.target_spec}'")
-        entity = world.find_entity(self.entity_id, include_destroyed=False)
-        if not entity: raise ValueError(f"Transfer 失败: 找不到要转移的实体 '{self.entity_id}' 或已销毁。")
-        context = f"Transfer {self.entity_type} '{self.entity_id}'"
-        expected_target_type: Optional[Union[Type, Tuple[Type, ...]]] = None
-        current_location_attr: Optional[str] = None
+        context = "Transfer"
+
+        # 1. 查找源实体 (找不到会报错, create_mode=None)
+        source_entity = _ensure_entity(world, self.entity_id, expected_type=self.entity_type, create_mode=None, context=context + " 源")
+
+        # 2. 确定目标属性名和期望容器类型
+        target_attr_name: str = ""
+        expected_container_type: Union[Type[Character], Type[Place], Tuple[Type[Character], Type[Place]]]
+        if self.entity_type == "Item":
+            target_attr_name = 'location'
+            expected_container_type = (Character, Place)
+        else:  # Character
+            target_attr_name = 'current_place'
+            expected_container_type = Place
+
+        # 3. 查找或创建目标容器 ID (使用 _ensure_target_id)
+        resolved_target_id = _ensure_target_id(world, self.target_spec, expected_container_type, context + " 目标")
+
+        # 4. 构造位置修改参数
+        location_update: Dict[str, Tuple[str, Any]] = {target_attr_name: ('=', resolved_target_id)}
+
+        # 5. 对源实体应用位置修改
+        _apply_modifications_to_entity(source_entity, location_update, world, context)
+
+
+class DestroyCommand(ICommand):
+    """处理 @Destroy 指令 (逻辑不变)。"""
+
+    def execute(self, world: WorldState) -> None:
+        # (Destroy 逻辑保持不变)
+        logging.info(f"执行 Destroy: Type={self.entity_type}, ID={self.entity_id}")
+        entity = world.find_entity(self.entity_id, include_destroyed=True)
+        if not entity: logging.warning(f"Destroy: 找不到实体 ID '{self.entity_id}'"); return
+        if entity.is_destroyed: logging.info(f"实体 '{self.entity_id}' 已销毁"); return
+        if entity.entity_type != self.entity_type: raise TypeError(f"Destroy: 类型不匹配 ({entity.entity_type} vs {self.entity_type})")
+        entity_name = entity.get_attribute('name', f'<{entity.entity_id}>')
+        logging.info(f"开始销毁实体: {entity.entity_type} ID='{entity.entity_id}', Name='{entity_name}'")
+        items_to_clear: List[str] = []
+        contents_to_clear: List[str] = []
+        location_key: Optional[str] = None
         if isinstance(entity, Item):
-            expected_target_type = (Character, Place)
-            current_location_attr = 'location'
+            location_key = 'location'
         elif isinstance(entity, Character):
-            expected_target_type = Place
-            current_location_attr = 'current_place'
-        try:
-            final_target_id = _ensure_entity_exists(world, self.target_spec, expected_target_type, context)
-        except Exception as e:
-            logging.error(f"{context}: 确定或创建目标 '{self.target_spec}' 失败: {e}", exc_info=True)
-            raise e
-        old_container_id: Optional[str] = getattr(entity, current_location_attr, None) if current_location_attr else None
-        if old_container_id == final_target_id:
-            logging.info(f"Transfer: 实体 '{self.entity_id}' 已在目标 '{final_target_id}'，无需转移。")
-            return
-        logging.info(f"开始转移实体 '{self.entity_id}' 从 '{old_container_id}' 到 '{final_target_id}'")
-        try:
-            if current_location_attr: entity.set_attribute(current_location_attr, final_target_id)
-            _update_container_lists(world, self.entity_id, old_container_id, final_target_id)
-            logging.info(f"实体 '{self.entity_id}' 成功转移到 '{final_target_id}'")
-        except Exception as e:
-            logging.error(f"执行 Transfer 失败: {e}", exc_info=True)
-            raise e
+            location_key = 'current_place'
+            items_to_clear = list(entity.get_attribute('has_items', []))
+        elif isinstance(entity, Place):
+            contents_to_clear = list(entity.get_attribute('contents', []))
+        entity.set_attribute('is_destroyed', True, world=None)
+        if location_key:
+            try:
+                entity.set_attribute(location_key, None, world)
+            except Exception as e:
+                logging.error(f"销毁 '{entity.entity_id}': 解除位置关系时出错(忽略): {e}")
+        if items_to_clear:
+            logging.debug(f"角色 '{self.entity_id}' 销毁，清物品位置...")
+            for item_id in items_to_clear:
+                if (item := world.find_entity(item_id)) and isinstance(item, Item) and not item.is_destroyed:
+                    try:
+                        item.set_attribute('location', None, world=None)
+                    except Exception as e:
+                        logging.error(f"...清除物品 '{item_id}' 位置出错(忽略): {e}")
+            try:
+                entity.set_attribute('has_items', [], world=None)
+            except Exception as e:
+                logging.error(f"...清空 has_items 出错(忽略): {e}")
+        if contents_to_clear:
+            logging.debug(f"地点 '{self.entity_id}' 销毁，清内容物位置...")
+            for content_id in contents_to_clear:
+                if (content := world.find_entity(content_id)) and not content.is_destroyed:
+                    content_loc_key = 'location' if isinstance(content, Item) else 'current_place' if isinstance(content, Character) else None
+                    if content_loc_key:
+                        try:
+                            content.set_attribute(content_loc_key, None, world=None)
+                        except Exception as e:
+                            logging.error(f"...清除内容物 '{content_id}' 位置出错(忽略): {e}")
+            try:
+                entity.set_attribute('contents', [], world=None)
+                entity.set_attribute('exits', {}, world=None)
+            except Exception as e:
+                logging.error(f"...清空 contents/exits 出错(忽略): {e}")
+        logging.info(f"实体 '{self.entity_id}' 销毁完成。")
 
 
 # --- CommandExecutor (保持不变) ---
 class CommandExecutor:
-    COMMAND_MAP: Dict[str, Type[ICommand]] = {"create": CreateCommand, "modify": ModifyCommand, "destroy": DestroyCommand, "transfer": TransferCommand}
+    COMMAND_MAP: Dict[str, Type[ICommand]] = {
+        "create": CreateCommand,
+        "modify": ModifyCommand,
+        "destroy": DestroyCommand,
+        "transfer": TransferCommand
+    }
 
     @staticmethod
     def execute_commands(parsed_commands: List[Dict[str, Any]], world: WorldState) -> None:
@@ -494,9 +307,7 @@ class CommandExecutor:
             entity_id = cmd_data.get("entity_id")
             params = cmd_data.get("params", {})
             command_class = CommandExecutor.COMMAND_MAP.get(command_name.lower())
-            if not command_class:
-                logging.warning(f"跳过未知指令类型: '{command_name}'")
-                continue
+            if not command_class: logging.warning(f"跳过未知指令: '{command_name}'"); continue
             logging.debug(f"准备执行指令 #{i + 1}: {command_name} {entity_type} {entity_id}")
             try:
                 command_instance = command_class(entity_type=entity_type, entity_id=entity_id, params=params)  # type: ignore

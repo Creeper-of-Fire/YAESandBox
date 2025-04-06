@@ -1,42 +1,42 @@
 # game_state.py
 import logging
 import json
-import re # 仍然需要 re 用于加载时清理摘要文本（可选）
-import yaml # 仍然需要 yaml 用于加载/保存时的元数据处理（如果使用）
-from typing import List, Optional, Dict, Any, Literal, Union, Set, Tuple, Deque
+import re
+import yaml # 仍然可能用于元数据
+from typing import List, Optional, Dict, Any, Literal, Union, Set, Tuple # 移除 Deque
 from pathlib import Path
 from datetime import datetime
-from collections import deque
+# from collections import deque # 移除 deque
 from pydantic import BaseModel, Field, ValidationError
 
-# 导入重构后的 WorldState 和实体类
+# 导入 WorldState 和实体类 (保持不变)
 from world_state import WorldState, Item, Character, Place, AnyEntity
 
-# --- 存档数据模型 (保持不变) ---
+# --- 存档数据模型 (移除 world_history) ---
 class SaveData(BaseModel):
-    """用于保存和加载游戏状态的数据结构"""
+    """用于保存和加载游戏状态的数据结构 (无历史记录)"""
     current_world: WorldState = Field(...)
     conversation_log: List[Dict[str, Any]] = Field(default_factory=list)
-    world_history: List[WorldState] = Field(default_factory=list)
-    game_state_metadata: Dict[str, Any] = Field(default_factory=dict)
+    # 移除 world_history: List[WorldState] = Field(default_factory=list)
+    game_state_metadata: Dict[str, Any] = Field(default_factory=dict) # 保留以备将来扩展
     metadata: Dict[str, Any] = Field(default_factory=dict)
     model_config = {'validate_assignment': True}
 
 
-# --- 游戏状态管理器 ---
+# --- 游戏状态管理器 (移除历史和回滚) ---
 class GameState:
     """
-    管理游戏元状态，包括当前世界状态、历史快照、用户焦点和持久化。
-    不包含生成摘要或报告的逻辑。
+    管理游戏元状态，包括当前世界状态、用户焦点和持久化。
+    不包含历史快照或回滚功能。
     """
-    def __init__(self, max_history: int = 10):
+    def __init__(self): # 移除 max_history 参数
         self.world = WorldState()
-        self.history: Deque[WorldState] = deque(maxlen=max_history)
-        self.max_history = max_history
+        # 移除 self.history: Deque[WorldState] = deque(maxlen=max_history)
+        # 移除 self.max_history = max_history
         self.user_focus: List[str] = []
-        logging.info(f"GameState 初始化，最大历史记录: {max_history}")
+        logging.info("GameState 初始化 (无历史记录功能)")
 
-    # --- 查询方法 (委托给 self.world) ---
+    # --- 查询方法 (保持不变) ---
     def find_entity(self, entity_id: str, include_destroyed: bool = False) -> Optional[AnyEntity]:
         """通过 ID 查找任何类型的实体"""
         return self.world.find_entity(entity_id, include_destroyed)
@@ -46,7 +46,7 @@ class GameState:
         """按名称查找实体（效率较低）"""
         return self.world.find_entity_by_name(name, entity_type, include_destroyed)
 
-    # --- 焦点管理 ---
+    # --- 焦点管理 (保持不变) ---
     def set_focus(self, entity_ids: List[str]):
         """设置用户焦点，只包含有效的实体ID"""
         valid_ids = []
@@ -88,58 +88,28 @@ class GameState:
         """获取当前的用户焦点列表"""
         return self.user_focus
 
-    # 移除 get_problematic_entities 和 get_state_summary 方法
-    # def get_problematic_entities(self) -> List[Dict[str, Any]]: ...
-    # def get_state_summary(self) -> str: ...
+    # --- 移除 快照与回滚 方法 ---
+    # def save_history_point(self): ...
+    # def rollback_state(self) -> bool: ...
+    # def commit_state(self): ...
 
-    # --- 快照与回滚 ---
-    def save_history_point(self):
-        """保存当前世界状态 (WorldState) 的快照"""
-        max_hist = self.history.maxlen if self.history.maxlen is not None else float('inf')
-        current_len = len(self.history)
-        if current_len >= max_hist:
-             logging.warning(f"历史记录已满 ({max_hist}/{max_hist})，最旧的状态点将被覆盖。")
-        snapshot = self.world.model_copy(deep=True)
-        self.history.appendleft(snapshot)
-        logging.info(f"保存历史状态点 (当前历史数: {len(self.history)} / {max_hist})")
-
-    def rollback_state(self) -> bool:
-        """回滚到上一个保存的 WorldState"""
-        if not self.history:
-            logging.warning("无法回滚：没有可用的历史状态。")
-            return False
-        logging.info("执行状态回滚...")
-        previous_world_state = self.history.popleft()
-        self.world = previous_world_state
-        logging.info(f"WorldState 已成功回滚到上一个保存点 (剩余历史: {len(self.history)})。焦点状态未改变。")
-        return True
-
-    def commit_state(self):
-        """清除所有 WorldState 历史记录，使当前状态成为新的基线"""
-        if not self.history:
-            logging.info("无需固化状态：历史记录已为空。")
-            return
-        logging.info(f"固化当前状态，清除 {len(self.history)} 条历史记录...")
-        self.history.clear()
-        logging.info("历史记录已清除。")
-
-    # --- 保存游戏 ---
+    # --- 保存游戏 (更新 SaveData 和元数据) ---
     def save_game(self, filepath: Union[str, Path], conversation_log: List[Dict[str, Any]]):
-        """保存当前游戏状态 (GameState 元数据和 WorldState) 和对话记录到文件"""
+        """保存当前游戏状态 (GameState 元数据和 WorldState) 和对话记录到文件 (无历史)"""
         filepath = Path(filepath)
         logging.info(f"准备保存游戏到: {filepath}")
         try:
             save_data = SaveData(
                 current_world=self.world,
                 conversation_log=conversation_log,
-                world_history=list(self.history),
+                # 不再保存 world_history
                 game_state_metadata={
-                    "max_history": self.max_history,
+                    # "max_history": self.max_history, # 移除
                     "user_focus": self.user_focus
                  },
                 metadata={
                     "save_time": datetime.now().isoformat(),
-                    "game_version": "0.4.1-prompt-refactor" # 更新版本号
+                    "game_version": "0.5.0-no-rollback" # 更新版本号
                 }
             )
             json_data = save_data.model_dump_json(indent=2)
@@ -150,11 +120,11 @@ class GameState:
             logging.error(f"保存游戏到 '{filepath}' 失败: {e}", exc_info=True)
             raise RuntimeError(f"保存游戏失败: {e}") from e
 
-# --- 加载游戏 (独立函数，保持不变) ---
+# --- 加载游戏 (更新 SaveData 和元数据加载) ---
 def load_game(filepath: Union[str, Path]) -> Tuple[GameState, List[Dict[str, Any]]]:
     """
     从文件加载游戏状态，返回新的 GameState 实例和对话记录。
-    失败时抛出异常。
+    失败时抛出异常。(无历史)
     """
     filepath = Path(filepath)
     logging.info(f"尝试从文件加载游戏: {filepath}")
@@ -162,23 +132,28 @@ def load_game(filepath: Union[str, Path]) -> Tuple[GameState, List[Dict[str, Any
         raise FileNotFoundError(f"存档文件不存在: {filepath}")
     try:
         with open(filepath, 'r', encoding='utf-8') as f: json_data = f.read()
-        save_data = SaveData.model_validate_json(json_data)
+        save_data = SaveData.model_validate_json(json_data) # 使用更新后的 SaveData 模型
 
         gs_metadata = save_data.game_state_metadata
-        max_history = gs_metadata.get("max_history", 10)
+        # max_history = gs_metadata.get("max_history", 10) # 移除
         user_focus = gs_metadata.get("user_focus", [])
 
-        new_game_state = GameState(max_history=max_history)
+        new_game_state = GameState() # 创建新的无历史 GameState
         new_game_state.world = save_data.current_world
         new_game_state.user_focus = user_focus
 
-        history_deque = deque(maxlen=max_history)
-        for state in save_data.world_history: history_deque.appendleft(state)
-        new_game_state.history = history_deque
+        # 移除 history_deque 的加载
+        # history_deque = deque(maxlen=max_history)
+        # for state in save_data.world_history: history_deque.appendleft(state)
+        # new_game_state.history = history_deque
 
-        logging.info(f"游戏成功从 '{filepath}' 加载。历史记录 {len(history_deque)} 条，焦点: {user_focus}")
+        logging.info(f"游戏成功从 '{filepath}' 加载。焦点: {user_focus}")
         return new_game_state, save_data.conversation_log
     except (json.JSONDecodeError, ValidationError) as e:
+         # 检查 ValidationError 是否因为缺少 world_history，如果是旧存档，可以给更明确提示
+         if isinstance(e, ValidationError) and any('world_history' in err['loc'] for err in e.errors()):
+              logging.error(f"加载游戏失败：存档文件 '{filepath}' 格式过时 (包含已移除的 world_history)。错误: {e}")
+              raise ValueError(f"加载游戏失败，存档文件格式过时，请使用新版本创建存档。") from e
          logging.error(f"加载游戏失败：文件格式无效或损坏 '{filepath}'. 错误: {e}")
          raise ValueError(f"加载游戏失败，文件格式无效: {e}") from e
     except FileNotFoundError as e:
