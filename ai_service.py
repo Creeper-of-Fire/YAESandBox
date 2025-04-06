@@ -20,7 +20,6 @@ MODEL_NAME = "deepseek-chat" # 确认模型名称
 
 class AIService:
     """封装与 AI 模型 (DeepSeek) 的通信服务。"""
-
     def __init__(self, api_key: Optional[str] = None, base_url: str = DEEPSEEK_BASE_URL, model: str = MODEL_NAME):
         """
         初始化 AI 服务客户端。
@@ -91,32 +90,3 @@ class AIService:
         except Exception as e:
             logging.error(f"调用 AI API 时发生未预料的错误: {e}", exc_info=True)
             raise
-
-# --- 使用示例 (仅用于测试 ai_service.py 本身) ---
-if __name__ == '__main__':
-    logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-    # 测试需要有效的 API Key
-    if DEEPSEEK_API_KEY and "sk-xxx" not in DEEPSEEK_API_KEY:
-        ai_service = AIService()
-        if ai_service.client:
-            test_system_prompt = "你是一个乐于助人的助手。"
-            test_history = [{"role": "user", "content": "你好，请介绍一下你自己。"}]
-            stream = ai_service.get_completion_stream(test_system_prompt, test_history)
-            if stream:
-                print("AI 响应 (流式):")
-                full_response_content = ""
-                try:
-                    for chunk in stream:
-                        delta_content = getattr(getattr(getattr(chunk, 'choices', [{}])[0], 'delta', {}), 'content', None)
-                        if delta_content:
-                            print(delta_content, end="", flush=True)
-                            full_response_content += delta_content
-                    print("\n--- 流接收完毕 ---")
-                except Exception as e:
-                    logging.error(f"处理 AI 响应流时出错: {e}")
-            else:
-                print("未能获取 AI 响应流。")
-        else:
-            print("AI 服务未能初始化客户端。")
-    else:
-        print("请先在 ai_service.py 中设置有效的 DEEPSEEK_API_KEY 以进行测试。")
