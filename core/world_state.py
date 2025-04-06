@@ -1,8 +1,10 @@
-# world_state.py
+# core/world_state.py
 import logging
 from typing import List, Optional, Dict, Any, Literal, Union, Set, Tuple, ClassVar, TYPE_CHECKING
 
 from pydantic import BaseModel, Field, ValidationError, PrivateAttr
+
+from parser import ENTITY_REF_REGEX
 
 # --- 类型提示循环导入处理 ---
 # 如果 WorldState 需要被实体类直接引用（现在需要了），我们需要这个
@@ -175,19 +177,43 @@ class BaseEntity(BaseModel):
             logging.error(f"基类 Modify({self.entity_id}): 处理属性 '{key}' 时发生未知错误: {e}", exc_info=True)
             raise e
 
-    # --- 内部辅助方法：更新容器关系 ---
-    def _update_location_relationship(self, old_container_id: Optional[str], new_container_id: Optional[str], world: 'WorldState'):
+    # --- 内部辅助方法：更新容器关系 (修正版) ---
+    def _update_location_relationship(self, old_container_spec: Optional[Union[str, Tuple[str, str]]],
+                                      new_container_spec: Optional[Union[str, Tuple[str, str]]],
+                                      world: 'WorldState'):
         """
         内部辅助方法，用于在实体位置改变后，更新旧容器和新容器的状态。
         由子类的 set_attribute 或 modify_attribute 在位置改变时调用。
+        现在能正确处理元组形式的容器规范。
         """
-        if old_container_id == new_container_id:
-            return  # 位置未变
 
-        logging.debug(f"实体 '{self.entity_id}': 更新容器关系: 从 '{old_container_id}' 到 '{new_container_id}'")
+        # --- 从规范中提取 ID ---
+        def get_id_from_spec(spec: Optional[Union[str, Tuple[str, str]]]) -> Optional[str]:
+            if isinstance(spec, tuple):
+                return spec[1]  # 元组的第二个元素是 ID
+            elif isinstance(spec, str):
+                # 如果是字符串，检查是否是 "Type:ID" 格式，如果是则提取 ID
+                match = ENTITY_REF_REGEX.match(spec)  # 使用之前定义的 regex
+                if match:
+                    logging.warning(f"发现字符串格式的位置 '{spec}'，应优先使用元组。提取 ID: {match.group(2)}")
+                    return match.group(2)
+                else:  # 假设是裸 ID (虽然不推荐)
+                    logging.warning(f"发现裸字符串 ID '{spec}' 作为位置，可能不明确。")
+                    return spec
+            return None  # 如果是 None 或其他类型，返回 None
+
+        old_container_id = get_id_from_spec(old_container_spec)
+        new_container_id = get_id_from_spec(new_container_spec)
+
+        # --- 后续逻辑不变，使用提取出的 ID ---
+        if old_container_id == new_container_id:
+            return  # 位置未变 (基于 ID 判断)
+
+        logging.debug(f"实体 '{self.entity_id}': 更新容器关系: 从 ID '{old_container_id}' 到 ID '{new_container_id}'")
 
         # 从旧容器移除
         if old_container_id:
+            # 使用 ID 查找
             old_container = world.find_entity(old_container_id)
             if old_container:
                 content_key = None
@@ -198,18 +224,16 @@ class BaseEntity(BaseModel):
 
                 if content_key:
                     try:
-                        # 使用 modify_attribute 从容器列表中移除自身 ID
                         logging.debug(f"尝试从旧容器 '{old_container_id}' ({content_key}) 移除 '{self.entity_id}'")
-                        # 注意：这里传递 world=None 给容器的 modify，防止无限递归或意外副作用
                         old_container.modify_attribute(content_key, ('-=', self.entity_id), world=None)
                     except Exception as e:
-                        # 即使移除失败（例如列表已不包含该ID），也继续尝试添加到新容器
                         logging.warning(f"从旧容器 '{old_container_id}' ({content_key}) 移除 '{self.entity_id}' 时出错 (可能已不在其中): {e}")
             else:
-                logging.warning(f"旧容器 '{old_container_id}' 未找到，无法从中移除 '{self.entity_id}'。")
+                logging.warning(f"旧容器 ID '{old_container_id}' 未找到，无法从中移除 '{self.entity_id}'。")
 
         # 添加到新容器
         if new_container_id:
+            # 使用 ID 查找
             new_container = world.find_entity(new_container_id)
             if new_container:
                 content_key = None
@@ -223,13 +247,10 @@ class BaseEntity(BaseModel):
 
                 if content_key and target_type_ok:
                     try:
-                        # 使用 modify_attribute 向容器列表添加自身 ID
                         logging.debug(f"尝试向新容器 '{new_container_id}' ({content_key}) 添加 '{self.entity_id}'")
-                        # 传递 world=None
                         new_container.modify_attribute(content_key, ('+=', self.entity_id), world=None)
                     except Exception as e:
                         logging.error(f"向新容器 '{new_container_id}' ({content_key}) 添加 '{self.entity_id}' 时出错: {e}", exc_info=True)
-                        # 如果添加失败，可能需要回滚位置设置？原型阶段暂不处理。
                         raise RuntimeError(f"未能将实体 '{self.entity_id}' 添加到容器 '{new_container_id}'") from e
                 elif not target_type_ok:
                     logging.error(
@@ -237,8 +258,7 @@ class BaseEntity(BaseModel):
                     raise TypeError(f"类型不匹配：不能将 {self.entity_type} 添加到 {new_container.entity_type}")
 
             else:
-                logging.error(f"新容器 '{new_container_id}' 未找到，无法添加 '{self.entity_id}'。")
-                # 这个错误比较严重，因为位置已经被设置了，但无法更新容器状态
+                logging.error(f"新容器 ID '{new_container_id}' 未找到，无法添加 '{self.entity_id}'。")
                 raise ValueError(f"新容器 '{new_container_id}' 不存在")
 
 

@@ -8,20 +8,20 @@ from typing import List, Dict, Optional, Any
 
 from PySide6 import QtGui
 from PySide6.QtCore import Qt, QThread, Signal, Slot, QObject
-from PySide6.QtGui import QAction # 需要导入 QAction
 from PySide6.QtWidgets import (
     QApplication, QMainWindow, QWidget, QHBoxLayout, QVBoxLayout,
     QTextEdit, QPushButton, QLineEdit, QMessageBox, QSplitter,
     QInputDialog, QFileDialog
 )
 
-import prompts
-from ai_service import AIService
-from command_processor import CommandExecutor
+from core import prompts
+from core.ai_service import AIService
+from core.command_processor import CommandExecutor
 # 导入更新后的 GameState (无历史)
-from game_state import GameState, load_game
+from core.game_state import GameState, load_game
+from core.parser import parse_commands
 # 导入实体类用于类型检查和 get_attribute
-from world_state import BaseEntity, Item, Character, Place
+from core.world_state import BaseEntity, Item, Character, Place
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s')
 
@@ -85,14 +85,14 @@ class MainWindow(QMainWindow):
     append_text_signal = Signal(str)
     set_status_signal = Signal(str)
     clear_display_signal = Signal()
-    game_state_changed_signal = Signal() # 这个信号仍然有用，用于更新 UI
+    game_state_changed_signal = Signal()  # 这个信号仍然有用，用于更新 UI
 
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("AI RPG Engine - No Rollback") # 更新标题
+        self.setWindowTitle("AI RPG Engine - No Rollback")  # 更新标题
         self.setGeometry(100, 100, 1200, 800)
         self.ai_service = AIService()
-        self.game_state = GameState() # 使用无历史的 GameState
+        self.game_state = GameState()  # 使用无历史的 GameState
         self.conversation_history: List[Dict[str, Any]] = []
         self.ai_thread: Optional[QThread] = None
         self.ai_worker: Optional[AIWorker] = None
@@ -101,7 +101,7 @@ class MainWindow(QMainWindow):
         self._connect_signals()
         self.statusBar().showMessage("准备就绪。")
 
-    def _create_menu_bar(self): # 移除 Edit 菜单及相关动作
+    def _create_menu_bar(self):  # 移除 Edit 菜单及相关动作
         menu_bar = self.menuBar()
 
         # --- 文件菜单 (保持不变) ---
@@ -131,7 +131,7 @@ class MainWindow(QMainWindow):
         about_action = help_menu.addAction("关于")
         about_action.triggered.connect(self.show_about_dialog)
 
-    def _create_main_layout(self): # (保持不变)
+    def _create_main_layout(self):  # (保持不变)
         central_widget = QWidget()
         self.setCentralWidget(central_widget)
         main_layout = QHBoxLayout(central_widget)
@@ -160,7 +160,7 @@ class MainWindow(QMainWindow):
         splitter.setSizes([250, 700, 250])
         main_layout.addWidget(splitter)
 
-    def _connect_signals(self): # (保持不变)
+    def _connect_signals(self):  # (保持不变)
         self.send_button.clicked.connect(self.on_send_button_clicked)
         self.append_text_signal.connect(self._append_text_to_display)
         self.clear_display_signal.connect(self.main_display.clear)
@@ -168,7 +168,7 @@ class MainWindow(QMainWindow):
         self.game_state_changed_signal.connect(self.update_side_panels)
 
     @Slot()
-    def start_new_game(self): # (保持不变, GameState 初始化已更新)
+    def start_new_game(self):  # (保持不变, GameState 初始化已更新)
         if self.ai_thread and self.ai_thread.isRunning():
             QMessageBox.warning(self, "操作失败", "请等待当前 AI 响应完成。")
             return
@@ -176,7 +176,7 @@ class MainWindow(QMainWindow):
                                      QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No, QMessageBox.StandardButton.No)
         if reply == QMessageBox.StandardButton.Yes:
             logging.info("开始新游戏...")
-            self.game_state = GameState() # 使用无历史的 GameState
+            self.game_state = GameState()  # 使用无历史的 GameState
             self.conversation_history = [
                 {"role": "system", "content": "开始新游戏。", "timestamp": datetime.datetime.now().isoformat(), "type": "system_message"}]
             self.clear_display_signal.emit()
@@ -185,7 +185,7 @@ class MainWindow(QMainWindow):
             self.game_state_changed_signal.emit()
 
     @Slot()
-    def save_game_dialog(self): # (保持不变, GameState.save_game 已更新)
+    def save_game_dialog(self):  # (保持不变, GameState.save_game 已更新)
         if self.ai_thread and self.ai_thread.isRunning():
             QMessageBox.warning(self, "操作失败", "请等待 AI 响应。")
             return
@@ -202,7 +202,7 @@ class MainWindow(QMainWindow):
                 QMessageBox.critical(self, "保存失败", f"保存出错:\n{e}")
 
     @Slot()
-    def load_game_dialog(self): # (保持不变, load_game 已更新)
+    def load_game_dialog(self):  # (保持不变, load_game 已更新)
         if self.ai_thread and self.ai_thread.isRunning():
             QMessageBox.warning(self, "操作失败", "请等待 AI 响应。")
             return
@@ -253,7 +253,7 @@ class MainWindow(QMainWindow):
     # def commit_action(self): ...
 
     @Slot()
-    def open_api_key_dialog(self): # (保持不变)
+    def open_api_key_dialog(self):  # (保持不变)
         current_key = ""
         if self.ai_service and self.ai_service.client:
             current_key = self.ai_service.client.api_key or ""
@@ -269,11 +269,11 @@ class MainWindow(QMainWindow):
                 self.set_status_signal.emit("更新 API Key 失败！")
 
     @Slot()
-    def show_about_dialog(self): # (保持不变)
+    def show_about_dialog(self):  # (保持不变)
         QMessageBox.about(self, "关于", "AI RPG Engine - No Rollback\n版本 0.5.0\n实验项目。")
 
     @Slot()
-    def on_send_button_clicked(self): # (保持不变)
+    def on_send_button_clicked(self):  # (保持不变)
         if self.ai_thread and self.ai_thread.isRunning():
             logging.warning("忽略重复发送")
             QMessageBox.information(self, "请稍候", "请等待 AI 响应。")
@@ -310,11 +310,11 @@ class MainWindow(QMainWindow):
             self.user_input.setFocus()
 
     @Slot(str)
-    def on_ai_chunk_received(self, chunk: str): # (保持不变)
+    def on_ai_chunk_received(self, chunk: str):  # (保持不变)
         self.append_text_signal.emit(chunk)
 
     @Slot(str)
-    def on_ai_finished(self, full_response: str): # 移除 save_history_point 调用
+    def on_ai_finished(self, full_response: str):  # 移除 save_history_point 调用
         logging.info("AI 响应接收完毕。")
         self._append_text_to_display("\n")
         self.main_display.ensureCursorVisible()
@@ -322,31 +322,162 @@ class MainWindow(QMainWindow):
             self.conversation_history.append(
                 {"role": "assistant", "content": full_response, "timestamp": datetime.datetime.now().isoformat(), "type": "ai_response"})
             try:
+                logging.info("开始解析指令...")  # 添加日志
                 parsed_commands = parse_commands(full_response)
                 if parsed_commands:
                     logging.info(f"解析到 {len(parsed_commands)} 条指令，准备执行...")
-                    # --- 移除保存快照的调用 ---
-                    # self.game_state.save_history_point()
                     CommandExecutor.execute_commands(parsed_commands, self.game_state.world)
-                    logging.info("指令执行完毕。")
+                    logging.info("指令执行完毕。")  # <--- 已看到这条日志
+                    # --- 在 emit 前后加日志 ---
+                    logging.info("准备发射 game_state_changed_signal...")
                     self.game_state_changed_signal.emit()
+                    logging.info("game_state_changed_signal 发射完毕。")
+                    # --- 日志添加结束 ---
                 else:
                     logging.info("AI 响应中未找到指令。")
             except Exception as e:
                 error_msg = f"处理 AI 响应或执行指令时出错: {e}"
                 logging.error(error_msg, exc_info=True)
                 self._append_text_to_display(f"\n[系统错误: {error_msg}]\n\n")
-                # 可以在此添加提示用户尝试存档/读档
+        # --- 在函数末尾加日志 ---
+        logging.info("准备恢复 UI 输入...")
         self.user_input.setEnabled(True)
         self.send_button.setEnabled(True)
         self.set_status_signal.emit("轮到你了。")
         self.user_input.setFocus()
         self.ai_thread = None
         self.ai_worker = None
-        logging.debug("AI 流程处理完毕，UI 已恢复。")
+        logging.info("on_ai_finished 方法结束。")  # 添加日志
+
+    @Slot()
+    def update_side_panels(self):
+        # --- 在槽函数开头加日志 ---
+        logging.info("开始执行 update_side_panels...")
+        try:  # 包裹整个函数体，捕获可能的异常
+            logging.debug("信号触发：更新侧边栏")
+            current_focus_ids = self.game_state.get_current_focus()
+            focus_str = "无焦点"
+
+            # --- 更新窗口标题 ---
+            logging.debug("更新窗口标题...")
+            if current_focus_ids:
+                focus_names = []
+                for fid in current_focus_ids:
+                    entity = self.game_state.find_entity(fid)
+                    if entity:
+                        name = entity.get_attribute('name', f'<{fid}>')
+                        focus_names.append(name)
+                    else:
+                        focus_names.append(f"<{fid} - 无效>")
+                focus_str = f"焦点: {', '.join(focus_names)}"
+            self.setWindowTitle(f"AI RPG Engine - No Rollback - {focus_str}")
+
+            # --- 更新左侧面板 ---
+            logging.debug("更新左侧面板...")
+            left_content = "焦点实体:\n----------------\n"
+            if not current_focus_ids:
+                left_content += "(无)"
+            else:
+                for fid_index, fid in enumerate(current_focus_ids):  # 添加索引日志
+                    logging.debug(f"处理左侧面板焦点 #{fid_index}: ID={fid}")
+                    entity = self.game_state.find_entity(fid)
+                    if entity:
+                        entity_type = entity.entity_type
+                        entity_name = entity.get_attribute('name', f'<{fid}>')
+                        logging.debug(f"  实体信息: Type={entity_type}, Name={entity_name}")
+                        left_content += f"ID: {fid}\n类型: {entity_type}\n名称: {entity_name}\n"
+
+                        logging.debug("  获取所有属性...")
+                        all_attrs = entity.get_all_attributes()
+                        logging.debug(f"  所有属性: {all_attrs}")  # 打印所有属性看看
+
+                        structure_keys_handled = {'name'}
+                        if isinstance(entity, Item):
+                            structure_keys_handled.update({'quantity', 'location'})
+                        elif isinstance(entity, Character):
+                            structure_keys_handled.update({'current_place', 'has_items'})
+                        elif isinstance(entity, Place):
+                            structure_keys_handled.update({'contents', 'exits'})
+
+                        exclude_keys = BaseEntity._CORE_FIELDS.union(structure_keys_handled).union({'model_config', '_dynamic_attributes'})
+                        dynamic_attrs_display = {k: v for k, v in all_attrs.items() if k not in exclude_keys}
+
+                        if dynamic_attrs_display:
+                            logging.debug(f"  显示动态属性: {dynamic_attrs_display}")
+                            left_content += "动态属性:\n"
+                            for k, v in dynamic_attrs_display.items():
+                                try:
+                                    repr_v = repr(v)  # 尝试获取 repr
+                                except Exception as repr_e:
+                                    repr_v = f"<repr error: {repr_e}>"
+                                left_content += f"  - {k}: {repr_v}\n"  # 使用安全的 repr
+
+                        logging.debug("  显示结构属性...")
+                        if isinstance(entity, Item):
+                            quantity = entity.get_attribute('quantity', 1)
+                            location = entity.get_attribute('location')
+                            left_content += f"结构属性:\n  - quantity: {quantity}\n  - location: {location}\n"
+                        elif isinstance(entity, Character):
+                            current_place = entity.get_attribute('current_place')
+                            has_items = entity.get_attribute('has_items', [])
+                            left_content += f"结构属性:\n  - current_place: {current_place}\n  - has_items: {has_items}\n"
+                        elif isinstance(entity, Place):
+                            contents = entity.get_attribute('contents', [])
+                            exits = entity.get_attribute('exits', {})
+                            left_content += f"结构属性:\n  - contents: {contents}\n  - exits: {exits}\n"
+
+                        left_content += "----------------\n"
+                    else:
+                        left_content += f"ID: {fid} (无效或已销毁)\n----------------\n"
+            logging.debug("设置左侧面板文本...")
+            self.left_panel.setText(left_content)
+            logging.debug("左侧面板文本设置完毕。")
+
+            # --- 更新右侧面板 ---
+            logging.debug("更新右侧面板...")
+            right_content = "持有物品:\n----------------\n"
+            has_character_focus = False
+            for fid_index, fid in enumerate(current_focus_ids):  # 添加索引日志
+                logging.debug(f"处理右侧面板焦点 #{fid_index}: ID={fid}")
+                entity = self.game_state.find_entity(fid)
+                if entity and isinstance(entity, Character):
+                    has_character_focus = True
+                    char_name = entity.get_attribute('name', f'<{fid}>')
+                    right_content += f"[{char_name} ({fid})]:\n"
+                    items_list = entity.get_attribute('has_items', [])
+                    logging.debug(f"  角色 {char_name} 物品列表: {items_list}")
+                    if not items_list:
+                        right_content += "  (空)\n"
+                    else:
+                        for item_index, item_id in enumerate(items_list):  # 添加索引日志
+                            logging.debug(f"  处理物品 #{item_index}: ID={item_id}")
+                            item_entity = self.game_state.find_entity(item_id)
+                            if item_entity and isinstance(item_entity, Item):
+                                item_name = item_entity.get_attribute('name', f'<{item_id}>')
+                                item_quantity = item_entity.get_attribute('quantity', 1)
+                                logging.debug(f"    物品信息: Name={item_name}, Quantity={item_quantity}")
+                                right_content += f"  - {item_name}{f' (x{item_quantity})' if item_quantity > 1 else ''} ({item_id})\n"
+                            else:
+                                logging.warning(f"    物品 ID '{item_id}' 未找到或类型不是 Item。")
+                                right_content += f"  - <{item_id}> (物品丢失?)\n"
+                    right_content += "----------------\n"
+
+            if not has_character_focus: right_content += "(未聚焦角色)"
+            logging.debug("设置右侧面板文本...")
+            self.right_panel.setText(right_content)
+            logging.debug("右侧面板文本设置完毕。")
+
+        except Exception as e:
+            # 捕获 update_side_panels 内部的任何异常
+            logging.exception("在 update_side_panels 中发生异常:")
+            # 可以选择在这里显示一个错误消息给用户
+            # QMessageBox.critical(self, "UI 更新错误", f"更新侧边栏时出错:\n{e}")
+        finally:
+            # --- 在槽函数末尾加日志 ---
+            logging.info("update_side_panels 执行完毕。")
 
     @Slot(str)
-    def on_ai_error(self, error_message: str): # (保持不变)
+    def on_ai_error(self, error_message: str):  # (保持不变)
         logging.error(f"AIWorker 发出错误信号: {error_message}")
         self._append_text_to_display(f"\n[AI 通信错误: {error_message}]\n\n")
         self.main_display.ensureCursorVisible()
@@ -359,101 +490,25 @@ class MainWindow(QMainWindow):
         logging.debug("AI 错误处理完毕，UI 已恢复。")
 
     @Slot(str)
-    def _append_text_to_display(self, text: str): # (保持不变)
+    def _append_text_to_display(self, text: str):  # (保持不变)
         cursor = self.main_display.textCursor()
         cursor.movePosition(QtGui.QTextCursor.MoveOperation.End)
         cursor.insertText(text)
         self.main_display.ensureCursorVisible()
 
-    @Slot()
-    def update_side_panels(self): # (保持不变, 已更新为使用 get_attribute)
-        logging.debug("信号触发：更新侧边栏")
-        current_focus_ids = self.game_state.get_current_focus()
-        focus_str = "无焦点"
-        if current_focus_ids:
-            focus_names = []
-            for fid in current_focus_ids:
-                entity = self.game_state.find_entity(fid)
-                if entity:
-                    name = entity.get_attribute('name', f'<{fid}>')
-                    focus_names.append(name)
-                else:
-                    focus_names.append(f"<{fid} - 无效>")
-            focus_str = f"焦点: {', '.join(focus_names)}"
-        self.setWindowTitle(f"AI RPG Engine - No Rollback - {focus_str}") # 更新标题
-        left_content = "焦点实体:\n----------------\n"
-        if not current_focus_ids:
-            left_content += "(无)"
-        else:
-            for fid in current_focus_ids:
-                entity = self.game_state.find_entity(fid)
-                if entity:
-                    entity_type = entity.entity_type
-                    entity_name = entity.get_attribute('name', f'<{fid}>')
-                    left_content += f"ID: {fid}\n类型: {entity_type}\n名称: {entity_name}\n"
-                    all_attrs = entity.get_all_attributes()
-                    structure_keys_handled = {'name'}
-                    if isinstance(entity, Item): structure_keys_handled.update({'quantity', 'location'})
-                    elif isinstance(entity, Character): structure_keys_handled.update({'current_place', 'has_items'})
-                    elif isinstance(entity, Place): structure_keys_handled.update({'contents', 'exits'})
-                    exclude_keys = BaseEntity._CORE_FIELDS.union(structure_keys_handled).union({'model_config', '_dynamic_attributes'})
-                    dynamic_attrs_display = {k: v for k, v in all_attrs.items() if k not in exclude_keys}
-                    if dynamic_attrs_display: left_content += "动态属性:\n" + "".join(f"  - {k}: {repr(v)}\n" for k, v in dynamic_attrs_display.items())
-                    if isinstance(entity, Item):
-                        quantity = entity.get_attribute('quantity', 1)
-                        location = entity.get_attribute('location')
-                        left_content += f"结构属性:\n  - quantity: {quantity}\n  - location: {location}\n"
-                    elif isinstance(entity, Character):
-                        current_place = entity.get_attribute('current_place')
-                        has_items = entity.get_attribute('has_items', [])
-                        left_content += f"结构属性:\n  - current_place: {current_place}\n  - has_items: {has_items}\n"
-                    elif isinstance(entity, Place):
-                        contents = entity.get_attribute('contents', [])
-                        exits = entity.get_attribute('exits', {})
-                        left_content += f"结构属性:\n  - contents: {contents}\n  - exits: {exits}\n"
-                    left_content += "----------------\n"
-                else:
-                    left_content += f"ID: {fid} (无效或已销毁)\n----------------\n"
-        self.left_panel.setText(left_content)
-        right_content = "持有物品:\n----------------\n"
-        has_character_focus = False
-        for fid in current_focus_ids:
-            entity = self.game_state.find_entity(fid)
-            if entity and isinstance(entity, Character):
-                has_character_focus = True
-                char_name = entity.get_attribute('name', f'<{fid}>')
-                right_content += f"[{char_name} ({fid})]:\n"
-                items_list = entity.get_attribute('has_items', [])
-                if not items_list: right_content += "  (空)\n"
-                else:
-                    for item_id in items_list:
-                        item_entity = self.game_state.find_entity(item_id)
-                        if item_entity and isinstance(item_entity, Item):
-                            item_name = item_entity.get_attribute('name', f'<{item_id}>')
-                            item_quantity = item_entity.get_attribute('quantity', 1)
-                            right_content += f"  - {item_name}{f' (x{item_quantity})' if item_quantity > 1 else ''} ({item_id})\n"
-                        else: right_content += f"  - <{item_id}> (物品丢失?)\n"
-                right_content += "----------------\n"
-        if not has_character_focus: right_content += "(未聚焦角色)"
-        self.right_panel.setText(right_content)
-
-    def closeEvent(self, event: QtGui.QCloseEvent): # (保持不变)
+    def closeEvent(self, event: QtGui.QCloseEvent):  # (保持不变)
         logging.info("收到关闭事件。")
-        reply = QMessageBox.question(self, "退出确认", "确定退出吗？", QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                     QMessageBox.StandardButton.No)
-        if reply == QMessageBox.StandardButton.Yes:
-            if self.ai_thread and self.ai_thread.isRunning():
-                logging.info("停止 AI 线程...")
-                if self.ai_worker:
-                    self.ai_worker.stop()
-                self.ai_thread.quit()
-                if not self.ai_thread.wait(1000): logging.warning("AI 线程未能优雅停止。")
-                else: logging.info("AI 线程已停止。")
-            logging.info("接受关闭事件。")
-            event.accept()
-        else:
-            logging.info("取消关闭事件。")
-            event.ignore()
+        if self.ai_thread and self.ai_thread.isRunning():
+            logging.info("停止 AI 线程...")
+            if self.ai_worker:
+                self.ai_worker.stop()
+            self.ai_thread.quit()
+            if not self.ai_thread.wait(1000):
+                logging.warning("AI 线程未能优雅停止。")
+            else:
+                logging.info("AI 线程已停止。")
+        logging.info("接受关闭事件。")
+        event.accept()
 
 
 # --- 应用程序入口 ---

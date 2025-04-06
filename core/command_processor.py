@@ -1,4 +1,4 @@
-# command_processor.py
+# core/command_processor.py
 import logging
 from abc import ABC, abstractmethod
 from typing import List, Dict, Any, Literal, Tuple, Optional, Union, Type, cast

@@ -1,4 +1,4 @@
-# game_state.py
+# core/game_state.py
 import logging
 import json
 import re

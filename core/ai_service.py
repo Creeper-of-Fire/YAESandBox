@@ -1,4 +1,4 @@
-# ai_service.py
+# core/ai_service.py
 import os
 import logging
 from typing import List, Dict, Iterator, Optional, Any # Iterator 用于流式响应

@@ -1,4 +1,4 @@
-# prompts.py
+# core/prompts.py
 import logging
 import re
 from typing import Dict, List, Any, Optional, Set
