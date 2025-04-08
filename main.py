@@ -1,6 +1,9 @@
 # main.py
 import sys
 import logging
+import time
+
+from PySide6.QtCore import Slot
 from PySide6.QtWidgets import QApplication
 
 # 导入核心后端组件 (假设它们可以被导入)

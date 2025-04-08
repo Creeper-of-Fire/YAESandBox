@@ -4,7 +4,7 @@ from typing import List, Optional, Dict, Any, Literal, Union, Set, Tuple, ClassV
 
 from pydantic import BaseModel, Field, ValidationError, PrivateAttr
 
-from parser import ENTITY_REF_REGEX
+from core.parser import ENTITY_REF_REGEX
 
 # --- 类型提示循环导入处理 ---
 # 如果 WorldState 需要被实体类直接引用（现在需要了），我们需要这个

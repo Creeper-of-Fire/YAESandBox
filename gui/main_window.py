@@ -99,52 +99,8 @@ class MainWindow(QMainWindow):
         主要是连接视图发出的信号到处理函数。
         """
         # 连接叙事视图的 user_input_submitted 信号到主窗口的处理方法
-        self.narrative_view.user_input_submitted.connect(self.handle_user_input)
+        # self.narrative_view.user_input_submitted.connect(self.handle_user_input)
         self.logger.debug("主窗口信号连接完毕。")
-
-    # --- 核心处理逻辑槽函数 ---
-    @Slot(str)
-    def handle_user_input(self, text: str):
-        """
-        处理来自叙事视图的用户输入。
-        **这是将 GUI 输入连接到后端逻辑的关键入口点。**
-        """
-        self.logger.info(f"主窗口捕获到用户输入: {text}")
-
-        # --- TODO: 集成后端逻辑 ---
-        # 1. (可选) 在叙事视图显示用户的输入 (提供即时反馈)
-        self.narrative_view.append_text(f"> {text}\n") # 临时回显
-
-        # 2. 禁用输入区域，防止用户在 AI 响应期间再次输入
-        self.narrative_view.set_input_enabled(False)
-
-        # 3. 调用 AI 服务获取响应 (需要 GameState 和 AI Service 实例)
-        #    - 构建提示 (需要 prompts.py 和 GameState)
-        #    - 调用 ai_service.get_completion_stream
-        #    - 处理流式响应 (逐步显示到 narrative_view.append_text)
-        #    - 处理完成后解析指令 (需要 parser.py)
-        #    - 执行指令 (需要 CommandExecutor 和 GameState)
-        #    - 发出 game_state_changed 信号 (GUI 需要定义这个信号)
-
-        # 4. (模拟 AI 响应 - 临时)
-        #    为了测试流程，这里可以模拟一个简单的 AI 回复
-        import time
-        from PySide6.QtCore import QTimer
-        def mock_ai_response():
-            self.narrative_view.append_text("AI 正在思考...\n")
-            time.sleep(1) # 模拟延迟
-            ai_reply = f"你输入了 '{text}'。这是一个模拟的回应。\n"
-            # --- 模拟指令 ---
-            # ai_reply += "@Create Item test-item (name=\"测试物品\", description=\"一个用于测试的物品\")\n"
-            # ai_reply += "@Modify Character player (hp+=1)\n"
-            self.narrative_view.append_text(ai_reply)
-
-            # 5. 响应完成后，重新启用输入
-            self.narrative_view.set_input_enabled(True)
-            self.logger.info("模拟 AI 响应完成，输入已启用。")
-
-        # 使用 QTimer 延迟执行模拟响应，避免阻塞 GUI 线程
-        QTimer.singleShot(100, mock_ai_response)
 
 
     # --- 视图切换方法 (示例) ---
