@@ -5,13 +5,16 @@ import random
 import re
 from typing import List, Dict, Any, Optional, Literal, Tuple, cast, Union
 
+# 从新的类型模块导入 TypedID
+from core.types import TypedID, EntityType
+
 # --- 正则表达式 (只用于指令头和基本结构) ---
 COMMAND_REGEX = re.compile(
     r"@(?P<command>\w+)\s+"
     r"(?P<type>Item|Character|Place)\s+"
     r"(?P<id>[\w\-]+)\s*"
-    r"(?:\((?P<params>.*?)\))?\s*" # params 部分仍然用 .*? 捕获，后续手动解析
-    , re.IGNORECASE | re.DOTALL
+    r"(?P<has_paren>\()?" # 可选地捕获左括号
+    , re.IGNORECASE # 移除 DOTALL，因为我们逐行或按匹配处理
 )
 
 # 不再需要 PARAM_REGEX
@@ -36,71 +39,73 @@ def _calculate_dice_roll(expression: str) -> int:
     logging.debug(f"计算掷骰: {expression} -> 结果 = {total}")
     return total
 
-# --- 递归解析辅助函数 (保持不变) ---
+# --- 递归解析辅助函数 (修改：返回 TypedID) ---
 def _parse_recursive(value: Any) -> Any:
     if isinstance(value, list): return [_parse_recursive(item) for item in value]
     elif isinstance(value, dict): return {k: _parse_recursive(v) for k, v in value.items()}
     elif isinstance(value, str):
-        entity_type_match = ENTITY_REF_REGEX.fullmatch(value.strip())
-        if entity_type_match:
-            entity_type = entity_type_match.group(1).capitalize()
-            entity_id = entity_type_match.group(2)
-            logging.debug(f"递归解析: 字符串 '{value}' -> 实体引用: ({entity_type}, {entity_id})")
-            return cast(Tuple[Literal["Item", "Character", "Place"], str], (entity_type, entity_id))
-        else:
+        value_stripped = value.strip()
+        # 优先检查是否为实体引用字符串 'Type:ID'
+        try:
+            # 尝试使用 TypedID.from_string 解析
+            typed_id = TypedID.from_string(value_stripped)
+            logging.debug(f"递归解析: 字符串 '{value}' -> 实体引用 TypedID: {typed_id}")
+            return typed_id
+        except ValueError:
+            # 如果不是有效的 TypedID 字符串，则保持为字符串
             logging.debug(f"递归解析: 保持字符串: '{value}'")
-            return value
-    else: return value
+            return value # 返回原始字符串，而不是 stripped，以防空格有意义
+    else:
+        # 其他类型保持不变
+        return value
 
-# --- parse_value 函数 (保持不变) ---
+# --- parse_value 函数 (修改：返回 TypedID) ---
 def parse_value(value_str: str) -> Any:
-    """解析单个参数值字符串，处理引号、掷骰、实体引用、基本类型和字面量。"""
+    """解析单个参数值字符串，处理引号、掷骰、实体引用(TypedID)、基本类型和字面量。"""
     value_str = value_str.strip()
     if not value_str: return None
-    content_str = value_str
+    content_str_or_obj: Any = value_str # 初始化为原始字符串
     is_quoted = False
+
     # 尝试安全地去除引号并处理转义
     if (value_str.startswith('"') and value_str.endswith('"')) or \
        (value_str.startswith("'") and value_str.endswith("'")):
         try:
-            # 使用 literal_eval 处理带引号的字符串，可以正确处理转义
             decoded_content = ast.literal_eval(value_str)
-            # 只有当 literal_eval 返回字符串时，才认为是有效的带引号字符串
             if isinstance(decoded_content, str):
-                content_str = decoded_content
+                content_str_or_obj = decoded_content
                 is_quoted = True
-            else:
-                # 如果 literal_eval 返回非字符串（如数字、列表），则 value_str 不是简单的带引号字符串
-                pass # content_str 保持原始 value_str，is_quoted 保持 False
+            # else: content_str_or_obj 保持原始 value_str
         except:
-            # literal_eval 失败（引号不匹配或包含非法内容），按原始字符串处理
-            content_str = value_str
+            content_str_or_obj = value_str # 按原始字符串处理
             is_quoted = False
 
-    # 优先检查内容是否为掷骰
-    if isinstance(content_str, str) and DICE_REGEX.fullmatch(content_str):
+    # --- 优先检查特殊格式 (作用于 content_str_or_obj) ---
+    if isinstance(content_str_or_obj, str):
+        # 1. 检查掷骰
+        if DICE_REGEX.fullmatch(content_str_or_obj):
+            try:
+                roll_result = _calculate_dice_roll(content_str_or_obj)
+                logging.debug(f"解析并执行掷骰: '{content_str_or_obj}' (来自 '{value_str}') -> {roll_result}")
+                return roll_result
+            except ValueError: pass # 非有效掷骰
+            except Exception as e: logging.error(f"执行掷骰 '{content_str_or_obj}' 时出错: {e}", exc_info=True); raise e
+
+        # 2. 检查实体引用 (Type:ID)
         try:
-            roll_result = _calculate_dice_roll(content_str)
-            logging.debug(f"解析并执行掷骰: '{content_str}' (来自 '{value_str}') -> {roll_result}")
-            return roll_result
-        except ValueError: pass # 非有效掷骰，继续
-        except Exception as e: logging.error(f"执行掷骰 '{content_str}' 时出错: {e}", exc_info=True); raise e
+            typed_id = TypedID.from_string(content_str_or_obj)
+            logging.debug(f"解析为实体引用 TypedID: {typed_id} (来自 '{value_str}')")
+            return typed_id
+        except ValueError:
+            # 不是有效的 Type:ID 字符串，继续
+            pass
 
-    # 检查内容是否为实体引用
-    if isinstance(content_str, str):
-        entity_type_match = ENTITY_REF_REGEX.fullmatch(content_str)
-        if entity_type_match:
-            entity_type = entity_type_match.group(1).capitalize()
-            entity_id = entity_type_match.group(2)
-            logging.debug(f"解析为实体引用: ({entity_type}, {entity_id}) (来自 '{value_str}')")
-            return cast(Tuple[Literal["Item", "Character", "Place"], str], (entity_type, entity_id))
-
-    # 如果原始字符串带引号，并且内容不是特殊类型，返回解码后的内容
+    # --- 如果带引号且内容不是特殊格式，返回解码后的字符串 ---
     if is_quoted:
-        logging.debug(f"解析为带引号的普通字符串内容: '{content_str}'")
-        return content_str
+        logging.debug(f"解析为带引号的普通字符串内容: '{content_str_or_obj}'")
+        return content_str_or_obj
 
-    # 尝试解析基本类型 (作用于原始字符串 value_str)
+    # --- 尝试解析基本类型 (作用于原始 value_str) ---
     try: return int(value_str)
     except ValueError: pass
     try: return float(value_str)
@@ -110,20 +115,23 @@ def parse_value(value_str: str) -> Any:
     if val_lower == 'false': return False
     if val_lower == 'none': return None
 
-    # 最后尝试用 literal_eval 解析列表/字典等 (作用于原始字符串 value_str)
+    # --- 最后尝试用 literal_eval 解析列表/字典等 (作用于原始 value_str) ---
     try:
         eval_result = ast.literal_eval(value_str)
         # 如果是列表/字典，递归解析内部字符串
         if isinstance(eval_result, (list, dict)):
             logging.debug(f"使用 ast.literal_eval 解析复杂结构，开始递归解析内部...")
+            # _parse_recursive 现在会返回包含 TypedID 的结构
             return _parse_recursive(eval_result)
-        else: # 其他 literal_eval 能解析的类型 (如数字，理论上已被上面覆盖)
+        else:
+            # 其他 literal_eval 能解析的类型
             return eval_result
-    except: # 所有解析都失败，视为普通无引号字符串
+    except:
+        # 所有解析都失败，视为普通无引号字符串
         logging.debug(f"所有解析失败，将 '{value_str}' 视为无引号普通字符串。")
-        return value_str
+        return value_str # 返回原始 value_str
 
-# --- 手动解析参数字符串 ---
+# --- 手动解析参数字符串 (无需修改，依赖 parse_value) ---
 def parse_params_string_manual(param_str: Optional[str]) -> Dict[str, Tuple[str, Any]]:
     """手动解析参数字符串，处理嵌套括号和引号。"""
     params = {}
@@ -196,8 +204,9 @@ def parse_params_string_manual(param_str: Optional[str]) -> Dict[str, Tuple[str,
         raw_value_str = param_str[value_start_pos:current_pos].strip()
 
         # 4. 处理值和操作符
-        if op == '-' and not raw_value_str: # 删除操作
+        if op == '-' and not raw_value_str: # 删除操作 (在 modify_attribute 中已移除，但解析器仍需识别)
             final_value = None
+            logging.warning(f"解析到删除操作符 '-' (键 '{key}'), 但该操作在 modify_attribute 中已被移除。将值设为 None。")
         elif not raw_value_str and op != '-':
             logging.error(f"参数 '{key}' 操作符为 '{op}' 但缺少值。")
             # 尝试跳到下一个参数
@@ -206,7 +215,8 @@ def parse_params_string_manual(param_str: Optional[str]) -> Dict[str, Tuple[str,
             continue
         else:
             try:
-                final_value = parse_value(raw_value_str) # 使用现有 parse_value 解析单个值
+                # parse_value 现在返回 TypedID
+                final_value = parse_value(raw_value_str)
             except Exception as e:
                 logging.error(f"解析参数值时出错: key='{key}', raw_value='{raw_value_str}', error: {e}", exc_info=True)
                 raise ValueError(f"解析参数 '{key}' 的值 '{raw_value_str}' 时失败: {e}") from e
@@ -228,32 +238,62 @@ def parse_params_string_manual(param_str: Optional[str]) -> Dict[str, Tuple[str,
     return params
 
 
-# --- parse_commands (现在调用手动解析器) ---
 def parse_commands(text: str) -> List[Dict[str, Any]]:
-    """从文本中解析所有 @Command 指令，使用手动参数解析器。"""
+    """从文本中解析所有 @Command 指令。手动查找匹配的右括号。"""
     parsed_commands = []
-    processed_spans = set()
+    # 使用 finditer 在整个文本中查找指令头
     for match in COMMAND_REGEX.finditer(text):
-        start, end = match.span()
-        # 重叠检查 (保持不变)
-        is_overlapping = False
-        for s_start, s_end in processed_spans:
-            if start >= s_start and end <= s_end: is_overlapping = True; break
-            if max(s_start, start) < min(s_end, end): is_overlapping = True; break
-        if is_overlapping: logging.debug(f"跳过重叠匹配: '{match.group(0).strip()}'"); continue
-
         command_data = match.groupdict()
         command_name = command_data['command'].lower()
         entity_type_str = command_data.get('type')
         entity_id = command_data.get('id')
-        params_str = command_data.get('params') # 获取括号内的原始字符串
+        has_paren = command_data.get('has_paren') # 是否捕获到了左括号
 
-        if not entity_type_str or not entity_id: logging.error(f"Regex 匹配但缺 type/id: {match.group(0)}"); continue
+        # 基本验证 (不变)
+        if not entity_type_str or not entity_id: continue
         entity_type = entity_type_str.capitalize()
-        if entity_type not in ["Item", "Character", "Place"]: logging.warning(f"跳过无效类型 '{entity_type}': {match.group(0).strip()}"); continue
+        if entity_type not in ["Item", "Character", "Place"]: continue
+
+        params_str: Optional[str] = None
+        command_end_pos = match.end() # 指令头结束的位置
+
+        # --- 手动查找匹配的右括号 ---
+        if has_paren:
+            param_start_pos = match.end() # 左括号之后是参数开始的位置
+            paren_level = 1 # 从 1 开始，因为已经匹配了一个 (
+            in_quotes = None
+            current_pos = param_start_pos
+
+            while current_pos < len(text):
+                char = text[current_pos]
+                prev_char = text[current_pos - 1] if current_pos > param_start_pos else None
+
+                if in_quotes:
+                    if char == in_quotes and prev_char != '\\':
+                        in_quotes = None
+                elif char == '"' or char == "'":
+                    in_quotes = char
+                elif not in_quotes:
+                    if char == '(': paren_level += 1
+                    elif char == ')':
+                        paren_level -= 1
+                        if paren_level == 0: # 找到了匹配的右括号
+                            params_str = text[param_start_pos:current_pos] # 提取参数内容
+                            command_end_pos = current_pos + 1 # 更新指令结束位置
+                            break # 找到，退出循环
+
+                current_pos += 1
+
+            if paren_level != 0: # 如果循环结束还没找到匹配的右括号
+                logging.warning(f"指令 '{match.group(0)}...' 括号不匹配，无法解析参数。")
+                # 这里可以选择跳过这个指令或按无参数处理
+                # 我们按无参数处理
+                params_str = None
+                command_end_pos = match.end() # 回退到只匹配指令头
+        # --- 结束手动查找 ---
 
         try:
-            # 调用手动参数解析器
+            # 调用手动参数解析器 (不变)
             params = parse_params_string_manual(params_str)
             parsed_command = {
                 "command": command_name,
@@ -262,8 +302,9 @@ def parse_commands(text: str) -> List[Dict[str, Any]]:
                 "params": params,
             }
             parsed_commands.append(parsed_command)
-            processed_spans.add(match.span())
+            # 注意：我们不再需要处理重叠，因为 finditer 本身会处理
+            # processed_spans.add((match.start(), command_end_pos))
         except Exception as e:
-            logging.error(f"解析指令参数时出错 '{match.group(0).strip()}': {e}", exc_info=True)
-            raise e # 原型阶段崩溃
+            logging.error(f"解析指令参数时出错 '{match.group(0)}{params_str or ''}...': {e}", exc_info=True)
+            raise e
     return parsed_commands

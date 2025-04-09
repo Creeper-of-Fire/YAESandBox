@@ -13,99 +13,103 @@ from ..dtos import (
 )
 from ..dependencies import get_game_state
 
-# 从 command_processor 导入辅助函数 (或将其移到更合适的位置)
-# 暂时假设它还在 processing 包
-try:
-    from processing.command_processor import _apply_modifications_to_entity
-except ImportError:
-    logging.error("无法导入 _apply_modifications_to_entity，原子化修改将失败。请确保该函数可用。")
-    # 定义一个假的，避免启动时崩溃，但运行时会出错
-    def _apply_modifications_to_entity(*args, **kwargs):
-        raise NotImplementedError("_apply_modifications_to_entity 未找到")
+# --- 辅助函数 _apply_modifications_to_entity (保持不变) ---
+def _apply_modifications_to_entity(entity: BaseEntity, updates: Dict[str, Tuple[str, Any]], world: WorldState, command_context: str):
+    """
+    将一系列修改应用到 *给定的* 实体实例上。
+    直接调用 entity.modify_attribute。
+    """
+    entity_id = entity.entity_id
+    entity_type = entity.entity_type # 获取类型用于日志
+    logging.debug(f"[{command_context}] '{entity_type}:{entity_id}': 开始应用修改: {updates}")
+    for key, op_value_tuple in updates.items():
+        try:
+            logging.debug(f"[{command_context}] '{entity_type}:{entity_id}': 应用 -> {key} {op_value_tuple}")
+            entity.modify_attribute(key, op_value_tuple, world)
+        except (ValueError, TypeError) as e:
+            logging.error(f"[{command_context}] '{entity_type}:{entity_id}': 应用 '{key}={op_value_tuple}' 时失败: {e}", exc_info=True)
+            raise e
+        except Exception as e:
+            logging.exception(f"[{command_context}] '{entity_type}:{entity_id}': 应用 '{key}={op_value_tuple}' 时发生意外错误:")
+            raise e
+    logging.info(f"[{command_context}] '{entity_type}:{entity_id}' 应用修改完毕。")
 
 router = APIRouter()
 
 @router.post(
     "/entities",
     response_model=FlatEntityDTO,
-    status_code=status.HTTP_201_CREATED,
-    summary="创建新实体",
-    description="创建一个新的游戏实体。如果同类型同 ID 实体已存在且未销毁，将返回冲突错误。"
+    status_code=status.HTTP_201_CREATED, # 成功创建或覆盖后都返回 201 或 200？维持 201 也可以
+    summary="创建或覆盖实体", # <--- 修改描述
+    description="创建新实体，或覆盖同类型同 ID 的现有实体（包括占位符或已销毁的）的属性。" # <--- 修改描述
 )
 async def create_entity(
     request: AtomicCreateEntityRequest,
     gs: GameState = Depends(get_game_state)
 ):
-    """原子化创建实体接口。"""
+    """原子化创建或覆盖实体接口。"""
     world = gs.world
     entity_type = request.entity_type
     entity_id = request.entity_id
-    context = "Atomic Create"
+    context = "Atomic Create/Overwrite" # <--- 修改上下文描述
 
-    logging.info(f"[{context}] 请求创建实体: {entity_type}:{entity_id}")
+    logging.info(f"[{context}] 请求处理实体: {entity_type}:{entity_id}")
 
-    # 检查实体是否已存在 (未销毁)
-    existing_entity = world.find_entity(entity_id, entity_type, include_destroyed=False)
-    if existing_entity:
-        logging.warning(f"[{context}] 创建失败：实体 '{entity_type}:{entity_id}' 已存在且未销毁。")
-        raise HTTPException(
-            status_code=status.HTTP_409_CONFLICT,
-            detail=f"实体 '{entity_type}:{entity_id}' 已存在且未销毁。"
-        )
+    # --- 修改：查找实体，包括已销毁的 ---
+    entity = world.find_entity(entity_id, entity_type, include_destroyed=True)
 
-    # 检查实体是否已存在 (已销毁) -> 决定是恢复还是报错
-    destroyed_entity = world.find_entity(entity_id, entity_type, include_destroyed=True)
-    entity: AnyEntity # 类型提示
-
-    if destroyed_entity:
-        # 选项 A: 恢复并应用属性
-        logging.info(f"[{context}] 实体 '{entity_type}:{entity_id}' 已销毁，将恢复并应用初始属性。")
-        destroyed_entity.set_attribute('is_destroyed', False, world=None) # 恢复
-        entity = destroyed_entity
-        # 清理旧属性？ CreateCommand 是清理的，这里也清理以保持一致
-        # 注意：直接访问 PrivateAttr 可能不是最佳实践，但 CreateCommand 这样做了
-        entity._dynamic_attributes.clear()
-        # 选项 B: 报错，要求先 DELETE
-        # raise HTTPException(
-        #     status_code=status.HTTP_409_CONFLICT,
-        #     detail=f"实体 '{entity_type}:{entity_id}' 已存在但被销毁，请先使用 DELETE /entities/{entity_type}/{entity_id} 彻底移除或直接 PATCH 修改。"
-        # )
+    if entity:
+        # 实体已存在 (可能是正常的，也可能是占位符，也可能是已销毁的)
+        if entity.is_destroyed:
+            logging.info(f"[{context}] 实体 '{entity_type}:{entity_id}' 已销毁，将恢复并覆盖属性。")
+            entity.set_attribute('is_destroyed', False, world=None) # 恢复
+            # 清理旧动态属性以模拟覆盖
+            entity._dynamic_attributes.clear()
+            status_to_return = status.HTTP_200_OK # 恢复并覆盖，返回 200 OK 可能更合适？或保持 201？我们暂定 201
+        else:
+            # 实体存在且未销毁（覆盖操作）
+            logging.info(f"[{context}] 实体 '{entity_type}:{entity_id}' 已存在，将覆盖其属性。")
+            # 不需要清除，modify 会覆盖
+            status_to_return = status.HTTP_200_OK # 覆盖现有资源，返回 200 OK
     else:
-        # 创建新实例
+        # 实体完全不存在，创建新实例
         logging.info(f"[{context}] 创建新的实体实例: {entity_type}:{entity_id}")
         entity_class: type[BaseEntity]
         if entity_type == "Item": entity_class = Item
         elif entity_type == "Character": entity_class = Character
         elif entity_type == "Place": entity_class = Place
-        else: # Should be caught by Pydantic validation
-             raise HTTPException(status_code=500, detail="内部错误：无效的实体类型")
+        else: raise HTTPException(status_code=500, detail="内部错误：无效的实体类型")
         entity = entity_class(entity_id=entity_id, entity_type=entity_type)
-        world.add_entity(entity) # 添加到世界
+        world.add_entity(entity)
+        status_to_return = status.HTTP_201_CREATED # 明确是新创建的
 
     # 应用初始属性 (如果提供)
     if request.initial_attributes:
-        # 转换 DTO 的 AttributeOperation 到 (op, value) 元组
         attributes_to_apply: Dict[str, Tuple[str, Any]] = {
             key: (op.op, op.value) for key, op in request.initial_attributes.items()
         }
         try:
-            # 调用修改函数应用属性
             _apply_modifications_to_entity(entity, attributes_to_apply, world, context)
         except Exception as e:
-            # 如果应用属性失败，是否应该删除刚刚创建的实体？
-            # 暂时记录错误并返回 500
-            logging.error(f"[{context}] 应用初始属性到 '{entity_type}:{entity_id}' 时失败: {e}", exc_info=True)
-            # 可以在这里尝试删除 entity
-            # world.get_entity_dict(entity_type).pop(entity_id, None)
-            raise HTTPException(status_code=500, detail=f"创建实体成功但应用初始属性失败: {e}")
+            logging.error(f"[{context}] 应用属性到 '{entity_type}:{entity_id}' 时失败: {e}", exc_info=True)
+            # 这里保持不变，应用属性失败还是内部错误
+            raise HTTPException(status_code=500, detail=f"处理实体成功但应用属性失败: {e}")
 
     # 转换为 DTO 返回
     dto = entity_to_dto(entity)
-    if dto is None: # 理论上不应发生，除非刚创建就立刻被标记销毁了
-        raise HTTPException(status_code=500, detail="内部错误：创建后无法转换实体为 DTO")
+    if dto is None:
+        raise HTTPException(status_code=500, detail="内部错误：处理后无法转换实体为 DTO")
 
-    logging.info(f"[{context}] 实体 '{entity_type}:{entity_id}' 创建成功。")
-    return dto
+    logging.info(f"[{context}] 实体 '{entity_type}:{entity_id}' 处理成功。")
+    # --- 修改：根据情况返回不同状态码 ---
+    # 注意：FastAPI 装饰器中的 status_code 是默认值，实际返回可以在函数内决定
+    # 但为了简单，我们可以统一返回 200 OK 表示成功处理（无论是创建还是覆盖）
+    # 或者维持装饰器的 201，因为调用者可能期望创建操作返回 201
+    # 我们先统一返回 200 OK 试试
+    from fastapi import Response # 确保导入 Response
+    return Response(content=dto.model_dump_json(), status_code=status.HTTP_200_OK, media_type="application/json")
+    # 或者，维持 201
+    # return dto # FastAPI 会使用装饰器的 201
 
 
 @router.patch(

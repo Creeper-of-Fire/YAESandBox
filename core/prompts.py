@@ -59,10 +59,10 @@ INTERACTION_MANUAL = """
 @Create Item goblin-loot (name="哥布林战利品", quantity="1d4", location="Place:goblin-camp", value=5)
 
 #### 1.2 角色创建
-@Create Character <char_id> (name="<角色名称>", [current_place="Place:<所在地点ID>",] [hp="<初始生命值或骰子>",] [inventory=["Item:<物品ID>", ...],] [其他自定义属性...])
+@Create Character <char_id> (name="<角色名称>", [current_place="Place:<所在地点ID>",] [hp="<初始生命值或骰子>",] [has_items=["Item:<物品ID>", ...],] [其他自定义属性...])
 - 示例：
 @Create Character blacksmith-john (name="铁匠约翰", current_place="Place:village-square", description="胡子花白的老矮人，围裙上满是火星灼烧的痕迹", hp=25)
-@Create Character goblin-scout (name="哥布林斥候", current_place="Place:dark-forest", hp="2d6", inventory=["Item:rusty-dagger", "Item:torn-pouch"]) 
+@Create Character goblin-scout (name="哥布林斥候", current_place="Place:dark-forest", hp="2d6", has_items=["Item:rusty-dagger", "Item:torn-pouch"]) 
 
 #### 1.3 地点创建
 @Create Place <place_id> (name="<地点名称>", [description="<描述>",]  [contents=["<EntityType>:<实体ID>", ...],] [其他自定义属性...])
@@ -88,8 +88,8 @@ INTERACTION_MANUAL = """
 @Modify Item player-sword (durability-=10, description+=" (剑刃出现裂纹)")
 @Modify Character npc-merchant (attitude="friendly", gold+=50)
 @Modify Place old-cave (description="洞穴深处传来滴水声。", contents+=["Character:bat-swarm", "Item:loose-rock"]) 
-@Modify Character hero (inventory-="Item:healing-potion") # <-- 修正ID格式
-@Modify Character hero (inventory-= ["Item:rusty-key", "Item:torch"]) # 批量移除物品
+@Modify Character hero (has_items-="Item:healing-potion") # <-- 修正ID格式
+@Modify Character hero (has_items-= ["Item:rusty-key", "Item:torch"]) # 批量移除物品
 @Modify Place main-hall (is_lit=true) # 修改布尔值
 @Modify Character boss-ogre (hp-="1d8+2") # 伤害掷骰
 
@@ -119,7 +119,7 @@ INTERACTION_MANUAL = """
 *   **ID 唯一性**: 确保所有 `entity_id` 是唯一的。
 *   **引用格式**: 引用其他实体时，**必须**使用正确的 `"Type:ID"` 格式（例如 `"Place:village-square"`, `"Item:sword"`）。
 *   **引用容错**: 如果你引用的实体 `"Type:ID"` 不存在，系统会自动为你创建一个**占位符实体**（名字类似 `Warning: Missing...`）。虽然这提供了容错性，但过多的占位符会扰乱世界状态。**请尽量在使用 `@Modify` 或 `@Transfer` 引用实体前，先用 `@Create` 明确创建它。**
-*   **类型匹配**: 确保 `@Transfer` 和位置属性 (`location`, `current_place`) 的 `EntityType` 正确。物品 (`Item`) 只能位于 `Place` 或 `Character` 中。角色 (`Character`) 只能位于 `Place` 中。列表属性（如 `contents`, `inventory`）也应包含正确类型的引用。
+*   **类型匹配**: 确保 `@Transfer` 和位置属性 (`location`, `current_place`) 的 `EntityType` 正确。物品 (`Item`) 只能位于 `Place` 或 `Character` 中。角色 (`Character`) 只能位于 `Place` 中。列表属性（如 `contents`, `has_items`）也应包含正确类型的引用。
 *   **占位符处理**: 如果系统提示词中出现 `problematic_entities_report`，这表示你之前引用了不存在的实体。请**优先**使用 `@Modify` 指令修复这些占位符实体的 `name` 和其他必要属性，将它们融入叙事；或者，如果你确认不再需要它们，请使用 `@Destroy` 指令将其移除。
 
 请根据用户的最新输入，继续故事，并使用指令更新世界状态。

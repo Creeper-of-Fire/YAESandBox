@@ -2,6 +2,8 @@
 import logging
 from typing import List, Dict, Any, Tuple, Literal, Optional, cast
 
+from core.types import TypedID
+
 # 导入实体类型用于提示
 EntityType = Literal["Item", "Character", "Place"]
 
@@ -77,9 +79,9 @@ def translate_parsed_command(parsed_cmd: Dict[str, Any]) -> List[Dict[str, Any]]
         if not target_attr_name:
              logging.error(f"翻译 Transfer 命令 '{entity_type}:{entity_id}' 失败：无法确定源类型的目标属性。")
              return []
-        if not isinstance(target_value, tuple): # 确保是元组
-             logging.error(f"翻译 Transfer 命令 '{entity_type}:{entity_id}' 失败：目标值格式错误，需要 (Type, ID) 元组，得到 {type(target_value)}。")
-             return []
+        if not isinstance(target_value, TypedID):  # 确保是 TypedID 对象
+            logging.error(f"翻译 Transfer 命令 '{entity_type}:{entity_id}' 失败：目标值格式错误，需要 TypedID 对象，得到 {type(target_value)}。")
+            return []
 
 
         attributes_to_patch = {
