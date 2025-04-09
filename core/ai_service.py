@@ -7,8 +7,9 @@ from openai import OpenAI, APITimeoutError, APIConnectionError, RateLimitError, 
 # --- 配置 ---
 # 建议从环境变量或配置文件读取 API Key
 # DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY")
-# 在原型阶段，可以直接在此处填入你的 Key，在原型阶段以后这个key会被用户注销，所以没关系
-DEEPSEEK_API_KEY = "sk-ee30faa083f94e71837a36cf5f870eab" # <--- 在这里填入你的 DeepSeek API Key
+# 目前这个Key已经注销，请各位不要公布你的任何Key！
+# 本模块现在没有接入任何地方
+DEEPSEEK_API_KEY = "sk-xxx" # <--- 在这里填入你的 DeepSeek API Key
 if not DEEPSEEK_API_KEY or "sk-xxx" in DEEPSEEK_API_KEY:
     logging.warning("请在 ai_service.py 文件中或环境变量中设置有效的 DEEPSEEK_API_KEY")
 
