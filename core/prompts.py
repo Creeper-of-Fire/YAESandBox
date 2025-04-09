@@ -6,8 +6,8 @@ from typing import Dict, List, Any, Optional, Set
 import yaml
 
 # 导入 GameState 和 WorldState 用于类型提示和访问数据
-from game_state import GameState
-from world_state import WorldState, Place, Character, Item  # 需要实体类用于类型检查
+from core.game_state import GameState
+from core.world_state import WorldState, Place, Character, Item  # 需要实体类用于类型检查
 
 # --- 核心系统提示词模板 ---
 # 使用 f-string 模板，占位符将在 get_system_prompt 中填充
@@ -31,22 +31,22 @@ SYSTEM_PROMPT_TEMPLATE = """\
 # --- 交互规范手册内容 ---
 INTERACTION_MANUAL = """
 ## 一、基础原则
-1.  **指令驱动原则**：所有游戏状态变更必须通过显式指令实现
-2.  **即时同步原则**：每次指令执行后需确保世界状态完全同步
-3.  **显式创建原则**：所有实体必须经过明确创建指令才能存在
-4.  **没有主角原则**：不区分NPC和玩家，因为用户随时可以切换自己的身份
+1.  **指令驱动原则**：所有游戏状态变更必须通过显式指令实现。
+2.  **即时同步原则**：每次指令执行后需确保世界状态完全同步。
+3.  **显式创建原则**：所有实体必须经过明确创建指令才能存在。
+4.  **没有主角原则**：不区分NPC和玩家，因为用户随时可以切换自己的身份。
 
 ## 二、指令规范详解
-（所有指令参数都应包裹在**圆括号 `()`** 中，不再支持方括号 `[]`）
+（所有指令参数都应包裹在**圆括号 `()`** 中）
 
 ### 1. 创建指令（@Create）
 
 #### 1.0 属性解释
 - `<entity_id>`: 必须是唯一的英文小写字母、数字和连字符（kebab-case），例如 `village-inn`, `rusty-sword`, `goblin-chief`。尽量不要使用 `player`。
 - `name`: 实体的称呼，**必填参数**。如果暂时未知，可用描述性名称，如 `"未知药水"`、`"散发可怕气息的书籍"`，之后用 `@Modify` 修改。
-- `location` (物品的位置，可以是地点ID或角色ID，格式：`"Place:地点ID"` 或 `"Character:角色ID"`)
-- `current_place` (角色的位置，必须是地点 ID，格式：`"Place:地点ID"`)
-- 自定义属性：如 `description="描述文本"`,`owner="盗贼工会"`,`心情=10`,`好感度=-100`, `hp=10`, `is_locked=true`。内容完全由你定义，用于丰富实体。**属性值可以是字符串（加引号）、整数、布尔值（true/false）、列表 `[1, "a", true]`、字典 `{"key": "value"}` 或实体引用 `"Type:ID"`。**
+- `location` (物品的位置，可以是地点或角色引用，格式：`"Place:地点ID"` 或 `"Character:角色ID"`)
+- `current_place` (角色的位置，必须是地点引用，格式：`"Place:地点ID"`)
+- 自定义属性：如 `description="描述文本"`,`owner="Organization:thieves-guild"`,`mood=10`,`affinity=-100`, `hp=10`, `is_locked=true`。内容完全由你定义，用于丰富实体。**属性值可以是字符串（加引号）、整数、布尔值（true/false）、列表 `[1, "a", true, "Item:potion"]`、字典 `{"key": "value", "exit": "Place:next-room"}` 或实体引用 `"Type:ID"`。**
 - **掷骰**: 可以在**数值型**属性值中使用 `"XdY[+/-Z]"` 格式（例如 `hp="1d6+2"`, `damage="2d4"`, `quantity="1d3"`）。系统会在执行时计算结果。**位置属性不支持掷骰**。
 
 #### 1.1 物品创建
@@ -59,39 +59,37 @@ INTERACTION_MANUAL = """
 @Create Item goblin-loot (name="哥布林战利品", quantity="1d4", location="Place:goblin-camp", value=5)
 
 #### 1.2 角色创建
-@Create Character <char_id> (name="<角色名称>", [current_place="Place:<所在地点ID>",] [hp="<初始生命值或骰子>",] [其他自定义属性...])
+@Create Character <char_id> (name="<角色名称>", [current_place="Place:<所在地点ID>",] [hp="<初始生命值或骰子>",] [inventory=["Item:<物品ID>", ...],] [其他自定义属性...])
 - 示例：
 @Create Character blacksmith-john (name="铁匠约翰", current_place="Place:village-square", description="胡子花白的老矮人，围裙上满是火星灼烧的痕迹", hp=25)
-@Create Character goblin-scout (name="哥布林斥候", current_place="Place:dark-forest", hp="2d6", inventory=["rusty-dagger", "torn-pouch"])
+@Create Character goblin-scout (name="哥布林斥候", current_place="Place:dark-forest", hp="2d6", inventory=["Item:rusty-dagger", "Item:torn-pouch"]) 
 
 #### 1.3 地点创建
-@Create Place <place_id> (name="<地点名称>", [description="<描述>",] [exits={"<方向>": "<目标地点ID>", ...},] [其他自定义属性...])
-- `exits` 是一个字典，定义出口。
+@Create Place <place_id> (name="<地点名称>", [description="<描述>",]  [contents=["<EntityType>:<实体ID>", ...],] [其他自定义属性...])
+- `contents` 是地点内的实体列表（物品或角色）。
 - 示例：
-@Create Place magic-library (name="魔法图书馆", description="高耸的书架直达穹顶，漂浮的蜡烛提供照明")
-@Create Place crossroad (name="十字路口", description="一条泥泞的小路在此分岔。", exits={"north": "forest-path", "south": "village-gate", "west": "old-farm"})
+@Create Place magic-library (name="魔法图书馆", description="高耸的书架直达穹顶，漂浮的蜡烛提供照明", contents=["Item:ancient-tome"])
 
 ### 2. 修改指令（@Modify）
 
 #### 2.1 标准格式
 @Modify <EntityType> <entity_id> (<属性名><操作符><值>, ...)
-- 值可以是直接量、骰子表达式（用于数值属性）、列表、字典等。
+- 值可以是直接量、骰子表达式（用于数值属性）、实体引用、列表或字典。
 
 #### 2.2 支持的操作符
-| 操作符 | 适用类型        | 说明                                     | 示例                                     |
-|--------|-----------------|------------------------------------------|----------------------------------------|
-| =      | 所有            | 赋值 (覆盖原值)                          | `name="新名字"`, `hp=20`, `location="Place:new-place"` |
-| +=     | 数值, 字符串, 列表 | 数值加, 字符串拼接, 列表添加**元素**       | `quantity+=1`, `description+=" (破损)"`, `inventory+=healing-potion-id` |
-| -=     | 数值, 列表      | 数值减, 列表移除**第一个匹配项**             | `hp-=5`, `inventory-=rusty-key-id`       |
-| +      | 数值, 字符串, 列表 | 数值加, 字符串拼接, **列表合并**           | `description=description + "!", inventory=inventory + ["gem1", "gem2"]` |
-| -      | 数值, 列表, 属性  | 数值减, 列表移除**第一个匹配项**, **删除属性** | `hp=hp-10`, `contents=contents - "goblin-1"`, `owner=-` |
-*注意：使用 `+`/`-` 进行属性修改时，通常需要引用属性自身，如 `hp=hp-10`。 `+=`/`-=` 更简洁。`owner=-` 会删除 owner 属性。*
+| 操作符 | 适用类型        | 说明                                                    | 示例                                                         |
+|--------|-----------------|---------------------------------------------------------|--------------------------------------------------------------|
+| =      | 字符串, 列表, 字典  | 赋值                                       | `name="新名字"`, `location="Place:new-place"`           |
+| +=     | 数值, 字符串, 列表, 字典 | 数值加, 字符串拼接, **列表添加单个元素或合并列表**, 字典更新 | `quantity+=1`, `desc+=" (破损)"`, `inv+="Item:gem"`, `inv+=["Item:gem1", "Item:gem2"]`, `tags+={"new": true}` |
+| -=     | 数值, 列表, 字典      | 数值减, **列表移除单个元素或批量移除**, 字典移除键       | `hp-=5`, `inv-="Item:key"`, `inv-= ["Item:arrow", "Item:torch"]`, `tags-="old"` |
+*说明：对于列表，`+=` 会将单个元素添加到末尾，或将列表中的所有元素添加到末尾（如果它们不存在）。`-=` 会移除单个元素（第一个匹配项），或移除列表中指定的所有元素。对于字典，`+=` 执行更新，`-=` 用于移除指定的键。*
 
 #### 2.3 修改示例
 @Modify Item player-sword (durability-=10, description+=" (剑刃出现裂纹)")
 @Modify Character npc-merchant (attitude="friendly", gold+=50)
-@Modify Place old-cave (description="洞穴深处传来滴水声。", contents+=bat-swarm-id) # 添加实体到地点
-@Modify Character hero (inventory-=healing-potion-id) # 从角色移除物品
+@Modify Place old-cave (description="洞穴深处传来滴水声。", contents+=["Character:bat-swarm", "Item:loose-rock"]) 
+@Modify Character hero (inventory-="Item:healing-potion") # <-- 修正ID格式
+@Modify Character hero (inventory-= ["Item:rusty-key", "Item:torch"]) # 批量移除物品
 @Modify Place main-hall (is_lit=true) # 修改布尔值
 @Modify Character boss-ogre (hp-="1d8+2") # 伤害掷骰
 
@@ -100,7 +98,7 @@ INTERACTION_MANUAL = """
 
 #### 3.1 物品转移
 @Transfer Item <item_id> (target="<EntityType>:<新位置ID>")
-- 目标可以是地点 ID (`Place:ID`) 或角色 ID (`Character:ID`)。
+- 目标可以是地点引用 (`Place:ID`) 或角色引用 (`Character:ID`)。
 - 示例：
 @Transfer Item magic-ring (target="Place:treasure-chest")
 @Transfer Item healing-potion (target="Character:player-char")
@@ -119,10 +117,10 @@ INTERACTION_MANUAL = """
 
 ## 三、重要提醒
 *   **ID 唯一性**: 确保所有 `entity_id` 是唯一的。
-*   **引用有效性**: 引用实体时（如 `location`, `target`, 列表中的 ID），尽量确保该 ID 已被 `@Create` 创建。如果引用的 ID 不存在，系统会尝试创建**占位符实体** (`Warning: Missing...`)，但这可能导致意外行为，请尽量避免。
-*   **类型匹配**: 确保 `@Transfer` 和位置属性的 `EntityType` 正确。物品 (`Item`) 只能位于 `Place` 或 `Character` 中。角色 (`Character`) 只能位于 `Place` 中。
-*   **堆叠**: 创建同名物品到同一容器时，系统会自动尝试增加现有物品的 `quantity` 而不是创建新物品实例。
-*   **占位符处理**: 如果系统提示词中出现 `problematic_entities_report`，请优先使用 `@Modify` 修复这些占位符实体的 `name` 和其他属性，或使用 `@Destroy` 清理不再需要的占位符。
+*   **引用格式**: 引用其他实体时，**必须**使用正确的 `"Type:ID"` 格式（例如 `"Place:village-square"`, `"Item:sword"`）。
+*   **引用容错**: 如果你引用的实体 `"Type:ID"` 不存在，系统会自动为你创建一个**占位符实体**（名字类似 `Warning: Missing...`）。虽然这提供了容错性，但过多的占位符会扰乱世界状态。**请尽量在使用 `@Modify` 或 `@Transfer` 引用实体前，先用 `@Create` 明确创建它。**
+*   **类型匹配**: 确保 `@Transfer` 和位置属性 (`location`, `current_place`) 的 `EntityType` 正确。物品 (`Item`) 只能位于 `Place` 或 `Character` 中。角色 (`Character`) 只能位于 `Place` 中。列表属性（如 `contents`, `inventory`）也应包含正确类型的引用。
+*   **占位符处理**: 如果系统提示词中出现 `problematic_entities_report`，这表示你之前引用了不存在的实体。请**优先**使用 `@Modify` 指令修复这些占位符实体的 `name` 和其他必要属性，将它们融入叙事；或者，如果你确认不再需要它们，请使用 `@Destroy` 指令将其移除。
 
 请根据用户的最新输入，继续故事，并使用指令更新世界状态。
 """

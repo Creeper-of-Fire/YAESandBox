@@ -1,4 +1,4 @@
-# core/parser.py
+# processing/parser.py
 import ast
 import logging
 import random
