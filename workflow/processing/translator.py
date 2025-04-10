@@ -1,4 +1,4 @@
-# processing/translator.py
+# workflow/processing/translator.py
 import logging
 from typing import List, Dict, Any, Tuple, Literal, Optional, cast, Set
 

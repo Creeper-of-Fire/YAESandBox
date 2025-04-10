@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>WebSocket 测试</title>
+    <style>
+        body { font-family: sans-serif; display: flex; flex-direction: column; height: 100vh; margin: 0; }
+        #controls { padding: 10px; border-bottom: 1px solid #ccc; display: flex; gap: 10px; align-items: center;}
+        #controls input[type="text"] { flex-grow: 1; padding: 8px; }
+        #controls button { padding: 8px 15px; }
+        #log { flex-grow: 1; overflow-y: auto; padding: 10px; border: 1px solid #eee; margin: 10px; background-color: #f9f9f9; font-size: 0.9em; white-space: pre-wrap; /* 保留换行和空格 */ }
+        .log-entry { margin-bottom: 5px; padding-bottom: 5px; border-bottom: 1px dotted #ddd; }
+        .log-sent { color: blue; }
+        .log-received { color: green; }
+        .log-system { color: orange; }
+        .log-error { color: red; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div id="controls">
+        <input type="text" id="messageInput" placeholder="输入要发送的消息或留空...">
+        <button id="sendWorkflowButton">发送工作流请求</button>
+        <button id="sendEchoButton">发送 Echo 请求</button>
+        <span id="connectionStatus" style="color: red;">未连接</span>
+    </div>
+    <div id="log"></div>
+
+    <script>
+        const messageInput = document.getElementById('messageInput');
+        const sendWorkflowButton = document.getElementById('sendWorkflowButton');
+        const sendEchoButton = document.getElementById('sendEchoButton');
+        const logDiv = document.getElementById('log');
+        const connectionStatus = document.getElementById('connectionStatus');
+
+        let socket;
+        // 重要：修改这里的 URL 为你 FastAPI 后端的实际地址和端口
+        const wsUrl = "ws://127.0.0.1:6700/ws";
+
+        function logMessage(message, type = 'system') {
+            const entry = document.createElement('div');
+            entry.classList.add('log-entry', `log-${type}`);
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logDiv.appendChild(entry);
+            // 自动滚动到底部
+            logDiv.scrollTop = logDiv.scrollHeight;
+        }
+
+        function connectWebSocket() {
+            logMessage(`尝试连接到 ${wsUrl}...`, 'system');
+            socket = new WebSocket(wsUrl);
+
+            socket.onopen = (event) => {
+                logMessage("WebSocket 连接已建立！", 'system');
+                connectionStatus.textContent = "已连接";
+                connectionStatus.style.color = "green";
+            };
+
+            socket.onmessage = (event) => {
+                try {
+                    const messageData = JSON.parse(event.data);
+                    logMessage(`收到消息: ${JSON.stringify(messageData, null, 2)}`, 'received');
+                    // 你可以在这里根据 messageData.type 或 messageData.request_id 做进一步处理
+                } catch (e) {
+                    logMessage(`收到非 JSON 消息: ${event.data}`, 'error');
+                }
+            };
+
+            socket.onerror = (event) => {
+                logMessage(`WebSocket 错误: ${event}`, 'error');
+                console.error("WebSocket Error: ", event);
+            };
+
+            socket.onclose = (event) => {
+                logMessage(`WebSocket 连接已关闭。代码: ${event.code}, 原因: ${event.reason || '无'}`, 'system');
+                connectionStatus.textContent = "已断开";
+                connectionStatus.style.color = "red";
+                // 可选：尝试重新连接
+                // setTimeout(connectWebSocket, 5000); // 5秒后重连
+            };
+        }
+
+        function sendMessage(messageObject) {
+            if (socket && socket.readyState === WebSocket.OPEN) {
+                try {
+                    const messageString = JSON.stringify(messageObject);
+                    socket.send(messageString);
+                    logMessage(`已发送: ${messageString}`, 'sent');
+                } catch (e) {
+                    logMessage(`发送消息时序列化失败: ${e}`, 'error');
+                }
+            } else {
+                logMessage("无法发送消息：WebSocket 未连接或未打开。", 'error');
+            }
+        }
+
+        // --- 发送工作流请求 ---
+        sendWorkflowButton.onclick = () => {
+            const userInput = messageInput.value || "默认测试输入"; // 如果输入框为空，使用默认值
+            // 生成一个简单的唯一 ID
+            const requestId = `req_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+
+            const message = {
+                type: "trigger_workflow",
+                request_id: requestId,
+                workflow_name: "test_workflow_from_browser", // 工作流名称
+                params: { // 工作流需要的参数
+                    userInput: userInput
+                }
+            };
+            sendMessage(message);
+        };
+
+        // --- 发送 Echo 请求 ---
+        sendEchoButton.onclick = () => {
+             const userInput = messageInput.value || "Echo Me!";
+             const message = {
+                 type: "echo",
+                 data: {
+                     text: userInput,
+                     timestamp: Date.now()
+                 }
+             };
+             sendMessage(message);
+        };
+
+
+        // 页面加载后自动连接
+        connectWebSocket();
+
+    </script>
+</body>
+</html>
