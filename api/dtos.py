@@ -50,17 +50,6 @@ def entities_to_dtos(entities: List[Optional[BaseEntity]]) -> List[FlatEntityDTO
         if dto: dtos.append(dto)
     return dtos
 
-# --- 命令执行请求/响应 (旧) ---
-# 保持不变，因为输入是文本
-class CommandExecutionRequest(BaseModel):
-    text: str = Field(..., description="包含 @Command 指令的文本")
-
-class CommandExecutionResponse(BaseModel):
-    message: str
-    executed_commands: int
-    total_commands: int
-    errors: Optional[str] = None
-
 # --- 原子化 API 请求体 DTOs ---
 
 # --- 定义基本类型和 TypedID ---

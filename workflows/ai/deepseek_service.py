@@ -1,11 +1,11 @@
-# workflow/ai/deepseek_service.py
+# workflows/ai/deepseek_service.py
 import logging
 import os
 from typing import List, Dict, AsyncIterator, Optional
 
 from openai import AsyncOpenAI, AuthenticationError, PermissionDeniedError
 
-from workflow.ai.base import AbstractAIService
+from workflows.ai.base import AbstractAIService
 
 # 使用 AsyncOpenAI
 

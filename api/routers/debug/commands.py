@@ -7,12 +7,12 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request as FastAP
 from pydantic_core import to_jsonable_python  # Pydantic v2 推荐
 
 from api.dependencies import get_game_state
-from api.dtos import CommandExecutionRequest, CommandExecutionResponse
+from api.routers.debug.dtos import CommandExecutionRequest, CommandExecutionResponse
 # 导入 core GameState 和 DTOs/依赖项
 from core.game_state import GameState
 # 导入新的 processing 组件
-from workflow.processing.parser import parse_commands
-from workflow.processing.translator import translate_all_commands  # <--- 签名已改变
+from workflows.processing.parser import parse_commands
+from workflows.processing.translator import translate_all_commands  # <--- 签名已改变
 
 router = APIRouter(tags=["_Internal/Debug - Commands"])
 
