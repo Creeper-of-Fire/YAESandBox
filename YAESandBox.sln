@@ -1,0 +1,22 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.API", "YAESandBox.API\YAESandBox.API.csproj", "{5F5667AF-F238-488E-B467-3A56420023C4}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Core", "YAESandBox.Core\YAESandBox.Core.csproj", "{5C1F0133-D0DB-4777-86F8-438B9DA0DBED}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5F5667AF-F238-488E-B467-3A56420023C4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5F5667AF-F238-488E-B467-3A56420023C4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5F5667AF-F238-488E-B467-3A56420023C4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5F5667AF-F238-488E-B467-3A56420023C4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5C1F0133-D0DB-4777-86F8-438B9DA0DBED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5C1F0133-D0DB-4777-86F8-438B9DA0DBED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5C1F0133-D0DB-4777-86F8-438B9DA0DBED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5C1F0133-D0DB-4777-86F8-438B9DA0DBED}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
