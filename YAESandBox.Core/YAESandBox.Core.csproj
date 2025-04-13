@@ -4,7 +4,7 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>eraSandBox.Core</RootNamespace>
+        <RootNamespace>YAESandBox.Core</RootNamespace>
     </PropertyGroup>
 
 </Project>

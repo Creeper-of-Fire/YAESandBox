@@ -9,59 +9,14 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="048b6c40-f802-4ef3-b108-7f6236b85f6c" name="更改" comment="">
-      <change afterPath="$PROJECT_DIR$/YAESandBox.API/YAESandBox.API.csproj" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/YAESandBox.Core/YAESandBox.Core.csproj" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/codeStyles/codeStyleConfig.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/eraSandBoxPy.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/Project_Default.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/inspectionProfiles/profiles_settings.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/dependencies.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/dtos.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/main.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/notifier.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/routers/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/routers/atomic.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/routers/debug/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/routers/debug/commands.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/routers/debug/dtos.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/routers/debug/game_state_debug.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/routers/entities.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/routers/websocket.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/api/websocket_manager.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/block.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/game_state.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/prompts.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/types.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/core/world_state.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/openapi_frontend.json" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/docs/websocket_protocol.md" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my_little_tooly/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my_little_tooly/filter_openapi.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/my_little_tooly/update_file_headers.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/run_api.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/websocket_test.html" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workflows/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workflows/ai/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workflows/ai/base.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workflows/ai/deepfake_service.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workflows/ai/deepseek_service.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workflows/processing/__init__.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workflows/processing/parser.py" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/workflows/processing/translator.py" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/.idea.eraSandBox/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/.idea.eraSandBox/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
+  <component name="MetaFilesCheckinStateConfiguration" checkMetaFiles="true" />
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 7
 }</component>
@@ -132,13 +87,23 @@
       <updated>1744464698617</updated>
       <workItem from="1744464700287" duration="17000" />
       <workItem from="1744464854960" duration="889000" />
-      <workItem from="1744465901544" duration="360000" />
+      <workItem from="1744465901544" duration="1031000" />
     </task>
+    <task id="LOCAL-00001" summary="change to csharp">
+      <option name="closed" value="true" />
+      <created>1744466334505</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1744466334505</updated>
+    </task>
+    <option name="localTasksCounter" value="2" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
   </component>
+  <component name="UnityCheckinConfiguration" checkUnsavedScenes="true" />
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
       <map>
@@ -152,5 +117,7 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="CLEAR_INITIAL_COMMIT_MESSAGE" value="true" />
+    <MESSAGE value="change to csharp" />
+    <option name="LAST_COMMIT_MESSAGE" value="change to csharp" />
   </component>
 </project>
