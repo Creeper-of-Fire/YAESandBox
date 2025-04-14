@@ -1,9 +1,6 @@
 ﻿using YAESandBox.Core.Action;
+using YAESandBox.Core.State;
 using YAESandBox.Depend;
-
-// For WorldState
-
-namespace YAESandBox.Core.State;
 
 /// <summary>
 /// 表示 Block 的不同状态。
@@ -75,9 +72,9 @@ public class Block
     public WorldState? WsPostUser { get; set; }
 
     /// <summary>
-    /// 一等公民工作流执行指令期间使用的临时世界状态。完成后通常会被丢弃或成为 WsPostAI。
+    /// 一等公民工作流执行指令期间使用的临时世界状态。完成后会被丢弃。
     /// </summary>
-    public WorldState? WsTemp { get; set; }
+    public WorldState? WsTemp { get; set; } // Now created by BlockManager when needed
 
     /// <summary>
     /// 与此 Block 相关的游戏状态设置。
@@ -107,82 +104,88 @@ public class Block
     /// <summary>
     /// (仅父 Block 存储) 触发子 Block 时使用的参数。
     /// </summary>
-    public Dictionary<string, object?> TriggeredChildParams { get; set; } = new();
+    public Dictionary<string, object?> TriggeredChildParams { get; set; } = new(); // Changed name for clarity
 
 
     /// <summary>
-    /// 创建一个新的根 Block。
+    /// 创建一个新的根 Block。(Internal use or specific scenarios)
     /// </summary>
-    /// <param name="blockId">Block 的唯一 ID。</param>
-    /// <param name="initialWorldState">初始的世界状态。</param>
-    /// <param name="initialGameState">初始的游戏状态。</param>
     public Block(string blockId, WorldState initialWorldState, GameState initialGameState)
     {
         if (string.IsNullOrWhiteSpace(blockId))
             throw new ArgumentException("Block ID cannot be null or whitespace.", nameof(blockId));
 
         this.BlockId = blockId;
-        this.ParentBlockId = null; // 根节点没有父节点
-        this.WsInput = initialWorldState ?? throw new ArgumentNullException(nameof(initialWorldState)); // 根节点的输入状态
-        // 对于根节点，PostUser 通常也等于 Input，除非立即有修改
+        this.ParentBlockId = null;
+        this.WsInput = initialWorldState ?? throw new ArgumentNullException(nameof(initialWorldState));
+        // Root node starts with WsPostUser matching WsInput
         this.WsPostUser = initialWorldState.Clone();
         this.GameState = initialGameState ?? throw new ArgumentNullException(nameof(initialGameState));
         this.Metadata["CreationTime"] = DateTime.UtcNow;
-        this.Status = BlockStatus.Idle; // 根节点创建后通常是 Idle
+        this.Status = BlockStatus.Idle;
     }
 
     /// <summary>
-    /// 创建一个新的子 Block。
+    /// 创建一个新的子 Block (由 BlockManager 调用)。
     /// </summary>
-    /// <param name="blockId">新 Block 的唯一 ID。</param>
-    /// <param name="parentBlock">父 Block。</param>
-    /// <param name="triggerParams">触发此子 Block 生成所使用的参数。</param>
-    /// <exception cref="ArgumentNullException"></exception>
-    /// <exception cref="InvalidOperationException">如果父 Block 的 WsPostUser 为 null。</exception>
-    public Block(string blockId, Block parentBlock, Dictionary<string, object?> triggerParams)
+    public Block(string blockId, string parentBlockId, WorldState wsInput, GameState gameState,
+        Dictionary<string, object?> triggerParams)
     {
-        ArgumentNullException.ThrowIfNull(parentBlock);
         if (string.IsNullOrWhiteSpace(blockId))
             throw new ArgumentException("Block ID cannot be null or whitespace.", nameof(blockId));
-        if (parentBlock.WsPostUser == null)
-            throw new InvalidOperationException($"无法创建子 Block，因为父 Block '{parentBlock.BlockId}' 的 WsPostUser 为 null。");
+        if (string.IsNullOrWhiteSpace(parentBlockId))
+            throw new ArgumentException("Parent Block ID cannot be null or whitespace.", nameof(parentBlockId));
+
 
         this.BlockId = blockId;
-        this.ParentBlockId = parentBlock.BlockId;
-        this.WsInput = parentBlock.WsPostUser.Clone(); // 从父节点的最终状态克隆
-        this.GameState = parentBlock.GameState.Clone(); // 从父节点克隆 GameState
+        this.ParentBlockId = parentBlockId;
+        this.WsInput = wsInput ?? throw new ArgumentNullException(nameof(wsInput)); // Cloned by caller
+        this.GameState = gameState ?? throw new ArgumentNullException(nameof(gameState)); // Cloned by caller
         this.Metadata["CreationTime"] = DateTime.UtcNow;
-        this.Status = BlockStatus.Loading; // 新创建的子 Block 通常立即进入 Loading 状态
-
-        // 在父 Block 中记录子 Block 信息和触发参数
-        int childIndex = parentBlock.ChildrenInfo.Count; // 基于当前子节点数量分配索引
-        parentBlock.ChildrenInfo[childIndex] = this.BlockId;
-        parentBlock.TriggeredChildParams = triggerParams ?? new Dictionary<string, object?>();
-        parentBlock.SelectedChildIndex = childIndex; // 默认选中新创建的子节点
+        this.Metadata["TriggerParams"] = triggerParams; // Store trigger params in metadata
+        this.Status = BlockStatus.Loading; // Starts in Loading state
+        // WsTemp, WsPostAI, WsPostUser are initially null and managed by BlockManager
+        this.WsTemp = this.WsInput.Clone(); // CRITICAL: Create WsTemp immediately for interaction during Loading
+        Log.Debug($"子 Block '{blockId}': 已创建 WsTemp (基于 WsInput)。");
     }
 
     /// <summary>
     /// 获取当前应该用于读取或修改的可交互 WorldState。
     /// </summary>
-    /// <returns>目标 WorldState。</returns>
-    /// <exception cref="InvalidOperationException">如果 Block 状态不允许访问可交互状态。</exception>
     public WorldState GetTargetWorldStateForInteraction()
     {
-        // 根据 Block 状态决定返回哪个 WorldState
         switch (this.Status)
         {
             case BlockStatus.Idle:
-            case BlockStatus.Error: // 错误状态下也允许查看最后的用户状态
-                if (this.WsPostUser != null)
+            case BlockStatus.Error:
+                // Prefer WsPostUser, fallback to WsInput
+                if (this.WsPostUser != null) return this.WsPostUser;
+                if (this.WsInput != null)
+                {
+                    Log.Warning($"Block '{this.BlockId}' 处于 {this.Status} 状态，WsPostUser 为 null，返回 WsInput 作为后备。");
+                    // Ensure WsPostUser is created if interaction happens based on WsInput in Idle/Error
+                    this.WsPostUser = this.WsInput.Clone();
                     return this.WsPostUser;
-                Log.Error($"Block '{this.BlockId}' 处于 {this.Status} 状态，但 WsPostUser 为 null，返回 WsInput 作为后备。");
-                return this.WsInput; // 或者抛出更严重的异常？
+                }
+
+                throw new InvalidOperationException(
+                    $"Block '{this.BlockId}' in state {this.Status} has no WsPostUser or WsInput.");
+
 
             case BlockStatus.Loading:
-            case BlockStatus.ResolvingConflict:
-                // 在加载或解决冲突时，外部交互（特别是修改）应该作用于 WsTemp
-                // 如果 WsTemp 还未创建（例如刚开始 Loading），则需要创建它
-                this.WsTemp ??= (this.WsPostAI ?? this.WsInput).Clone();
+            case BlockStatus.ResolvingConflict
+                : // During conflict, interaction might still use WsTemp or be blocked? Let's use WsTemp for reads.
+                if (this.WsTemp == null)
+                {
+                    // Should have been created in constructor or by manager, but as a fallback:
+                    Log.Warning(
+                        $"Block '{this.BlockId}' in state {this.Status} has null WsTemp. Attempting to create from WsInput.");
+                    if (this.WsInput == null)
+                        throw new InvalidOperationException(
+                            $"Block '{this.BlockId}' in state {this.Status} has no WsInput to create WsTemp from.");
+                    this.WsTemp = this.WsInput.Clone();
+                }
+
                 return this.WsTemp;
 
             default:

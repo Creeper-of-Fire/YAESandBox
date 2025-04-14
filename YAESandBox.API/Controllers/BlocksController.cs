@@ -6,14 +6,9 @@ namespace YAESandBox.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")] // /api/blocks
-public class BlocksController : ControllerBase
+public class BlocksController(BlockManager blockManager) : ControllerBase
 {
-    private readonly BlockManager _blockManager; // Inject BlockManager
-
-    public BlocksController(BlockManager blockManager)
-    {
-        _blockManager = blockManager;
-    }
+    private BlockManager blockManager { get; } = blockManager;
 
     /// <summary>
     /// 获取 Block 树的摘要信息（例如用于概览）。
@@ -24,7 +19,7 @@ public class BlocksController : ControllerBase
     public async Task<IActionResult> GetBlocks() // 参数: [FromQuery] int page = 1, [FromQuery] int pageSize = 20
     {
         // 调用 BlockManager 获取数据
-        var summaries = await _blockManager.GetAllBlockSummariesAsync(); // 实现这个方法
+        var summaries = await this.blockManager.GetAllBlockSummariesAsync(); // 实现这个方法
         return Ok(summaries);
     }
 
@@ -36,7 +31,7 @@ public class BlocksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetBlockDetail(string blockId)
     {
-        var detail = await _blockManager.GetBlockDetailDtoAsync(blockId); // 实现这个方法
+        var detail = await this.blockManager.GetBlockDetailDtoAsync(blockId); // 实现这个方法
         if (detail == null)
         {
             return NotFound($"Block with ID '{blockId}' not found.");
@@ -53,7 +48,7 @@ public class BlocksController : ControllerBase
     [ProducesResponseType(StatusCodes.Status400BadRequest)] // Changed from 400, now explicitly handles invalid index
     public async Task<IActionResult> SelectChild(string blockId, [FromBody] SelectChildRequestDto request)
     {
-        var (result, message) = await _blockManager.SelectChildBlockAsync(blockId, request.SelectedChildIndex);
+        var (result, message) = await this.blockManager.SelectChildBlockAsync(blockId, request.SelectedChildIndex);
 
         return result switch
         {

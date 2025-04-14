@@ -1,10 +1,12 @@
-﻿using System;
+﻿// --- START OF FILE BlockManager.cs ---
+
+using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Nito.AsyncEx;
-using YAESandBox.API.Controllers; // For AsyncLock
+using YAESandBox.API.Controllers; // For AsyncLock, UpdateResult
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
@@ -28,88 +30,117 @@ public interface IBlockManager
     Task<BaseEntity?> GetEntityDetailAsync(string blockId, TypedID entityRef); // 返回 Core 对象供 Controller 映射
     Task<AtomicExecutionResult> EnqueueOrExecuteAtomicOperationsAsync(string blockId, List<AtomicOperation> operations);
 
-    Task<bool> SetBlockStatusAsync(string blockId, BlockStatus newStatus, WorldState? resultingWsPostAI = null,
-        WorldState? resultingWsPostUser = null); // Workflow 调用
+    // --- Workflow Interaction Methods ---
+    /// <summary>
+    /// 为新的工作流创建一个子 Block。
+    /// </summary>
+    /// <param name="parentBlockId">父 Block ID。</param>
+    /// <param name="triggerParams">触发工作流的参数。</param>
+    /// <returns>新创建的子 Block ID，如果失败则返回 null。</returns>
+    Task<string?> CreateChildBlockForWorkflowAsync(string parentBlockId, Dictionary<string, object?> triggerParams);
 
-    Task<List<AtomicOperation>> GetAndClearPendingCommandsAsync(string blockId); // Workflow 调用
-    Task ApplyPendingCommandsAsync(string blockId, List<AtomicOperation> resolvedCommands); // 用于冲突解决后
+    /// <summary>
+    /// 处理工作流执行完成后的回调。
+    /// </summary>
+    /// <param name="blockId">完成的工作流对应的 Block ID。</param>
+    /// <param name="success">工作流是否成功执行。</param>
+    /// <param name="rawText">工作流生成的原始文本内容。</param>
+    /// <param name="firstPartyCommands">工作流生成的原子指令。</param>
+    /// <param name="outputVariables">工作流输出的变量 (可选，用于元数据等)。</param>
+    Task HandleWorkflowCompletionAsync(string blockId, bool success, string rawText,
+        List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables);
 
-    Task AddChildBlockRecordAsync(string parentBlockId, string childBlockId,
-        Dictionary<string, object?> triggerParams); // Workflow 调用
+    /// <summary>
+    /// 应用用户解决冲突后提交的指令列表。
+    /// </summary>
+    /// <param name="blockId">需要应用指令的 Block ID。</param>
+    /// <param name="resolvedCommands">解决冲突后的指令列表。</param>
+    Task ApplyResolvedCommandsAsync(string blockId, List<AtomicOperation> resolvedCommands);
 
-    Task<WorldState?> GetWsInputForNewBlockAsync(string parentBlockId); // Workflow 调用
-    Task<GameState?> GetGsForNewBlockAsync(string parentBlockId); // Workflow 调用
+    // --- Internal Helper (Potentially needed by WorkflowService or internally) ---
+    // Task<List<AtomicOperation>> GetAndClearPendingCommandsAsync(string blockId); // Made internal or removed if handled within HandleWorkflowCompletionAsync
+    // Task<bool> SetBlockStatusAsync(string blockId, BlockStatus newStatus, ...); // Made internal or controlled via HandleWorkflowCompletionAsync/ApplyResolvedCommandsAsync
+
+    // Kept for potential direct use or testing, though workflow usually clones
+    Task<WorldState?> GetWsInputForNewBlockAsync(string parentBlockId);
+    Task<GameState?> GetGsForNewBlockAsync(string parentBlockId);
 }
 
 public class BlockManager : IBlockManager
 {
-    // 使用 ConcurrentDictionary 保证基本的读写线程安全
-    private readonly ConcurrentDictionary<string, Block> _blocks = new();
+    private ConcurrentDictionary<string, Block> blocks { get; } = new();
+    private ConcurrentDictionary<string, AsyncLock> blockLocks { get; } = new();
+    private INotifierService notifierService { get; }
 
-    // 使用 AsyncLock 保护需要原子性的复杂操作 (如创建子 Block 并更新父 Block)
-    private readonly ConcurrentDictionary<string, AsyncLock> _blockLocks = new(); // 每个 Block 一个锁
-
-    private readonly INotifierService _notifierService;
-    // private readonly IAtomicExecutorService _atomicExecutor; // 如果拆分执行逻辑
-
-    public BlockManager(INotifierService notifierService /*, IAtomicExecutorService atomicExecutor */)
+    public BlockManager(INotifierService notifierService)
     {
-        _notifierService = notifierService;
-        // _atomicExecutor = atomicExecutor;
-
-        // TODO: 初始化时可能需要从持久化存储加载 Blocks
-        // LoadBlocksFromPersistenceAsync().GetAwaiter().GetResult();
-        if (_blocks.IsEmpty)
+        this.notifierService = notifierService;
+        // ... (初始化和加载逻辑不变) ...
+        if (this.blocks.IsEmpty)
         {
             Log.Info("BlockManager 初始化：没有从持久化存储加载任何 Block，将创建默认根 Block。");
-            // 如果没有加载到任何 Block，创建一个默认的根 Block
             CreateDefaultRootBlockIfNeededAsync().GetAwaiter().GetResult();
         }
         else
         {
-            Log.Info($"BlockManager 初始化：从持久化存储加载了 {_blocks.Count} 个 Block。");
+            Log.Info($"BlockManager 初始化：从持久化存储加载了 {this.blocks.Count} 个 Block。");
         }
     }
 
     private async Task CreateDefaultRootBlockIfNeededAsync()
     {
-        if (_blocks.IsEmpty)
+        if (this.blocks.IsEmpty)
         {
-            var rootId = "root_0";
-            Log.Warning($"未找到任何 Block，创建默认根 Block: {rootId}");
-            var initialWs = new WorldState(); // 创建一个空的 WorldState
-            var initialGs = new GameState(); // 创建一个空的 GameState
-            initialGs["FocusCharacter"] = "player_default"; // 示例 GameState 设置
-            await CreateRootBlockAsync(initialWs, initialGs);
+            var rootId = "root_default"; // Use a consistent default ID for simplicity
+            if (!this.blocks.ContainsKey(rootId)) // Check if it somehow exists
+            {
+                Log.Warning($"未找到任何 Block，创建默认根 Block: {rootId}");
+                var initialWs = new WorldState();
+                var initialGs = new GameState();
+                initialGs["FocusCharacter"] = "player_default";
+                // Manually create and add the root block to bypass CreateRootBlockAsync's Guid generation
+                var rootBlock = new Block(rootId, initialWorldState: initialWs, initialGameState: initialGs);
+                rootBlock.Metadata["IsRoot"] = true;
+                if (this.blocks.TryAdd(rootId, rootBlock))
+                {
+                    Log.Info($"默认根 Block '{rootId}' 已创建并添加。");
+                    await this.notifierService.NotifyBlockStatusUpdateAsync(rootId, rootBlock.Status);
+                    // TODO: Persist
+                }
+                else
+                {
+                    Log.Error($"添加默认根 Block '{rootId}' 失败。");
+                }
+            }
         }
     }
 
+
     private AsyncLock GetLockForBlock(string blockId)
     {
-        // 获取或创建该 Block ID 对应的锁
-        return _blockLocks.GetOrAdd(blockId, _ => new AsyncLock());
+        return this.blockLocks.GetOrAdd(blockId, _ => new AsyncLock());
     }
+
+    // --- Standard Methods (mostly unchanged, review GetTargetWorldStateForInteraction) ---
 
     public async Task<string> CreateRootBlockAsync(WorldState initialWorldState, GameState initialGameState)
     {
-        var blockId = $"root_{Guid.NewGuid().ToString("N")[..8]}"; // 更唯一的根 ID
+        var blockId = $"root_{Guid.NewGuid().ToString("N")[..8]}";
         var rootBlock = new Block(blockId, initialWorldState, initialGameState);
         rootBlock.Metadata["IsRoot"] = true;
 
-        // 使用锁确保添加操作的原子性（虽然对于根节点并发可能性小）
         using (await GetLockForBlock(blockId).LockAsync())
         {
-            if (_blocks.TryAdd(blockId, rootBlock))
+            if (this.blocks.TryAdd(blockId, rootBlock))
             {
                 Log.Info($"根 Block '{blockId}' 已创建并添加。");
-                await _notifierService.NotifyBlockStatusUpdateAsync(blockId, rootBlock.Status);
+                await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, rootBlock.Status);
                 // TODO: 持久化存储新创建的 Block
                 return blockId;
             }
             else
             {
                 Log.Error($"尝试创建根 Block '{blockId}' 失败，可能已存在同名 Block。");
-                // 理论上 Guid 不会重复，但以防万一
                 throw new InvalidOperationException($"Failed to add root block '{blockId}'. It might already exist.");
             }
         }
@@ -117,8 +148,20 @@ public class BlockManager : IBlockManager
 
     public Task<Block?> GetBlockAsync(string blockId)
     {
-        _blocks.TryGetValue(blockId, out var block);
-        return Task.FromResult(block); // 直接返回，ConcurrentDictionary 的读取是线程安全的
+        Log.Debug($"GetBlockAsync: 尝试获取 Block ID: '{blockId}'"); // <-- 添加日志
+        this.blocks.TryGetValue(blockId, out var block);
+        if (block == null)
+        {
+            Log.Warning($"GetBlockAsync: 未在 _blocks 字典中找到 Block ID: '{blockId}'。当前字典大小: {this.blocks.Count}"); // <-- 添加日志
+            // 可以选择性地打印出所有 keys 来调试
+            // var keys = string.Join(", ", _blocks.Keys);
+            // Log.Debug($"GetBlockAsync: 当前所有 Block IDs: [{keys}]");
+        }
+        else
+        {
+            Log.Debug($"GetBlockAsync: 成功找到 Block ID: '{blockId}'，状态为: {block.Status}"); // <-- 添加日志
+        }
+        return Task.FromResult(block);
     }
 
     public async Task<BlockSummaryDto?> GetBlockSummaryDtoAsync(string blockId)
@@ -129,8 +172,11 @@ public class BlockManager : IBlockManager
 
     public Task<IEnumerable<BlockSummaryDto>> GetAllBlockSummariesAsync()
     {
-        // ConcurrentDictionary 的 Values 获取快照，是线程安全的
-        var summaries = _blocks.Values.Select(MapToSummaryDto).OrderBy(b => (DateTime?)b.CreationTime).ToList();
+        // Order by CreationTime from Metadata if available
+        var summaries = this.blocks.Values
+            .Select(MapToSummaryDto)
+            .OrderBy(b => b.CreationTime) // Assuming CreationTime is mapped
+            .ToList();
         return Task.FromResult<IEnumerable<BlockSummaryDto>>(summaries);
     }
 
@@ -143,11 +189,11 @@ public class BlockManager : IBlockManager
     public async Task<(UpdateResult result, string? message)> SelectChildBlockAsync(string blockId,
         int selectedChildIndex)
     {
+        // (Logic unchanged)
         using (await GetLockForBlock(blockId).LockAsync())
         {
-            if (!_blocks.TryGetValue(blockId, out var block))
+            if (!this.blocks.TryGetValue(blockId, out var block))
             {
-                // 返回明确的 NotFound 结果
                 return (UpdateResult.NotFound, $"Block with ID '{blockId}' not found.");
             }
 
@@ -156,75 +202,77 @@ public class BlockManager : IBlockManager
                 block.SelectedChildIndex = selectedChildIndex;
                 Log.Debug($"Block '{blockId}': Selected child index set to {selectedChildIndex}.");
                 // TODO: 持久化 Block 的变更
-                // 返回成功结果
                 return (UpdateResult.Success, null);
             }
             else
             {
-                Log.Warning(
-                    $"Block '{blockId}': Invalid child index {selectedChildIndex} provided. Valid range: 0 to {block.ChildrenInfo.Count - 1}.");
-                // 返回明确的无效操作结果 (或者可以认为是 Conflict/BadRequest?)
-                // 使用 InvalidOperation 可能更贴切内部逻辑错误，BadRequest 更符合 API 层面
-                // 暂定用 InvalidOperation，让 Controller 转为 BadRequest
-                return (UpdateResult.InvalidOperation,
-                    $"Invalid child index '{selectedChildIndex}'. Valid range: 0 to {block.ChildrenInfo.Count - 1}.");
+                string validRange = block.ChildrenInfo.Count == 0
+                    ? "N/A (no children)"
+                    : $"0 to {block.ChildrenInfo.Count - 1}";
+                string msg = $"Invalid child index '{selectedChildIndex}'. Valid range: {validRange}.";
+                Log.Warning($"Block '{blockId}': {msg}");
+                return (UpdateResult.InvalidOperation, msg);
             }
         }
     }
 
-
     public async Task<GameState?> GetBlockGameStateAsync(string blockId)
     {
         var block = await GetBlockAsync(blockId);
-        // GameState 本身是引用类型，返回的是引用，但 Clone() 方法可以获取副本
-        // 直接返回引用允许修改，如果需要只读，应返回 Clone()
-        return block?.GameState; // 直接返回引用
+        return block?.GameState;
     }
 
     public async Task<UpdateResult> UpdateBlockGameStateAsync(string blockId,
         Dictionary<string, object?> settingsToUpdate)
     {
+        // (Logic mostly unchanged, check status carefully)
         using (await GetLockForBlock(blockId).LockAsync())
         {
-            if (!_blocks.TryGetValue(blockId, out var block))
+            if (!this.blocks.TryGetValue(blockId, out var block))
             {
                 return UpdateResult.NotFound;
             }
 
-            // 检查状态是否允许修改 GameState
-            if (block.Status == BlockStatus.Loading || block.Status == BlockStatus.ResolvingConflict)
+            // Allow GameState changes unless actively loading or resolving (could be debated)
+            if (block.Status == BlockStatus.Loading /*|| block.Status == BlockStatus.ResolvingConflict */
+               ) // Allow during conflict? Maybe.
             {
                 Log.Warning($"尝试在 Block '{blockId}' 处于 '{block.Status}' 状态时修改 GameState，已拒绝。");
-                return UpdateResult.Conflict; // 不允许在加载或冲突解决期间修改
+                return UpdateResult.Conflict;
             }
 
             foreach (var kvp in settingsToUpdate)
             {
-                block.GameState[kvp.Key] = kvp.Value; // 直接修改 GameState
+                block.GameState[kvp.Key] = kvp.Value;
             }
 
             Log.Debug($"Block '{blockId}': GameState 已更新。");
-            // TODO: 持久化 Block (因为 GameState 变了)
-            // 注意：此变更通常不直接影响 WorldState，可能不需要 NotifyStateUpdateAsync
+            // TODO: 持久化 Block
             return UpdateResult.Success;
         }
     }
 
-
     public async Task<IEnumerable<BaseEntity>?> GetAllEntitiesSummaryAsync(string blockId)
     {
+        // Uses GetTargetWorldStateForInteraction, which handles status checks
         var block = await GetBlockAsync(blockId);
         if (block == null) return null;
 
         try
         {
             var targetWs = block.GetTargetWorldStateForInteraction();
-            // 返回所有未销毁的实体
+            // Return all non-destroyed entities
             return targetWs.Items.Values.Cast<BaseEntity>()
                 .Concat(targetWs.Characters.Values)
                 .Concat(targetWs.Places.Values)
                 .Where(e => !e.IsDestroyed)
-                .ToList(); // 创建副本
+                .ToList(); // Create a copy
+        }
+        catch (InvalidOperationException ex) // Catch specific exception from GetTargetWorldState...
+        {
+            Log.Warning(
+                $"Block '{blockId}': Cannot get entities summary in current state ({block.Status}): {ex.Message}");
+            return null; // Or return empty list?
         }
         catch (Exception ex)
         {
@@ -235,13 +283,19 @@ public class BlockManager : IBlockManager
 
     public async Task<BaseEntity?> GetEntityDetailAsync(string blockId, TypedID entityRef)
     {
+        // Uses GetTargetWorldStateForInteraction
         var block = await GetBlockAsync(blockId);
         if (block == null) return null;
 
         try
         {
             var targetWs = block.GetTargetWorldStateForInteraction();
-            return targetWs.FindEntity(entityRef, includeDestroyed: false); // 查找未销毁的
+            return targetWs.FindEntity(entityRef, includeDestroyed: false); // Find non-destroyed
+        }
+        catch (InvalidOperationException ex)
+        {
+            Log.Warning($"Block '{blockId}': Cannot get entity detail in current state ({block.Status}): {ex.Message}");
+            return null;
         }
         catch (Exception ex)
         {
@@ -253,10 +307,9 @@ public class BlockManager : IBlockManager
     public async Task<AtomicExecutionResult> EnqueueOrExecuteAtomicOperationsAsync(string blockId,
         List<AtomicOperation> operations)
     {
-        // 使用锁确保状态检查和操作执行/入队的原子性
         using (await GetLockForBlock(blockId).LockAsync())
         {
-            if (!_blocks.TryGetValue(blockId, out var block))
+            if (!this.blocks.TryGetValue(blockId, out var block))
             {
                 return AtomicExecutionResult.NotFound;
             }
@@ -264,18 +317,35 @@ public class BlockManager : IBlockManager
             switch (block.Status)
             {
                 case BlockStatus.Idle:
-                case BlockStatus.Error: // 允许在错误状态下尝试修改（可能用于修复）？ 暂定允许
+                case BlockStatus.Error: // Allow modifications in Error state
                     try
                     {
-                        var targetWs = block.GetTargetWorldStateForInteraction(); // 获取 WsPostUser
-                        var changedEntityIds = ExecuteAtomicOperations(targetWs, operations); // 直接执行
-                        Log.Debug($"Block '{blockId}' ({block.Status}): 原子操作已执行，影响 {changedEntityIds.Count} 个实体。");
-                        // TODO: 持久化 Block (因为 WsPostUser 变了)
+                        // Get WsPostUser (or WsInput as fallback)
+                        var targetWs = block.WsPostUser ?? block.WsInput;
+                        if (targetWs == null)
+                        {
+                            Log.Error(
+                                $"Block '{blockId}' in state {block.Status} has no WsPostUser or WsInput to modify.");
+                            return AtomicExecutionResult.Error; // Cannot proceed
+                        }
 
-                        // 通知状态变更
+                        // Ensure WsPostUser exists if we modify based on WsInput
+                        if (block.WsPostUser == null)
+                        {
+                            block.WsPostUser = targetWs.Clone();
+                            targetWs = block.WsPostUser; // Modify the new WsPostUser
+                            Log.Debug($"Block '{blockId}': Cloned WsInput to create WsPostUser for modification.");
+                        }
+
+
+                        var changedEntityIds = ExecuteAtomicOperations(targetWs, operations);
+                        Log.Debug(
+                            $"Block '{blockId}' ({block.Status}): 原子操作已执行到 WsPostUser，影响 {changedEntityIds.Count} 个实体。");
+                        // TODO: 持久化 Block (WsPostUser changed)
+
                         if (changedEntityIds.Count > 0)
                         {
-                            await _notifierService.NotifyStateUpdateAsync(blockId, changedEntityIds);
+                            await this.notifierService.NotifyStateUpdateAsync(blockId, changedEntityIds);
                         }
 
                         return AtomicExecutionResult.Executed;
@@ -283,187 +353,359 @@ public class BlockManager : IBlockManager
                     catch (Exception ex)
                     {
                         Log.Error(ex, $"Block '{blockId}': 执行原子操作时出错: {ex.Message}");
-                        // 可以考虑将 Block 状态设为 Error
-                        // await SetBlockStatusAsync(blockId, BlockStatus.Error);
+                        // Consider setting status to Error?
+                        // await SetBlockStatusInternalAsync(blockId, BlockStatus.Error); // If SetBlockStatusInternalAsync exists
                         return AtomicExecutionResult.Error;
                     }
 
                 case BlockStatus.Loading:
-                case BlockStatus.ResolvingConflict: // 在解决冲突状态下，新的修改也应排队
-                    block.PendingUserCommands.AddRange(operations); // 暂存指令
+                    // 1. Queue the command
+                    block.PendingUserCommands.AddRange(operations);
                     Log.Debug(
                         $"Block '{blockId}' ({block.Status}): 原子操作已暂存 ({operations.Count} 条)。当前暂存总数: {block.PendingUserCommands.Count}");
-                    // TODO: 是否需要持久化暂存的指令？看需求
+
+                    // 2. Apply to WsTemp for immediate feedback (best effort)
+                    if (block.WsTemp != null)
+                    {
+                        try
+                        {
+                            var changedTempIds = ExecuteAtomicOperations(block.WsTemp, operations);
+                            Log.Debug(
+                                $"Block '{blockId}' ({block.Status}): 原子操作已尝试应用到 WsTemp，影响 {changedTempIds.Count} 个实体 (仅用于显示)。");
+                            // TODO: Persist pending commands? Maybe not.
+
+                            // Notify that the *temporary* state changed
+                            if (changedTempIds.Count > 0)
+                            {
+                                // Send a specific signal? Or just the standard one? Standard might be confusing.
+                                // Let's stick to the standard one for now, front-end needs to know it's temporary.
+                                await this.notifierService.NotifyStateUpdateAsync(blockId, changedTempIds);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.Error(ex, $"Block '{blockId}': 应用原子操作到 WsTemp 时出错 (已忽略): {ex.Message}");
+                        }
+                    }
+                    else
+                    {
+                        Log.Warning(
+                            $"Block '{blockId}' ({block.Status}): WsTemp is null, cannot apply queued operations for immediate feedback.");
+                    }
+
                     return AtomicExecutionResult.Queued;
+
+                case BlockStatus.ResolvingConflict:
+                    // Queue commands during conflict resolution as well
+                    block.PendingUserCommands.AddRange(operations);
+                    Log.Debug(
+                        $"Block '{blockId}' ({block.Status}): 原子操作已暂存 ({operations.Count} 条), Block 正在解决冲突。当前暂存总数: {block.PendingUserCommands.Count}");
+                    // Do NOT apply to WsTemp here, as the base state is uncertain until resolved.
+                    return AtomicExecutionResult.Queued; // Or return ConflictState? Queued seems more accurate.
 
                 default:
                     Log.Error($"Block '{blockId}': 处于未知的状态 '{block.Status}'，无法处理原子操作。");
-                    return AtomicExecutionResult.Error; // 或者更特定的状态码
+                    return AtomicExecutionResult.Error;
             }
         }
     }
 
-    /// <summary>
-    /// 由工作流服务调用，以更新 Block 的状态。
-    /// </summary>
-    public async Task<bool> SetBlockStatusAsync(string blockId, BlockStatus newStatus,
-        WorldState? resultingWsPostAI = null, WorldState? resultingWsPostUser = null)
+
+    // --- Workflow Interaction Methods ---
+
+    public async Task<string?> CreateChildBlockForWorkflowAsync(string parentBlockId,
+        Dictionary<string, object?> triggerParams)
     {
-        using (await GetLockForBlock(blockId).LockAsync())
+        string newBlockId = $"blk_{Guid.NewGuid().ToString("N")[..8]}"; // Generate ID
+
+        using (await GetLockForBlock(parentBlockId).LockAsync()) // Lock parent to add child info
         {
-            if (!_blocks.TryGetValue(blockId, out var block))
+            // 1. Get Parent Block
+            if (!this.blocks.TryGetValue(parentBlockId, out var parentBlock))
             {
-                Log.Error($"尝试设置不存在的 Block '{blockId}' 的状态为 {newStatus}。");
-                return false;
+                Log.Error($"Cannot create child block: Parent block '{parentBlockId}' not found.");
+                return null;
             }
 
-            var oldStatus = block.Status;
-            if (oldStatus == newStatus) return true; // 状态未改变
-
-            block.Status = newStatus;
-            if (resultingWsPostAI != null) block.WsPostAI = resultingWsPostAI;
-            if (resultingWsPostUser != null) block.WsPostUser = resultingWsPostUser;
-
-            // 根据状态转换清理 WsTemp
-            if (newStatus == BlockStatus.Idle || newStatus == BlockStatus.Error)
+            // 2. Check Parent Status (cannot create child if parent is loading/error?)
+            if (parentBlock.Status == BlockStatus.Loading || parentBlock.Status == BlockStatus.Error ||
+                parentBlock.Status == BlockStatus.ResolvingConflict)
             {
-                block.WsTemp = null; // 清理临时状态
+                Log.Error(
+                    $"Cannot create child block: Parent block '{parentBlockId}' is in status {parentBlock.Status}.");
+                return null;
             }
 
-            Log.Info($"Block '{blockId}': 状态从 {oldStatus} 变为 {newStatus}。");
-            // TODO: 持久化 Block 状态和可能更新的 WorldState
 
-            // 广播状态更新
-            await _notifierService.NotifyBlockStatusUpdateAsync(blockId, newStatus);
-            return true;
-        }
-    }
+            // 3. Ensure parent has a final state (WsPostUser)
+            if (parentBlock.WsPostUser == null)
+            {
+                Log.Error($"Cannot create child block: Parent block '{parentBlockId}' has no WsPostUser state.");
+                // Attempt recovery? Or just fail. Let's fail for now.
+                // Maybe clone WsInput if WsPostUser is null?
+                if (parentBlock.WsInput == null)
+                {
+                    Log.Error($"Cannot create child block: Parent block '{parentBlockId}' also has no WsInput state.");
+                    return null;
+                }
 
-    /// <summary>
-    /// 由工作流服务调用，获取并清除指定 Block 的暂存用户指令。
-    /// </summary>
-    public async Task<List<AtomicOperation>> GetAndClearPendingCommandsAsync(string blockId)
-    {
-        // 获取并清除是原子操作，需要锁
-        using (await GetLockForBlock(blockId).LockAsync())
-        {
-            if (_blocks.TryGetValue(blockId, out var block))
-            {
-                var commands = new List<AtomicOperation>(block.PendingUserCommands);
-                block.PendingUserCommands.Clear();
-                Log.Debug($"Block '{blockId}': 获取并清除了 {commands.Count} 条暂存指令。");
-                // TODO: 如果暂存指令被持久化了，这里需要更新持久化存储
-                return commands;
-            }
-            else
-            {
-                Log.Warning($"尝试获取不存在的 Block '{blockId}' 的暂存指令。");
-                return new List<AtomicOperation>(); // 返回空列表
-            }
-        }
-    }
-
-    /// <summary>
-    /// 由冲突解决流程调用，将解决后的指令应用到 WsPostAI (或 WsInput) 上，
-    /// 并最终更新 WsPostUser。
-    /// </summary>
-    public async Task ApplyPendingCommandsAsync(string blockId, List<AtomicOperation> resolvedCommands)
-    {
-        using (await GetLockForBlock(blockId).LockAsync())
-        {
-            if (!_blocks.TryGetValue(blockId, out var block))
-            {
-                Log.Error($"尝试为不存在的 Block '{blockId}' 应用已解决的指令。");
-                return;
-            }
-
-            if (block.Status != BlockStatus.ResolvingConflict &&
-                block.Status != BlockStatus.Loading) // 可能从 Loading 直接解决
-            {
                 Log.Warning(
-                    $"尝试在 Block '{blockId}' 处于 '{block.Status}' 状态时应用已解决的指令，已忽略。预期状态: ResolvingConflict 或 Loading。");
+                    $"Parent block '{parentBlockId}' WsPostUser is null, using WsInput as base for child '{newBlockId}'.");
+                parentBlock.WsPostUser = parentBlock.WsInput.Clone(); // Create it if missing
+            }
+
+            // Clone parent's state for the new block's input
+            WorldState wsInputClone = parentBlock.WsPostUser.Clone();
+            GameState gsClone = parentBlock.GameState.Clone();
+
+
+            // 4. Create the new Block instance (use internal constructor or dedicated method)
+            var newBlock =
+                new Block(newBlockId, parentBlockId, wsInputClone, gsClone, triggerParams); // Use constructor overload
+
+            // 5. Add Child Info to Parent
+            int childIndex = parentBlock.ChildrenInfo.Count;
+            parentBlock.ChildrenInfo[childIndex] = newBlockId;
+            parentBlock.TriggeredChildParams[newBlockId] =
+                triggerParams ?? new Dictionary<string, object?>(); // Store params associated with the child ID
+            parentBlock.SelectedChildIndex = childIndex; // Select the new child
+            Log.Debug($"父 Block '{parentBlockId}': 已添加子 Block '{newBlockId}' 记录，索引为 {childIndex}。");
+            // TODO: Persist Parent Block changes
+
+
+            // 6. Add New Block to Manager's Dictionary (Lock the *new* block ID)
+            using (await GetLockForBlock(newBlockId).LockAsync())
+            {
+                if (this.blocks.TryAdd(newBlockId, newBlock))
+                {
+                    Log.Info($"新 Block '{newBlockId}' 已创建并添加，状态: {newBlock.Status}。");
+                    // TODO: Persist New Block
+                }
+                else
+                {
+                    Log.Error($"添加新 Block '{newBlockId}' 失败，可能已存在同名 Block。");
+                    // Clean up parent's child info? Complex rollback needed. For now, log error.
+                    parentBlock.ChildrenInfo.Remove(childIndex); // Attempt cleanup
+                    parentBlock.TriggeredChildParams.Remove(newBlockId);
+                    // Reset selection? Maybe select last child or -1
+                    parentBlock.SelectedChildIndex =
+                        parentBlock.ChildrenInfo.Count > 0 ? parentBlock.ChildrenInfo.Keys.Max() : -1;
+
+                    return null; // Indicate failure
+                }
+            }
+
+            // 7. Notify about the new block and parent update
+            await this.notifierService.NotifyBlockStatusUpdateAsync(newBlockId, newBlock.Status);
+            // Maybe notify about parent's selection change? Or batch updates.
+
+            return newBlockId;
+        }
+    }
+
+    public async Task HandleWorkflowCompletionAsync(string blockId, bool success, string rawText,
+        List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables)
+    {
+        using (await GetLockForBlock(blockId).LockAsync())
+        {
+            if (!this.blocks.TryGetValue(blockId, out var block))
+            {
+                Log.Error($"处理工作流完成失败: Block '{blockId}' 未找到。");
                 return;
             }
+
+            if (block.Status != BlockStatus.Loading)
+            {
+                Log.Warning($"收到 Block '{blockId}' 的工作流完成回调，但其状态为 {block.Status} (非 Loading)。可能重复或过时。");
+                // Decide whether to proceed or ignore. Let's ignore for now.
+                return;
+            }
+
+            // Store output variables in metadata?
+            block.Metadata["WorkflowOutputVariables"] = outputVariables;
+
+
+            if (success)
+            {
+                Log.Info($"Block '{blockId}': 工作流成功完成。准备处理指令和状态。");
+                // 1. Get pending user commands accumulated during loading
+                var pendingUserCommands = new List<AtomicOperation>(block.PendingUserCommands);
+                block.PendingUserCommands.Clear();
+                Log.Debug($"Block '{blockId}': 获取了 {pendingUserCommands.Count} 条暂存的用户指令。");
+
+                // 2. Conflict Resolution (Placeholder: just combine, user commands after AI)
+                var resolvedCommands = new List<AtomicOperation>(firstPartyCommands);
+                resolvedCommands.AddRange(pendingUserCommands); // Simple append strategy
+                Log.Debug(
+                    $"Block '{blockId}': 合并了 {firstPartyCommands.Count} 条 AI 指令和 {pendingUserCommands.Count} 条用户指令，共 {resolvedCommands.Count} 条。");
+                // TODO: Implement real conflict detection and resolution strategy.
+                // If conflicts detected -> block.Status = ResolvingConflict; notify; return;
+
+                // 3. Apply resolved commands to WsPostAI (based on WsInput)
+                try
+                {
+                    if (block.WsInput == null)
+                    {
+                        Log.Error($"Block '{blockId}': WsInput is null, cannot generate WsPostAI.");
+                        await SetBlockStatusInternalAsync(blockId, BlockStatus.Error, rawText,
+                            "Internal Error: WsInput missing.");
+                        return;
+                    }
+
+                    block.WsPostAI = block.WsInput.Clone(); // Start from input state
+                    var changedAiIds = ExecuteAtomicOperations(block.WsPostAI, resolvedCommands);
+                    
+                    // *** ADD DETAILED LOGGING HERE ***
+                    Log.Debug($"Block '{blockId}': Post ExecuteAtomicOperations on WsPostAI.");
+                    Log.Debug($"  WsPostAI - Items: {block.WsPostAI.Items.Count}, Characters: {block.WsPostAI.Characters.Count}, Places: {block.WsPostAI.Places.Count}");
+                    var knight = block.WsPostAI.FindEntityById("clumsy-knight", EntityType.Character);
+                    Log.Debug($"  WsPostAI - Found clumsy-knight? {(knight != null ? "Yes" : "No")}");
+                    var entrance = block.WsPostAI.FindEntityById("castle-entrance", EntityType.Place);
+                    Log.Debug($"  WsPostAI - Found castle-entrance? {(entrance != null ? "Yes" : "No")}");
+                    if (entrance != null)
+                    {
+                        Log.Debug($"  WsPostAI - castle-entrance description: '{entrance.GetAttribute("description")?.ToString() ?? "N/A"}'");
+                    }
+                    // *** END OF ADDED LOGGING ***
+                    
+                    Log.Debug($"Block '{blockId}': 已解决的指令已应用到 WsPostAI，影响 {changedAiIds.Count} 个实体。");
+
+                    // 4. Create WsPostUser based on WsPostAI
+                    block.WsPostUser = block.WsPostAI.Clone();
+                    Log.Debug($"Block '{blockId}': 已基于 WsPostAI 创建 WsPostUser。");
+
+                    // 5. Update Block Content and finalize state
+                    block.BlockContent = rawText;
+                    block.WsTemp = null; // Discard temporary state
+                    block.Status = BlockStatus.Idle; // Set to Idle
+                    Log.Info($"Block '{blockId}': 状态设置为 Idle。");
+
+                    // TODO: Persist Block (Status, Content, WsPostAI, WsPostUser)
+
+                    // 6. Notify status and state update
+                    await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, BlockStatus.Idle);
+                    if (changedAiIds.Count > 0) // Notify based on changes applied to WsPostAI/WsPostUser
+                    {
+                        await this.notifierService.NotifyStateUpdateAsync(blockId, changedAiIds);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log.Error(ex, $"Block '{blockId}': 应用已解决指令时出错: {ex.Message}");
+                    await SetBlockStatusInternalAsync(blockId, BlockStatus.Error, rawText,
+                        $"Error applying commands: {ex.Message}");
+                }
+            }
+            else // Workflow failed
+            {
+                Log.Error($"Block '{blockId}': 工作流执行失败。");
+                await SetBlockStatusInternalAsync(blockId, BlockStatus.Error, rawText, "Workflow execution failed.");
+            }
+        }
+    }
+
+
+    public async Task ApplyResolvedCommandsAsync(string blockId, List<AtomicOperation> resolvedCommands)
+    {
+        // This logic is now mostly inside HandleWorkflowCompletionAsync after conflict resolution.
+        // This method might be used if we implement manual conflict resolution flow.
+        using (await GetLockForBlock(blockId).LockAsync())
+        {
+            if (!this.blocks.TryGetValue(blockId, out var block))
+            {
+                Log.Error($"尝试应用已解决指令失败: Block '{blockId}' 未找到。");
+                return;
+            }
+
+            if (block.Status != BlockStatus.ResolvingConflict)
+            {
+                Log.Warning($"尝试应用已解决指令，但 Block '{blockId}' 状态为 {block.Status} (非 ResolvingConflict)。已忽略。");
+                return;
+            }
+
+            Log.Info($"Block '{blockId}': 正在应用手动解决的冲突指令 ({resolvedCommands.Count} 条)。");
 
             try
             {
-                // 冲突解决后的指令应该应用在哪个基础上？
-                // 理想情况是 WsPostAI (如果存在)，否则是 WsInput
-                var baseWs = block.WsPostAI ?? block.WsInput;
-                // 创建一个新的 WsPostUser 来应用解决后的指令
-                var finalWs = baseWs.Clone();
-                var changedEntityIds = ExecuteAtomicOperations(finalWs, resolvedCommands);
-
-                block.WsPostUser = finalWs; // 更新最终的用户可见状态
-                Log.Info($"Block '{blockId}': 已解决的冲突指令已应用，生成新的 WsPostUser。影响 {changedEntityIds.Count} 个实体。");
-
-                // 清理 WsTemp （如果还存在）
-                block.WsTemp = null;
-
-                // TODO: 持久化 Block (WsPostUser 更新)
-
-                // 将状态设置为 Idle
-                await SetBlockStatusAsync(blockId, BlockStatus.Idle); // SetBlockStatus 会处理通知
-
-                // 可能需要额外通知状态已更新
-                if (changedEntityIds.Count > 0)
+                // Apply to WsPostAI (assuming it exists from the initial workflow run)
+                var baseWs = block.WsPostAI ?? block.WsInput; // Should ideally be WsPostAI
+                if (baseWs == null)
                 {
-                    await _notifierService.NotifyStateUpdateAsync(blockId, changedEntityIds);
+                    Log.Error($"Block '{blockId}': WsPostAI or WsInput is null, cannot apply resolved commands.");
+                    await SetBlockStatusInternalAsync(blockId, BlockStatus.Error, block.BlockContent,
+                        "Internal Error: Base state missing for conflict resolution.");
+                    return;
+                }
+
+                // We modify WsPostAI in place based on user resolution
+                block.WsPostAI =
+                    baseWs.Clone(); // Clone before modify? Or modify WsPostAI directly? Let's modify directly for now.
+                var changedIds = ExecuteAtomicOperations(block.WsPostAI, resolvedCommands); // Apply to WsPostAI
+
+                // Re-create WsPostUser from the newly modified WsPostAI
+                block.WsPostUser = block.WsPostAI.Clone();
+                Log.Debug($"Block '{blockId}': 已基于修改后的 WsPostAI 更新 WsPostUser。");
+
+
+                block.WsTemp = null; // Clear temp state
+                block.Status = BlockStatus.Idle; // Resolution complete
+                Log.Info($"Block '{blockId}': 冲突解决完成，状态设置为 Idle。");
+
+                // TODO: Persist Block (Status, WsPostAI, WsPostUser)
+
+                // Notify
+                await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, BlockStatus.Idle);
+                if (changedIds.Count > 0)
+                {
+                    await this.notifierService.NotifyStateUpdateAsync(blockId, changedIds);
                 }
             }
             catch (Exception ex)
             {
-                Log.Error(ex, $"Block '{blockId}': 应用已解决的指令时出错: {ex.Message}");
-                await SetBlockStatusAsync(blockId, BlockStatus.Error); // 出错则标记为错误状态
+                Log.Error(ex, $"Block '{blockId}': 应用手动解决的指令时出错: {ex.Message}");
+                await SetBlockStatusInternalAsync(blockId, BlockStatus.Error, block.BlockContent,
+                    $"Error applying resolved commands: {ex.Message}");
             }
         }
     }
 
-
-    /// <summary>
-    /// 由工作流服务调用，在父 Block 中记录新创建的子 Block 信息。
-    /// </summary>
-    public async Task AddChildBlockRecordAsync(string parentBlockId, string childBlockId,
-        Dictionary<string, object?> triggerParams)
+    // Helper to set error status internally
+    private async Task SetBlockStatusInternalAsync(string blockId, BlockStatus status, string? content = null,
+        string? errorMessage = null)
     {
-        using (await GetLockForBlock(parentBlockId).LockAsync()) // 锁父 Block
+        // No lock here, assumes called from within a locked context
+        if (this.blocks.TryGetValue(blockId, out var block))
         {
-            if (!_blocks.TryGetValue(parentBlockId, out var parentBlock))
-            {
-                Log.Error($"尝试向不存在的父 Block '{parentBlockId}' 添加子 Block 记录 '{childBlockId}'。");
-                return; // 或者抛出异常？
-            }
+            block.Status = status;
+            if (content != null) block.BlockContent = content;
+            if (errorMessage != null) block.Metadata["Error"] = errorMessage;
+            block.WsTemp = null; // Clear temp state on error
+            block.PendingUserCommands.Clear(); // Clear pending commands on error? Or keep them? Clear for now.
 
-            int childIndex = parentBlock.ChildrenInfo.Count;
-            parentBlock.ChildrenInfo[childIndex] = childBlockId;
-            parentBlock.TriggeredChildParams[childBlockId] = triggerParams ?? new Dictionary<string, object?>();
-            parentBlock.SelectedChildIndex = childIndex; // 默认选中新子节点
+            Log.Info($"Block '{blockId}': 内部状态设置为 {status}。");
+            // TODO: Persist Block
 
-            Log.Debug($"父 Block '{parentBlockId}': 已添加子 Block '{childBlockId}' 记录，索引为 {childIndex}。");
-            // TODO: 持久化父 Block 的变更
+            // Notify status update
+            await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, status);
         }
     }
 
 
-    /// <summary>
-    /// 由工作流服务调用，获取用于创建新子 Block 的输入 WorldState (父节点的 WsPostUser 的克隆)。
-    /// </summary>
+    // --- Other existing methods ---
     public async Task<WorldState?> GetWsInputForNewBlockAsync(string parentBlockId)
     {
-        // 读取父节点的 WsPostUser 不需要锁，但要确保 Block 存在
         var parentBlock = await GetBlockAsync(parentBlockId);
-        if (parentBlock?.WsPostUser == null)
+        // Return clone of WsPostUser or WsInput as fallback
+        var baseWs = parentBlock?.WsPostUser ?? parentBlock?.WsInput;
+        if (baseWs == null)
         {
-            Log.Error($"父 Block '{parentBlockId}' 不存在或其 WsPostUser 为 null，无法为新子 Block 提供输入 WorldState。");
+            Log.Error($"父 Block '{parentBlockId}' 不存在或没有 WsPostUser/WsInput，无法为新子 Block 提供输入 WorldState。");
             return null;
         }
 
-        return parentBlock.WsPostUser.Clone(); // 返回克隆副本
+        return baseWs.Clone();
     }
 
-    /// <summary>
-    /// 由工作流服务调用，获取用于创建新子 Block 的 GameState (父节点的 GameState 的克隆)。
-    /// </summary>
     public async Task<GameState?> GetGsForNewBlockAsync(string parentBlockId)
     {
         var parentBlock = await GetBlockAsync(parentBlockId);
@@ -473,19 +715,13 @@ public class BlockManager : IBlockManager
             return null;
         }
 
-        return parentBlock.GameState.Clone(); // 返回克隆副本
+        return parentBlock.GameState.Clone();
     }
 
-
-    // --- 私有辅助方法 ---
-
-    /// <summary>
-    /// 在给定的 WorldState 上执行一批原子操作。
-    /// </summary>
-    /// <returns>发生变更的实体 ID 列表。</returns>
     private List<string> ExecuteAtomicOperations(WorldState worldState, IEnumerable<AtomicOperation> operations)
     {
-        var changedEntityIds = new HashSet<string>(); // 使用 HashSet 避免重复
+        // (Logic unchanged)
+        var changedEntityIds = new HashSet<string>();
 
         foreach (var op in operations)
         {
@@ -495,14 +731,12 @@ public class BlockManager : IBlockManager
                 switch (op.OperationType)
                 {
                     case AtomicOperationType.CreateEntity:
-                        // 检查是否已存在（即使是销毁的也可能需要处理）
                         entity = worldState.FindEntityById(op.EntityId, op.EntityType, includeDestroyed: true);
                         if (entity != null && !entity.IsDestroyed)
                         {
                             Log.Warning($"原子操作 Create: 实体 '{op.EntityType}:{op.EntityId}' 已存在且未销毁，将被覆盖。");
                         }
 
-                        // 创建新实例
                         entity = op.EntityType switch
                         {
                             EntityType.Item => new Item(op.EntityId),
@@ -510,12 +744,11 @@ public class BlockManager : IBlockManager
                             EntityType.Place => new Place(op.EntityId),
                             _ => throw new ArgumentOutOfRangeException($"不支持创建类型: {op.EntityType}")
                         };
-                        // 应用初始属性
                         if (op.InitialAttributes != null)
                         {
                             foreach (var attr in op.InitialAttributes)
                             {
-                                entity.SetAttribute(attr.Key, attr.Value); // 使用 SetAttribute 进行基础验证
+                                entity.SetAttribute(attr.Key, attr.Value);
                             }
                         }
 
@@ -525,12 +758,11 @@ public class BlockManager : IBlockManager
                         break;
 
                     case AtomicOperationType.ModifyEntity:
-                        entity = worldState.FindEntityById(op.EntityId, op.EntityType,
-                            includeDestroyed: false); // 只修改未销毁的
+                        entity = worldState.FindEntityById(op.EntityId, op.EntityType, includeDestroyed: false);
                         if (entity == null)
                         {
                             Log.Warning($"原子操作 Modify: 实体 '{op.EntityType}:{op.EntityId}' 未找到或已被销毁。");
-                            continue; // 跳过此操作
+                            continue;
                         }
 
                         if (string.IsNullOrWhiteSpace(op.AttributeKey) || op.ModifyOperator == null)
@@ -545,15 +777,14 @@ public class BlockManager : IBlockManager
                         break;
 
                     case AtomicOperationType.DeleteEntity:
-                        entity = worldState.FindEntityById(op.EntityId, op.EntityType,
-                            includeDestroyed: false); // 查找未销毁的
+                        entity = worldState.FindEntityById(op.EntityId, op.EntityType, includeDestroyed: false);
                         if (entity == null)
                         {
                             Log.Warning($"原子操作 Delete: 实体 '{op.EntityType}:{op.EntityId}' 未找到或已被销毁。");
-                            continue; // 已经是目标状态
+                            continue;
                         }
 
-                        entity.IsDestroyed = true; // 标记为销毁
+                        entity.IsDestroyed = true;
                         Log.Debug($"原子操作 Delete: 实体 '{entity.TypedId}' 已标记为销毁。");
                         changedEntityIds.Add(entity.EntityId);
                         break;
@@ -565,16 +796,13 @@ public class BlockManager : IBlockManager
             catch (Exception ex)
             {
                 Log.Error(ex, $"执行原子操作 {op.OperationType} ({op.EntityType}:{op.EntityId}) 时发生异常: {ex.Message}");
-                // 根据策略，可以选择继续执行其他操作或直接抛出异常中止整个批次
-                // 这里选择继续执行其他操作，但记录错误
             }
         }
 
         return changedEntityIds.ToList();
     }
 
-
-    // --- DTO Mapping Helpers (可以移到专门的 Mapper 类) ---
+    // --- DTO Mapping Helpers ---
     private BlockSummaryDto MapToSummaryDto(Block block)
     {
         return new BlockSummaryDto
@@ -583,9 +811,11 @@ public class BlockManager : IBlockManager
             ParentBlockId = block.ParentBlockId,
             Status = block.Status,
             SelectedChildIndex = block.SelectedChildIndex,
-            // 尝试从内容或元数据获取摘要
-            ContentSummary = GetContentSummary(block.BlockContent), // 实现这个方法
-            CreationTime = (DateTime)(block.Metadata.GetValueOrDefault("CreationTime") ?? DateTime.MinValue)
+            ContentSummary = GetContentSummary(block.BlockContent),
+            // Safely access CreationTime from metadata
+            CreationTime = block.Metadata.TryGetValue("CreationTime", out var timeObj) && timeObj is DateTime time
+                ? time
+                : DateTime.MinValue
         };
     }
 
@@ -598,17 +828,19 @@ public class BlockManager : IBlockManager
             Status = block.Status,
             SelectedChildIndex = block.SelectedChildIndex,
             ContentSummary = GetContentSummary(block.BlockContent),
-            CreationTime = (DateTime)(block.Metadata.GetValueOrDefault("CreationTime") ?? DateTime.MinValue),
+            CreationTime = block.Metadata.TryGetValue("CreationTime", out var timeObj) && timeObj is DateTime time
+                ? time
+                : DateTime.MinValue,
             BlockContent = block.BlockContent,
-            Metadata = new Dictionary<string, object?>(block.Metadata), // 返回副本
-            ChildrenInfo = new Dictionary<int, string>(block.ChildrenInfo) // 返回副本
+            Metadata = new Dictionary<string, object?>(block.Metadata), // Return copy
+            ChildrenInfo = new Dictionary<int, string>(block.ChildrenInfo) // Return copy
         };
     }
 
-    private string GetContentSummary(string content, int maxLength = 100)
+    private string GetContentSummary(string? content, int maxLength = 100)
     {
         if (string.IsNullOrEmpty(content)) return string.Empty;
-        // 简单的截断，可以根据内容类型（如 JSON/HTML）实现更智能的摘要
         return content.Length <= maxLength ? content : content.Substring(0, maxLength) + "...";
     }
 }
+// --- END OF FILE BlockManager.cs ---

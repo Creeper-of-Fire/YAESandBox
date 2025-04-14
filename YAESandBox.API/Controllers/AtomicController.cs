@@ -9,14 +9,9 @@ namespace YAESandBox.API.Controllers;
 
 [ApiController]
 [Route("api/atomic/{blockId}")] // /api/atomic/{blockId}
-public class AtomicController : ControllerBase
+public class AtomicController(BlockManager blockManager) : ControllerBase
 {
-    private readonly BlockManager _blockManager;
-
-    public AtomicController(BlockManager blockManager)
-    {
-        _blockManager = blockManager;
-    }
+    private BlockManager blockManager { get; } = blockManager;
 
     /// <summary>
     /// 对指定的 Block 执行一批原子化操作。
@@ -38,7 +33,7 @@ public class AtomicController : ControllerBase
         }
 
         // 2. Call BlockManager to handle the operations
-        var result = await _blockManager.EnqueueOrExecuteAtomicOperationsAsync(blockId, coreOperations);
+        var result = await this.blockManager.EnqueueOrExecuteAtomicOperationsAsync(blockId, coreOperations);
 
         // 3. Return appropriate status code based on the result
         return result switch

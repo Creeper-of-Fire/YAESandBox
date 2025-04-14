@@ -2,7 +2,7 @@
 
 using YAESandBox.API.DTOs;
 
-namespace YAESandBox.WorkFlow;
+namespace YAESandBox.API.Services;
 
 /// <summary>
 /// 服务接口，用于处理工作流的触发和执行。
