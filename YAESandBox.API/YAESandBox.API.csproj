@@ -9,6 +9,12 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4"/>
+        <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" />
+      <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
     </ItemGroup>
 
 </Project>

@@ -1,0 +1,6 @@
+@YAESandBox.API_HostAddress = http://localhost:5087
+
+GET {{YAESandBox.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

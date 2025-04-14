@@ -1,4 +1,7 @@
-﻿namespace YAESandBox.Core.World;
+﻿using YAESandBox.Core.State.Entity;
+using YAESandBox.Depend;
+
+namespace YAESandBox.Core.State;
 
 /// <summary>
 /// 包含游戏中所有实体状态的核心容器。
@@ -39,11 +42,12 @@ public class WorldState
         {
             case EntityType.Item:
                 // 需要显式转换字典值为 BaseEntity
-                return this.Items.ToDictionary(kvp => kvp.Key, kvp => (BaseEntity)kvp.Value); // 或直接返回 Items 再强制转换，但这样更安全点
+                return this.Items.ToDictionary(kvp => kvp.Key, BaseEntity (kvp) => kvp.Value);
+            // 或直接返回 Items 再强制转换，但这样更安全点
             case EntityType.Character:
-                return this.Characters.ToDictionary(kvp => kvp.Key, kvp => (BaseEntity)kvp.Value);
+                return this.Characters.ToDictionary(kvp => kvp.Key, BaseEntity (kvp) => kvp.Value);
             case EntityType.Place:
-                return this.Places.ToDictionary(kvp => kvp.Key, kvp => (BaseEntity)kvp.Value);
+                return this.Places.ToDictionary(kvp => kvp.Key, BaseEntity (kvp) => kvp.Value);
             default:
                 throw new ArgumentOutOfRangeException(nameof(entityType), $"未知的实体类型: {entityType}");
         }
@@ -64,15 +68,15 @@ public class WorldState
         switch (@ref.Type)
         {
             case EntityType.Item:
-                found = this.Items.TryGetValue(@ref.Id, out Item? item);
+                found = this.Items.TryGetValue(@ref.Id, out var item);
                 entity = item;
                 break;
             case EntityType.Character:
-                found = this.Characters.TryGetValue(@ref.Id, out Character? character);
+                found = this.Characters.TryGetValue(@ref.Id, out var character);
                 entity = character;
                 break;
             case EntityType.Place:
-                found = this.Places.TryGetValue(@ref.Id, out Place? place);
+                found = this.Places.TryGetValue(@ref.Id, out var place);
                 entity = place;
                 break;
             default:
@@ -84,6 +88,7 @@ public class WorldState
         {
             return entity;
         }
+
         return null;
     }
 
@@ -96,51 +101,6 @@ public class WorldState
     }
 
     /// <summary>
-    /// 按名称查找实体（效率较低）。
-    /// </summary>
-    /// <param name="name">要查找的实体名称。</param>
-    /// <param name="entityType">可选，限制查找的实体类型。</param>
-    /// <param name="includeDestroyed">是否包含已销毁的实体。</param>
-    /// <returns>第一个匹配的实体，或 null。</returns>
-    public BaseEntity? FindEntityByName(string name, EntityType? entityType = null, bool includeDestroyed = false)
-    {
-        // 定义要搜索的字典集合
-        var dictionariesToSearch = new List<IEnumerable<BaseEntity>>();
-
-        if (entityType.HasValue)
-        {
-            switch (entityType.Value)
-            {
-                case EntityType.Item: dictionariesToSearch.Add(this.Items.Values); break;
-                case EntityType.Character: dictionariesToSearch.Add(this.Characters.Values); break;
-                case EntityType.Place: dictionariesToSearch.Add(this.Places.Values); break;
-            }
-        }
-        else
-        {
-            dictionariesToSearch.Add(this.Items.Values);
-            dictionariesToSearch.Add(this.Characters.Values);
-            dictionariesToSearch.Add(this.Places.Values);
-        }
-
-        // 遍历搜索
-        foreach (var dictionary in dictionariesToSearch)
-        {
-            foreach (var entity in dictionary)
-            {
-                // 假设 'name' 是一个动态属性
-                if (entity.TryGetAttribute<string>("name", out var entityName) &&
-                    entityName == name &&
-                    (!entity.IsDestroyed || includeDestroyed))
-                {
-                    return entity;
-                }
-            }
-        }
-        return null;
-    }
-
-    /// <summary>
     /// 添加实体到世界状态，仅在同类型中检查 ID 冲突。
     /// </summary>
     /// <param name="entity">要添加的实体。</param>
@@ -150,36 +110,70 @@ public class WorldState
     {
         ArgumentNullException.ThrowIfNull(entity);
 
-        // TODO: 考虑添加日志记录 (需要注入 ILogger)
-        // logger.LogDebug($"尝试添加实体: {entity.TypedId}");
+        Log.Debug($"尝试添加实体: {entity.TypedId}");
 
         switch (entity)
         {
             case Item item:
-                if (this.Items.TryGetValue(item.EntityId, out var existing) && !existing.IsDestroyed)
+                if (this.Items.TryGetValue(item.EntityId, out var existingItem) && !existingItem.IsDestroyed)
                 {
-                    // logger.LogWarning($"覆盖已存在且未销毁的 Item: {item.TypedId}");
+                    Log.Warning($"覆盖已存在且未销毁的 Item: {item.TypedId}");
                 }
+
                 this.Items[item.EntityId] = item;
                 break;
             case Character character:
-                if (this.Characters.TryGetValue(character.EntityId, out var existing) && !existing.IsDestroyed)
+                if (this.Characters.TryGetValue(character.EntityId, out var existingChar) && !existingChar.IsDestroyed)
                 {
-                    // logger.LogWarning($"覆盖已存在且未销毁的 Character: {character.TypedId}");
+                    Log.Warning($"覆盖已存在且未销毁的 Character: {character.TypedId}");
                 }
+
                 this.Characters[character.EntityId] = character;
                 break;
             case Place place:
-                if (this.Places.TryGetValue(place.EntityId, out var existing) && !existing.IsDestroyed)
+                if (this.Places.TryGetValue(place.EntityId, out var existingPlace) && !existingPlace.IsDestroyed)
                 {
-                    // logger.LogWarning($"覆盖已存在且未销毁的 Place: {place.TypedId}");
+                    Log.Warning($"覆盖已存在且未销毁的 Place: {place.TypedId}");
                 }
+
                 this.Places[place.EntityId] = place;
                 break;
             default:
                 // 如果 BaseEntity 是密封的或者所有子类都已处理，这理论上不应该发生
                 throw new ArgumentException($"未知的实体类型实例: {entity.GetType().Name}", nameof(entity));
         }
-        // logger.LogDebug($"实体 '{entity.TypedId}' 已添加到 WorldState。");
+
+        Log.Debug($"实体 '{entity.TypedId}' 已添加到 WorldState。");
+    }
+    
+    /// <summary>
+    /// 创建 WorldState 的深拷贝副本。
+    /// 这将克隆所有的实体及其属性。
+    /// </summary>
+    /// <returns>一个新的 WorldState 实例。</returns>
+    public WorldState Clone()
+    {
+        var clone = new WorldState();
+
+        // 克隆 Items 字典中的每个 Item
+        foreach (var kvp in this.Items)
+        {
+            // 假设 BaseEntity.Clone() 实现了正确的深拷贝
+            clone.Items[kvp.Key] = (Item)kvp.Value.Clone();
+        }
+
+        // 克隆 Characters
+        foreach (var kvp in this.Characters)
+        {
+            clone.Characters[kvp.Key] = (Character)kvp.Value.Clone();
+        }
+
+        // 克隆 Places
+        foreach (var kvp in this.Places)
+        {
+            clone.Places[kvp.Key] = (Place)kvp.Value.Clone();
+        }
+
+        return clone;
     }
 }

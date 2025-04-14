@@ -4,11 +4,6 @@
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
-        <RootNamespace>YAESandBox.Core</RootNamespace>
     </PropertyGroup>
-
-    <ItemGroup>
-      <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
-    </ItemGroup>
 
 </Project>
