@@ -9,9 +9,10 @@ namespace YAESandBox.API.Controllers;
 
 [ApiController]
 [Route("api/entities")] // /api/entities
-public class EntitiesController(BlockService blockService) : ControllerBase
+public class EntitiesController(IBlockWritService writServices, IBlockReadService readServices) : ControllerBase
 {
-    private BlockService blockService { get; } = blockService;
+    private IBlockWritService blockWritService { get; } = writServices;
+    private IBlockReadService blockReadServices { get; } = readServices;
 
     /// <summary>
     /// 获取指定 Block 当前可交互 WorldState 中的所有实体摘要。
@@ -24,7 +25,7 @@ public class EntitiesController(BlockService blockService) : ControllerBase
     public async Task<IActionResult> GetAllEntities([FromQuery, Required] string blockId)
     {
         // BlockManager needs a method to get entities based on blockId and its current target WorldState
-        var entities = await this.blockService.GetAllEntitiesSummaryAsync(blockId);
+        var entities = await this.blockReadServices.GetAllEntitiesSummaryAsync(blockId);
 
         if (entities == null) // Indicates block not found or other issue handled in service
         {
@@ -47,7 +48,7 @@ public class EntitiesController(BlockService blockService) : ControllerBase
     public async Task<IActionResult> GetEntityDetail(EntityType entityType, string entityId, [FromQuery, Required] string blockId)
     {
         var typedId = new TypedID(entityType, entityId);
-        var entity = await this.blockService.GetEntityDetailAsync(blockId, typedId);
+        var entity = await this.blockReadServices.GetEntityDetailAsync(blockId, typedId);
 
         if (entity == null)
         {

@@ -26,9 +26,9 @@ builder.Services.AddSwaggerGen(c => // Configure Swagger
 {
     c.SwaggerDoc("v1", new OpenApiInfo { Title = "YAESandBox API", Version = "v1" });
     // Include XML comments if set up in .csproj file
-    // var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    // var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    // c.IncludeXmlComments(xmlPath);
+    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    c.IncludeXmlComments(xmlPath);
 
      // Add Enum Schema Filter to display enums as strings in Swagger UI
      c.SchemaFilter<EnumSchemaFilter>(); // Requires the EnumSchemaFilter class defined below
@@ -47,7 +47,8 @@ builder.Services.AddSingleton<INotifierService, SignalRNotifierService>();
 
 // BlockManager holds state, make it Singleton. Depends on INotifierService.
 builder.Services.AddSingleton<BlockManager>(); // Also register concrete type if controllers inject it directly
-builder.Services.AddSingleton<IBlockServices, BlockService>(); // Register interface and implementation
+builder.Services.AddSingleton<IBlockWritService, BlockWritService>(); // Register interface and implementation
+builder.Services.AddSingleton<IBlockReadService, BlockReadService>(); 
 
 // WorkflowService depends on IBlockManager and INotifierService, make it Singleton or Scoped.
 // Singleton is fine if it doesn't hold per-request state.

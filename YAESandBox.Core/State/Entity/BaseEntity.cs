@@ -9,7 +9,7 @@ namespace YAESandBox.Core.State.Entity;
 public abstract class BaseEntity
 {
     // 使用 static readonly 定义核心字段集合
-    protected static readonly HashSet<string> CoreFields = [nameof(EntityId), nameof(EntityType), nameof(IsDestroyed)];
+    public static readonly HashSet<string> CoreFields = [nameof(EntityId), nameof(EntityType), nameof(IsDestroyed)];
 
     /// <summary>
     /// 实体的唯一 ID。

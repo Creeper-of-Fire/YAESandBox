@@ -76,3 +76,6 @@ public class GameState
         return clone;
     }
 }
+
+// Helper enum for update results (can be defined elsewhere)
+public enum UpdateResult { Success, NotFound, InvalidOperation }

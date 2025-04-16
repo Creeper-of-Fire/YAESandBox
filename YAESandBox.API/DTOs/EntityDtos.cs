@@ -19,7 +19,7 @@ public class EntitySummaryDto
 /// </summary>
 public class EntityDetailDto : EntitySummaryDto
 {
-    public Dictionary<string, object?> Attributes { get; set; } = new();
+    public Dictionary<string, object?> Attributes { get; init; } = new();
 }
 
 // 可以为特定实体类型创建更具体的 DTO，如果需要的话
