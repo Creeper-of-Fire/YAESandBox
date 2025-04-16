@@ -9,11 +9,7 @@ namespace YAESandBox.Core.State.Entity;
 public abstract class BaseEntity
 {
     // 使用 static readonly 定义核心字段集合
-    protected static readonly HashSet<string> CoreFields = new()
-    {
-        nameof(EntityId), nameof(EntityType), nameof(IsDestroyed)
-        // 注意：这里使用 nameof 来避免硬编码字符串，提高重构安全性
-    };
+    protected static readonly HashSet<string> CoreFields = [nameof(EntityId), nameof(EntityType), nameof(IsDestroyed)];
 
     /// <summary>
     /// 实体的唯一 ID。
@@ -187,27 +183,22 @@ public abstract class BaseEntity
     {
         // logger.LogDebug($"实体 '{this.TypedId}': (Core) SetAttribute: Key='{key}', Value='{value?.ToString() ?? "null"}'");
 
-        // 处理核心属性
-        if (key.Equals(nameof(this.EntityId), StringComparison.OrdinalIgnoreCase))
+        switch (key)
         {
-            Log.Warning($"核心属性 '{nameof(this.EntityId)}' 是只读的。");
-        }
-
-        if (key.Equals(nameof(this.EntityType), StringComparison.OrdinalIgnoreCase))
-        {
-            Log.Warning($"核心属性 '{nameof(this.EntityType)}' 是只读的。");
-        }
-
-        if (key.Equals(nameof(this.IsDestroyed), StringComparison.OrdinalIgnoreCase))
-        {
-            if (value is bool isDestroyedValue)
-            {
+            // 处理核心属性
+            case nameof(this.EntityId):
+                Log.Warning($"核心属性 '{nameof(this.EntityId)}' 是只读的。");
+                break;
+            case nameof(this.EntityType):
+                Log.Warning($"核心属性 '{nameof(this.EntityType)}' 是只读的。");
+                break;
+            case nameof(this.IsDestroyed) when value is bool isDestroyedValue:
                 this.IsDestroyed = isDestroyedValue;
                 // logger.LogDebug($"实体 '{this.TypedId}': 设置核心属性 {nameof(IsDestroyed)} = {this.IsDestroyed}");
                 return; // 设置完成
-            }
-
-            Log.Warning($"核心属性 '{nameof(this.IsDestroyed)}' 需要布尔类型值，得到 {value?.GetType().Name ?? "null"}");
+            case nameof(this.IsDestroyed):
+                Log.Warning($"核心属性 '{nameof(this.IsDestroyed)}' 需要布尔类型值，得到 {value?.GetType().Name ?? "null"}");
+                break;
         }
 
         // 设置动态属性
@@ -218,7 +209,7 @@ public abstract class BaseEntity
 
     public void ModifyAttribute(string key, string stringOp, object value)
     {
-        this.ModifyAttribute(key, OperatorSever.StringToOperator(stringOp: stringOp), value);
+        this.ModifyAttribute(key, OperatorHelper.StringToOperator(stringOp: stringOp), value);
     }
 
 

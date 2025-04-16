@@ -2,15 +2,16 @@
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services;
+using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity; // For EntityType, TypedID
 
 namespace YAESandBox.API.Controllers;
 
 [ApiController]
 [Route("api/entities")] // /api/entities
-public class EntitiesController(BlockManager blockManager) : ControllerBase
+public class EntitiesController(BlockService blockService) : ControllerBase
 {
-    private BlockManager blockManager { get; } = blockManager;
+    private BlockService blockService { get; } = blockService;
 
     /// <summary>
     /// 获取指定 Block 当前可交互 WorldState 中的所有实体摘要。
@@ -23,16 +24,16 @@ public class EntitiesController(BlockManager blockManager) : ControllerBase
     public async Task<IActionResult> GetAllEntities([FromQuery, Required] string blockId)
     {
         // BlockManager needs a method to get entities based on blockId and its current target WorldState
-        var entities = await this.blockManager.GetAllEntitiesSummaryAsync(blockId);
+        var entities = await this.blockService.GetAllEntitiesSummaryAsync(blockId);
 
         if (entities == null) // Indicates block not found or other issue handled in service
         {
-            return NotFound($"Block with ID '{blockId}' not found or inaccessible.");
+            return this.NotFound($"Block with ID '{blockId}' not found or inaccessible.");
         }
 
         // Map Core Entities to DTOs (implement this mapping)
-        var dtos = MapToSummaryDtos(entities);
-        return Ok(dtos);
+        var dtos = this.MapToSummaryDtos(entities);
+        return this.Ok(dtos);
     }
 
     /// <summary>
@@ -46,16 +47,16 @@ public class EntitiesController(BlockManager blockManager) : ControllerBase
     public async Task<IActionResult> GetEntityDetail(EntityType entityType, string entityId, [FromQuery, Required] string blockId)
     {
         var typedId = new TypedID(entityType, entityId);
-        var entity = await this.blockManager.GetEntityDetailAsync(blockId, typedId);
+        var entity = await this.blockService.GetEntityDetailAsync(blockId, typedId);
 
         if (entity == null)
         {
-            return NotFound($"Entity '{typedId}' not found in block '{blockId}' or block not found.");
+            return this.NotFound($"Entity '{typedId}' not found in block '{blockId}' or block not found.");
         }
 
         // Map Core Entity to DTO (implement this mapping)
-        var dto = MapToDetailDto(entity);
-        return Ok(dto);
+        var dto = this.MapToDetailDto(entity);
+        return this.Ok(dto);
     }
 
 

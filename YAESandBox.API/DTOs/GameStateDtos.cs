@@ -3,7 +3,7 @@
 namespace YAESandBox.API.DTOs;
 
 /// <summary>
-/// 用于获取 GameState 的响应。
+/// 用于获取 gameState 的响应。
 /// </summary>
 public class GameStateDto
 {
@@ -11,7 +11,7 @@ public class GameStateDto
 }
 
 /// <summary>
-/// 用于修改 GameState 的请求体。
+/// 用于修改 gameState 的请求体。
 /// </summary>
 public class UpdateGameStateRequestDto
 {

@@ -10,10 +10,12 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
+        <PackageReference Include="OneOf" Version="3.0.271" />
         <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
     </ItemGroup>
 
     <ItemGroup>
+      <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj" />
       <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" />
       <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
     </ItemGroup>

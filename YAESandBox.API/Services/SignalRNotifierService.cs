@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Hubs;
+using YAESandBox.Core.Block;
 using YAESandBox.Core.State;
 using YAESandBox.Depend;
 
@@ -19,7 +20,7 @@ public class SignalRNotifierService : INotifierService
          Log.Debug("SignalRNotifierService 初始化完成。");
     }
 
-    public async Task NotifyBlockStatusUpdateAsync(string blockId, BlockStatus newStatus)
+    public async Task NotifyBlockStatusUpdateAsync(string blockId, BlockStatusCode newStatusCode)
     {
         // Try to get the block to include parent info (this might be slightly racy if called during creation/deletion)
         // A better approach might be to pass parentId explicitly when calling this method if available.
@@ -38,12 +39,12 @@ public class SignalRNotifierService : INotifierService
         var update = new BlockStatusUpdateDto
         {
             BlockId = blockId,
-            Status = newStatus
+            StatusCode = newStatusCode
             // ParentBlockId = parentId // <<< Set ParentBlockId here
             // For now, we can't easily get parentId here without BlockManager ref or interface change.
             // The frontend fix below will rely on sessionStorage fallback if ParentBlockId is null.
         };
-        Log.Debug($"准备通过 SignalR 发送 BlockStatusUpdate: BlockId={blockId}, Status={newStatus}");
+        Log.Debug($"准备通过 SignalR 发送 BlockStatusUpdate: BlockId={blockId}, StatusCode={newStatusCode}");
         await this.hubContext.Clients.All.ReceiveBlockStatusUpdate(update);
         Log.Debug($"BlockStatusUpdate for {blockId} 已发送。");
     }
@@ -71,7 +72,7 @@ public class SignalRNotifierService : INotifierService
 
      public async Task NotifyWorkflowCompleteAsync(WorkflowCompleteDto completion)
      {
-         Log.Debug($"准备通过 SignalR 发送 WorkflowComplete: RequestId={completion.RequestId}, BlockId={completion.BlockId}, Status={completion.ExecutionStatus}");
+         Log.Debug($"准备通过 SignalR 发送 WorkflowComplete: RequestId={completion.RequestId}, BlockId={completion.BlockId}, StatusCode={completion.ExecutionStatus}");
          await this.hubContext.Clients.All.ReceiveWorkflowComplete(completion);
          Log.Debug($"WorkflowComplete for RequestId={completion.RequestId} 已发送。");
      }

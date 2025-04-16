@@ -16,25 +16,19 @@ public interface IGameClient
     Task ReceiveStateUpdateSignal(StateUpdateSignalDto signal);
     // Task ReceiveWorkflowError(WorkflowErrorDto error); // Consider specific error message type
 }
-public class GameHub : Hub<IGameClient>
+public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
 {
-    private readonly IWorkflowService _workflowService;
-
-    public GameHub(IWorkflowService workflowService)
-    {
-        _workflowService = workflowService;
-        Log.Debug("GameHub 初始化完成 (with WorkflowService).");
-    }
+    private IWorkflowService workflowService { get; } = workflowService;
 
     // --- TriggerWorkflow 和 ResolveConflict 不变 ---
      public async Task TriggerWorkflow(TriggerWorkflowRequestDto request)
     {
-        var connectionId = Context.ConnectionId;
+        var connectionId = this.Context.ConnectionId;
         // *** 确认日志存在 ***
         Log.Info($"GameHub: 收到来自 {connectionId} 的 TriggerWorkflow 请求: {request.RequestId}, Workflow: {request.WorkflowName}");
         try
         {
-            await _workflowService.HandleWorkflowTriggerAsync(request);
+            await this.workflowService.HandleWorkflowTriggerAsync(request);
         }
         catch(Exception ex)
         {
@@ -44,12 +38,12 @@ public class GameHub : Hub<IGameClient>
     }
     public async Task ResolveConflict(ResolveConflictRequestDto request)
     {
-         var connectionId = Context.ConnectionId;
+         var connectionId = this.Context.ConnectionId;
          // *** 确认日志存在 ***
          Log.Info($"GameHub: 收到来自 {connectionId} 的 ResolveConflict 请求: {request.RequestId}, Block: {request.BlockId}");
          try
          {
-             await _workflowService.HandleConflictResolutionAsync(request);
+             await this.workflowService.HandleConflictResolutionAsync(request);
          }
          catch (Exception ex)
          {
@@ -61,9 +55,9 @@ public class GameHub : Hub<IGameClient>
     public override async Task OnConnectedAsync()
     {
         // *** 确认日志存在 ***
-        Log.Info($"GameHub: Client connected. ConnectionId: {Context.ConnectionId}");
+        Log.Info($"GameHub: Client connected. ConnectionId: {this.Context.ConnectionId}");
         // 尝试获取更多信息 (可能为 null)
-        var httpContext = Context.GetHttpContext();
+        var httpContext = this.Context.GetHttpContext();
         var remoteIp = httpContext?.Connection.RemoteIpAddress;
         var userAgent = httpContext?.Request.Headers["User-Agent"];
         Log.Debug($"GameHub: Connection details - Remote IP: {remoteIp}, User-Agent: {userAgent}");
@@ -73,10 +67,10 @@ public class GameHub : Hub<IGameClient>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
          // *** 确认日志存在 ***
-        Log.Info($"GameHub: Client disconnected. ConnectionId: {Context.ConnectionId}. Reason: {exception?.Message ?? "Normal disconnect"}");
+        Log.Info($"GameHub: Client disconnected. ConnectionId: {this.Context.ConnectionId}. Reason: {exception?.Message ?? "Normal disconnect"}");
         if (exception != null)
         {
-            Log.Error(exception, $"GameHub: Disconnect exception details for {Context.ConnectionId}:");
+            Log.Error(exception, $"GameHub: Disconnect exception details for {this.Context.ConnectionId}:");
         }
         await base.OnDisconnectedAsync(exception);
     }

@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YAESandBox.Core.Action;
+using YAESandBox.Core.Block;
 using YAESandBox.Core.State; // For AtomicOperation
 
 namespace YAESandBox.API.DTOs;
@@ -30,7 +31,7 @@ public class ResolveConflictRequestDto
 public class BlockStatusUpdateDto
 {
     public string BlockId { get; set; } = null!;
-    public BlockStatus Status { get; set; }
+    public BlockStatusCode StatusCode { get; set; }
     public string? ParentBlockId { get; set; }
 }
 

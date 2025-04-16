@@ -3,6 +3,8 @@
 using System.Text.Json;
 using YAESandBox.API.DTOs;
 using YAESandBox.Core.Action;
+using YAESandBox.Core.Block;
+using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
 
@@ -39,7 +41,7 @@ public class WorkflowService : IWorkflowService
             return;
         }
 
-        if (parentBlock.Status == BlockStatus.Loading) // 不允许在 Loading 状态的 Block 上创建子节点
+        if (parentBlock.Status == BlockStatusCode.Loading) // 不允许在 Loading 状态的 Block 上创建子节点
         {
             Log.Error($"触发工作流失败: 父 Block '{request.ParentBlockId}' 正在加载中。");
             // 通知请求者
@@ -197,7 +199,7 @@ public class WorkflowService : IWorkflowService
             return;
         }
 
-        if (block.Status != BlockStatus.ResolvingConflict)
+        if (block.Status != BlockStatusCode.ResolvingConflict)
         {
             Log.Warning($"尝试解决冲突，但 Block '{request.BlockId}' 当前状态为 {block.Status} (非 ResolvingConflict)。");
             // 根据策略，可能忽略，也可能强制应用？目前先忽略。

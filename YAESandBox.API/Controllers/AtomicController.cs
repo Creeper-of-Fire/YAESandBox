@@ -2,6 +2,7 @@
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services;
 using YAESandBox.Core.Action;
+using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend; // For mapping DTO to Core object
 
@@ -9,9 +10,9 @@ namespace YAESandBox.API.Controllers;
 
 [ApiController]
 [Route("api/atomic/{blockId}")] // /api/atomic/{blockId}
-public class AtomicController(BlockManager blockManager) : ControllerBase
+public class AtomicController(BlockService blockService) : ControllerBase
 {
-    private BlockManager blockManager { get; } = blockManager;
+    private BlockService blockService { get; } = blockService;
 
     /// <summary>
     /// 对指定的 Block 执行一批原子化操作。
@@ -26,24 +27,24 @@ public class AtomicController(BlockManager blockManager) : ControllerBase
     public async Task<IActionResult> ExecuteAtomicOperations(string blockId, [FromBody] BatchAtomicRequestDto request)
     {
         // 1. Map DTOs to Core AtomicOperation objects (add validation)
-        var coreOperations = MapToCoreOperations(request.Operations);
+        var coreOperations = this.MapToCoreOperations(request.Operations);
         if (coreOperations == null) // Mapping/Validation failed
         {
-            return BadRequest("Invalid atomic operations provided.");
+            return this.BadRequest("Invalid atomic operations provided.");
         }
 
         // 2. Call BlockManager to handle the operations
-        var result = await this.blockManager.EnqueueOrExecuteAtomicOperationsAsync(blockId, coreOperations);
+        var result = await this.blockService.EnqueueOrExecuteAtomicOperationsAsync(blockId, coreOperations);
 
-        // 3. Return appropriate status code based on the result
+        // 3. Return appropriate statusCode code based on the result
         return result switch
         {
-            AtomicExecutionResult.Executed => Ok("Operations executed successfully."), // Or 204 No Content if preferred
-            AtomicExecutionResult.Queued => Accepted($"Operations queued for block '{blockId}' (block is loading)."),
-            AtomicExecutionResult.NotFound => NotFound($"Block with ID '{blockId}' not found."),
-            AtomicExecutionResult.ConflictState => Conflict($"Block '{blockId}' is in a conflict state. Resolve conflict first."),
-            AtomicExecutionResult.Error => StatusCode(StatusCodes.Status500InternalServerError, "An error occurred during execution."),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, "An unexpected result occurred.")
+            AtomicExecutionResult.Executed => this.Ok("Operations executed successfully."), // Or 204 No Content if preferred
+            AtomicExecutionResult.Queued => this.Accepted($"Operations queued for block '{blockId}' (block is loading)."),
+            AtomicExecutionResult.NotFound => this.NotFound($"Block with ID '{blockId}' not found."),
+            AtomicExecutionResult.ConflictState => this.Conflict($"Block '{blockId}' is in a conflict state. Resolve conflict first."),
+            AtomicExecutionResult.Error => this.StatusCode(StatusCodes.Status500InternalServerError, "An error occurred during execution."),
+            _ => this.StatusCode(StatusCodes.Status500InternalServerError, "An unexpected result occurred.")
         };
     }
 
@@ -66,7 +67,7 @@ public class AtomicController(BlockManager blockManager) : ControllerBase
                     case AtomicOperationType.ModifyEntity:
                         if (string.IsNullOrWhiteSpace(dto.AttributeKey) || string.IsNullOrWhiteSpace(dto.ModifyOperator))
                             return null; // Invalid modify op
-                        var op = OperatorSever.StringToOperator(dto.ModifyOperator);
+                        var op = OperatorHelper.StringToOperator(dto.ModifyOperator);
                         coreOp = AtomicOperation.Modify(dto.EntityType, dto.EntityId, dto.AttributeKey, op, dto.ModifyValue);
                         break;
                     case AtomicOperationType.DeleteEntity:

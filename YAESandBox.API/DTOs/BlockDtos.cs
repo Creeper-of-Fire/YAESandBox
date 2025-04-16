@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using YAESandBox.Core.State; // For BlockStatus
+using YAESandBox.Core.Block;
+using YAESandBox.Core.State; // For BlockStatusCode
 
 namespace YAESandBox.API.DTOs;
 
@@ -10,7 +11,7 @@ public class BlockSummaryDto
 {
     public string BlockId { get; set; } = null!;
     public string? ParentBlockId { get; set; }
-    public BlockStatus Status { get; set; }
+    public BlockStatusCode StatusCode { get; set; }
     public int SelectedChildIndex { get; set; }
     public string? ContentSummary { get; set; } // Block 内容的摘要或标题
     public DateTime CreationTime { get; set; } // 从 Metadata 获取

@@ -6,7 +6,9 @@ using Microsoft.Extensions.DependencyInjection; // Needed for IServiceCollection
 using Microsoft.Extensions.Hosting; // Needed for IHostEnvironment
 using YAESandBox.API.Hubs; // For GameHub
 using YAESandBox.API.Services; // For BlockManager, NotifierService, WorkflowService
-using System.Text.Json.Serialization; // For EnumConverter
+using System.Text.Json.Serialization;
+using YAESandBox.Core.Block;
+using YAESandBox.Core.State; // For EnumConverter
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -44,8 +46,8 @@ builder.Services.AddSignalR()
 builder.Services.AddSingleton<INotifierService, SignalRNotifierService>();
 
 // BlockManager holds state, make it Singleton. Depends on INotifierService.
-builder.Services.AddSingleton<IBlockManager, BlockManager>(); // Register interface and implementation
 builder.Services.AddSingleton<BlockManager>(); // Also register concrete type if controllers inject it directly
+builder.Services.AddSingleton<IBlockServices, BlockService>(); // Register interface and implementation
 
 // WorkflowService depends on IBlockManager and INotifierService, make it Singleton or Scoped.
 // Singleton is fine if it doesn't hold per-request state.
@@ -121,7 +123,7 @@ app.Run();
 // --- Records/Classes used in Program.cs ---
 record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 {
-    public int TemperatureF => 32 + (int)(TemperatureC / 0.5556);
+    public int TemperatureF => 32 + (int)(this.TemperatureC / 0.5556);
 }
 
 // Helper class for Swagger Enum Display
