@@ -11,23 +11,13 @@ using static YAESandBox.Core.Block.BlockTopologyExporter;
 
 namespace YAESandBox.API.Services;
 
-public interface IBlockReadService
-{
-    Task<IReadOnlyDictionary<string, BlockDetailDto>> GetAllBlockDetailsAsync();
-    Task<JsonBlockNode?> GetBlockTopologyJsonAsync();
-    Task<BlockDetailDto?> GetBlockDetailDtoAsync(string blockId);
-    Task<GameState?> GetBlockGameStateAsync(string blockId);
-    Task<IEnumerable<BaseEntity>?> GetAllEntitiesSummaryAsync(string blockId); // 返回 Core 对象供 Controller 映射
-    Task<BaseEntity?> GetEntityDetailAsync(string blockId, TypedID entityRef); // 返回 Core 对象供 Controller 映射
-}
-
 /// <summary>
 /// BlockReadService专注于单个 Block 的数据查询服务（主要是其中的worldState和gameState），仅限只读操作。
 /// 它也提供对于整体的总结服务。
 /// </summary>
 /// <param name="notifierService"></param>
 /// <param name="blockManager"></param>
-public class BlockReadService(INotifierService notifierService, BlockManager blockManager) :
+public class BlockReadService(INotifierService notifierService, IBlockManager blockManager) :
     BasicBlockService(notifierService, blockManager), IBlockReadService
 {
     public async Task<IReadOnlyDictionary<string, BlockDetailDto>> GetAllBlockDetailsAsync()

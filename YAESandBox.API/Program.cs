@@ -30,8 +30,8 @@ builder.Services.AddSwaggerGen(c => // Configure Swagger
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     c.IncludeXmlComments(xmlPath);
 
-     // Add Enum Schema Filter to display enums as strings in Swagger UI
-     c.SchemaFilter<EnumSchemaFilter>(); // Requires the EnumSchemaFilter class defined below
+    // Add Enum Schema Filter to display enums as strings in Swagger UI
+    c.SchemaFilter<EnumSchemaFilter>(); // Requires the EnumSchemaFilter class defined below
 });
 
 // --- SignalR ---
@@ -46,9 +46,9 @@ builder.Services.AddSignalR()
 builder.Services.AddSingleton<INotifierService, SignalRNotifierService>();
 
 // BlockManager holds state, make it Singleton. Depends on INotifierService.
-builder.Services.AddSingleton<BlockManager>(); // Also register concrete type if controllers inject it directly
-builder.Services.AddSingleton<IBlockWritService, BlockWritService>(); // Register interface and implementation
-builder.Services.AddSingleton<IBlockReadService, BlockReadService>(); 
+builder.Services.AddSingleton<IBlockManager, BlockManager>();
+builder.Services.AddSingleton<IBlockWritService, BlockWritService>();
+builder.Services.AddSingleton<IBlockReadService, BlockReadService>();
 
 // WorkflowService depends on IBlockManager and INotifierService, make it Singleton or Scoped.
 // Singleton is fine if it doesn't hold per-request state.
@@ -61,8 +61,8 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
-              .AllowAnyMethod()
-              .AllowAnyHeader();
+            .AllowAnyMethod()
+            .AllowAnyHeader();
         // If using SignalR with credentials, adjust AllowAnyOrigin and add AllowCredentials()
         // policy.WithOrigins("http://localhost:xxxx") // Your frontend URL
         //       .AllowAnyMethod()
@@ -86,8 +86,8 @@ if (app.Environment.IsDevelopment())
 }
 else
 {
-     app.UseExceptionHandler("/Error"); // Add basic error handling page
-     app.UseHsts(); // Enable HTTP Strict Transport Security
+    app.UseExceptionHandler("/Error"); // Add basic error handling page
+    app.UseHsts(); // Enable HTTP Strict Transport Security
 }
 
 // app.UseHttpsRedirection();
@@ -130,17 +130,18 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 // Helper class for Swagger Enum Display
 public class EnumSchemaFilter : Swashbuckle.AspNetCore.SwaggerGen.ISchemaFilter
 {
-    public void Apply(Microsoft.OpenApi.Models.OpenApiSchema schema, Swashbuckle.AspNetCore.SwaggerGen.SchemaFilterContext context)
+    public void Apply(Microsoft.OpenApi.Models.OpenApiSchema schema,
+        Swashbuckle.AspNetCore.SwaggerGen.SchemaFilterContext context)
     {
         if (context.Type.IsEnum)
         {
-             schema.Enum.Clear();
-             schema.Type = "string"; // Represent enum as string
-             schema.Format = null;
-             foreach (string enumName in Enum.GetNames(context.Type))
-             {
-                 schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(enumName));
-             }
+            schema.Enum.Clear();
+            schema.Type = "string"; // Represent enum as string
+            schema.Format = null;
+            foreach (string enumName in Enum.GetNames(context.Type))
+            {
+                schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(enumName));
+            }
         }
     }
 }

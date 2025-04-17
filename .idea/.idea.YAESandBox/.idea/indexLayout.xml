@@ -3,6 +3,8 @@
   <component name="UserContentModel">
     <attachedFolders />
     <explicitIncludes />
-    <explicitExcludes />
+    <explicitExcludes>
+      <Path>YAESandBox.Core.Block/YAESandBox.Core.Block.csproj.DotSettings</Path>
+    </explicitExcludes>
   </component>
 </project>

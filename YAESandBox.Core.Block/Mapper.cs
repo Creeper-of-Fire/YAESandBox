@@ -98,43 +98,66 @@ internal static class PersistenceMapper
                 // 递归处理数组元素
                 return element.EnumerateArray().Select(DeserializeObjectValue).ToList();
             case JsonValueKind.Object:
-                // ----- Bug 1 & 3 修复：优先手动检测 TypedID 结构 -----
-                // 检查是否存在 "type" 和 "id" 属性，并且类型是预期的（string 或 number for type, string for id）
-                if (element.TryGetProperty("type", out var typeProp) && // 检查 "type" 属性
-                    element.TryGetProperty("id", out var idProp) &&   // 检查 "id" 属性
-                    idProp.ValueKind == JsonValueKind.String)         // 确保 "id" 是字符串
+                // // ----- Bug 1 & 3 修复：优先手动检测 TypedID 结构 -----
+                // // 检查是否存在 "type" 和 "id" 属性，并且类型是预期的（string 或 number for type, string for id）
+                // if (element.TryGetProperty("type", out var typeProp) && // 检查 "type" 属性
+                //     element.TryGetProperty("id", out var idProp) &&   // 检查 "id" 属性
+                //     idProp.ValueKind == JsonValueKind.String)         // 确保 "id" 是字符串
+                // {
+                //     string? typeString = null;
+                //     switch (typeProp.ValueKind)
+                //     {
+                //         // EntityType 可能被序列化为字符串（推荐）或数字
+                //         case JsonValueKind.String:
+                //             typeString = typeProp.GetString();
+                //             break;
+                //         case JsonValueKind.Number when typeProp.TryGetInt32(out int typeInt):
+                //         {
+                //             // 如果枚举被序列化为数字，尝试转换
+                //             if (Enum.IsDefined(typeof(EntityType), typeInt)) 
+                //                 typeString = ((EntityType)typeInt).ToString(); // 转回字符串以便统一处理
+                //
+                //             break;
+                //         }
+                //     }
+                //
+                //     // 使用 Enum.TryParse 进行健壮的解析（忽略大小写）
+                //     if (typeString != null && Enum.TryParse<EntityType>(typeString, ignoreCase: true, out var entityType))
+                //     {
+                //         var idString = idProp.GetString();
+                //         if (idString != null) // 再次确认 id 字符串不为 null
+                //         {
+                //             // 成功识别并解析为 TypedID
+                //             return new TypedID(entityType, idString);
+                //         }
+                //     }
+                //     // 如果解析失败，记录日志并继续按普通字典处理
+                //     Log.Warning($"JSON 对象结构类似 TypedID，但无法解析 'type' ('{typeString}') 或 'id'。将按普通字典处理。原始JSON: {element.GetRawText()}");
+                // }
+                // // ----- TypedID 手动检测结束 -----
+                try
                 {
-                    string? typeString = null;
-                    switch (typeProp.ValueKind)
+                    // 注意：需要确保 JsonSerializerOptions 传递正确
+                    // 这里的 options 需要包含 TypedIdConverter 和 JsonStringEnumConverter
+                    var options = BlockManager._jsonOptions; // 假设 BlockManager 中的 _jsonOptions 可访问或重新创建
+                    var typedId = element.Deserialize<TypedID>(options);
+                    // 如果反序列化成功（没有抛异常），并且结果不为 null
+                    if (typedId != default) // 检查是否为默认值，因为 record struct 不是 null
                     {
-                        // EntityType 可能被序列化为字符串（推荐）或数字
-                        case JsonValueKind.String:
-                            typeString = typeProp.GetString();
-                            break;
-                        case JsonValueKind.Number when typeProp.TryGetInt32(out int typeInt):
-                        {
-                            // 如果枚举被序列化为数字，尝试转换
-                            if (Enum.IsDefined(typeof(EntityType), typeInt)) 
-                                typeString = ((EntityType)typeInt).ToString(); // 转回字符串以便统一处理
-
-                            break;
-                        }
+                        return typedId;
                     }
-
-                    // 使用 Enum.TryParse 进行健壮的解析（忽略大小写）
-                    if (typeString != null && Enum.TryParse<EntityType>(typeString, ignoreCase: true, out var entityType))
-                    {
-                        var idString = idProp.GetString();
-                        if (idString != null) // 再次确认 id 字符串不为 null
-                        {
-                            // 成功识别并解析为 TypedID
-                            return new TypedID(entityType, idString);
-                        }
-                    }
-                    // 如果解析失败，记录日志并继续按普通字典处理
-                    Log.Warning($"JSON 对象结构类似 TypedID，但无法解析 'type' ('{typeString}') 或 'id'。将按普通字典处理。原始JSON: {element.GetRawText()}");
+                    // 如果反序列化为默认值，可能不是 TypedID 结构，继续按字典处理
                 }
-                // ----- TypedID 手动检测结束 -----
+                catch (JsonException)
+                {
+                    // 反序列化失败，说明它不是一个有效的 TypedID JSON，按普通字典处理
+                    Log.Debug($"JSON object was not a valid TypedID. Deserializing as dictionary. JSON: {element.GetRawText()}");
+                }
+                catch (Exception ex) // 其他意外错误
+                {
+                    Log.Error(ex, $"Unexpected error during potential TypedID deserialization. JSON: {element.GetRawText()}");
+                    // 根据情况决定是继续按字典处理还是抛出异常
+                }
 
                 // 处理普通字典
                 var dict = new Dictionary<string, object?>();

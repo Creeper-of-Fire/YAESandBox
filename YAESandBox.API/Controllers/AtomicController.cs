@@ -20,10 +20,11 @@ public class AtomicController(IBlockWritService writServices, IBlockReadService 
     /// 根据 Block 状态，操作可能被立即执行或暂存。
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(StatusCodes.Status200OK)]       // Operations executed successfully
-    [ProducesResponseType(StatusCodes.Status202Accepted)]    // Operations queued due to block loading
+    [ProducesResponseType(StatusCodes.Status200OK)] // Operations executed successfully
+    [ProducesResponseType(StatusCodes.Status202Accepted)] // Operations queued due to block loading
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    [ProducesResponseType(StatusCodes.Status409Conflict)]    // e.g., Trying to modify while in conflict state without resolution
+    [ProducesResponseType(StatusCodes
+        .Status409Conflict)] // e.g., Trying to modify while in conflict state without resolution
     [ProducesResponseType(StatusCodes.Status400BadRequest)] // Invalid operations in request
     public async Task<IActionResult> ExecuteAtomicOperations(string blockId, [FromBody] BatchAtomicRequestDto request)
     {
@@ -40,11 +41,15 @@ public class AtomicController(IBlockWritService writServices, IBlockReadService 
         // 3. Return appropriate statusCode code based on the result
         return result switch
         {
-            AtomicExecutionResult.Executed => this.Ok("Operations executed successfully."), // Or 204 No Content if preferred
-            AtomicExecutionResult.Queued => this.Accepted($"Operations queued for block '{blockId}' (block is loading)."),
+            AtomicExecutionResult.Executed =>
+                this.Ok("Operations executed successfully."), // Or 204 No Content if preferred
+            AtomicExecutionResult.ExecutedAndQueued => this.Accepted((string?)null,
+                $"Operations executed successfully. Operations queued for block '{blockId}' (loading)."),
             AtomicExecutionResult.NotFound => this.NotFound($"Block with ID '{blockId}' not found."),
-            AtomicExecutionResult.ConflictState => this.Conflict($"Block '{blockId}' is in a conflict state. Resolve conflict first."),
-            AtomicExecutionResult.Error => this.StatusCode(StatusCodes.Status500InternalServerError, "An error occurred during execution."),
+            AtomicExecutionResult.ConflictState => this.Conflict(
+                $"Block '{blockId}' is in a conflict state. Resolve conflict first."),
+            AtomicExecutionResult.Error => this.StatusCode(StatusCodes.Status500InternalServerError,
+                "An error occurred during execution."),
             _ => this.StatusCode(StatusCodes.Status500InternalServerError, "An unexpected result occurred.")
         };
     }
@@ -66,27 +71,38 @@ public class AtomicController(IBlockWritService writServices, IBlockReadService 
                         coreOp = AtomicOperation.Create(dto.EntityType, dto.EntityId, dto.InitialAttributes);
                         break;
                     case AtomicOperationType.ModifyEntity:
-                        if (string.IsNullOrWhiteSpace(dto.AttributeKey) || string.IsNullOrWhiteSpace(dto.ModifyOperator))
+                        if (string.IsNullOrWhiteSpace(dto.AttributeKey) ||
+                            string.IsNullOrWhiteSpace(dto.ModifyOperator))
                             return null; // Invalid modify op
                         var op = OperatorHelper.StringToOperator(dto.ModifyOperator);
-                        coreOp = AtomicOperation.Modify(dto.EntityType, dto.EntityId, dto.AttributeKey, op, dto.ModifyValue);
+                        coreOp = AtomicOperation.Modify(dto.EntityType, dto.EntityId, dto.AttributeKey, op,
+                            dto.ModifyValue);
                         break;
                     case AtomicOperationType.DeleteEntity:
                         coreOp = AtomicOperation.Delete(dto.EntityType, dto.EntityId);
                         break;
                     default: return null; // Unknown type
                 }
+
                 coreOps.Add(coreOp);
             }
             catch (Exception ex) // Catch parsing errors etc.
             {
-                 Log.Error(ex,$"Failed to map AtomicOperationRequestDto: {ex.Message}");
+                Log.Error(ex, $"Failed to map AtomicOperationRequestDto: {ex.Message}");
                 return null; // Indicate mapping failure
             }
         }
+
         return coreOps;
     }
 }
 
 // Helper enum for atomic execution results (can be defined elsewhere)
-public enum AtomicExecutionResult { Executed, Queued, NotFound, ConflictState, Error }
+public enum AtomicExecutionResult
+{
+    Executed,
+    ExecutedAndQueued,
+    NotFound,
+    ConflictState,
+    Error
+}

@@ -59,7 +59,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
         // 尝试获取更多信息 (可能为 null)
         var httpContext = this.Context.GetHttpContext();
         var remoteIp = httpContext?.Connection.RemoteIpAddress;
-        var userAgent = httpContext?.Request.Headers["User-Agent"];
+        var userAgent = httpContext?.Request.Headers.UserAgent;
         Log.Debug($"GameHub: Connection details - Remote IP: {remoteIp}, User-Agent: {userAgent}");
         await base.OnConnectedAsync();
     }

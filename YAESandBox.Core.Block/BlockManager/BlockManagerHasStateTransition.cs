@@ -4,6 +4,7 @@ using OneOf;
 
 namespace YAESandBox.Core.Block;
 
+// BlockManager中，可能导致Block状态转换的那部分代码。
 public partial class BlockManager
 {
     internal void TrySetBlock(BlockStatus? blockStatus)

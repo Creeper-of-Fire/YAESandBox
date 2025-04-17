@@ -11,7 +11,7 @@ using YAESandBox.Depend;
 
 namespace YAESandBox.Core.Block;
 
-public partial class BlockManager
+public partial class BlockManager : IBlockManager
 {
     /// <summary>
     /// 构造函数，创建默认根节点。
@@ -251,7 +251,7 @@ public partial class BlockManager
     //--- 持久化逻辑 --- 
 
 
-    private static readonly JsonSerializerOptions _jsonOptions = new()
+    internal static readonly JsonSerializerOptions _jsonOptions = new()
     {
         WriteIndented = true, // For readability
         Converters = { new JsonStringEnumConverter(), new TypedIdConverter() }, // 注册转换器

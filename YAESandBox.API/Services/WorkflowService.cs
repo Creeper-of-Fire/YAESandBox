@@ -27,7 +27,7 @@ public class WorkflowService(
         Log.Info(
             $"收到工作流触发请求: RequestId={request.RequestId}, Workflow={request.WorkflowName}, ParentBlock={request.ParentBlockId}");
         var childBlock =
-            await this.blockWritServices.CreateChildBlockForWorkflowAsync(request.ParentBlockId, request.Params);
+            await this.blockWritServices.CreateChildBlockAsync(request.ParentBlockId, request.Params);
         if (childBlock == null)
         {
             Log.Error($"创建子 Block 失败，父 Block: {request.ParentBlockId}");
@@ -37,7 +37,19 @@ public class WorkflowService(
         Log.Info($"为工作流 '{request.WorkflowName}' 创建了新的子 Block: {childBlock.Block.BlockId}");
         // 3. 异步执行工作流逻辑 (使用 Task.Run 避免阻塞 Hub 调用线程)
         // 注意：在 Task.Run 中访问 Scoped 服务 (如数据库上下文) 可能需要手动创建 Scope
-        _ = Task.Run(() => this.ExecuteWorkflowAsync(request, childBlock.Block.BlockId));
+        _ = Task.Run(() => this.StartExecuteWorkflowAsync(request, childBlock.Block.BlockId));
+    }
+
+    internal async Task StartExecuteWorkflowAsync(TriggerWorkflowRequestDto request, string blockId)
+    {
+        try
+        {
+            await this.ExecuteWorkflowAsync(request, blockId);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Block '{blockId}': 工作流执行失败。");
+        }
     }
 
     // 实际执行工作流的私有方法

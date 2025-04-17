@@ -12,10 +12,10 @@ namespace YAESandBox.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")] // /api/persistence
-public class PersistenceController(BlockManager blockManager) : ControllerBase
+public class PersistenceController(IBlockManager blockManager) : ControllerBase
 {
     // Inject BlockManager
-    private BlockManager blockManager { get; } = blockManager;
+    private IBlockManager blockManager { get; } = blockManager;
 
 
     /// <summary>

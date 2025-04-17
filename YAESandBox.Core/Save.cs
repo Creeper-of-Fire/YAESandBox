@@ -1,7 +1,6 @@
 ﻿// --- Persistence DTOs ---
 
 using System.Text.Json.Serialization;
-using YAESandBox.Core.State.Entity;
 
 // For EntityType, TypedID
 // For GameState? (Maybe define GameStateDto here too)
@@ -95,24 +94,4 @@ public class EntityDto
     /// </summary>
     [JsonPropertyName("attributes")]
     public Dictionary<string, object?> Attributes { get; set; } = new();
-}
-
-// --- Helper for TypedID serialization ---
-// 可以考虑自定义 JsonConverter，或者定义一个简单的 DTO
-public class TypedIdDto
-{
-    [JsonPropertyName("type")] public EntityType Type { get; set; }
-    [JsonPropertyName("id")] public string Id { get; set; } = null!;
-
-    public TypedIdDto()
-    {
-    } // For deserialization
-
-    public TypedIdDto(TypedID typedID)
-    {
-        this.Type = typedID.Type;
-        this.Id = typedID.Id;
-    }
-
-    public TypedID ToTypedID() => new(this.Type, this.Id);
 }

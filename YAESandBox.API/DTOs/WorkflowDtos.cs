@@ -32,7 +32,6 @@ public class BlockStatusUpdateDto
 {
     public string BlockId { get; set; } = null!;
     public BlockStatusCode StatusCode { get; set; }
-    public string? ParentBlockId { get; set; }
 }
 
 public class WorkflowUpdateDto
