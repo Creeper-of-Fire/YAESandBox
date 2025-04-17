@@ -34,7 +34,7 @@ public enum BlockStatusCode
 
 public interface IBlockStatus
 {
-    public Block Block { get; init; }
+    public Block Block { get; }
     public BlockStatusCode StatusCode { get; }
 }
 
@@ -43,7 +43,7 @@ public interface IBlockStatus
 /// </summary>
 public class BlockStatus(Block block) : IBlockStatus
 {
-    public Block Block { get; init; } = block;
+    public Block Block { get; } = block;
 
     public BlockStatusCode StatusCode
     {
@@ -109,13 +109,13 @@ public class IdleBlockStatus(Block block) : BlockStatus(block)
     /// </summary>
     /// <param name="operations"></param>
     /// <returns></returns>
-    public List<OperationResult> ApplyOperations(List<AtomicOperation> operations)
+    internal List<OperationResult> ApplyOperations(List<AtomicOperation> operations)
     {
         var results = Block.ApplyOperationsTo(this.CurrentWorldState, operations);
         return results;
     }
 
-    public (string newBlockId, LoadingBlockStatus newChildblock) CreateNewChildrenBlock()
+    internal (string newBlockId, LoadingBlockStatus newChildblock) CreateNewChildrenBlock()
     {
         string newBlockId = $"blk_{Guid.NewGuid()}";
         if (this.Block.wsPostUser == null)
@@ -147,7 +147,7 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
     /// </summary>
     /// <param name="operations"></param>
     /// <returns></returns>
-    public List<OperationResult> ApplyOperations(List<AtomicOperation> operations)
+    internal List<OperationResult> ApplyOperations(List<AtomicOperation> operations)
     {
         var results = Block.ApplyOperationsTo(this.CurrentWorldState, operations);
         this.PendingUserCommands.AddRange(results.FindAllOK());
@@ -160,11 +160,13 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
     /// <param name="rawContent"></param>
     /// <param name="pendingAICommands"></param>
     /// <returns>BlockStatusIdle或BlockStatusConflict</returns>
+    [HasBlockStateTransition]
     internal OneOf<
             (OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results), ConflictBlockStatus>
         TryFinalizeSuccessfulWorkflow(string rawContent, List<AtomicOperation> pendingAICommands)
     {
-        (bool hasConflict, var conflictAI, var conflictUser) =
+        (bool hasConflict, var simpleResolvedAiCommands, var simpleResolvedUserCommands, var conflictAI,
+                var conflictUser) =
             this.Block.DetectAndHandleConflicts(this.PendingUserCommands, pendingAICommands);
 
         if (!hasConflict)
@@ -180,8 +182,10 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
                 [..pendingAICommands.Concat(this.PendingUserCommands)]);
         }
 
+
         Log.Info($"Block '{this.Block.BlockId}' has conflict commands. Entering Conflict State.");
-        return this.EnterConflictState(rawContent, conflictAI, conflictUser);
+        return this.EnterConflictState(rawContent,
+            pendingAICommands, this.PendingUserCommands, conflictAI, conflictUser);
     }
 
     /// <summary>
@@ -190,6 +194,7 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
     /// <param name="rawContent"></param>
     /// <param name="commands"></param>
     /// <returns></returns>
+    [HasBlockStateTransition]
     internal (OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results)
         _FinalizeSuccessfulWorkflow(string rawContent,
             List<AtomicOperation> commands)
@@ -224,13 +229,20 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
     /// 进入冲突状态，并记录 AI 和用户提交的命令。
     /// </summary>
     /// <param name="rawContent"></param>
+    /// <param name="conflictAiCommands"></param>
+    /// <param name="conflictUserCommands"></param>
     /// <param name="aiCommands"></param>
     /// <param name="userCommands"></param>
     /// <returns></returns>
-    private ConflictBlockStatus EnterConflictState(string rawContent, List<AtomicOperation> aiCommands,
+    [HasBlockStateTransition]
+    private ConflictBlockStatus EnterConflictState(string rawContent,
+        List<AtomicOperation> conflictAiCommands,
+        List<AtomicOperation> conflictUserCommands,
+        List<AtomicOperation> aiCommands,
         List<AtomicOperation> userCommands)
     {
-        var newSelf = new ConflictBlockStatus(this.Block, aiCommands, userCommands); // 进入冲突状态
+        var newSelf = new ConflictBlockStatus(this.Block, conflictAiCommands, conflictUserCommands, aiCommands,
+            userCommands); // 进入冲突状态
 
         //TODO 解决冲突的逻辑
         this.Block.BlockContent = rawContent;
@@ -244,6 +256,7 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
     /// 当Loading时，强制进入 Idle 状态
     /// </summary>
     /// <returns></returns>
+    [HasBlockStateTransition]
     internal IdleBlockStatus ForceIdleState()
     {
         var newSelf = new IdleBlockStatus(this.Block);
@@ -258,18 +271,27 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
     /// 将当前状态转换为 ErrorBlockStatus。
     /// </summary>
     /// <returns></returns>
+    [HasBlockStateTransition]
     public ErrorBlockStatus toErrorStatus() => new(this.Block);
 }
 
 /// <summary>
 /// 工作流执行完毕，但检测到与暂存的用户指令存在冲突，等待解决。
 /// </summary>
-public class ConflictBlockStatus(Block block, List<AtomicOperation> aiCommands, List<AtomicOperation> userCommands)
+public class ConflictBlockStatus(
+    Block block,
+    List<AtomicOperation> conflictAiCommands,
+    List<AtomicOperation> conflictUserCommands,
+    List<AtomicOperation> aiCommands,
+    List<AtomicOperation> userCommands)
     : BlockStatus(block)
 {
     // --- 冲突信息 (仅在 ResolvingConflict 状态下有意义) ---
-    public List<AtomicOperation> conflictingAiCommands { get; } = aiCommands;
-    public List<AtomicOperation> conflictingUserCommands { get; } = userCommands;
+    public List<AtomicOperation> conflictingAiCommands { get; } = conflictAiCommands;
+    public List<AtomicOperation> conflictingUserCommands { get; } = conflictUserCommands;
+
+    public List<AtomicOperation> AiCommands { get; } = aiCommands;
+    public List<AtomicOperation> UserCommands { get; } = userCommands;
 
     /// <summary>
     /// 冲突已由用户解决。
@@ -278,6 +300,7 @@ public class ConflictBlockStatus(Block block, List<AtomicOperation> aiCommands, 
     /// <param name="rawContent"></param>
     /// <param name="resolvedCommands">用户提交的最终指令列表。</param>
     /// <returns>如果最终化成功则为 true，否则 false。</returns>
+    [HasBlockStateTransition]
     internal (OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results)
         FinalizeConflictResolution(string rawContent, List<AtomicOperation> resolvedCommands)
     {
@@ -290,3 +313,21 @@ public class ConflictBlockStatus(Block block, List<AtomicOperation> aiCommands, 
 /// Block 处理过程中发生错误。
 /// </summary>
 public class ErrorBlockStatus(Block block) : BlockStatus(block);
+
+/// <summary>
+/// 指示一个方法或代码块包含 Block 状态转换逻辑，
+/// 并且调用者（通常是 BlockManager）需要在转换后确保更新 BlockManager.blocks 字典，
+/// 并建议使用 EnsureStatusUpdated 进行检查。
+/// </summary>
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+// AttributeTargets.Method: 可以标记方法
+// AttributeTargets.Class: 也可以标记整个类（如果类主要负责状态转换）
+// Inherited = false: 此属性不被派生类继承
+// AllowMultiple = false: 同一个目标上只能应用一次此属性
+public sealed class HasBlockStateTransition(string? description = null) : Attribute
+{
+    /// <summary>
+    /// 可选的描述信息，说明转换的性质或需要注意的地方。
+    /// </summary>
+    public string? Description { get; } = description;
+}

@@ -11,7 +11,7 @@ using YAESandBox.Depend;
 
 namespace YAESandBox.Core.Block;
 
-public class BlockManager
+public partial class BlockManager
 {
     /// <summary>
     /// 构造函数，创建默认根节点。
@@ -19,8 +19,11 @@ public class BlockManager
     /// <exception cref="Exception"></exception>
     public BlockManager()
     {
-        if (this.blocks.TryAdd(WorldRootId, Block.CreateBlock(WorldRootId, null, new WorldState(), new GameState())))
-            Log.Info("BlockManager: 根节点已创建。");
+        var rootBlock = Block.CreateBlock(WorldRootId, null, new WorldState(), new GameState());
+        if (this.blocks.TryAdd(WorldRootId, rootBlock.ForceIdleState()))
+        {
+            Log.Info("BlockManager: 根节点已创建并设置为空闲。");
+        }
         else
             throw new Exception($"添加默认根 Block '{WorldRootId}' 失败。");
     }
@@ -39,14 +42,15 @@ public class BlockManager
     /// <returns></returns>
     private AsyncLock GetLockForBlock(string blockId) => this.blockLocks.GetOrAdd(blockId, _ => new AsyncLock());
 
-    /// <summary>
-    /// 全局锁，用于控制对单个 BlockManager 的并发访问。
-    /// </summary>
-    private AsyncLock globalLoadLock { get; } = new AsyncLock();
+    // /// <summary>
+    // /// 全局锁，用于控制对单个 BlockManager 的并发访问。
+    // /// </summary>
+    // private AsyncLock globalLoadLock { get; } = new AsyncLock();
 
-    public IReadOnlyDictionary<string, Block> Blocks => this.blocks.ToDictionary(kv => kv.Key, kv => kv.Value.Block);
+    public IReadOnlyDictionary<string, Block> GetBlocks() =>
+        this.blocks.ToDictionary(kv => kv.Key, kv => kv.Value.Block);
 
-    public IReadOnlyDictionary<string, IBlockNode> NodeOnlyBlocks =>
+    public IReadOnlyDictionary<string, IBlockNode> GetNodeOnlyBlocks() =>
         this.blocks.ToDictionary(kv => kv.Key, IBlockNode (kv) => kv.Value.Block);
 
     /// <summary>
@@ -75,6 +79,8 @@ public class BlockManager
                 return null;
             }
 
+            parentBlock.Block.TriggeredChildParams = triggerParams;
+            
             (string newBlockId, var newChildBlock) = idleParentBlock.CreateNewChildrenBlock();
 
 
@@ -88,7 +94,6 @@ public class BlockManager
                 }
 
                 // 3. Add Child Info to Parent
-                parentBlock.Block.TriggeredChildParams = triggerParams;
                 parentBlock.Block.AddChildren(newChildBlock.Block);
                 Log.Debug($"父 Block '{parentBlockId}': 已添加子 Block '{newBlockId}' 记录。");
                 // TODO: 持久化 Parent Block changes
@@ -115,7 +120,7 @@ public class BlockManager
         // 循环向下查找，直到遇到没有子节点的块 或 遇到数据不一致的情况
         while (this.blocks.TryGetValue(currentId, out var currentBlock))
         {
-            if (currentBlock.Block.ChildrenList.Any())
+            if (!currentBlock.Block.ChildrenList.Any())
                 break;
 
             string lastChildId = currentBlock.Block.ChildrenList.Last(); // 获取最后一个子节点的ID
@@ -183,38 +188,28 @@ public class BlockManager
         return Task.FromResult(block);
     }
 
-
     /// <summary>
-    /// 处理已解决冲突的指令。
+    /// 更新block的GameState，它比worldState简单很多，所以简单加锁即可。
+    /// 它完全不被一等工作流修改，所以无论BlockStatus是什么，都可以进行修改，不存在任何的冲突。
     /// </summary>
     /// <param name="blockId"></param>
-    /// <param name="resolvedCommands"></param>
+    /// <param name="settingsToUpdate"></param>
     /// <returns></returns>
-    public async Task<(OneOf<IdleBlockStatus, ErrorBlockStatus>? blockStatus, List<OperationResult>? results)>
-        ApplyResolvedCommandsAsync(string blockId, List<AtomicOperation> resolvedCommands)
+    public async Task<UpdateResult> UpdateBlockGameStateAsync(
+        string blockId, Dictionary<string, object?> settingsToUpdate)
     {
-        // This logic is now mostly inside HandleWorkflowCompletionAsync after conflict resolution.
-        // This method might be used if we implement manual conflict resolution flow.
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
             if (!this.blocks.TryGetValue(blockId, out var block))
-            {
-                Log.Error($"尝试应用已解决指令失败: Block '{blockId}' 未找到。");
-                return (null, null);
-            }
+                return UpdateResult.NotFound;
 
-            if (block is not ConflictBlockStatus conflictBlock)
-            {
-                Log.Warning($"尝试应用已解决指令，但 Block '{blockId}' 状态为 {block.StatusCode} (非 ResolvingConflict)。已忽略。");
-                return (null, null);
-            }
+            foreach (var kvp in settingsToUpdate)
+                block.Block.GameState[kvp.Key] = kvp.Value;
 
-            Log.Info($"Block '{blockId}': 正在应用手动解决的冲突指令 ({resolvedCommands.Count} 条)。");
-
-            return conflictBlock.FinalizeConflictResolution(block.Block.BlockContent, resolvedCommands);
+            Log.Debug($"Block '{blockId}': GameState 已更新。");
+            return UpdateResult.Success;
         }
     }
-
 
     /// <summary>
     /// 异步执行或排队原子操作。
@@ -250,76 +245,6 @@ public class BlockManager
                     Log.Error($"尝试执行原子操作失败: Block '{blockId}' 状态为 {block.StatusCode}。");
                     return (null, null);
             }
-        }
-    }
-
-    /// <summary>
-    /// 更新block的GameState，它比worldState简单很多，所以简单加锁即可。
-    /// 它完全不被一等工作流修改，所以无论BlockStatus是什么，都可以进行修改，不存在任何的冲突。
-    /// </summary>
-    /// <param name="blockId"></param>
-    /// <param name="settingsToUpdate"></param>
-    /// <returns></returns>
-    public async Task<UpdateResult> UpdateBlockGameStateAsync(
-        string blockId, Dictionary<string, object?> settingsToUpdate)
-    {
-        using (await this.GetLockForBlock(blockId).LockAsync())
-        {
-            if (!this.blocks.TryGetValue(blockId, out var block))
-                return UpdateResult.NotFound;
-
-            foreach (var kvp in settingsToUpdate)
-                block.Block.GameState[kvp.Key] = kvp.Value;
-
-            Log.Debug($"Block '{blockId}': GameState 已更新。");
-            return UpdateResult.Success;
-        }
-    }
-
-
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="blockId"></param>
-    /// <param name="success"></param>
-    /// <param name="rawText"></param>
-    /// <param name="firstPartyCommands">来自第一公民工作流的指令</param>
-    /// <param name="outputVariables"></param>
-    public async
-        Task<OneOf<(OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results),
-            ConflictBlockStatus, ErrorBlockStatus>?>
-        HandleWorkflowCompletionAsync(string blockId, bool success, string rawText,
-            List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables)
-    {
-        using (await this.GetLockForBlock(blockId).LockAsync())
-        {
-            if (!this.blocks.TryGetValue(blockId, out var blockStatus))
-            {
-                Log.Error($"处理工作流完成失败: Block '{blockId}' 未找到。");
-                return null;
-            }
-
-            if (blockStatus is not LoadingBlockStatus block)
-            {
-                Log.Warning($"收到 Block '{blockId}' 的工作流完成回调，但其状态为 {blockStatus.StatusCode} (非 Loading)。可能重复或过时。");
-                return null;
-            }
-
-            if (!success) // Workflow failed
-            {
-                Log.Error($"Block '{blockId}': 工作流执行失败。已转为错误状态。");
-                var errorStatus = block.toErrorStatus();
-                this.blocks[blockId] = errorStatus;
-                return errorStatus;
-            }
-
-            // Store output variables in metadata?
-            block.Block.Metadata["WorkflowOutputVariables"] = outputVariables;
-
-            Log.Info($"Block '{blockId}': 工作流成功完成。准备处理指令和状态。");
-            var val = block.TryFinalizeSuccessfulWorkflow(rawText, firstPartyCommands);
-            return val.Widen<(OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results),
-                ConflictBlockStatus, ErrorBlockStatus>();
         }
     }
 

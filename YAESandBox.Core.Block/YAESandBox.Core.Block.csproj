@@ -8,12 +8,15 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" />
-      <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
+        <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
+        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
+            <_Parameter1>YAESandBox.Tests</_Parameter1> <!-- 这里是你的测试项目的程序集名称 -->
+        </AssemblyAttribute>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="OneOf" Version="3.0.271" />
+        <PackageReference Include="OneOf" Version="3.0.271"/>
     </ItemGroup>
 
 </Project>

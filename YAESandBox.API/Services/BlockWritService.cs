@@ -145,16 +145,15 @@ public class BlockWritService(INotifierService notifierService, BlockManager blo
         }
 
         Log.Info("工作流生成的指令和当前修改存在冲突，等待手动解决。");
-        // 1. Get pending user commands accumulated during loading
-        var conflictingAiCommands = conflictBlock.conflictingAiCommands;
-        var conflictingUserCommands = conflictBlock.conflictingUserCommands;
 
         await this.notifierService.NotifyConflictDetectedAsync(new ConflictDetectedDto()
         {
             BlockId = blockId,
             RequestId = requestId,
-            ConflictingAiCommands = conflictingAiCommands,
-            ConflictingUserCommands = conflictingUserCommands
+            AiCommands = conflictBlock.AiCommands,
+            UserCommands = conflictBlock.UserCommands,
+            ConflictingAiCommands = conflictBlock.conflictingAiCommands,
+            ConflictingUserCommands = conflictBlock.conflictingUserCommands
         });
     }
 }

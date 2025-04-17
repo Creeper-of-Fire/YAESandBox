@@ -32,7 +32,7 @@ public class BlockReadService(INotifierService notifierService, BlockManager blo
 {
     public async Task<IReadOnlyDictionary<string, BlockDetailDto>> GetAllBlockDetailsAsync()
     {
-        var tasks = this.blockManager.Blocks.Keys
+        var tasks = this.blockManager.GetBlocks().Keys
             .Select(this.GetBlockDetailDtoAsync)
             .ToList();
         var results = await tasks.WhenAll();
@@ -41,7 +41,7 @@ public class BlockReadService(INotifierService notifierService, BlockManager blo
 
     public Task<JsonBlockNode?> GetBlockTopologyJsonAsync()
     {
-        return Task.FromResult(GenerateTopologyJson(this.blockManager.NodeOnlyBlocks));
+        return Task.FromResult(GenerateTopologyJson(this.blockManager.GetNodeOnlyBlocks()));
     }
 
     public async Task<BlockDetailDto?> GetBlockDetailDtoAsync(string blockId)

@@ -122,7 +122,7 @@ public class Block : NodeBlock
         //     throw new ArgumentException("Parent Block ID cannot be null or whitespace.", nameof(parentBlockId));
 
         this.Metadata["CreationTime"] = DateTime.UtcNow;
-        this.Metadata["TriggerParams"] = triggerParams;
+        this.Metadata["TriggerParams"] = triggerParams.ToDictionary();
 
         // --- 在构造函数内部完成克隆 ---
         this.wsInput = sourceWorldState.Clone(); // 创建 wsInput 的隔离副本
@@ -155,40 +155,141 @@ public class Block : NodeBlock
 
 
     /// <summary>
-    /// 检测用户提交的命令和AI生成的命令是否有冲突，如果有冲突则进入冲突状态。
+    /// 检测并处理用户和 AI 命令之间的冲突，采用基于属性的细粒度规则。
     /// </summary>
-    /// <param name="pendingUserCommands"></param>
-    /// <param name="pendingAICommands"></param>
-    /// <returns></returns>
-    internal (bool hasConflict, List<AtomicOperation>? conflictingAi, List<AtomicOperation>? conflictingUser)
-        DetectAndHandleConflicts(List<AtomicOperation> pendingUserCommands,
+    /// <param name="pendingUserCommands">用户在 Loading 状态下提交的原始命令。</param>
+    /// <param name="pendingAICommands">AI 工作流生成的原始命令。</param>
+    /// <returns>一个包含冲突检测结果的元组：
+    /// - hasBlockingConflict: bool - 是否存在需要用户解决的阻塞性冲突 (Modify/Modify 同一属性)。
+    /// - resolvedAiCommands: List-AtomicOperation - AI 命令列表（当前逻辑下通常与输入相同，除非未来加入 AI 重命名逻辑）。
+    /// - resolvedUserCommands: List-AtomicOperation - 经过自动处理（如 Create/Create 重命名）后的用户命令列表。
+    /// - conflictingAiForResolution: List-AtomicOperation? - 导致阻塞性冲突的 AI 命令子集 (仅当 hasBlockingConflict 为 true)。
+    /// - conflictingUserForResolution: List-AtomicOperation? - 导致阻塞性冲突的用户命令子集 (仅当 hasBlockingConflict 为 true)。
+    /// </returns>
+    internal (
+        bool hasBlockingConflict,
+        List<AtomicOperation> resolvedAiCommands,
+        List<AtomicOperation> resolvedUserCommands,
+        List<AtomicOperation>? conflictingAiForResolution,
+        List<AtomicOperation>? conflictingUserForResolution
+        ) DetectAndHandleConflicts(
+            List<AtomicOperation> pendingUserCommands,
             List<AtomicOperation> pendingAICommands)
     {
-        // 使用 HashSet 来快速查找冲突
-        var userCommandsSet =
-            new HashSet<(EntityType, string)>(pendingUserCommands.Select(op => (op.EntityType, op.EntityId)));
-        var aiCommandsSet =
-            new HashSet<(EntityType, string)>(pendingAICommands.Select(op => (op.EntityType, op.EntityId)));
+        // 初始化返回结果结构
+        bool hasBlockingConflict = false;
+        List<AtomicOperation> conflictingAiForResolution = [];
+        List<AtomicOperation> conflictingUserForResolution = [];
 
-        // 找出冲突的命令
-        var conflictingUser = pendingUserCommands
-            .Where(userCommand => aiCommandsSet.Contains((userCommand.EntityType, userCommand.EntityId))).ToList();
+        // 复制原始列表，以便进行修改（特别是用户命令的重命名）
+        // AI 命令当前不进行修改，直接引用或浅拷贝即可
+        var resolvedAiCommands = new List<AtomicOperation>(pendingAICommands);
+        var resolvedUserCommands = new List<AtomicOperation>(pendingUserCommands); // 这将是可能被修改的列表
 
-        var conflictingAi = pendingAICommands
-            .Where(aiCommand => userCommandsSet.Contains((aiCommand.EntityType, aiCommand.EntityId))).ToList();
+        // --- 1. 处理 Create/Create 冲突 (自动重命名用户实体) ---
+        var aiCreatedEntities = pendingAICommands
+            .Where(op => op.OperationType == AtomicOperationType.CreateEntity)
+            .Select(op => new TypedID(op.EntityType, op.EntityId))
+            .ToHashSet();
 
-        if (conflictingUser.Any())
+        // 存储重命名映射：原始 TypedID -> 新 EntityId
+        var renamedUserEntities = new Dictionary<TypedID, string>();
+
+        // 第一次遍历：识别并重命名用户 Create 操作
+        for (int i = 0; i < resolvedUserCommands.Count; i++)
         {
-            // 记录冲突
-            Log.Warning($"Block '{this.BlockId}': 发现 {conflictingUser.Count} 个冲突操作。");
+            var userOp = resolvedUserCommands[i];
+            if (userOp.OperationType != AtomicOperationType.CreateEntity) continue;
+            var userTypedId = new TypedID(userOp.EntityType, userOp.EntityId);
+            if (!aiCreatedEntities.Contains(userTypedId)) continue;
+            // 冲突：AI 也创建了同名同类型实体
+            string originalId = userOp.EntityId;
+            // 你可以选择不同的重命名策略，例如加后缀或完全随机
+            string newId = $"{originalId}_user_created_{Guid.NewGuid().ToString("N")[..6]}";
+            renamedUserEntities[userTypedId] = newId;
 
-            // 返回冲突状态
-            return (true, conflictingAi, conflictingUser);
+            // 创建一个新的 AtomicOperation 实例，因为它是 readonly record struct
+            resolvedUserCommands[i] = userOp with { EntityId = newId };
+
+            Log.Info(
+                $"Block '{this.BlockId}': Create/Create conflict detected for {userTypedId}. User entity automatically renamed to '{newId}'.");
         }
 
-        // 没有冲突，继续处理
-        Log.Info($"Block '{this.BlockId}': No conflicts detected.");
-        return (false, null, null);
+        // 第二次遍历：更新后续引用了被重命名实体的用户操作
+        if (renamedUserEntities.Any())
+        {
+            for (int i = 0; i < resolvedUserCommands.Count; i++)
+            {
+                var userOp = resolvedUserCommands[i];
+                // 检查操作是否针对一个已被重命名的实体 (Create 操作已在上面处理过)
+                if (userOp.OperationType == AtomicOperationType.CreateEntity) continue;
+                var targetTypedId = new TypedID(userOp.EntityType, userOp.EntityId);
+                if (!renamedUserEntities.TryGetValue(targetTypedId, out string? newId)) continue;
+                // 更新操作的目标 ID
+                resolvedUserCommands[i] = userOp with { EntityId = newId };
+                Log.Debug(
+                    $"Block '{this.BlockId}': Updated user operation targeting renamed entity {targetTypedId} to use new ID '{newId}'. Operation: {userOp.OperationType}");
+            }
+        }
+
+        // --- 2. 处理 Modify/Modify 冲突 (同一实体，同一属性) ---
+        // 使用 HashSet 存储 AI 修改的 (实体, 属性) 对以提高查找效率
+        var aiModifications = pendingAICommands
+            .Where(op => op.OperationType == AtomicOperationType.ModifyEntity && op.AttributeKey != null)
+            // 使用元组 (TypedID, string) 作为 Key
+            .Select(op => (TargetId: new TypedID(op.EntityType, op.EntityId), AttributeKey: op.AttributeKey!))
+            .ToHashSet();
+
+        // 查找用户修改操作中与 AI 修改冲突的部分
+        foreach (var userOp in resolvedUserCommands) // 遍历可能已重命名的用户命令
+        {
+            if (userOp.OperationType != AtomicOperationType.ModifyEntity || userOp.AttributeKey == null) continue;
+            var userModTarget = (TargetId: new TypedID(userOp.EntityType, userOp.EntityId), userOp.AttributeKey);
+
+            if (!aiModifications.Contains(userModTarget)) continue;
+            // 阻塞性冲突发现！
+            hasBlockingConflict = true;
+
+            // 添加导致冲突的用户命令
+            conflictingUserForResolution.Add(userOp);
+
+            // 找到并添加导致冲突的 AI 命令 (可能多个 AI 命令修改同一属性，虽然少见)
+            var conflictingAiOps = pendingAICommands // 从原始 AI 命令中查找
+                .Where(aiOp =>
+                        aiOp.OperationType == AtomicOperationType.ModifyEntity &&
+                        aiOp.AttributeKey == userOp.AttributeKey && // 匹配属性
+                        new TypedID(aiOp.EntityType, aiOp.EntityId) == userModTarget.TargetId // 匹配实体
+                );
+            conflictingAiForResolution.AddRange(conflictingAiOps);
+
+            Log.Warning(
+                $"Block '{this.BlockId}': Blocking Modify/Modify conflict detected on Entity '{userModTarget.TargetId}', Attribute '{userModTarget.AttributeKey}'.");
+            // 决定是否找到第一个冲突就停止，还是收集所有冲突
+            // 当前逻辑会收集所有 Modify/Modify 冲突
+        }
+
+        // --- 3. Delete 及其他组合根据规则不视为冲突 ---
+        // Delete 操作被忽略
+        // Create/Modify 被忽略
+        // Modify/Delete 被忽略
+
+        // --- 4. 清理和返回 ---
+        if (hasBlockingConflict)
+        {
+            // 去重，以防万一有重复添加（理论上不应发生，但保险起见）
+            conflictingAiForResolution = conflictingAiForResolution.Distinct().ToList();
+            conflictingUserForResolution = conflictingUserForResolution.Distinct().ToList();
+
+            // 如果有阻塞性冲突，resolved 命令列表的意义不大，因为不会被直接应用
+            // 但为了保持返回结构一致，我们仍然返回它们（可能是修改过的用户列表）
+            return (hasBlockingConflict, resolvedAiCommands, resolvedUserCommands, conflictingAiForResolution,
+                conflictingUserForResolution);
+        }
+
+        // 没有阻塞性冲突
+        Log.Info($"Block '{this.BlockId}': No blocking conflicts detected after processing.");
+        // 冲突列表为空
+        return (false, resolvedAiCommands, resolvedUserCommands, null, null);
     }
 
 

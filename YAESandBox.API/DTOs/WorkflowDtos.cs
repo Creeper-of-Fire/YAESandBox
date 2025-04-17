@@ -58,6 +58,9 @@ public class ConflictDetectedDto
 {
     public string RequestId { get; set; } = null!; // 关联原始触发请求
     public string BlockId { get; set; } = null!;
+    public List<AtomicOperation> AiCommands { get; set; } = new();
+
+    public List<AtomicOperation> UserCommands { get; set; } = new();
     public List<AtomicOperation> ConflictingAiCommands { get; set; } = new();
 
     public List<AtomicOperation> ConflictingUserCommands { get; set; } = new();
