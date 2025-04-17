@@ -10,12 +10,21 @@ namespace YAESandBox.API.Services;
 public interface IWorkflowService
 {
     /// <summary>
-    /// 处理来自客户端的工作流触发请求。
-    /// 这通常会创建一个新的 Block 并启动一个异步的工作流执行。
+    /// 处理来自客户端的主工作流触发请求。
+    /// 这会创建一个新的 Block 并启动一个异步的工作流执行。
     /// </summary>
     /// <param name="request">工作流触发请求 DTO。</param>
     /// <returns>一个 Task 代表异步操作。</returns>
-    Task HandleWorkflowTriggerAsync(TriggerWorkflowRequestDto request);
+    Task HandleMainWorkflowTriggerAsync(TriggerWorkflowRequestDto request);
+
+    /// <summary>
+    /// 处理来自客户端的微工作流触发请求。
+    /// 这*不会*创建一个新的 Block 并启动一个异步的工作流执行。
+    /// </summary>
+    /// <param name="request">工作流触发请求 DTO。</param>
+    /// <returns>一个 Task 代表异步操作。</returns>
+    Task HandleMicroWorkflowTriggerAsync(TriggerMicroWorkflowRequestDto request);
+    
 
     /// <summary>
     /// 处理来自客户端的冲突解决请求。

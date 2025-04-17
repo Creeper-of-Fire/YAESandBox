@@ -5,7 +5,7 @@ namespace YAESandBox.API.DTOs;
 /// <summary>
 /// 用于 API 响应的实体基本信息。
 /// </summary>
-public class EntitySummaryDto
+public record EntitySummaryDto
 {
     public string EntityId { get; set; } = null!;
     public EntityType EntityType { get; set; }
@@ -17,7 +17,7 @@ public class EntitySummaryDto
 /// <summary>
 /// 用于 API 响应的实体详细信息（包含所有属性）。
 /// </summary>
-public class EntityDetailDto : EntitySummaryDto
+public record EntityDetailDto : EntitySummaryDto
 {
     public Dictionary<string, object?> Attributes { get; init; } = new();
 }

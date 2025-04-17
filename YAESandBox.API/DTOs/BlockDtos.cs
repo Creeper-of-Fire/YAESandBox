@@ -7,7 +7,7 @@ namespace YAESandBox.API.DTOs;
 /// <summary>
 /// 用于获取单个 Block 详细信息的响应 (不含 WorldState)。
 /// </summary>
-public class BlockDetailDto
+public record BlockDetailDto
 {
     public string BlockId { get; init; } = null!;
     public string? ParentBlockId { get; init; }

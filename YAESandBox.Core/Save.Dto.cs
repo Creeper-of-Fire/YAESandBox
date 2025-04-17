@@ -12,7 +12,7 @@ namespace YAESandBox.Core;
 /// <summary>
 /// 存档文件的顶层结构。
 /// </summary>
-public class ArchiveDto
+public record ArchiveDto
 {
     /// <summary>
     /// 存储所有 Block 的信息。键是 Block ID。
@@ -33,7 +33,7 @@ public class ArchiveDto
 /// <summary>
 /// 用于持久化的 Block 信息。
 /// </summary>
-public class BlockDto
+public record BlockDto
 {
     [JsonPropertyName("id")] public string BlockId { get; set; } = null!;
 
@@ -64,7 +64,7 @@ public class BlockDto
 /// <summary>
 /// 用于持久化的 WorldState 信息。
 /// </summary>
-public class WorldStateDto
+public record WorldStateDto
 {
     /// <summary>
     /// 持久化的实体。键是 Entity ID。
@@ -80,7 +80,7 @@ public class WorldStateDto
 /// <summary>
 /// 用于持久化的实体信息。
 /// </summary>
-public class EntityDto
+public record EntityDto
 {
     // EntityId 和 EntityType 从 WorldStateDto 的字典结构和 Key 中隐含，或者显式添加
     // [JsonPropertyName("entityId")]

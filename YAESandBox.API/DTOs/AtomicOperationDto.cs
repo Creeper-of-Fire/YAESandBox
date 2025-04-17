@@ -7,7 +7,7 @@ namespace YAESandBox.API.DTOs;
 /// <summary>
 /// 用于 API 请求的原子操作表示。
 /// </summary>
-public class AtomicOperationRequestDto
+public record AtomicOperationRequestDto
 {
     [Required]
     public string OperationType { get; set; } = null!; // "create", "modify", "delete"
@@ -33,7 +33,7 @@ public class AtomicOperationRequestDto
 /// <summary>
 /// 用于 API 请求的批量原子操作。
 /// </summary>
-public class BatchAtomicRequestDto
+public record BatchAtomicRequestDto
 {
     [Required]
     [MinLength(1)]

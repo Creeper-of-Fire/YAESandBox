@@ -90,7 +90,7 @@ public class BlockWritService(INotifierService notifierService, IBlockManager bl
 
 
     // --- 和 Workflow 交互的部分 ---
-    
+
     /// <summary>
     /// 为新的工作流创建一个子 Block。
     /// </summary>
@@ -143,14 +143,9 @@ public class BlockWritService(INotifierService notifierService, IBlockManager bl
 
         Log.Info("工作流生成的指令和当前修改存在冲突，等待手动解决。");
 
-        await this.notifierService.NotifyConflictDetectedAsync(new ConflictDetectedDto()
-        {
-            BlockId = blockId,
-            RequestId = requestId,
-            AiCommands = conflictBlock.AiCommands,
-            UserCommands = conflictBlock.UserCommands,
-            ConflictingAiCommands = conflictBlock.conflictingAiCommands,
-            ConflictingUserCommands = conflictBlock.conflictingUserCommands
-        });
+        await this.notifierService.NotifyConflictDetectedAsync(new ConflictDetectedDto(BlockId: blockId,
+            RequestId: requestId, AiCommands: conflictBlock.AiCommands, UserCommands: conflictBlock.UserCommands,
+            ConflictingAiCommands: conflictBlock.conflictingAiCommands,
+            ConflictingUserCommands: conflictBlock.conflictingUserCommands));
     }
 }

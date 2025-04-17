@@ -17,7 +17,7 @@ public class SignalRNotifierService : INotifierService
     public SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext)
     {
         this.hubContext = hubContext;
-         Log.Debug("SignalRNotifierService 初始化完成。");
+        Log.Debug("SignalRNotifierService 初始化完成。");
     }
 
     public async Task NotifyBlockStatusUpdateAsync(string blockId, BlockStatusCode newStatusCode)
@@ -49,38 +49,42 @@ public class SignalRNotifierService : INotifierService
         Log.Debug($"BlockStatusUpdate for {blockId} 已发送。");
     }
 
+    /// <summary>
+    /// 发送State状态更新到前端
+    /// </summary>
+    /// <param name="blockId"></param>
+    /// <param name="changedEntityIds"></param>
+    /// <returns></returns>
     public async Task NotifyStateUpdateAsync(string blockId, IEnumerable<string>? changedEntityIds = null)
     {
-        var signal = new StateUpdateSignalDto
-        {
-            BlockId = blockId
-            // ChangedEntityIds = changedEntityIds?.ToList() ?? new List<string>() // 可选
-        };
-         Log.Debug($"准备通过 SignalR 发送 StateUpdateSignal: BlockId={blockId}");
+        var signal = new StateUpdateSignalDto(BlockId: blockId, ChangedEntityIds: changedEntityIds?.ToList() ?? []);
+        Log.Debug($"准备通过 SignalR 发送 StateUpdateSignal: BlockId={blockId}");
         await this.hubContext.Clients.All.ReceiveStateUpdateSignal(signal);
-         Log.Debug($"StateUpdateSignal for {blockId} 已发送。");
+        Log.Debug($"StateUpdateSignal for {blockId} 已发送。");
     }
 
-     // --- 实现其他通知方法 ---
-     public async Task NotifyWorkflowUpdateAsync(WorkflowUpdateDto update)
-     {
-         Log.Debug($"准备通过 SignalR 发送 WorkflowUpdate: RequestId={update.RequestId}, BlockId={update.BlockId}, Type={update.UpdateType}");
-         // 广播给所有客户端，前端根据 BlockId 决定是否显示
-         await this.hubContext.Clients.All.ReceiveWorkflowUpdate(update);
-         Log.Debug($"WorkflowUpdate for RequestId={update.RequestId} 已发送。");
-     }
+    /// <summary>
+    /// 发送显示更新到前端
+    /// </summary>
+    /// <param name="update"></param>
+    /// <returns></returns>
+    public async Task NotifyDisplayUpdateAsync(DisplayUpdateDto update)
+    {
+        Log.Debug(
+            $"准备通过 SignalR 发送 WorkflowUpdate: RequestId={update.RequestId}, BlockId={update.ContextBlockId}, UpdateMode={update.UpdateMode}");
+        await this.hubContext.Clients.All.ReceiveWorkflowUpdate(update);
+        Log.Debug($"WorkflowUpdate for RequestId={update.RequestId} 已发送。");
+    }
 
-     public async Task NotifyWorkflowCompleteAsync(WorkflowCompleteDto completion)
-     {
-         Log.Debug($"准备通过 SignalR 发送 WorkflowComplete: RequestId={completion.RequestId}, BlockId={completion.BlockId}, StatusCode={completion.ExecutionStatus}");
-         await this.hubContext.Clients.All.ReceiveWorkflowComplete(completion);
-         Log.Debug($"WorkflowComplete for RequestId={completion.RequestId} 已发送。");
-     }
-
-     public async Task NotifyConflictDetectedAsync(ConflictDetectedDto conflict)
-     {
-          Log.Debug($"准备通过 SignalR 发送 ConflictDetected: RequestId={conflict.RequestId}, BlockId={conflict.BlockId}");
-         await this.hubContext.Clients.All.ReceiveConflictDetected(conflict);
-          Log.Debug($"ConflictDetected for RequestId={conflict.RequestId} 已发送。");
-     }
+    /// <summary>
+    /// 检测到指令冲突就发送这个通知
+    /// </summary>
+    /// <param name="conflict"></param>
+    /// <returns></returns>
+    public async Task NotifyConflictDetectedAsync(ConflictDetectedDto conflict)
+    {
+        Log.Debug($"准备通过 SignalR 发送 ConflictDetected: RequestId={conflict.RequestId}, BlockId={conflict.BlockId}");
+        await this.hubContext.Clients.All.ReceiveConflictDetected(conflict);
+        Log.Debug($"ConflictDetected for RequestId={conflict.RequestId} 已发送。");
+    }
 }

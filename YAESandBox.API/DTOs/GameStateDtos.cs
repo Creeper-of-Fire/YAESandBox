@@ -5,7 +5,7 @@ namespace YAESandBox.API.DTOs;
 /// <summary>
 /// 用于获取 GameState 的响应。
 /// </summary>
-public class GameStateDto
+public record GameStateDto
 {
     public Dictionary<string, object?> Settings { get; set; } = new();
 }
@@ -13,7 +13,7 @@ public class GameStateDto
 /// <summary>
 /// 用于修改 GameState 的请求体。
 /// </summary>
-public class UpdateGameStateRequestDto
+public record UpdateGameStateRequestDto
 {
     [Required]
     public Dictionary<string, object?> SettingsToUpdate { get; set; } = new();

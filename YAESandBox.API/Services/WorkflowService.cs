@@ -22,10 +22,14 @@ public class WorkflowService(
     private INotifierService notifierService { get; } = notifierService;
     // private readonly IAiService _aiService; // 未来可能注入 AI 服务
 
-    public async Task HandleWorkflowTriggerAsync(TriggerWorkflowRequestDto request)
+    /// <summary>
+    /// 触发主工作流
+    /// </summary>
+    /// <param name="request"></param>
+    public async Task HandleMainWorkflowTriggerAsync(TriggerWorkflowRequestDto request)
     {
         Log.Info(
-            $"收到工作流触发请求: RequestId={request.RequestId}, Workflow={request.WorkflowName}, ParentBlock={request.ParentBlockId}");
+            $"GameHub: 收到主工作流触发请求: RequestId={request.RequestId}, Workflow={request.WorkflowName}, ParentBlock={request.ParentBlockId}");
         var childBlock =
             await this.blockWritServices.CreateChildBlockAsync(request.ParentBlockId, request.Params);
         if (childBlock == null)
@@ -37,10 +41,22 @@ public class WorkflowService(
         Log.Info($"为工作流 '{request.WorkflowName}' 创建了新的子 Block: {childBlock.Block.BlockId}");
         // 3. 异步执行工作流逻辑 (使用 Task.Run 避免阻塞 Hub 调用线程)
         // 注意：在 Task.Run 中访问 Scoped 服务 (如数据库上下文) 可能需要手动创建 Scope
-        _ = Task.Run(() => this.StartExecuteWorkflowAsync(request, childBlock.Block.BlockId));
+        _ = Task.Run(() => this.StartMainExecuteWorkflowAsync(request, childBlock.Block.BlockId));
     }
 
-    internal async Task StartExecuteWorkflowAsync(TriggerWorkflowRequestDto request, string blockId)
+    /// <summary>
+    /// 触发微工作流
+    /// </summary>
+    /// <param name="request"></param>
+    /// <returns></returns>
+    /// <exception cref="NotImplementedException"></exception>
+    public Task HandleMicroWorkflowTriggerAsync(TriggerMicroWorkflowRequestDto request)
+    {
+        throw new NotImplementedException();
+    }
+
+
+    internal async Task StartMainExecuteWorkflowAsync(TriggerWorkflowRequestDto request, string blockId)
     {
         try
         {
@@ -93,16 +109,12 @@ public class WorkflowService(
             foreach (var part in fakeResponseParts)
             {
                 // *** 发送流式更新到前端 ***
-                var updateDto = new WorkflowUpdateDto
-                {
-                    RequestId = request.RequestId, // 关联请求
-                    BlockId = blockId,
-                    UpdateType = "stream_chunk", // 定义一个类型表示文本块
-                    Data = part // 发送当前的文本片段
-                };
+                var updateDto = new DisplayUpdateDto(RequestId: request.RequestId, // 关联请求
+                    ContextBlockId: blockId, StreamingStatus: StreamStatus.Streaming, Content: part, // 发送当前的文本片段
+                    UpdateMode: UpdateMode.FullSnapshot);
                 // 使用 NotifierService 发送 (确保 NotifierService 已实现 SendWorkflowUpdate)
                 // 注意：这里需要实际调用 INotifierService 的方法，我们假设它存在并能广播
-                await this.notifierService.NotifyWorkflowUpdateAsync(updateDto); // <--- 添加此行
+                await this.notifierService.NotifyDisplayUpdateAsync(updateDto); // <--- 添加此行
                 streamChunks.Add(part); // 存储块
 
                 // 安全地截取日志摘要
@@ -161,18 +173,10 @@ public class WorkflowService(
             Log.Debug($"Block '{blockId}': 已通知 BlockManager 工作流完成状态: Success={success}");
 
             // 发送最终完成状态 (如果需要单独通知)
-            var completeDto = new WorkflowCompleteDto
-            {
-                RequestId = request.RequestId,
-                BlockId = blockId,
-                ExecutionStatus = success ? "success" : "failure",
-                FinalContent =
-                    success
-                        ? string.Concat(rawTextResult.AsSpan(0, Math.Min(rawTextResult.Length, 100)), "...")
-                        : null, // 摘要
-                ErrorMessage = success ? null : rawTextResult
-            };
-            await this.notifierService.NotifyWorkflowCompleteAsync(completeDto); // <--- 添加此行
+            var completeDto = new DisplayUpdateDto(RequestId: request.RequestId, ContextBlockId: blockId,
+                StreamingStatus: success ? StreamStatus.Complete : StreamStatus.Error, Content: rawTextResult,
+                UpdateMode: UpdateMode.FullSnapshot);
+            await this.notifierService.NotifyDisplayUpdateAsync(completeDto); // <--- 添加此行
         }
     }
 
