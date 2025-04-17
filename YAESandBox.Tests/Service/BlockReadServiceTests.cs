@@ -22,7 +22,7 @@ public class BlockReadServiceTests
 
     public BlockReadServiceTests()
     {
-        _notifierServiceMock = Substitute.For<INotifierService>();
+        this._notifierServiceMock = Substitute.For<INotifierService>();
         // 注意：BlockManager 是具体类，但我们可以模拟其公共/内部可访问的方法
         // 或者，如果 BlockManager 实现了接口，则模拟接口更好。
         // 这里我们假设需要模拟 BlockManager 本身（或其相关方法）。
@@ -31,9 +31,9 @@ public class BlockReadServiceTests
         // 为简单起见，我们假设 GetBlockAsync, GetBlocks, GetNodeOnlyBlocks 是可模拟的（例如 virtual 或通过接口）
         // 如果 BlockManager 不易模拟，这表明 BlockManager 可能需要重构以提高可测试性 (例如，提取接口)
         // *** 暂时直接 new 一个，然后在需要的地方 Mock 特定方法的返回值 ***
-        _blockManagerMock = Substitute.For<IBlockManager>(); // 使用 NSubstitute 模拟
+        this._blockManagerMock = Substitute.For<IBlockManager>(); // 使用 NSubstitute 模拟
 
-        _sut = new BlockReadService(_notifierServiceMock, _blockManagerMock);
+        this._sut = new BlockReadService(this._notifierServiceMock, this._blockManagerMock);
     }
 
     // --- 测试 GetBlockDetailDtoAsync ---
@@ -51,10 +51,10 @@ public class BlockReadServiceTests
         block.Block.BlockContent = "测试内容";
         block.Block.AddOrSetMetaData("TestKey", "TestValue");
 
-        _blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(block)); // 模拟 GetBlockAsync
+        this._blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(block)); // 模拟 GetBlockAsync
 
         // Act (执行)
-        var result = await _sut.GetBlockDetailDtoAsync(blockId);
+        var result = await this._sut.GetBlockDetailDtoAsync(blockId);
 
         // Assert (断言)
         result.Should().NotBeNull();
@@ -71,10 +71,10 @@ public class BlockReadServiceTests
     {
         // Arrange
         var blockId = "non-existent-block";
-        _blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(null)); // 模拟返回 null
+        this._blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(null)); // 模拟返回 null
 
         // Act
-        var result = await _sut.GetBlockDetailDtoAsync(blockId);
+        var result = await this._sut.GetBlockDetailDtoAsync(blockId);
 
         // Assert
         result.Should().BeNull();
@@ -91,10 +91,10 @@ public class BlockReadServiceTests
         gameState["level"] = 5;
         var worldState = new WorldState();
         var block = Block.CreateBlock(blockId, null, worldState, gameState).ForceIdleState();
-        _blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(block));
+        this._blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(block));
 
         // Act
-        var result = await _sut.GetBlockGameStateAsync(blockId);
+        var result = await this._sut.GetBlockGameStateAsync(blockId);
 
         // Assert
         result.Should().NotBeNull();
@@ -107,10 +107,10 @@ public class BlockReadServiceTests
     {
         // Arrange
         var blockId = "non-existent-block-gs";
-        _blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(null));
+        this._blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(null));
 
         // Act
-        var result = await _sut.GetBlockGameStateAsync(blockId);
+        var result = await this._sut.GetBlockGameStateAsync(blockId);
 
         // Assert
         result.Should().BeNull();
@@ -134,10 +134,10 @@ public class BlockReadServiceTests
         worldState.AddEntity(place1);
 
         var block = Block.CreateBlock(blockId, null, worldState, new GameState()).ForceIdleState();
-        _blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(block));
+        this._blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(block));
 
         // Act
-        var result = await _sut.GetAllEntitiesSummaryAsync(blockId);
+        var result = await this._sut.GetAllEntitiesSummaryAsync(blockId);
 
         // Assert
         result.Should().NotBeNull();
@@ -153,10 +153,10 @@ public class BlockReadServiceTests
     {
         // Arrange
         var blockId = "non-existent-entities";
-        _blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(null));
+        this._blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(null));
 
         // Act
-        var result = await _sut.GetAllEntitiesSummaryAsync(blockId);
+        var result = await this._sut.GetAllEntitiesSummaryAsync(blockId);
 
         // Assert
         result.Should().BeNull();
@@ -179,10 +179,10 @@ public class BlockReadServiceTests
         worldState.AddEntity(charDetail);
 
         var block = Block.CreateBlock(blockId, null, worldState, new GameState()).ForceIdleState();
-        _blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(block));
+        this._blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(block));
 
         // Act
-        var result = await _sut.GetEntityDetailAsync(blockId, typedId);
+        var result = await this._sut.GetEntityDetailAsync(blockId, typedId);
 
         // Assert
         result.Should().NotBeNull();
@@ -204,10 +204,10 @@ public class BlockReadServiceTests
 
         var worldState = new WorldState(); // 空的 WorldState
         var block = Block.CreateBlock(blockId, null, worldState, new GameState()).ForceIdleState();
-        _blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(block));
+        this._blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(block));
 
         // Act
-        var result = await _sut.GetEntityDetailAsync(blockId, typedId);
+        var result = await this._sut.GetEntityDetailAsync(blockId, typedId);
 
         // Assert
         result.Should().BeNull();
@@ -219,10 +219,10 @@ public class BlockReadServiceTests
         // Arrange
         var blockId = "non-existent-entity-detail";
         var typedId = new TypedID(EntityType.Place, "place-1");
-        _blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(null));
+        this._blockManagerMock.GetBlockAsync(blockId).Returns(Task.FromResult<BlockStatus?>(null));
 
         // Act
-        var result = await _sut.GetEntityDetailAsync(blockId, typedId);
+        var result = await this._sut.GetEntityDetailAsync(blockId, typedId);
 
         // Assert
         result.Should().BeNull();
@@ -265,10 +265,10 @@ public class BlockReadServiceTests
         var readOnlyNodes = nodes.ToDictionary(kv => kv.Key, kv => kv.Value); // 转为 IReadOnlyDictionary
 
         // 模拟 BlockManager 返回这些节点
-        _blockManagerMock.GetNodeOnlyBlocks().Returns(readOnlyNodes);
+        this._blockManagerMock.GetNodeOnlyBlocks().Returns(readOnlyNodes);
 
         // Act
-        var result = _sut.GetBlockTopologyJsonAsync(); // 注意：原始方法不是 async Task
+        var result = this._sut.GetBlockTopologyJsonAsync(); // 注意：原始方法不是 async Task
         var jsonNode = result.Result; // 直接获取结果
 
         // Assert
@@ -287,7 +287,7 @@ public class BlockReadServiceTests
         resultChild2!.Children.Should().BeEmpty();
 
         // 验证 BlockManager 的 GetNodeOnlyBlocks 被调用了一次
-         _blockManagerMock.Received(1).GetNodeOnlyBlocks();
+        this._blockManagerMock.Received(1).GetNodeOnlyBlocks();
         return Task.CompletedTask; // 因为原始方法不是 async, 返回 CompletedTask
     }
 
@@ -308,13 +308,13 @@ public class BlockReadServiceTests
         };
         var readOnlyBlocksDict = blocksDict.ToDictionary(kv => kv.Key, kv => kv.Value); //转为 IReadOnlyDictionary
 
-        _blockManagerMock.GetBlocks().Returns(readOnlyBlocksDict); // 模拟 GetBlocks
+        this._blockManagerMock.GetBlocks().Returns(readOnlyBlocksDict); // 模拟 GetBlocks
         // 模拟 GetBlockAsync 以便内部调用获取 BlockStatus
-        _blockManagerMock.GetBlockAsync(blockId1).Returns(Task.FromResult<BlockStatus?>(block1));
-        _blockManagerMock.GetBlockAsync(blockId2).Returns(Task.FromResult<BlockStatus?>(block2));
+        this._blockManagerMock.GetBlockAsync(blockId1).Returns(Task.FromResult<BlockStatus?>(block1));
+        this._blockManagerMock.GetBlockAsync(blockId2).Returns(Task.FromResult<BlockStatus?>(block2));
 
         // Act
-        var result = await _sut.GetAllBlockDetailsAsync();
+        var result = await this._sut.GetAllBlockDetailsAsync();
 
         // Assert
         result.Should().NotBeNull();
@@ -326,9 +326,9 @@ public class BlockReadServiceTests
         result[blockId1].StatusCode.Should().Be(BlockStatusCode.Idle);
 
         // 验证 GetBlocks 被调用一次
-        _blockManagerMock.Received(1).GetBlocks();
+        this._blockManagerMock.Received(1).GetBlocks();
         // 验证 GetBlockAsync 被每个 blockId 调用一次
-        await _blockManagerMock.Received(1).GetBlockAsync(blockId1);
-        await _blockManagerMock.Received(1).GetBlockAsync(blockId2);
+        await this._blockManagerMock.Received(1).GetBlockAsync(blockId1);
+        await this._blockManagerMock.Received(1).GetBlockAsync(blockId2);
     }
 }

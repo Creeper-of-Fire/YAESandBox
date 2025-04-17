@@ -54,7 +54,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
             $"GameHub: 收到来自 {connectionId} 的微工作流触发请求: {request.RequestId}, Workflow:{request.WorkflowName}, Element:{request.TargetElementId}, Block:{request.ContextBlockId}");
         try
         {
-            await workflowService.HandleMicroWorkflowTriggerAsync(request);
+            await this.workflowService.HandleMicroWorkflowTriggerAsync(request);
         }
         catch (Exception ex)
         {

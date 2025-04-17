@@ -28,20 +28,19 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
     public void RegisterHandler<TMessage>(string methodName) where TMessage : class
     {
         var messageType = typeof(TMessage);
-        _receivedMessages.TryAdd(messageType, new ConcurrentQueue<object>());
-        var semaphore = _messageSemaphores.GetOrAdd(messageType, _ => new SemaphoreSlim(0)); // 初始计数为 0
+        this._receivedMessages.TryAdd(messageType, new ConcurrentQueue<object>());
+        var semaphore = this._messageSemaphores.GetOrAdd(messageType, _ => new SemaphoreSlim(0)); // 初始计数为 0
 
-        _connection.On<TMessage>(methodName, (message) =>
+        this._connection.On<TMessage>(methodName, (message) =>
         {
             if (message is DisplayUpdateDto dto)
             {
-
-                _output.WriteLine(
+                this._output.WriteLine(
                     $"[SignalRCollector Callback] Method '{methodName}' received ({messageType.Name}): {dto.Content}");
             }
             
             // *** 日志结束 ***
-            if (_receivedMessages.TryGetValue(messageType, out var queue))
+            if (this._receivedMessages.TryGetValue(messageType, out var queue))
             {
                 queue.Enqueue(message);
                 try
@@ -69,7 +68,7 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
     /// <exception cref="InvalidOperationException">如果尚未为该消息类型注册处理器。</exception>
     public async Task<TMessage> WaitForMessageAsync<TMessage>(TimeSpan timeout) where TMessage : class
     {
-        return await WaitForMessageAsync<TMessage>(_ => true, timeout); // 等待任何该类型的消息
+        return await this.WaitForMessageAsync<TMessage>(_ => true, timeout); // 等待任何该类型的消息
     }
 
     /// <summary>
@@ -85,8 +84,8 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
         where TMessage : class
     {
         var messageType = typeof(TMessage);
-        if (!_messageSemaphores.TryGetValue(messageType, out var semaphore) ||
-            !_receivedMessages.TryGetValue(messageType, out var queue))
+        if (!this._messageSemaphores.TryGetValue(messageType, out var semaphore) ||
+            !this._receivedMessages.TryGetValue(messageType, out var queue))
         {
             throw new InvalidOperationException($"消息类型 '{messageType.Name}' 的处理器尚未注册。");
         }
@@ -162,7 +161,7 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
     {
         try
         {
-            await WaitForMessageAsync(predicate, timeout);
+            await this.WaitForMessageAsync(predicate, timeout);
             return false; // 如果成功等到消息，则返回 false
         }
         catch (TimeoutException)
@@ -183,12 +182,12 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
     public void ClearMessages<TMessage>() where TMessage : class
     {
         var messageType = typeof(TMessage);
-        if (_receivedMessages.TryGetValue(messageType, out var queue))
+        if (this._receivedMessages.TryGetValue(messageType, out var queue))
         {
             queue.Clear();
         }
 
-        if (_messageSemaphores.TryGetValue(messageType, out var semaphore))
+        if (this._messageSemaphores.TryGetValue(messageType, out var semaphore))
         {
             // 不断尝试获取信号量，直到为0，以清空计数
             while (semaphore.Wait(0))
@@ -202,12 +201,12 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
     /// </summary>
     public void ClearAllMessages()
     {
-        foreach (var queue in _receivedMessages.Values)
+        foreach (var queue in this._receivedMessages.Values)
         {
             queue.Clear();
         }
 
-        foreach (var semaphore in _messageSemaphores.Values)
+        foreach (var semaphore in this._messageSemaphores.Values)
         {
             while (semaphore.Wait(0))
             {

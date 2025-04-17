@@ -19,7 +19,7 @@ public class GameStateTests
     public void Indexer_应能设置和获取各种类型的值()
     {
         // Arrange
-        var gs = CreateTestGameState();
+        var gs = this.CreateTestGameState();
         var stringVal = "test string";
         var intVal = 42;
         var boolVal = false;
@@ -49,7 +49,7 @@ public class GameStateTests
     public void TryGetValue_应能成功获取正确类型的值并处理类型不匹配()
     {
         // Arrange
-        var gs = CreateTestGameState();
+        var gs = this.CreateTestGameState();
         gs["age"] = 30;
         gs["name"] = "Alice";
 
@@ -77,7 +77,7 @@ public class GameStateTests
     public void Remove_应能移除存在的键并对不存在的键返回false()
     {
         // Arrange
-        var gs = CreateTestGameState();
+        var gs = this.CreateTestGameState();
         gs["keyToRemove"] = "value";
         gs["keyToKeep"] = 123;
 
@@ -104,7 +104,7 @@ public class GameStateTests
     public void GetAllSettings_应返回包含所有设置的只读字典副本()
     {
         // Arrange
-        var gs = CreateTestGameState();
+        var gs = this.CreateTestGameState();
         gs["setting1"] = "value1";
         gs["setting2"] = 2;
 
@@ -135,7 +135,7 @@ public class GameStateTests
     public void Clone_应创建包含相同设置的独立副本()
     {
         // Arrange
-        var originalGs = CreateTestGameState();
+        var originalGs = this.CreateTestGameState();
         var listValue = new List<string> { "a", "b" };
         originalGs["key1"] = "value1";
         originalGs["listKey"] = listValue;

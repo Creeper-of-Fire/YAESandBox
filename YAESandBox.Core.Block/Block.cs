@@ -20,17 +20,17 @@ public abstract class NodeBlock(string blockId, string? parentBlockId) : IBlockN
     /// <summary>
     /// Block 的唯一标识符。
     /// </summary>
-    public virtual string BlockId { get; } = blockId;
+    public string BlockId { get; } = blockId;
 
     /// <summary>
     /// 父 Block 的 ID，如果是根节点则为 null。
     /// </summary>
-    public virtual string? ParentBlockId { get; } = parentBlockId;
+    public string? ParentBlockId { get; } = parentBlockId;
 
     /// <summary>
     /// 存储子 Block ID 的列表。
     /// </summary>
-    public virtual List<string> ChildrenList { get; } = [];
+    public List<string> ChildrenList { get; } = [];
 
     // 废弃代码，因为前端维护整个树结构，这些逻辑放在前端执行
     // 对应的持久化逻辑：后端只保存“当前选择路径的最深block的ID”，并且提供一个“列出指定ID全部父类”的接口。并且采取盲存手段，前端自己解析。

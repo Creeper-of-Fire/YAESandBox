@@ -42,110 +42,109 @@ namespace YAESandBox.Core.Tests
         // 异步初始化，在所有测试之前运行一次
         public async Task InitializeAsync()
         {
-            _originalManager = new BlockManager(); // 创建新的管理器实例
+            this._originalManager = new BlockManager(); // 创建新的管理器实例
 
             // --- 准备测试数据 ---
-            _playerCharacter = new Character("player_main") { IsDestroyed = false };
-            _playerCharacter.SetAttribute("姓名", "爱丽丝");
-            _playerCharacter.SetAttribute("等级", 10);
-            _playerCharacter.SetAttribute("活跃", true);
-            _playerCharacter.SetAttribute("背包容量", 20.5); // double 类型
-            _playerCharacter.SetAttribute("空值属性", null);
+            this._playerCharacter = new Character("player_main") { IsDestroyed = false };
+            this._playerCharacter.SetAttribute("姓名", "爱丽丝");
+            this._playerCharacter.SetAttribute("等级", 10);
+            this._playerCharacter.SetAttribute("活跃", true);
+            this._playerCharacter.SetAttribute("背包容量", 20.5); // double 类型
+            this._playerCharacter.SetAttribute("空值属性", null);
 
-            _testItem = new Item("item_sword") { IsDestroyed = false };
-            _testItem.SetAttribute("名称", "精灵之刃");
-            _testItem.SetAttribute("攻击力", 15);
-            _testItem.SetAttribute("标签", new List<object> { "武器", "锋利", 123 }); // 列表类型
+            this._testItem = new Item("item_sword") { IsDestroyed = false };
+            this._testItem.SetAttribute("名称", "精灵之刃");
+            this._testItem.SetAttribute("攻击力", 15);
+            this._testItem.SetAttribute("标签", new List<object> { "武器", "锋利", 123 }); // 列表类型
 
-            _testPlace = new Place("place_forest") { IsDestroyed = true }; // 已销毁的实体
-            _testPlace.SetAttribute("名称", "迷雾森林");
-            _testPlace.SetAttribute("危险等级", 5);
-            _testPlace.SetAttribute("特性", new Dictionary<string, object> // 字典类型
+            this._testPlace = new Place("place_forest") { IsDestroyed = true }; // 已销毁的实体
+            this._testPlace.SetAttribute("名称", "迷雾森林");
+            this._testPlace.SetAttribute("危险等级", 5);
+            this._testPlace.SetAttribute("特性", new Dictionary<string, object> // 字典类型
             {
                 { "天气", "多雾" },
                 { "怪物", new List<object> { "哥布林", "蜘蛛" } } // 嵌套列表
             });
 
 
-            _playerRef = _playerCharacter.TypedId;
-            _itemRef = _testItem.TypedId;
-            _placeRef = _testPlace.TypedId;
+            this._playerRef = this._playerCharacter.TypedId;
+            this._itemRef = this._testItem.TypedId;
+            this._placeRef = this._testPlace.TypedId;
 
             // 添加 TypedID 作为属性值
-            _playerCharacter.SetAttribute("持有物", _itemRef);
-            _testItem.SetAttribute("所在地", _placeRef); // 即使地点销毁，引用也应保留
-            _playerCharacter.SetAttribute("盟友",
+            this._playerCharacter.SetAttribute("持有物", this._itemRef);
+            this._testItem.SetAttribute("所在地", this._placeRef); // 即使地点销毁，引用也应保留
+            this._playerCharacter.SetAttribute("盟友",
                 new List<object> { new TypedID(EntityType.Character, "npc_bob") }); // 包含TypedID的列表
 
-            _testGameState = new Dictionary<string, object?>
+            this._testGameState = new Dictionary<string, object?>
             {
                 { "当前任务", "寻找古老卷轴" },
                 { "时间", 100 },
                 { "难度", "普通" },
                 { "启用教程", false },
-                { "玩家位置参考", _playerRef } // 包含 TypedID
+                { "玩家位置参考", this._playerRef } // 包含 TypedID
             };
 
-            _testMetadata = new Dictionary<string, object?>
+            this._testMetadata = new Dictionary<string, object?>
             {
                 { "创建者", "测试脚本" },
                 { "版本", 1.1 },
                 { "目标", null }
             };
 
-            _testTriggerParams = new Dictionary<string, object?>
+            this._testTriggerParams = new Dictionary<string, object?>
             {
                 { "触发事件", "玩家进入" },
-                { "相关物品", _itemRef }
+                { "相关物品", this._itemRef }
             };
 
-            _testBlindStorage = new { FrontendSetting = "DarkMode", UserID = 12345 }; // 匿名的前端数据
+            this._testBlindStorage = new { FrontendSetting = "DarkMode", UserID = 12345 }; // 匿名的前端数据
 
             // --- 构建 Block 结构和状态 ---
 
             // 1. 修改根节点状态
-            await _originalManager.UpdateBlockGameStateAsync(_rootBlockId, _testGameState);
+            await this._originalManager.UpdateBlockGameStateAsync(this._rootBlockId, this._testGameState);
             var rootOps = new List<AtomicOperation>
             {
-                AtomicOperation.Create(_playerRef.Type, _playerRef.Id, _playerCharacter.GetAllAttributes()),
-                AtomicOperation.Create(_itemRef.Type, _itemRef.Id, _testItem.GetAllAttributes())
+                AtomicOperation.Create(this._playerRef.Type, this._playerRef.Id, this._playerCharacter.GetAllAttributes()),
+                AtomicOperation.Create(this._itemRef.Type, this._itemRef.Id, this._testItem.GetAllAttributes())
             };
-            await _originalManager.EnqueueOrExecuteAtomicOperationsAsync(_rootBlockId, rootOps);
+            await this._originalManager.EnqueueOrExecuteAtomicOperationsAsync(this._rootBlockId, rootOps);
 
             // 2. 创建子节点 (会是 Loading 状态)
-            var loadingChildStatus = await _originalManager.CreateChildBlock_Async(_rootBlockId, _testTriggerParams);
+            var loadingChildStatus = await this._originalManager.CreateChildBlock_Async(this._rootBlockId, this._testTriggerParams);
             loadingChildStatus.Should().NotBeNull();
-            _childBlockId = loadingChildStatus!.Block.BlockId; // 获取实际生成的ID
+            this._childBlockId = loadingChildStatus!.Block.BlockId; // 获取实际生成的ID
 
             // 模拟工作流完成，使其变为 Idle
             var childAiOps = new List<AtomicOperation>
             {
-                AtomicOperation.Create(_placeRef.Type, _placeRef.Id, _testPlace.GetAllAttributes()), // 创建地点
-                AtomicOperation.Modify(_playerRef.Type, _playerRef.Id, "等级", Operator.Add, 1) // 玩家升级
+                AtomicOperation.Create(this._placeRef.Type, this._placeRef.Id, this._testPlace.GetAllAttributes()), // 创建地点
+                AtomicOperation.Modify(this._playerRef.Type, this._playerRef.Id, "等级", Operator.Add, 1) // 玩家升级
             };
-            await _originalManager.HandleWorkflowCompletionAsync(_childBlockId, true, "AI 创建了地点并升级了玩家。", childAiOps,
-                _testMetadata);
+            await this._originalManager.HandleWorkflowCompletionAsync(this._childBlockId, true, "AI 创建了地点并升级了玩家。", childAiOps, this._testMetadata);
 
             // 3. 在子节点上再添加用户操作
             var childUserOps = new List<AtomicOperation>
             {
-                AtomicOperation.Modify(_itemRef.Type, _itemRef.Id, "攻击力", Operator.Add, 5) // 增强物品
+                AtomicOperation.Modify(this._itemRef.Type, this._itemRef.Id, "攻击力", Operator.Add, 5) // 增强物品
             };
-            await _originalManager.EnqueueOrExecuteAtomicOperationsAsync(_childBlockId, childUserOps);
+            await this._originalManager.EnqueueOrExecuteAtomicOperationsAsync(this._childBlockId, childUserOps);
 
 
             // 4. 创建孙子节点
-            var loadingGrandChildStatus = await _originalManager.CreateChildBlock_Async(_childBlockId,
+            var loadingGrandChildStatus = await this._originalManager.CreateChildBlock_Async(this._childBlockId,
                 new Dictionary<string, object?> { { "原因", "进一步探索" } });
             loadingGrandChildStatus.Should().NotBeNull();
-            _grandChildBlockId = loadingGrandChildStatus!.Block.BlockId;
+            this._grandChildBlockId = loadingGrandChildStatus!.Block.BlockId;
 
             // 模拟孙子节点工作流完成
             var grandChildAiOps = new List<AtomicOperation>
             {
-                AtomicOperation.Delete(_itemRef.Type, _itemRef.Id) // 删除了物品
+                AtomicOperation.Delete(this._itemRef.Type, this._itemRef.Id) // 删除了物品
             };
-            await _originalManager.HandleWorkflowCompletionAsync(_grandChildBlockId, true, "AI 删除了物品。", grandChildAiOps,
+            await this._originalManager.HandleWorkflowCompletionAsync(this._grandChildBlockId, true, "AI 删除了物品。", grandChildAiOps,
                 new Dictionary<string, object?>());
         }
 
@@ -167,7 +166,7 @@ namespace YAESandBox.Core.Tests
             using var memoryStream = new MemoryStream();
 
             // Act: 保存
-            await _originalManager.SaveToFileAsync(memoryStream, _testBlindStorage);
+            await this._originalManager.SaveToFileAsync(memoryStream, this._testBlindStorage);
             memoryStream.Position = 0; // 重置流位置以便读取
 
             // Act: 加载
@@ -181,7 +180,7 @@ namespace YAESandBox.Core.Tests
             // ----- Bug 2 修复 -----
 
             // 2. 将原始的匿名类型 _testBlindStorage 序列化为 JSON，再解析回 JsonElement 以便比较
-            var originalAsJson = JsonSerializer.Serialize(_testBlindStorage, _jsonOptions); // 使用相同的序列化选项确保一致性
+            var originalAsJson = JsonSerializer.Serialize(this._testBlindStorage, _jsonOptions); // 使用相同的序列化选项确保一致性
             var expectedJsonElement = JsonDocument.Parse(originalAsJson).RootElement.Clone(); // Clone 以便比较
 
             // 3. 使用 FluentAssertions 比较两个 JsonElement
@@ -196,33 +195,33 @@ namespace YAESandBox.Core.Tests
             // Bug2 修不好了，但是我人工比较了一下，只差一个空格，我认为没问题。
 
             // Assert: 验证 Block 数量
-            var originalBlocks = _originalManager.GetBlocks();
+            var originalBlocks = this._originalManager.GetBlocks();
             var loadedBlocks = loadedManager.GetBlocks();
             loadedBlocks.Should().HaveCount(originalBlocks.Count); // 应该有相同数量的 Block
 
             // Assert: 验证根节点
-            loadedBlocks.Should().ContainKey(_rootBlockId);
-            var loadedRoot = loadedBlocks[_rootBlockId];
-            var originalRoot = originalBlocks[_rootBlockId];
+            loadedBlocks.Should().ContainKey(this._rootBlockId);
+            var loadedRoot = loadedBlocks[this._rootBlockId];
+            var originalRoot = originalBlocks[this._rootBlockId];
             loadedRoot.ParentBlockId.Should().BeNull();
-            loadedRoot.ChildrenList.Should().Contain(_childBlockId);
+            loadedRoot.ChildrenList.Should().Contain(this._childBlockId);
             loadedRoot.BlockContent.Should().Be(originalRoot.BlockContent); // 检查内容
 
             // Assert: 验证子节点
-            loadedBlocks.Should().ContainKey(_childBlockId);
-            var loadedChild = loadedBlocks[_childBlockId];
-            var originalChild = originalBlocks[_childBlockId];
-            loadedChild.ParentBlockId.Should().Be(_rootBlockId);
-            loadedChild.ChildrenList.Should().Contain(_grandChildBlockId);
+            loadedBlocks.Should().ContainKey(this._childBlockId);
+            var loadedChild = loadedBlocks[this._childBlockId];
+            var originalChild = originalBlocks[this._childBlockId];
+            loadedChild.ParentBlockId.Should().Be(this._rootBlockId);
+            loadedChild.ChildrenList.Should().Contain(this._grandChildBlockId);
             loadedChild.BlockContent.Should().Be(originalChild.BlockContent);
             loadedChild.Metadata.Should()
                 .BeEquivalentTo(originalChild.Metadata, options => options.ComparingByMembers<object>()); // 检查元数据
 
             // Assert: 验证孙子节点
-            loadedBlocks.Should().ContainKey(_grandChildBlockId);
-            var loadedGrandChild = loadedBlocks[_grandChildBlockId];
-            var originalGrandChild = originalBlocks[_grandChildBlockId];
-            loadedGrandChild.ParentBlockId.Should().Be(_childBlockId);
+            loadedBlocks.Should().ContainKey(this._grandChildBlockId);
+            var loadedGrandChild = loadedBlocks[this._grandChildBlockId];
+            var originalGrandChild = originalBlocks[this._grandChildBlockId];
+            loadedGrandChild.ParentBlockId.Should().Be(this._childBlockId);
             loadedGrandChild.ChildrenList.Should().BeEmpty();
             loadedGrandChild.BlockContent.Should().Be(originalGrandChild.BlockContent);
         }
@@ -237,19 +236,19 @@ namespace YAESandBox.Core.Tests
             using var memoryStream = new MemoryStream();
 
             // Act: 保存 & 加载
-            await _originalManager.SaveToFileAsync(memoryStream, null);
+            await this._originalManager.SaveToFileAsync(memoryStream, null);
             memoryStream.Position = 0;
             var loadedManager = new BlockManager();
             await loadedManager.LoadFromFileAsync(memoryStream);
 
             // Assert: 检查特定 Block 的 WorldState (例如：子节点加载后的 wsPostUser)
-            var loadedChildBlockStatus = await loadedManager.GetBlockAsync(_childBlockId);
+            var loadedChildBlockStatus = await loadedManager.GetBlockAsync(this._childBlockId);
             loadedChildBlockStatus.Should().NotBeNull().And.BeOfType<IdleBlockStatus>(); // 加载后应为 Idle
             var loadedChildWs = loadedChildBlockStatus!.Block.wsPostUser; // Idle 状态下，wsPostUser 是主要状态
             loadedChildWs.Should().NotBeNull();
 
             // --- 验证玩家实体 ---
-            var loadedPlayer = loadedChildWs!.FindEntity(_playerRef) as Character;
+            var loadedPlayer = loadedChildWs!.FindEntity(this._playerRef) as Character;
             loadedPlayer.Should().NotBeNull();
             loadedPlayer!.IsDestroyed.Should().BeFalse();
             loadedPlayer.GetAttribute("姓名").Should().Be("爱丽丝");
@@ -258,7 +257,7 @@ namespace YAESandBox.Core.Tests
             loadedPlayer.GetAttribute("背包容量").Should().Be(20.5);
             loadedPlayer.GetAttribute("空值属性").Should().BeNull();
             // 验证 TypedID 属性
-            loadedPlayer.GetAttribute("持有物").Should().BeOfType<TypedID>().And.Be(_itemRef);
+            loadedPlayer.GetAttribute("持有物").Should().BeOfType<TypedID>().And.Be(this._itemRef);
             // 验证包含 TypedID 的列表
             loadedPlayer.TryGetAttribute<List<object>>("盟友", out var allies).Should().BeTrue();
             allies.Should().ContainSingle().Which.Should().BeOfType<TypedID>().And
@@ -266,7 +265,7 @@ namespace YAESandBox.Core.Tests
 
 
             // --- 验证物品实体 ---
-            var loadedItem = loadedChildWs.FindEntity(_itemRef) as Item;
+            var loadedItem = loadedChildWs.FindEntity(this._itemRef) as Item;
             loadedItem.Should().NotBeNull();
             loadedItem!.IsDestroyed.Should().BeFalse();
             loadedItem.GetAttribute("名称").Should().Be("精灵之刃");
@@ -277,10 +276,10 @@ namespace YAESandBox.Core.Tests
                 .BeEquivalentTo(new List<object>
                     { "武器", "锋利", 123L }); // JSON 数字默认可能变为 long (System.Text.Json 行为) 或 int，取决于大小，使用 BeEquivalentTo 更灵活
             // 验证 TypedID 属性
-            loadedItem.GetAttribute("所在地").Should().BeOfType<TypedID>().And.Be(_placeRef);
+            loadedItem.GetAttribute("所在地").Should().BeOfType<TypedID>().And.Be(this._placeRef);
 
             // --- 验证地点实体 ---
-            var loadedPlace = loadedChildWs.FindEntity(_placeRef, includeDestroyed: true) as Place; // 查找时包含已销毁
+            var loadedPlace = loadedChildWs.FindEntity(this._placeRef, includeDestroyed: true) as Place; // 查找时包含已销毁
             loadedPlace.Should().NotBeNull();
             loadedPlace!.IsDestroyed.Should().BeTrue(); // 确认是已销毁状态
             loadedPlace.GetAttribute("名称").Should().Be("迷雾森林");
@@ -293,13 +292,13 @@ namespace YAESandBox.Core.Tests
                 .BeEquivalentTo(new List<object> { "哥布林", "蜘蛛" });
 
             // --- 验证孙子节点中物品被删除 ---
-            var loadedGrandChildBlockStatus = await loadedManager.GetBlockAsync(_grandChildBlockId);
+            var loadedGrandChildBlockStatus = await loadedManager.GetBlockAsync(this._grandChildBlockId);
             loadedGrandChildBlockStatus.Should().NotBeNull().And.BeOfType<IdleBlockStatus>();
             var loadedGrandChildWs = loadedGrandChildBlockStatus!.Block.wsPostUser;
             loadedGrandChildWs.Should().NotBeNull();
-            loadedGrandChildWs.FindEntity(_itemRef).Should().BeNull(); // 物品应该找不到了 (因为 IsDestroyed=true)
-            loadedGrandChildWs.FindEntity(_itemRef, includeDestroyed: true).Should().NotBeNull(); // 包含已销毁的能找到
-            loadedGrandChildWs.FindEntity(_itemRef, includeDestroyed: true)!.IsDestroyed.Should().BeTrue(); // 确认是被标记为删除
+            loadedGrandChildWs.FindEntity(this._itemRef).Should().BeNull(); // 物品应该找不到了 (因为 IsDestroyed=true)
+            loadedGrandChildWs.FindEntity(this._itemRef, includeDestroyed: true).Should().NotBeNull(); // 包含已销毁的能找到
+            loadedGrandChildWs.FindEntity(this._itemRef, includeDestroyed: true)!.IsDestroyed.Should().BeTrue(); // 确认是被标记为删除
         }
 
         /// <summary>
@@ -312,16 +311,16 @@ namespace YAESandBox.Core.Tests
             using var memoryStream = new MemoryStream();
 
             // Act: 保存 & 加载
-            await _originalManager.SaveToFileAsync(memoryStream, null);
+            await this._originalManager.SaveToFileAsync(memoryStream, null);
             memoryStream.Position = 0;
             var loadedManager = new BlockManager();
             await loadedManager.LoadFromFileAsync(memoryStream);
 
             // Assert: 验证根节点的 GameState
-            var loadedRootStatus = await loadedManager.GetBlockAsync(_rootBlockId);
+            var loadedRootStatus = await loadedManager.GetBlockAsync(this._rootBlockId);
             loadedRootStatus.Should().NotBeNull();
             var loadedGameState = loadedRootStatus!.Block.GameState;
-            var originalGameState = _originalManager.GetBlocks()[_rootBlockId].GameState;
+            var originalGameState = this._originalManager.GetBlocks()[this._rootBlockId].GameState;
 
             // 使用 BeEquivalentTo 比较 GameState 内容
             loadedGameState.GetAllSettings().Should().BeEquivalentTo(originalGameState.GetAllSettings(), options =>
@@ -334,21 +333,21 @@ namespace YAESandBox.Core.Tests
                         .When(info => info.Type == typeof(int)) // 处理 int->long 转换
             );
             // 手动检查包含 TypedID 的项
-            loadedGameState["玩家位置参考"].Should().BeOfType<TypedID>().And.Be(_playerRef);
+            loadedGameState["玩家位置参考"].Should().BeOfType<TypedID>().And.Be(this._playerRef);
 
 
             // Assert: 验证子节点的 Metadata 和 TriggeredChildParams
-            var loadedChildStatus = await loadedManager.GetBlockAsync(_childBlockId);
+            var loadedChildStatus = await loadedManager.GetBlockAsync(this._childBlockId);
             loadedChildStatus.Should().NotBeNull();
             var loadedChildBlock = loadedChildStatus!.Block;
-            var originalChildBlock = _originalManager.GetBlocks()[_childBlockId];
+            var originalChildBlock = this._originalManager.GetBlocks()[this._childBlockId];
 
             loadedChildBlock.Metadata.Should().BeEquivalentTo(originalChildBlock.Metadata,
                 options => options.ComparingByMembers<object>());
             loadedChildBlock.TriggeredChildParams.Should().BeEquivalentTo(originalChildBlock.TriggeredChildParams,
                 options => options.ComparingByMembers<object>());
             // 手动检查 TriggeredChildParams 中的 TypedID
-            loadedRootStatus.Block.TriggeredChildParams["相关物品"].Should().BeOfType<TypedID>().And.Be(_itemRef);
+            loadedRootStatus.Block.TriggeredChildParams["相关物品"].Should().BeOfType<TypedID>().And.Be(this._itemRef);
         }
 
         /// <summary>
@@ -371,8 +370,8 @@ namespace YAESandBox.Core.Tests
             blindData.Should().BeOfType<JsonElement>().Which.GetString().Should().Be("Empty");
             var loadedBlocks = loadedManager.GetBlocks();
             loadedBlocks.Should().HaveCount(1);
-            loadedBlocks.Should().ContainKey(_rootBlockId);
-            var rootBlock = loadedBlocks[_rootBlockId];
+            loadedBlocks.Should().ContainKey(this._rootBlockId);
+            var rootBlock = loadedBlocks[this._rootBlockId];
             rootBlock.ChildrenList.Should().BeEmpty();
             rootBlock.wsInput.Should().NotBeNull(); // 根节点应该有 wsInput
             rootBlock.wsPostUser.Should().NotBeNull(); // 加载后强制为 Idle，应有 wsPostUser

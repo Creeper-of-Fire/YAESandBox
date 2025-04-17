@@ -243,13 +243,13 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
         var operation = AtomicOperation.Create(EntityType.Character, "hero_save_test", new() { { "name", "持久化英雄" } });
         var batchRequest = new BatchAtomicRequestDto { Operations = [operation.ToAtomicOperationRequestDto()] };
 
-        var postResponse = await HttpClient.PostAsJsonAsync($"/api/atomic/{initialBlockId}", batchRequest);
+        var postResponse = await this.HttpClient.PostAsJsonAsync($"/api/atomic/{initialBlockId}", batchRequest);
         Assert.Equal(HttpStatusCode.OK, postResponse.StatusCode); // 确认操作成功
 
         // --- Act 1: 保存状态 ---
         var blindDataToSave = new { UserSetting = "SomeValue", LastBlock = "block-xyz" };
-        _output.WriteLine("持久化: 调用保存 API...");
-        var saveResponse = await HttpClient.PostAsJsonAsync("/api/persistence/save", blindDataToSave);
+        this._output.WriteLine("持久化: 调用保存 API...");
+        var saveResponse = await this.HttpClient.PostAsJsonAsync("/api/persistence/save", blindDataToSave);
         Assert.Equal(HttpStatusCode.OK, saveResponse.StatusCode);
         Assert.Equal("application/json", saveResponse.Content.Headers.ContentType?.MediaType);
         Assert.StartsWith("yaesandbox_save_", saveResponse.Content.Headers.ContentDisposition?.FileName);
@@ -271,7 +271,7 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
         var savedBlindDataElement = (JsonElement)savedArchive.BlindStorage;
         Assert.Equal("SomeValue", savedBlindDataElement.GetProperty("userSetting").GetString());
         Assert.Equal("block-xyz", savedBlindDataElement.GetProperty("lastBlock").GetString());
-        _output.WriteLine("持久化: 保存的数据结构基本验证通过。");
+        this._output.WriteLine("持久化: 保存的数据结构基本验证通过。");
 
         // --- Act 2: 加载状态 ---
         memoryStream.Position = 0; // 重置流以供上传
@@ -281,13 +281,13 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
         // 文件名需要和服务端期望的一致或兼容
         content.Add(fileContent, "archiveFile", "test_save.json");
 
-        _output.WriteLine("持久化: 调用加载 API...");
-        var loadResponse = await HttpClient.PostAsync("/api/persistence/load", content);
-        _output.WriteLine($"持久化: 加载 API 响应状态: {loadResponse.StatusCode}");
+        this._output.WriteLine("持久化: 调用加载 API...");
+        var loadResponse = await this.HttpClient.PostAsync("/api/persistence/load", content);
+        this._output.WriteLine($"持久化: 加载 API 响应状态: {loadResponse.StatusCode}");
 
         // 调试输出响应内容
         var responseContent = await loadResponse.Content.ReadAsStringAsync();
-        _output.WriteLine($"持久化: 加载 API 响应内容: {responseContent}");
+        this._output.WriteLine($"持久化: 加载 API 响应内容: {responseContent}");
 
 
         Assert.Equal(HttpStatusCode.OK, loadResponse.StatusCode);
@@ -299,10 +299,10 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
             await loadResponse.Content.ReadFromJsonAsync<JsonElement>(optionsForHttpRead); // 直接读为 JsonElement
         Assert.Equal("SomeValue", loadedBlindData.GetProperty("userSetting").GetString());
         Assert.Equal("block-xyz", loadedBlindData.GetProperty("lastBlock").GetString());
-        _output.WriteLine("持久化: 返回的盲存数据验证成功。");
+        this._output.WriteLine("持久化: 返回的盲存数据验证成功。");
 
         // 验证加载后的 Block 状态 (应为 Idle) 和实体数据
-        _output.WriteLine("持久化: 验证加载后的 Block 状态和实体...");
+        this._output.WriteLine("持久化: 验证加载后的 Block 状态和实体...");
 
 // *** 创建包含 Enum 转换器的选项 ***
         var optionsForDtoRead = new JsonSerializerOptions
@@ -313,11 +313,11 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
         optionsForDtoRead.Converters.Add(new JsonStringEnumConverter()); // <--- 关键：添加枚举转换器
 // 如果 DTO 中还包含 TypedID 等自定义类型，也需要在此添加对应的转换器
 // optionsForDtoRead.Converters.Add(new TypedIdConverter()); // 如果需要
-        var blockDetailResponse = await HttpClient.GetAsync($"/api/blocks/{initialBlockId}");
+        var blockDetailResponse = await this.HttpClient.GetAsync($"/api/blocks/{initialBlockId}");
 
         // (可选，用于调试) 打印原始响应内容
         var responseContent0 = await blockDetailResponse.Content.ReadAsStringAsync();
-        _output.WriteLine($"持久化: /api/blocks/{initialBlockId} 响应内容: {responseContent0}");
+        this._output.WriteLine($"持久化: /api/blocks/{initialBlockId} 响应内容: {responseContent0}");
 
         Assert.Equal(HttpStatusCode.OK, blockDetailResponse.StatusCode);
 
@@ -326,7 +326,7 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
         Assert.NotNull(blockDetail);
         // 持久化加载后，Block 状态应恢复为 Idle
         Assert.Equal(BlockStatusCode.Idle, blockDetail.StatusCode);
-        _output.WriteLine($"持久化: Block '{initialBlockId}' 加载后状态为 Idle。");
+        this._output.WriteLine($"持久化: Block '{initialBlockId}' 加载后状态为 Idle。");
 
         // *** 实体 DTO 可能也需要配置选项反序列化 ***
 // 创建包含所需转换器的选项 (如果 EntitySummaryDto 包含枚举或其他特殊类型)
@@ -338,7 +338,7 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
         optionsForEntityDtoRead.Converters.Add(new TypedIdConverter()); // 如果 DTO 里有 TypedID
 
 
-        var entitiesResponse = await HttpClient.GetAsync($"/api/entities?blockId={initialBlockId}");
+        var entitiesResponse = await this.HttpClient.GetAsync($"/api/entities?blockId={initialBlockId}");
         Assert.Equal(HttpStatusCode.OK, entitiesResponse.StatusCode);
         var entities = await entitiesResponse.Content.ReadFromJsonAsync<List<EntitySummaryDto>>(optionsForEntityDtoRead);
         Assert.NotNull(entities);
@@ -346,13 +346,13 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
         Assert.NotNull(loadedHero);
         Assert.Equal(EntityType.Character, loadedHero.EntityType);
         Assert.Equal("持久化英雄", loadedHero.Name); // 确认属性也恢复了
-        _output.WriteLine("持久化: 加载后的实体数据验证成功。");
+        this._output.WriteLine("持久化: 加载后的实体数据验证成功。");
 
         // 验证 GameState (如果需要)
-        var gameStateResponse = await HttpClient.GetAsync($"/api/blocks/{initialBlockId}/gamestate");
+        var gameStateResponse = await this.HttpClient.GetAsync($"/api/blocks/{initialBlockId}/gamestate");
         Assert.Equal(HttpStatusCode.OK, gameStateResponse.StatusCode);
         // ... 反序列化并验证 GameState 内容 ...
-        _output.WriteLine("持久化: GameState 验证 (如果实现)。");
+        this._output.WriteLine("持久化: GameState 验证 (如果实现)。");
     }
 
     // 可选：测试加载期间用户修改的情况 (根据场景一第 4 步)

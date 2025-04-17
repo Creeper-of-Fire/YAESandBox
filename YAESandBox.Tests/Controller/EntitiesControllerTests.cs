@@ -22,9 +22,9 @@ public class EntitiesControllerTests
 
     public EntitiesControllerTests()
     {
-        _mockReadService = new Mock<IBlockReadService>();
-        _mockWritService = new Mock<IBlockWritService>();
-        _controller = new EntitiesController(_mockWritService.Object, _mockReadService.Object);
+        this._mockReadService = new Mock<IBlockReadService>();
+        this._mockWritService = new Mock<IBlockWritService>();
+        this._controller = new EntitiesController(this._mockWritService.Object, this._mockReadService.Object);
     }
 
     [Fact]
@@ -40,10 +40,10 @@ public class EntitiesControllerTests
         // 设置 Character 的 name 属性用于测试 DTO 映射
         entities[0].SetAttribute("name", "英雄");
 
-        _mockReadService.Setup(s => s.GetAllEntitiesSummaryAsync(blockId)).ReturnsAsync(entities);
+        this._mockReadService.Setup(s => s.GetAllEntitiesSummaryAsync(blockId)).ReturnsAsync(entities);
 
         // Act
-        var result = await _controller.GetAllEntities(blockId);
+        var result = await this._controller.GetAllEntities(blockId);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
@@ -52,7 +52,7 @@ public class EntitiesControllerTests
         dtos.Should().ContainEquivalentOf(new EntitySummaryDto { EntityId = "char1", EntityType = EntityType.Character, IsDestroyed = false, Name = "英雄" });
         dtos.Should().ContainEquivalentOf(new EntitySummaryDto { EntityId = "item1", EntityType = EntityType.Item, IsDestroyed = false, Name = null }); // Item 没有设置 Name
 
-        _mockReadService.Verify(s => s.GetAllEntitiesSummaryAsync(blockId), Times.Once);
+        this._mockReadService.Verify(s => s.GetAllEntitiesSummaryAsync(blockId), Times.Once);
     }
 
     [Fact]
@@ -60,15 +60,15 @@ public class EntitiesControllerTests
     {
         // Arrange
         var blockId = "invalidBlock";
-        _mockReadService.Setup(s => s.GetAllEntitiesSummaryAsync(blockId)).ReturnsAsync((IEnumerable<BaseEntity>?)null); // 模拟服务返回 null
+        this._mockReadService.Setup(s => s.GetAllEntitiesSummaryAsync(blockId)).ReturnsAsync((IEnumerable<BaseEntity>?)null); // 模拟服务返回 null
 
         // Act
-        var result = await _controller.GetAllEntities(blockId);
+        var result = await this._controller.GetAllEntities(blockId);
 
         // Assert
         var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
         notFoundResult.Value.Should().Be($"Block with ID '{blockId}' not found or inaccessible.");
-        _mockReadService.Verify(s => s.GetAllEntitiesSummaryAsync(blockId), Times.Once);
+        this._mockReadService.Verify(s => s.GetAllEntitiesSummaryAsync(blockId), Times.Once);
     }
 
      [Fact]
@@ -77,17 +77,17 @@ public class EntitiesControllerTests
         // Arrange
         var blockId = "emptyBlock";
         var entities = new List<BaseEntity>(); // 空列表
-        _mockReadService.Setup(s => s.GetAllEntitiesSummaryAsync(blockId)).ReturnsAsync(entities);
+        this._mockReadService.Setup(s => s.GetAllEntitiesSummaryAsync(blockId)).ReturnsAsync(entities);
 
         // Act
-        var result = await _controller.GetAllEntities(blockId);
+        var result = await this._controller.GetAllEntities(blockId);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         var dtos = okResult.Value.Should().BeAssignableTo<IEnumerable<EntitySummaryDto>>().Subject;
         dtos.Should().BeEmpty(); // 验证列表为空
 
-        _mockReadService.Verify(s => s.GetAllEntitiesSummaryAsync(blockId), Times.Once);
+        this._mockReadService.Verify(s => s.GetAllEntitiesSummaryAsync(blockId), Times.Once);
     }
 
 
@@ -102,10 +102,10 @@ public class EntitiesControllerTests
         var entity = new Character(entityId) { IsDestroyed = false };
         entity.SetAttribute("name", "战士");
         entity.SetAttribute("hp", 100);
-        _mockReadService.Setup(s => s.GetEntityDetailAsync(blockId, typedId)).ReturnsAsync(entity);
+        this._mockReadService.Setup(s => s.GetEntityDetailAsync(blockId, typedId)).ReturnsAsync(entity);
 
         // Act
-        var result = await _controller.GetEntityDetail(entityType, entityId, blockId);
+        var result = await this._controller.GetEntityDetail(entityType, entityId, blockId);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
@@ -119,7 +119,7 @@ public class EntitiesControllerTests
         dto.Attributes.Should().ContainKey("EntityType").WhoseValue.Should().Be(entityType);
         dto.Attributes.Should().ContainKey("IsDestroyed").WhoseValue.Should().Be(false);
 
-        _mockReadService.Verify(s => s.GetEntityDetailAsync(blockId, typedId), Times.Once);
+        this._mockReadService.Verify(s => s.GetEntityDetailAsync(blockId, typedId), Times.Once);
     }
 
     [Fact]
@@ -130,15 +130,15 @@ public class EntitiesControllerTests
         var entityType = EntityType.Place;
         var entityId = "nonExistentPlace";
         var typedId = new TypedID(entityType, entityId);
-        _mockReadService.Setup(s => s.GetEntityDetailAsync(blockId, typedId)).ReturnsAsync((BaseEntity?)null); // 模拟未找到
+        this._mockReadService.Setup(s => s.GetEntityDetailAsync(blockId, typedId)).ReturnsAsync((BaseEntity?)null); // 模拟未找到
 
         // Act
-        var result = await _controller.GetEntityDetail(entityType, entityId, blockId);
+        var result = await this._controller.GetEntityDetail(entityType, entityId, blockId);
 
         // Assert
         var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
         notFoundResult.Value.Should().Be($"Entity '{typedId}' not found in block '{blockId}' or block not found.");
-        _mockReadService.Verify(s => s.GetEntityDetailAsync(blockId, typedId), Times.Once);
+        this._mockReadService.Verify(s => s.GetEntityDetailAsync(blockId, typedId), Times.Once);
     }
 }
 // --- END OF FILE YAESandBox.Tests/API/Controllers/EntitiesControllerTests.cs ---

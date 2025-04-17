@@ -30,7 +30,7 @@ public class BlockStatusTests
     public void IdleBlockStatus_CurrentWorldState_应返回wsPostUser()
     {
         // Arrange
-        var block = CreateTestBlock();
+        var block = this.CreateTestBlock();
         block.wsPostUser = new WorldState(); // 确保 wsPostUser 存在
         var status = new IdleBlockStatus(block);
         var expectedWs = block.wsPostUser;
@@ -50,7 +50,7 @@ public class BlockStatusTests
     public void LoadingBlockStatus_CurrentWorldState_应返回wsTemp()
     {
         // Arrange
-        var block = CreateTestBlock();
+        var block = this.CreateTestBlock();
         var status = new LoadingBlockStatus(block); // 创建时 wsTemp 已基于 wsInput 初始化
         var expectedWs = block.wsTemp;
 
@@ -69,7 +69,7 @@ public class BlockStatusTests
     public void ConflictBlockStatus_CurrentWorldState_应返回wsTemp()
     {
         // Arrange
-        var block = CreateTestBlock();
+        var block = this.CreateTestBlock();
         block.wsTemp = new WorldState(); // 确保 wsTemp 存在
         var status = new ConflictBlockStatus(block, [], [], [], []);
         var expectedWs = block.wsTemp;
@@ -89,7 +89,7 @@ public class BlockStatusTests
     public void ErrorBlockStatus_CurrentWorldState_应返回wsPostUser()
     {
         // Arrange
-        var block = CreateTestBlock();
+        var block = this.CreateTestBlock();
         block.wsPostUser = new WorldState(); // 确保 wsPostUser 存在
         var status = new ErrorBlockStatus(block);
         var expectedWs = block.wsPostUser;
@@ -109,7 +109,7 @@ public class BlockStatusTests
     public void IdleBlockStatus_ApplyOperations_应直接修改wsPostUser()
     {
         // Arrange
-        var block = CreateTestBlock();
+        var block = this.CreateTestBlock();
         block.wsPostUser = new WorldState(); // Idle 状态操作 wsPostUser
         var status = new IdleBlockStatus(block);
         var op = AtomicOperation.Create(EntityType.Place, "place_market");
@@ -132,7 +132,7 @@ public class BlockStatusTests
     public void LoadingBlockStatus_ApplyOperations_应修改wsTemp并暂存命令()
     {
         // Arrange
-        var block = CreateTestBlock();
+        var block = this.CreateTestBlock();
         var status = new LoadingBlockStatus(block); // wsTemp 已初始化
         var op = AtomicOperation.Create(EntityType.Character, "char_merchant");
         var operations = new List<AtomicOperation> { op };
@@ -163,7 +163,7 @@ public class BlockStatusTests
     public void LoadingBlockStatus_TryFinalizeSuccessfulWorkflow_无冲突_应返回Idle状态和结果()
     {
         // Arrange
-        var block = CreateTestBlock();
+        var block = this.CreateTestBlock();
         var loadingStatus = new LoadingBlockStatus(block);
         var aiOp = AtomicOperation.Create(EntityType.Item, "item_gem");
         var userOp = AtomicOperation.Create(EntityType.Place, "place_cave");
@@ -209,7 +209,7 @@ public class BlockStatusTests
         // Arrange
         var inputWs = new WorldState();
         inputWs.AddEntity(new Item("item_shield"));
-        var block = CreateTestBlock(inputWs: inputWs);
+        var block = this.CreateTestBlock(inputWs: inputWs);
         var loadingStatus = new LoadingBlockStatus(block);
 
         var aiOp = AtomicOperation.Modify(EntityType.Item, "item_shield", "defense", "=", 5);
@@ -246,7 +246,7 @@ public class BlockStatusTests
     public void LoadingBlockStatus_FinalizeSuccessfulWorkflow_应用命令失败_应返回Error状态()
     {
         // Arrange
-        var block = CreateTestBlock();
+        var block = this.CreateTestBlock();
         var loadingStatus = new LoadingBlockStatus(block);
         // 构造一个会失败的操作：修改一个不存在的实体的属性
         var failingOp = AtomicOperation.Modify(EntityType.Item, "item_nonexistent", "value", "=", 100);
@@ -282,7 +282,7 @@ public class BlockStatusTests
     public void IdleBlockStatus_CreateNewChildrenBlock_应成功创建Loading状态的子节点()
     {
         // Arrange
-        var parentBlock = CreateTestBlock("blk_parent");
+        var parentBlock = this.CreateTestBlock("blk_parent");
         parentBlock.wsPostUser = new WorldState(); // Idle 状态需要 wsPostUser
         var parentStatus = new IdleBlockStatus(parentBlock);
 

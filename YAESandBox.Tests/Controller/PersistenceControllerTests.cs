@@ -25,9 +25,9 @@ public class PersistenceControllerTests
     public PersistenceControllerTests()
     {
         // 如果 BlockManager 有无参数构造函数或者可以轻松模拟其依赖项：
-         _mockBlockManager = new Mock<IBlockManager>();
+        this._mockBlockManager = new Mock<IBlockManager>();
 
-        _controller = new PersistenceController(_mockBlockManager.Object);
+        this._controller = new PersistenceController(this._mockBlockManager.Object);
     }
 
     [Fact]
@@ -36,7 +36,7 @@ public class PersistenceControllerTests
         // Arrange
         var blindData = new { frontend = "data" };
         // 设置 SaveToFileAsync 行为：它应该向传入的 Stream 写入数据
-        _mockBlockManager.Setup(bm => bm.SaveToFileAsync(It.IsAny<Stream>(), blindData))
+        this._mockBlockManager.Setup(bm => bm.SaveToFileAsync(It.IsAny<Stream>(), blindData))
             .Callback<Stream, object?>((stream, data) =>
             {
                 // 模拟写入 JSON 数据到流
@@ -47,7 +47,7 @@ public class PersistenceControllerTests
             .Returns(Task.CompletedTask); // 返回完成的任务
 
         // Act
-        var result = await _controller.SaveState(blindData);
+        var result = await this._controller.SaveState(blindData);
 
         // Assert
         var fileResult = result.Should().BeOfType<FileStreamResult>().Subject;
@@ -59,7 +59,7 @@ public class PersistenceControllerTests
         var content = await reader.ReadToEndAsync();
         content.Should().Be("{\"status\":\"saved\"}");
 
-        _mockBlockManager.Verify(bm => bm.SaveToFileAsync(It.IsAny<Stream>(), blindData), Times.Once);
+        this._mockBlockManager.Verify(bm => bm.SaveToFileAsync(It.IsAny<Stream>(), blindData), Times.Once);
     }
 
     [Fact]
@@ -67,17 +67,17 @@ public class PersistenceControllerTests
     {
         // Arrange
         var blindData = new { data = 1 };
-        _mockBlockManager.Setup(bm => bm.SaveToFileAsync(It.IsAny<Stream>(), blindData))
+        this._mockBlockManager.Setup(bm => bm.SaveToFileAsync(It.IsAny<Stream>(), blindData))
             .ThrowsAsync(new Exception("模拟保存失败")); // 模拟服务抛出异常
 
         // Act
-        var result = await _controller.SaveState(blindData);
+        var result = await this._controller.SaveState(blindData);
 
         // Assert
         var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
         objectResult.Value.Should().Be("Failed to save state.");
-        _mockBlockManager.Verify(bm => bm.SaveToFileAsync(It.IsAny<Stream>(), blindData), Times.Once);
+        this._mockBlockManager.Verify(bm => bm.SaveToFileAsync(It.IsAny<Stream>(), blindData), Times.Once);
     }
 
     [Fact]
@@ -94,17 +94,17 @@ public class PersistenceControllerTests
         mockFile.Setup(f => f.ContentType).Returns("application/json");
 
         // 模拟 LoadFromFileAsync 返回盲存数据
-        _mockBlockManager.Setup(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()))
+        this._mockBlockManager.Setup(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()))
             .ReturnsAsync(expectedBlindData);
 
         // Act
-        var result = await _controller.LoadState(mockFile.Object);
+        var result = await this._controller.LoadState(mockFile.Object);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().BeEquivalentTo(expectedBlindData); // 验证返回的盲存数据
 
-        _mockBlockManager.Verify(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()), Times.Once); // 验证传入了流
+        this._mockBlockManager.Verify(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()), Times.Once); // 验证传入了流
     }
 
     [Fact]
@@ -116,12 +116,12 @@ public class PersistenceControllerTests
         mockFile.Setup(f => f.FileName).Returns("empty.json");
 
         // Act
-        var result = await _controller.LoadState(mockFile.Object);
+        var result = await this._controller.LoadState(mockFile.Object);
 
         // Assert
         var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
         badRequestResult.Value.Should().Be("No archive file uploaded.");
-        _mockBlockManager.Verify(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()), Times.Never); // 确认未调用加载
+        this._mockBlockManager.Verify(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()), Times.Never); // 确认未调用加载
     }
 
     [Fact]
@@ -136,16 +136,16 @@ public class PersistenceControllerTests
         mockFile.Setup(f => f.OpenReadStream()).Returns(stream);
 
         // 模拟 LoadFromFileAsync 因 JSON 错误抛出异常
-        _mockBlockManager.Setup(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()))
+        this._mockBlockManager.Setup(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()))
             .ThrowsAsync(new JsonException("模拟 JSON 解析错误"));
 
         // Act
-        var result = await _controller.LoadState(mockFile.Object);
+        var result = await this._controller.LoadState(mockFile.Object);
 
         // Assert
         var badRequestResult = result.Should().BeOfType<BadRequestObjectResult>().Subject;
         badRequestResult.Value.Should().Be("Invalid archive file format.");
-        _mockBlockManager.Verify(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()), Times.Once);
+        this._mockBlockManager.Verify(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()), Times.Once);
     }
 
     [Fact]
@@ -160,17 +160,17 @@ public class PersistenceControllerTests
         mockFile.Setup(f => f.OpenReadStream()).Returns(stream);
 
         // 模拟 LoadFromFileAsync 抛出通用异常
-        _mockBlockManager.Setup(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()))
+        this._mockBlockManager.Setup(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()))
             .ThrowsAsync(new Exception("模拟加载时内部错误"));
 
         // Act
-        var result = await _controller.LoadState(mockFile.Object);
+        var result = await this._controller.LoadState(mockFile.Object);
 
         // Assert
         var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
         objectResult.Value.Should().Be("Failed to load state.");
-        _mockBlockManager.Verify(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()), Times.Once);
+        this._mockBlockManager.Verify(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()), Times.Once);
     }
 
     [Fact]
@@ -185,17 +185,17 @@ public class PersistenceControllerTests
         mockFile.Setup(f => f.Length).Returns(stream.Length);
         mockFile.Setup(f => f.OpenReadStream()).Returns(stream);
 
-        _mockBlockManager.Setup(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()))
+        this._mockBlockManager.Setup(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()))
             .ReturnsAsync(expectedBlindData); // 假设加载成功
 
         // Act
-        var result = await _controller.LoadState(mockFile.Object);
+        var result = await this._controller.LoadState(mockFile.Object);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         okResult.Value.Should().BeEquivalentTo(expectedBlindData); // 仍然成功加载
 
-        _mockBlockManager.Verify(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()), Times.Once);
+        this._mockBlockManager.Verify(bm => bm.LoadFromFileAsync(It.IsAny<Stream>()), Times.Once);
     }
 }
 // --- END OF FILE YAESandBox.Tests/API/Controllers/PersistenceControllerTests.cs ---

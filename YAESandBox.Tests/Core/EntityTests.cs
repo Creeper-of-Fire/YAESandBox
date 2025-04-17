@@ -35,9 +35,9 @@ public class EntityTests
         var expectedId = "unique_id_123";
 
         // Act
-        var item = CreateTestItem(expectedId);
-        var character = CreateTestCharacter(expectedId);
-        var place = CreateTestPlace(expectedId);
+        var item = this.CreateTestItem(expectedId);
+        var character = this.CreateTestCharacter(expectedId);
+        var place = this.CreateTestPlace(expectedId);
 
         // Assert
         item.EntityId.Should().Be(expectedId);
@@ -72,7 +72,7 @@ public class EntityTests
     public void GetAttribute_获取核心属性_应返回正确的值()
     {
         // Arrange
-        var entity = CreateTestItem("item_core", isDestroyed: true);
+        var entity = this.CreateTestItem("item_core", isDestroyed: true);
 
         // Act
         var id = entity.GetAttribute(nameof(BaseEntity.EntityId));
@@ -92,7 +92,7 @@ public class EntityTests
     public void SetAttribute_GetAttribute_对于动态属性_应能设置和获取各种类型的值()
     {
         // Arrange
-        var entity = CreateTestCharacter("char_dynamic");
+        var entity = this.CreateTestCharacter("char_dynamic");
         var stringVal = "value1";
         var intVal = 123;
         var boolVal = true;
@@ -127,7 +127,7 @@ public class EntityTests
     public void TryGetAttribute_应能成功获取正确类型的值并处理类型不匹配()
     {
         // Arrange
-        var entity = CreateTestItem("item_tryget");
+        var entity = this.CreateTestItem("item_tryget");
         entity.SetAttribute("count", 5);
         entity.SetAttribute("description", "A test item.");
         entity.SetAttribute("location", new TypedID(EntityType.Place, "place_chest"));
@@ -180,7 +180,7 @@ public class EntityTests
     public void SetAttribute_设置IsDestroyed_应更新属性值()
     {
         // Arrange
-        var entity = CreateTestPlace("place_set");
+        var entity = this.CreateTestPlace("place_set");
 
         // Act
         entity.SetAttribute(nameof(BaseEntity.IsDestroyed), true);
@@ -197,7 +197,7 @@ public class EntityTests
     public void SetAttribute_尝试设置只读核心属性_应被忽略()
     {
         // Arrange
-        var entity = CreateTestItem("item_readonly");
+        var entity = this.CreateTestItem("item_readonly");
         var originalId = entity.EntityId;
         var originalType = entity.EntityType;
 
@@ -218,7 +218,7 @@ public class EntityTests
     public void ModifyAttribute_使用Equal操作符_应等同于SetAttribute()
     {
         // Arrange
-        var entity = CreateTestCharacter("char_modify_eq");
+        var entity = this.CreateTestCharacter("char_modify_eq");
         var typedIdVal = new TypedID(EntityType.Item, "item_weapon");
 
         // Act
@@ -243,7 +243,7 @@ public class EntityTests
     public void ModifyAttribute_对数值使用AddSub_应执行算术运算<T>(T initialValue, Operator op, T changeValue, T expectedValue) where T : struct
     {
         // Arrange
-        var entity = CreateTestItem("item_modify_num");
+        var entity = this.CreateTestItem("item_modify_num");
         entity.SetAttribute("value", initialValue);
 
         // Act
@@ -260,7 +260,7 @@ public class EntityTests
     public void ModifyAttribute_对字符串使用Add_应执行拼接()
     {
         // Arrange
-        var entity = CreateTestPlace("place_modify_str");
+        var entity = this.CreateTestPlace("place_modify_str");
         entity.SetAttribute("description", "Old ");
 
         // Act
@@ -277,7 +277,7 @@ public class EntityTests
     public void ModifyAttribute_对列表使用AddSub_应添加或移除元素()
     {
         // Arrange
-        var entity = CreateTestCharacter("char_modify_list");
+        var entity = this.CreateTestCharacter("char_modify_list");
         var initialList = new List<object> { "apple", 1 };
         entity.SetAttribute("inventory", initialList); // 设置初始列表
 
@@ -309,7 +309,7 @@ public class EntityTests
     public void ModifyAttribute_对字典使用AddSub_应添加或移除键值对()
     {
         // Arrange
-        var entity = CreateTestItem("item_modify_dict");
+        var entity = this.CreateTestItem("item_modify_dict");
         var initialDict = new Dictionary<string, object?> { { "color", "red" }, { "weight", 10 } };
         entity.SetAttribute("properties", initialDict); // 设置初始字典
 
@@ -341,7 +341,7 @@ public class EntityTests
     public void ModifyAttribute_对TypedID使用不支持的操作符_应保持不变()
     {
         // Arrange
-        var entity = CreateTestPlace("place_modify_tid");
+        var entity = this.CreateTestPlace("place_modify_tid");
         var initialTid = new TypedID(EntityType.Character, "char_owner");
         entity.SetAttribute("owner", initialTid);
 
@@ -359,7 +359,7 @@ public class EntityTests
     public void DeleteAttribute_应能删除动态属性但不能删除核心属性()
     {
         // Arrange
-        var entity = CreateTestItem("item_delete");
+        var entity = this.CreateTestItem("item_delete");
         entity.SetAttribute("dynamicAttr", "to_be_deleted");
         entity.SetAttribute("anotherAttr", 123);
 
@@ -387,7 +387,7 @@ public class EntityTests
     public void GetAllAttributes_应返回包含所有核心和动态属性的字典()
     {
         // Arrange
-        var entity = CreateTestCharacter("char_getall");
+        var entity = this.CreateTestCharacter("char_getall");
         entity.SetAttribute("level", 5);
         entity.SetAttribute("inventory", new List<object> { "sword" });
         entity.IsDestroyed = true;
@@ -417,7 +417,7 @@ public class EntityTests
     public void Clone_应创建具有相同属性的独立副本()
     {
         // Arrange
-        var original = CreateTestItem("item_original");
+        var original = this.CreateTestItem("item_original");
         original.SetAttribute("quality", "good");
         original.SetAttribute("tags", new List<object> { "metal", "sharp" });
         original.SetAttribute("stats", new Dictionary<string, object?> { { "damage", 10 } });
@@ -470,7 +470,7 @@ public class EntityTests
     public void Item_SetAttribute_对于quantity_应进行验证和默认值处理(object? inputValue, int expectedValue)
     {
         // Arrange
-        var item = CreateTestItem("item_quantity");
+        var item = this.CreateTestItem("item_quantity");
 
         // Act
         item.SetAttribute("quantity", inputValue);

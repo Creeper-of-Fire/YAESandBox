@@ -1,13 +1,21 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Serialization;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
 
-namespace YAESandBox.Core.Block;
+namespace YAESandBox.Core;
 
 // 可能还需要一个辅助方法来将 DTO 映射到 Core 类型
 internal static class PersistenceMapper
 {
+    public static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        WriteIndented = true, // For readability
+        Converters = { new JsonStringEnumConverter(), new TypedIdConverter() }, // 注册转换器
+        PropertyNameCaseInsensitive = true // Optional for loading flexibility
+    };
+
     // Helper to convert DTOs back to Core objects
     public static WorldState? MapWorldState(WorldStateDto? wsDto)
     {
@@ -74,11 +82,11 @@ internal static class PersistenceMapper
     {
         if (value is not JsonElement element)
             return value; // 如果不是 JsonElement (例如已经是基本类型)，直接返回
-        return DeserializeObjectValue(element); // 调用重载方法
+        return DeserializeJsonElementValue(element); // 调用重载方法
     }
 
     // *** 非常重要：处理反序列化后的 object? 值 ***
-    internal static object? DeserializeObjectValue(JsonElement element)
+    internal static object? DeserializeJsonElementValue(JsonElement element)
     {
         switch (element.ValueKind)
         {
@@ -96,7 +104,7 @@ internal static class PersistenceMapper
                 return element.GetString();
             case JsonValueKind.Array:
                 // 递归处理数组元素
-                return element.EnumerateArray().Select(DeserializeObjectValue).ToList();
+                return element.EnumerateArray().Select(DeserializeJsonElementValue).ToList();
             case JsonValueKind.Object:
                 // // ----- Bug 1 & 3 修复：优先手动检测 TypedID 结构 -----
                 // // 检查是否存在 "type" 和 "id" 属性，并且类型是预期的（string 或 number for type, string for id）
@@ -139,7 +147,7 @@ internal static class PersistenceMapper
                 {
                     // 注意：需要确保 JsonSerializerOptions 传递正确
                     // 这里的 options 需要包含 TypedIdConverter 和 JsonStringEnumConverter
-                    var options = BlockManager._jsonOptions; // 假设 BlockManager 中的 _jsonOptions 可访问或重新创建
+                    var options = JsonOptions; // 假设 BlockManager 中的 _jsonOptions 可访问或重新创建
                     var typedId = element.Deserialize<TypedID>(options);
                     // 如果反序列化成功（没有抛异常），并且结果不为 null
                     if (typedId != default) // 检查是否为默认值，因为 record struct 不是 null
@@ -151,11 +159,13 @@ internal static class PersistenceMapper
                 catch (JsonException)
                 {
                     // 反序列化失败，说明它不是一个有效的 TypedID JSON，按普通字典处理
-                    Log.Debug($"JSON object was not a valid TypedID. Deserializing as dictionary. JSON: {element.GetRawText()}");
+                    Log.Debug(
+                        $"JSON object was not a valid TypedID. Deserializing as dictionary. JSON: {element.GetRawText()}");
                 }
                 catch (Exception ex) // 其他意外错误
                 {
-                    Log.Error(ex, $"Unexpected error during potential TypedID deserialization. JSON: {element.GetRawText()}");
+                    Log.Error(ex,
+                        $"Unexpected error during potential TypedID deserialization. JSON: {element.GetRawText()}");
                     // 根据情况决定是继续按字典处理还是抛出异常
                 }
 
@@ -163,7 +173,7 @@ internal static class PersistenceMapper
                 var dict = new Dictionary<string, object?>();
                 foreach (var prop in element.EnumerateObject())
                 {
-                    dict[prop.Name] = DeserializeObjectValue(prop.Value);
+                    dict[prop.Name] = DeserializeJsonElementValue(prop.Value);
                 }
 
                 return dict;

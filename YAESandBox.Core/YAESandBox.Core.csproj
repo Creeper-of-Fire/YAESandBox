@@ -8,11 +8,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
+        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
+        <InternalsVisibleTo Include="YAESandBox.Core.Block"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
+        <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2"/>
     </ItemGroup>
 
 </Project>

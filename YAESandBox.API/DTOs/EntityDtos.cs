@@ -1,27 +1,48 @@
-﻿using YAESandBox.Core.State.Entity; // For EntityType, TypedID
+﻿using YAESandBox.Core.State.Entity; // For EntityType
 
 namespace YAESandBox.API.DTOs;
 
 /// <summary>
-/// 用于 API 响应的实体基本信息。
+/// 用于 API 响应，表示实体的基本摘要信息。
 /// </summary>
 public record EntitySummaryDto
 {
+    /// <summary>
+    /// 实体的唯一 ID。
+    /// </summary>
     public string EntityId { get; set; } = null!;
+
+    /// <summary>
+    /// 实体的类型 (Item, Character, Place)。
+    /// </summary>
     public EntityType EntityType { get; set; }
+
+    /// <summary>
+    /// 指示实体是否已被标记为销毁。
+    /// 注意：查询 API 通常只返回未销毁的实体。
+    /// </summary>
     public bool IsDestroyed { get; set; }
-    // 可能包含 Name 或 Description 等关键摘要信息
+
+    /// <summary>
+    /// 实体的名称 (通常来自 'name' 属性，如果不存在则可能回退到 EntityId)。
+    /// </summary>
     public string? Name { get; set; }
+    // 可以添加其他关键摘要信息，如描述等
 }
 
 /// <summary>
-/// 用于 API 响应的实体详细信息（包含所有属性）。
+/// 用于 API 响应，表示实体的详细信息，包含所有属性。
+/// 继承自 <see cref="EntitySummaryDto"/>。
 /// </summary>
 public record EntityDetailDto : EntitySummaryDto
 {
+    /// <summary>
+    /// 包含实体所有属性（包括核心属性如 IsDestroyed 和动态属性）的字典。
+    /// 值的类型可能是 string, int, bool, double, List<object?>, Dictionary<string, object?>, TypedID 等。
+    /// </summary>
     public Dictionary<string, object?> Attributes { get; init; } = new();
 }
 
-// 可以为特定实体类型创建更具体的 DTO，如果需要的话
-// public class ItemDetailDto : EntityDetailDto { public int Quantity { get; set; } }
-// public class PlaceDetailDto : EntityDetailDto { public List<TypedID> Contents { get; set; } }
+// 如果需要，可以为特定实体类型创建更具体的 DTO
+// public record ItemDetailDto : EntityDetailDto { public int Quantity { get; set; } }
+// public record PlaceDetailDto : EntityDetailDto { public List<TypedID> Contents { get; set; } }

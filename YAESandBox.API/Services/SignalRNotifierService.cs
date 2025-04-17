@@ -10,16 +10,19 @@ using YAESandBox.Depend;
 
 namespace YAESandBox.API.Services;
 
-public class SignalRNotifierService : INotifierService
+/// <summary>
+/// SignalRNotifierService 是一个实现 INotifierService 接口的服务，用于通过 SignalR 发送通知。
+/// </summary>
+public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext) : INotifierService
 {
-    private IHubContext<GameHub, IGameClient> hubContext { get; }
+    private IHubContext<GameHub, IGameClient> hubContext { get; } = hubContext;
 
-    public SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext)
-    {
-        this.hubContext = hubContext;
-        Log.Debug("SignalRNotifierService 初始化完成。");
-    }
-
+    /// <summary>
+    /// 发送Block状态更新到前端
+    /// </summary>
+    /// <param name="blockId"></param>
+    /// <param name="newStatusCode"></param>
+    /// <returns></returns>
     public async Task NotifyBlockStatusUpdateAsync(string blockId, BlockStatusCode newStatusCode)
     {
         // Try to get the block to include parent info (this might be slightly racy if called during creation/deletion)
@@ -57,7 +60,7 @@ public class SignalRNotifierService : INotifierService
     /// <returns></returns>
     public async Task NotifyStateUpdateAsync(string blockId, IEnumerable<string>? changedEntityIds = null)
     {
-        var signal = new StateUpdateSignalDto(BlockId: blockId, ChangedEntityIds: changedEntityIds?.ToList() ?? []);
+        var signal = new StateUpdateSignalDto(BlockId: blockId, ChangedEntityIds: changedEntityIds?.ToList());
         Log.Debug($"准备通过 SignalR 发送 StateUpdateSignal: BlockId={blockId}");
         await this.hubContext.Clients.All.ReceiveStateUpdateSignal(signal);
         Log.Debug($"StateUpdateSignal for {blockId} 已发送。");

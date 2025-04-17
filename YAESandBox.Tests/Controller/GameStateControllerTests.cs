@@ -22,9 +22,9 @@ public class GameStateControllerTests
 
     public GameStateControllerTests()
     {
-        _mockWritService = new Mock<IBlockWritService>();
-        _mockReadService = new Mock<IBlockReadService>();
-        _controller = new GameStateController(_mockWritService.Object, _mockReadService.Object);
+        this._mockWritService = new Mock<IBlockWritService>();
+        this._mockReadService = new Mock<IBlockReadService>();
+        this._controller = new GameStateController(this._mockWritService.Object, this._mockReadService.Object);
     }
 
     [Fact]
@@ -34,16 +34,16 @@ public class GameStateControllerTests
         var blockId = "testBlock";
         var gameState = new GameState();
         gameState["level"] = 5;
-        _mockReadService.Setup(s => s.GetBlockGameStateAsync(blockId)).ReturnsAsync(gameState);
+        this._mockReadService.Setup(s => s.GetBlockGameStateAsync(blockId)).ReturnsAsync(gameState);
 
         // Act
-        var result = await _controller.GetGameState(blockId);
+        var result = await this._controller.GetGameState(blockId);
 
         // Assert
         var okResult = result.Should().BeOfType<OkObjectResult>().Subject;
         var dto = okResult.Value.Should().BeOfType<GameStateDto>().Subject;
         dto.Settings.Should().ContainKey("level").WhoseValue.Should().Be(5);
-        _mockReadService.Verify(s => s.GetBlockGameStateAsync(blockId), Times.Once);
+        this._mockReadService.Verify(s => s.GetBlockGameStateAsync(blockId), Times.Once);
     }
 
     [Fact]
@@ -51,15 +51,15 @@ public class GameStateControllerTests
     {
         // Arrange
         var blockId = "nonExistentBlock";
-        _mockReadService.Setup(s => s.GetBlockGameStateAsync(blockId)).ReturnsAsync((GameState?)null); // 模拟返回 null
+        this._mockReadService.Setup(s => s.GetBlockGameStateAsync(blockId)).ReturnsAsync((GameState?)null); // 模拟返回 null
 
         // Act
-        var result = await _controller.GetGameState(blockId);
+        var result = await this._controller.GetGameState(blockId);
 
         // Assert
         var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
         notFoundResult.Value.Should().Be($"Block with ID '{blockId}' not found.");
-        _mockReadService.Verify(s => s.GetBlockGameStateAsync(blockId), Times.Once);
+        this._mockReadService.Verify(s => s.GetBlockGameStateAsync(blockId), Times.Once);
     }
 
     [Fact]
@@ -71,15 +71,15 @@ public class GameStateControllerTests
         {
             SettingsToUpdate = new Dictionary<string, object?> { { "score", 100 } }
         };
-        _mockWritService.Setup(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate))
+        this._mockWritService.Setup(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate))
             .ReturnsAsync(UpdateResult.Success); // 模拟成功
 
         // Act
-        var result = await _controller.UpdateGameState(blockId, request);
+        var result = await this._controller.UpdateGameState(blockId, request);
 
         // Assert
         result.Should().BeOfType<NoContentResult>(); // 验证返回类型
-        _mockWritService.Verify(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate), Times.Once);
+        this._mockWritService.Verify(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate), Times.Once);
     }
 
     [Fact]
@@ -91,16 +91,16 @@ public class GameStateControllerTests
         {
             SettingsToUpdate = new Dictionary<string, object?> { { "score", 100 } }
         };
-        _mockWritService.Setup(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate))
+        this._mockWritService.Setup(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate))
             .ReturnsAsync(UpdateResult.NotFound); // 模拟未找到
 
         // Act
-        var result = await _controller.UpdateGameState(blockId, request);
+        var result = await this._controller.UpdateGameState(blockId, request);
 
         // Assert
         var notFoundResult = result.Should().BeOfType<NotFoundObjectResult>().Subject;
         notFoundResult.Value.Should().Be($"Block with ID '{blockId}' not found.");
-        _mockWritService.Verify(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate), Times.Once);
+        this._mockWritService.Verify(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate), Times.Once);
     }
 
      [Fact]
@@ -113,17 +113,17 @@ public class GameStateControllerTests
             SettingsToUpdate = new Dictionary<string, object?> { { "score", 100 } }
         };
         // 假设 UpdateResult 有一个 Error 状态，或者服务抛出异常
-         _mockWritService.Setup(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate))
+        this._mockWritService.Setup(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate))
              .ReturnsAsync(UpdateResult.InvalidOperation); // 用 InvalidOperation 模拟其他错误
 
         // Act
-        var result = await _controller.UpdateGameState(blockId, request);
+        var result = await this._controller.UpdateGameState(blockId, request);
 
         // Assert
         var objectResult = result.Should().BeOfType<ObjectResult>().Subject;
         objectResult.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
         objectResult.Value.Should().Be("An unexpected error occurred."); // 根据控制器中的错误处理逻辑断言
-        _mockWritService.Verify(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate), Times.Once);
+        this._mockWritService.Verify(s => s.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate), Times.Once);
     }
 }
 // --- END OF FILE YAESandBox.Tests/API/Controllers/GameStateControllerTests.cs ---

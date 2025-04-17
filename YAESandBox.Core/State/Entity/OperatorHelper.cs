@@ -14,6 +14,12 @@ public enum Operator
 
 public static class OperatorHelper
 {
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="stringOp"></param>
+    /// <returns></returns>
+    /// <exception cref="ArgumentException">不支持的操作符</exception>
     public static Operator StringToOperator(string stringOp)
     {
         return stringOp switch
@@ -21,7 +27,7 @@ public static class OperatorHelper
             "=" => Operator.Equal,
             "+=" or "+" => Operator.Add,
             "-=" or "-" => Operator.Sub,
-            _ => throw new ArgumentException($"Quantity 不支持 '{stringOp}'", stringOp)
+            _ => throw new ArgumentException($"不支持 '{stringOp}'")
         };
     }
 

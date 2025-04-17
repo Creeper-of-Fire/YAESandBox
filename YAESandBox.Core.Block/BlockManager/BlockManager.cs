@@ -251,12 +251,7 @@ public partial class BlockManager : IBlockManager
     //--- 持久化逻辑 --- 
 
 
-    internal static readonly JsonSerializerOptions _jsonOptions = new()
-    {
-        WriteIndented = true, // For readability
-        Converters = { new JsonStringEnumConverter(), new TypedIdConverter() }, // 注册转换器
-        PropertyNameCaseInsensitive = true // Optional for loading flexibility
-    };
+
 
     /// <summary>
     /// 将当前 BlockManager 的状态保存到流中。
@@ -295,15 +290,15 @@ public partial class BlockManager : IBlockManager
 
             blockDto.WorldStates["wsInput"] = this.MapWorldStateDto(coreBlock.wsInput);
             if (coreBlock.wsPostAI != null)
-                blockDto.WorldStates["wsPostAI"] = MapWorldStateDto(coreBlock.wsPostAI);
+                blockDto.WorldStates["wsPostAI"] = this.MapWorldStateDto(coreBlock.wsPostAI);
             if (coreBlock.wsPostUser != null)
-                blockDto.WorldStates["wsPostUser"] = MapWorldStateDto(coreBlock.wsPostUser);
+                blockDto.WorldStates["wsPostUser"] = this.MapWorldStateDto(coreBlock.wsPostUser);
             // wsTemp 不保存
 
             archive.Blocks.Add(blockId, blockDto);
         }
 
-        await JsonSerializer.SerializeAsync(stream, archive, _jsonOptions);
+        await JsonSerializer.SerializeAsync(stream, archive, PersistenceMapper.JsonOptions);
         Log.Info($"BlockManager state saved. Blocks count: {archive.Blocks.Count}");
     }
 
@@ -314,7 +309,7 @@ public partial class BlockManager : IBlockManager
     /// <returns>恢复的前端盲存数据。</returns>
     public async Task<object?> LoadFromFileAsync(Stream stream)
     {
-        var archive = await JsonSerializer.DeserializeAsync<ArchiveDto>(stream, _jsonOptions);
+        var archive = await JsonSerializer.DeserializeAsync<ArchiveDto>(stream, PersistenceMapper.JsonOptions);
 
         if (archive == null)
         {
@@ -428,9 +423,9 @@ public partial class BlockManager : IBlockManager
     private WorldStateDto MapWorldStateDto(WorldState ws)
     {
         var dto = new WorldStateDto();
-        MapEntitiesDto(dto.Items, ws.Items);
-        MapEntitiesDto(dto.Characters, ws.Characters);
-        MapEntitiesDto(dto.Places, ws.Places);
+        this.MapEntitiesDto(dto.Items, ws.Items);
+        this.MapEntitiesDto(dto.Characters, ws.Characters);
+        this.MapEntitiesDto(dto.Places, ws.Places);
         return dto;
     }
 

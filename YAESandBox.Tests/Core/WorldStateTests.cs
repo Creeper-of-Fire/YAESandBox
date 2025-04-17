@@ -19,7 +19,7 @@ public class WorldStateTests
     public void AddEntity_应能成功添加不同类型的实体()
     {
         // Arrange
-        var ws = CreateTestWorldState();
+        var ws = this.CreateTestWorldState();
         var item = new Item("item_sword");
         var character = new Character("char_hero");
         var place = new Place("place_castle");
@@ -42,7 +42,7 @@ public class WorldStateTests
     public void AddEntity_添加重复ID和类型的实体_应覆盖旧实体()
     {
         // Arrange
-        var ws = CreateTestWorldState();
+        var ws = this.CreateTestWorldState();
         var item1 = new Item("item_apple") { IsDestroyed = false };
         var item2 = new Item("item_apple") { IsDestroyed = false }; // 相同 ID
         item2.SetAttribute("color", "red"); // 新实体有不同属性
@@ -65,7 +65,7 @@ public class WorldStateTests
     public void AddEntity_添加相同ID但不同类型的实体_应都存在()
     {
         // Arrange
-        var ws = CreateTestWorldState();
+        var ws = this.CreateTestWorldState();
         var item = new Item("shared_id");
         var character = new Character("shared_id");
 
@@ -86,7 +86,7 @@ public class WorldStateTests
     public void FindEntity_使用TypedID_应能精确查找实体()
     {
         // Arrange
-        var ws = CreateTestWorldState();
+        var ws = this.CreateTestWorldState();
         var item = new Item("item_find_tid");
         var character = new Character("char_find_tid");
         var destroyedItem = new Item("item_destroyed_tid") { IsDestroyed = true };
@@ -121,7 +121,7 @@ public class WorldStateTests
     public void FindEntityById_使用ID和类型_应能精确查找实体()
     {
         // Arrange
-        var ws = CreateTestWorldState();
+        var ws = this.CreateTestWorldState();
         var item = new Item("item_find_id");
         var character = new Character("char_find_id");
         var destroyedItem = new Item("item_destroyed_id") { IsDestroyed = true };
@@ -154,7 +154,7 @@ public class WorldStateTests
     public void Clone_应创建包含独立实体副本的WorldState副本()
     {
         // Arrange
-        var originalWs = CreateTestWorldState();
+        var originalWs = this.CreateTestWorldState();
         var item1 = new Item("item_clone1");
         item1.SetAttribute("value", 10);
         var char1 = new Character("char_clone1");

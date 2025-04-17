@@ -29,7 +29,7 @@ public class BlockManagerTests
     public async Task 构造函数_应创建并初始化世界根节点()
     {
         // Arrange & Act
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var rootBlock = await manager.GetBlockAsync(BlockManager.WorldRootId);
 
         // Assert
@@ -50,7 +50,7 @@ public class BlockManagerTests
     public async Task CreateChildBlock_Async_当父节点空闲时_应成功创建子节点并返回Loading状态()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var parentId = BlockManager.WorldRootId;
         var triggerParams = new Dictionary<string, object?> { { "reason", "test" } };
 
@@ -85,7 +85,7 @@ public class BlockManagerTests
     public async Task CreateChildBlock_Async_当父节点不存在时_应失败并返回null()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var nonExistentParentId = "blk_不存在的父节点";
         var triggerParams = new Dictionary<string, object?> { { "reason", "test" } };
 
@@ -174,7 +174,7 @@ public class BlockManagerTests
     public async Task GetBlockAsync_当Block存在时_应返回对应的BlockStatus()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
 
         // Act
         var rootBlock = await manager.GetBlockAsync(BlockManager.WorldRootId);
@@ -191,7 +191,7 @@ public class BlockManagerTests
     public async Task GetBlockAsync_当Block不存在时_应返回null()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var nonExistentId = "blk_不存在的块";
 
         // Act
@@ -208,7 +208,7 @@ public class BlockManagerTests
     public async Task EnqueueOrExecuteAtomicOperationsAsync_对于Idle状态_应直接执行操作()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var blockId = BlockManager.WorldRootId;
         var op = AtomicOperation.Create(EntityType.Item, "item_sword", new() { { "damage", 10 } });
         var operations = new List<AtomicOperation> { op };
@@ -234,7 +234,7 @@ public class BlockManagerTests
     public async Task EnqueueOrExecuteAtomicOperationsAsync_对于Loading状态_应暂存操作()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var parentId = BlockManager.WorldRootId;
         var childBlock =
             await manager.CreateChildBlock_Async(parentId, new Dictionary<string, object?>()); // 创建一个 Loading 状态的子块
@@ -309,7 +309,7 @@ public class BlockManagerTests
     public async Task HandleWorkflowCompletionAsync_成功但有冲突_应转为Conflict状态()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var initialWs = new WorldState();
         initialWs.AddEntity(new Item("item_sword") { IsDestroyed = false }); // 添加一个实体供冲突
         var parentBlock = await manager.GetBlockAsync(BlockManager.WorldRootId) as IdleBlockStatus;
@@ -363,7 +363,7 @@ public class BlockManagerTests
     public async Task HandleWorkflowCompletionAsync_失败_应转为Error状态()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var childBlock = await manager.CreateChildBlock_Async(BlockManager.WorldRootId, new());
         var loadingBlockId = childBlock!.Block.BlockId;
 
@@ -400,7 +400,7 @@ public class BlockManagerTests
     public async Task GetPathToRoot_简单线性路径_应返回从根到叶的正确路径()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var child1 = await manager.CreateChildBlock_Async(BlockManager.WorldRootId, new());
         // 需要手动将 child1 状态变为 Idle 才能创建 child2
         await manager.HandleWorkflowCompletionAsync(child1!.Block.BlockId, true, "child1 done", [], []);
@@ -432,7 +432,7 @@ public class BlockManagerTests
     public async Task GetPathToRoot_带分支的路径_应跟随最后一个子节点()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var child1 = await manager.CreateChildBlock_Async(BlockManager.WorldRootId, new()); // child1
         await manager.HandleWorkflowCompletionAsync(child1!.Block.BlockId, true, "child1 done", [], []);
 
@@ -467,7 +467,7 @@ public class BlockManagerTests
     public async Task GetPathToRoot_从根节点开始_应只返回根节点()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var child1 = await manager.CreateChildBlock_Async(BlockManager.WorldRootId, new());
         await manager.HandleWorkflowCompletionAsync(child1!.Block.BlockId, true, "child1 done", [], []);
 
@@ -489,7 +489,7 @@ public class BlockManagerTests
     public void GetPathToRoot_使用无效起始ID_应返回空列表()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var invalidId = "blk_无效ID";
 
         // Act
@@ -507,7 +507,7 @@ public class BlockManagerTests
     public async Task UpdateBlockGameStateAsync_当块存在时_应成功更新GameState()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var blockId = BlockManager.WorldRootId;
         var updates = new Dictionary<string, object?>
         {
@@ -536,7 +536,7 @@ public class BlockManagerTests
     public async Task UpdateBlockGameStateAsync_当块不存在时_应返回NotFound()
     {
         // Arrange
-        var manager = CreateTestManager();
+        var manager = this.CreateTestManager();
         var nonExistentId = "blk_不存在的块";
         var updates = new Dictionary<string, object?> { { "difficulty", "easy" } };
 

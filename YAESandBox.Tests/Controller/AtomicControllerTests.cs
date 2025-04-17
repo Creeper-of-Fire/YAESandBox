@@ -24,9 +24,9 @@ public class AtomicControllerTests
 
     public AtomicControllerTests()
     {
-        _mockWritService = new Mock<IBlockWritService>();
-        _mockReadService = new Mock<IBlockReadService>(); // 初始化 mock
-        _controller = new AtomicController(_mockWritService.Object, _mockReadService.Object);
+        this._mockWritService = new Mock<IBlockWritService>();
+        this._mockReadService = new Mock<IBlockReadService>(); // 初始化 mock
+        this._controller = new AtomicController(this._mockWritService.Object, this._mockReadService.Object);
     }
 
     // 辅助方法创建有效的请求 DTO
@@ -51,22 +51,22 @@ public class AtomicControllerTests
     {
         // Arrange
         var blockId = "testBlock";
-        var requestDto = CreateValidRequestDto();
+        var requestDto = this.CreateValidRequestDto();
         // 设置模拟 WritService 的行为
-        _mockWritService.Setup(s => s.EnqueueOrExecuteAtomicOperationsAsync(
+        this._mockWritService.Setup(s => s.EnqueueOrExecuteAtomicOperationsAsync(
                 blockId,
                 It.IsAny<List<AtomicOperation>>())) // 验证传入 List<AtomicOperation>
             .ReturnsAsync(AtomicExecutionResult.Executed); // 模拟服务返回 Executed
 
         // Act
-        var result = await _controller.ExecuteAtomicOperations(blockId, requestDto);
+        var result = await this._controller.ExecuteAtomicOperations(blockId, requestDto);
 
         // Assert
         result.Should().BeOfType<OkObjectResult>() // 验证返回类型为 OkObjectResult
             .Which.Value.Should().Be("Operations executed successfully."); // 验证返回的消息
 
         // 验证 WritService 的方法是否被以正确的参数调用了一次
-        _mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(
+        this._mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(
             blockId,
             It.Is<List<AtomicOperation>>(list => list.Count == 1 && list[0].OperationType == AtomicOperationType.CreateEntity)), // 检查传入的操作列表是否符合预期
             Times.Once);
@@ -77,12 +77,12 @@ public class AtomicControllerTests
     {
         // Arrange
         var blockId = "loadingBlock";
-        var requestDto = CreateValidRequestDto(); // 假设这个辅助方法是存在的
-        _mockWritService.Setup(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()))
+        var requestDto = this.CreateValidRequestDto(); // 假设这个辅助方法是存在的
+        this._mockWritService.Setup(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()))
             .ReturnsAsync(AtomicExecutionResult.ExecutedAndQueued); // 模拟服务返回 ExecutedAndQueued
 
         // Act
-        var result = await _controller.ExecuteAtomicOperations(blockId, requestDto);
+        var result = await this._controller.ExecuteAtomicOperations(blockId, requestDto);
 
         // Assert
         // 验证返回类型为 AcceptedResult (这是正确的类型)
@@ -95,7 +95,7 @@ public class AtomicControllerTests
         // Location 属性应该是 null，因为没有传递 URI 给 Accepted 方法
         acceptedResult.Location.Should().BeNull();
 
-        _mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()), Times.Once);
+        this._mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()), Times.Once);
     }
 
     [Fact]
@@ -103,18 +103,18 @@ public class AtomicControllerTests
     {
         // Arrange
         var blockId = "nonExistentBlock";
-        var requestDto = CreateValidRequestDto();
-        _mockWritService.Setup(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()))
+        var requestDto = this.CreateValidRequestDto();
+        this._mockWritService.Setup(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()))
             .ReturnsAsync(AtomicExecutionResult.NotFound); // 模拟服务返回 NotFound
 
         // Act
-        var result = await _controller.ExecuteAtomicOperations(blockId, requestDto);
+        var result = await this._controller.ExecuteAtomicOperations(blockId, requestDto);
 
         // Assert
         result.Should().BeOfType<NotFoundObjectResult>() // 验证返回类型为 NotFoundObjectResult
              .Which.Value.Should().Be($"Block with ID '{blockId}' not found."); // 验证错误消息
 
-        _mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()), Times.Once);
+        this._mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()), Times.Once);
     }
 
     [Fact]
@@ -122,18 +122,18 @@ public class AtomicControllerTests
     {
         // Arrange
         var blockId = "conflictBlock";
-        var requestDto = CreateValidRequestDto();
-        _mockWritService.Setup(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()))
+        var requestDto = this.CreateValidRequestDto();
+        this._mockWritService.Setup(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()))
             .ReturnsAsync(AtomicExecutionResult.ConflictState); // 模拟服务返回 ConflictState
 
         // Act
-        var result = await _controller.ExecuteAtomicOperations(blockId, requestDto);
+        var result = await this._controller.ExecuteAtomicOperations(blockId, requestDto);
 
         // Assert
         result.Should().BeOfType<ConflictObjectResult>() // 验证返回类型为 ConflictObjectResult
             .Which.Value.Should().Be($"Block '{blockId}' is in a conflict state. Resolve conflict first."); // 验证错误消息
 
-        _mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()), Times.Once);
+        this._mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()), Times.Once);
     }
 
      [Fact]
@@ -141,12 +141,12 @@ public class AtomicControllerTests
     {
         // Arrange
         var blockId = "errorBlock";
-        var requestDto = CreateValidRequestDto();
-        _mockWritService.Setup(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()))
+        var requestDto = this.CreateValidRequestDto();
+        this._mockWritService.Setup(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()))
             .ReturnsAsync(AtomicExecutionResult.Error); // 模拟服务返回 Error
 
         // Act
-        var result = await _controller.ExecuteAtomicOperations(blockId, requestDto);
+        var result = await this._controller.ExecuteAtomicOperations(blockId, requestDto);
 
         // Assert
         result.Should().BeOfType<ObjectResult>() // 验证返回类型为 ObjectResult (Status500通常用这个)
@@ -154,7 +154,7 @@ public class AtomicControllerTests
          result.Should().BeOfType<ObjectResult>()
              .Which.Value.Should().Be("An error occurred during execution."); // 验证错误消息
 
-        _mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()), Times.Once);
+         this._mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(blockId, It.IsAny<List<AtomicOperation>>()), Times.Once);
     }
 
     [Fact]
@@ -180,14 +180,14 @@ public class AtomicControllerTests
         // 我们不需要模拟 WritService，因为预期在调用它之前就会失败。
 
         // Act
-        var result = await _controller.ExecuteAtomicOperations(blockId, invalidRequestDto);
+        var result = await this._controller.ExecuteAtomicOperations(blockId, invalidRequestDto);
 
         // Assert
         result.Should().BeOfType<BadRequestObjectResult>() // 验证返回类型为 BadRequestObjectResult
             .Which.Value.Should().Be("Invalid atomic operations provided."); // 验证错误消息
 
         // 验证 WritService 的方法 *没有* 被调用
-        _mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(It.IsAny<string>(), It.IsAny<List<AtomicOperation>>()), Times.Never);
+        this._mockWritService.Verify(s => s.EnqueueOrExecuteAtomicOperationsAsync(It.IsAny<string>(), It.IsAny<List<AtomicOperation>>()), Times.Never);
     }
 }
 // --- END OF FILE YAESandBox.Tests/API/Controllers/AtomicControllerTests.cs ---

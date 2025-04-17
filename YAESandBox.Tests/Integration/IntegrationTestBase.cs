@@ -31,7 +31,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     protected IntegrationTestBase()
     {
         // 配置 WebApplicationFactory
-        Factory = new WebApplicationFactory<Program>()
+        this.Factory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
             {
                 // 可在此处配置测试特定的服务或设置
@@ -45,7 +45,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     /// </summary>
     public virtual Task InitializeAsync()
     {
-        HttpClient = Factory.CreateClient();
+        this.HttpClient = this.Factory.CreateClient();
         return Task.CompletedTask;
     }
 
@@ -54,8 +54,8 @@ public abstract class IntegrationTestBase : IAsyncLifetime
     /// </summary>
     public virtual Task DisposeAsync()
     {
-        HttpClient?.Dispose();
-        Factory?.Dispose();
+        this.HttpClient?.Dispose();
+        this.Factory?.Dispose();
         return Task.CompletedTask;
     }
 
@@ -74,7 +74,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
 
         // 这里使用一种简化的方式，直接构建 URL，依赖于 Kestrel 的默认行为或配置
         // 注意：这可能不够健壮，实际项目中可能需要更可靠的端口获取方式
-        var serverHandler = Factory.Server.CreateHandler(); // 获取内部 TestServer 的 Handler
+        var serverHandler = this.Factory.Server.CreateHandler(); // 获取内部 TestServer 的 Handler
 
         var connection = new HubConnectionBuilder()
             .WithUrl("ws://localhost/gamehub", options => // 使用 ws:// 避免 HTTPS 证书问题
