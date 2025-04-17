@@ -15,7 +15,7 @@ public interface IWorkflowService
     /// </summary>
     /// <param name="request">工作流触发请求 DTO。</param>
     /// <returns>一个 Task 代表异步操作。</returns>
-    Task HandleMainWorkflowTriggerAsync(TriggerWorkflowRequestDto request);
+    Task HandleMainWorkflowTriggerAsync(TriggerMainWorkflowRequestDto request);
 
     /// <summary>
     /// 处理来自客户端的微工作流触发请求。

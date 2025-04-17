@@ -25,6 +25,14 @@
     &lt;TestId&gt;xUnit::66DBE303-0FA0-44B0-BC8B-769227A3FE55::net9.0::YAESandBox.Tests.API.Controllers.AtomicControllerTests.ExecuteAtomicOperations_当操作被排队时_应返回AcceptedResult并包含消息&lt;/TestId&gt;&#xD;
   &lt;/TestAncestor&gt;&#xD;
 &lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=274f71a8_002Dd825_002D489a_002D9167_002De20232a5a3f2/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="解决方案中的所有测试" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;Solution /&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
+	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=346b06a5_002D3105_002D4692_002D8e8e_002D9ff48db40e32/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="持久化_保存和加载状态_应恢复数据和盲存" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
+  &lt;TestAncestor&gt;&#xD;
+    &lt;TestId&gt;xUnit::66DBE303-0FA0-44B0-BC8B-769227A3FE55::net9.0::YAESandBox.Tests.Integration.MainWorkflowIntegrationTests.持久化_保存和加载状态_应恢复数据和盲存&lt;/TestId&gt;&#xD;
+  &lt;/TestAncestor&gt;&#xD;
+&lt;/SessionState&gt;</s:String>
 	
 	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6a13b028_002De785_002D4a85_002D9062_002D7852758cb69d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="解决方案中的所有测试" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
   &lt;Solution /&gt;&#xD;

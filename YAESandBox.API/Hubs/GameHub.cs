@@ -26,7 +26,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
     /// 触发主工作流
     /// </summary>
     /// <param name="request"></param>
-    public async Task TriggerMainWorkflow(TriggerWorkflowRequestDto request)
+    public async Task TriggerMainWorkflow(TriggerMainWorkflowRequestDto request)
     {
         var connectionId = this.Context.ConnectionId;
         // *** 确认日志存在 ***

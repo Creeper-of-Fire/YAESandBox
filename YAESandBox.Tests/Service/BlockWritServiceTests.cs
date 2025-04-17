@@ -367,10 +367,10 @@ public class BlockWritServiceTests
         await _notifierServiceMock.Received(1).NotifyConflictDetectedAsync(Arg.Is<ConflictDetectedDto>(dto =>
             dto.BlockId == blockId &&
             dto.RequestId == requestId &&
-            dto.AiCommands.SequenceEqual(aiCommands) &&
-            dto.UserCommands.SequenceEqual(userCommands) && // 验证是否正确传递了所有命令
-            dto.ConflictingAiCommands.SequenceEqual(conflictingAi) &&
-            dto.ConflictingUserCommands.SequenceEqual(conflictingUser)
+            dto.AiCommands.ToAtomicOperations().SequenceEqual(aiCommands) &&
+            dto.UserCommands.ToAtomicOperations().SequenceEqual(userCommands) && // 验证是否正确传递了所有命令
+            dto.ConflictingAiCommands.ToAtomicOperations().SequenceEqual(conflictingAi) &&
+            dto.ConflictingUserCommands.ToAtomicOperations().SequenceEqual(conflictingUser)
         ));
     }
 

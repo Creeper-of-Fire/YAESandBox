@@ -49,6 +49,6 @@ public interface IBlockWritService
     /// <param name="rawText">工作流生成的原始文本内容。</param>
     /// <param name="firstPartyCommands">工作流生成的原子指令。</param>
     /// <param name="outputVariables">工作流输出的变量 (可选，用于元数据等)。</param>
-    Task HandleWorkflowCompletionAsync(string blockId, string requestId, bool success, string rawText,
+    Task<BlockStatus?> HandleWorkflowCompletionAsync(string blockId, string requestId, bool success, string rawText,
         List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables);
 }

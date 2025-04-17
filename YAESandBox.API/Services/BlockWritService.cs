@@ -111,6 +111,7 @@ public class BlockWritService(INotifierService notifierService, IBlockManager bl
         return newBlock;
     }
 
+    
     /// <summary>
     /// 处理工作流执行完成后的回调。
     /// </summary>
@@ -120,32 +121,38 @@ public class BlockWritService(INotifierService notifierService, IBlockManager bl
     /// <param name="rawText">工作流生成的原始文本内容。</param>
     /// <param name="firstPartyCommands">工作流生成的原子指令。</param>
     /// <param name="outputVariables">工作流输出的变量 (可选，用于元数据等)。</param>
-    public async Task HandleWorkflowCompletionAsync(string blockId, string requestId, bool success, string rawText,
+    /// <returns>返回状态，如果没有找到block或者block在应用前不为loading，则返回空（代表出错）</returns>
+    public async Task<BlockStatus?> HandleWorkflowCompletionAsync(string blockId, string requestId, bool success,
+        string rawText,
         List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables)
     {
         var val = await this.blockManager.HandleWorkflowCompletionAsync(blockId, success, rawText, firstPartyCommands,
             outputVariables);
         if (val == null)
-            return;
+            return null;
         if (val.Value.TryPickT0(out var tempTuple, out var conflictOrErrorBlock))
         {
             var (IdleOrErrorBlock, results) = tempTuple;
             // 此时已经处理完成，如果处理的指令存在错误，则进入Error状态
             // TODO 这里处理的太生硬，也许处理的指令有错误直接打印日志然后继续就行了
-            return;
+            return IdleOrErrorBlock.Match<BlockStatus>(i => i, e => e);
         }
 
-        if (conflictOrErrorBlock.TryPickT1(out var errorBlock, out var conflictBlock))
+        if (!conflictOrErrorBlock.TryPickT0(out var conflictBlock, out var errorBlock))
         {
             Log.Error("工作流执行失败，block进入错误状态。");
-            return;
+            return errorBlock;
         }
 
         Log.Info("工作流生成的指令和当前修改存在冲突，等待手动解决。");
 
+
         await this.notifierService.NotifyConflictDetectedAsync(new ConflictDetectedDto(BlockId: blockId,
-            RequestId: requestId, AiCommands: conflictBlock.AiCommands, UserCommands: conflictBlock.UserCommands,
-            ConflictingAiCommands: conflictBlock.conflictingAiCommands,
-            ConflictingUserCommands: conflictBlock.conflictingUserCommands));
+            RequestId: requestId,
+            AiCommands: conflictBlock.AiCommands.ToAtomicOperationRequests(),
+            UserCommands: conflictBlock.UserCommands.ToAtomicOperationRequests(),
+            ConflictingAiCommands: conflictBlock.conflictingAiCommands.ToAtomicOperationRequests(),
+            ConflictingUserCommands: conflictBlock.conflictingUserCommands.ToAtomicOperationRequests()));
+        return conflictBlock;
     }
 }

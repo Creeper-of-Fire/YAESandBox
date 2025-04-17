@@ -25,6 +25,26 @@ public static class OperatorHelper
         };
     }
 
+    public static Operator? StringToOperatorCanBeNull(string? stringOp)
+    {
+        if (string.IsNullOrWhiteSpace(stringOp))
+            return null;
+        return StringToOperator(stringOp);
+    }
+
+    public static string? OperatorToString(Operator? op)
+    {
+        if (op == null)
+            return null;
+        return op switch
+        {
+            Operator.Equal => "=",
+            Operator.Add => "+=",
+            Operator.Sub => "-=",
+            _ => throw new ArgumentException($"Quantity 不支持 '{op}'", op.ToString())
+        };
+    }
+
     public static object ChangedValue(this Operator op, object? oldValue, object newValue)
     {
         if (oldValue == null)

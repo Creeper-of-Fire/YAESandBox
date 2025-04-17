@@ -10,7 +10,7 @@ namespace YAESandBox.API.DTOs;
 /// <summary>
 /// 用于触发主工作流 (创建新 Block)
 /// </summary>
-public record TriggerWorkflowRequestDto
+public record TriggerMainWorkflowRequestDto
 {
     /// <summary>
     /// 唯一的请求 ID，用于追踪特定的工作流调用。
@@ -93,7 +93,7 @@ public record ResolveConflictRequestDto
     /// 用户解决冲突后的指令列表
     /// </summary>
     [Required]
-    public List<AtomicOperation> ResolvedCommands { get; set; } = new();
+    public List<AtomicOperationRequestDto> ResolvedCommands { get; set; } = new();
     // 注意：这里直接用了 Core 的 AtomicOperation，也可以再创建一个 DTO
 }
 
@@ -169,10 +169,10 @@ public record DisplayUpdateDto(
 public record ConflictDetectedDto(
     string BlockId,
     string RequestId,
-    List<AtomicOperation> AiCommands,
-    List<AtomicOperation> UserCommands,
-    List<AtomicOperation> ConflictingAiCommands,
-    List<AtomicOperation> ConflictingUserCommands);
+    List<AtomicOperationRequestDto> AiCommands,
+    List<AtomicOperationRequestDto> UserCommands,
+    List<AtomicOperationRequestDto> ConflictingAiCommands,
+    List<AtomicOperationRequestDto> ConflictingUserCommands);
 
 /// <summary>
 /// 状态更新信号的DTO，前端接受这个内容用于更新状态。

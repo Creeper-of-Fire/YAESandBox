@@ -26,10 +26,10 @@ public class WorkflowService(
     /// 触发主工作流
     /// </summary>
     /// <param name="request"></param>
-    public async Task HandleMainWorkflowTriggerAsync(TriggerWorkflowRequestDto request)
+    public async Task HandleMainWorkflowTriggerAsync(TriggerMainWorkflowRequestDto request)
     {
         Log.Info(
-            $"GameHub: 收到主工作流触发请求: RequestId={request.RequestId}, Workflow={request.WorkflowName}, ParentBlock={request.ParentBlockId}");
+            $"WorkflowService: 收到主工作流触发请求: RequestId={request.RequestId}, Workflow={request.WorkflowName}, ParentBlock={request.ParentBlockId}");
         var childBlock =
             await this.blockWritServices.CreateChildBlockAsync(request.ParentBlockId, request.Params);
         if (childBlock == null)
@@ -45,22 +45,31 @@ public class WorkflowService(
     }
 
     /// <summary>
-    /// 触发微工作流
+    /// 处理来自客户端的微工作流触发请求。
+    /// 这*不会*创建一个新的 Block 并启动一个异步的工作流执行。
+    /// 主要用于生成 UI 建议或信息，通过 DisplayUpdateDto 发送给特定 TargetElementId。
     /// </summary>
-    /// <param name="request"></param>
-    /// <returns></returns>
-    /// <exception cref="NotImplementedException"></exception>
+    /// <param name="request">微工作流触发请求 DTO。</param>
+    /// <returns>一个 Task 代表异步操作。</returns>
     public Task HandleMicroWorkflowTriggerAsync(TriggerMicroWorkflowRequestDto request)
     {
-        throw new NotImplementedException();
+        Log.Info(
+            $"WorkflowService: 收到微工作流触发请求: RequestId={request.RequestId}, Workflow={request.WorkflowName}, TargetElementId={request.TargetElementId}, ContextBlockId={request.ContextBlockId}");
+
+        // 微工作流不创建 Block，直接在后台执行
+        // 异步执行模拟逻辑
+        _ = Task.Run(() => this.StartMicroExecuteWorkflowAsync(request));
+
+        // 立即返回
+        return Task.CompletedTask;
     }
 
-
-    internal async Task StartMainExecuteWorkflowAsync(TriggerWorkflowRequestDto request, string blockId)
+    // 为了方便测试而分离出来
+    internal async Task StartMainExecuteWorkflowAsync(TriggerMainWorkflowRequestDto request, string blockId)
     {
         try
         {
-            await this.ExecuteWorkflowAsync(request, blockId);
+            await this.ExecuteMainWorkflowAsync(request, blockId);
         }
         catch (Exception ex)
         {
@@ -68,8 +77,103 @@ public class WorkflowService(
         }
     }
 
+    // 为了方便测试而分离出来
+    internal async Task StartMicroExecuteWorkflowAsync(TriggerMicroWorkflowRequestDto request)
+    {
+        try
+        {
+            await this.ExecuteMicroWorkflowAsync(request);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"Request '{request.RequestId}': 工作流执行失败。");
+        }
+    }
+
+    /// <summary>
+    /// 后台执行微工作流的模拟逻辑。
+    /// 微工作流不修改 Block 状态，主要通过 DisplayUpdateDto 更新 UI 元素。
+    /// </summary>
+    /// <param name="request">原始触发请求。</param>
+    private async Task ExecuteMicroWorkflowAsync(TriggerMicroWorkflowRequestDto request)
+    {
+        Log.Debug(
+            $"开始后台执行微工作流 '{request.WorkflowName}' for TargetElementId '{request.TargetElementId}' on ContextBlockId '{request.ContextBlockId}'...");
+        bool success = false;
+        string finalMessage = ""; // 存储最终发送的消息
+
+        try
+        {
+            // === 模拟微工作流工作（例如获取建议、计算信息） ===
+            var simulatedContent = new List<string>
+            {
+                $"[微工作流 '{request.WorkflowName}'] 正在处理...\n",
+                $"请求参数: {JsonSerializer.Serialize(request.Params)}\n",
+                "思考中... (模拟延迟)...\n",
+                "也许你可以尝试... (生成建议中)...\n",
+                $"建议 1: 检查一下 '{request.ContextBlockId}' 的元数据。\n",
+                $"建议 2: 看看能否对 '{request.ContextBlockId}' 应用 'Modify' 操作。\n",
+                $"最终建议: 喝杯咖啡休息一下！☕\n",
+                $"[微工作流 '{request.WorkflowName}'] 处理完毕。\n"
+            };
+
+            // === 模拟流式输出到特定 UI 元素 ===
+            foreach (var part in simulatedContent)
+            {
+                var updateDto = new DisplayUpdateDto(
+                    RequestId: request.RequestId, // 关联请求
+                    ContextBlockId: request.ContextBlockId, // 上下文 Block
+                    Content: part, // 当前内容片段
+                    StreamingStatus: StreamStatus.Streaming,
+                    UpdateMode: UpdateMode.Incremental // 微工作流内容通常也是增量
+                )
+                {
+                    // *** 关键：设置 TargetElementId ***
+                    TargetElementId = request.TargetElementId
+                    // ScriptId 通常不需要为微工作流设置
+                };
+                await this.notifierService.NotifyDisplayUpdateAsync(updateDto);
+
+                Log.Debug(
+                    $"微工作流 '{request.WorkflowName}' 发送流片段到 '{request.TargetElementId}': '{part.Substring(0, Math.Min(part.Length, 50))}...'");
+                await Task.Delay(TimeSpan.FromMilliseconds(Random.Shared.Next(40, 120))); // 模拟延迟
+            }
+
+            success = true;
+            finalMessage = $"[微工作流 '{request.WorkflowName}' 成功完成]";
+            Log.Info($"微工作流 '{request.WorkflowName}' for TargetElementId '{request.TargetElementId}' 模拟执行成功。");
+        }
+        catch (Exception ex)
+        {
+            success = false;
+            finalMessage = $"[微工作流 '{request.WorkflowName}' 执行失败: {ex.Message}]";
+            Log.Error(ex,
+                $"微工作流 '{request.WorkflowName}' for TargetElementId '{request.TargetElementId}' 执行过程中发生异常: {ex.Message}");
+        }
+        finally
+        {
+            // *** 微工作流完成：发送最终状态通知 ***
+            // 不需要调用 HandleWorkflowCompletionAsync
+            var finalStatus = success ? StreamStatus.Complete : StreamStatus.Error;
+            var completeDto = new DisplayUpdateDto(
+                RequestId: request.RequestId,
+                ContextBlockId: request.ContextBlockId,
+                Content: finalMessage, // 最终消息
+                StreamingStatus: finalStatus // 完成或错误状态
+            )
+            {
+                TargetElementId = request.TargetElementId // 确保最终状态也发往目标元素
+            };
+            await this.notifierService.NotifyDisplayUpdateAsync(completeDto);
+            Log.Debug(
+                $"微工作流 '{request.WorkflowName}' for TargetElementId '{request.TargetElementId}' 发送最终状态通知: {finalStatus}");
+        }
+        // 微工作流的 Task.Run 级别的异常处理与主工作流类似，但通知 DTO 需要包含 TargetElementId
+        // catch (Exception ex) { ... Log ... Send panic DTO with TargetElementId ... }
+    }
+
     // 实际执行工作流的私有方法
-    private async Task ExecuteWorkflowAsync(TriggerWorkflowRequestDto request, string blockId)
+    private async Task ExecuteMainWorkflowAsync(TriggerMainWorkflowRequestDto request, string blockId)
     {
         Log.Debug($"Block '{blockId}': 开始执行工作流 '{request.WorkflowName}'...");
         bool success = false;
@@ -120,7 +224,7 @@ public class WorkflowService(
                 // 安全地截取日志摘要
                 Log.Debug(
                     $"Block '{blockId}': Workflow sent stream chunk: '{part.Substring(0, Math.Min(part.Length, 20))}...'");
-                await Task.Delay(TimeSpan.FromMilliseconds(Random.Shared.Next(80, 300))); // 模拟延迟
+                await Task.Delay(TimeSpan.FromMilliseconds(Random.Shared.Next(8, 30))); // 模拟延迟
             }
 
             // === 模拟指令生成 ===
@@ -149,13 +253,14 @@ public class WorkflowService(
 
 
             // === 格式化最终的 rawText (可以包含所有流式块或其他信息) ===
-            rawTextResult = JsonSerializer.Serialize(new
-            {
-                workflowName = request.WorkflowName,
-                fullStreamedContent = string.Join("", streamChunks), // 合并所有流式块
-                finalNote = "工作流执行完毕 (模拟)。",
-                // 可以添加其他需要持久化的信息
-            }, new JsonSerializerOptions { WriteIndented = true });
+            rawTextResult = string.Join("", streamChunks); 
+            //     JsonSerializer.Serialize(new
+            // {
+            //     workflowName = request.WorkflowName,
+            //     fullStreamedContent = string.Join("", streamChunks), // 合并所有流式块
+            //     finalNote = "工作流执行完毕 (模拟)。",
+            //     // 可以添加其他需要持久化的信息
+            // }, new JsonSerializerOptions { WriteIndented = true });
 
             success = true;
             Log.Info($"Block '{blockId}': 工作流 '{request.WorkflowName}' 执行成功。");
@@ -168,23 +273,29 @@ public class WorkflowService(
         }
         finally
         {
-            await this.blockWritServices.HandleWorkflowCompletionAsync(blockId, request.RequestId, success,
-                rawTextResult, generatedCommands, outputVariables);
-            Log.Debug($"Block '{blockId}': 已通知 BlockManager 工作流完成状态: Success={success}");
-
-            // 发送最终完成状态 (如果需要单独通知)
-            var completeDto = new DisplayUpdateDto(RequestId: request.RequestId, ContextBlockId: blockId,
-                StreamingStatus: success ? StreamStatus.Complete : StreamStatus.Error, Content: rawTextResult,
-                UpdateMode: UpdateMode.FullSnapshot);
-            await this.notifierService.NotifyDisplayUpdateAsync(completeDto); // <--- 添加此行
+            
         }
+        var blockStatus = await this.blockWritServices.HandleWorkflowCompletionAsync(blockId, request.RequestId,
+            success,
+            rawTextResult, generatedCommands, outputVariables);
+        Log.Debug($"Block '{blockId}': 已通知 BlockManager 工作流完成状态: Success={success}");
+
+        // 发送最终完成状态 (如果需要单独通知)
+        var completeDto = new DisplayUpdateDto(RequestId: request.RequestId, ContextBlockId: blockId,
+            StreamingStatus: success ? StreamStatus.Complete : StreamStatus.Error, Content: rawTextResult,
+            UpdateMode: UpdateMode.FullSnapshot);
+        if (blockStatus != null)
+            await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, blockStatus.StatusCode);
+        await this.notifierService.NotifyDisplayUpdateAsync(completeDto);
     }
 
     public async Task HandleConflictResolutionAsync(ResolveConflictRequestDto request)
     {
         Log.Info($"收到冲突解决请求: RequestId={request.RequestId}, BlockId={request.BlockId}");
 
-        await this.blockWritServices.ApplyResolvedCommandsAsync(request.BlockId, request.ResolvedCommands);
+        await this.blockWritServices.ApplyResolvedCommandsAsync(
+            request.BlockId,
+            request.ResolvedCommands.ToAtomicOperations());
 
         Log.Info($"Block '{request.BlockId}': 已提交冲突解决方案。");
     }

@@ -255,7 +255,7 @@ public partial class BlockManager : IBlockManager
     {
         WriteIndented = true, // For readability
         Converters = { new JsonStringEnumConverter(), new TypedIdConverter() }, // 注册转换器
-        // PropertyNameCaseInsensitive = true // Optional for loading flexibility
+        PropertyNameCaseInsensitive = true // Optional for loading flexibility
     };
 
     /// <summary>
