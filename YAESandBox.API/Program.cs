@@ -104,20 +104,20 @@ app.MapControllers(); // Map attribute-routed controllers
 app.MapHub<GameHub>("/gamehub"); // Define the SignalR endpoint URL
 
 // Minimal API example (keep or remove)
-app.MapGet("/weatherforecast", () =>
-    {
-        var forecast = Enumerable.Range(1, 5).Select(index =>
-                new WeatherForecast
-                (
-                    DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-                    Random.Shared.Next(-20, 55),
-                    "Sample" // Simplified
-                ))
-            .ToArray();
-        return forecast;
-    })
-    .WithName("GetWeatherForecast")
-    .RequireCors("AllowAll"); // Apply CORS to minimal APIs too
+// app.MapGet("/weatherforecast", () =>
+//     {
+//         var forecast = Enumerable.Range(1, 5).Select(index =>
+//                 new WeatherForecast
+//                 (
+//                     DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
+//                     Random.Shared.Next(-20, 55),
+//                     "Sample" // Simplified
+//                 ))
+//             .ToArray();
+//         return forecast;
+//     })
+//     .WithName("GetWeatherForecast")
+//     .RequireCors("AllowAll"); // Apply CORS to minimal APIs too
 
 app.Run();
 
