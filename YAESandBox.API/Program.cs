@@ -32,6 +32,9 @@ builder.Services.AddSwaggerGen(c => // Configure Swagger
 
     // Add Enum Schema Filter to display enums as strings in Swagger UI
     c.SchemaFilter<EnumSchemaFilter>(); // Requires the EnumSchemaFilter class defined below
+    
+    // --- 在这里注册 Document Filter ---
+    c.DocumentFilter<RemoveHiddenFromJsonFilter>();
 });
 
 // --- SignalR ---

@@ -36,7 +36,7 @@ public class BlockManagementController(
     [ProducesResponseType(StatusCodes.Status404NotFound)] // If parent not found
     [ProducesResponseType(StatusCodes.Status409Conflict)] // If parent state invalid
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [ApiExplorerSettings(IgnoreApi = true)]
+    [HiddenFromJsonApi]
     public async Task<IActionResult> CreateBlockManually([FromBody] CreateBlockManualRequestDto request)
     {
         if (!ModelState.IsValid) // 使用模型验证
@@ -107,7 +107,7 @@ public class BlockManagementController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)] // For InvalidState or CyclicMove
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [ApiExplorerSettings(IgnoreApi = true)]
+    [HiddenFromJsonApi]
     public async Task<IActionResult> MoveBlockManually(string blockId, [FromBody] MoveBlockRequestDto request)
     {
         if (!ModelState.IsValid)
