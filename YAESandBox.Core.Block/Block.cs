@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Globalization;
+using System.Text.Json;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
@@ -102,8 +104,20 @@ public class Block : NodeBlock
 
     /// <summary>
     /// 存储与 Block 相关的任意元数据（例如创建时间、触发的工作流名称）。
+    /// 所有的数据必须统一变成字符串，如果要用那么请自行解析。
     /// </summary>
-    public Dictionary<string, object?> Metadata { get; } = new();
+    public IReadOnlyDictionary<string, string> Metadata => this._metadata;
+
+    private readonly Dictionary<string, string> _metadata = new();
+
+    public void AddOrSetMetaData(string key, object value)
+    {
+        string jsonValue = value as string ?? JsonSerializer.Serialize(value);
+        if (this._metadata.ContainsKey(key))
+            this._metadata[key] = jsonValue;
+        else
+            this._metadata.TryAdd(key, jsonValue);
+    }
 
     /// <summary>
     /// (仅父 Block 存储) 触发子 Block 时使用的参数。只会保存一个，不会为不同的子 Block 保存不同的参数。
@@ -121,8 +135,8 @@ public class Block : NodeBlock
         // if (string.IsNullOrWhiteSpace(parentBlockId))
         //     throw new ArgumentException("Parent Block ID cannot be null or whitespace.", nameof(parentBlockId));
 
-        this.Metadata["CreationTime"] = DateTime.UtcNow;
-        this.Metadata["TriggerParams"] = triggerParams.ToDictionary();
+        this.AddOrSetMetaData("CreationTime", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
+        this.AddOrSetMetaData("TriggerParams", JsonSerializer.Serialize(triggerParams));
 
         // --- 在构造函数内部完成克隆 ---
         this.wsInput = sourceWorldState.Clone(); // 创建 wsInput 的隔离副本
@@ -402,7 +416,7 @@ public class Block : NodeBlock
         string? parentBlockId,
         List<string> childrenIds,
         string blockContent,
-        Dictionary<string, object?> metadata,
+        Dictionary<string, string> metadata,
         Dictionary<string, object?> triggeredChildParams,
         GameState gameState, // 传入重建好的 GameState
         WorldState? wsInput, // 传入重建好的 WorldState 快照
@@ -412,7 +426,7 @@ public class Block : NodeBlock
     {
         // 直接赋值
         this.BlockContent = blockContent;
-        this.Metadata = metadata; // 注意：这里是引用赋值，如果DTO的字典是新建的就没问题
+        this._metadata = metadata; // 注意：这里是引用赋值，如果DTO的字典是新建的就没问题
         this.TriggeredChildParams = triggeredChildParams;
         this.GameState = gameState;
         this.wsInput = wsInput ?? throw new ArgumentNullException(nameof(wsInput),
@@ -432,7 +446,7 @@ public class Block : NodeBlock
         string? parentBlockId,
         List<string> childrenIds,
         string blockContent,
-        Dictionary<string, object?> metadata,
+        Dictionary<string, string> metadata,
         Dictionary<string, object?> triggeredChildParams,
         GameState gameState, // 传入重建好的 GameState
         WorldState? wsInput, // 传入重建好的 WorldState 快照

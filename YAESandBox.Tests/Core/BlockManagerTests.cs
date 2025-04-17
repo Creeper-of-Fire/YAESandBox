@@ -5,8 +5,10 @@ using YAESandBox.Core.State;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State.Entity;
 using System.Collections.Concurrent;
+using Newtonsoft.Json;
 using OneOf.Types;
 using OneOf;
+using JsonSerializer = System.Text.Json.JsonSerializer;
 
 namespace YAESandBox.Core.Tests;
 
@@ -69,8 +71,7 @@ public class BlockManagerTests
         childBlockFromManager.Should().NotBeNull();
         childBlockFromManager!.Block.ParentBlockId.Should().Be(parentId); // 确认父 ID 正确
         childBlockFromManager.Block.Metadata.Should().ContainKey("TriggerParams"); // 确认触发参数已记录
-        (childBlockFromManager.Block.Metadata["TriggerParams"] as Dictionary<string, object?>).Should()
-            .BeEquivalentTo(triggerParams);
+        (childBlockFromManager.Block.Metadata["TriggerParams"]).Should().BeEquivalentTo(JsonSerializer.Serialize(triggerParams));
 
         parentBlock.Should().NotBeNull();
         parentBlock!.Block.ChildrenList.Should().Contain(newBlockId); // 确认父节点记录了子节点
@@ -299,7 +300,7 @@ public class BlockManagerTests
     //     // 确认 WorldState 未改变
     //     conflictStatus.CurrentWorldState.FindEntityById("place_town", EntityType.Place).Should().BeNull();
     // }
-    
+
 
     /// <summary>
     /// 测试工作流成功完成但存在冲突的情况。

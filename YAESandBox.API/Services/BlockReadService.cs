@@ -103,7 +103,7 @@ public class BlockReadService(INotifierService notifierService, BlockManager blo
             ParentBlockId = block.Block.ParentBlockId,
             StatusCode = block.StatusCode,
             BlockContent = block.Block.BlockContent,
-            Metadata = new Dictionary<string, object?>(block.Block.Metadata), // Return copy
+            Metadata = new Dictionary<string, string>(block.Block.Metadata), // Return copy
             ChildrenInfo = new List<string>(block.Block.ChildrenList) // Return copy
         };
     }

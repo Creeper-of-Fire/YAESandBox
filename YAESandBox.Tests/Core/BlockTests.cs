@@ -8,6 +8,7 @@ using YAESandBox.Core.State.Entity;
 using YAESandBox.Core.Action;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json;
 
 namespace YAESandBox.Tests.Core.BlockTests;
 // Changed namespace slightly
@@ -47,7 +48,7 @@ public class BlockTests
         block.BlockId.Should().Be("new-blk");
         block.ParentBlockId.Should().Be(parentId);
         block.Metadata.Should().ContainKey("CreationTime");
-        block.Metadata.Should().ContainKey("TriggerParams").WhoseValue.Should().BeEquivalentTo(triggerParams);
+        block.Metadata.Should().ContainKey("TriggerParams").WhoseValue.Should().BeEquivalentTo(JsonSerializer.Serialize(triggerParams));
 
         // Check Cloned States (not same instance)
         block.wsInput.Should().NotBeSameAs(sourceWs);
@@ -199,6 +200,5 @@ public class BlockTests
         // Assert
         result.Success.Should().BeTrue(); // Delete is idempotent
     }
-    
 }
 // --- END OF FILE BlockTests.cs ---

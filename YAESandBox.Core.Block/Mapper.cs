@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
+using YAESandBox.Depend;
 
 namespace YAESandBox.Core.Block;
 
@@ -24,9 +25,27 @@ internal static class PersistenceMapper
     {
         foreach (var kvp in sourceDict)
         {
-            var entity = CreateEntityInstance(type, kvp.Key); // Use existing helper
-            entity.IsDestroyed = kvp.Value.Attributes.TryGetValue("IsDestroyed", out object? isDestroyedVal) &&
-                                 isDestroyedVal is true; // Restore core prop
+            var entity = CreateEntityInstance(type, kvp.Key);
+            var attributes = kvp.Value.Attributes;
+
+            // ----- Bug 修复：更健壮地恢复 IsDestroyed -----
+            if (attributes.TryGetValue("IsDestroyed", out object? isDestroyedVal))
+            {
+                switch (isDestroyedVal)
+                {
+                    // 检查是否直接是 bool 类型
+                    case bool destroyedBool:
+                        entity.IsDestroyed = destroyedBool;
+                        break;
+                    // 否则，检查是否是 JsonElement 表示的 true
+                    case JsonElement { ValueKind: JsonValueKind.True }:
+                        entity.IsDestroyed = true;
+                        break;
+                }
+                // 其他情况（比如 null, 或者非 bool/JsonElement.True）都视为 false （保持默认值）
+                // entity.IsDestroyed 默认为 false，所以这里不用显式设置 false
+            }
+            // 如果 "IsDestroyed" 键不存在，entity.IsDestroyed 保持默认的 false
 
             foreach (var attr in kvp.Value.Attributes.Where(attr => !BaseEntity.CoreFields.Contains(attr.Key)))
             {
@@ -79,18 +98,43 @@ internal static class PersistenceMapper
                 // 递归处理数组元素
                 return element.EnumerateArray().Select(DeserializeObjectValue).ToList();
             case JsonValueKind.Object:
-                // 尝试识别 TypedID 对象（如果使用对象格式）
-                try
+                // ----- Bug 1 & 3 修复：优先手动检测 TypedID 结构 -----
+                // 检查是否存在 "type" 和 "id" 属性，并且类型是预期的（string 或 number for type, string for id）
+                if (element.TryGetProperty("type", out var typeProp) && // 检查 "type" 属性
+                    element.TryGetProperty("id", out var idProp) &&   // 检查 "id" 属性
+                    idProp.ValueKind == JsonValueKind.String)         // 确保 "id" 是字符串
                 {
-                    // 尝试反序列化为 TypedIdDto，然后转为 TypedID
-                    // 这里需要 JsonSerializerOptions，可能需要传递进来或全局获取
-                    var dto = element.Deserialize<TypedIdDto>( /* options */);
-                    if (dto != null) return dto.ToTypedID();
+                    string? typeString = null;
+                    switch (typeProp.ValueKind)
+                    {
+                        // EntityType 可能被序列化为字符串（推荐）或数字
+                        case JsonValueKind.String:
+                            typeString = typeProp.GetString();
+                            break;
+                        case JsonValueKind.Number when typeProp.TryGetInt32(out int typeInt):
+                        {
+                            // 如果枚举被序列化为数字，尝试转换
+                            if (Enum.IsDefined(typeof(EntityType), typeInt)) 
+                                typeString = ((EntityType)typeInt).ToString(); // 转回字符串以便统一处理
+
+                            break;
+                        }
+                    }
+
+                    // 使用 Enum.TryParse 进行健壮的解析（忽略大小写）
+                    if (typeString != null && Enum.TryParse<EntityType>(typeString, ignoreCase: true, out var entityType))
+                    {
+                        var idString = idProp.GetString();
+                        if (idString != null) // 再次确认 id 字符串不为 null
+                        {
+                            // 成功识别并解析为 TypedID
+                            return new TypedID(entityType, idString);
+                        }
+                    }
+                    // 如果解析失败，记录日志并继续按普通字典处理
+                    Log.Warning($"JSON 对象结构类似 TypedID，但无法解析 'type' ('{typeString}') 或 'id'。将按普通字典处理。原始JSON: {element.GetRawText()}");
                 }
-                catch (JsonException)
-                {
-                    /* 不是 TypedIdDto，忽略 */
-                }
+                // ----- TypedID 手动检测结束 -----
 
                 // 处理普通字典
                 var dict = new Dictionary<string, object?>();
