@@ -47,12 +47,13 @@ builder.Services.AddSingleton<INotifierService, SignalRNotifierService>();
 
 // BlockManager holds state, make it Singleton. Depends on INotifierService.
 builder.Services.AddSingleton<IBlockManager, BlockManager>();
-builder.Services.AddSingleton<IBlockWritService, BlockWritService>();
-builder.Services.AddSingleton<IBlockReadService, BlockReadService>();
 
 // WorkflowService depends on IBlockManager and INotifierService, make it Singleton or Scoped.
 // Singleton is fine if it doesn't hold per-request state.
 builder.Services.AddSingleton<IWorkflowService, WorkflowService>();
+builder.Services.AddSingleton<IBlockManagementService, BlockManagementService>();
+builder.Services.AddSingleton<IBlockWritService, BlockWritService>();
+builder.Services.AddSingleton<IBlockReadService, BlockReadService>();
 
 
 // --- CORS (Configure as needed, especially for development) ---

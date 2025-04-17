@@ -35,6 +35,7 @@
     *   `BlocksController`: 查询 Block 列表、单个 Block 详情以及整个 Block 树的拓扑结构。
     *   `EntitiesController`: 查询指定 Block 当前 WorldState 中的实体列表和单个实体详情。
     *   `GameStateController`: 获取和修改指定 Block 的 GameState。
+    *   `BlockManagementController`: 提供手动管理 Block（目前只有删除）的 API 端点。
     *   `AtomicController`: 接收并执行对指定 Block 的批量原子化操作 (`AtomicOperation`) 请求，用于精确修改 WorldState。
     *   `PersistenceController`: 提供 `/api/persistence/save` 和 `/api/persistence/load` 端点，用于保存和加载整个应用的状态（包括所有 Block、WorldState 快照、GameState 以及前端盲存数据）。
 
