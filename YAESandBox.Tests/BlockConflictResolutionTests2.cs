@@ -6,7 +6,7 @@ using YAESandBox.Core.State; // 引入包含 WorldState, GameState 的命名空�
 using YAESandBox.Core.State.Entity; // 引入包含 EntityType, TypedID 的命名空间
 using YAESandBox.Core.Block; // 引入包含 Block, BlockStatus 等的命名空间
 
-namespace YAESandBox.Tests.Core.Block;
+namespace YAESandBox.Tests.Core.Blocks;
 
 public class BlockConflictDetectionTests
 {

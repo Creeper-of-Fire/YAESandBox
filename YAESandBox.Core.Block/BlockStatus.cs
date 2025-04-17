@@ -208,7 +208,7 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
             // 进入 Error 状态
             newSelf = new ErrorBlockStatus(this.Block);
             this.Block.BlockContent = rawContent;
-            this.Block.Metadata["Error"] = applyResults.FindAllFail();
+            this.Block.AddOrSetMetaData("Error", applyResults.FindAllFail());
             this.Block.wsTemp = null;
             //TODO 这一块的逻辑可能还改一改
             this.Block.wsPostAI = null; // 失败了，不保留可能不一致的状态

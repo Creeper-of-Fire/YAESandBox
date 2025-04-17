@@ -107,7 +107,7 @@ public partial class BlockManager
             }
 
             // Store output variables in metadata?
-            block.Block.Metadata["WorkflowOutputVariables"] = outputVariables;
+            block.Block.AddOrSetMetaData("WorkflowOutputVariables", outputVariables);
 
             Log.Info($"Block '{blockId}': 工作流成功完成。准备处理指令和状态。");
             var val = block.TryFinalizeSuccessfulWorkflow(rawText, firstPartyCommands);

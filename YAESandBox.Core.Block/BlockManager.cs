@@ -345,8 +345,7 @@ public partial class BlockManager
             // --- 恢复状态 ---
             var gameState = PersistenceMapper.MapGameState(blockDto.GameState);
             // Metadata and TriggeredChildParams might need deep copy or type recovery if complex objects are stored
-            var metadata = blockDto.Metadata.ToDictionary(entry => entry.Key,
-                entry => PersistenceMapper.DeserializeObjectValue(entry.Value));
+            var metadata = blockDto.Metadata.ToDictionary();
             var triggeredParams = blockDto.TriggeredChildParams.ToDictionary(entry => entry.Key,
                 entry => PersistenceMapper.DeserializeObjectValue(entry.Value));
 

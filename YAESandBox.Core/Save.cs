@@ -44,7 +44,7 @@ public class BlockDto
 
     [JsonPropertyName("content")] public string BlockContent { get; set; } = string.Empty;
 
-    [JsonPropertyName("metadata")] public Dictionary<string, object?> Metadata { get; set; } = new();
+    [JsonPropertyName("metadata")] public Dictionary<string, string> Metadata { get; set; } = new();
 
     [JsonPropertyName("triggeredChildParams")]
     public Dictionary<string, object?> TriggeredChildParams { get; set; } = new();

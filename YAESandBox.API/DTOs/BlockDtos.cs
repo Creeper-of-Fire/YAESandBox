@@ -13,7 +13,7 @@ public class BlockDetailDto
     public string? ParentBlockId { get; init; }
     public BlockStatusCode StatusCode { get; init; }
     public string BlockContent { get; init; } = string.Empty;
-    public Dictionary<string, object?> Metadata { get; init; } = new();
+    public Dictionary<string, string> Metadata { get; init; } = new();
     public List<string> ChildrenInfo { get; init; } = new();
     // 注意：WsInput, WsPostAI, WsPostUser, WsTemp 不应直接通过 API 暴露
 }
