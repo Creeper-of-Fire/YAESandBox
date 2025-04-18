@@ -29,7 +29,7 @@ public class BlockManagerModificationTests
         var gameState = gs ?? new GameState();
         // 使用内部构造函数或 CreateBlockFromSave（如果需要预设状态）
         // 这里我们假设需要一个基础的 Idle 状态 Block 来进行后续修改
-        var initialIdleStatus = YAESandBox.Core.Block.Block.CreateBlockFromSave(
+        var initialIdleStatus = Block.CreateBlockFromSave(
             blockId,
             parentId,
             new List<string>(), // children

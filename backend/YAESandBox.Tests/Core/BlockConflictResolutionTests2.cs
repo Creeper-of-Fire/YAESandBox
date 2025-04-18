@@ -13,7 +13,7 @@ public class BlockConflictDetectionTests
     // --- 辅助方法和常量 ---
 
     // 创建一个用于测试的 Block 实例
-    private static YAESandBox.Core.Block.Block CreateTestBlock(string blockId = "test_block")
+    private static Block CreateTestBlock(string blockId = "test_block")
     {
         // DetectAndHandleConflicts 不依赖 Block 的内部状态（如 WorldState）
         // 它只处理传入的命令列表，因此一个最小化的 Block 实例即可
@@ -21,7 +21,7 @@ public class BlockConflictDetectionTests
         var dummyGs = new GameState();
         // 使用内部方法或模拟来创建 Block 对象，这里我们假设有方法可以获取到底层 Block
         // 或者直接调用静态方法创建再获取 Block
-        var loadingStatus = YAESandBox.Core.Block.Block.CreateBlock(blockId, null, dummyWs, dummyGs);
+        var loadingStatus = Block.CreateBlock(blockId, null, dummyWs, dummyGs);
         return loadingStatus.Block; // 直接获取 Block 实例
     }
 

@@ -8,9 +8,12 @@ using YAESandBox.API.Hubs; // For GameHub
 using YAESandBox.API.Services; // For BlockManager, NotifierService, WorkflowService
 using System.Text.Json.Serialization;
 using YAESandBox.Core.Block;
-using YAESandBox.Core.State; // For EnumConverter
+using YAESandBox.Core.State;
+using static GlobalSwaggerConstants;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
 
 // Add services to the container.
 builder.Services.AddControllers()
@@ -21,21 +24,53 @@ builder.Services.AddControllers()
     });
 
 // --- OpenAPI / Swagger ---
-builder.Services.AddEndpointsApiExplorer(); // Needed for Minimal APIs if used, and Swagger
-builder.Services.AddSwaggerGen(c => // Configure Swagger
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "YAESandBox API", Version = "v1" });
+    // --- 定义公开 API 文档 ---
+    c.SwaggerDoc(PublicApiGroupName, new OpenApiInfo
+    {
+        Title = "YAESandBox API (Public)",
+        Version = "v1",
+        Description = "供前端和外部使用的公开 API 文档。"
+    });
+
+    // --- 定义内部/调试 API 文档 ---
+    c.SwaggerDoc(InternalApiGroupName, new OpenApiInfo
+    {
+        Title = "YAESandBox API (Internal)",
+        Version = "v1",
+        Description = "包含所有 API，包括内部调试接口。"
+    });
+
+    // --- 告诉 Swashbuckle 如何根据 GroupName 分配 API ---
+    // 如果 API 没有明确的 GroupName，默认可以将其分配给公开文档
+    c.DocInclusionPredicate((docName, apiDesc) =>
+        {
+            // 如果 API 没有 GroupName 设置，我们默认认为它属于 Public
+            string groupName = apiDesc.GroupName ?? PublicApiGroupName;
+
+            // 只有当 API 的 GroupName 与当前生成的文档名称匹配时，才包含它
+            // 或者，如果当前生成的是 Internal 文档，包含所有 API (Public + Internal)
+            if (docName == InternalApiGroupName) // 内部文档包含所有公共 API 和标记为 internal 的 API
+                return groupName is PublicApiGroupName or InternalApiGroupName;
+            // 否则，生成的是 Public 文档
+            // 公开文档只包含 GroupName 为 Public 的 API
+            return groupName == PublicApiGroupName;
+        }
+    );
+
+
     // Include XML comments if set up in .csproj file
-    var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    c.IncludeXmlComments(xmlPath);
+    string xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
+    string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
+    if (File.Exists(xmlPath)) // 检查文件是否存在
+        c.IncludeXmlComments(xmlPath);
 
     // Add Enum Schema Filter to display enums as strings in Swagger UI
-    c.SchemaFilter<EnumSchemaFilter>(); // Requires the EnumSchemaFilter class defined below
-    
-    // --- 在这里注册 Document Filter ---
-    c.DocumentFilter<RemoveHiddenFromJsonFilter>();
+    c.SchemaFilter<EnumSchemaFilter>(); // 假设 EnumSchemaFilter 已定义
 });
+
 
 // --- SignalR ---
 builder.Services.AddSignalR()
@@ -84,14 +119,24 @@ app.UseStaticFiles(); // 启用从 wwwroot 提供静态文件的功能
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI(c => c.SwaggerEndpoint("/swagger/v1/swagger.json", "YAESandBox API v1"));
-    // app.UseDeveloperExceptionPage(); // Useful for debugging startup issues
+    app.UseSwagger(); // 启用 Swagger 中间件 (提供 JSON)
+    app.UseSwaggerUI(c =>
+    {
+        // --- 配置 UI 以显示两个文档版本 ---
+        // 端点 1: 公开 API
+        c.SwaggerEndpoint($"/swagger/{PublicApiGroupName}/swagger.json", $"YAESandBox API (Public)");
+        // 端点 2: 内部 API
+        c.SwaggerEndpoint($"/swagger/{InternalApiGroupName}/swagger.json", $"YAESandBox API (Internal)");
+
+        // (可选) 设置默认展开级别等 UI 选项
+        c.DefaultModelsExpandDepth(-1); // 折叠模型定义
+        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List); // 列表形式展开操作
+    });
 }
 else
 {
-    app.UseExceptionHandler("/Error"); // Add basic error handling page
-    app.UseHsts(); // Enable HTTP Strict Transport Security
+    app.UseExceptionHandler("/Error");
+    app.UseHsts();
 }
 
 // app.UseHttpsRedirection();
@@ -134,7 +179,7 @@ record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
 // Helper class for Swagger Enum Display
 public class EnumSchemaFilter : Swashbuckle.AspNetCore.SwaggerGen.ISchemaFilter
 {
-    public void Apply(Microsoft.OpenApi.Models.OpenApiSchema schema,
+    public void Apply(OpenApiSchema schema,
         Swashbuckle.AspNetCore.SwaggerGen.SchemaFilterContext context)
     {
         if (context.Type.IsEnum)
@@ -148,5 +193,12 @@ public class EnumSchemaFilter : Swashbuckle.AspNetCore.SwaggerGen.ISchemaFilter
             }
         }
     }
+}
+
+public static class GlobalSwaggerConstants
+{
+    // --- 定义文档名称常量 ---
+    public const string PublicApiGroupName = "v1-public"; // 公开 API 文档
+    public const string InternalApiGroupName = "v1-internal"; // 内部/调试 API 文档
 }
 // --- END OF FILE Program.cs ---

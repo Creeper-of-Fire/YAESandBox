@@ -8,7 +8,8 @@ using YAESandBox.API.DTOs; // 可能需要新的 DTO
 using YAESandBox.API.Services; // 需要 IBlockWritService (或新的 IBlockManagementService)
 using YAESandBox.Core.Block; // For BlockManager/Block
 using YAESandBox.Core.State; // For WorldState, GameState
-using YAESandBox.Depend; // For Log
+using YAESandBox.Depend;
+using static GlobalSwaggerConstants; // For Log
 
 namespace YAESandBox.API.Controllers;
 
@@ -36,7 +37,8 @@ public class BlockManagementController(
     [ProducesResponseType(StatusCodes.Status404NotFound)] // If parent not found
     [ProducesResponseType(StatusCodes.Status409Conflict)] // If parent state invalid
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [HiddenFromJsonApi]
+    [ApiExplorerSettings(GroupName = InternalApiGroupName)]
+    [Tags("__DEBUG__")]
     public async Task<IActionResult> CreateBlockManually([FromBody] CreateBlockManualRequestDto request)
     {
         if (!ModelState.IsValid) // 使用模型验证
@@ -107,7 +109,8 @@ public class BlockManagementController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)] // For InvalidState or CyclicMove
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    [HiddenFromJsonApi]
+    [ApiExplorerSettings(GroupName = InternalApiGroupName)]
+    [Tags("__DEBUG__")]
     public async Task<IActionResult> MoveBlockManually(string blockId, [FromBody] MoveBlockRequestDto request)
     {
         if (!ModelState.IsValid)
@@ -181,33 +184,6 @@ public record MoveBlockRequestDto
     /// </summary>
     [System.ComponentModel.DataAnnotations.Required]
     public string NewParentBlockId { get; init; } = null!;
-}
-
-// --- Enums for Operation Results (需要在 BlockManager 或共享位置定义) ---
-
-/// <summary>
-/// 手动删除 Block 的操作结果。
-/// </summary>
-public enum DeleteResult
-{
-    Success,
-    NotFound,
-    CannotDeleteRoot,
-    InvalidState,
-    Error
-}
-
-/// <summary>
-/// 手动移动 Block 的操作结果。
-/// </summary>
-public enum MoveResult
-{
-    Success,
-    NotFound,
-    CannotMoveRoot,
-    InvalidState,
-    CyclicMove,
-    Error
 }
 
 // --- END OF FILE BlockManagementController.cs ---

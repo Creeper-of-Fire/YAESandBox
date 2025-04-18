@@ -22,5 +22,10 @@
       <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" />
       <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
     </ItemGroup>
+    
+
+    <ItemGroup>
+      <Folder Include="Others\" />
+    </ItemGroup>
 
 </Project>
