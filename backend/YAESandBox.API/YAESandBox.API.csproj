@@ -6,26 +6,34 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>YAESandBox.API</RootNamespace>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        
+        <!-- 定义输出路径，可以根据你的项目结构调整 -->
+        <SwaggerJsonPath>$(MSBuildProjectDirectory)/../../frontend/src/api-client/swagger.json</SwaggerJsonPath>
+        <!-- 定义 Web API 项目的 DLL 路径 -->
+        <ApiDllPath>$(TargetDir)$(TargetFileName)</ApiDllPath>
     </PropertyGroup>
+
+    <Target Name="CreateSwaggerJson" AfterTargets="Build" Condition="$(Configuration)=='Debug'">
+        <Exec Command="swagger tofile --output $(SwaggerJsonPath) $(OutputPath)$(AssemblyName).dll v1-public" WorkingDirectory="$(ProjectDir)" />
+    </Target>
 
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4"/>
-        <PackageReference Include="Nito.AsyncEx" Version="5.1.2" />
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1" />
-        <InternalsVisibleTo Include="YAESandBox.Tests" />
+        <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1"/>
+        <InternalsVisibleTo Include="YAESandBox.Tests"/>
+        <PackageReference Include="TypeGen" Version="6.0.2" />
     </ItemGroup>
-    
+
 
     <ItemGroup>
-      <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj" />
-      <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" />
-      <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
+        <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
     </ItemGroup>
-    
+
 
     <ItemGroup>
-      <Folder Include="Others\" />
+        <Folder Include="Others\"/>
     </ItemGroup>
 
 </Project>

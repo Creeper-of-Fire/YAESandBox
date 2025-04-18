@@ -38,7 +38,7 @@ public record EntityDetailDto : EntitySummaryDto
 {
     /// <summary>
     /// 包含实体所有属性（包括核心属性如 IsDestroyed 和动态属性）的字典。
-    /// 值的类型可能是 string, int, bool, double, List<object?>, Dictionary<string, object?>, TypedID 等。
+    /// 值的类型可能是 string, int, bool, double, List[object?], Dictionary-[string, object?], TypedID 等。
     /// </summary>
     public Dictionary<string, object?> Attributes { get; init; } = new();
 }
