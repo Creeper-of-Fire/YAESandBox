@@ -1,10 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
+using FluentResults;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
+using static YAESandBox.Core.Action.OperationWarning;
 
 namespace YAESandBox.Core.Block;
 
@@ -310,11 +312,11 @@ public class Block : NodeBlock
     /// <summary>
     /// 辅助方法：将指定的一系列操作应用到 WorldState，允许部分成功部分失败。
     /// </summary>
-    /// <returns>一个包含每个操作执行结果的列表。</returns>
-    internal static List<OperationResult> ApplyOperationsTo(WorldState worldState, List<AtomicOperation> operations)
+    /// <returns>返回操作结果</returns>
+    internal static List<Result<AtomicOperation>> ApplyOperationsTo(WorldState worldState,
+        IEnumerable<AtomicOperation> operations)
     {
-        // 用于存储每个操作的结果
-        var results = new List<OperationResult>(operations.Count); // 预设容量提高效率
+        var results = new List<Result<AtomicOperation>>();
 
         foreach (var op in operations)
             try // 可以选择性地用 try-catch 包裹，以防万一内部方法抛出未预期的异常
@@ -325,7 +327,7 @@ public class Block : NodeBlock
             {
                 // 捕获可能由 worldState 操作（如 SetAttribute, ModifyAttribute）抛出的意外异常
                 // 记录这个意外失败，然后继续处理下一个操作
-                results.Add(OperationResult.Fail(op, $"处理操作时发生意外错误: {ex.Message}"));
+                results.Add(Error(op, $"处理操作时发生意外错误: {ex.Message}").ToResult());
                 // 这里可以考虑记录更详细的日志，包括堆栈跟踪 ex.ToString()
             }
 
@@ -338,58 +340,50 @@ public class Block : NodeBlock
     /// </summary>
     /// <param name="worldState">要应用操作的世界状态。</param>
     /// <param name="op">要应用的操作。</param>
-    /// <returns>返回操作的结果。</returns>
+    /// <returns>返回操作结果</returns>
     /// <exception cref="UnreachableException">在操作到达不可达代码路径时抛出。</exception>
-    private static OperationResult ApplyOperationTo(WorldState worldState, AtomicOperation op)
+    private static Result<AtomicOperation> ApplyOperationTo(WorldState worldState, AtomicOperation op)
     {
         switch (op.OperationType)
         {
             case AtomicOperationType.CreateEntity:
                 var existing = worldState.FindEntityById(op.EntityId, op.EntityType, includeDestroyed: false);
                 if (existing != null)
-                {
-                    // 失败：记录错误，继续下一个操作
-                    return OperationResult.Fail(op, $"实体 '{op.EntityType}:{op.EntityId}' 已存在。");
-                }
+                    return Conflict(op, $"实体 '{op.EntityType}:{op.EntityId}' 已存在。").ToResult();
 
                 var newEntity = CreateEntityInstance(op.EntityType, op.EntityId);
                 if (op.InitialAttributes != null)
-                {
                     foreach (var attr in op.InitialAttributes)
-                    {
                         newEntity.SetAttribute(attr.Key, attr.Value);
-                    }
-                }
 
                 worldState.AddEntity(newEntity);
                 // 成功：记录成功
-                return OperationResult.Ok(op);
+                return Result.Ok(op);
 
             case AtomicOperationType.ModifyEntity:
                 var entityToModify =
                     worldState.FindEntityById(op.EntityId, op.EntityType, includeDestroyed: false);
                 if (entityToModify == null)
-                    return OperationResult.Fail(op, $"实体 '{op.EntityType}:{op.EntityId}' 未找到或已被销毁。");
+                    return NotFound(op, $"实体 '{op.EntityType}:{op.EntityId}' 未找到或已被销毁。").ToResult();
                 // 注意：这里的检查需要根据你的 AtomicOperation 定义调整
                 // 如果 AttributeKey 或 ModifyOperator 设计为非空，则这些检查可能不需要或应在创建 op 时完成
 
                 if (op.AttributeKey == null || op.ModifyOperator == null)
-                    return OperationResult.Fail(op,
-                        $"修改操作 '{op.EntityType}:{op.EntityId}' 的参数无效 (AttributeKey 或 Operator 为 null)。");
+                    return InvalidInput(op, $"修改操作 '{op.EntityType}:{op.EntityId}' 的参数 为 null。").ToResult();
                 // 再次确认 null 是否是合法的 ModifyValue (根据你的业务逻辑)
 
                 if (op.ModifyValue == null)
-                    return OperationResult.Fail(op, $"修改操作 '{op.EntityType}:{op.EntityId}' 的值不能为 null。");
+                    return InvalidInput(op, $"修改操作 '{op.EntityType}:{op.EntityId}' 的值不能为 null。").ToResult();
 
                 entityToModify.ModifyAttribute(op.AttributeKey, op.ModifyOperator.Value, op.ModifyValue);
-                return OperationResult.Ok(op);
+                return Result.Ok(op);
 
             case AtomicOperationType.DeleteEntity:
                 var entityToDelete = worldState.FindEntityById(op.EntityId, op.EntityType, includeDestroyed: false);
                 if (entityToDelete != null)
                     entityToDelete.IsDestroyed = true;
 
-                return OperationResult.Ok(op); // 删除操作是幂等的，即使实体不存在或已删除，也视为“逻辑上”成功完成其意图
+                return Result.Ok(op); // 删除操作是幂等的，即使实体不存在或已删除，也视为“逻辑上”成功完成其意图
 
             default:
                 throw new UnreachableException($"未知的操作类型: {op.OperationType}"); // 理论上不应到达这里

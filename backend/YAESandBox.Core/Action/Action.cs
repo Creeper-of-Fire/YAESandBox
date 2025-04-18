@@ -1,4 +1,7 @@
-﻿using YAESandBox.Core.State.Entity;
+﻿using System.Diagnostics.CodeAnalysis;
+using FluentResults;
+using YAESandBox.Core.State.Entity;
+using YAESandBox.Depend;
 
 // For EntityType, Operator
 
@@ -13,61 +16,35 @@ public enum AtomicOperationType
     ModifyEntity,
     DeleteEntity
 }
+//
+// /// <summary>
+// /// 表示单个原子操作的执行结果。
+// /// </summary>
+// public readonly record struct OperationResult
+// {
+//     /// <summary>
+//     /// 指示操作是否成功执行。
+//     /// </summary>
+//     public bool Success { get; init; }
+//
+//     /// <summary>
+//     /// 如果操作失败，则包含错误信息；否则为 null。
+//     /// </summary>
+//     public string? ErrorMessage { get; init; }
+//
+//     /// <summary>
+//     /// 导致此结果的原始操作。
+//     /// </summary>
+//     public AtomicOperation OriginalOperation { get; init; }
+//
+//     // 可以添加一个静态工厂方法方便创建
+//     public static OperationResult Ok(AtomicOperation operation) =>
+//         new() { Success = true, ErrorMessage = null, OriginalOperation = operation };
+//
+//     public static OperationResult Fail(AtomicOperation operation, string error) =>
+//         new() { Success = false, ErrorMessage = error, OriginalOperation = operation };
+// }
 
-/// <summary>
-/// 表示单个原子操作的执行结果。
-/// </summary>
-public readonly record struct OperationResult
-{
-    /// <summary>
-    /// 指示操作是否成功执行。
-    /// </summary>
-    public bool Success { get; init; }
-
-    /// <summary>
-    /// 如果操作失败，则包含错误信息；否则为 null。
-    /// </summary>
-    public string? ErrorMessage { get; init; }
-
-    /// <summary>
-    /// 导致此结果的原始操作。
-    /// </summary>
-    public AtomicOperation OriginalOperation { get; init; }
-
-    // 可以添加一个静态工厂方法方便创建
-    public static OperationResult Ok(AtomicOperation operation) =>
-        new() { Success = true, ErrorMessage = null, OriginalOperation = operation };
-
-    public static OperationResult Fail(AtomicOperation operation, string error) =>
-        new() { Success = false, ErrorMessage = error, OriginalOperation = operation };
-}
-
-public static class AtomicHelper
-{
-    /// <summary>
-    /// 返回OperationResult列表中成功的操作。
-    /// </summary>
-    /// <param name="results"></param>
-    /// <returns></returns>
-    public static List<AtomicOperation> FindAllOK(this List<OperationResult> results) =>
-        results.Where(r => r.Success).Select(r => r.OriginalOperation).ToList();
-
-    /// <summary>
-    /// 返回OperationResult列表中失败的操作。
-    /// </summary>
-    /// <param name="results"></param>
-    /// <returns></returns>
-    public static List<AtomicOperation> FindAllFail(this List<OperationResult> results) =>
-        results.Where(r => !r.Success).Select(r => r.OriginalOperation).ToList();
-
-    /// <summary>
-    /// 如果列表中有至少一个失败的操作，则返回 true。
-    /// </summary>
-    /// <param name="results"></param>
-    /// <returns></returns>
-    public static bool IfAtLeastOneFail(this List<OperationResult> results) =>
-        results.Any(r => !r.Success);
-}
 
 /// <summary>
 /// 封装一个原子化操作及其参数。
@@ -154,4 +131,26 @@ public readonly record struct AtomicOperation
             EntityId = id
         };
     }
+}
+
+/// <summary>
+/// 操作警告，不被当成错误，没有实现IError
+/// </summary>
+/// <param name="Code"></param>
+/// <param name="Message"></param>
+/// <param name="FailedOperation"></param>
+public record OperationWarning(ResultCode Code, string Message, AtomicOperation FailedOperation)
+    : LazyInitWarning(Message)
+{
+    public static OperationWarning NotFound(AtomicOperation operation, string message)
+        => new(ResultCode.NotFound, message, operation);
+
+    public static OperationWarning Conflict(AtomicOperation operation, string message)
+        => new(ResultCode.Conflict, message, operation);
+
+    public static OperationWarning InvalidInput(AtomicOperation operation, string message)
+        => new(ResultCode.InvalidInput, message, operation);
+
+    public static OperationWarning Error(AtomicOperation operation, string message)
+        => new(ResultCode.Error, message, operation);
 }

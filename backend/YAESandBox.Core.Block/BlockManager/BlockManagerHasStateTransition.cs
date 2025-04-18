@@ -1,4 +1,5 @@
-﻿using YAESandBox.Core.Action;
+﻿using FluentResults;
+using YAESandBox.Core.Action;
 using YAESandBox.Depend;
 using OneOf;
 
@@ -44,7 +45,7 @@ public partial class BlockManager
     /// <param name="resolvedCommands"></param>
     /// <returns></returns>
     [HasBlockStateTransition]
-    public async Task<(OneOf<IdleBlockStatus, ErrorBlockStatus>? blockStatus, List<OperationResult>? results)>
+    public async Task<Result<IEnumerable<AtomicOperation>>>
         ApplyResolvedCommandsAsync(string blockId, List<AtomicOperation> resolvedCommands)
     {
         // This logic is now mostly inside HandleWorkflowCompletionAsync after conflict resolution.
@@ -53,21 +54,20 @@ public partial class BlockManager
         {
             if (!this.blocks.TryGetValue(blockId, out var block))
             {
-                Log.Error($"尝试应用已解决指令失败: Block '{blockId}' 未找到。");
-                return (null, null);
+                return BlockStatusError.NotFound(null, $"尝试应用已解决指令失败: Block '{blockId}' 未找到。").ToResult();
             }
 
             if (block is not ConflictBlockStatus conflictBlock)
             {
-                Log.Warning($"尝试应用已解决指令，但 Block '{blockId}' 状态为 {block.StatusCode} (非 ResolvingConflict)。已忽略。");
-                return (null, null);
+                return NormalWarning.InvalidState(
+                    $"尝试应用已解决指令，但 Block '{blockId}' 状态为 {block.StatusCode} (非 ResolvingConflict)。已忽略。").ToResult();
             }
 
             Log.Info($"Block '{blockId}': 正在应用手动解决的冲突指令 ({resolvedCommands.Count} 条)。");
 
             var val = conflictBlock.FinalizeConflictResolution(block.Block.BlockContent, resolvedCommands);
-            this.TrySetBlock(val.blockStatus);
-            return val;
+            this.TrySetBlock(val.block);
+            return val.atomicOp;
         }
     }
 
@@ -80,8 +80,7 @@ public partial class BlockManager
     /// <param name="firstPartyCommands">来自第一公民工作流的指令</param>
     /// <param name="outputVariables"></param>
     [HasBlockStateTransition]
-    public async Task<OneOf<(OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results),
-            ConflictBlockStatus, ErrorBlockStatus>?>
+    public async Task<OneOf<(IdleBlockStatus, Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>
         HandleWorkflowCompletionAsync(string blockId, bool success, string rawText,
             List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables)
     {
@@ -89,14 +88,12 @@ public partial class BlockManager
         {
             if (!this.blocks.TryGetValue(blockId, out var blockStatus))
             {
-                Log.Error($"处理工作流完成失败: Block '{blockId}' 未找到。");
-                return null;
+                return BlockStatusError.NotFound(null, $"处理工作流完成失败: Block '{blockId}' 未找到。");
             }
 
             if (blockStatus is not LoadingBlockStatus block)
             {
-                Log.Warning($"收到 Block '{blockId}' 的工作流完成回调，但其状态为 {blockStatus.StatusCode} (非 Loading)。可能重复或过时。");
-                return null;
+                return NormalWarning.InvalidState($"收到 Block '{blockId}' 的工作流完成回调，但其状态为 {blockStatus.StatusCode} (非 Loading)。可能重复或过时。");
             }
 
             if (!success) // Workflow failed
@@ -113,8 +110,9 @@ public partial class BlockManager
             Log.Info($"Block '{blockId}': 工作流成功完成。准备处理指令和状态。");
             var val = block.TryFinalizeSuccessfulWorkflow(rawText, firstPartyCommands);
             val.Switch(tuple => this.TrySetBlock(tuple.blockStatus), this.TrySetBlock);
-            return val.Widen<(OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results),
-                ConflictBlockStatus, ErrorBlockStatus>();
+            return val.Match<OneOf<(IdleBlockStatus, Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>(
+                tuple => tuple,
+                conflict => conflict);
         }
     }
 }

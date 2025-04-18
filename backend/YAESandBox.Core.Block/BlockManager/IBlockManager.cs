@@ -1,6 +1,9 @@
-﻿using OneOf;
+﻿using FluentResults;
+using OneOf;
+using OneOf.Types;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
+using YAESandBox.Depend;
 
 namespace YAESandBox.Core.Block
 {
@@ -54,9 +57,8 @@ namespace YAESandBox.Core.Block
         /// </summary>
         /// <param name="blockId">区块唯一标识符</param>
         /// <param name="operations">待执行的原子操作列表</param>
-        /// <returns>返回一个元组，包含区块状态和操作结果列表</returns>
-        Task<(OneOf<IdleBlockStatus, LoadingBlockStatus, ConflictBlockStatus, ErrorBlockStatus>? blockStatus,
-                List<OperationResult>? results)>
+        /// <returns>返回一个元组，包含区块状态和操作结果列表（结果包含失败的）</returns>
+        Task<(FluentResults.Result<IEnumerable<AtomicOperation>> result, BlockStatusCode? blockStatusCode)>
             EnqueueOrExecuteAtomicOperationsAsync(string blockId, List<AtomicOperation> operations);
 
         /// <summary>
@@ -95,8 +97,8 @@ namespace YAESandBox.Core.Block
         /// <param name="blockId"></param>
         /// <param name="resolvedCommands"></param>
         /// <returns></returns>
-        Task<(OneOf<IdleBlockStatus, ErrorBlockStatus>? blockStatus, List<OperationResult>? results)>
-            ApplyResolvedCommandsAsync(string blockId, List<AtomicOperation> resolvedCommands);
+        Task<FluentResults.Result<IEnumerable<AtomicOperation>>> ApplyResolvedCommandsAsync(string blockId,
+            List<AtomicOperation> resolvedCommands);
 
         /// <summary>
         /// 
@@ -106,9 +108,8 @@ namespace YAESandBox.Core.Block
         /// <param name="rawText"></param>
         /// <param name="firstPartyCommands">来自第一公民工作流的指令</param>
         /// <param name="outputVariables"></param>
-        Task<OneOf<(OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results),
-                ConflictBlockStatus, ErrorBlockStatus>?>
-            HandleWorkflowCompletionAsync(string blockId, bool success, string rawText,
-                List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables);
+        Task<OneOf<(IdleBlockStatus, FluentResults.Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>
+            HandleWorkflowCompletionAsync(string blockId, bool success, string rawText, List<AtomicOperation> firstPartyCommands,
+                Dictionary<string, object?> outputVariables);
     }
 }

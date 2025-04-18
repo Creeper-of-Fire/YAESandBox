@@ -3,6 +3,7 @@
 using YAESandBox.API.DTOs; // For potential DTOs used/returned by service
 using YAESandBox.Core.Block; // For BlockStatus, Result Enums
 using System.Threading.Tasks;
+using YAESandBox.Depend;
 
 namespace YAESandBox.API.Services;
 

@@ -1,4 +1,5 @@
-﻿using YAESandBox.API.Controllers;
+﻿using FluentResults;
+using YAESandBox.API.Controllers;
 using YAESandBox.API.DTOs;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.Block;
@@ -24,31 +25,31 @@ public class BlockWritService(INotifierService notifierService, IBlockManager bl
     /// <param name="blockId"></param>
     /// <param name="operations"></param>
     /// <returns></returns>
-    public async Task<AtomicExecutionResult> EnqueueOrExecuteAtomicOperationsAsync(string blockId,
-        List<AtomicOperation> operations)
+    public async Task<(ResultCode resultCode, BlockStatusCode blockStatusCode)>
+        EnqueueOrExecuteAtomicOperationsAsync(string blockId, List<AtomicOperation> operations)
     {
-        var (blockStatus, results) = await this.blockManager.EnqueueOrExecuteAtomicOperationsAsync(blockId, operations);
+        var (atomicOp, blockStatus) = await this.blockManager.EnqueueOrExecuteAtomicOperationsAsync(blockId, operations);
         if (blockStatus == null)
-            return AtomicExecutionResult.NotFound;
+            return (ResultCode.NotFound, BlockStatusCode.Error);
 
-        var atomicExecutionResult = blockStatus.Value.Match(
-            idle => AtomicExecutionResult.Executed,
-            loading => AtomicExecutionResult.ExecutedAndQueued,
-            conflict => AtomicExecutionResult.ConflictState,
-            error => AtomicExecutionResult.Error);
+        bool hasBlockStatusError = atomicOp.HasError<BlockStatusError>();
+        var resultCode = hasBlockStatusError ? ResultCode.Success : ResultCode.Error;
 
-        if (results == null)
-            return atomicExecutionResult;
-        await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, blockStatus.Value.ForceResult
-            <IdleBlockStatus, LoadingBlockStatus, ConflictBlockStatus, ErrorBlockStatus, BlockStatus, BlockStatusCode>
-            (target => target.StatusCode));
-        if (results.Any())
-        {
-            await this.notifierService.NotifyStateUpdateAsync(blockId,
-                results.Select(x => x.OriginalOperation.EntityId));
-        }
+        foreach (var error in atomicOp.Errors)
+            Log.Error(error.Message);
 
-        return atomicExecutionResult;
+        foreach (var warning in atomicOp.Warning())
+            Log.Warning(warning.Message);
+
+        if (hasBlockStatusError)
+            return (resultCode, blockStatus.Value);
+
+        var successes = atomicOp.Value.ToList();
+
+        if (successes.Any())
+            await this.notifierService.NotifyStateUpdateAsync(blockId, successes.Select(x => x.EntityId));
+
+        return (resultCode, blockStatus.Value);
     }
 
     /// <summary>
@@ -68,24 +69,18 @@ public class BlockWritService(INotifierService notifierService, IBlockManager bl
     /// <param name="resolvedCommands">解决冲突后的指令列表。</param>
     public async Task ApplyResolvedCommandsAsync(string blockId, List<AtomicOperation> resolvedCommands)
     {
-        var (blockStatus, results) = await this.blockManager.ApplyResolvedCommandsAsync(blockId, resolvedCommands);
-        if (blockStatus == null || results == null)
-            return;
+        var atomicOp = await this.blockManager.ApplyResolvedCommandsAsync(blockId, resolvedCommands);
 
         // 提取最终的状态码
-        var finalStatusCode = blockStatus.Value.Match(
-            idle => idle.StatusCode,
-            error => error.StatusCode
-        );
+        var blockStatus = await this.GetBlockAsync(blockId);
+        
+        if (blockStatus != null)
+            await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, blockStatus.StatusCode);
 
-        // *** 总是发送最终状态通知 ***
-        await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, finalStatusCode);
+        var successes = atomicOp.Value.ToList();
 
-        if (results.Any())
-        {
-            await this.notifierService.NotifyStateUpdateAsync(blockId,
-                results.Select(x => x.OriginalOperation.EntityId));
-        }
+        if (successes.Any())
+            await this.notifierService.NotifyStateUpdateAsync(blockId, successes.Select(x => x.EntityId));
     }
 
 
@@ -111,7 +106,7 @@ public class BlockWritService(INotifierService notifierService, IBlockManager bl
         return newBlock;
     }
 
-    
+
     /// <summary>
     /// 处理工作流执行完成后的回调。
     /// </summary>
@@ -122,30 +117,28 @@ public class BlockWritService(INotifierService notifierService, IBlockManager bl
     /// <param name="firstPartyCommands">工作流生成的原子指令。</param>
     /// <param name="outputVariables">工作流输出的变量 (可选，用于元数据等)。</param>
     /// <returns>返回状态，如果没有找到block或者block在应用前不为loading，则返回空（代表出错）</returns>
-    public async Task<BlockStatus?> HandleWorkflowCompletionAsync(string blockId, string requestId, bool success,
+    public async Task<Result<BlockStatus>> HandleWorkflowCompletionAsync(string blockId, string requestId, bool success,
         string rawText,
         List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables)
     {
         var val = await this.blockManager.HandleWorkflowCompletionAsync(blockId, success, rawText, firstPartyCommands,
             outputVariables);
-        if (val == null)
-            return null;
-        if (val.Value.TryPickT0(out var tempTuple, out var conflictOrErrorBlock))
+        if (val.TryPickT3(out var ErrorOrWarning, out var IdleOrErrorOrConflictBlock))
+            return Result.Ok().WithReason(ErrorOrWarning);
+
+        if (IdleOrErrorOrConflictBlock.TryPickT0(out var tempTuple, out var conflictOrErrorBlock))
         {
-            var (IdleOrErrorBlock, results) = tempTuple;
-            // 此时已经处理完成，如果处理的指令存在错误，则进入Error状态
-            // TODO 这里处理的太生硬，也许处理的指令有错误直接打印日志然后继续就行了
-            return IdleOrErrorBlock.Match<BlockStatus>(i => i, e => e);
+            var (IdleBlock, results) = tempTuple;
+            return IdleBlock;
         }
 
-        if (!conflictOrErrorBlock.TryPickT0(out var conflictBlock, out var errorBlock))
+        if (conflictOrErrorBlock.TryPickT1(out var errorBlock, out var conflictBlock))
         {
             Log.Error("工作流执行失败，block进入错误状态。");
             return errorBlock;
         }
 
         Log.Info("工作流生成的指令和当前修改存在冲突，等待手动解决。");
-
 
         await this.notifierService.NotifyConflictDetectedAsync(new ConflictDetectedDto(BlockId: blockId,
             RequestId: requestId,

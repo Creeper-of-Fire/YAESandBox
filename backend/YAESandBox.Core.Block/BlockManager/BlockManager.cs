@@ -1,15 +1,16 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using FluentResults;
 using Nito.AsyncEx;
 using OneOf;
-using OneOf.Types;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
 
 namespace YAESandBox.Core.Block;
+
 
 public partial class BlockManager : IBlockManager
 {
@@ -219,37 +220,28 @@ public partial class BlockManager : IBlockManager
     /// <param name="blockId">区块唯一标识符</param>
     /// <param name="operations">待执行的原子操作列表</param>
     /// <returns>返回一个元组，包含区块状态和操作结果列表</returns>
-    public async Task<(OneOf<IdleBlockStatus, LoadingBlockStatus, ConflictBlockStatus, ErrorBlockStatus>? blockStatus,
-            List<OperationResult>? results)>
+    public async Task<(Result<IEnumerable<AtomicOperation>> result, BlockStatusCode? blockStatusCode)>
         EnqueueOrExecuteAtomicOperationsAsync(string blockId, List<AtomicOperation> operations)
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
             if (!this.blocks.TryGetValue(blockId, out var block))
-            {
-                Log.Error($"尝试执行原子操作失败: Block '{blockId}' 未找到。");
-                return (null, null);
-            }
+                return (Result.Fail($"尝试执行原子操作失败: Block '{blockId}' 未找到。"), null);
 
-            switch (block)
+            var result = block switch
             {
-                case LoadingBlockStatus loadingBlock:
-                    return (loadingBlock, loadingBlock.ApplyOperations(operations));
-                case IdleBlockStatus idleBlock:
-                    return (idleBlock, idleBlock.ApplyOperations(operations));
-                case ConflictBlockStatus conflictBlock:
-                    return (conflictBlock, null);
-                case ErrorBlockStatus errorBlock:
-                    return (errorBlock, null);
-                default:
-                    Log.Error($"尝试执行原子操作失败: Block '{blockId}' 状态为 {block.StatusCode}。");
-                    return (null, null);
-            }
+                LoadingBlockStatus loading => loading.ApplyOperations(operations),
+                IdleBlockStatus idle => idle.ApplyOperations(operations),
+                // ConflictBlockStatus conflict => BlockStatusError.Conflict(conflict, $"Block '{blockId}' 状态为 Conflict。").ToResult(),
+                // ErrorBlockStatus error => BlockStatusError.Error(error, $"Block '{blockId}' 状态为 Error。").ToResult(),
+                _ => BlockStatusError.Error(block, $"尝试执行原子操作失败: Block '{blockId}' 状态为 {block.StatusCode}。").ToResult()
+            };
+
+            return (result, block.StatusCode);
         }
     }
 
-    //--- 持久化逻辑 --- 
-
+    #region 持久化逻辑
 
     /// <summary>
     /// 将当前 BlockManager 的状态保存到流中。
@@ -438,7 +430,9 @@ public partial class BlockManager : IBlockManager
         }
     }
 
-    #region Internal Management Methods
+    #endregion
+
+    #region 内部操作方法
 
     /// <summary>
     /// (内部实现) 手动创建新的 Idle Block。
@@ -834,44 +828,17 @@ public partial class BlockManager : IBlockManager
     #endregion
 }
 
-/// <summary>
-/// 表示管理操作的通用结果枚举。
-/// 包含来自 DeleteResult 和 MoveResult 的可能状态，以及创建操作的状态。
-/// </summary>
-public enum ManagementResult
+public record BlockStatusError(ResultCode Code, string Message, BlockStatus? FailedBlockStatus) : LazyInitError(Message)
 {
-    /// <summary>
-    /// 成功
-    /// </summary>
-    Success,
+    public static BlockStatusError NotFound(BlockStatus? block, string message)
+        => new(ResultCode.NotFound, message, block);
 
-    /// <summary>
-    /// 目标或者父 Block 不存在
-    /// </summary>
-    NotFound,
+    public static BlockStatusError Conflict(BlockStatus block, string message)
+        => new(ResultCode.Conflict, message, block);
 
-    /// <summary>
-    /// 根 Block 无法被操作
-    /// </summary>
-    CannotPerformOnRoot,
+    public static BlockStatusError InvalidInput(BlockStatus block, string message)
+        => new(ResultCode.InvalidInput, message, block);
 
-    /// <summary>
-    /// 状态不允许操作
-    /// </summary>
-    InvalidState,
-
-    /// <summary>
-    /// 循环操作，如移动 Block 为其子 Block
-    /// </summary>
-    CyclicOperation,
-
-    /// <summary>
-    /// 请求错误
-    /// </summary>
-    BadRequest,
-
-    /// <summary>
-    /// 内部错误
-    /// </summary>
-    Error
+    public static BlockStatusError Error(BlockStatus block, string message)
+        => new(ResultCode.Error, message, block);
 }

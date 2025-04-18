@@ -1,7 +1,9 @@
-﻿using YAESandBox.API.Controllers;
+﻿using FluentResults;
+using YAESandBox.API.Controllers;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.Block;
 using YAESandBox.Core.State;
+using YAESandBox.Depend;
 
 namespace YAESandBox.API.Services;
 
@@ -21,7 +23,7 @@ public interface IBlockWritService
     /// <param name="blockId"></param>
     /// <param name="operations"></param>
     /// <returns></returns>
-    Task<AtomicExecutionResult> EnqueueOrExecuteAtomicOperationsAsync(string blockId, List<AtomicOperation> operations);
+    Task<(ResultCode resultCode, BlockStatusCode blockStatusCode)> EnqueueOrExecuteAtomicOperationsAsync(string blockId, List<AtomicOperation> operations);
 
     /// <summary>
     /// 应用用户解决冲突后提交的指令列表。
@@ -49,6 +51,6 @@ public interface IBlockWritService
     /// <param name="rawText">工作流生成的原始文本内容。</param>
     /// <param name="firstPartyCommands">工作流生成的原子指令。</param>
     /// <param name="outputVariables">工作流输出的变量 (可选，用于元数据等)。</param>
-    Task<BlockStatus?> HandleWorkflowCompletionAsync(string blockId, string requestId, bool success, string rawText,
+    Task<Result<BlockStatus>> HandleWorkflowCompletionAsync(string blockId, string requestId, bool success, string rawText,
         List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables);
 }

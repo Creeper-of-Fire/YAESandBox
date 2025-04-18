@@ -1,4 +1,5 @@
-﻿using OneOf;
+﻿using FluentResults;
+using OneOf;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Depend;
@@ -101,7 +102,7 @@ public class BlockStatus(Block block) : IBlockStatus
 /// <summary>
 /// Block 已生成，处于空闲状态，可以接受修改或作为新 Block 的父级。
 /// </summary>
-public class IdleBlockStatus(Block block) : BlockStatus(block)
+public class IdleBlockStatus(Block block) : BlockStatus(block), ICanApplyOperations
 {
     /// <summary>
     /// 将指定的一系列操作应用到当前唯一允许的 WorldState，允许部分成功部分失败。
@@ -109,10 +110,10 @@ public class IdleBlockStatus(Block block) : BlockStatus(block)
     /// </summary>
     /// <param name="operations"></param>
     /// <returns></returns>
-    internal List<OperationResult> ApplyOperations(List<AtomicOperation> operations)
+    public Result<IEnumerable<AtomicOperation>> ApplyOperations(IEnumerable<AtomicOperation> operations)
     {
         var results = Block.ApplyOperationsTo(this.CurrentWorldState, operations);
-        return results;
+        return results.CollectValue();
     }
 
     internal (string newBlockId, LoadingBlockStatus newChildblock) CreateNewChildrenBlock()
@@ -130,11 +131,16 @@ public class IdleBlockStatus(Block block) : BlockStatus(block)
     }
 }
 
+public interface ICanApplyOperations
+{
+    Result<IEnumerable<AtomicOperation>> ApplyOperations(IEnumerable<AtomicOperation> operations);
+}
+
 /// <summary>
 /// Block 正在由一等公民工作流处理（例如 AI 生成内容、执行指令）。
 /// 针对此 Block 的修改将被暂存。
 /// </summary>
-public class LoadingBlockStatus(Block block) : BlockStatus(block)
+public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOperations
 {
     /// <summary>
     /// 在 Block 处于 Loading 状态期间，暂存的用户原子化修改指令。
@@ -147,11 +153,12 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
     /// </summary>
     /// <param name="operations"></param>
     /// <returns></returns>
-    internal List<OperationResult> ApplyOperations(List<AtomicOperation> operations)
+    public Result<IEnumerable<AtomicOperation>> ApplyOperations(IEnumerable<AtomicOperation> operations)
     {
         var results = Block.ApplyOperationsTo(this.CurrentWorldState, operations);
-        this.PendingUserCommands.AddRange(results.FindAllOK());
-        return results;
+        // 目前直接把成功的添加到 PendingUserCommands 之后可能会进行修改
+        this.PendingUserCommands.AddRange(results.SelectSuccessValue());
+        return results.CollectValue();
     }
 
     /// <summary>
@@ -159,33 +166,32 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
     /// </summary>
     /// <param name="rawContent"></param>
     /// <param name="pendingAICommands"></param>
-    /// <returns>BlockStatusIdle或BlockStatusConflict</returns>
+    /// <returns></returns>
     [HasBlockStateTransition]
-    internal OneOf<
-            (OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results), ConflictBlockStatus>
+    internal OneOf<(IdleBlockStatus blockStatus, Result<IEnumerable<AtomicOperation>> atomicOp), ConflictBlockStatus>
         TryFinalizeSuccessfulWorkflow(string rawContent, List<AtomicOperation> pendingAICommands)
     {
         (bool hasConflict, var simpleResolvedAiCommands, var simpleResolvedUserCommands, var conflictAI,
                 var conflictUser) =
             this.Block.DetectAndHandleConflicts(this.PendingUserCommands, pendingAICommands);
 
-        if (!hasConflict)
-        {
-            return this._FinalizeSuccessfulWorkflow(rawContent,
-                [..pendingAICommands.Concat(this.PendingUserCommands)]);
-        }
-
         if (conflictAI == null || conflictUser == null)
         {
-            Log.Error($"Block '{this.Block.BlockId}' 有冲突，但是冲突内容为空。");
-            return this._FinalizeSuccessfulWorkflow(rawContent,
-                [..pendingAICommands.Concat(this.PendingUserCommands)]);
+            Log.Warning($"Block '{this.Block.BlockId}' 有冲突，但是冲突内容为空。");
+            var tuple = this._FinalizeSuccessfulWorkflow(rawContent, [..pendingAICommands.Concat(simpleResolvedUserCommands)]);
+            return tuple;
+        }
+
+        if (!hasConflict)
+        {
+            var tuple = this._FinalizeSuccessfulWorkflow(rawContent, [..pendingAICommands.Concat(simpleResolvedUserCommands)]);
+            return tuple;
         }
 
 
         Log.Info($"Block '{this.Block.BlockId}' has conflict commands. Entering Conflict State.");
         return this.EnterConflictState(rawContent,
-            pendingAICommands, this.PendingUserCommands, conflictAI, conflictUser);
+            simpleResolvedAiCommands, simpleResolvedUserCommands, conflictAI, conflictUser);
     }
 
     /// <summary>
@@ -195,27 +201,26 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block)
     /// <param name="commands"></param>
     /// <returns></returns>
     [HasBlockStateTransition]
-    internal (OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results)
-        _FinalizeSuccessfulWorkflow(string rawContent,
-            List<AtomicOperation> commands)
+    internal (IdleBlockStatus blockStatus, Result<IEnumerable<AtomicOperation>> atomicOp)
+        _FinalizeSuccessfulWorkflow(string rawContent, List<AtomicOperation> commands)
     {
-        OneOf<IdleBlockStatus, ErrorBlockStatus> newSelf = new IdleBlockStatus(this.Block);
+        var newSelf = new IdleBlockStatus(this.Block);
 
         this.Block.wsPostAI = this.Block.wsInput.Clone();
-        var applyResults = Block.ApplyOperationsTo(this.Block.wsPostAI, commands);
-        if (applyResults.IfAtLeastOneFail())
-        {
-            // 进入 Error 状态
-            newSelf = new ErrorBlockStatus(this.Block);
-            this.Block.BlockContent = rawContent;
-            this.Block.AddOrSetMetaData("Error", applyResults.FindAllFail());
-            this.Block.wsTemp = null;
-            //TODO 这一块的逻辑可能还改一改
-            this.Block.wsPostAI = null; // 失败了，不保留可能不一致的状态
-            this.Block.wsPostUser = null; // 同样不设置
-            Log.Error($"Block '{this.Block.BlockId}': Finalization failed. StatusCode set to Error.");
-            return (newSelf, applyResults);
-        }
+        var applyResults = Block.ApplyOperationsTo(this.Block.wsPostAI, commands).CollectValue();
+        // if (applyResults.IfAtLeastOneFail())
+        // {
+        //     // 进入 Error 状态
+        //     newSelf = new ErrorBlockStatus(this.Block);
+        //     this.Block.BlockContent = rawContent;
+        //     this.Block.AddOrSetMetaData("Error", applyResults.FindAllFail());
+        //     this.Block.wsTemp = null;
+        //     //TODO 这一块的逻辑可能还改一改， 目前全部删掉了
+        //     this.Block.wsPostAI = null; // 失败了，不保留可能不一致的状态
+        //     this.Block.wsPostUser = null; // 同样不设置
+        //     Log.Error($"Block '{this.Block.BlockId}': Finalization failed. StatusCode set to Error.");
+        //     return (newSelf, applyResults);
+        // }
 
         this.Block.BlockContent = rawContent;
         this.PendingUserCommands.Clear();
@@ -301,7 +306,7 @@ public class ConflictBlockStatus(
     /// <param name="resolvedCommands">用户提交的最终指令列表。</param>
     /// <returns>如果最终化成功则为 true，否则 false。</returns>
     [HasBlockStateTransition]
-    internal (OneOf<IdleBlockStatus, ErrorBlockStatus> blockStatus, List<OperationResult> results)
+    internal (IdleBlockStatus block, Result<IEnumerable<AtomicOperation>> atomicOp)
         FinalizeConflictResolution(string rawContent, List<AtomicOperation> resolvedCommands)
     {
         var newSelf = new LoadingBlockStatus(this.Block);

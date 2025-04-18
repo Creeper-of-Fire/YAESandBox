@@ -253,7 +253,7 @@ public class WorkflowService(
 
 
             // === 格式化最终的 rawText (可以包含所有流式块或其他信息) ===
-            rawTextResult = string.Join("", streamChunks); 
+            rawTextResult = string.Join("", streamChunks);
             //     JsonSerializer.Serialize(new
             // {
             //     workflowName = request.WorkflowName,
@@ -273,19 +273,18 @@ public class WorkflowService(
         }
         finally
         {
-            
         }
+
         var blockStatus = await this.blockWritServices.HandleWorkflowCompletionAsync(blockId, request.RequestId,
-            success,
-            rawTextResult, generatedCommands, outputVariables);
+            success, rawTextResult, generatedCommands, outputVariables);
         Log.Debug($"Block '{blockId}': 已通知 BlockManager 工作流完成状态: Success={success}");
 
         // 发送最终完成状态 (如果需要单独通知)
         var completeDto = new DisplayUpdateDto(RequestId: request.RequestId, ContextBlockId: blockId,
             StreamingStatus: success ? StreamStatus.Complete : StreamStatus.Error, Content: rawTextResult,
             UpdateMode: UpdateMode.FullSnapshot);
-        if (blockStatus != null)
-            await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, blockStatus.StatusCode);
+        if (blockStatus.IsSuccess)
+            await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, blockStatus.Value.StatusCode);
         await this.notifierService.NotifyDisplayUpdateAsync(completeDto);
     }
 

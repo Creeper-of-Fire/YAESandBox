@@ -2,6 +2,7 @@
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services;
 using YAESandBox.Core.Action;
+using YAESandBox.Core.Block;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend; // For mapping DTO to Core object
@@ -68,15 +69,15 @@ public class AtomicController(IBlockWritService writServices, IBlockReadService 
         // 3. 根据结果返回相应的状态码
         return result switch
         {
-            AtomicExecutionResult.Executed => this.Ok("操作已成功执行。"), // 200 OK
-            AtomicExecutionResult.ExecutedAndQueued => this.Accepted(null as string, // 使用 Accepted(string?, string?) 重载
+            (ResultCode.Success, BlockStatusCode.Loading) => this.Ok("操作已成功执行。"), // 200 OK
+            (ResultCode.Success, BlockStatusCode.Idle) => this.Accepted(null as string, // 使用 Accepted(string?, string?) 重载
                 $"操作已成功执行。部分或全部操作已为 Block '{blockId}' (Loading 状态) 排队等待。"),
             // 202 Accepted
-            AtomicExecutionResult.NotFound => this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"),
+            (ResultCode.NotFound, _) => this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"),
             // 404 Not Found
-            AtomicExecutionResult.ConflictState => this.Conflict($"Block '{blockId}' 处于冲突状态。请先解决冲突。"),
+            (ResultCode.Error,BlockStatusCode.ResolvingConflict) => this.Conflict($"Block '{blockId}' 处于冲突状态。请先解决冲突。"),
             // 409 Conflict
-            AtomicExecutionResult.Error => this.StatusCode(StatusCodes.Status500InternalServerError, "执行期间发生错误。"),
+            (ResultCode.Error,BlockStatusCode.Error) => this.StatusCode(StatusCodes.Status500InternalServerError, "执行期间发生错误。"),
             // 500 Internal Server Error
             _ => this.StatusCode(StatusCodes.Status500InternalServerError, "发生意外的结果。")
             // 500 Internal Server Error for unknown enum value
@@ -154,35 +155,4 @@ public class AtomicController(IBlockWritService writServices, IBlockReadService 
     //
     //     return coreOps;
     // }
-}
-
-/// <summary>
-/// 表示原子操作执行结果的枚举。
-/// </summary>
-public enum AtomicExecutionResult
-{
-    /// <summary>
-    /// 操作已成功执行 (通常在 Idle 状态下)。
-    /// </summary>
-    Executed,
-
-    /// <summary>
-    /// 操作已成功执行并且/或者已暂存 (通常在 Loading 状态下)。
-    /// </summary>
-    ExecutedAndQueued,
-
-    /// <summary>
-    /// 目标 Block 未找到。
-    /// </summary>
-    NotFound,
-
-    /// <summary>
-    /// Block 当前处于冲突状态，无法执行操作。
-    /// </summary>
-    ConflictState,
-
-    /// <summary>
-    /// 执行过程中发生错误。
-    /// </summary>
-    Error
 }

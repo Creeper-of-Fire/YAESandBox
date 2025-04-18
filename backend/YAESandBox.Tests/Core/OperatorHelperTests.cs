@@ -40,8 +40,7 @@ public class OperatorHelperTests
         System.Action act = () => OperatorHelper.StringToOperator(invalidOp);
 
         // Act & Assert
-        act.Should().Throw<ArgumentException>()
-            .WithMessage($"Quantity 不支持 '{invalidOp}'*"); // 检查异常消息
+        act.Should().Throw<ArgumentException>().WithMessage($"不支持 '{invalidOp}'*"); // 检查异常消息
     }
 
     // --- 测试 ChangedValue ---
