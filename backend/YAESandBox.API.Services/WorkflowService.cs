@@ -3,8 +3,6 @@
 using System.Text.Json;
 using YAESandBox.API.DTOs;
 using YAESandBox.Core.Action;
-using YAESandBox.Core.Block;
-using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
 
@@ -22,10 +20,7 @@ public class WorkflowService(
     private INotifierService notifierService { get; } = notifierService;
     // private readonly IAiService _aiService; // 未来可能注入 AI 服务
 
-    /// <summary>
-    /// 触发主工作流
-    /// </summary>
-    /// <param name="request"></param>
+    ///<inheritdoc/>
     public async Task HandleMainWorkflowTriggerAsync(TriggerMainWorkflowRequestDto request)
     {
         Log.Info(
@@ -44,13 +39,7 @@ public class WorkflowService(
         _ = Task.Run(() => this.StartMainExecuteWorkflowAsync(request, childBlock.Block.BlockId));
     }
 
-    /// <summary>
-    /// 处理来自客户端的微工作流触发请求。
-    /// 这*不会*创建一个新的 Block 并启动一个异步的工作流执行。
-    /// 主要用于生成 UI 建议或信息，通过 DisplayUpdateDto 发送给特定 TargetElementId。
-    /// </summary>
-    /// <param name="request">微工作流触发请求 DTO。</param>
-    /// <returns>一个 Task 代表异步操作。</returns>
+    ///<inheritdoc/>
     public Task HandleMicroWorkflowTriggerAsync(TriggerMicroWorkflowRequestDto request)
     {
         Log.Info(
@@ -90,11 +79,6 @@ public class WorkflowService(
         }
     }
 
-    /// <summary>
-    /// 后台执行微工作流的模拟逻辑。
-    /// 微工作流不修改 Block 状态，主要通过 DisplayUpdateDto 更新 UI 元素。
-    /// </summary>
-    /// <param name="request">原始触发请求。</param>
     private async Task ExecuteMicroWorkflowAsync(TriggerMicroWorkflowRequestDto request)
     {
         Log.Debug(
@@ -276,7 +260,7 @@ public class WorkflowService(
         }
 
         var blockStatus = await this.blockWritServices.HandleWorkflowCompletionAsync(blockId, request.RequestId,
-            success, rawTextResult, generatedCommands, outputVariables);
+            success, rawTextResult, generatedCommands.ToAtomicOperationRequests(), outputVariables);
         Log.Debug($"Block '{blockId}': 已通知 BlockManager 工作流完成状态: Success={success}");
 
         // 发送最终完成状态 (如果需要单独通知)
@@ -288,13 +272,14 @@ public class WorkflowService(
         await this.notifierService.NotifyDisplayUpdateAsync(completeDto);
     }
 
+    ///<inheritdoc/>
     public async Task HandleConflictResolutionAsync(ResolveConflictRequestDto request)
     {
         Log.Info($"收到冲突解决请求: RequestId={request.RequestId}, BlockId={request.BlockId}");
 
         await this.blockWritServices.ApplyResolvedCommandsAsync(
             request.BlockId,
-            request.ResolvedCommands.ToAtomicOperations());
+            request.ResolvedCommands);
 
         Log.Info($"Block '{request.BlockId}': 已提交冲突解决方案。");
     }

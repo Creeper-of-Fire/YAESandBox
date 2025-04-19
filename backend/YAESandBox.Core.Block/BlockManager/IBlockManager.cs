@@ -1,6 +1,5 @@
 ﻿using FluentResults;
 using OneOf;
-using OneOf.Types;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Depend;
@@ -111,5 +110,16 @@ namespace YAESandBox.Core.Block
         Task<OneOf<(IdleBlockStatus, FluentResults.Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>
             HandleWorkflowCompletionAsync(string blockId, bool success, string rawText, List<AtomicOperation> firstPartyCommands,
                 Dictionary<string, object?> outputVariables);
+
+
+        /// <summary>
+        /// 更新指定 Block 的内容和/或元数据。
+        /// 仅在 Block 处于 Idle 状态时允许操作。
+        /// </summary>
+        /// <param name="blockId">要更新的 Block ID。</param>
+        /// <param name="newContent">新的 Block 内容。如果为 null 则不更新。</param>
+        /// <param name="metadataUpdates">要更新或移除的元数据。Key 为元数据键，Value 为新值（null 表示移除）。如果为 null 则不更新。</param>
+        /// <returns>更新操作的结果。</returns>
+        Task<BlockResultCode> UpdateBlockDetailsAsync(string blockId, string? newContent, Dictionary<string, string?>? metadataUpdates);
     }
 }

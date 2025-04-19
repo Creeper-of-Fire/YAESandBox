@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using YAESandBox.Core.Action; // For AtomicOperation, OperatorHelper
-using YAESandBox.Core.Block; // For BlockStatusCode
-using YAESandBox.Core.State; // For EntityType (可能需要)
+// For AtomicOperation, OperatorHelper
+using YAESandBox.Depend; // For BlockStatusCode
+
+// For EntityType (可能需要)
 
 namespace YAESandBox.API.DTOs;
 

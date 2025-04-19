@@ -1,13 +1,13 @@
 ﻿// --- START OF FILE IntegrationTestBase.cs ---
-using System.Net.Http.Json; // For ReadFromJsonAsync
+
+// For ReadFromJsonAsync
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.SignalR.Client;
 using Microsoft.Extensions.DependencyInjection;
-using YAESandBox.API.DTOs; // Add your DTO namespaces
+// Add your DTO namespaces
 using YAESandBox.Core; // For TypedIdConverter if needed in client serialization
-using Xunit;
 
 namespace YAESandBox.Tests.Integration;
 

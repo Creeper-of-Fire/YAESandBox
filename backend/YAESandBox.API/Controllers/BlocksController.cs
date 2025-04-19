@@ -96,4 +96,49 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     // 现在不会根据切换页面来发送信号了，页面状态仅在前端进行维护
     // 前端会将“当前选择路径的最底层block”通过“后端盲存”进行持久化，并且在启动时自行读取盲存数据解析路径
     // 在启动时，前端可能会调用后端的GetPathToRoot来生成路径，或者这个逻辑会被挪动到前端
+    
+     /// <summary>
+    /// 部分更新指定 Block 的内容和/或元数据。
+    /// 此操作仅在 Block 处于 Idle 状态时被允许。
+    /// </summary>
+    /// <param name="blockId">要更新的 Block 的 ID。</param>
+    /// <param name="updateDto">包含要更新的字段（Content, MetadataUpdates）的请求体。
+    /// 省略的字段或值为 null 的字段将不会被修改（MetadataUpdates 中值为 null 表示移除该键）。</param>
+    /// <returns>无内容响应表示成功。</returns>
+    /// <response code="204">更新成功。</response>
+    /// <response code="400">请求体无效或未提供任何更新。</response>
+    /// <response code="404">未找到具有指定 ID 的 Block。</response>
+    /// <response code="409">Block 不处于 Idle 状态，无法修改。</response>
+    /// <response code="500">更新时发生内部服务器错误。</response>
+    [HttpPatch("{blockId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status409Conflict)] // 使用 409 表示状态冲突
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateBlockDetails(string blockId, [FromBody] UpdateBlockDetailsDto updateDto)
+    {
+        if (!ModelState.IsValid) // 基本模型验证
+        {
+            return BadRequest(ModelState);
+        }
+
+        // 可以在这里添加一个检查，确保至少提供了一项更新
+        if (updateDto.Content == null && (updateDto.MetadataUpdates == null || !updateDto.MetadataUpdates.Any()))
+        {
+             // return BadRequest("必须提供 Content 或 MetadataUpdates 中的至少一项来进行更新。");
+             // 或者根据服务层的行为，允许无操作请求并返回 204
+        }
+
+        var result = await this.WritServices.UpdateBlockDetailsAsync(blockId, updateDto);
+
+        return result switch
+        {
+            BlockResultCode.Success => this.NoContent(),                       // 204
+            BlockResultCode.NotFound => this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"), // 404
+            BlockResultCode.InvalidState => this.Conflict($"Block '{blockId}' 当前状态不允许修改内容或元数据。请确保其处于 Idle 状态。"), // 409
+            BlockResultCode.InvalidInput => this.BadRequest("无效的更新操作。"), // 400 (如果服务层返回这个)
+            _ => this.StatusCode(StatusCodes.Status500InternalServerError, "更新 Block 时发生意外错误。") // 500
+        };
+    }
 }

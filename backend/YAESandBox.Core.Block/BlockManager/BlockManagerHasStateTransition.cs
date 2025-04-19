@@ -59,7 +59,7 @@ public partial class BlockManager
 
             if (block is not ConflictBlockStatus conflictBlock)
             {
-                return NormalWarning.InvalidState(
+                return NormalHandledIssue.InvalidState(
                     $"尝试应用已解决指令，但 Block '{blockId}' 状态为 {block.StatusCode} (非 ResolvingConflict)。已忽略。").ToResult();
             }
 
@@ -93,7 +93,7 @@ public partial class BlockManager
 
             if (blockStatus is not LoadingBlockStatus block)
             {
-                return NormalWarning.InvalidState($"收到 Block '{blockId}' 的工作流完成回调，但其状态为 {blockStatus.StatusCode} (非 Loading)。可能重复或过时。");
+                return NormalHandledIssue.InvalidState($"收到 Block '{blockId}' 的工作流完成回调，但其状态为 {blockStatus.StatusCode} (非 Loading)。可能重复或过时。");
             }
 
             if (!success) // Workflow failed

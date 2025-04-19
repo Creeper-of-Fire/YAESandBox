@@ -1,6 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-using YAESandBox.Core.Block;
-using YAESandBox.Core.State; // For BlockStatusCode
+﻿using YAESandBox.Depend;
+
+// For BlockStatusCode
 
 namespace YAESandBox.API.DTOs;
 

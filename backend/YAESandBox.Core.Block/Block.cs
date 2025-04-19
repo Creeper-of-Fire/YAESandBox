@@ -6,7 +6,7 @@ using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
-using static YAESandBox.Core.Action.OperationWarning;
+using static YAESandBox.Core.Action.OperationHandledIssue;
 
 namespace YAESandBox.Core.Block;
 
@@ -112,7 +112,7 @@ public class Block : NodeBlock
 
     private readonly Dictionary<string, string> _metadata = new();
 
-    public void AddOrSetMetaData(string key, object value)
+    internal void AddOrSetMetaData(string key, object value)
     {
         string jsonValue = value as string ?? JsonSerializer.Serialize(value);
         if (this._metadata.ContainsKey(key))
@@ -120,6 +120,13 @@ public class Block : NodeBlock
         else
             this._metadata.TryAdd(key, jsonValue);
     }
+
+    /// <summary>
+    /// (供内部调用) 移除指定的元数据键。
+    /// </summary>
+    /// <param name="key">要移除的键。</param>
+    /// <returns>如果成功移除则为 true，否则为 false（例如键不存在）。</returns>
+    internal bool RemoveMetaData(string key) => this._metadata.Remove(key);
 
     /// <summary>
     /// (仅父 Block 存储) 触发子 Block 时使用的参数。只会保存一个，不会为不同的子 Block 保存不同的参数。

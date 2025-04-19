@@ -1,16 +1,13 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using FluentResults;
 using Nito.AsyncEx;
-using OneOf;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
 
 namespace YAESandBox.Core.Block;
-
 
 public partial class BlockManager : IBlockManager
 {
@@ -104,6 +101,73 @@ public partial class BlockManager : IBlockManager
             }
 
             return newChildBlock;
+        }
+    }
+
+    /// <inheritdoc/>
+    public async Task<BlockResultCode> UpdateBlockDetailsAsync(string blockId, string? newContent,
+        Dictionary<string, string?>? metadataUpdates)
+    {
+        using (await this.GetLockForBlock(blockId).LockAsync())
+        {
+            if (!this.blocks.TryGetValue(blockId, out var blockStatus))
+            {
+                return BlockResultCode.NotFound;
+            }
+
+            // *** 关键：只允许在 Idle 状态下修改 ***
+            if (blockStatus is not IdleBlockStatus idleBlock)
+            {
+                Log.Warning($"尝试修改 Block '{blockId}' 的内容/元数据，但其状态为 {blockStatus.StatusCode} (非 Idle)。操作被拒绝。");
+                return BlockResultCode.InvalidState; // 返回新的状态码
+            }
+
+            bool updated = false;
+
+            // 更新 Content
+            if (newContent != null)
+            {
+                idleBlock.Block.BlockContent = newContent;
+                Log.Debug($"Block '{blockId}': BlockContent 已更新。");
+                updated = true;
+            }
+
+            // 更新 Metadata
+            if (metadataUpdates != null)
+            {
+                foreach (var kvp in metadataUpdates)
+                {
+                    if (kvp.Value == null) // 值为 null 表示移除
+                    {
+                        if (!idleBlock.Block.RemoveMetaData(kvp.Key)) continue;
+                        Log.Debug($"Block '{blockId}': 元数据 '{kvp.Key}' 已移除。");
+                    }
+                    else // 非 null 值表示添加或更新
+                    {
+                        // 使用现有的 AddOrSetMetaData
+                        idleBlock.Block.AddOrSetMetaData(kvp.Key, kvp.Value);
+                        Log.Debug($"Block '{blockId}': 元数据 '{kvp.Key}' 已设置。");
+                    }
+
+                    updated = true;
+                }
+            }
+
+            if (updated)
+            {
+                Log.Info($"Block '{blockId}': 内容或元数据已成功更新。");
+                // 可以在这里添加持久化逻辑，如果需要立即保存这些更改
+                // await PersistBlockAsync(idleBlock.Block);
+
+                // 决定是否发送通知。目前我们不发送 SignalR 通知。
+                // 如果需要，可以在此调用 notifierService.NotifyStateUpdateSignal(blockId);
+            }
+            else
+            {
+                Log.Debug($"Block '{blockId}': 收到更新请求，但没有提供有效的更新内容或元数据。");
+            }
+
+            return BlockResultCode.Success;
         }
     }
 
@@ -828,17 +892,17 @@ public partial class BlockManager : IBlockManager
     #endregion
 }
 
-public record BlockStatusError(ResultCode Code, string Message, BlockStatus? FailedBlockStatus) : LazyInitError(Message)
+public record BlockStatusError(BlockResultCode Code, string Message, BlockStatus? FailedBlockStatus) : LazyInitError(Message)
 {
     public static BlockStatusError NotFound(BlockStatus? block, string message)
-        => new(ResultCode.NotFound, message, block);
+        => new(BlockResultCode.NotFound, message, block);
 
     public static BlockStatusError Conflict(BlockStatus block, string message)
-        => new(ResultCode.Conflict, message, block);
+        => new(BlockResultCode.Conflict, message, block);
 
     public static BlockStatusError InvalidInput(BlockStatus block, string message)
-        => new(ResultCode.InvalidInput, message, block);
+        => new(BlockResultCode.InvalidInput, message, block);
 
     public static BlockStatusError Error(BlockStatus block, string message)
-        => new(ResultCode.Error, message, block);
+        => new(BlockResultCode.Error, message, block);
 }

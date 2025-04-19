@@ -1,6 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using FluentResults;
-using YAESandBox.Core.State.Entity;
+﻿using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
 
 // For EntityType, Operator
@@ -139,18 +137,18 @@ public readonly record struct AtomicOperation
 /// <param name="Code"></param>
 /// <param name="Message"></param>
 /// <param name="FailedOperation"></param>
-public record OperationWarning(ResultCode Code, string Message, AtomicOperation FailedOperation)
-    : LazyInitWarning(Message)
+public record OperationHandledIssue(BlockResultCode Code, string Message, AtomicOperation FailedOperation)
+    : LazyInitHandledIssue(Message)
 {
-    public static OperationWarning NotFound(AtomicOperation operation, string message)
-        => new(ResultCode.NotFound, message, operation);
+    public static OperationHandledIssue NotFound(AtomicOperation operation, string message)
+        => new(BlockResultCode.NotFound, message, operation);
 
-    public static OperationWarning Conflict(AtomicOperation operation, string message)
-        => new(ResultCode.Conflict, message, operation);
+    public static OperationHandledIssue Conflict(AtomicOperation operation, string message)
+        => new(BlockResultCode.Conflict, message, operation);
 
-    public static OperationWarning InvalidInput(AtomicOperation operation, string message)
-        => new(ResultCode.InvalidInput, message, operation);
+    public static OperationHandledIssue InvalidInput(AtomicOperation operation, string message)
+        => new(BlockResultCode.InvalidInput, message, operation);
 
-    public static OperationWarning Error(AtomicOperation operation, string message)
-        => new(ResultCode.Error, message, operation);
+    public static OperationHandledIssue Error(AtomicOperation operation, string message)
+        => new(BlockResultCode.Error, message, operation);
 }

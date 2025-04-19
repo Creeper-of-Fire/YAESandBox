@@ -4,12 +4,8 @@ using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using System;
-using System.IO;
 using System.Text;
 using System.Text.Json;
-using System.Threading.Tasks;
-using Xunit;
 using YAESandBox.API.Controllers;
 using YAESandBox.Core.Block; // For BlockManager
 

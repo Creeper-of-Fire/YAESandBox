@@ -1,0 +1,17 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\YAESandBox.API.DTOs\YAESandBox.API.DTOs.csproj" />
+      <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj" />
+      <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" />
+      <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
+    </ItemGroup>
+
+</Project>

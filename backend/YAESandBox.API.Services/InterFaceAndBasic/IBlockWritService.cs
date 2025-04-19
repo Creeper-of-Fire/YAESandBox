@@ -1,5 +1,5 @@
 ﻿using FluentResults;
-using YAESandBox.API.Controllers;
+using YAESandBox.API.DTOs;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.Block;
 using YAESandBox.Core.State;
@@ -23,14 +23,15 @@ public interface IBlockWritService
     /// <param name="blockId"></param>
     /// <param name="operations"></param>
     /// <returns></returns>
-    Task<(ResultCode resultCode, BlockStatusCode blockStatusCode)> EnqueueOrExecuteAtomicOperationsAsync(string blockId, List<AtomicOperation> operations);
+    Task<(BlockResultCode resultCode, BlockStatusCode blockStatusCode)> EnqueueOrExecuteAtomicOperationsAsync(string blockId,
+        List<AtomicOperationRequestDto> operations);
 
     /// <summary>
     /// 应用用户解决冲突后提交的指令列表。
     /// </summary>
     /// <param name="blockId">需要应用指令的 Block ID。</param>
     /// <param name="resolvedCommands">解决冲突后的指令列表。</param>
-    Task ApplyResolvedCommandsAsync(string blockId, List<AtomicOperation> resolvedCommands);
+    Task ApplyResolvedCommandsAsync(string blockId, List<AtomicOperationRequestDto> resolvedCommands);
 
     // --- Workflow Interaction Methods ---
     /// <summary>
@@ -52,5 +53,14 @@ public interface IBlockWritService
     /// <param name="firstPartyCommands">工作流生成的原子指令。</param>
     /// <param name="outputVariables">工作流输出的变量 (可选，用于元数据等)。</param>
     Task<Result<BlockStatus>> HandleWorkflowCompletionAsync(string blockId, string requestId, bool success, string rawText,
-        List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables);
+        List<AtomicOperationRequestDto> firstPartyCommands, Dictionary<string, object?> outputVariables);
+
+    /// <summary>
+    /// 部分更新指定 Block 的内容和/或元数据。
+    /// 仅在 Block 处于 Idle 状态时允许操作。
+    /// </summary>
+    /// <param name="blockId">要更新的 Block ID。</param>
+    /// <param name="updateDto">包含要更新内容的 DTO。</param>
+    /// <returns>更新操作的结果。</returns>
+    Task<BlockResultCode> UpdateBlockDetailsAsync(string blockId, UpdateBlockDetailsDto updateDto);
 }

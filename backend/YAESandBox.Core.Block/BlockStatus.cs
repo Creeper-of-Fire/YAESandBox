@@ -6,33 +6,6 @@ using YAESandBox.Depend;
 
 namespace YAESandBox.Core.Block;
 
-/// <summary>
-/// 表示 Block 的不同状态。
-/// </summary>
-public enum BlockStatusCode
-{
-    /// <summary>
-    /// Block 正在由一等公民工作流处理（例如 AI 生成内容、执行指令）。
-    /// 针对此 Block 的修改将被暂存。
-    /// </summary>
-    Loading,
-
-    /// <summary>
-    /// Block 已生成，处于空闲状态，可以接受修改或作为新 Block 的父级。
-    /// </summary>
-    Idle,
-
-    /// <summary>
-    /// 工作流执行完毕，但检测到与暂存的用户指令存在冲突，等待解决。
-    /// </summary>
-    ResolvingConflict,
-
-    /// <summary>
-    /// Block 处理过程中发生错误。
-    /// </summary>
-    Error
-}
-
 public interface IBlockStatus
 {
     public Block Block { get; }

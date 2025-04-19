@@ -1,10 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services;
-using YAESandBox.Core.Action;
-using YAESandBox.Core.Block;
-using YAESandBox.Core.State;
-using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend; // For mapping DTO to Core object
 
 namespace YAESandBox.API.Controllers;
@@ -42,11 +38,11 @@ public class AtomicController(IBlockWritService writServices, IBlockReadService 
     public async Task<IActionResult> ExecuteAtomicOperations(string blockId, [FromBody] BatchAtomicRequestDto request)
     {
         // 1. 使用辅助方法将 DTO 映射为核心原子操作对象
-        List<AtomicOperation> coreOperations;
+        List<AtomicOperationRequestDto> coreOperations;
         try
         {
             // 调用 DTO 辅助类中的扩展方法
-            coreOperations = request.Operations.ToAtomicOperations();
+            coreOperations = request.Operations;
         }
         // 捕获由 ToAtomicOperations (及其调用的 ToAtomicOperation 和 AtomicOperation 工厂方法)
         // 抛出的验证或解析异常 (例如无效的操作类型、操作符、空ID等)
@@ -69,15 +65,15 @@ public class AtomicController(IBlockWritService writServices, IBlockReadService 
         // 3. 根据结果返回相应的状态码
         return result switch
         {
-            (ResultCode.Success, BlockStatusCode.Loading) => this.Ok("操作已成功执行。"), // 200 OK
-            (ResultCode.Success, BlockStatusCode.Idle) => this.Accepted(null as string, // 使用 Accepted(string?, string?) 重载
+            (BlockResultCode.Success, BlockStatusCode.Loading) => this.Ok("操作已成功执行。"), // 200 OK
+            (BlockResultCode.Success, BlockStatusCode.Idle) => this.Accepted(null as string, // 使用 Accepted(string?, string?) 重载
                 $"操作已成功执行。部分或全部操作已为 Block '{blockId}' (Loading 状态) 排队等待。"),
             // 202 Accepted
-            (ResultCode.NotFound, _) => this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"),
+            (BlockResultCode.NotFound, _) => this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"),
             // 404 Not Found
-            (ResultCode.Error,BlockStatusCode.ResolvingConflict) => this.Conflict($"Block '{blockId}' 处于冲突状态。请先解决冲突。"),
+            (BlockResultCode.Error,BlockStatusCode.ResolvingConflict) => this.Conflict($"Block '{blockId}' 处于冲突状态。请先解决冲突。"),
             // 409 Conflict
-            (ResultCode.Error,BlockStatusCode.Error) => this.StatusCode(StatusCodes.Status500InternalServerError, "执行期间发生错误。"),
+            (BlockResultCode.Error,BlockStatusCode.Error) => this.StatusCode(StatusCodes.Status500InternalServerError, "执行期间发生错误。"),
             // 500 Internal Server Error
             _ => this.StatusCode(StatusCodes.Status500InternalServerError, "发生意外的结果。")
             // 500 Internal Server Error for unknown enum value

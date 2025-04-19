@@ -1,5 +1,4 @@
-﻿using Xunit;
-using FluentAssertions;
+﻿using FluentAssertions;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 

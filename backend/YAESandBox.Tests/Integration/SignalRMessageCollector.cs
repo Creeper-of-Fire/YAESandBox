@@ -1,9 +1,6 @@
 ﻿// --- START OF FILE SignalRMessageCollector.cs ---
 
 using System.Collections.Concurrent;
-using System.Text.Json;
-using System.Threading;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.SignalR.Client;
 using Xunit.Abstractions;
 using YAESandBox.API.DTOs;

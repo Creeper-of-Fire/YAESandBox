@@ -1,14 +1,7 @@
 ﻿// --- START OF FILE MicroWorkflowIntegrationTests.cs ---
-using System.Net;
-using System.Net.Http.Json;
-using System.Text.Json;
-using System.Text.Json.Serialization;
-using Microsoft.AspNetCore.SignalR.Client;
-using YAESandBox.API.DTOs;
-using YAESandBox.Core.Block; // For BlockStatusCode
-using Xunit;
+
+// For BlockStatusCode
 using Xunit.Abstractions;
-using YAESandBox.Core;
 
 namespace YAESandBox.Tests.Integration;
 

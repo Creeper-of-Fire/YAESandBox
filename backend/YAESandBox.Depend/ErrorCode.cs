@@ -3,7 +3,7 @@ using FluentResults;
 
 namespace YAESandBox.Depend;
 
-public enum ResultCode
+public enum BlockResultCode
 {
     /// <summary>
     /// 成功
@@ -11,7 +11,7 @@ public enum ResultCode
     Success,
 
     /// <summary>
-    /// 目标未找到
+    /// 目标Block未找到
     /// </summary>
     NotFound,
 
@@ -21,7 +21,7 @@ public enum ResultCode
     InvalidInput,
 
     /// <summary>
-    /// 状态无效
+    /// Block状态无效（如在不允许修改时修改）
     /// </summary>
     InvalidState,
 
@@ -157,7 +157,7 @@ public abstract record LazyInitError(string Message) : IError
     public List<IError> Reasons => field ??= [];
 }
 
-public abstract record LazyInitWarning(string Message) : IWarning
+public abstract record LazyInitHandledIssue(string Message) : IHandledIssue
 {
     public Result ToResult() => Result.Ok().WithReason(this);
     public Result<T> ToResult<T>() => Result.Ok().WithReason(this);
@@ -175,27 +175,29 @@ public abstract record LazyInitWarning(string Message) : IWarning
     public List<IReason> Reasons => field ??= [];
 }
 
-public record NormalWarning(ResultCode Code, string Message) : LazyInitWarning(Message)
+public record NormalHandledIssue(BlockResultCode Code, string Message) : LazyInitHandledIssue(Message)
 {
-    public static NormalWarning NotFound(string message) => new(ResultCode.NotFound, message);
-    public static NormalWarning Conflict(string message) => new(ResultCode.Conflict, message);
-    public static NormalWarning InvalidInput(string message) => new(ResultCode.InvalidInput, message);
-    public static NormalWarning Error(string message) => new(ResultCode.Error, message);
-    public static NormalWarning InvalidState(string message) => new(ResultCode.InvalidState, message);
+    public static NormalHandledIssue NotFound(string message) => new(BlockResultCode.NotFound, message);
+    public static NormalHandledIssue Conflict(string message) => new(BlockResultCode.Conflict, message);
+    public static NormalHandledIssue InvalidInput(string message) => new(BlockResultCode.InvalidInput, message);
+    public static NormalHandledIssue Error(string message) => new(BlockResultCode.Error, message);
+    public static NormalHandledIssue InvalidState(string message) => new(BlockResultCode.InvalidState, message);
 }
-
-public interface IWarning : IReason
+/// <summary>
+/// 错误已经被处理，但是相关的信息依旧需要得到保留
+/// </summary>
+public interface IHandledIssue : IReason
 {
     public List<IReason> Reasons { get; }
 }
 
 public static class ErrorHelper
 {
-    public static IEnumerable<IWarning> Warning(this IResultBase resultBase) =>
-        resultBase.Reasons.OfType<IWarning>();
+    public static IEnumerable<IHandledIssue> HandledIssue(this IResultBase resultBase) =>
+        resultBase.Reasons.OfType<IHandledIssue>();
 
-    public static bool HasWarning<TWarning>(this IResultBase resultBase) where TWarning : IWarning =>
-        resultBase.Warning().OfType<TWarning>().Any();
+    public static bool HasHandledIssue<THandledIssue>(this IResultBase resultBase) where THandledIssue : IHandledIssue =>
+        resultBase.HandledIssue().OfType<THandledIssue>().Any();
 
     /// <summary>
     /// 选择成功的 FluentResults.Result
@@ -203,7 +205,7 @@ public static class ErrorHelper
     /// <param name="results"></param>
     /// <returns></returns>
     public static IEnumerable<T> SelectSuccessValue<T>(this IEnumerable<Result<T>> results) =>
-        results.Where(op => !op.Errors.Any() && !op.Warning().Any()).Select(op => op.Value);
+        results.Where(op => !op.Errors.Any() && !op.HandledIssue().Any()).Select(op => op.Value);
 
     // /// <summary>
     // /// 使用FluentResults.Result.Merge，合并 Result 列表 为一个Result。
@@ -240,4 +242,36 @@ public static class ErrorHelper
 
         return finalResult;
     }
+}
+
+/// <summary>
+/// 表示 Block 的不同状态。
+/// </summary>
+public enum BlockStatusCode
+{
+    /// <summary>
+    /// Block 正在由一等公民工作流处理（例如 AI 生成内容、执行指令）。
+    /// 针对此 Block 的修改将被暂存。
+    /// </summary>
+    Loading,
+
+    /// <summary>
+    /// Block 已生成，处于空闲状态，可以接受修改或作为新 Block 的父级。
+    /// </summary>
+    Idle,
+
+    /// <summary>
+    /// 工作流执行完毕，但检测到与暂存的用户指令存在冲突，等待解决。
+    /// </summary>
+    ResolvingConflict,
+
+    /// <summary>
+    /// Block 处理过程中发生错误。
+    /// </summary>
+    Error,
+
+    /// <summary>
+    /// Block 不存在。某些地方强制要求返回一个返回值，但是没找到block又不想返回null时使用
+    /// </summary>
+    NotFound
 }

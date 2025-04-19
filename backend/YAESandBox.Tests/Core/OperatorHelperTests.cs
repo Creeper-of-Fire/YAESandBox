@@ -1,8 +1,8 @@
-﻿using Xunit;
-using FluentAssertions;
+﻿using FluentAssertions;
 using YAESandBox.Core.State.Entity;
-using System.Collections.Generic; // 需要 для List 和 Dictionary
-using System.Numerics; // 需要 для INumber<T>
+// 需要 для List 和 Dictionary
+
+// 需要 для INumber<T>
 
 namespace YAESandBox.Core.Tests;
 

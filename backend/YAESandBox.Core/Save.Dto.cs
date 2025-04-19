@@ -1,8 +1,9 @@
 ﻿// --- Persistence DTOs ---
 
 using System.Text.Json.Serialization;
-using YAESandBox.Core.State; // For GameState (conceptually)
-using YAESandBox.Core.State.Entity; // For EntityType, BaseEntity (for CoreFields)
+// For GameState (conceptually)
+
+// For EntityType, BaseEntity (for CoreFields)
 
 namespace YAESandBox.Core; // Namespace matches BlockManager persistence location
 

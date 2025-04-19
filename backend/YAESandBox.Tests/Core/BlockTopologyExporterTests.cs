@@ -1,10 +1,6 @@
 ﻿// --- START OF FILE BlockTopologyExporterTests.cs ---
 using FluentAssertions;
-using Xunit;
 using YAESandBox.Core.Block;
-using YAESandBox.Core.State;
-using System.Collections.Generic;
-using System.Text.Json;
 
 namespace YAESandBox.Tests.Core.BlockTopologyExporterTests;
 

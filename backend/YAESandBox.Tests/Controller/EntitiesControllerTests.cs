@@ -3,10 +3,6 @@
 using FluentAssertions;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
-using Xunit;
 using YAESandBox.API.Controllers;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services;
