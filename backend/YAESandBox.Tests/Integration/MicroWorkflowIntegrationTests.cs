@@ -20,7 +20,7 @@ public class MicroWorkflowIntegrationTests(ITestOutputHelper output) : Integrati
 //         // 只需要监听 DisplayUpdate，以及可选的 BlockStatusUpdate/StateUpdateSignal 用于验证 *没有* 收到
 //         collector.RegisterHandler<DisplayUpdateDto>("ReceiveDisplayUpdate");
 //         collector.RegisterHandler<BlockStatusUpdateDto>("ReceiveBlockStatusUpdate");
-//         collector.RegisterHandler<StateUpdateSignalDto>("ReceiveBlockUpdateSignal");
+//         collector.RegisterHandler<BlockUpdateSignalDto>("ReceiveBlockUpdateSignal");
 //
 //         await ConnectHubAsync(connection);
 //         collector.ClearAllMessages();
@@ -104,7 +104,7 @@ public class MicroWorkflowIntegrationTests(ITestOutputHelper output) : Integrati
 //               _output.WriteLine($"微工作流: 确认没有收到 Block '{contextBlockId}' 的状态更新。");
 //
 //
-//             bool receivedStateUpdateSignal = await collector.DidNotReceiveMessageAsync<StateUpdateSignalDto>(
+//             bool receivedStateUpdateSignal = await collector.DidNotReceiveMessageAsync<BlockUpdateSignalDto>(
 //                 msg => msg.BlockId == contextBlockId, TimeSpan.Zero);
 //              Assert.True(receivedStateUpdateSignal, $"不应收到 Block '{contextBlockId}' 的状态信号。");
 //              _output.WriteLine($"微工作流: 确认没有收到 Block '{contextBlockId}' 的状态信号。");

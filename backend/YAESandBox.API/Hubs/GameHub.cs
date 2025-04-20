@@ -38,7 +38,7 @@ public interface IGameClient
     /// </summary>
     /// <param name="signal"></param>
     /// <returns></returns>
-    Task ReceiveBlockUpdateSignal(StateUpdateSignalDto signal);
+    Task ReceiveBlockUpdateSignal(BlockUpdateSignalDto signal);
 
     /// <summary>
     /// Block的非WorldState/GameState内容存在更新，建议重新获取

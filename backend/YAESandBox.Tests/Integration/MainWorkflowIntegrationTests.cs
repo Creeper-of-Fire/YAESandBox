@@ -38,7 +38,7 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
     //     // 注册需要监听的消息类型
     //     collector.RegisterHandler<BlockStatusUpdateDto>("ReceiveBlockStatusUpdate");
     //     collector.RegisterHandler<DisplayUpdateDto>("ReceiveDisplayUpdate");
-    //     collector.RegisterHandler<StateUpdateSignalDto>("ReceiveBlockUpdateSignal");
+    //     collector.RegisterHandler<BlockUpdateSignalDto>("ReceiveBlockUpdateSignal");
     //     collector.RegisterHandler<ConflictDetectedDto>("ReceiveConflictDetected"); // 即使本测试不期待冲突，也注册以防万一
     //
     //     await ConnectHubAsync(connection);
@@ -137,7 +137,7 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
     //             // 验证是否收到 StateUpdateSignal (如果工作流修改了状态)
     //             // 注意：这里的模拟工作流生成了命令，所以应该会收到信号
     //             _output.WriteLine("主工作流: 检查 StateUpdateSignal...");
-    //             var stateSignal = await collector.WaitForMessageAsync<StateUpdateSignalDto>(
+    //             var stateSignal = await collector.WaitForMessageAsync<BlockUpdateSignalDto>(
     //                 msg => msg.BlockId == newBlockId, TimeSpan.FromSeconds(5));
     //             Assert.NotNull(stateSignal);
     //             Assert.NotEmpty(stateSignal.ChangedEntityIds); // 确认有实体被改变
@@ -207,7 +207,7 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
     //             if (resolvedStatusUpdate.StatusCode == BlockStatusCode.Idle)
     //             {
     //                 _output.WriteLine("主工作流: 检查冲突解决后的 StateUpdateSignal...");
-    //                 var resolvedStateSignal = await collector.WaitForMessageAsync<StateUpdateSignalDto>(
+    //                 var resolvedStateSignal = await collector.WaitForMessageAsync<BlockUpdateSignalDto>(
     //                     msg => msg.BlockId == newBlockId, TimeSpan.FromSeconds(5));
     //                 Assert.NotNull(resolvedStateSignal);
     //                 // 根据保留的指令断言 ChangedEntityIds

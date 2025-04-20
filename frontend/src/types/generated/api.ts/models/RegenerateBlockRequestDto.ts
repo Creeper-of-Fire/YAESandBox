@@ -23,6 +23,6 @@ export type RegenerateBlockRequestDto = {
     /**
      * 传递给重新生成工作流的参数。
      */
-    params?: Record<string, any> | null;
+    params: Record<string, any>;
 };
 

@@ -1,4 +1,5 @@
-﻿using YAESandBox.Core.Block;
+﻿using System.ComponentModel.DataAnnotations;
+using YAESandBox.Core.Block;
 using YAESandBox.Depend;
 
 // For BlockStatusCode
@@ -13,6 +14,7 @@ public record BlockDetailDto
     /// <summary>
     /// Block 的唯一标识符。
     /// </summary>
+    [Required]
     public required string BlockId { get; init; } = null!;
 
     /// <summary>

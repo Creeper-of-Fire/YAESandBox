@@ -34,6 +34,7 @@ public record TriggerMainWorkflowRequestDto
     /// <summary>
     /// 传递给工作流的参数字典。键值对的具体内容取决于所调用的工作流。
     /// </summary>
+    [Required]
     public Dictionary<string, object?> Params { get; set; } = new();
 }
 
@@ -75,6 +76,7 @@ public record TriggerMicroWorkflowRequestDto
     /// <summary>
     /// 传递给微工作流的参数字典。
     /// </summary>
+    [Required]
     public Dictionary<string, object?> Params { get; set; } = new();
 }
 
@@ -106,6 +108,7 @@ public record RegenerateBlockRequestDto
     /// <summary>
     /// 传递给重新生成工作流的参数。
     /// </summary>
+    [Required]
     public Dictionary<string, object?> Params { get; set; } = new();
 }
 

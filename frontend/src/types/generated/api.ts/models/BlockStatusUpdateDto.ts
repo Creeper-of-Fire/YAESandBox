@@ -11,7 +11,7 @@ export type BlockStatusUpdateDto = {
     /**
      * 状态发生变化的 Block 的 ID。
      */
-    blockId?: string | null;
-    statusCode?: BlockStatusCode;
+    blockId: string;
+    statusCode: BlockStatusCode;
 };
 

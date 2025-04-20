@@ -51,10 +51,10 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     }
 
     /// <summary>
-    /// 获取整个 Block 树的拓扑结构 (基于 ID 的嵌套关系)。
-    /// 返回一个表示 Block 树层级结构的 JSON 对象。
+    /// 基于特定根节点，获取以其为根的 Block 树的拓扑结构 (基于 ID 的嵌套关系)。
+    /// 返回一个表示 Block 树层级结构的 JSON 对象，最外层即为根节点。
     /// </summary>
-    /// <param name="blockId">目标根节点的ID，如果为空则返回整个父节点的ID</param>
+    /// <param name="blockId">目标根节点的ID。如果为空则指向**最高根节点**，能返回整个树的完整拓扑结构。</param>
     /// <returns>表示 Block 拓扑结构的 JSON 对象。</returns>
     /// <response code="200">成功返回 JSON 格式的拓扑结构。
     /// 形如：{ "id": "__WORLD__", "children": [{ "id": "child1", "children": [] },{ "id": "child2", "children": [] }] }</response>

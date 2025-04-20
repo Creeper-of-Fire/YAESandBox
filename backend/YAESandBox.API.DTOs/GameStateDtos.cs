@@ -12,7 +12,8 @@ public record GameStateDto
     /// 键是设置的名称 (string)，值是设置的值 (object?)。
     /// 值的实际类型取决于具体的游戏状态设置。
     /// </summary>
-    public Dictionary<string, object?> Settings { get; set; } = new();
+    [Required]
+    public required Dictionary<string, object?> Settings { get; set; } = new();
 }
 
 /// <summary>

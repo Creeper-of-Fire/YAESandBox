@@ -2,7 +2,10 @@
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
-
+    "baseUrl": ".", // baseUrl 很重要
+    "paths": {
+      "@/*": ["src/*"] // <--- 检查这行或类似配置
+    },
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

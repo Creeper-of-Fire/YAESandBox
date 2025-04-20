@@ -12,26 +12,26 @@ export type ConflictDetectedDto = {
     /**
      * 发生冲突的 Block 的 ID。
      */
-    blockId?: string | null;
+    blockId: string;
     /**
      * 关联的原始工作流请求 ID。
      */
-    requestId?: string | null;
+    requestId: string;
     /**
      * 工作流（AI）生成的 **完整** 原子操作列表。
      */
-    aiCommands?: Array<AtomicOperationRequestDto> | null;
+    aiCommands: Array<AtomicOperationRequestDto>;
     /**
      * 用户在 Loading 期间提交的 **完整** 原子操作列表（可能包含因 Create/Create 冲突而被自动重命名的操作）。
      */
-    userCommands?: Array<AtomicOperationRequestDto> | null;
+    userCommands: Array<AtomicOperationRequestDto>;
     /**
      * 导致 **阻塞性冲突** (Modify/Modify 同一属性) 的 AI 原子操作子集。
      */
-    conflictingAiCommands?: Array<AtomicOperationRequestDto> | null;
+    conflictingAiCommands: Array<AtomicOperationRequestDto>;
     /**
      * 导致 **阻塞性冲突** (Modify/Modify 同一属性) 的用户原子操作子集。
      */
-    conflictingUserCommands?: Array<AtomicOperationRequestDto> | null;
+    conflictingUserCommands: Array<AtomicOperationRequestDto>;
 };
 

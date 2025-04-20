@@ -16,6 +16,27 @@ using YAESandBox.Depend;
 var builder = WebApplication.CreateBuilder(args);
 
 
+// 1. 定义 CORS 策略名称 (可以自定义)
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+
+// 2. 添加 CORS 服务，并配置策略
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+        policy =>
+        {
+            policy.WithOrigins(
+                    // *** 把这里替换成你的 Vite 前端开发服务器的确切地址! ***
+                    "http://localhost:5173", // 示例 Vite 默认端口
+                    "http://127.0.0.1:5173"  // 有时也需要加上 127.0.0.1
+                    // 如果你的前端运行在其他地址，也要加进去
+                )
+                .AllowAnyHeader()       // 允许所有请求头
+                .AllowAnyMethod()       // 允许所有 HTTP 方法 (GET, POST, PUT, etc.)
+                .AllowCredentials();    // *** SignalR 必须允许凭据 ***
+        });
+});
+
 // Add services to the container.
 builder.Services.AddControllers()
     .AddJsonOptions(options => // Configure JSON options
@@ -155,9 +176,10 @@ else
 
 // app.UseHttpsRedirection();
 
+
 app.UseRouting(); // Add routing middleware
 
-app.UseCors("AllowAll"); // Apply CORS policy - place before UseAuthorization/UseEndpoints
+app.UseCors(MyAllowSpecificOrigins); // Apply CORS policy - place before UseAuthorization/UseEndpoints
 
 app.UseAuthorization(); // Add authorization middleware if needed
 

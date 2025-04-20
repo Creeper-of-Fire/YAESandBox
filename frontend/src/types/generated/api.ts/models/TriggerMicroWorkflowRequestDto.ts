@@ -31,6 +31,6 @@ export type TriggerMicroWorkflowRequestDto = {
     /**
      * 传递给微工作流的参数字典。
      */
-    params?: Record<string, any> | null;
+    params: Record<string, any>;
 };
 

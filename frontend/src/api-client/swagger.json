@@ -428,12 +428,12 @@
         "tags": [
           "Blocks"
         ],
-        "summary": "获取整个 Block 树的拓扑结构 (基于 ID 的嵌套关系)。\r\n返回一个表示 Block 树层级结构的 JSON 对象。",
+        "summary": "基于特定根节点，获取以其为根的 Block 树的拓扑结构 (基于 ID 的嵌套关系)。\r\n返回一个表示 Block 树层级结构的 JSON 对象，最外层即为根节点。",
         "parameters": [
           {
             "name": "blockId",
             "in": "query",
-            "description": "目标根节点的ID，如果为空则返回整个父节点的ID",
+            "description": "目标根节点的ID。如果为空则指向**最高根节点**，能返回整个树的完整拓扑结构。",
             "schema": {
               "type": "string"
             }
@@ -984,9 +984,9 @@
         "type": "object",
         "properties": {
           "blockId": {
+            "minLength": 1,
             "type": "string",
-            "description": "Block 的唯一标识符。",
-            "nullable": true
+            "description": "Block 的唯一标识符。"
           },
           "parentBlockId": {
             "type": "string",
@@ -1034,12 +1034,16 @@
         "description": "表示 Block 的不同状态。"
       },
       "BlockStatusUpdateDto": {
+        "required": [
+          "blockId",
+          "statusCode"
+        ],
         "type": "object",
         "properties": {
           "blockId": {
+            "minLength": 1,
             "type": "string",
-            "description": "状态发生变化的 Block 的 ID。",
-            "nullable": true
+            "description": "状态发生变化的 Block 的 ID。"
           },
           "statusCode": {
             "$ref": "#/components/schemas/BlockStatusCode"
@@ -1048,72 +1052,114 @@
         "additionalProperties": false,
         "description": "(服务器 -> 客户端)\r\n通知客户端某个 Block 的状态码发生了变化。"
       },
-      "ConflictDetectedDto": {
+      "BlockUpdateSignalDto": {
+        "required": [
+          "blockId"
+        ],
         "type": "object",
         "properties": {
           "blockId": {
+            "minLength": 1,
             "type": "string",
-            "description": "发生冲突的 Block 的 ID。",
+            "description": "状态可能已发生变化的 Block 的 ID。"
+          },
+          "changedFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BlockDataFields"
+            },
+            "description": "（可选）包含受影响的 Block 数据字段的枚举值，以便前端进行更精细的更新。如果为 null 或空，表示通用状态变更。",
             "nullable": true
           },
-          "requestId": {
-            "type": "string",
-            "description": "关联的原始工作流请求 ID。",
+          "changedEntityIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "（可选）如果变化是由原子操作引起的，这里可以包含受影响的实体的 ID 列表，以便前端进行更精细的更新。如果为 null 或空，表示未知具体实体。",
             "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "(服务器 -> 客户端)\r\n一个轻量级信号，通知客户端指定 Block 的状态 (WorldState 或 GameState) 可能已发生变化。\r\n鼓励客户端根据需要重新获取该 Block 的详细信息或相关实体的最新状态。"
+      },
+      "ConflictDetectedDto": {
+        "required": [
+          "aiCommands",
+          "blockId",
+          "conflictingAiCommands",
+          "conflictingUserCommands",
+          "requestId",
+          "userCommands"
+        ],
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "发生冲突的 Block 的 ID。"
+          },
+          "requestId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "关联的原始工作流请求 ID。"
           },
           "aiCommands": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AtomicOperationRequestDto"
             },
-            "description": "工作流（AI）生成的 **完整** 原子操作列表。",
-            "nullable": true
+            "description": "工作流（AI）生成的 **完整** 原子操作列表。"
           },
           "userCommands": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AtomicOperationRequestDto"
             },
-            "description": "用户在 Loading 期间提交的 **完整** 原子操作列表（可能包含因 Create/Create 冲突而被自动重命名的操作）。",
-            "nullable": true
+            "description": "用户在 Loading 期间提交的 **完整** 原子操作列表（可能包含因 Create/Create 冲突而被自动重命名的操作）。"
           },
           "conflictingAiCommands": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AtomicOperationRequestDto"
             },
-            "description": "导致 **阻塞性冲突** (Modify/Modify 同一属性) 的 AI 原子操作子集。",
-            "nullable": true
+            "description": "导致 **阻塞性冲突** (Modify/Modify 同一属性) 的 AI 原子操作子集。"
           },
           "conflictingUserCommands": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/AtomicOperationRequestDto"
             },
-            "description": "导致 **阻塞性冲突** (Modify/Modify 同一属性) 的用户原子操作子集。",
-            "nullable": true
+            "description": "导致 **阻塞性冲突** (Modify/Modify 同一属性) 的用户原子操作子集。"
           }
         },
         "additionalProperties": false,
         "description": "(服务器 -> 客户端)\r\n当主工作流执行完成后，检测到 AI 生成的指令与用户在 Loading 状态下提交的指令存在冲突时发送。\r\n前端应使用此信息向用户展示冲突详情，并提供解决冲突的界面。"
       },
       "DisplayUpdateDto": {
+        "required": [
+          "content",
+          "contextBlockId",
+          "requestId",
+          "streamingStatus",
+          "updateMode"
+        ],
         "type": "object",
         "properties": {
           "requestId": {
+            "minLength": 1,
             "type": "string",
-            "description": "关联的原始工作流请求 ID (YAESandBox.API.DTOs.WebSocket.TriggerMainWorkflowRequestDto.RequestId 或 YAESandBox.API.DTOs.WebSocket.TriggerMicroWorkflowRequestDto.RequestId)。",
-            "nullable": true
+            "description": "关联的原始工作流请求 ID (YAESandBox.API.DTOs.WebSocket.TriggerMainWorkflowRequestDto.RequestId 或 YAESandBox.API.DTOs.WebSocket.TriggerMicroWorkflowRequestDto.RequestId)。"
           },
           "contextBlockId": {
+            "minLength": 1,
             "type": "string",
-            "description": "主要关联的 Block ID。对于主工作流，这是被更新或新创建的 Block。对于微工作流，这通常是触发时的上下文 Block。",
-            "nullable": true
+            "description": "主要关联的 Block ID。对于主工作流，这是被更新或新创建的 Block。对于微工作流，这通常是触发时的上下文 Block。"
           },
           "content": {
+            "minLength": 1,
             "type": "string",
-            "description": "需要显示或处理的内容字符串。可能是完整的文本、HTML 片段、JSON 数据，或增量更新指令。",
-            "nullable": true
+            "description": "需要显示或处理的内容字符串。可能是完整的文本、HTML 片段、JSON 数据，或增量更新指令。"
           },
           "streamingStatus": {
             "$ref": "#/components/schemas/StreamStatus"
@@ -1147,12 +1193,18 @@
         "description": "(服务器 -> 客户端)\r\n携带由工作流（主工作流或微工作流）生成或处理的内容，用于更新前端显示。"
       },
       "EntityDetailDto": {
+        "required": [
+          "attributes",
+          "entityId",
+          "entityType",
+          "isDestroyed"
+        ],
         "type": "object",
         "properties": {
           "entityId": {
+            "minLength": 1,
             "type": "string",
-            "description": "实体的唯一 ID。",
-            "nullable": true
+            "description": "实体的唯一 ID。"
           },
           "entityType": {
             "$ref": "#/components/schemas/EntityType"
@@ -1171,20 +1223,24 @@
             "additionalProperties": {
               "nullable": true
             },
-            "description": "包含实体所有属性（包括核心属性如 IsDestroyed 和动态属性）的字典。\r\n值的类型可能是 string, int, bool, double, List[object?], Dictionary-[string, object?], TypedID 等。",
-            "nullable": true
+            "description": "包含实体所有属性（包括核心属性如 IsDestroyed 和动态属性）的字典。\r\n值的类型可能是 string, int, bool, double, List[object?], Dictionary-[string, object?], TypedID 等。"
           }
         },
         "additionalProperties": false,
         "description": "用于 API 响应，表示实体的详细信息，包含所有属性。\r\n继承自 YAESandBox.API.DTOs.EntitySummaryDto。"
       },
       "EntitySummaryDto": {
+        "required": [
+          "entityId",
+          "entityType",
+          "isDestroyed"
+        ],
         "type": "object",
         "properties": {
           "entityId": {
+            "minLength": 1,
             "type": "string",
-            "description": "实体的唯一 ID。",
-            "nullable": true
+            "description": "实体的唯一 ID。"
           },
           "entityType": {
             "$ref": "#/components/schemas/EntityType"
@@ -1211,6 +1267,9 @@
         "type": "string"
       },
       "GameStateDto": {
+        "required": [
+          "settings"
+        ],
         "type": "object",
         "properties": {
           "settings": {
@@ -1218,8 +1277,7 @@
             "additionalProperties": {
               "nullable": true
             },
-            "description": "包含 GameState 所有设置的字典。\r\n键是设置的名称 (string)，值是设置的值 (object?)。\r\n值的实际类型取决于具体的游戏状态设置。",
-            "nullable": true
+            "description": "包含 GameState 所有设置的字典。\r\n键是设置的名称 (string)，值是设置的值 (object?)。\r\n值的实际类型取决于具体的游戏状态设置。"
           }
         },
         "additionalProperties": false,
@@ -1273,6 +1331,7 @@
       "RegenerateBlockRequestDto": {
         "required": [
           "blockId",
+          "params",
           "requestId",
           "workflowName"
         ],
@@ -1298,8 +1357,7 @@
             "additionalProperties": {
               "nullable": true
             },
-            "description": "传递给重新生成工作流的参数。",
-            "nullable": true
+            "description": "传递给重新生成工作流的参数。"
           }
         },
         "additionalProperties": false,
@@ -1334,34 +1392,6 @@
         "additionalProperties": false,
         "description": "(客户端 -> 服务器)\r\n用于通过 SignalR 提交 **冲突解决方案** 的请求。\r\n当主工作流完成后检测到与用户修改冲突时，前端会收到 YAESandBox.API.DTOs.WebSocket.ConflictDetectedDto。\r\n用户解决冲突后，通过此 DTO 将最终确定的原子操作列表提交回后端。"
       },
-      "StateUpdateSignalDto": {
-        "type": "object",
-        "properties": {
-          "blockId": {
-            "type": "string",
-            "description": "状态可能已发生变化的 Block 的 ID。",
-            "nullable": true
-          },
-          "changedFields": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/BlockDataFields"
-            },
-            "description": "（可选）如果变化是由原子操作引起的，这里可以包含受影响的 Block 数据字段的枚举值，以便前端进行更精细的更新。如果为 null 或空，表示通用状态变更。",
-            "nullable": true
-          },
-          "changedEntityIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "（可选）如果变化是由原子操作引起的，这里可以包含受影响的实体的 ID 列表，以便前端进行更精细的更新。如果为 null 或空，表示未知具体实体。",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "(服务器 -> 客户端)\r\n一个轻量级信号，通知客户端指定 Block 的状态 (WorldState 或 GameState) 可能已发生变化。\r\n鼓励客户端根据需要重新获取该 Block 的详细信息或相关实体的最新状态。"
-      },
       "StreamStatus": {
         "enum": [
           "Streaming",
@@ -1373,6 +1403,7 @@
       },
       "TriggerMainWorkflowRequestDto": {
         "required": [
+          "params",
           "parentBlockId",
           "requestId",
           "workflowName"
@@ -1399,8 +1430,7 @@
             "additionalProperties": {
               "nullable": true
             },
-            "description": "传递给工作流的参数字典。键值对的具体内容取决于所调用的工作流。",
-            "nullable": true
+            "description": "传递给工作流的参数字典。键值对的具体内容取决于所调用的工作流。"
           }
         },
         "additionalProperties": false,
@@ -1409,6 +1439,7 @@
       "TriggerMicroWorkflowRequestDto": {
         "required": [
           "contextBlockId",
+          "params",
           "requestId",
           "targetElementId",
           "workflowName"
@@ -1440,8 +1471,7 @@
             "additionalProperties": {
               "nullable": true
             },
-            "description": "传递给微工作流的参数字典。",
-            "nullable": true
+            "description": "传递给微工作流的参数字典。"
           }
         },
         "additionalProperties": false,

@@ -11,6 +11,6 @@ export type GameStateDto = {
      * 键是设置的名称 (string)，值是设置的值 (object?)。
      * 值的实际类型取决于具体的游戏状态设置。
      */
-    settings?: Record<string, any> | null;
+    settings: Record<string, any>;
 };
 

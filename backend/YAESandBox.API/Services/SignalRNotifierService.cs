@@ -53,7 +53,11 @@ public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext
         IEnumerable<BlockDataFields> changedFields,
         IEnumerable<string>? changedEntityIds = null)
     {
-        var signal = new StateUpdateSignalDto(blockId, ChangedEntityIds: changedEntityIds?.ToList());
+        var signal = new BlockUpdateSignalDto
+        {
+            BlockId = blockId,
+            ChangedEntityIds = changedEntityIds?.ToList()
+        };
         Log.Debug($"准备通过 SignalR 发送 StateUpdateSignal: BlockId={blockId}");
         await this.hubContext.Clients.All.ReceiveBlockUpdateSignal(signal);
         Log.Debug($"StateUpdateSignal for {blockId} 已发送。");

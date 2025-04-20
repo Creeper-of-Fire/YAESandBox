@@ -11,13 +11,13 @@ export type EntityDetailDto = {
     /**
      * 实体的唯一 ID。
      */
-    entityId?: string | null;
-    entityType?: EntityType;
+    entityId: string;
+    entityType: EntityType;
     /**
      * 指示实体是否已被标记为销毁。
      * 注意：查询 API 通常只返回未销毁的实体。
      */
-    isDestroyed?: boolean;
+    isDestroyed: boolean;
     /**
      * 实体的名称 (通常来自 'name' 属性，如果不存在则可能回退到 EntityId)。
      */
@@ -26,6 +26,6 @@ export type EntityDetailDto = {
      * 包含实体所有属性（包括核心属性如 IsDestroyed 和动态属性）的字典。
      * 值的类型可能是 string, int, bool, double, List[object?], Dictionary-[string, object?], TypedID 等。
      */
-    attributes?: Record<string, any> | null;
+    attributes: Record<string, any>;
 };
 
