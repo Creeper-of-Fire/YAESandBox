@@ -2,6 +2,7 @@
 
 using System.Text.Json;
 using YAESandBox.API.DTOs;
+using YAESandBox.API.DTOs.WebSocket;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
@@ -10,6 +11,12 @@ using YAESandBox.Depend;
 
 namespace YAESandBox.API.Services;
 
+/// <summary>
+/// 工作流服务
+/// </summary>
+/// <param name="blockReadServices"></param>
+/// <param name="blockWritServices"></param>
+/// <param name="notifierService"></param>
 public class WorkflowService(
     IBlockReadService blockReadServices,
     IBlockWritService blockWritServices,
@@ -160,8 +167,8 @@ public class WorkflowService(
     private async Task ExecuteMainWorkflowAsync(TriggerMainWorkflowRequestDto request, string blockId)
     {
         Log.Debug($"Block '{blockId}': 开始执行工作流 '{request.WorkflowName}'...");
-        bool success = false;
-        string rawTextResult = string.Empty;
+        bool success;
+        string rawTextResult;
         List<AtomicOperation> generatedCommands = [];
         Dictionary<string, object?> outputVariables = new();
         List<string> streamChunks = []; // 存储流式块以便最终组合

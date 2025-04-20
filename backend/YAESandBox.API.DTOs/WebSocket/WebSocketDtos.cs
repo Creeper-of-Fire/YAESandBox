@@ -1,10 +1,15 @@
 ﻿using System.ComponentModel.DataAnnotations;
-// For AtomicOperation, OperatorHelper
-using YAESandBox.Depend; // For BlockStatusCode
+using YAESandBox.Depend;
 
-// For EntityType (可能需要)
+namespace YAESandBox.API.DTOs.WebSocket;
 
-namespace YAESandBox.API.DTOs;
+/// <summary>
+/// 配置信息
+/// </summary>
+public static class WebSocketInfo
+{
+    internal const string TypeGenPath = "types/generated/signalr";
+}
 
 // --- WebSocket (SignalR) 消息 DTOs ---
 

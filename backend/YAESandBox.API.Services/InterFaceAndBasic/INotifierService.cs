@@ -1,4 +1,5 @@
 ﻿using YAESandBox.API.DTOs;
+using YAESandBox.API.DTOs.WebSocket;
 using YAESandBox.Depend;
 
 namespace YAESandBox.API.Services;

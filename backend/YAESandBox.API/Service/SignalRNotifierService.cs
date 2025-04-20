@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.SignalR;
 using YAESandBox.API.DTOs;
+using YAESandBox.API.DTOs.WebSocket;
 using YAESandBox.API.Hubs;
 using YAESandBox.Depend;
 

@@ -10,24 +10,67 @@
         <SwaggerJsonPath>$(MSBuildProjectDirectory)/../../frontend/src/api-client/swagger.json</SwaggerJsonPath>
         <!-- 定义 Web API 项目的 DLL 路径 -->
         <ApiDllPath>$(TargetDir)$(TargetFileName)</ApiDllPath>
+
+        <!-- 定义前端项目的相对路径 (重要：根据你的实际结构调整!) -->
+        <!-- 这个路径是相对于后端项目编译输出目录 (如 bin/Debug/net9.0) 的， -->
+        <!-- 或者更可靠地，相对于项目文件目录 $(MSBuildProjectDirectory) -->
+        <FrontendProjectDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend'))</FrontendProjectDir>
+
+        <!-- 定义 Swagger JSON 输出路径 -->
+        <SwaggerJsonOutputPath>$(FrontendProjectDir)/src/api-client/swagger.json</SwaggerJsonOutputPath>
+        <!-- 定义 OpenAPI 生成的 TS 类型输出路径 -->
+        <ApiTypesOutputPath>$(FrontendProjectDir)/src/types/generated/api.ts</ApiTypesOutputPath>
     </PropertyGroup>
-
-    <Target Name="CreateSwaggerJson" AfterTargets="Build" Condition="$(Configuration)=='Debug'">
-        <Exec Command="swagger tofile --output $(SwaggerJsonPath) $(OutputPath)$(AssemblyName).dll v1-public" WorkingDirectory="$(ProjectDir)" />
-    </Target>
-
+    
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1"/>
         <InternalsVisibleTo Include="YAESandBox.Tests"/>
-        <PackageReference Include="TypeGen" Version="6.0.2" />
     </ItemGroup>
-
 
     <ItemGroup>
         <ProjectReference Include="..\YAESandBox.API.Services\YAESandBox.API.Services.csproj" />
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
     </ItemGroup>
+    
+<!--    <Target Name="CreateSwaggerJson" AfterTargets="Build" Condition="$(Configuration)=='Debug'">-->
+<!--        <Exec Command="swagger tofile &#45;&#45;output $(SwaggerJsonPath) $(OutputPath)$(AssemblyName).dll v1-public" WorkingDirectory="$(ProjectDir)" />-->
+<!--    </Target>-->
+
+    <!-- ================================================================== -->
+    <!-- == 自动生成 Swagger JSON 和 TypeScript 类型 == -->
+    <!-- ================================================================== -->
+    
+    <!-- 步骤 1: 构建完成后生成 swagger.json 文件 -->
+    <Target Name="GenerateSwaggerDoc" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+        <Message Text="------------------------------------------------------------------" Importance="high" />
+        <Message Text="正在生成 Swagger JSON 文件..." Importance="high" />
+        <!-- 使用 dotnet swagger 命令生成 v1 版本的 swagger.json -->
+        <!-- $(TargetPath) 是编译后的后端项目 DLL 路径 -->
+        <Exec Command="swagger tofile --output $(SwaggerJsonPath) $(OutputPath)$(AssemblyName).dll v1-public" WorkingDirectory="$(ProjectDir)" />
+        <Message Text="Swagger JSON 文件已生成到: $(SwaggerJsonOutputPath)" Importance="high" />
+        <Message Text="------------------------------------------------------------------" Importance="high" />
+    </Target>
+
+    <!-- 步骤 2: 使用生成的 swagger.json 生成 TypeScript API 客户端和类型 -->
+    <Target Name="GenerateApiTypes" AfterTargets="GenerateSwaggerDoc" Condition="Exists('$(SwaggerJsonOutputPath)')">
+        <Message Text="------------------------------------------------------------------" Importance="high" />
+        <Message Text="正在从 Swagger JSON 生成 TypeScript API 客户端和类型..." Importance="high" />
+        <!-- 定义 API 客户端输出目录 -->
+        <MakeDir Directories="$(ApiTypesOutputPath)" Condition="!Exists('$(ApiTypesOutputPath)')" />
+        <!-- 使用 openapi-typescript-codegen -->
+        <!-- WorkingDirectory 设为前端目录 -->
+        <!-- 这里的参数需要根据 openapi-typescript-codegen 的文档和你需要的功能进行调整 -->
+        <Exec Command="npx openapi-typescript-codegen --input $(SwaggerJsonOutputPath) --output $(ApiTypesOutputPath) --client axios --useOptions" WorkingDirectory="$(FrontendProjectDir)" ContinueOnError="false" />
+        <!-- 示例参数: -->
+        <!-- -input: 输入 swagger.json 文件路径 -->
+        <!-- -output: 输出目录 -->
+        <!-- -client: 选择 HTTP 客户端 (axios, fetch 等) -->
+        <!-- -useOptions: 使用选项对象作为方法参数，更灵活 -->
+        <!-- 还有很多其他选项，例如 -name (客户端类名), -exportCore (导出核心请求逻辑), 等等 -->
+        <Message Text="TypeScript API 客户端和类型已生成到: $(ApiTypesOutputPath)" Importance="high" />
+        <Message Text="------------------------------------------------------------------" Importance="high" />
+    </Target>
 
 </Project>

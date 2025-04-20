@@ -2,6 +2,7 @@
 
 using Microsoft.AspNetCore.SignalR;
 using YAESandBox.API.DTOs;
+using YAESandBox.API.DTOs.WebSocket;
 using YAESandBox.API.Services; // Need WorkflowService
 using YAESandBox.Depend; // For Log
 

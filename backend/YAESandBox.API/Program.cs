@@ -1,5 +1,6 @@
 // --- START OF FILE Program.cs ---
 
+using System.Reflection;
 using Microsoft.OpenApi.Models; // Needed for AddOpenApi
 // Needed for WebApplicationBuilder
 // Needed for IServiceCollection extensions
@@ -7,6 +8,9 @@ using Microsoft.OpenApi.Models; // Needed for AddOpenApi
 using YAESandBox.API.Hubs; // For GameHub
 using YAESandBox.API.Services; // For BlockManager, NotifierService, WorkflowService
 using System.Text.Json.Serialization;
+using Swashbuckle.AspNetCore.SwaggerGen;
+using YAESandBox.API;
+using YAESandBox.API.DTOs;
 using YAESandBox.Core.Block;
 using static GlobalSwaggerConstants;
 
@@ -24,10 +28,10 @@ builder.Services.AddControllers()
 
 // --- OpenAPI / Swagger ---
 builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(c =>
+builder.Services.AddSwaggerGen(options =>
 {
     // --- 定义公开 API 文档 ---
-    c.SwaggerDoc(PublicApiGroupName, new OpenApiInfo
+    options.SwaggerDoc(PublicApiGroupName, new OpenApiInfo
     {
         Title = "YAESandBox API (Public)",
         Version = "v1",
@@ -35,7 +39,7 @@ builder.Services.AddSwaggerGen(c =>
     });
 
     // --- 定义内部/调试 API 文档 ---
-    c.SwaggerDoc(InternalApiGroupName, new OpenApiInfo
+    options.SwaggerDoc(InternalApiGroupName, new OpenApiInfo
     {
         Title = "YAESandBox API (Internal)",
         Version = "v1",
@@ -44,7 +48,7 @@ builder.Services.AddSwaggerGen(c =>
 
     // --- 告诉 Swashbuckle 如何根据 GroupName 分配 API ---
     // 如果 API 没有明确的 GroupName，默认可以将其分配给公开文档
-    c.DocInclusionPredicate((docName, apiDesc) =>
+    options.DocInclusionPredicate((docName, apiDesc) =>
         {
             // 如果 API 没有 GroupName 设置，我们默认认为它属于 Public
             string groupName = apiDesc.GroupName ?? PublicApiGroupName;
@@ -60,14 +64,21 @@ builder.Services.AddSwaggerGen(c =>
     );
 
 
-    // Include XML comments if set up in .csproj file
-    string xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
-    string xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
-    if (File.Exists(xmlPath)) // 检查文件是否存在
-        c.IncludeXmlComments(xmlPath);
+    // --- 加载 XML 注释文件 ---
+
+    // 1. 加载 API 项目自身的 XML 注释文件
+    options.AddSwaggerDocumentation(Assembly.GetExecutingAssembly());
+
+    // 2. 加载 Service 项目的 XML 注释文件
+    options.AddSwaggerDocumentation(typeof(BasicBlockService).Assembly);
+
+    // 3. 加载共享 DTO 项目的 XML 注释文件
+    options.AddSwaggerDocumentation(typeof(AtomicOperationRequestDto).Assembly);
 
     // Add Enum Schema Filter to display enums as strings in Swagger UI
-    c.SchemaFilter<EnumSchemaFilter>(); // 假设 EnumSchemaFilter 已定义
+    options.SchemaFilter<EnumSchemaFilter>(); // 假设 EnumSchemaFilter 已定义
+    
+    options.DocumentFilter<SignalRDtoDocumentFilter>();
 });
 
 
@@ -190,6 +201,31 @@ public class EnumSchemaFilter : Swashbuckle.AspNetCore.SwaggerGen.ISchemaFilter
             {
                 schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(enumName));
             }
+        }
+    }
+}
+
+public static class SwaggerHelper
+{
+    public static void AddSwaggerDocumentation(this SwaggerGenOptions options, Assembly assembly)
+    {
+        try
+        {
+            string XmlFilename = $"{assembly.GetName().Name}.xml";
+            string XmlFilePath = Path.Combine(AppContext.BaseDirectory, XmlFilename);
+            if (File.Exists(XmlFilePath))
+            {
+                options.IncludeXmlComments(XmlFilePath);
+                Console.WriteLine($"加载 XML 注释: {XmlFilePath}");
+            }
+            else
+            {
+                Console.WriteLine($"警告: 未找到 XML 注释文件: {XmlFilePath}");
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"加载 Contracts XML 注释时出错: {ex.Message}");
         }
     }
 }

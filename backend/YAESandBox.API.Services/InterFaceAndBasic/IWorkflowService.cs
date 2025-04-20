@@ -1,6 +1,7 @@
 ﻿// --- START OF FILE IWorkflowService.cs ---
 
 using YAESandBox.API.DTOs;
+using YAESandBox.API.DTOs.WebSocket;
 
 namespace YAESandBox.API.Services;
 
