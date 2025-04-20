@@ -14,7 +14,8 @@ namespace YAESandBox.API.Services;
 /// 它也提供对于整体的总结服务。
 /// </summary>
 /// <param name="blockManager"></param>
-public class BlockReadService(IBlockManager blockManager) : BasicBlockService(blockManager), IBlockReadService
+public class BlockReadService(IBlockManager blockManager, INotifierService notifierService)
+    : BasicBlockService(blockManager, notifierService), IBlockReadService
 {
     ///<inheritdoc/>
     public async Task<IReadOnlyDictionary<string, BlockDetailDto>> GetAllBlockDetailsAsync()

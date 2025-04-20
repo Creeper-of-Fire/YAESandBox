@@ -12,11 +12,8 @@ namespace YAESandBox.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/entities")] // /api/entities
-public class EntitiesController(
-    IBlockWritService writServices,
-    IBlockReadService readServices,
-    INotifierService notifierService)
-    : APINotifyControllerBase(readServices, writServices, notifierService)
+public class EntitiesController(IBlockWritService writServices, IBlockReadService readServices)
+    : APIControllerBase(readServices, writServices)
 {
     /// <summary>
     /// 获取指定 Block 当前可交互 WorldState 中的所有非销毁实体摘要信息。

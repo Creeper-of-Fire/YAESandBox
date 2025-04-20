@@ -15,7 +15,8 @@ namespace YAESandBox.API.Services;
 /// 同时也提供输入原子化指令修改其内容的服务（修改Block数据的唯一入口），之后可能分离。
 /// </summary>
 /// <param name="blockManager"></param>
-public class BlockWritService(IBlockManager blockManager) : BasicBlockService(blockManager), IBlockWritService
+public class BlockWritService(IBlockManager blockManager, INotifierService notifierService)
+    : BasicBlockService(blockManager, notifierService), IBlockWritService
 {
     /// <inheritdoc/>
     public async Task<(BlockResultCode resultCode, BlockStatusCode blockStatusCode)>
@@ -35,6 +36,8 @@ public class BlockWritService(IBlockManager blockManager) : BasicBlockService(bl
         foreach (var warning in atomicOp.HandledIssue())
             Log.Warning(warning.Message);
 
+        await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.WorldState);
+
         if (hasBlockStatusError)
             return (resultCode, blockStatus.Value);
 
@@ -45,20 +48,30 @@ public class BlockWritService(IBlockManager blockManager) : BasicBlockService(bl
     public async Task<BlockResultCode> UpdateBlockGameStateAsync(
         string blockId, Dictionary<string, object?> settingsToUpdate)
     {
-        return await this.blockManager.UpdateBlockGameStateAsync(blockId, settingsToUpdate);
+        var code = await this.blockManager.UpdateBlockGameStateAsync(blockId, settingsToUpdate);
+        if (code == BlockResultCode.Success)
+            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.GameState);
+        return code;
     }
 
 
     /// <inheritdoc/>
     public async Task<BlockResultCode> UpdateBlockDetailsAsync(string blockId, UpdateBlockDetailsDto updateDto)
     {
-        // 参数验证可以在这里做，或者委托给 Manager
-        if (updateDto.Content != null || updateDto.MetadataUpdates != null)
-            return await this.blockManager.UpdateBlockDetailsAsync(blockId, updateDto.Content, updateDto.MetadataUpdates);
-
         // 没有提供任何更新内容，可以认为操作“成功”但无效果，或返回 BadRequest
-        // 为了简单，我们认为这是一个无操作的成功
-        Log.Debug($"Block '{blockId}': 收到空的更新请求，无操作。");
-        return BlockResultCode.InvalidInput;
+        if (updateDto.Content == null && (updateDto.MetadataUpdates == null || !updateDto.MetadataUpdates.Any()))
+        {
+            Log.Debug($"Block '{blockId}': 收到空的更新请求，无操作。");
+            return BlockResultCode.InvalidInput;
+        }
+
+        var resultCode = await this.blockManager.UpdateBlockDetailsAsync(blockId, updateDto.Content, updateDto.MetadataUpdates);
+        
+        if (updateDto.Content != null)
+            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.BlockContent);
+        if (updateDto.MetadataUpdates != null && updateDto.MetadataUpdates.Any())
+            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.Metadata);
+
+        return resultCode;
     }
 }

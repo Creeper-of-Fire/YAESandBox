@@ -20,9 +20,8 @@ namespace YAESandBox.API.Controllers;
 public class BlockManagementController(
     IBlockManagementService blockManagementService,
     IBlockWritService writServices,
-    INotifierService notifierService,
     IBlockReadService readServices)
-    : APINotifyControllerBase(readServices, writServices, notifierService)
+    : APIControllerBase(readServices, writServices)
 {
     private IBlockManagementService blockManagementService { get; } = blockManagementService;
 

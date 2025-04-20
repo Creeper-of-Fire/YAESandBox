@@ -15,11 +15,8 @@ namespace YAESandBox.API.Controllers;
 /// <param name="readServices"></param>
 [ApiController]
 [Route("api/[controller]")] // /api/blocks
-public class BlocksController(
-    IBlockWritService writServices,
-    IBlockReadService readServices,
-    INotifierService notifierService)
-    : APINotifyControllerBase(readServices, writServices, notifierService)
+public class BlocksController(IBlockWritService writServices, IBlockReadService readServices) 
+    : APIControllerBase(readServices, writServices)
 {
     /// <summary>
     /// 获取所有 Block 的摘要信息字典。
@@ -118,17 +115,8 @@ public class BlocksController(
     {
         if (!this.ModelState.IsValid) // 基本模型验证
             return this.BadRequest(this.ModelState);
-
-        // 可以在这里添加一个检查，确保至少提供了一项更新
-        if (updateDto.Content == null && (updateDto.MetadataUpdates == null || !updateDto.MetadataUpdates.Any()))
-            return BadRequest("必须提供 Content 或 MetadataUpdates 中的至少一项来进行更新。");
-
+        
         var result = await this.blockWritService.UpdateBlockDetailsAsync(blockId, updateDto);
-
-        if (updateDto.Content != null)
-            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.BlockContent);
-        if (updateDto.MetadataUpdates != null && updateDto.MetadataUpdates.Any())
-            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.Metadata);
 
         return result switch
         {

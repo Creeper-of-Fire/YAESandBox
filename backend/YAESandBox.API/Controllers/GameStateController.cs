@@ -14,9 +14,8 @@ namespace YAESandBox.API.Controllers;
 [Route("api/blocks/{blockId}/[controller]")] // /api/blocks/{blockId}/gamestate
 public class GameStateController(
     IBlockWritService writServices,
-    IBlockReadService readServices,
-    INotifierService notifierService)
-    : APINotifyControllerBase(readServices, writServices, notifierService)
+    IBlockReadService readServices)
+    : APIControllerBase(readServices, writServices)
 {
     /// <summary>
     /// 获取指定 Block 的当前 GameState。
@@ -64,7 +63,7 @@ public class GameStateController(
         switch (result)
         {
             case BlockResultCode.Success:
-                await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.GameState);
+                
                 return this.NoContent(); // 204 No Content
             case BlockResultCode.NotFound:
                 return this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"); // 404 Not Found

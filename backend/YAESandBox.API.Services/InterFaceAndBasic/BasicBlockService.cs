@@ -2,12 +2,12 @@
 
 namespace YAESandBox.API.Services.InterFaceAndBasic;
 
-public class BasicBlockService(IBlockManager blockManager)
+public class BasicBlockService(IBlockManager blockManager,INotifierService notifierService)
 {
-    // /// <summary>
-    // /// 通知服务
-    // /// </summary>
-    // protected INotifierService notifierService { get; } = notifierService;
+    /// <summary>
+    /// 通知服务
+    /// </summary>
+    protected INotifierService notifierService { get; } = notifierService;
 
     /// <summary>
     /// Block管理器

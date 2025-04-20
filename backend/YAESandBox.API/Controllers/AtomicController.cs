@@ -13,9 +13,8 @@ namespace YAESandBox.API.Controllers;
 [Route("api/atomic/{blockId}")] // /api/atomic/{blockId}
 public class AtomicController(
     IBlockWritService writServices,
-    IBlockReadService readServices,
-    INotifierService notifierService)
-    : APINotifyControllerBase(readServices, writServices, notifierService)
+    IBlockReadService readServices)
+    : APIControllerBase(readServices, writServices)
 {
     /// <summary>
     /// 对指定的 Block 执行一批原子化操作。
@@ -61,9 +60,6 @@ public class AtomicController(
 
         // 2. 调用 BlockManager 处理操作
         var result = await this.blockWritService.EnqueueOrExecuteAtomicOperationsAsync(blockId, coreOperations);
-
-        if (result.resultCode != BlockResultCode.NotFound)
-            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.WorldState);
 
         // 3. 根据结果返回相应的状态码
         return result switch
