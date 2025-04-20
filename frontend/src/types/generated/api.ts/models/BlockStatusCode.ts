@@ -2,6 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+/**
+ * 表示 Block 的不同状态。
+ */
 export enum BlockStatusCode {
     LOADING = 'Loading',
     IDLE = 'Idle',

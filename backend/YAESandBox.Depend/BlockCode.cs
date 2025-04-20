@@ -27,13 +27,14 @@ public enum BlockStatusCode
     Error,
 
     /// <summary>
-    /// Block 不存在。某些地方强制要求返回一个返回值，但是没找到block又不想返回null时使用
+    /// Block 不存在。某些地方强制要求返回一个返回值，但是没找到block又不想返回null时使用。
+    /// 也有可能是获取状态时确实没找到。
     /// </summary>
     NotFound
 }
 
 /// <summary>
-/// 表示管理操作的通用结果枚举。
+/// 表示Block关系管理操作的通用结果枚举。
 /// 包含来自 DeleteResult 和 MoveResult 的可能状态，以及创建操作的状态。
 /// </summary>
 public enum ManagementResult
@@ -74,6 +75,10 @@ public enum ManagementResult
     Error
 }
 
+/// <summary>
+/// 针对单个Block
+/// 表示 Block 的处理结果代码枚举。
+/// </summary>
 public enum BlockResultCode
 {
     /// <summary>
@@ -105,11 +110,6 @@ public enum BlockResultCode
     /// 禁止
     /// </summary>
     Forbidden,
-
-    /// <summary>
-    /// 循环操作
-    /// </summary>
-    CyclicOperation,
 
     /// <summary>
     /// 冲突

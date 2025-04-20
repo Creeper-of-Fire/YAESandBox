@@ -2,7 +2,7 @@
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 
-namespace YAESandBox.Core.Tests;
+namespace YAESandBox.Tests.Core;
 
 /// <summary>
 /// 针对 WorldState 的单元测试。

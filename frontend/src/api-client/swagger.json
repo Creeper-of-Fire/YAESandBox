@@ -45,10 +45,7 @@
         },
         "responses": {
           "200": {
-            "description": "操作已成功执行 (适用于 Idle 状态)。"
-          },
-          "202": {
-            "description": "操作已成功执行并/或已暂存 (适用于 Loading 状态)。"
+            "description": "操作已成功执行，若为Loading状态则还额外暂存了一份。"
           },
           "404": {
             "description": "未找到具有指定 ID 的 Block。",
@@ -126,6 +123,7 @@
           {
             "name": "blockId",
             "in": "path",
+            "description": "要删除的 Block ID。",
             "required": true,
             "schema": {
               "type": "string"
@@ -134,14 +132,16 @@
           {
             "name": "recursive",
             "in": "query",
+            "description": "是否递归删除子 Block。默认递归删除，非递归可能导致奇奇怪怪的问题？",
             "schema": {
               "type": "boolean",
-              "default": false
+              "default": true
             }
           },
           {
             "name": "force",
             "in": "query",
+            "description": "是否强制删除，无视状态。",
             "schema": {
               "type": "boolean",
               "default": false
@@ -149,11 +149,11 @@
           }
         ],
         "responses": {
-          "204": {
-            "description": "No Content"
+          "200": {
+            "description": "操作已成功执行。"
           },
           "400": {
-            "description": "Bad Request",
+            "description": "不允许删除根节点或请求无效（例如 Block 有子节点但未指定 recursive=true）。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -173,7 +173,7 @@
             }
           },
           "404": {
-            "description": "Not Found",
+            "description": "未找到具有指定 ID 的 Block。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -193,7 +193,7 @@
             }
           },
           "409": {
-            "description": "Conflict",
+            "description": "Block的当前状态不允许删除。现在只允许删除Idle或Error，说实在的有点意义不明，也许以后设计成什么都可以删除。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -213,7 +213,7 @@
             }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "执行操作时发生内部服务器错误。"
           }
         }
       }
@@ -429,6 +429,16 @@
           "Blocks"
         ],
         "summary": "获取整个 Block 树的拓扑结构 (基于 ID 的嵌套关系)。\r\n返回一个表示 Block 树层级结构的 JSON 对象。",
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "query",
+            "description": "目标根节点的ID，如果为空则返回整个父节点的ID",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
         "responses": {
           "200": {
             "description": "成功返回 JSON 格式的拓扑结构。\r\n            形如：{ \"id\": \"__WORLD__\", \"children\": [{ \"id\": \"child1\", \"children\": [] },{ \"id\": \"child2\", \"children\": [] }] }",
@@ -956,6 +966,9 @@
         "description": "包含用于批量执行的原子操作请求列表。"
       },
       "BlockDetailDto": {
+        "required": [
+          "blockId"
+        ],
         "type": "object",
         "properties": {
           "blockId": {
@@ -1004,7 +1017,8 @@
           "Error",
           "NotFound"
         ],
-        "type": "string"
+        "type": "string",
+        "description": "表示 Block 的不同状态。"
       },
       "BlockStatusUpdateDto": {
         "type": "object",
@@ -1243,6 +1257,41 @@
         },
         "additionalProperties": { }
       },
+      "RegenerateBlockRequestDto": {
+        "required": [
+          "blockId",
+          "requestId",
+          "workflowName"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "唯一的请求 ID，用于追踪。"
+          },
+          "blockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "要重新生成的 Block 的 ID。"
+          },
+          "workflowName": {
+            "minLength": 1,
+            "type": "string",
+            "description": "用于重新生成的工作流名称。"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "description": "传递给重新生成工作流的参数。",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "(客户端 -> 服务器)\r\n用于通过 SignalR 请求重新生成现有 Block 的内容和状态。\r\n只有主工作流对此有用。"
+      },
       "ResolveConflictRequestDto": {
         "required": [
           "blockId",
@@ -1270,7 +1319,7 @@
           }
         },
         "additionalProperties": false,
-        "description": "用于通过 SignalR 提交 **冲突解决方案** 的请求。\r\n当主工作流完成后检测到与用户修改冲突时，前端会收到 YAESandBox.API.DTOs.WebSocket.ConflictDetectedDto。\r\n用户解决冲突后，通过此 DTO 将最终确定的原子操作列表提交回后端。"
+        "description": "(客户端 -> 服务器)\r\n用于通过 SignalR 提交 **冲突解决方案** 的请求。\r\n当主工作流完成后检测到与用户修改冲突时，前端会收到 YAESandBox.API.DTOs.WebSocket.ConflictDetectedDto。\r\n用户解决冲突后，通过此 DTO 将最终确定的原子操作列表提交回后端。"
       },
       "StateUpdateSignalDto": {
         "type": "object",
@@ -1334,7 +1383,7 @@
           }
         },
         "additionalProperties": false,
-        "description": "用于通过 SignalR 触发 **主工作流** 的请求。\r\n主工作流通常会导致创建一个新的子 Block 来表示新的叙事状态。"
+        "description": "(客户端 -> 服务器)\r\n用于通过 SignalR 触发 **主工作流** 的请求。\r\n主工作流通常会导致创建一个新的子 Block 来表示新的叙事状态。"
       },
       "TriggerMicroWorkflowRequestDto": {
         "required": [
@@ -1375,7 +1424,7 @@
           }
         },
         "additionalProperties": false,
-        "description": "用于通过 SignalR 触发 **微工作流** 的请求。\r\n微工作流通常用于生成辅助信息、建议或执行不直接改变核心叙事状态（即不创建新 Block）的操作。\r\n其结果通常用于更新 UI 的特定部分。"
+        "description": "(客户端 -> 服务器)\r\n用于通过 SignalR 触发 **微工作流** 的请求。\r\n微工作流通常用于生成辅助信息、建议或执行不直接改变核心叙事状态（即不创建新 Block）的操作。\r\n其结果通常用于更新 UI 的特定部分。"
       },
       "UpdateBlockDetailsDto": {
         "type": "object",

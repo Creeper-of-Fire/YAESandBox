@@ -2,11 +2,12 @@
 
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.API.DTOs; // 可能需要新的 DTO
-using YAESandBox.API.Services; // 需要 IBlockWritService (或新的 IBlockManagementService)
+using YAESandBox.API.Services;
+using YAESandBox.API.Services.InterFaceAndBasic; // 需要 IBlockWritService (或新的 IBlockManagementService)
 using YAESandBox.Core.Block; // For BlockManager/Block
 // For WorldState, GameState
 using YAESandBox.Depend;
-using static GlobalSwaggerConstants; // For Log
+using static YAESandBox.API.GlobalSwaggerConstants; // For Log
 
 namespace YAESandBox.API.Controllers;
 
@@ -18,11 +19,12 @@ namespace YAESandBox.API.Controllers;
 [Route("api/manage/blocks")]
 public class BlockManagementController(
     IBlockManagementService blockManagementService,
-    IBlockReadService blockReadService)
-    : ControllerBase
+    IBlockWritService writServices,
+    INotifierService notifierService,
+    IBlockReadService readServices)
+    : APINotifyControllerBase(readServices, writServices, notifierService)
 {
-    private readonly IBlockManagementService _blockManagementService = blockManagementService;
-    private readonly IBlockReadService _blockReadService = blockReadService;
+    private IBlockManagementService blockManagementService { get; } = blockManagementService;
 
 
     /// <summary>
@@ -44,7 +46,7 @@ public class BlockManagementController(
         }
 
         var (result, newBlockStatus) =
-            await _blockManagementService.CreateBlockManuallyAsync(request.ParentBlockId, request.InitialMetadata);
+            await this.blockManagementService.CreateBlockManuallyAsync(request.ParentBlockId, request.InitialMetadata);
 
         switch (result)
         {
@@ -55,7 +57,7 @@ public class BlockManagementController(
                     return StatusCode(StatusCodes.Status500InternalServerError, "创建成功但无法获取 Block 信息。");
                 }
 
-                var newBlockDto = MapToDetailDto(newBlockStatus); // 使用辅助方法映射
+                var newBlockDto = newBlockStatus.MapToDetailDto(); // 使用辅助方法映射
                 // 使用 GetBlockDetail 的路由名和参数创建 Location Header
                 return CreatedAtAction(nameof(BlocksController.GetBlockDetail), "Blocks",
                     new { blockId = newBlockStatus.Block.BlockId }, newBlockDto);
@@ -74,20 +76,29 @@ public class BlockManagementController(
     /// <summary>
     /// 手动删除一个指定的 Block。
     /// </summary>
+    /// <param name="blockId">要删除的 Block ID。</param>
+    /// <param name="recursive">是否递归删除子 Block。默认递归删除，非递归可能导致奇奇怪怪的问题？</param>
+    /// <param name="force">是否强制删除，无视状态。</param>
+    /// <returns>删除操作的结果的 HTTP 状态码。</returns>
+    /// <response code="200">操作已成功执行。</response>
+    /// <response code="400">不允许删除根节点或请求无效（例如 Block 有子节点但未指定 recursive=true）。</response>
+    /// <response code="404">未找到具有指定 ID 的 Block。</response>
+    /// <response code="409">Block的当前状态不允许删除。现在只允许删除Idle或Error，说实在的有点意义不明，也许以后设计成什么都可以删除。</response>
+    /// <response code="500">执行操作时发生内部服务器错误。</response>
     [HttpDelete("{blockId}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)] // For InvalidState
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteBlockManually(string blockId, [FromQuery] bool recursive = false,
+    public async Task<IActionResult> DeleteBlockManually(string blockId, [FromQuery] bool recursive = true,
         [FromQuery] bool force = false)
     {
-        var result = await _blockManagementService.DeleteBlockManuallyAsync(blockId, recursive, force);
+        var result = await this.blockManagementService.DeleteBlockManuallyAsync(blockId, recursive, force);
 
         return result switch
         {
-            ManagementResult.Success => NoContent(),
+            ManagementResult.Success => Ok(),
             ManagementResult.NotFound => NotFound($"Block '{blockId}' 未找到。"),
             ManagementResult.CannotPerformOnRoot => BadRequest("不允许删除根节点。"),
             ManagementResult.InvalidState => Conflict($"Block '{blockId}' 当前状态不允许删除（可尝试 force=true）。"),
@@ -120,7 +131,7 @@ public class BlockManagementController(
             return Conflict("不能将 Block 移动到自身之下。");
         }
 
-        var result = await _blockManagementService.MoveBlockManuallyAsync(blockId, request.NewParentBlockId);
+        var result = await this.blockManagementService.MoveBlockManuallyAsync(blockId, request.NewParentBlockId);
 
         return result switch
         {
@@ -133,21 +144,6 @@ public class BlockManagementController(
             ManagementResult.BadRequest => BadRequest("请求无效。"),
             ManagementResult.Error => StatusCode(StatusCodes.Status500InternalServerError, "移动 Block 时发生错误。"),
             _ => StatusCode(StatusCodes.Status500InternalServerError, "未知的移动结果。")
-        };
-    }
-
-    // --- 辅助方法 MapToDetailDto (应移至公共位置或由 ReadService 提供) ---
-    private BlockDetailDto MapToDetailDto(BlockStatus blockStatus)
-    {
-        var block = blockStatus.Block;
-        return new BlockDetailDto
-        {
-            BlockId = block.BlockId,
-            ParentBlockId = block.ParentBlockId,
-            StatusCode = blockStatus.StatusCode,
-            BlockContent = block.BlockContent,
-            Metadata = new Dictionary<string, string>(block.Metadata),
-            ChildrenInfo = new List<string>(block.ChildrenList)
         };
     }
 }

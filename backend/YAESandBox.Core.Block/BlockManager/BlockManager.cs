@@ -11,13 +11,16 @@ namespace YAESandBox.Core.Block;
 
 public partial class BlockManager : IBlockManager
 {
+    
+    public const string DEBUG_WorkFlowName = "";
+    
     /// <summary>
     /// 构造函数，创建默认根节点。
     /// </summary>
     /// <exception cref="Exception"></exception>
     public BlockManager()
     {
-        var rootBlock = Block.CreateBlock(WorldRootId, null, new WorldState(), new GameState());
+        var rootBlock = Block.CreateBlock(WorldRootId, null, DEBUG_WorkFlowName, new WorldState(), new GameState());
         if (this.blocks.TryAdd(WorldRootId, rootBlock.ForceIdleState()))
         {
             Log.Info("BlockManager: 根节点已创建并设置为空闲。");
@@ -52,13 +55,14 @@ public partial class BlockManager : IBlockManager
         this.blocks.ToDictionary(kv => kv.Key, IBlockNode (kv) => kv.Value.Block);
 
     /// <summary>
-    /// 创建子Block，需要父BlockId和触发参数
+    /// 创建子Block，需要父BlockId和触发参数，以及触发所用的工作流的名称
     /// </summary>
     /// <param name="parentBlockId"></param>
+    /// <param name="workFlowName"></param>
     /// <param name="triggerParams"></param>
     /// <returns></returns>
     public async Task<LoadingBlockStatus?> CreateChildBlock_Async(
-        string? parentBlockId, Dictionary<string, object?> triggerParams)
+        string? parentBlockId, string workFlowName, Dictionary<string, object?> triggerParams)
     {
         parentBlockId ??= WorldRootId;
         using (await this.GetLockForBlock(parentBlockId).LockAsync()) // Lock parent to add child info
@@ -79,7 +83,7 @@ public partial class BlockManager : IBlockManager
 
             parentBlock.Block.TriggeredChildParams = triggerParams;
 
-            (string newBlockId, var newChildBlock) = idleParentBlock.CreateNewChildrenBlock();
+            (string newBlockId, var newChildBlock) = idleParentBlock.CreateNewChildrenBlock(workFlowName);
 
 
             // 4. Add New Block to Manager's Dictionary (Lock the *new* block ID)
@@ -331,6 +335,7 @@ public partial class BlockManager : IBlockManager
             {
                 BlockId = coreBlock.BlockId,
                 ParentBlockId = coreBlock.ParentBlockId,
+                WorkFlowName = coreBlock.WorkFlowName,
                 ChildrenIds = new List<string>(coreBlock.ChildrenList), // Copy list
                 BlockContent = coreBlock.BlockContent,
                 Metadata = coreBlock.Metadata.ToDictionary(entry => entry.Key,
@@ -376,7 +381,7 @@ public partial class BlockManager : IBlockManager
             if (!this.blocks.ContainsKey(WorldRootId))
             {
                 this.blocks.TryAdd(WorldRootId,
-                    Block.CreateBlock(WorldRootId, null, new WorldState(), new GameState()));
+                    Block.CreateBlock(WorldRootId, null, DEBUG_WorkFlowName, new WorldState(), new GameState()));
             }
 
             return null;
@@ -419,6 +424,7 @@ public partial class BlockManager : IBlockManager
                 coreBlock = Block.CreateBlockFromSave(
                     blockId,
                     blockDto.ParentBlockId,
+                    blockDto.WorkFlowName,
                     blockDto.ChildrenIds,
                     blockDto.BlockContent,
                     metadata,
@@ -511,7 +517,7 @@ public partial class BlockManager : IBlockManager
             return (ManagementResult.NotFound, null);
         }
 
-        if (parentBlockStatus is not IdleBlockStatus idleParentBlock)
+        if (parentBlockStatus is not IdleBlockStatus)
         {
             Log.Warning($"手动创建 Block 失败: 父 Block '{parentBlockId}' 状态为 {parentBlockStatus.StatusCode}，非 Idle。");
             return (ManagementResult.InvalidState, null);
@@ -522,7 +528,6 @@ public partial class BlockManager : IBlockManager
         Log.Info($"准备手动创建新 Block '{newBlockId}'，父节点: '{parentBlockId}'。");
 
         // 3. 获取父节点锁并创建 Block (初始可能为 Loading)
-        LoadingBlockStatus tempLoadingBlock;
         using (await this.GetLockForBlock(parentBlockId).LockAsync())
         {
             // 重新检查父节点状态，以防在等待锁期间发生变化
@@ -533,14 +538,12 @@ public partial class BlockManager : IBlockManager
                 return (ManagementResult.InvalidState, null); // 或者重试？取决于策略
             }
 
-            idleParentBlock = updatedIdleParentBlock; // 使用最新的状态
-
             // 克隆状态
-            var wsInputClone = idleParentBlock.Block.wsPostUser?.Clone() ?? idleParentBlock.Block.wsInput.Clone();
-            var gameStateClone = idleParentBlock.Block.GameState.Clone();
+            var wsInputClone = updatedIdleParentBlock.Block.wsPostUser?.Clone() ?? updatedIdleParentBlock.Block.wsInput.Clone();
+            var gameStateClone = updatedIdleParentBlock.Block.GameState.Clone();
 
             // 使用标准方式创建 Block (返回 Loading)
-            tempLoadingBlock = Block.CreateBlock(newBlockId, parentBlockId, wsInputClone, gameStateClone,
+            var tempLoadingBlock = Block.CreateBlock(newBlockId, parentBlockId, DEBUG_WorkFlowName, wsInputClone, gameStateClone,
                 new Dictionary<string, object?>());
 
             // 添加到字典 (仍然需要锁新 Block ID，虽然概率极低，但保险起见)
@@ -554,7 +557,7 @@ public partial class BlockManager : IBlockManager
                 }
 
                 // 更新父节点的孩子列表
-                idleParentBlock.Block.AddChildren(tempLoadingBlock.Block);
+                updatedIdleParentBlock.Block.AddChildren(tempLoadingBlock.Block);
                 Log.Debug($"父 Block '{parentBlockId}' 已添加子节点 '{newBlockId}'。");
                 // 注意：父节点的变更可能需要持久化（如果使用了数据库）
             }
@@ -905,4 +908,6 @@ public record BlockStatusError(BlockResultCode Code, string Message, BlockStatus
 
     public static BlockStatusError Error(BlockStatus block, string message)
         => new(BlockResultCode.Error, message, block);
+
+    public static implicit operator Result(BlockStatusError initError) => initError.ToResult();
 }

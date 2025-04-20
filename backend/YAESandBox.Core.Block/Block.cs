@@ -99,10 +99,16 @@ public class Block : NodeBlock
     /// </summary>
     public GameState GameState { get; }
 
+
     /// <summary>
     /// Block 的主要内容（例如 AI 生成的文本、JSON 配置、HTML 片段）。不过目前来看更有可能是工作流产生的RawText
     /// </summary>
-    public string BlockContent { get; set; } = string.Empty;
+    public string BlockContent { get; internal set; } = string.Empty;
+
+    /// <summary>
+    /// 触发这个的Bloc内容的工作流的名称。
+    /// </summary>
+    public string WorkFlowName { get; internal set; }
 
     /// <summary>
     /// 存储与 Block 相关的任意元数据（例如创建时间、触发的工作流名称）。
@@ -131,12 +137,12 @@ public class Block : NodeBlock
     /// <summary>
     /// (仅父 Block 存储) 触发子 Block 时使用的参数。只会保存一个，不会为不同的子 Block 保存不同的参数。
     /// </summary>
-    public Dictionary<string, object?> TriggeredChildParams { get; set; } = new();
+    public Dictionary<string, object?> TriggeredChildParams { get; internal set; } = new();
 
     /// <summary>
     /// 创建一个新的子 Block (由 BlockManager 调用)。
     /// </summary>
-    private Block(string blockId, string? parentBlockId, WorldState sourceWorldState, GameState sourceGameState,
+    private Block(string blockId, string? parentBlockId, string workFlowName, WorldState sourceWorldState, GameState sourceGameState,
         Dictionary<string, object?> triggerParams) : base(blockId, parentBlockId)
     {
         if (string.IsNullOrWhiteSpace(blockId))
@@ -146,6 +152,7 @@ public class Block : NodeBlock
 
         this.AddOrSetMetaData("CreationTime", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
         this.AddOrSetMetaData("TriggerParams", JsonSerializer.Serialize(triggerParams));
+        this.WorkFlowName = workFlowName;
 
         // --- 在构造函数内部完成克隆 ---
         this.wsInput = sourceWorldState.Clone(); // 创建 wsInput 的隔离副本
@@ -158,16 +165,17 @@ public class Block : NodeBlock
     /// </summary>
     /// <param name="blockId"></param>
     /// <param name="parentBlockId"></param>
+    /// <param name="workFlowName"></param>
     /// <param name="sourceWorldState"></param>
     /// <param name="sourceGameState"></param>
     /// <param name="triggerParams"></param>
     /// <returns></returns>
-    public static LoadingBlockStatus CreateBlock(string blockId, string? parentBlockId, WorldState sourceWorldState,
+    public static LoadingBlockStatus CreateBlock(string blockId, string? parentBlockId, string workFlowName, WorldState sourceWorldState,
         GameState sourceGameState, Dictionary<string, object?>? triggerParams = null)
     {
         triggerParams ??= new Dictionary<string, object?>();
         return new LoadingBlockStatus(
-            new Block(blockId, parentBlockId, sourceWorldState, sourceGameState, triggerParams));
+            new Block(blockId, parentBlockId,workFlowName, sourceWorldState, sourceGameState, triggerParams));
     }
 
 
@@ -415,6 +423,7 @@ public class Block : NodeBlock
     private Block(
         string blockId,
         string? parentBlockId,
+        string workFlowName,
         List<string> childrenIds,
         string blockContent,
         Dictionary<string, string> metadata,
@@ -427,6 +436,7 @@ public class Block : NodeBlock
     {
         // 直接赋值
         this.BlockContent = blockContent;
+        this.WorkFlowName = workFlowName;
         this._metadata = metadata; // 注意：这里是引用赋值，如果DTO的字典是新建的就没问题
         this.TriggeredChildParams = triggeredChildParams;
         this.GameState = gameState;
@@ -445,6 +455,7 @@ public class Block : NodeBlock
     public static IdleBlockStatus CreateBlockFromSave(
         string blockId,
         string? parentBlockId,
+        string workFlowName,
         List<string> childrenIds,
         string blockContent,
         Dictionary<string, string> metadata,
@@ -457,6 +468,7 @@ public class Block : NodeBlock
         return new IdleBlockStatus(new Block(
             blockId,
             parentBlockId,
+            workFlowName,
             childrenIds,
             blockContent,
             metadata,

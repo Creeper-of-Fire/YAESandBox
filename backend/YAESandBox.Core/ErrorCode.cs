@@ -1,7 +1,8 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using FluentResults;
+using YAESandBox.Depend;
 
-namespace YAESandBox.Depend;
+namespace YAESandBox.Core;
 
 public abstract record LazyInitError(string Message) : IError
 {
@@ -19,6 +20,8 @@ public abstract record LazyInitError(string Message) : IError
     /// </summary>
     [field: AllowNull, MaybeNull]
     public List<IError> Reasons => field ??= [];
+
+    public static implicit operator Result(LazyInitError initError) => initError.ToResult();
 }
 
 public abstract record LazyInitHandledIssue(string Message) : IHandledIssue
@@ -47,6 +50,15 @@ public record NormalHandledIssue(BlockResultCode Code, string Message) : LazyIni
     public static NormalHandledIssue Error(string message) => new(BlockResultCode.Error, message);
     public static NormalHandledIssue InvalidState(string message) => new(BlockResultCode.InvalidState, message);
 }
+public record NormalError(BlockResultCode Code, string Message): LazyInitError(Message)
+{
+    public static NormalError NotFound(string message) => new(BlockResultCode.NotFound, message);
+    public static NormalError Conflict(string message) => new(BlockResultCode.Conflict, message);
+    public static NormalError InvalidInput(string message) => new(BlockResultCode.InvalidInput, message);
+    public static NormalError Error(string message) => new(BlockResultCode.Error, message);
+    public static NormalError InvalidState(string message) => new(BlockResultCode.InvalidState, message);
+}
+
 /// <summary>
 /// 错误已经被处理，但是相关的信息依旧需要得到保留
 /// </summary>

@@ -10,7 +10,7 @@ export class AtomicService {
     /**
      * 对指定的 Block 执行一批原子化操作。
      * 根据 Block 的当前状态，操作可能被立即执行或暂存。
-     * @returns any 操作已成功执行 (适用于 Idle 状态)。
+     * @returns any 操作已成功执行，若为Loading状态则还额外暂存了一份。
      * @throws ApiError
      */
     public static postApiAtomic({

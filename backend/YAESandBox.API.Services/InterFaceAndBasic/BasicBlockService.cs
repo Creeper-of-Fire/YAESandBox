@@ -1,13 +1,13 @@
 ﻿using YAESandBox.Core.Block;
 
-namespace YAESandBox.API.Services;
+namespace YAESandBox.API.Services.InterFaceAndBasic;
 
-public class BasicBlockService(INotifierService notifierService, IBlockManager blockManager)
+public class BasicBlockService(IBlockManager blockManager)
 {
-    /// <summary>
-    /// 通知服务
-    /// </summary>
-    protected INotifierService notifierService { get; } = notifierService;
+    // /// <summary>
+    // /// 通知服务
+    // /// </summary>
+    // protected INotifierService notifierService { get; } = notifierService;
 
     /// <summary>
     /// Block管理器

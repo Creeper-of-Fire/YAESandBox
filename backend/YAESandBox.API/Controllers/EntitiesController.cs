@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services;
+using YAESandBox.API.Services.InterFaceAndBasic;
 using YAESandBox.Core.State.Entity; // For EntityType, TypedID
 
 namespace YAESandBox.API.Controllers;
@@ -11,11 +12,9 @@ namespace YAESandBox.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/entities")] // /api/entities
-public class EntitiesController(IBlockWritService writServices, IBlockReadService readServices) : ControllerBase
+public class EntitiesController(IBlockWritService writServices, IBlockReadService readServices, INotifierService notifierService)
+    : APINotifyControllerBase(readServices, writServices, notifierService)
 {
-    private IBlockWritService blockWritService { get; } = writServices;
-    private IBlockReadService blockReadServices { get; } = readServices;
-
     /// <summary>
     /// 获取指定 Block 当前可交互 WorldState 中的所有非销毁实体摘要信息。
     /// </summary>
@@ -27,11 +26,11 @@ public class EntitiesController(IBlockWritService writServices, IBlockReadServic
     [HttpGet]
     [ProducesResponseType(typeof(IEnumerable<EntitySummaryDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)] // Missing blockId
-    [ProducesResponseType(StatusCodes.Status404NotFound)]   // Block not found
+    [ProducesResponseType(StatusCodes.Status404NotFound)] // Block not found
     public async Task<IActionResult> GetAllEntities([FromQuery, Required] string blockId)
     {
         // BlockManager 需要一个方法来根据 blockId 及其当前目标 WorldState 获取实体
-        var entities = await this.blockReadServices.GetAllEntitiesSummaryAsync(blockId);
+        var entities = await this.blockReadService.GetAllEntitiesSummaryAsync(blockId);
 
         if (entities == null) // 表示 block 未找到或服务层处理了其他问题
             return this.NotFound($"未找到 ID 为 '{blockId}' 的 Block 或无法访问。");
@@ -54,14 +53,14 @@ public class EntitiesController(IBlockWritService writServices, IBlockReadServic
     [HttpGet("{entityType}/{entityId}")]
     [ProducesResponseType(typeof(EntityDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)] // Missing blockId or invalid entityType/entityId format
-    [ProducesResponseType(StatusCodes.Status404NotFound)]   // Block or Entity not found
+    [ProducesResponseType(StatusCodes.Status404NotFound)] // Block or Entity not found
     public async Task<IActionResult> GetEntityDetail(EntityType entityType, string entityId, [FromQuery, Required] string blockId)
     {
         if (string.IsNullOrWhiteSpace(entityId))
             return this.BadRequest("实体 ID 不能为空。");
 
         var typedId = new TypedID(entityType, entityId);
-        var entity = await this.blockReadServices.GetEntityDetailAsync(blockId, typedId);
+        var entity = await this.blockReadService.GetEntityDetailAsync(blockId, typedId);
 
         if (entity == null)
             return this.NotFound($"在 Block '{blockId}' 中未找到实体 '{typedId}'，或 Block 未找到。");
@@ -95,7 +94,7 @@ public class EntitiesController(IBlockWritService writServices, IBlockReadServic
     /// </summary>
     private EntityDetailDto MapToDetailDto(BaseEntity entity)
     {
-         // 示例基础映射
+        // 示例基础映射
         return new EntityDetailDto
         {
             EntityId = entity.EntityId,
@@ -107,7 +106,7 @@ public class EntitiesController(IBlockWritService writServices, IBlockReadServic
         };
     }
 
-     // 如果需要，可以在此处添加更具体的实体查询端点
+    // 如果需要，可以在此处添加更具体的实体查询端点
     // 例如：GET /places/{placeId}/contents?block_id=...
     // 例如：GET /characters/{characterId}/items?block_id=...
 }

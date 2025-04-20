@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" PrivateAssets="all" />
         <InternalsVisibleTo Include="YAESandBox.Core.Block"/>
     </ItemGroup>
 

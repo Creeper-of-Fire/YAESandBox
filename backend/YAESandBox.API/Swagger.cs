@@ -16,8 +16,8 @@ public class SignalRDtoDocumentFilter(ISchemaGenerator schemaGenerator) : IDocum
     public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
     {
         // 定义包含 SignalR DTOs 的程序集和命名空间
-        var targetAssembly = typeof(WebSocketInfo).Assembly; // 获取 DTO 所在的程序集
-        var targetNamespace = typeof(WebSocketInfo).Namespace; // 获取 DTO 所在的命名空间
+        var targetAssembly = typeof(TriggerMainWorkflowRequestDto).Assembly; // 获取 DTO 所在的程序集
+        var targetNamespace = typeof(TriggerMainWorkflowRequestDto).Namespace; // 获取 DTO 所在的命名空间
 
         if (targetNamespace == null)
         {

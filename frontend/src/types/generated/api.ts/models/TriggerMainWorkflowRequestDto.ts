@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
+ * (客户端 -> 服务器)
  * 用于通过 SignalR 触发 **主工作流** 的请求。
  * 主工作流通常会导致创建一个新的子 Block 来表示新的叙事状态。
  */

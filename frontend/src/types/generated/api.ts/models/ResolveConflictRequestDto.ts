@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { AtomicOperationRequestDto } from './AtomicOperationRequestDto';
 /**
+ * (客户端 -> 服务器)
  * 用于通过 SignalR 提交 **冲突解决方案** 的请求。
  * 当主工作流完成后检测到与用户修改冲突时，前端会收到 YAESandBox.API.DTOs.WebSocket.ConflictDetectedDto。
  * 用户解决冲突后，通过此 DTO 将最终确定的原子操作列表提交回后端。

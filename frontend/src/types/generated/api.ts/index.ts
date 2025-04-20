@@ -20,6 +20,7 @@ export { EntityType } from './models/EntityType';
 export type { GameStateDto } from './models/GameStateDto';
 export type { JsonBlockNode } from './models/JsonBlockNode';
 export type { ProblemDetails } from './models/ProblemDetails';
+export type { RegenerateBlockRequestDto } from './models/RegenerateBlockRequestDto';
 export type { ResolveConflictRequestDto } from './models/ResolveConflictRequestDto';
 export type { StateUpdateSignalDto } from './models/StateUpdateSignalDto';
 export { StreamStatus } from './models/StreamStatus';

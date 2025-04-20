@@ -88,10 +88,20 @@ export class BlocksService {
      * 形如：{ "id": "__WORLD__", "children": [{ "id": "child1", "children": [] },{ "id": "child2", "children": [] }] }
      * @throws ApiError
      */
-    public static getApiBlocksTopology(): CancelablePromise<JsonBlockNode> {
+    public static getApiBlocksTopology({
+        blockId,
+    }: {
+        /**
+         * 目标根节点的ID，如果为空则返回整个父节点的ID
+         */
+        blockId?: string,
+    }): CancelablePromise<JsonBlockNode> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Blocks/topology',
+            query: {
+                'blockId': blockId,
+            },
             errors: {
                 500: `生成拓扑结构时发生内部服务器错误。`,
             },

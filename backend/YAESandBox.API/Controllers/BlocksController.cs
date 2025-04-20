@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services;
+using YAESandBox.API.Services.InterFaceAndBasic;
 using YAESandBox.Core.Block;
 using YAESandBox.Core.State;
 using YAESandBox.Depend; // Assuming BlockManager is a service
@@ -14,11 +15,9 @@ namespace YAESandBox.API.Controllers;
 /// <param name="readServices"></param>
 [ApiController]
 [Route("api/[controller]")] // /api/blocks
-public class BlocksController(IBlockWritService writServices, IBlockReadService readServices) : ControllerBase
+public class BlocksController(IBlockWritService writServices, IBlockReadService readServices, INotifierService notifierService)
+    : APINotifyControllerBase(readServices, writServices, notifierService)
 {
-    private IBlockWritService WritServices { get; } = writServices;
-    private IBlockReadService ReadServices { get; } = readServices;
-
     /// <summary>
     /// 获取所有 Block 的摘要信息字典。
     /// 返回一个以 Block ID 为键，Block 详细信息 DTO 为值的只读字典。
@@ -29,7 +28,7 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     [ProducesResponseType(typeof(IReadOnlyDictionary<string, BlockDetailDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBlocks()
     {
-        var summaries = await this.ReadServices.GetAllBlockDetailsAsync();
+        var summaries = await this.blockReadService.GetAllBlockDetailsAsync();
         return this.Ok(summaries);
     }
 
@@ -45,7 +44,7 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetBlockDetail(string blockId)
     {
-        var detail = await this.ReadServices.GetBlockDetailDtoAsync(blockId); // 实现这个方法
+        var detail = await this.blockReadService.GetBlockDetailDtoAsync(blockId); // 实现这个方法
         if (detail == null)
         {
             return this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。");
@@ -58,6 +57,7 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     /// 获取整个 Block 树的拓扑结构 (基于 ID 的嵌套关系)。
     /// 返回一个表示 Block 树层级结构的 JSON 对象。
     /// </summary>
+    /// <param name="blockId">目标根节点的ID，如果为空则返回整个父节点的ID</param>
     /// <returns>表示 Block 拓扑结构的 JSON 对象。</returns>
     /// <response code="200">成功返回 JSON 格式的拓扑结构。
     /// 形如：{ "id": "__WORLD__", "children": [{ "id": "child1", "children": [] },{ "id": "child2", "children": [] }] }</response>
@@ -66,12 +66,12 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     [ProducesResponseType(typeof(BlockTopologyExporter.JsonBlockNode), StatusCodes.Status200OK, "application/json")]
     // 明确内容类型和返回类型
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetTopology()
+    public async Task<IActionResult> GetTopology(string? blockId)
     {
         try
         {
             // 调用 Service 获取 JSON 字符串
-            var topologyJson = await this.ReadServices.GetBlockTopologyJsonAsync();
+            var topologyJson = await this.blockReadService.GetBlockTopologyJsonAsync(blockId);
 
             if (topologyJson != null)
             {
@@ -96,8 +96,8 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     // 现在不会根据切换页面来发送信号了，页面状态仅在前端进行维护
     // 前端会将“当前选择路径的最底层block”通过“后端盲存”进行持久化，并且在启动时自行读取盲存数据解析路径
     // 在启动时，前端可能会调用后端的GetPathToRoot来生成路径，或者这个逻辑会被挪动到前端
-    
-     /// <summary>
+
+    /// <summary>
     /// 部分更新指定 Block 的内容和/或元数据。
     /// 此操作仅在 Block 处于 Idle 状态时被允许。
     /// </summary>
@@ -126,15 +126,15 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
         // 可以在这里添加一个检查，确保至少提供了一项更新
         if (updateDto.Content == null && (updateDto.MetadataUpdates == null || !updateDto.MetadataUpdates.Any()))
         {
-             // return BadRequest("必须提供 Content 或 MetadataUpdates 中的至少一项来进行更新。");
-             // 或者根据服务层的行为，允许无操作请求并返回 204
+            // return BadRequest("必须提供 Content 或 MetadataUpdates 中的至少一项来进行更新。");
+            // 或者根据服务层的行为，允许无操作请求并返回 204
         }
 
-        var result = await this.WritServices.UpdateBlockDetailsAsync(blockId, updateDto);
+        var result = await this.blockWritService.UpdateBlockDetailsAsync(blockId, updateDto);
 
         return result switch
         {
-            BlockResultCode.Success => this.NoContent(),                       // 204
+            BlockResultCode.Success => this.NoContent(), // 204
             BlockResultCode.NotFound => this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"), // 404
             BlockResultCode.InvalidState => this.Conflict($"Block '{blockId}' 当前状态不允许修改内容或元数据。请确保其处于 Idle 状态。"), // 409
             BlockResultCode.InvalidInput => this.BadRequest("无效的更新操作。"), // 400 (如果服务层返回这个)

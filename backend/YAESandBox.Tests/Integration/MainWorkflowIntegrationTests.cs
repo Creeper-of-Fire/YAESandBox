@@ -37,7 +37,7 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
     //
     //     // 注册需要监听的消息类型
     //     collector.RegisterHandler<BlockStatusUpdateDto>("ReceiveBlockStatusUpdate");
-    //     collector.RegisterHandler<DisplayUpdateDto>("ReceiveWorkflowUpdate");
+    //     collector.RegisterHandler<DisplayUpdateDto>("ReceiveDisplayUpdate");
     //     collector.RegisterHandler<StateUpdateSignalDto>("ReceiveStateUpdateSignal");
     //     collector.RegisterHandler<ConflictDetectedDto>("ReceiveConflictDetected"); // 即使本测试不期待冲突，也注册以防万一
     //

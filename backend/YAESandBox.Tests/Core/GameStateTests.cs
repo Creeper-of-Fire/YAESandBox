@@ -3,7 +3,7 @@ using YAESandBox.Core.State;
 
 // 需要 для Dictionary
 
-namespace YAESandBox.Core.Tests;
+namespace YAESandBox.Tests.Core;
 
 /// <summary>
 /// 针对 GameState 的单元测试。

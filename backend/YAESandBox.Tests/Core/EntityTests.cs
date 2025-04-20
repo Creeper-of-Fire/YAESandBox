@@ -3,7 +3,7 @@ using YAESandBox.Core.State.Entity;
 
 // 需要 для List 和 Dictionary
 
-namespace YAESandBox.Core.Tests;
+namespace YAESandBox.Tests.Core;
 
 /// <summary>
 /// 针对 BaseEntity 及其子类的单元测试。

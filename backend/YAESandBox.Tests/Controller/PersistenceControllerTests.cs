@@ -1,15 +1,17 @@
 ﻿// --- START OF FILE YAESandBox.Tests/API/Controllers/PersistenceControllerTests.cs ---
 
+using System.Text;
+using System.Text.Json;
 using FluentAssertions;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
-using System.Text;
-using System.Text.Json;
 using YAESandBox.API.Controllers;
-using YAESandBox.Core.Block; // For BlockManager
+using YAESandBox.Core.Block;
 
-namespace YAESandBox.Tests.API.Controllers;
+// For BlockManager
+
+namespace YAESandBox.Tests.Controller;
 
 public class PersistenceControllerTests
 {

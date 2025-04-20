@@ -1,9 +1,8 @@
 ﻿// --- START OF FILE IWorkflowService.cs ---
 
-using YAESandBox.API.DTOs;
 using YAESandBox.API.DTOs.WebSocket;
 
-namespace YAESandBox.API.Services;
+namespace YAESandBox.API.Services.InterFaceAndBasic;
 
 /// <summary>
 /// 服务接口，用于处理工作流的触发和执行。
@@ -33,6 +32,13 @@ public interface IWorkflowService
     /// <param name="request">冲突解决请求 DTO。</param>
     /// <returns>一个 Task 代表异步操作。</returns>
     Task HandleConflictResolutionAsync(ResolveConflictRequestDto request);
+    
+    /// <summary>
+    /// 处理重新生成 Block 的请求。
+    /// </summary>
+    /// <param name="request">重新生成请求 DTO。</param>
+    /// <returns>一个 Task 代表异步操作。</returns>
+    Task HandleRegenerateBlockAsync(RegenerateBlockRequestDto request);
 }
 // --- END OF FILE IWorkflowService.cs ---
 

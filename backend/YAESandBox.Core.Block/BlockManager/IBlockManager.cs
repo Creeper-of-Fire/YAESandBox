@@ -19,10 +19,11 @@ namespace YAESandBox.Core.Block
         /// 创建子Block，需要父BlockId和触发参数
         /// </summary>
         /// <param name="parentBlockId"></param>
+        /// <param name="workFlowName"></param>
         /// <param name="triggerParams"></param>
         /// <returns></returns>
         Task<LoadingBlockStatus?> CreateChildBlock_Async(
-            string? parentBlockId, Dictionary<string, object?> triggerParams);
+            string? parentBlockId,string workFlowName, Dictionary<string, object?> triggerParams);
 
         /// <summary>
         /// 获取从根节点到指定块ID可达的最深层叶子节点（根据“最后一个子节点”规则）的完整路径。
@@ -121,5 +122,20 @@ namespace YAESandBox.Core.Block
         /// <param name="metadataUpdates">要更新或移除的元数据。Key 为元数据键，Value 为新值（null 表示移除）。如果为 null 则不更新。</param>
         /// <returns>更新操作的结果。</returns>
         Task<BlockResultCode> UpdateBlockDetailsAsync(string blockId, string? newContent, Dictionary<string, string?>? metadataUpdates);
+
+
+        /// <summary>
+        /// 启动对现有 Block 的重新生成过程。
+        /// 仅当 Block 处于 Idle 或 Error 状态时有效。
+        /// 会将 Block 状态强制转换为 Loading，并重置其派生状态。
+        /// </summary>
+        /// <param name="blockId">要重新生成的 Block ID。</param>
+        /// <param name="workFlowName">工作流名称</param>
+        /// <param name="triggerParams">用于重新生成工作流的参数。</param>
+        /// <returns>
+        /// Block当前的状态（必定为LoadingBlockStatus）
+        /// </returns>
+        Task<Result<LoadingBlockStatus>> StartRegenerationAsync(string blockId,string workFlowName, Dictionary<string, object?> triggerParams);
+
     }
 }

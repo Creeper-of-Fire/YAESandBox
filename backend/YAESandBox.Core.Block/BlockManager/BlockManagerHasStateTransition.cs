@@ -1,4 +1,5 @@
-﻿using FluentResults;
+﻿using System.Globalization;
+using FluentResults;
 using YAESandBox.Core.Action;
 using YAESandBox.Depend;
 using OneOf;
@@ -93,7 +94,8 @@ public partial class BlockManager
 
             if (blockStatus is not LoadingBlockStatus block)
             {
-                return NormalHandledIssue.InvalidState($"收到 Block '{blockId}' 的工作流完成回调，但其状态为 {blockStatus.StatusCode} (非 Loading)。可能重复或过时。");
+                return NormalHandledIssue.InvalidState(
+                    $"收到 Block '{blockId}' 的工作流完成回调，但其状态为 {blockStatus.StatusCode} (非 Loading)。可能重复或过时。");
             }
 
             if (!success) // Workflow failed
@@ -110,9 +112,58 @@ public partial class BlockManager
             Log.Info($"Block '{blockId}': 工作流成功完成。准备处理指令和状态。");
             var val = block.TryFinalizeSuccessfulWorkflow(rawText, firstPartyCommands);
             val.Switch(tuple => this.TrySetBlock(tuple.blockStatus), this.TrySetBlock);
-            return val.Match<OneOf<(IdleBlockStatus, Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>(
-                tuple => tuple,
-                conflict => conflict);
+            return val
+                .Match<OneOf<(IdleBlockStatus, Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>(
+                    tuple => tuple,
+                    conflict => conflict);
+        }
+    }
+
+    /// <inheritdoc/>
+    [HasBlockStateTransition]
+    public async Task<Result<LoadingBlockStatus>> StartRegenerationAsync(string blockId, string workFlowName,
+        Dictionary<string, object?> triggerParams)
+    {
+        using (await this.GetLockForBlock(blockId).LockAsync())
+        {
+            if (!this.blocks.TryGetValue(blockId, out var blockStatus))
+            {
+                Log.Error($"BlockManager: 尝试为 Block '{blockId}' 启动重新生成失败：Block 未找到。");
+                return BlockStatusError.NotFound(null, $"尝试为 Block '{blockId}' 启动重新生成失败：Block 未找到。").ToResult();
+            }
+
+            var sourceWsForRegen = blockStatus.Block.wsInput;
+            var coreBlock = blockStatus.Block; // 获取核心 Block 对象
+
+            // --- 准备 Block 以进入 Loading 状态 ---
+            Log.Debug($"BlockManager: 准备将 Block '{blockId}' 从 {blockStatus.StatusCode} 转为 Loading 状态...");
+
+            // 1. 清理旧的输出和临时状态
+            coreBlock.wsPostAI = null;
+            coreBlock.wsPostUser = null;
+            coreBlock.wsTemp = null;
+
+            // 2. 创建新的 wsTemp (基于选定的源)
+            coreBlock.wsTemp = sourceWsForRegen.Clone();
+            Log.Debug($"BlockManager: Block '{blockId}': wsTemp 已基于源 WorldState 重新克隆。");
+
+
+            // 3. 更新触发参数和元数据
+            coreBlock.WorkFlowName = workFlowName;
+            coreBlock.TriggeredChildParams = triggerParams ?? new Dictionary<string, object?>(); // 确保存储的是有效字典
+            coreBlock.AddOrSetMetaData("RegenerationStartTime", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
+            // 可以考虑移除旧的 WorkflowOutputVariables 或其他相关元数据
+            coreBlock.RemoveMetaData("WorkflowOutputVariables"); // 示例：移除旧输出
+
+            // 4. 创建新的 LoadingBlockStatus 实例
+            var newLoadingStatus = new LoadingBlockStatus(coreBlock);
+
+            // 5. 更新 BlockManager 中的状态字典
+            // 使用 AddOrUpdate 确保线程安全地替换旧状态
+            this.blocks.AddOrUpdate(blockId, newLoadingStatus, (key, oldStatus) => newLoadingStatus);
+
+            Log.Info($"BlockManager: Block '{blockId}' 已成功转换到 Loading 状态，准备重新生成。");
+            return newLoadingStatus;
         }
     }
 }

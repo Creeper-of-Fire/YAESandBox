@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services;
+using YAESandBox.API.Services.InterFaceAndBasic;
 using YAESandBox.Core.State; // For UpdateResult
 
 namespace YAESandBox.API.Controllers;
@@ -10,11 +11,9 @@ namespace YAESandBox.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/blocks/{blockId}/[controller]")] // /api/blocks/{blockId}/gamestate
-public class GameStateController(IBlockWritService writServices, IBlockReadService readServices) : ControllerBase
+public class GameStateController(IBlockWritService writServices, IBlockReadService readServices, INotifierService notifierService)
+    : APINotifyControllerBase(readServices, writServices, notifierService)
 {
-    private IBlockWritService BlockWritService { get; } = writServices;
-    private IBlockReadService blockReadService { get; } = readServices;
-
     /// <summary>
     /// 获取指定 Block 的当前 GameState。
     /// </summary>
@@ -56,7 +55,7 @@ public class GameStateController(IBlockWritService writServices, IBlockReadServi
         if (request?.SettingsToUpdate == null)
             return this.BadRequest("请求体或要更新的设置不能为空。");
 
-        var result = await this.BlockWritService.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate); // 实现更新逻辑
+        var result = await this.blockWritService.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate); // 实现更新逻辑
 
         return result switch
         {

@@ -89,7 +89,7 @@ public class IdleBlockStatus(Block block) : BlockStatus(block), ICanApplyOperati
         return results.CollectValue();
     }
 
-    internal (string newBlockId, LoadingBlockStatus newChildblock) CreateNewChildrenBlock()
+    internal (string newBlockId, LoadingBlockStatus newChildblock) CreateNewChildrenBlock(string workFlowName)
     {
         string newBlockId = $"blk_{Guid.NewGuid()}";
         if (this.Block.wsPostUser == null)
@@ -98,7 +98,7 @@ public class IdleBlockStatus(Block block) : BlockStatus(block), ICanApplyOperati
             this.Block.wsPostUser = this.Block.wsInput.Clone();
         }
 
-        var newChildBlock = Block.CreateBlock(newBlockId, this.Block.BlockId,
+        var newChildBlock = Block.CreateBlock(newBlockId, this.Block.BlockId, workFlowName,
             this.Block.wsPostUser, this.Block.GameState, this.Block.TriggeredChildParams);
         return (newBlockId, newChildBlock);
     }

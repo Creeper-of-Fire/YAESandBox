@@ -10,7 +10,7 @@ export type BlockDetailDto = {
     /**
      * Block 的唯一标识符。
      */
-    blockId?: string | null;
+    blockId: string | null;
     /**
      * 父 Block 的 ID。如果为根节点，则为 null。
      */

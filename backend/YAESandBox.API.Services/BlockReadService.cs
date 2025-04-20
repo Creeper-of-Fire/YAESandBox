@@ -1,5 +1,6 @@
 ﻿using Nito.AsyncEx;
 using YAESandBox.API.DTOs;
+using YAESandBox.API.Services.InterFaceAndBasic;
 using YAESandBox.Core.Block;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
@@ -12,11 +13,10 @@ namespace YAESandBox.API.Services;
 /// BlockReadService专注于单个 Block 的数据查询服务（主要是其中的worldState和gameState），仅限只读操作。
 /// 它也提供对于整体的总结服务。
 /// </summary>
-/// <param name="notifierService"></param>
 /// <param name="blockManager"></param>
-public class BlockReadService(INotifierService notifierService, IBlockManager blockManager) :
-    BasicBlockService(notifierService, blockManager), IBlockReadService
+public class BlockReadService(IBlockManager blockManager) : BasicBlockService(blockManager), IBlockReadService
 {
+    ///<inheritdoc/>
     public async Task<IReadOnlyDictionary<string, BlockDetailDto>> GetAllBlockDetailsAsync()
     {
         var tasks = this.blockManager.GetBlocks().Keys
@@ -26,23 +26,32 @@ public class BlockReadService(INotifierService notifierService, IBlockManager bl
         return results.Where(x => x != null).Select(x => x!).ToDictionary(x => x.BlockId, x => x);
     }
 
-    public Task<JsonBlockNode?> GetBlockTopologyJsonAsync()
+    ///<inheritdoc/>
+    public Task<JsonBlockNode?> GetBlockTopologyJsonAsync(string? blockID)
     {
-        return Task.FromResult(GenerateTopologyJson(this.blockManager.GetNodeOnlyBlocks()));
+        var result = GenerateTopologyJson(this.blockManager.GetNodeOnlyBlocks(), blockID ?? BlockManager.WorldRootId);
+        foreach (var e in result.Errors)
+            Log.Error(e.Message);
+        if (result.IsFailed) 
+            return Task.FromResult<JsonBlockNode?>(null);
+        return Task.FromResult<JsonBlockNode?>(result.Value);
     }
 
+    ///<inheritdoc/>
     public async Task<BlockDetailDto?> GetBlockDetailDtoAsync(string blockId)
     {
         var block = await this.GetBlockAsync(blockId);
         return block == null ? null : this.MapToDetailDto(block);
     }
 
+    ///<inheritdoc/>
     public async Task<GameState?> GetBlockGameStateAsync(string blockId)
     {
         var block = await this.GetBlockAsync(blockId);
         return block?.Block.GameState;
     }
 
+    ///<inheritdoc/>
     public async Task<IEnumerable<BaseEntity>?> GetAllEntitiesSummaryAsync(string blockId)
     {
         var block = await this.GetBlockAsync(blockId);
@@ -64,6 +73,7 @@ public class BlockReadService(INotifierService notifierService, IBlockManager bl
         }
     }
 
+    ///<inheritdoc/>
     public async Task<BaseEntity?> GetEntityDetailAsync(string blockId, TypedID entityRef)
     {
         var block = await this.GetBlockAsync(blockId);

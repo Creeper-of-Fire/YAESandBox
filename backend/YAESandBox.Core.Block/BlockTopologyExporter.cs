@@ -1,4 +1,5 @@
 ﻿using System.Text.Json.Serialization;
+using FluentResults;
 using YAESandBox.Depend;
 
 namespace YAESandBox.Core.Block;
@@ -19,35 +20,34 @@ public static class BlockTopologyExporter
     /// 从 Block 字典生成表示拓扑结构的嵌套 JSON 字符串。
     /// </summary>
     /// <param name="allBlocks">包含所有 Block 状态对象的字典 (BlockId -> BlockStatus)。</param>
-    /// <param name="rootId">要开始构建树的根节点 ID (例如 "__WORLD__")。</param>
+    /// <param name="rootId">要开始构建树的根节点 ID (例如 全局根节点 <see cref="BlockManager.WorldRootId"/>>)。</param>
     /// <returns>表示嵌套拓扑结构的 JSON 字符串，如果根节点无效或发生错误则返回 null。</returns>
-    public static JsonBlockNode? GenerateTopologyJson(
+    public static Result<JsonBlockNode> GenerateTopologyJson(
         IReadOnlyDictionary<string, IBlockNode> allBlocks, // 使用接口增加灵活性
         string rootId = BlockManager.WorldRootId // 使用常量默认值
     )
     {
         if (!allBlocks.Any())
-        {
-            Log.Warning("GenerateTopologyJson: 输入的 Block 字典为空。");
-            return null;
-        }
+            return NormalError.InvalidInput("GenerateTopologyJson: 输入的 Block 字典为空。").ToResult();
 
         if (!allBlocks.ContainsKey(rootId))
-        {
-            Log.Error($"GenerateTopologyJson: 根节点 ID '{rootId}' 在字典中不存在。");
-            return null;
-        }
+            return BlockStatusError.NotFound(null, $"GenerateTopologyJson: 节点 ID '{rootId}' 在字典中不存在。").ToResult();
 
         try
         {
+            var nodes = BuildNodeRecursive(rootId, allBlocks, allBlocks.Count);
+            if (nodes == null)
+                return BlockStatusError.NotFound(null,
+                    "一般来说不会发生这种情况，此处调用的BlockTopologyExporter.BuildNodeRecursive只有最外层id不存在才会导致方法返回null，而现在显然最外层id存在。").ToResult();
+
             // 从指定的根节点开始递归构建节点树
-            return BuildNodeRecursive(rootId, allBlocks, allBlocks.Count);
+            return nodes;
         }
         catch (Exception ex)
         {
             // 捕获任何在构建或序列化过程中发生的异常
             Log.Error(ex, $"GenerateTopologyJson: 生成 JSON 时发生错误: {ex.Message}");
-            return null; // 返回 null 表示失败
+            return NormalError.Error("GenerateTopologyJson: 生成 JSON 时发生错误。").ToResult(); // 返回 null 表示失败
         }
     }
 

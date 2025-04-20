@@ -1,10 +1,11 @@
 ﻿using FluentAssertions;
 using YAESandBox.Core.State.Entity;
+
 // 需要 для List 和 Dictionary
 
 // 需要 для INumber<T>
 
-namespace YAESandBox.Core.Tests;
+namespace YAESandBox.Tests.Core;
 
 /// <summary>
 /// 针对 OperatorHelper 的单元测试。

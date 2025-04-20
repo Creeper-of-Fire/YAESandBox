@@ -3,19 +3,56 @@
 using Microsoft.AspNetCore.SignalR;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.DTOs.WebSocket;
-using YAESandBox.API.Services; // Need WorkflowService
+using YAESandBox.API.Services;
+using YAESandBox.API.Services.InterFaceAndBasic; // Need WorkflowService
 using YAESandBox.Depend; // For Log
 
 namespace YAESandBox.API.Hubs;
 
 public interface IGameClient
 {
+    /// <summary>
+    /// Block的状态码更新了
+    /// </summary>
+    /// <param name="update"></param>
+    /// <returns></returns>
     Task ReceiveBlockStatusUpdate(BlockStatusUpdateDto update);
-    Task ReceiveWorkflowUpdate(DisplayUpdateDto update); // For progress/logs
+
+    /// <summary>
+    /// 更新特定Block/控件的显示内容
+    /// </summary>
+    /// <param name="update"></param>
+    /// <returns></returns>
+    Task ReceiveDisplayUpdate(DisplayUpdateDto update);
+
+    /// <summary>
+    /// 检测到主工作流存在冲突
+    /// </summary>
+    /// <param name="conflict"></param>
+    /// <returns></returns>
     Task ReceiveConflictDetected(ConflictDetectedDto conflict);
 
+    /// <summary>
+    /// Block内部的WorldState/GameState存在更新，建议重新获取
+    /// </summary>
+    /// <param name="signal"></param>
+    /// <returns></returns>
     Task ReceiveStateUpdateSignal(StateUpdateSignalDto signal);
-    // Task ReceiveWorkflowError(WorkflowErrorDto error); // Consider specific error message type
+    
+    /// <summary>
+    /// Block的非WorldState/GameState内容存在更新，建议重新获取
+    /// </summary>
+    /// <param name="signal"></param>
+    /// <returns></returns>
+    Task ReceiveBlockUpdateSignal(string signal);
+
+    /// <summary>
+    /// Block的详细信息更新了，比如显示内容、父子结构或者Metadata（不包含DisplayUpdate发起的那些内容更新）
+    /// </summary>
+    /// <param name="partiallyFilledDto">部分填充的 BlockDetailDto，包含各种已更新的字段。</param>
+    /// <returns></returns>
+    [Obsolete("目前我们不使用这个玩意，而是只通知可能发生变更的Block。",true)]
+    Task ReceiveBlockDetailUpdateSignal(BlockDetailDto partiallyFilledDto);
 }
 
 public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
@@ -62,6 +99,10 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
         }
     }
 
+    /// <summary>
+    /// 解决冲突
+    /// </summary>
+    /// <param name="request"></param>
     public async Task ResolveConflict(ResolveConflictRequestDto request)
     {
         var connectionId = this.Context.ConnectionId;
@@ -78,6 +119,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
     }
 
     // --- Hub 生命周期事件 ---
+    ///<inheritdoc/>
     public override async Task OnConnectedAsync()
     {
         // *** 确认日志存在 ***
@@ -90,6 +132,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
         await base.OnConnectedAsync();
     }
 
+    ///<inheritdoc/>
     public override async Task OnDisconnectedAsync(Exception? exception)
     {
         // *** 确认日志存在 ***

@@ -1,19 +1,17 @@
 // --- START OF FILE Program.cs ---
 
 using System.Reflection;
-using Microsoft.OpenApi.Models; // Needed for AddOpenApi
-// Needed for WebApplicationBuilder
-// Needed for IServiceCollection extensions
-// Needed for IHostEnvironment
-using YAESandBox.API.Hubs; // For GameHub
-using YAESandBox.API.Services; // For BlockManager, NotifierService, WorkflowService
 using System.Text.Json.Serialization;
+using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using YAESandBox.API;
 using YAESandBox.API.DTOs;
+using YAESandBox.API.Hubs;
+using YAESandBox.API.Services;
+using YAESandBox.API.Services.InterFaceAndBasic;
+using YAESandBox.API.Services.WorkFlow;
 using YAESandBox.Core.Block;
-using static GlobalSwaggerConstants;
-
+using YAESandBox.Depend;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -31,7 +29,7 @@ builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
     // --- 定义公开 API 文档 ---
-    options.SwaggerDoc(PublicApiGroupName, new OpenApiInfo
+    options.SwaggerDoc(GlobalSwaggerConstants.PublicApiGroupName, new OpenApiInfo
     {
         Title = "YAESandBox API (Public)",
         Version = "v1",
@@ -39,7 +37,7 @@ builder.Services.AddSwaggerGen(options =>
     });
 
     // --- 定义内部/调试 API 文档 ---
-    options.SwaggerDoc(InternalApiGroupName, new OpenApiInfo
+    options.SwaggerDoc(GlobalSwaggerConstants.InternalApiGroupName, new OpenApiInfo
     {
         Title = "YAESandBox API (Internal)",
         Version = "v1",
@@ -51,15 +49,15 @@ builder.Services.AddSwaggerGen(options =>
     options.DocInclusionPredicate((docName, apiDesc) =>
         {
             // 如果 API 没有 GroupName 设置，我们默认认为它属于 Public
-            string groupName = apiDesc.GroupName ?? PublicApiGroupName;
+            string groupName = apiDesc.GroupName ?? GlobalSwaggerConstants.PublicApiGroupName;
 
             // 只有当 API 的 GroupName 与当前生成的文档名称匹配时，才包含它
             // 或者，如果当前生成的是 Internal 文档，包含所有 API (Public + Internal)
-            if (docName == InternalApiGroupName) // 内部文档包含所有公共 API 和标记为 internal 的 API
-                return groupName is PublicApiGroupName or InternalApiGroupName;
+            if (docName == GlobalSwaggerConstants.InternalApiGroupName) // 内部文档包含所有公共 API 和标记为 internal 的 API
+                return groupName is GlobalSwaggerConstants.PublicApiGroupName or GlobalSwaggerConstants.InternalApiGroupName;
             // 否则，生成的是 Public 文档
             // 公开文档只包含 GroupName 为 Public 的 API
-            return groupName == PublicApiGroupName;
+            return groupName == GlobalSwaggerConstants.PublicApiGroupName;
         }
     );
 
@@ -75,9 +73,11 @@ builder.Services.AddSwaggerGen(options =>
     // 3. 加载共享 DTO 项目的 XML 注释文件
     options.AddSwaggerDocumentation(typeof(AtomicOperationRequestDto).Assembly);
 
+    options.AddSwaggerDocumentation(typeof(BlockResultCode).Assembly);
+
     // Add Enum Schema Filter to display enums as strings in Swagger UI
     options.SchemaFilter<EnumSchemaFilter>(); // 假设 EnumSchemaFilter 已定义
-    
+
     options.DocumentFilter<SignalRDtoDocumentFilter>();
 });
 
@@ -90,14 +90,16 @@ builder.Services.AddSignalR()
     });
 
 // --- Application Services (Singleton or Scoped depending on need) ---
-// NotifierService depends on IHubContext, usually Singleton
-builder.Services.AddSingleton<INotifierService, SignalRNotifierService>();
 
-// BlockManager holds state, make it Singleton. Depends on INotifierService.
+// BlockManager holds state, make it Singleton.
 builder.Services.AddSingleton<IBlockManager, BlockManager>();
+
+// NotifierService depends on IHubContext, BlockManager, usually Singleton
+builder.Services.AddSingleton<INotifierService, SignalRNotifierService>();
 
 // WorkflowService depends on IBlockManager and INotifierService, make it Singleton or Scoped.
 // Singleton is fine if it doesn't hold per-request state.
+builder.Services.AddSingleton<IWorkFlowBlockService, WorkFlowBlockService>();
 builder.Services.AddSingleton<IWorkflowService, WorkflowService>();
 builder.Services.AddSingleton<IBlockManagementService, BlockManagementService>();
 builder.Services.AddSingleton<IBlockWritService, BlockWritService>();
@@ -134,9 +136,9 @@ if (app.Environment.IsDevelopment())
     {
         // --- 配置 UI 以显示两个文档版本 ---
         // 端点 1: 公开 API
-        c.SwaggerEndpoint($"/swagger/{PublicApiGroupName}/swagger.json", $"YAESandBox API (Public)");
+        c.SwaggerEndpoint($"/swagger/{GlobalSwaggerConstants.PublicApiGroupName}/swagger.json", $"YAESandBox API (Public)");
         // 端点 2: 内部 API
-        c.SwaggerEndpoint($"/swagger/{InternalApiGroupName}/swagger.json", $"YAESandBox API (Internal)");
+        c.SwaggerEndpoint($"/swagger/{GlobalSwaggerConstants.InternalApiGroupName}/swagger.json", $"YAESandBox API (Internal)");
 
         // (可选) 设置默认展开级别等 UI 选项
         c.DefaultModelsExpandDepth(-1); // 折叠模型定义
@@ -180,60 +182,63 @@ app.MapHub<GameHub>("/gamehub"); // Define the SignalR endpoint URL
 
 app.Run();
 
-// --- Records/Classes used in Program.cs ---
-record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+namespace YAESandBox.API
 {
-    public int TemperatureF => 32 + (int)(this.TemperatureC / 0.5556);
-}
+    // --- Records/Classes used in Program.cs ---
+    record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+    {
+        public int TemperatureF => 32 + (int)(this.TemperatureC / 0.5556);
+    }
 
 // Helper class for Swagger Enum Display
-public class EnumSchemaFilter : Swashbuckle.AspNetCore.SwaggerGen.ISchemaFilter
-{
-    public void Apply(OpenApiSchema schema,
-        Swashbuckle.AspNetCore.SwaggerGen.SchemaFilterContext context)
+    public class EnumSchemaFilter : Swashbuckle.AspNetCore.SwaggerGen.ISchemaFilter
     {
-        if (context.Type.IsEnum)
+        public void Apply(OpenApiSchema schema,
+            Swashbuckle.AspNetCore.SwaggerGen.SchemaFilterContext context)
         {
-            schema.Enum.Clear();
-            schema.Type = "string"; // Represent enum as string
-            schema.Format = null;
-            foreach (string enumName in Enum.GetNames(context.Type))
+            if (context.Type.IsEnum)
             {
-                schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(enumName));
+                schema.Enum.Clear();
+                schema.Type = "string"; // Represent enum as string
+                schema.Format = null;
+                foreach (string enumName in Enum.GetNames(context.Type))
+                {
+                    schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(enumName));
+                }
             }
         }
     }
-}
 
-public static class SwaggerHelper
-{
-    public static void AddSwaggerDocumentation(this SwaggerGenOptions options, Assembly assembly)
+    public static class SwaggerHelper
     {
-        try
+        public static void AddSwaggerDocumentation(this SwaggerGenOptions options, Assembly assembly)
         {
-            string XmlFilename = $"{assembly.GetName().Name}.xml";
-            string XmlFilePath = Path.Combine(AppContext.BaseDirectory, XmlFilename);
-            if (File.Exists(XmlFilePath))
+            try
             {
-                options.IncludeXmlComments(XmlFilePath);
-                Console.WriteLine($"加载 XML 注释: {XmlFilePath}");
+                string XmlFilename = $"{assembly.GetName().Name}.xml";
+                string XmlFilePath = Path.Combine(AppContext.BaseDirectory, XmlFilename);
+                if (File.Exists(XmlFilePath))
+                {
+                    options.IncludeXmlComments(XmlFilePath);
+                    Console.WriteLine($"加载 XML 注释: {XmlFilePath}");
+                }
+                else
+                {
+                    Console.WriteLine($"警告: 未找到 XML 注释文件: {XmlFilePath}");
+                }
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine($"警告: 未找到 XML 注释文件: {XmlFilePath}");
+                Console.WriteLine($"加载 Contracts XML 注释时出错: {ex.Message}");
             }
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"加载 Contracts XML 注释时出错: {ex.Message}");
         }
     }
-}
 
-public static class GlobalSwaggerConstants
-{
-    // --- 定义文档名称常量 ---
-    public const string PublicApiGroupName = "v1-public"; // 公开 API 文档
-    public const string InternalApiGroupName = "v1-internal"; // 内部/调试 API 文档
-}
+    public static class GlobalSwaggerConstants
+    {
+        // --- 定义文档名称常量 ---
+        public const string PublicApiGroupName = "v1-public"; // 公开 API 文档
+        public const string InternalApiGroupName = "v1-internal"; // 内部/调试 API 文档
+    }
 // --- END OF FILE Program.cs ---
+}

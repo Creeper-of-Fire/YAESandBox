@@ -1,10 +1,12 @@
 ﻿// --- START OF FILE IBlockManagementService.cs ---
 
 // For potential DTOs used/returned by service
-using YAESandBox.Core.Block; // For BlockStatus, Result Enums
-using YAESandBox.Depend;
 
-namespace YAESandBox.API.Services;
+using YAESandBox.Core.Block;
+using YAESandBox.Depend;
+// For BlockStatus, Result Enums
+
+namespace YAESandBox.API.Services.InterFaceAndBasic;
 
 /// <summary>
 /// 提供 Block 手动管理操作的服务接口。

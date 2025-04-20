@@ -17,7 +17,7 @@ public class MicroWorkflowIntegrationTests(ITestOutputHelper output) : Integrati
 //         var collector = new SignalRMessageCollector(connection,this._output);
 //
 //         // 只需要监听 DisplayUpdate，以及可选的 BlockStatusUpdate/StateUpdateSignal 用于验证 *没有* 收到
-//         collector.RegisterHandler<DisplayUpdateDto>("ReceiveWorkflowUpdate");
+//         collector.RegisterHandler<DisplayUpdateDto>("ReceiveDisplayUpdate");
 //         collector.RegisterHandler<BlockStatusUpdateDto>("ReceiveBlockStatusUpdate");
 //         collector.RegisterHandler<StateUpdateSignalDto>("ReceiveStateUpdateSignal");
 //

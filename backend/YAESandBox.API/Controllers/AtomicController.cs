@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services;
+using YAESandBox.API.Services.InterFaceAndBasic;
 using YAESandBox.Depend; // For mapping DTO to Core object
 
 namespace YAESandBox.API.Controllers;
@@ -10,11 +11,9 @@ namespace YAESandBox.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/atomic/{blockId}")] // /api/atomic/{blockId}
-public class AtomicController(IBlockWritService writServices, IBlockReadService readServices) : ControllerBase
+public class AtomicController(IBlockWritService writServices, IBlockReadService readServices, INotifierService notifierService)
+    : APINotifyControllerBase(readServices, writServices, notifierService)
 {
-    private IBlockWritService blockWritService { get; } = writServices;
-    private IBlockReadService blockReadService { get; } = readServices;
-
     /// <summary>
     /// 对指定的 Block 执行一批原子化操作。
     /// 根据 Block 的当前状态，操作可能被立即执行或暂存。
@@ -22,15 +21,13 @@ public class AtomicController(IBlockWritService writServices, IBlockReadService 
     /// <param name="blockId">要执行操作的目标 Block 的 ID。</param>
     /// <param name="request">包含原子操作列表的请求体。</param>
     /// <returns>指示操作执行结果的 HTTP 状态码。</returns>
-    /// <response code="200">操作已成功执行 (适用于 Idle 状态)。</response>
-    /// <response code="202">操作已成功执行并/或已暂存 (适用于 Loading 状态)。</response>
+    /// <response code="200">操作已成功执行，若为Loading状态则还额外暂存了一份。</response>
     /// <response code="400">请求中包含无效的原子操作定义。</response>
     /// <response code="404">未找到具有指定 ID 的 Block。</response>
     /// <response code="409">Block 当前处于冲突状态 (ResolvingConflict)，需要先解决冲突。</response>
     /// <response code="500">执行操作时发生内部服务器错误。</response>
     [HttpPost]
     [ProducesResponseType(StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status409Conflict)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -65,18 +62,12 @@ public class AtomicController(IBlockWritService writServices, IBlockReadService 
         // 3. 根据结果返回相应的状态码
         return result switch
         {
-            (BlockResultCode.Success, BlockStatusCode.Loading) => this.Ok("操作已成功执行。"), // 200 OK
-            (BlockResultCode.Success, BlockStatusCode.Idle) => this.Accepted(null as string, // 使用 Accepted(string?, string?) 重载
-                $"操作已成功执行。部分或全部操作已为 Block '{blockId}' (Loading 状态) 排队等待。"),
-            // 202 Accepted
+            (BlockResultCode.Success, BlockStatusCode.Loading) => this.Ok("操作已成功执行。"),
+            (BlockResultCode.Success, BlockStatusCode.Idle) => this.Ok($"操作已成功执行并暂存"),
             (BlockResultCode.NotFound, _) => this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"),
-            // 404 Not Found
-            (BlockResultCode.Error,BlockStatusCode.ResolvingConflict) => this.Conflict($"Block '{blockId}' 处于冲突状态。请先解决冲突。"),
-            // 409 Conflict
-            (BlockResultCode.Error,BlockStatusCode.Error) => this.StatusCode(StatusCodes.Status500InternalServerError, "执行期间发生错误。"),
-            // 500 Internal Server Error
+            (BlockResultCode.Error, BlockStatusCode.ResolvingConflict) => this.Conflict($"Block '{blockId}' 处于冲突状态。请先解决冲突。"),
+            (BlockResultCode.Error, BlockStatusCode.Error) => this.StatusCode(StatusCodes.Status500InternalServerError, "执行期间发生错误。"),
             _ => this.StatusCode(StatusCodes.Status500InternalServerError, "发生意外的结果。")
-            // 500 Internal Server Error for unknown enum value
         };
     }
 

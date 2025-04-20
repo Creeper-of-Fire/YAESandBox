@@ -63,6 +63,13 @@ public record BlockDto
     /// </summary>
     [JsonPropertyName("content")]
     public string BlockContent { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// 存储触发block时所使用的工作流名称。
+    /// </summary>
+    [JsonPropertyName("workFlowName")]
+    public string WorkFlowName { get; set; } = string.Empty;
+    
 
     /// <summary>
     /// 与 Block 相关的元数据字典。键值对均为字符串。
