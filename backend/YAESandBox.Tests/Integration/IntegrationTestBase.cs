@@ -1,6 +1,7 @@
 ﻿// --- START OF FILE IntegrationTestBase.cs ---
 
 // For ReadFromJsonAsync
+
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Mvc.Testing;
@@ -87,14 +88,14 @@ public abstract class IntegrationTestBase : IAsyncLifetime
             {
                 options.PayloadSerializerOptions.Converters.Add(new JsonStringEnumConverter());
                 // 添加其他必要的转换器，例如 TypedIdConverter
-                 options.PayloadSerializerOptions.Converters.Add(new TypedIdConverter());
+                options.PayloadSerializerOptions.Converters.Add(new TypedIdConverter());
             })
             .Build();
 
         return connection;
     }
 
-     /// <summary>
+    /// <summary>
     /// 辅助方法：等待 SignalR 连接成功建立。
     /// </summary>
     protected static async Task ConnectHubAsync(HubConnection connection, CancellationToken cancellationToken = default)
@@ -128,6 +129,7 @@ public abstract class IntegrationTestBase : IAsyncLifetime
                 // 记录停止时发生的错误，但不抛出，避免影响测试清理
                 Console.WriteLine($"停止 SignalR 连接时出错: {ex.Message}");
             }
+
             await connection.DisposeAsync();
         }
     }

@@ -11,7 +11,10 @@ namespace YAESandBox.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/atomic/{blockId}")] // /api/atomic/{blockId}
-public class AtomicController(IBlockWritService writServices, IBlockReadService readServices, INotifierService notifierService)
+public class AtomicController(
+    IBlockWritService writServices,
+    IBlockReadService readServices,
+    INotifierService notifierService)
     : APINotifyControllerBase(readServices, writServices, notifierService)
 {
     /// <summary>
@@ -59,87 +62,18 @@ public class AtomicController(IBlockWritService writServices, IBlockReadService 
         // 2. 调用 BlockManager 处理操作
         var result = await this.blockWritService.EnqueueOrExecuteAtomicOperationsAsync(blockId, coreOperations);
 
+        if (result.resultCode != BlockResultCode.NotFound)
+            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.WorldState);
+
         // 3. 根据结果返回相应的状态码
         return result switch
         {
             (BlockResultCode.Success, BlockStatusCode.Loading) => this.Ok("操作已成功执行。"),
-            (BlockResultCode.Success, BlockStatusCode.Idle) => this.Ok($"操作已成功执行并暂存"),
+            (BlockResultCode.Success, BlockStatusCode.Idle) => this.Ok("操作已成功执行并暂存"),
             (BlockResultCode.NotFound, _) => this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"),
             (BlockResultCode.Error, BlockStatusCode.ResolvingConflict) => this.Conflict($"Block '{blockId}' 处于冲突状态。请先解决冲突。"),
             (BlockResultCode.Error, BlockStatusCode.Error) => this.StatusCode(StatusCodes.Status500InternalServerError, "执行期间发生错误。"),
             _ => this.StatusCode(StatusCodes.Status500InternalServerError, "发生意外的结果。")
         };
     }
-
-    // /// <summary>
-    // /// 辅助方法：将原子操作请求 DTO 列表映射为核心原子操作对象列表。
-    // /// </summary>
-    // /// <param name="dtos">原子操作请求 DTO 列表。</param>
-    // /// <returns>核心原子操作对象列表，如果任何 DTO 无效则返回 null。</returns>
-    // private List<AtomicOperation>? MapToCoreOperations(List<AtomicOperationRequestDto> dtos)
-    // {
-    //     var coreOps = new List<AtomicOperation>();
-    //     foreach (var dto in dtos)
-    //     {
-    //         try
-    //         {
-    //             // 基础映射示例，需要添加更健壮的验证！
-    //             if (!Enum.TryParse<AtomicOperationType>(dto.OperationType, true, out var opType))
-    //             {
-    //                 Log.Warning($"无法解析原子操作类型: {dto.OperationType}");
-    //                 return null; // 无效的操作类型
-    //             }
-    //
-    //             AtomicOperation coreOp;
-    //             switch (opType)
-    //             {
-    //                 case AtomicOperationType.CreateEntity:
-    //                     if (string.IsNullOrWhiteSpace(dto.EntityId)) return null; // ID 不能为空
-    //                     coreOp = AtomicOperation.Create(dto.EntityType, dto.EntityId, dto.InitialAttributes);
-    //                     break;
-    //                 case AtomicOperationType.ModifyEntity:
-    //                     if (string.IsNullOrWhiteSpace(dto.EntityId) ||
-    //                         string.IsNullOrWhiteSpace(dto.AttributeKey) ||
-    //                         string.IsNullOrWhiteSpace(dto.ModifyOperator))
-    //                     {
-    //                         Log.Warning(
-    //                             $"Modify 操作缺少必要的参数: EntityId={dto.EntityId}, AttributeKey={dto.AttributeKey}, Operator={dto.ModifyOperator}");
-    //                         return null; // 无效的 modify 操作
-    //                     }
-    //
-    //                     // 注意：这里的 ModifyValue 可以是 null，取决于业务逻辑是否允许设置 null
-    //                     Operator op;
-    //                     try
-    //                     {
-    //                         op = OperatorHelper.StringToOperator(dto.ModifyOperator);
-    //                     }
-    //                     catch (ArgumentException ex)
-    //                     {
-    //                         Log.Warning($"无效的修改操作符 '{dto.ModifyOperator}': {ex.Message}");
-    //                         return null;
-    //                     }
-    //
-    //                     coreOp = AtomicOperation.Modify(dto.EntityType, dto.EntityId, dto.AttributeKey, op,
-    //                         dto.ModifyValue);
-    //                     break;
-    //                 case AtomicOperationType.DeleteEntity:
-    //                     if (string.IsNullOrWhiteSpace(dto.EntityId)) return null; // ID 不能为空
-    //                     coreOp = AtomicOperation.Delete(dto.EntityType, dto.EntityId);
-    //                     break;
-    //                 default:
-    //                     Log.Warning($"未知的原子操作类型枚举值: {opType}");
-    //                     return null; // 未知的类型
-    //             }
-    //
-    //             coreOps.Add(coreOp);
-    //         }
-    //         catch (Exception ex) // 捕获解析错误等。
-    //         {
-    //             Log.Error(ex, $"映射 AtomicOperationRequestDto 时失败: {ex.Message}");
-    //             return null; // 指示映射失败
-    //         }
-    //     }
-    //
-    //     return coreOps;
-    // }
 }

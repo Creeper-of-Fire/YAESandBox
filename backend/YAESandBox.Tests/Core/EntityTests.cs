@@ -32,7 +32,7 @@ public class EntityTests
     public void Constructor_应正确设置EntityId()
     {
         // Arrange
-        var expectedId = "unique_id_123";
+        string? expectedId = "unique_id_123";
 
         // Act
         var item = this.CreateTestItem(expectedId);
@@ -55,9 +55,9 @@ public class EntityTests
     public void Constructor_对于无效ID_应抛出ArgumentException(string invalidId)
     {
         // Arrange
-        System.Action createItem = () => new Item(invalidId);
-        System.Action createChar = () => new Character(invalidId);
-        System.Action createPlace = () => new Place(invalidId);
+        Action createItem = () => new Item(invalidId);
+        Action createChar = () => new Character(invalidId);
+        Action createPlace = () => new Place(invalidId);
 
         // Act & Assert
         createItem.Should().Throw<ArgumentException>();
@@ -72,12 +72,12 @@ public class EntityTests
     public void GetAttribute_获取核心属性_应返回正确的值()
     {
         // Arrange
-        var entity = this.CreateTestItem("item_core", isDestroyed: true);
+        var entity = this.CreateTestItem("item_core", true);
 
         // Act
-        var id = entity.GetAttribute(nameof(BaseEntity.EntityId));
-        var type = entity.GetAttribute(nameof(BaseEntity.EntityType));
-        var destroyed = entity.GetAttribute(nameof(BaseEntity.IsDestroyed));
+        object? id = entity.GetAttribute(nameof(BaseEntity.EntityId));
+        object? type = entity.GetAttribute(nameof(BaseEntity.EntityType));
+        object? destroyed = entity.GetAttribute(nameof(BaseEntity.IsDestroyed));
 
         // Assert
         id.Should().Be("item_core");
@@ -93,9 +93,9 @@ public class EntityTests
     {
         // Arrange
         var entity = this.CreateTestCharacter("char_dynamic");
-        var stringVal = "value1";
-        var intVal = 123;
-        var boolVal = true;
+        string stringVal = "value1";
+        int intVal = 123;
+        bool boolVal = true;
         var listVal = new List<object> { 1, "two", true };
         var dictVal = new Dictionary<string, object?> { { "key1", 10 }, { "key2", null } };
         var typedIdVal = new TypedID(EntityType.Place, "place_home");
@@ -120,7 +120,7 @@ public class EntityTests
         entity.HasAttribute("nullAttr").Should().BeTrue(); // 确认属性存在，即使值为 null
     }
 
-     /// <summary>
+    /// <summary>
     /// 测试 TryGetAttribute 方法。
     /// </summary>
     [Fact]
@@ -135,10 +135,10 @@ public class EntityTests
 
         // Act & Assert
         // 成功获取
-        entity.TryGetAttribute<int>("count", out var count).Should().BeTrue();
+        entity.TryGetAttribute<int>("count", out int count).Should().BeTrue();
         count.Should().Be(5);
 
-        entity.TryGetAttribute<string>("description", out var desc).Should().BeTrue();
+        entity.TryGetAttribute<string>("description", out string? desc).Should().BeTrue();
         desc.Should().Be("A test item.");
 
         entity.TryGetAttribute<TypedID>("location", out var loc).Should().BeTrue();
@@ -150,11 +150,11 @@ public class EntityTests
 
 
         // 获取不存在的属性
-        entity.TryGetAttribute<double>("weight", out var weight).Should().BeFalse();
+        entity.TryGetAttribute<double>("weight", out double weight).Should().BeFalse();
         weight.Should().Be(default); // 默认值 0.0
 
         // 类型不匹配
-        entity.TryGetAttribute<bool>("count", out var isCountBool).Should().BeFalse();
+        entity.TryGetAttribute<bool>("count", out bool isCountBool).Should().BeFalse();
         isCountBool.Should().Be(default); // 默认值 false
 
         // 注意：TryGetAttribute<List<TypedID>> 对于 List<object> 的转换比较特殊，需要测试
@@ -167,7 +167,7 @@ public class EntityTests
         entity.TryGetAttribute<List<TypedID>>("relatedItems", out var related).Should().BeTrue();
         related.Should().HaveCount(2).And.ContainInOrder(typedIdList.Cast<TypedID>());
 
-         // 如果 List<object> 存的不是 TypedID
+        // 如果 List<object> 存的不是 TypedID
         entity.SetAttribute("mixedList", new List<object> { 1, "string" });
         entity.TryGetAttribute<List<TypedID>>("mixedList", out _).Should().BeFalse();
     }
@@ -198,7 +198,7 @@ public class EntityTests
     {
         // Arrange
         var entity = this.CreateTestItem("item_readonly");
-        var originalId = entity.EntityId;
+        string? originalId = entity.EntityId;
         var originalType = entity.EntityType;
 
         // Act
@@ -237,7 +237,7 @@ public class EntityTests
     /// </summary>
     [Theory]
     [InlineData(10, Operator.Add, 5, 15)] // int
-    [InlineData(10, Operator.Sub, 3, 7)]  // int
+    [InlineData(10, Operator.Sub, 3, 7)] // int
     [InlineData(10.5, Operator.Add, 2.0, 12.5)] // double
     [InlineData(10.5f, Operator.Sub, 1.5f, 9.0f)] // float
     public void ModifyAttribute_对数值使用AddSub_应执行算术运算<T>(T initialValue, Operator op, T changeValue, T expectedValue) where T : struct
@@ -253,7 +253,7 @@ public class EntityTests
         entity.GetAttribute("value").Should().Be(expectedValue);
     }
 
-     /// <summary>
+    /// <summary>
     /// 测试 ModifyAttribute 对字符串使用 Add 操作符。
     /// </summary>
     [Fact]
@@ -288,17 +288,17 @@ public class EntityTests
 
         // Act: Add multiple items (as a list)
         entity.ModifyAttribute("inventory", Operator.Add, new List<object> { 2, "orange" });
-         // Assert: Add multiple items
+        // Assert: Add multiple items
         entity.GetAttribute("inventory").Should().BeEquivalentTo(new List<object> { "apple", 1, "banana", 2, "orange" });
 
         // Act: Remove single item
         entity.ModifyAttribute("inventory", Operator.Sub, 1);
-         // Assert: Remove single item
+        // Assert: Remove single item
         entity.GetAttribute("inventory").Should().BeEquivalentTo(new List<object> { "apple", "banana", 2, "orange" });
 
         // Act: Remove multiple items (as a list)
         entity.ModifyAttribute("inventory", Operator.Sub, new List<object> { "apple", "nonexistent" });
-         // Assert: Remove multiple items
+        // Assert: Remove multiple items
         entity.GetAttribute("inventory").Should().BeEquivalentTo(new List<object> { "banana", 2, "orange" });
     }
 
@@ -316,25 +316,29 @@ public class EntityTests
         // Act: Add single KeyValuePair
         entity.ModifyAttribute("properties", Operator.Add, new KeyValuePair<string, object?>("material", "iron"));
         // Assert: Add single KeyValuePair
-        entity.GetAttribute("properties").Should().BeEquivalentTo(new Dictionary<string, object?> { { "color", "red" }, { "weight", 10 }, { "material", "iron" } });
+        entity.GetAttribute("properties").Should().BeEquivalentTo(new Dictionary<string, object?>
+            { { "color", "red" }, { "weight", 10 }, { "material", "iron" } });
 
         // Act: Add multiple from another Dictionary (only adds new keys)
         entity.ModifyAttribute("properties", Operator.Add, new Dictionary<string, object?> { { "weight", 15 }, { "volume", 5 } });
         // Assert: Add multiple from another Dictionary
-        entity.GetAttribute("properties").Should().BeEquivalentTo(new Dictionary<string, object?> { { "color", "red" }, { "weight", 10 }, { "material", "iron" }, { "volume", 5 } }); // weight 保持不变
+        entity.GetAttribute("properties").Should().BeEquivalentTo(new Dictionary<string, object?>
+            { { "color", "red" }, { "weight", 10 }, { "material", "iron" }, { "volume", 5 } }); // weight 保持不变
 
         // Act: Remove single key (as string)
         entity.ModifyAttribute("properties", Operator.Sub, "weight");
         // Assert: Remove single key
-        entity.GetAttribute("properties").Should().BeEquivalentTo(new Dictionary<string, object?> { { "color", "red" }, { "material", "iron" }, { "volume", 5 } });
+        entity.GetAttribute("properties").Should().BeEquivalentTo(new Dictionary<string, object?>
+            { { "color", "red" }, { "material", "iron" }, { "volume", 5 } });
 
         // Act: Remove multiple keys (as List<string>)
         entity.ModifyAttribute("properties", Operator.Sub, new List<string> { "color", "nonexistent" });
         // Assert: Remove multiple keys
-        entity.GetAttribute("properties").Should().BeEquivalentTo(new Dictionary<string, object?> { { "material", "iron" }, { "volume", 5 } });
+        entity.GetAttribute("properties").Should()
+            .BeEquivalentTo(new Dictionary<string, object?> { { "material", "iron" }, { "volume", 5 } });
     }
 
-     /// <summary>
+    /// <summary>
     /// 测试 ModifyAttribute 对 TypedID 使用不支持的操作符。
     /// </summary>
     [Fact]
@@ -364,9 +368,9 @@ public class EntityTests
         entity.SetAttribute("anotherAttr", 123);
 
         // Act
-        var resultDynamic = entity.DeleteAttribute("dynamicAttr");
-        var resultCore = entity.DeleteAttribute(nameof(BaseEntity.EntityId));
-        var resultNonExistent = entity.DeleteAttribute("nonExistentAttr");
+        bool resultDynamic = entity.DeleteAttribute("dynamicAttr");
+        bool resultCore = entity.DeleteAttribute(nameof(BaseEntity.EntityId));
+        bool resultNonExistent = entity.DeleteAttribute("nonExistentAttr");
 
         // Assert
         resultDynamic.Should().BeTrue();
@@ -443,7 +447,7 @@ public class EntityTests
         clone.IsDestroyed = true;
         clone.SetAttribute("quality", "excellent");
         (clone.GetAttribute("tags") as List<object>)?.Add("heavy");
-        var objects = (clone.GetAttribute("stats") as Dictionary<string, object?>);
+        var objects = clone.GetAttribute("stats") as Dictionary<string, object?>;
         if (objects != null) objects["defense"] = 5;
 
 

@@ -38,7 +38,6 @@ internal static class PersistenceMapper
 
             // ----- Bug 修复：更健壮地恢复 IsDestroyed -----
             if (attributes.TryGetValue("IsDestroyed", out object? isDestroyedVal))
-            {
                 switch (isDestroyedVal)
                 {
                     // 检查是否直接是 bool 类型
@@ -50,16 +49,13 @@ internal static class PersistenceMapper
                         entity.IsDestroyed = true;
                         break;
                 }
-                // 其他情况（比如 null, 或者非 bool/JsonElement.True）都视为 false （保持默认值）
-                // entity.IsDestroyed 默认为 false，所以这里不用显式设置 false
-            }
+            // 其他情况（比如 null, 或者非 bool/JsonElement.True）都视为 false （保持默认值）
+            // entity.IsDestroyed 默认为 false，所以这里不用显式设置 false
             // 如果 "IsDestroyed" 键不存在，entity.IsDestroyed 保持默认的 false
 
             foreach (var attr in kvp.Value.Attributes.Where(attr => !BaseEntity.CoreFields.Contains(attr.Key)))
-            {
                 // *** 这里是关键：需要正确恢复 object? 类型 ***
                 entity.SetAttribute(attr.Key, DeserializeObjectValue(attr.Value));
-            }
 
             targetDict.Add(kvp.Key, (TEntity)entity);
         }
@@ -73,7 +69,7 @@ internal static class PersistenceMapper
             EntityType.Item => new Item(id),
             EntityType.Character => new Character(id),
             EntityType.Place => new Place(id),
-            _ => throw new ArgumentOutOfRangeException(nameof(type)),
+            _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
     }
 
@@ -151,9 +147,7 @@ internal static class PersistenceMapper
                     var typedId = element.Deserialize<TypedID>(options);
                     // 如果反序列化成功（没有抛异常），并且结果不为 null
                     if (typedId != default) // 检查是否为默认值，因为 record struct 不是 null
-                    {
                         return typedId;
-                    }
                     // 如果反序列化为默认值，可能不是 TypedID 结构，继续按字典处理
                 }
                 catch (JsonException)
@@ -171,10 +165,7 @@ internal static class PersistenceMapper
 
                 // 处理普通字典
                 var dict = new Dictionary<string, object?>();
-                foreach (var prop in element.EnumerateObject())
-                {
-                    dict[prop.Name] = DeserializeJsonElementValue(prop.Value);
-                }
+                foreach (var prop in element.EnumerateObject()) dict[prop.Name] = DeserializeJsonElementValue(prop.Value);
 
                 return dict;
             case JsonValueKind.Null: return null;
@@ -189,10 +180,8 @@ internal static class PersistenceMapper
     {
         var gs = new GameState();
         foreach (var kvp in gsDto)
-        {
             // *** 同样需要处理 object? 类型恢复 ***
             gs[kvp.Key] = DeserializeObjectValue(kvp.Value);
-        }
 
         return gs;
     }

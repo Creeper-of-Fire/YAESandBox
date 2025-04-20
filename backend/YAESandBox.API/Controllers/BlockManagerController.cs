@@ -40,10 +40,8 @@ public class BlockManagementController(
     [Tags("__DEBUG__")]
     public async Task<IActionResult> CreateBlockManually([FromBody] CreateBlockManualRequestDto request)
     {
-        if (!ModelState.IsValid) // 使用模型验证
-        {
-            return BadRequest(ModelState);
-        }
+        if (!this.ModelState.IsValid) // 使用模型验证
+            return this.BadRequest(this.ModelState);
 
         var (result, newBlockStatus) =
             await this.blockManagementService.CreateBlockManuallyAsync(request.ParentBlockId, request.InitialMetadata);
@@ -54,22 +52,21 @@ public class BlockManagementController(
                 if (newBlockStatus == null) // 理论上不应发生
                 {
                     Log.Error("CreateBlockManuallyAsync 返回 Success 但 BlockStatus 为 null。");
-                    return StatusCode(StatusCodes.Status500InternalServerError, "创建成功但无法获取 Block 信息。");
+                    return this.StatusCode(StatusCodes.Status500InternalServerError, "创建成功但无法获取 Block 信息。");
                 }
-
                 var newBlockDto = newBlockStatus.MapToDetailDto(); // 使用辅助方法映射
                 // 使用 GetBlockDetail 的路由名和参数创建 Location Header
-                return CreatedAtAction(nameof(BlocksController.GetBlockDetail), "Blocks",
+                return this.CreatedAtAction(nameof(BlocksController.GetBlockDetail), "Blocks",
                     new { blockId = newBlockStatus.Block.BlockId }, newBlockDto);
             case ManagementResult.NotFound:
-                return NotFound($"父 Block '{request.ParentBlockId}' 未找到。");
+                return this.NotFound($"父 Block '{request.ParentBlockId}' 未找到。");
             case ManagementResult.InvalidState:
-                return Conflict($"父 Block '{request.ParentBlockId}' 当前状态不允许创建子节点。"); // 409 Conflict 更合适
+                return this.Conflict($"父 Block '{request.ParentBlockId}' 当前状态不允许创建子节点。"); // 409 Conflict 更合适
             case ManagementResult.BadRequest:
-                return BadRequest("请求无效。");
+                return this.BadRequest("请求无效。");
             case ManagementResult.Error:
             default:
-                return StatusCode(StatusCodes.Status500InternalServerError, "创建 Block 时发生内部错误。");
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "创建 Block 时发生内部错误。");
         }
     }
 
@@ -95,17 +92,25 @@ public class BlockManagementController(
         [FromQuery] bool force = false)
     {
         var result = await this.blockManagementService.DeleteBlockManuallyAsync(blockId, recursive, force);
-
-        return result switch
+        switch (result)
         {
-            ManagementResult.Success => Ok(),
-            ManagementResult.NotFound => NotFound($"Block '{blockId}' 未找到。"),
-            ManagementResult.CannotPerformOnRoot => BadRequest("不允许删除根节点。"),
-            ManagementResult.InvalidState => Conflict($"Block '{blockId}' 当前状态不允许删除（可尝试 force=true）。"),
-            ManagementResult.BadRequest => BadRequest("请求无效（例如 Block 有子节点但未指定 recursive=true）。"),
-            ManagementResult.Error => StatusCode(StatusCodes.Status500InternalServerError, "删除 Block 时发生错误。"),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, "未知的删除结果。")
-        };
+            case ManagementResult.Success:
+                return this.Ok();
+            case ManagementResult.NotFound:
+                return this.NotFound($"Block '{blockId}' 未找到。");
+            case ManagementResult.CannotPerformOnRoot:
+                return this.BadRequest("不允许删除根节点。");
+            case ManagementResult.BadRequest:
+                return this.BadRequest("请求无效（例如 Block 有子节点但未指定 recursive=true）。");
+            case ManagementResult.CyclicOperation:
+                return this.BadRequest("循环移动操作。");
+            case ManagementResult.InvalidState:
+                return this.Conflict($"Block '{blockId}' 当前状态不允许删除（可尝试 force=true）。");
+            case ManagementResult.Error:
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "删除 Block 时发生错误。");
+            default:
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "未知的删除结果。");
+        }
     }
 
     /// <summary>
@@ -121,29 +126,24 @@ public class BlockManagementController(
     [Tags("__DEBUG__")]
     public async Task<IActionResult> MoveBlockManually(string blockId, [FromBody] MoveBlockRequestDto request)
     {
-        if (!ModelState.IsValid)
-        {
-            return BadRequest(ModelState);
-        }
+        if (!this.ModelState.IsValid) return this.BadRequest(this.ModelState);
 
         if (blockId == request.NewParentBlockId) // 基本的循环检查
-        {
-            return Conflict("不能将 Block 移动到自身之下。");
-        }
+            return this.Conflict("不能将 Block 移动到自身之下。");
 
         var result = await this.blockManagementService.MoveBlockManuallyAsync(blockId, request.NewParentBlockId);
 
         return result switch
         {
-            ManagementResult.Success => NoContent(),
-            ManagementResult.NotFound => NotFound(
+            ManagementResult.Success => this.NoContent(),
+            ManagementResult.NotFound => this.NotFound(
                 $"要移动的 Block '{blockId}' 或目标父 Block '{request.NewParentBlockId}' 未找到。"),
-            ManagementResult.CannotPerformOnRoot => BadRequest("不允许移动根节点。"),
-            ManagementResult.InvalidState => Conflict("Block 或目标父 Block 当前状态不允许移动。"),
-            ManagementResult.CyclicOperation => Conflict("不能将 Block 移动到其自身或其子孙节点下。"),
-            ManagementResult.BadRequest => BadRequest("请求无效。"),
-            ManagementResult.Error => StatusCode(StatusCodes.Status500InternalServerError, "移动 Block 时发生错误。"),
-            _ => StatusCode(StatusCodes.Status500InternalServerError, "未知的移动结果。")
+            ManagementResult.CannotPerformOnRoot => this.BadRequest("不允许移动根节点。"),
+            ManagementResult.InvalidState => this.Conflict("Block 或目标父 Block 当前状态不允许移动。"),
+            ManagementResult.CyclicOperation => this.Conflict("不能将 Block 移动到其自身或其子孙节点下。"),
+            ManagementResult.BadRequest => this.BadRequest("请求无效。"),
+            ManagementResult.Error => this.StatusCode(StatusCodes.Status500InternalServerError, "移动 Block 时发生错误。"),
+            _ => this.StatusCode(StatusCodes.Status500InternalServerError, "未知的移动结果。")
         };
     }
 }

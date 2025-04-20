@@ -8,10 +8,7 @@ public class TypedIdConverter : JsonConverter<TypedID>
 {
     public override TypedID Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType != JsonTokenType.StartObject)
-        {
-            throw new JsonException("Expected StartObject token for TypedID");
-        }
+        if (reader.TokenType != JsonTokenType.StartObject) throw new JsonException("Expected StartObject token for TypedID");
 
         EntityType type = default;
         string id = null!;
@@ -47,6 +44,7 @@ public class TypedIdConverter : JsonConverter<TypedID>
                 }
             }
         }
+
         throw new JsonException("Unexpected end when reading TypedID.");
     }
 

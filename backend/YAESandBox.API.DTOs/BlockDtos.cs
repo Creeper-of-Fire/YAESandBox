@@ -43,6 +43,19 @@ public record BlockDetailDto
 }
 
 /// <summary>
+/// 用于标识 Block 中可能过时的字段。
+/// </summary>
+public enum BlockDataFields
+{
+    ParentBlockId,
+    BlockContent,
+    Metadata,
+    ChildrenInfo,
+    WorldState,
+    GameState
+}
+
+/// <summary>
 /// 用于通过 PATCH 请求部分更新 Block 的内容和元数据。
 /// 任何设置为 null 的属性表示不修改该部分。
 /// </summary>

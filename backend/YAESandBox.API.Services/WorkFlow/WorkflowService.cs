@@ -18,13 +18,13 @@ namespace YAESandBox.API.Services.WorkFlow;
 /// </summary>
 /// <param name="blockServices"></param>
 /// <param name="notifierService"></param>
-public partial class WorkflowService(
+public class WorkflowService(
     IWorkFlowBlockService blockServices,
-    INotifierService notifierService
+    IWorkflowNotifierService notifierService
 ) : IWorkflowService
 {
     private IWorkFlowBlockService blockServices { get; } = blockServices;
-    private INotifierService notifierService { get; } = notifierService;
+    private IWorkflowNotifierService notifierService { get; } = notifierService;
     // private readonly IAiService _aiService; // 未来可能注入 AI 服务
 
     ///<inheritdoc/>
@@ -39,8 +39,6 @@ public partial class WorkflowService(
             Log.Error($"创建子 Block 失败，父 Block: {request.ParentBlockId}");
             return; // 创建失败，已记录日志
         }
-
-        await this.notifierService.NotifyBlockStatusUpdateAsync(childBlock.Block.BlockId, childBlock.StatusCode);
 
         Log.Info($"为工作流 '{request.WorkflowName}' 创建了新的子 Block: {childBlock.Block.BlockId}");
         // 3. 异步执行工作流逻辑 (使用 Task.Run 避免阻塞 Hub 调用线程)
@@ -146,14 +144,14 @@ public partial class WorkflowService(
             };
 
             // === 模拟流式输出到特定 UI 元素 ===
-            foreach (var part in simulatedContent)
+            foreach (string part in simulatedContent)
             {
                 var updateDto = new DisplayUpdateDto(
-                    RequestId: request.RequestId, // 关联请求
-                    ContextBlockId: request.ContextBlockId, // 上下文 Block
-                    Content: part, // 当前内容片段
-                    StreamingStatus: StreamStatus.Streaming,
-                    UpdateMode: UpdateMode.Incremental // 微工作流内容通常也是增量
+                    request.RequestId, // 关联请求
+                    request.ContextBlockId, // 上下文 Block
+                    part, // 当前内容片段
+                    StreamStatus.Streaming,
+                    UpdateMode.Incremental // 微工作流内容通常也是增量
                 )
                 {
                     // *** 关键：设置 TargetElementId ***
@@ -184,10 +182,10 @@ public partial class WorkflowService(
             // 不需要调用 HandleWorkflowCompletionAsync
             var finalStatus = success ? StreamStatus.Complete : StreamStatus.Error;
             var completeDto = new DisplayUpdateDto(
-                RequestId: request.RequestId,
-                ContextBlockId: request.ContextBlockId,
-                Content: finalMessage, // 最终消息
-                StreamingStatus: finalStatus // 完成或错误状态
+                request.RequestId,
+                request.ContextBlockId,
+                finalMessage, // 最终消息
+                finalStatus // 完成或错误状态
             )
             {
                 TargetElementId = request.TargetElementId // 确保最终状态也发往目标元素
@@ -238,11 +236,11 @@ public partial class WorkflowService(
                 "希望我这次的胡说八道能成功把你的测试流程跑起来！🤞"
             };
 
-            foreach (var part in fakeResponseParts)
+            foreach (string part in fakeResponseParts)
             {
                 // *** 发送流式更新到前端 ***
-                var updateDto = new DisplayUpdateDto(RequestId: request.RequestId, // 关联请求
-                    ContextBlockId: blockId, StreamingStatus: StreamStatus.Streaming, Content: part, // 发送当前的文本片段
+                var updateDto = new DisplayUpdateDto(request.RequestId, // 关联请求
+                    blockId, StreamingStatus: StreamStatus.Streaming, Content: part, // 发送当前的文本片段
                     UpdateMode: UpdateMode.FullSnapshot);
                 // 使用 NotifierService 发送 (确保 NotifierService 已实现 SendWorkflowUpdate)
                 // 注意：这里需要实际调用 INotifierService 的方法，我们假设它存在并能广播
@@ -260,22 +258,23 @@ public partial class WorkflowService(
             if (request.Params.TryGetValue("create_item_id", out object? itemIdObj) && itemIdObj is string itemId)
             {
                 generatedCommands.Add(AtomicOperation.Create(EntityType.Item, itemId,
-                    new() { { "name", $"Item {itemId} (from workflow)" }, { "created_by", request.WorkflowName } }));
+                    new Dictionary<string, object?>
+                        { { "name", $"Item {itemId} (from workflow)" }, { "created_by", request.WorkflowName } }));
                 Log.Debug($"Block '{blockId}': Workflow generated command to create item {itemId}.");
             }
 
             // 假设需要创建 DeepFake 提到的地点和角色 (如果它们在 WsInput 不存在)
             // 注意：实际应用中需要检查是否存在，避免重复创建错误
             generatedCommands.Add(AtomicOperation.Create(EntityType.Place, "castle-entrance",
-                new() { { "name", "城堡入口" } })); // 可能创建也可能覆盖
+                new Dictionary<string, object?> { { "name", "城堡入口" } })); // 可能创建也可能覆盖
             generatedCommands.Add(AtomicOperation.Create(EntityType.Character, "clumsy-knight",
-                new()
+                new Dictionary<string, object?>
                 {
                     { "name", "笨手笨脚的骑士" }, { "current_place", "Place:castle-entrance" }, { "hp", 15 },
                     { "description", "盔甲上全是凹痕，走路还同手同脚" }
                 }));
             generatedCommands.Add(AtomicOperation.Create(EntityType.Item, "dropped-gauntlet",
-                new() { { "name", "掉落的铁手套" }, { "location", "Place:castle-entrance" }, { "material", "生锈的铁" } }));
+                new Dictionary<string, object?> { { "name", "掉落的铁手套" }, { "location", "Place:castle-entrance" }, { "material", "生锈的铁" } }));
             generatedCommands.Add(AtomicOperation.Modify(EntityType.Place, "castle-entrance", "description", "+=",
                 " 地上现在多了一只孤零零的铁手套和一个看起来不太聪明的骑士。"));
 
@@ -299,20 +298,15 @@ public partial class WorkflowService(
             rawTextResult = $"工作流 '{request.WorkflowName}' 执行失败: {ex.Message}";
             Log.Error(ex, $"Block '{blockId}': 工作流 '{request.WorkflowName}' 执行过程中发生异常: {ex.Message}");
         }
-        finally
-        {
-        }
 
-        var blockStatus = await this.blockServices.HandleWorkflowCompletionAsync(blockId, request.RequestId,
+        await this.blockServices.HandleWorkflowCompletionAsync(blockId, request.RequestId,
             success, rawTextResult, generatedCommands.ToAtomicOperationRequests(), outputVariables);
         Log.Debug($"Block '{blockId}': 已通知 BlockManager 工作流完成状态: Success={success}");
 
         // 发送最终完成状态 (如果需要单独通知)
-        var completeDto = new DisplayUpdateDto(RequestId: request.RequestId, ContextBlockId: blockId,
+        var completeDto = new DisplayUpdateDto(request.RequestId, blockId,
             StreamingStatus: success ? StreamStatus.Complete : StreamStatus.Error, Content: rawTextResult,
             UpdateMode: UpdateMode.FullSnapshot);
-        if (blockStatus.IsSuccess)
-            await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, blockStatus.Value.StatusCode);
         await this.notifierService.NotifyDisplayUpdateAsync(completeDto);
     }
 

@@ -9,7 +9,10 @@ namespace YAESandBox.Tests.Core;
 /// </summary>
 public class WorldStateTests
 {
-    private WorldState CreateTestWorldState() => new();
+    private WorldState CreateTestWorldState()
+    {
+        return new WorldState();
+    }
 
     /// <summary>
     /// 测试向 WorldState 添加不同类型的实体。
@@ -57,7 +60,7 @@ public class WorldStateTests
         // 注意：根据 AddEntity 实现，覆盖已存在且未销毁的实体会记录警告
     }
 
-     /// <summary>
+    /// <summary>
     /// 测试添加具有相同 ID 但不同类型的实体。
     /// </summary>
     [Fact]
@@ -110,7 +113,7 @@ public class WorldStateTests
         ws.FindEntity(destroyedTid).Should().BeNull();
 
         // 查找已销毁的 (显式包含)
-        ws.FindEntity(destroyedTid, includeDestroyed: true).Should().BeSameAs(destroyedItem);
+        ws.FindEntity(destroyedTid, true).Should().BeSameAs(destroyedItem);
     }
 
     /// <summary>
@@ -143,10 +146,10 @@ public class WorldStateTests
         ws.FindEntityById("item_destroyed_id", EntityType.Item).Should().BeNull();
 
         // 查找已销毁的 (显式包含)
-        ws.FindEntityById("item_destroyed_id", EntityType.Item, includeDestroyed: true).Should().BeSameAs(destroyedItem);
+        ws.FindEntityById("item_destroyed_id", EntityType.Item, true).Should().BeSameAs(destroyedItem);
     }
 
-     /// <summary>
+    /// <summary>
     /// 测试 WorldState 的 Clone 方法。
     /// </summary>
     [Fact]

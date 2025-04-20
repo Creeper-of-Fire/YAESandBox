@@ -2,7 +2,8 @@
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services;
 using YAESandBox.API.Services.InterFaceAndBasic;
-using YAESandBox.Core.State; // For UpdateResult
+using YAESandBox.Core.State;
+using YAESandBox.Depend; // For UpdateResult
 
 namespace YAESandBox.API.Controllers;
 
@@ -11,7 +12,10 @@ namespace YAESandBox.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/blocks/{blockId}/[controller]")] // /api/blocks/{blockId}/gamestate
-public class GameStateController(IBlockWritService writServices, IBlockReadService readServices, INotifierService notifierService)
+public class GameStateController(
+    IBlockWritService writServices,
+    IBlockReadService readServices,
+    INotifierService notifierService)
     : APINotifyControllerBase(readServices, writServices, notifierService)
 {
     /// <summary>
@@ -57,12 +61,16 @@ public class GameStateController(IBlockWritService writServices, IBlockReadServi
 
         var result = await this.blockWritService.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate); // 实现更新逻辑
 
-        return result switch
+        switch (result)
         {
-            UpdateResult.Success => this.NoContent(), // 204 No Content
-            UpdateResult.NotFound => this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"), // 404 Not Found
-            // 根据 UpdateResult 枚举的其他可能值处理错误，这里假设只有 NotFound
-            _ => this.StatusCode(StatusCodes.Status500InternalServerError, "更新 GameState 时发生意外错误。") // 500 Internal Server Error
-        };
+            case BlockResultCode.Success:
+                await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.GameState);
+                return this.NoContent(); // 204 No Content
+            case BlockResultCode.NotFound:
+                return this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"); // 404 Not Found
+            default:
+                // 根据 UpdateResult 枚举的其他可能值处理错误，这里假设只有 NotFound
+                return this.StatusCode(StatusCodes.Status500InternalServerError, "更新 GameState 时发生意外错误。"); // 500 Internal Server Error
+        }
     }
 }

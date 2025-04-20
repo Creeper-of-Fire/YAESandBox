@@ -6,57 +6,117 @@ namespace YAESandBox.Core;
 
 public abstract record LazyInitError(string Message) : IError
 {
-    public Result ToResult() => Result.Fail(this);
-    public Result<T> ToResult<T>() => Result.Fail(this);
+    public Result ToResult()
+    {
+        return Result.Fail(this);
+    }
+
+    public Result<T> ToResult<T>()
+    {
+        return Result.Fail(this);
+    }
 
     /// <summary>
     /// 元数据
     /// </summary>
-    [field: AllowNull, MaybeNull]
+    [field: AllowNull]
+    [field: MaybeNull]
     public Dictionary<string, object> Metadata => field ??= [];
 
     /// <summary>
     /// 错误原因
     /// </summary>
-    [field: AllowNull, MaybeNull]
+    [field: AllowNull]
+    [field: MaybeNull]
     public List<IError> Reasons => field ??= [];
 
-    public static implicit operator Result(LazyInitError initError) => initError.ToResult();
+    public static implicit operator Result(LazyInitError initError)
+    {
+        return initError.ToResult();
+    }
 }
 
 public abstract record LazyInitHandledIssue(string Message) : IHandledIssue
 {
-    public Result ToResult() => Result.Ok().WithReason(this);
-    public Result<T> ToResult<T>() => Result.Ok().WithReason(this);
+    public Result ToResult()
+    {
+        return Result.Ok().WithReason(this);
+    }
+
+    public Result<T> ToResult<T>()
+    {
+        return Result.Ok().WithReason(this);
+    }
 
     /// <summary>
     /// 元数据
     /// </summary>
-    [field: AllowNull, MaybeNull]
+    [field: AllowNull]
+    [field: MaybeNull]
     public Dictionary<string, object> Metadata => field ??= [];
 
     /// <summary>
     /// 原因
     /// </summary>
-    [field: AllowNull, MaybeNull]
+    [field: AllowNull]
+    [field: MaybeNull]
     public List<IReason> Reasons => field ??= [];
 }
 
 public record NormalHandledIssue(BlockResultCode Code, string Message) : LazyInitHandledIssue(Message)
 {
-    public static NormalHandledIssue NotFound(string message) => new(BlockResultCode.NotFound, message);
-    public static NormalHandledIssue Conflict(string message) => new(BlockResultCode.Conflict, message);
-    public static NormalHandledIssue InvalidInput(string message) => new(BlockResultCode.InvalidInput, message);
-    public static NormalHandledIssue Error(string message) => new(BlockResultCode.Error, message);
-    public static NormalHandledIssue InvalidState(string message) => new(BlockResultCode.InvalidState, message);
+    public static NormalHandledIssue NotFound(string message)
+    {
+        return new NormalHandledIssue(BlockResultCode.NotFound, message);
+    }
+
+    public static NormalHandledIssue Conflict(string message)
+    {
+        return new NormalHandledIssue(BlockResultCode.Conflict, message);
+    }
+
+    public static NormalHandledIssue InvalidInput(string message)
+    {
+        return new NormalHandledIssue(BlockResultCode.InvalidInput, message);
+    }
+
+    public static NormalHandledIssue Error(string message)
+    {
+        return new NormalHandledIssue(BlockResultCode.Error, message);
+    }
+
+    public static NormalHandledIssue InvalidState(string message)
+    {
+        return new NormalHandledIssue(BlockResultCode.InvalidState, message);
+    }
 }
-public record NormalError(BlockResultCode Code, string Message): LazyInitError(Message)
+
+public record NormalError(BlockResultCode Code, string Message) : LazyInitError(Message)
 {
-    public static NormalError NotFound(string message) => new(BlockResultCode.NotFound, message);
-    public static NormalError Conflict(string message) => new(BlockResultCode.Conflict, message);
-    public static NormalError InvalidInput(string message) => new(BlockResultCode.InvalidInput, message);
-    public static NormalError Error(string message) => new(BlockResultCode.Error, message);
-    public static NormalError InvalidState(string message) => new(BlockResultCode.InvalidState, message);
+    public static NormalError NotFound(string message)
+    {
+        return new NormalError(BlockResultCode.NotFound, message);
+    }
+
+    public static NormalError Conflict(string message)
+    {
+        return new NormalError(BlockResultCode.Conflict, message);
+    }
+
+    public static NormalError InvalidInput(string message)
+    {
+        return new NormalError(BlockResultCode.InvalidInput, message);
+    }
+
+    public static NormalError Error(string message)
+    {
+        return new NormalError(BlockResultCode.Error, message);
+    }
+
+    public static NormalError InvalidState(string message)
+    {
+        return new NormalError(BlockResultCode.InvalidState, message);
+    }
 }
 
 /// <summary>
@@ -69,19 +129,25 @@ public interface IHandledIssue : IReason
 
 public static class ErrorHelper
 {
-    public static IEnumerable<IHandledIssue> HandledIssue(this IResultBase resultBase) =>
-        resultBase.Reasons.OfType<IHandledIssue>();
+    public static IEnumerable<IHandledIssue> HandledIssue(this IResultBase resultBase)
+    {
+        return resultBase.Reasons.OfType<IHandledIssue>();
+    }
 
-    public static bool HasHandledIssue<THandledIssue>(this IResultBase resultBase) where THandledIssue : IHandledIssue =>
-        resultBase.HandledIssue().OfType<THandledIssue>().Any();
+    public static bool HasHandledIssue<THandledIssue>(this IResultBase resultBase) where THandledIssue : IHandledIssue
+    {
+        return resultBase.HandledIssue().OfType<THandledIssue>().Any();
+    }
 
     /// <summary>
     /// 选择成功的 FluentResults.Result
     /// </summary>
     /// <param name="results"></param>
     /// <returns></returns>
-    public static IEnumerable<T> SelectSuccessValue<T>(this IEnumerable<Result<T>> results) =>
-        results.Where(op => !op.Errors.Any() && !op.HandledIssue().Any()).Select(op => op.Value);
+    public static IEnumerable<T> SelectSuccessValue<T>(this IEnumerable<Result<T>> results)
+    {
+        return results.Where(op => !op.Errors.Any() && !op.HandledIssue().Any()).Select(op => op.Value);
+    }
 
     // /// <summary>
     // /// 使用FluentResults.Result.Merge，合并 Result 列表 为一个Result。

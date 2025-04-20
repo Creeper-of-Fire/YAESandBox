@@ -23,7 +23,7 @@ namespace YAESandBox.Core.Block
         /// <param name="triggerParams"></param>
         /// <returns></returns>
         Task<LoadingBlockStatus?> CreateChildBlock_Async(
-            string? parentBlockId,string workFlowName, Dictionary<string, object?> triggerParams);
+            string? parentBlockId, string workFlowName, Dictionary<string, object?> triggerParams);
 
         /// <summary>
         /// 获取从根节点到指定块ID可达的最深层叶子节点（根据“最后一个子节点”规则）的完整路径。
@@ -47,7 +47,7 @@ namespace YAESandBox.Core.Block
         /// <param name="blockId"></param>
         /// <param name="settingsToUpdate"></param>
         /// <returns></returns>
-        Task<UpdateResult> UpdateBlockGameStateAsync(
+        Task<BlockResultCode> UpdateBlockGameStateAsync(
             string blockId, Dictionary<string, object?> settingsToUpdate);
 
         /// <summary>
@@ -58,7 +58,7 @@ namespace YAESandBox.Core.Block
         /// <param name="blockId">区块唯一标识符</param>
         /// <param name="operations">待执行的原子操作列表</param>
         /// <returns>返回一个元组，包含区块状态和操作结果列表（结果包含失败的）</returns>
-        Task<(FluentResults.Result<IEnumerable<AtomicOperation>> result, BlockStatusCode? blockStatusCode)>
+        Task<(Result<IEnumerable<AtomicOperation>> result, BlockStatusCode? blockStatusCode)>
             EnqueueOrExecuteAtomicOperationsAsync(string blockId, List<AtomicOperation> operations);
 
         /// <summary>
@@ -97,7 +97,7 @@ namespace YAESandBox.Core.Block
         /// <param name="blockId"></param>
         /// <param name="resolvedCommands"></param>
         /// <returns></returns>
-        Task<FluentResults.Result<IEnumerable<AtomicOperation>>> ApplyResolvedCommandsAsync(string blockId,
+        Task<Result<IEnumerable<AtomicOperation>>> ApplyResolvedCommandsAsync(string blockId,
             List<AtomicOperation> resolvedCommands);
 
         /// <summary>
@@ -108,7 +108,7 @@ namespace YAESandBox.Core.Block
         /// <param name="rawText"></param>
         /// <param name="firstPartyCommands">来自第一公民工作流的指令</param>
         /// <param name="outputVariables"></param>
-        Task<OneOf<(IdleBlockStatus, FluentResults.Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>
+        Task<OneOf<(IdleBlockStatus, Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>
             HandleWorkflowCompletionAsync(string blockId, bool success, string rawText, List<AtomicOperation> firstPartyCommands,
                 Dictionary<string, object?> outputVariables);
 
@@ -135,7 +135,7 @@ namespace YAESandBox.Core.Block
         /// <returns>
         /// Block当前的状态（必定为LoadingBlockStatus）
         /// </returns>
-        Task<Result<LoadingBlockStatus>> StartRegenerationAsync(string blockId,string workFlowName, Dictionary<string, object?> triggerParams);
-
+        Task<Result<LoadingBlockStatus>> StartRegenerationAsync(string blockId, string workFlowName,
+            Dictionary<string, object?> triggerParams);
     }
 }

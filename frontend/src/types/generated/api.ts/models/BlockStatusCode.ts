@@ -11,4 +11,5 @@ export enum BlockStatusCode {
     RESOLVING_CONFLICT = 'ResolvingConflict',
     ERROR = 'Error',
     NOT_FOUND = 'NotFound',
+    DELETED = 'Deleted',
 }

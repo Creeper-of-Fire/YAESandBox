@@ -8,40 +8,40 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" PrivateAssets="all" />
-        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" PrivateAssets="all"/>
     </ItemGroup>
 
-<!--    &lt;!&ndash; 在生成 (Build) 目标之前执行 C# 到 TypeScript 的转换 &ndash;&gt;-->
-<!--    <Target Name="GenerateSignalRTypeScriptDTOs" BeforeTargets="Build">-->
-<!--        &lt;!&ndash; 打印一条消息，方便在构建日志中看到这个步骤 &ndash;&gt;-->
-<!--        <Message Text="正在从 WebSocketDtos.cs 生成 TypeScript DTOs..." Importance="high" />-->
+    <!--    &lt;!&ndash; 在生成 (Build) 目标之前执行 C# 到 TypeScript 的转换 &ndash;&gt;-->
+    <!--    <Target Name="GenerateSignalRTypeScriptDTOs" BeforeTargets="Build">-->
+    <!--        &lt;!&ndash; 打印一条消息，方便在构建日志中看到这个步骤 &ndash;&gt;-->
+    <!--        <Message Text="正在从 WebSocketDtos.cs 生成 TypeScript DTOs..." Importance="high" />-->
 
-<!--        &lt;!&ndash; 执行 dotnet cs2ts 命令 &ndash;&gt;-->
-<!--        &lt;!&ndash; -->
-<!--          命令解释:-->
-<!--          dotnet cs2ts                : 调用 CSharpToTypeScript 工具-->
-<!--          WebSocket/WebSocketDtos.cs  : 指定输入的 C# 文件。请确保这个路径相对于你的 .csproj 文件是正确的。-->
-<!--                                        假设 .csproj 文件在项目根目录，且 WebSocketDtos.cs 在名为 'WebSocket' 的子目录中。-->
-<!--          -o ../../frontend/types/generated/signalr : 指定输出目录。这个相对路径表示从 .csproj 文件位置向上两级，-->
-<!--                                                      然后进入 frontend/src/types/generated/signalr 目录。-->
-<!--                                                      请根据你的实际目录结构调整。-->
-<!--          -i Simple                   : 启用简单的 import 语句生成。如果 DTO 之间有引用，这会很有用。-->
-<!--                                        它假设同一目录下的 TS 文件名对应类型名（处理了大小写和可选后缀）。-->
-<!--          -q Single                   : 在生成的 TypeScript 代码中使用单引号 ('') 而不是双引号 ("")。-->
-<!--          -c                          : 在生成文件之前清理输出目录。这确保了旧的或不再使用的 DTO 文件会被删除。-->
-<!--          -preserve-casing=false     : (默认值，但明确写出) 将 C# 的 PascalCase 属性转换为 TypeScript 的 camelCase。-->
-<!--          -convert-nullables-to=Null : (默认值) 将 C# 的可空类型 T? 转换为 T | null。-->
-<!--                                        如果你更喜欢 undefined，可以使用 -convert-nullables-to=Undefined-->
-<!--        &ndash;&gt;-->
-<!--        <Exec Command="dotnet cs2ts ./WebSocket/WebSocketDtos.cs -o ../../frontend/src/types/generated/signalr -i Simple -q Single -c" >-->
-<!--            <Output TaskParameter="ConsoleOutput" PropertyName="Cs2TsOutput" />-->
-<!--        </Exec>-->
+    <!--        &lt;!&ndash; 执行 dotnet cs2ts 命令 &ndash;&gt;-->
+    <!--        &lt;!&ndash; -->
+    <!--          命令解释:-->
+    <!--          dotnet cs2ts                : 调用 CSharpToTypeScript 工具-->
+    <!--          WebSocket/WebSocketDtos.cs  : 指定输入的 C# 文件。请确保这个路径相对于你的 .csproj 文件是正确的。-->
+    <!--                                        假设 .csproj 文件在项目根目录，且 WebSocketDtos.cs 在名为 'WebSocket' 的子目录中。-->
+    <!--          -o ../../frontend/types/generated/signalr : 指定输出目录。这个相对路径表示从 .csproj 文件位置向上两级，-->
+    <!--                                                      然后进入 frontend/src/types/generated/signalr 目录。-->
+    <!--                                                      请根据你的实际目录结构调整。-->
+    <!--          -i Simple                   : 启用简单的 import 语句生成。如果 DTO 之间有引用，这会很有用。-->
+    <!--                                        它假设同一目录下的 TS 文件名对应类型名（处理了大小写和可选后缀）。-->
+    <!--          -q Single                   : 在生成的 TypeScript 代码中使用单引号 ('') 而不是双引号 ("")。-->
+    <!--          -c                          : 在生成文件之前清理输出目录。这确保了旧的或不再使用的 DTO 文件会被删除。-->
+    <!--          -preserve-casing=false     : (默认值，但明确写出) 将 C# 的 PascalCase 属性转换为 TypeScript 的 camelCase。-->
+    <!--          -convert-nullables-to=Null : (默认值) 将 C# 的可空类型 T? 转换为 T | null。-->
+    <!--                                        如果你更喜欢 undefined，可以使用 -convert-nullables-to=Undefined-->
+    <!--        &ndash;&gt;-->
+    <!--        <Exec Command="dotnet cs2ts ./WebSocket/WebSocketDtos.cs -o ../../frontend/src/types/generated/signalr -i Simple -q Single -c" >-->
+    <!--            <Output TaskParameter="ConsoleOutput" PropertyName="Cs2TsOutput" />-->
+    <!--        </Exec>-->
 
-<!--        &lt;!&ndash; （可选）可以在这里添加检查命令是否成功执行的逻辑 &ndash;&gt;-->
-<!--        <Message Text="cs2ts 输出: $(Cs2TsOutput)" Importance="normal" />-->
-<!--    </Target>-->
+    <!--        &lt;!&ndash; （可选）可以在这里添加检查命令是否成功执行的逻辑 &ndash;&gt;-->
+    <!--        <Message Text="cs2ts 输出: $(Cs2TsOutput)" Importance="normal" />-->
+    <!--    </Target>-->
 
 
 </Project>

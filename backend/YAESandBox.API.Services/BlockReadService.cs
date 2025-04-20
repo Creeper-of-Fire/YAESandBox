@@ -32,7 +32,7 @@ public class BlockReadService(IBlockManager blockManager) : BasicBlockService(bl
         var result = GenerateTopologyJson(this.blockManager.GetNodeOnlyBlocks(), blockID ?? BlockManager.WorldRootId);
         foreach (var e in result.Errors)
             Log.Error(e.Message);
-        if (result.IsFailed) 
+        if (result.IsFailed)
             return Task.FromResult<JsonBlockNode?>(null);
         return Task.FromResult<JsonBlockNode?>(result.Value);
     }
@@ -82,7 +82,7 @@ public class BlockReadService(IBlockManager blockManager) : BasicBlockService(bl
         try
         {
             var targetWs = block.CurrentWorldState;
-            return targetWs.FindEntity(entityRef, includeDestroyed: false); // Find non-destroyed
+            return targetWs.FindEntity(entityRef, false); // Find non-destroyed
         }
         catch (Exception ex)
         {

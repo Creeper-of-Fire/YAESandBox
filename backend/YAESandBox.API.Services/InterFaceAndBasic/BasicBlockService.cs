@@ -19,6 +19,8 @@ public class BasicBlockService(IBlockManager blockManager)
     /// </summary>
     /// <param name="blockId"></param>
     /// <returns></returns>
-    protected Task<BlockStatus?> GetBlockAsync(string blockId) =>
-        this.blockManager.GetBlockAsync(blockId);
+    protected Task<BlockStatus?> GetBlockAsync(string blockId)
+    {
+        return this.blockManager.GetBlockAsync(blockId);
+    }
 }

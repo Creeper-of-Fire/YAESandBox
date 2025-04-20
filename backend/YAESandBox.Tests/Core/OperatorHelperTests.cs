@@ -37,8 +37,8 @@ public class OperatorHelperTests
     public void StringToOperator_对于无效字符串_应抛出ArgumentException()
     {
         // Arrange
-        var invalidOp = "*";
-        System.Action act = () => OperatorHelper.StringToOperator(invalidOp);
+        string? invalidOp = "*";
+        Action act = () => OperatorHelper.StringToOperator(invalidOp);
 
         // Act & Assert
         act.Should().Throw<ArgumentException>().WithMessage($"不支持 '{invalidOp}'*"); // 检查异常消息
@@ -54,11 +54,11 @@ public class OperatorHelperTests
     {
         // Arrange
         object? oldValue = null;
-        var newValue = "new value";
+        string? newValue = "new value";
         var op = Operator.Equal; // 操作符不重要
 
         // Act
-        var result = op.ChangedValue(oldValue, newValue);
+        object? result = op.ChangedValue(oldValue, newValue);
 
         // Assert
         result.Should().Be(newValue);
@@ -83,7 +83,7 @@ public class OperatorHelperTests
     public void ChangedValue_对于数值类型_应正确应用操作符<T>(Operator op, T oldValue, T newValue, T expected) where T : struct
     {
         // Act
-        var result = op.ChangedValue(oldValue, newValue);
+        object? result = op.ChangedValue(oldValue, newValue);
 
         // Assert
         result.Should().BeOfType<T>(); // 确认类型正确
@@ -100,7 +100,7 @@ public class OperatorHelperTests
     public void ChangedValue_对于字符串类型_应正确应用操作符(Operator op, string oldValue, string newValue, string expected)
     {
         // Act
-        var result = op.ChangedValue(oldValue, newValue);
+        object? result = op.ChangedValue(oldValue, newValue);
 
         // Assert
         result.Should().BeOfType<string>();

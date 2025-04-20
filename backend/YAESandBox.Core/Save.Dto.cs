@@ -1,11 +1,13 @@
 ﻿// --- Persistence DTOs ---
 
 using System.Text.Json.Serialization;
+
 // For GameState (conceptually)
 
 // For EntityType, BaseEntity (for CoreFields)
 
-namespace YAESandBox.Core; // Namespace matches BlockManager persistence location
+namespace YAESandBox.Core;
+// Namespace matches BlockManager persistence location
 
 /// <summary>
 /// 代表 YAESandBox 完整状态存档文件的顶层结构。
@@ -63,13 +65,13 @@ public record BlockDto
     /// </summary>
     [JsonPropertyName("content")]
     public string BlockContent { get; set; } = string.Empty;
-    
+
     /// <summary>
     /// 存储触发block时所使用的工作流名称。
     /// </summary>
     [JsonPropertyName("workFlowName")]
     public string WorkFlowName { get; set; } = string.Empty;
-    
+
 
     /// <summary>
     /// 与 Block 相关的元数据字典。键值对均为字符串。

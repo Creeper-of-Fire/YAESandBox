@@ -42,9 +42,11 @@ public class BlockWritService(IBlockManager blockManager) : BasicBlockService(bl
     }
 
     /// <inheritdoc/>
-    public async Task<UpdateResult> UpdateBlockGameStateAsync(
+    public async Task<BlockResultCode> UpdateBlockGameStateAsync(
         string blockId, Dictionary<string, object?> settingsToUpdate)
-        => await this.blockManager.UpdateBlockGameStateAsync(blockId, settingsToUpdate);
+    {
+        return await this.blockManager.UpdateBlockGameStateAsync(blockId, settingsToUpdate);
+    }
 
 
     /// <inheritdoc/>

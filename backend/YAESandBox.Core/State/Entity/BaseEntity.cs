@@ -33,16 +33,13 @@ public abstract class BaseEntity
     /// 获取实体的 TypedID 表示。
     /// </summary>
     public TypedID TypedId =>
-        new TypedID(this.EntityType, this.EntityId);
+        new(this.EntityType, this.EntityId);
 
     // 主构造函数，确保核心属性被初始化
     protected BaseEntity(string entityId)
     {
         // 添加基本的 ID 验证
-        if (string.IsNullOrWhiteSpace(entityId))
-        {
-            throw new ArgumentException("Entity ID cannot be null or whitespace.", nameof(entityId));
-        }
+        if (string.IsNullOrWhiteSpace(entityId)) throw new ArgumentException("Entity ID cannot be null or whitespace.", nameof(entityId));
 
         this.EntityId = entityId;
     }
@@ -90,7 +87,6 @@ public abstract class BaseEntity
 
         // 特殊处理：如果期望 List<TypedID> 而存储的是 List<object> 或其他兼容列表
         if (typeof(T) == typeof(List<TypedID>) && rawValue is List<object> objectList)
-        {
             try
             {
                 // 尝试将 object 列表转换为 TypedID 列表
@@ -102,7 +98,6 @@ public abstract class BaseEntity
             {
                 /* 转换失败，忽略 */
             }
-        }
         // ... 可以根据需要添加更多类型转换逻辑
 
         value = default;
@@ -156,7 +151,6 @@ public abstract class BaseEntity
 
         // 合并动态属性
         foreach (var kvp in this._dynamicAttributes)
-        {
             // 简单的浅拷贝处理（对于 List 和 Dictionary）
             // 注意：这不会深拷贝嵌套的复杂对象
             allAttrs[kvp.Key] = kvp.Value switch
@@ -165,7 +159,6 @@ public abstract class BaseEntity
                 Dictionary<string, object> dict => new Dictionary<string, object>(dict), // 拷贝字典
                 _ => kvp.Value // 其他类型直接赋值
             };
-        }
 
         return allAttrs;
     }
@@ -209,7 +202,7 @@ public abstract class BaseEntity
 
     public void ModifyAttribute(string key, string stringOp, object value)
     {
-        this.ModifyAttribute(key, OperatorHelper.StringToOperator(stringOp: stringOp), value);
+        this.ModifyAttribute(key, OperatorHelper.StringToOperator(stringOp), value);
     }
 
 
@@ -240,7 +233,7 @@ public abstract class BaseEntity
         object newValueToSet = op.ChangedValue(currentValue, value);
         this.SetAttribute(key, newValueToSet);
     }
-    
+
     /// <summary>
     /// 创建此实体的深拷贝副本。
     /// 子类应覆盖此方法以确保所有特定字段都被正确复制。
@@ -266,7 +259,6 @@ public abstract class BaseEntity
 
         // 3. 深拷贝动态属性
         foreach (var kvp in this._dynamicAttributes)
-        {
             // 实现基本的深拷贝逻辑 (对 List 和 Dictionary)
             // 注意: 这不会递归深拷贝复杂对象内部的引用
             clone._dynamicAttributes[kvp.Key] = kvp.Value switch
@@ -275,7 +267,6 @@ public abstract class BaseEntity
                 Dictionary<string, object> dict => new Dictionary<string, object>(dict), // 拷贝字典本身，内部值是浅拷贝
                 _ => kvp.Value // 其他类型直接赋值 (浅拷贝)
             };
-        }
 
         return clone;
     }

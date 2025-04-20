@@ -1,4 +1,5 @@
 ﻿using YAESandBox.Core.State.Entity; // For EntityType
+
 namespace YAESandBox.API.DTOs;
 
 /// <summary>

@@ -84,10 +84,7 @@ public class WorldState
                 throw new ArgumentOutOfRangeException(nameof(@ref.Type), $"未知的实体类型: {@ref.Type}");
         }
 
-        if (found && entity != null && (!entity.IsDestroyed || includeDestroyed))
-        {
-            return entity;
-        }
+        if (found && entity != null && (!entity.IsDestroyed || includeDestroyed)) return entity;
 
         return null;
     }
@@ -116,25 +113,19 @@ public class WorldState
         {
             case Item item:
                 if (this.Items.TryGetValue(item.EntityId, out var existingItem) && !existingItem.IsDestroyed)
-                {
                     Log.Warning($"覆盖已存在且未销毁的 Item: {item.TypedId}");
-                }
 
                 this.Items[item.EntityId] = item;
                 break;
             case Character character:
                 if (this.Characters.TryGetValue(character.EntityId, out var existingChar) && !existingChar.IsDestroyed)
-                {
                     Log.Warning($"覆盖已存在且未销毁的 Character: {character.TypedId}");
-                }
 
                 this.Characters[character.EntityId] = character;
                 break;
             case Place place:
                 if (this.Places.TryGetValue(place.EntityId, out var existingPlace) && !existingPlace.IsDestroyed)
-                {
                     Log.Warning($"覆盖已存在且未销毁的 Place: {place.TypedId}");
-                }
 
                 this.Places[place.EntityId] = place;
                 break;
@@ -145,7 +136,7 @@ public class WorldState
 
         Log.Debug($"实体 '{entity.TypedId}' 已添加到 WorldState。");
     }
-    
+
     /// <summary>
     /// 创建 WorldState 的深拷贝副本。
     /// 这将克隆所有的实体及其属性。
@@ -157,22 +148,14 @@ public class WorldState
 
         // 克隆 Items 字典中的每个 Item
         foreach (var kvp in this.Items)
-        {
             // 假设 BaseEntity.Clone() 实现了正确的深拷贝
             clone.Items[kvp.Key] = (Item)kvp.Value.Clone();
-        }
 
         // 克隆 Characters
-        foreach (var kvp in this.Characters)
-        {
-            clone.Characters[kvp.Key] = (Character)kvp.Value.Clone();
-        }
+        foreach (var kvp in this.Characters) clone.Characters[kvp.Key] = (Character)kvp.Value.Clone();
 
         // 克隆 Places
-        foreach (var kvp in this.Places)
-        {
-            clone.Places[kvp.Key] = (Place)kvp.Value.Clone();
-        }
+        foreach (var kvp in this.Places) clone.Places[kvp.Key] = (Place)kvp.Value.Clone();
 
         return clone;
     }

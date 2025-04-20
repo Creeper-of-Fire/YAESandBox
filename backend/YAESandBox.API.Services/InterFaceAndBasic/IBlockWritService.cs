@@ -12,7 +12,7 @@ public interface IBlockWritService
     /// <param name="blockId"></param>
     /// <param name="settingsToUpdate"></param>
     /// <returns></returns>
-    Task<UpdateResult> UpdateBlockGameStateAsync(string blockId, Dictionary<string, object?> settingsToUpdate);
+    Task<BlockResultCode> UpdateBlockGameStateAsync(string blockId, Dictionary<string, object?> settingsToUpdate);
 
     /// <summary>
     /// 输入原子化指令修改其内容

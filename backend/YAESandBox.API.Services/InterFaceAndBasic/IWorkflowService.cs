@@ -24,7 +24,7 @@ public interface IWorkflowService
     /// <param name="request">工作流触发请求 DTO。</param>
     /// <returns>一个 Task 代表异步操作。</returns>
     Task HandleMicroWorkflowTriggerAsync(TriggerMicroWorkflowRequestDto request);
-    
+
 
     /// <summary>
     /// 处理来自客户端的冲突解决请求。
@@ -32,7 +32,7 @@ public interface IWorkflowService
     /// <param name="request">冲突解决请求 DTO。</param>
     /// <returns>一个 Task 代表异步操作。</returns>
     Task HandleConflictResolutionAsync(ResolveConflictRequestDto request);
-    
+
     /// <summary>
     /// 处理重新生成 Block 的请求。
     /// </summary>
@@ -41,4 +41,3 @@ public interface IWorkflowService
     Task HandleRegenerateBlockAsync(RegenerateBlockRequestDto request);
 }
 // --- END OF FILE IWorkflowService.cs ---
-

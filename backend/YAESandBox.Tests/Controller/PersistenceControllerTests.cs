@@ -16,8 +16,9 @@ namespace YAESandBox.Tests.Controller;
 public class PersistenceControllerTests
 {
     private readonly Mock<IBlockManager> _mockBlockManager; // Mock BlockManager (需要它是可 mock 的，或者 mock IBlockManager)
-                                                           // 注意：BlockManager 本身可能不易 mock，最好依赖 IBlockManager 接口
-                                                           // 这里假设我们可以 mock BlockManager 或其接口
+
+    // 注意：BlockManager 本身可能不易 mock，最好依赖 IBlockManager 接口
+    // 这里假设我们可以 mock BlockManager 或其接口
     private readonly PersistenceController _controller;
 
     public PersistenceControllerTests()
@@ -54,7 +55,7 @@ public class PersistenceControllerTests
 
         // 检查流内容（可选，但更彻底）
         using var reader = new StreamReader(fileResult.FileStream);
-        var content = await reader.ReadToEndAsync();
+        string content = await reader.ReadToEndAsync();
         content.Should().Be("{\"status\":\"saved\"}");
 
         this._mockBlockManager.Verify(bm => bm.SaveToFileAsync(It.IsAny<Stream>(), blindData), Times.Once);
@@ -83,7 +84,7 @@ public class PersistenceControllerTests
     {
         // Arrange
         var expectedBlindData = new { restored = true };
-        var fileContent = "{\"some\":\"data\"}"; // 文件内容不直接重要，重要的是 LoadFromFileAsync 的返回值
+        string fileContent = "{\"some\":\"data\"}"; // 文件内容不直接重要，重要的是 LoadFromFileAsync 的返回值
         var stream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
         var mockFile = new Mock<IFormFile>();
         mockFile.Setup(f => f.FileName).Returns("archive.json");
@@ -126,7 +127,7 @@ public class PersistenceControllerTests
     public async Task LoadState_当文件格式无效时_应返回BadRequest()
     {
         // Arrange
-        var fileContent = "不是有效的 JSON";
+        string fileContent = "不是有效的 JSON";
         var stream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
         var mockFile = new Mock<IFormFile>();
         mockFile.Setup(f => f.FileName).Returns("invalid.json");
@@ -150,7 +151,7 @@ public class PersistenceControllerTests
     public async Task LoadState_当加载时发生其他错误时_应返回InternalServerError()
     {
         // Arrange
-        var fileContent = "{\"valid\":\"json\"}";
+        string fileContent = "{\"valid\":\"json\"}";
         var stream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
         var mockFile = new Mock<IFormFile>();
         mockFile.Setup(f => f.FileName).Returns("error.json");
@@ -176,7 +177,7 @@ public class PersistenceControllerTests
     {
         // Arrange
         var expectedBlindData = new { loaded = "anyway" };
-        var fileContent = "{\"content\":\"data\"}"; // 假设内容是有效的 JSON
+        string fileContent = "{\"content\":\"data\"}"; // 假设内容是有效的 JSON
         var stream = new MemoryStream(Encoding.UTF8.GetBytes(fileContent));
         var mockFile = new Mock<IFormFile>();
         mockFile.Setup(f => f.FileName).Returns("archive.txt"); // 非 .json 扩展名

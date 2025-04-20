@@ -9,12 +9,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" PrivateAssets="all" />
+        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" PrivateAssets="all"/>
         <InternalsVisibleTo Include="YAESandBox.Core.Block"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentResults" Version="3.16.0" />
+        <PackageReference Include="FluentResults" Version="3.16.0"/>
         <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2"/>
     </ItemGroup>
 

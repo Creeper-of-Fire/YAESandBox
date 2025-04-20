@@ -139,4 +139,3 @@ public record ResolveConflictRequestDto
     [Required(ErrorMessage = "必须提供解决冲突后的指令列表")]
     public List<AtomicOperationRequestDto> ResolvedCommands { get; set; } = new();
 }
-

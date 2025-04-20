@@ -36,6 +36,7 @@ public class GameState
             value = typedValue;
             return true;
         }
+
         value = default;
         return false;
     }
@@ -69,13 +70,7 @@ public class GameState
     {
         var clone = new GameState();
         // 简单地拷贝字典内容（值是浅拷贝）
-        foreach (var kvp in this.settings)
-        {
-            clone.settings[kvp.Key] = kvp.Value; // 浅拷贝
-        }
+        foreach (var kvp in this.settings) clone.settings[kvp.Key] = kvp.Value; // 浅拷贝
         return clone;
     }
 }
-
-// Helper enum for update results (can be defined elsewhere)
-public enum UpdateResult { Success, NotFound, InvalidOperation }

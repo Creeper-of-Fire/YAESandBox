@@ -17,7 +17,7 @@ public class SignalRDtoDocumentFilter(ISchemaGenerator schemaGenerator) : IDocum
     {
         // 定义包含 SignalR DTOs 的程序集和命名空间
         var targetAssembly = typeof(TriggerMainWorkflowRequestDto).Assembly; // 获取 DTO 所在的程序集
-        var targetNamespace = typeof(TriggerMainWorkflowRequestDto).Namespace; // 获取 DTO 所在的命名空间
+        string? targetNamespace = typeof(TriggerMainWorkflowRequestDto).Namespace; // 获取 DTO 所在的命名空间
 
         if (targetNamespace == null)
         {
@@ -44,7 +44,7 @@ public class SignalRDtoDocumentFilter(ISchemaGenerator schemaGenerator) : IDocum
             // 如果 Schema 已存在，它不会重复添加。
             // 我们不需要手动将返回的 Schema 添加到 swaggerDoc.Components.Schemas，
             // Swashbuckle 会在最后根据 SchemaRepository 填充 Components.Schemas。
-            _schemaGenerator.GenerateSchema(dtoType, context.SchemaRepository);
+            this._schemaGenerator.GenerateSchema(dtoType, context.SchemaRepository);
         }
 
         Console.WriteLine("SignalR DTO Schema 生成检查完成。");
@@ -63,7 +63,7 @@ public class SignalRDtoDocumentFilter(ISchemaGenerator schemaGenerator) : IDocum
             {
                 // 同样，如果枚举尚未被引用，强制生成其 Schema
                 Console.WriteLine($"- {enumType.FullName}");
-                _schemaGenerator.GenerateSchema(enumType, context.SchemaRepository);
+                this._schemaGenerator.GenerateSchema(enumType, context.SchemaRepository);
             }
 
             Console.WriteLine("SignalR 枚举 Schema 生成检查完成。");

@@ -43,7 +43,6 @@ public enum AtomicOperationType
 //         new() { Success = false, ErrorMessage = error, OriginalOperation = operation };
 // }
 
-
 /// <summary>
 /// 封装一个原子化操作及其参数。
 /// 使用 record struct 以获得值相等性和不变性。
@@ -141,14 +140,22 @@ public record OperationHandledIssue(BlockResultCode Code, string Message, Atomic
     : LazyInitHandledIssue(Message)
 {
     public static OperationHandledIssue NotFound(AtomicOperation operation, string message)
-        => new(BlockResultCode.NotFound, message, operation);
+    {
+        return new OperationHandledIssue(BlockResultCode.NotFound, message, operation);
+    }
 
     public static OperationHandledIssue Conflict(AtomicOperation operation, string message)
-        => new(BlockResultCode.Conflict, message, operation);
+    {
+        return new OperationHandledIssue(BlockResultCode.Conflict, message, operation);
+    }
 
     public static OperationHandledIssue InvalidInput(AtomicOperation operation, string message)
-        => new(BlockResultCode.InvalidInput, message, operation);
+    {
+        return new OperationHandledIssue(BlockResultCode.InvalidInput, message, operation);
+    }
 
     public static OperationHandledIssue Error(AtomicOperation operation, string message)
-        => new(BlockResultCode.Error, message, operation);
+    {
+        return new OperationHandledIssue(BlockResultCode.Error, message, operation);
+    }
 }

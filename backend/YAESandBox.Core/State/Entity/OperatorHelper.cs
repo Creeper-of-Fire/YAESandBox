@@ -9,7 +9,7 @@ public enum Operator
 {
     Equal,
     Add,
-    Sub,
+    Sub
 }
 
 public static class OperatorHelper
@@ -159,7 +159,6 @@ public static class OperatorHelper
     {
         var result = new List<object>(oldValue);
         if (newValue is IList newIList)
-        {
             switch (op)
             {
                 case Operator.Add:
@@ -173,9 +172,7 @@ public static class OperatorHelper
                 default:
                     throw new UnreachableException($"不可能到达的分支 '{op}'");
             }
-        }
         else
-        {
             switch (op)
             {
                 case Operator.Add:
@@ -189,7 +186,6 @@ public static class OperatorHelper
                 default:
                     throw new UnreachableException($"不可能到达的分支 '{op}'");
             }
-        }
 
         return result;
     }

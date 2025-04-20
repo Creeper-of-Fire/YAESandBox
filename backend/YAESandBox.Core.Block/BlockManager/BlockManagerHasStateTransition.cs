@@ -54,15 +54,11 @@ public partial class BlockManager
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
             if (!this.blocks.TryGetValue(blockId, out var block))
-            {
                 return BlockStatusError.NotFound(null, $"尝试应用已解决指令失败: Block '{blockId}' 未找到。").ToResult();
-            }
 
             if (block is not ConflictBlockStatus conflictBlock)
-            {
                 return NormalHandledIssue.InvalidState(
                     $"尝试应用已解决指令，但 Block '{blockId}' 状态为 {block.StatusCode} (非 ResolvingConflict)。已忽略。").ToResult();
-            }
 
             Log.Info($"Block '{blockId}': 正在应用手动解决的冲突指令 ({resolvedCommands.Count} 条)。");
 
@@ -88,15 +84,11 @@ public partial class BlockManager
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
             if (!this.blocks.TryGetValue(blockId, out var blockStatus))
-            {
                 return BlockStatusError.NotFound(null, $"处理工作流完成失败: Block '{blockId}' 未找到。");
-            }
 
             if (blockStatus is not LoadingBlockStatus block)
-            {
                 return NormalHandledIssue.InvalidState(
                     $"收到 Block '{blockId}' 的工作流完成回调，但其状态为 {blockStatus.StatusCode} (非 Loading)。可能重复或过时。");
-            }
 
             if (!success) // Workflow failed
             {

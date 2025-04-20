@@ -29,7 +29,7 @@ public class BlockStatus(Block block) : IBlockStatus
                 IdleBlockStatus => BlockStatusCode.Idle,
                 ConflictBlockStatus => BlockStatusCode.ResolvingConflict,
                 ErrorBlockStatus => BlockStatusCode.Error,
-                _ => throw new InvalidOperationException($"Block '{this.Block.BlockId}' 处于错误的状态."),
+                _ => throw new InvalidOperationException($"Block '{this.Block.BlockId}' 处于错误的状态.")
             };
         }
     }
@@ -250,7 +250,10 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
     /// </summary>
     /// <returns></returns>
     [HasBlockStateTransition]
-    public ErrorBlockStatus toErrorStatus() => new(this.Block);
+    public ErrorBlockStatus toErrorStatus()
+    {
+        return new ErrorBlockStatus(this.Block);
+    }
 }
 
 /// <summary>

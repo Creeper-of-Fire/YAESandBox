@@ -9,13 +9,13 @@
 
     <ItemGroup>
         <PackageReference Include="coverlet.collector" Version="6.0.2"/>
-        <PackageReference Include="FluentAssertions" Version="8.2.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0" />
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.4" />
-        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0-preview.3.25172.1" />
+        <PackageReference Include="FluentAssertions" Version="8.2.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.4"/>
+        <PackageReference Include="Microsoft.AspNetCore.SignalR.Client" Version="10.0.0-preview.3.25172.1"/>
         <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1"/>
-        <PackageReference Include="Moq" Version="4.20.72" />
-        <PackageReference Include="NSubstitute" Version="5.3.0" />
+        <PackageReference Include="Moq" Version="4.20.72"/>
+        <PackageReference Include="NSubstitute" Version="5.3.0"/>
         <PackageReference Include="xunit" Version="2.9.2"/>
         <PackageReference Include="xunit.runner.visualstudio" Version="2.8.2"/>
     </ItemGroup>
@@ -25,15 +25,15 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\YAESandBox.API.DTOs\YAESandBox.API.DTOs.csproj" />
-      <ProjectReference Include="..\YAESandBox.API\YAESandBox.API.csproj" />
-      <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj" />
-      <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" />
-      <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
+        <ProjectReference Include="..\YAESandBox.API.DTOs\YAESandBox.API.DTOs.csproj"/>
+        <ProjectReference Include="..\YAESandBox.API\YAESandBox.API.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="Service\" />
+        <Folder Include="Service\"/>
     </ItemGroup>
 
 </Project>

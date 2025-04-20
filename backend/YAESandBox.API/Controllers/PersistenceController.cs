@@ -76,12 +76,9 @@ public class PersistenceController(IBlockManager blockManager) : ControllerBase
         // 对文件扩展名进行基本检查 (可选，但推荐)
         string extension = Path.GetExtension(archiveFile.FileName);
         if (!string.Equals(extension, ".json", StringComparison.OrdinalIgnoreCase))
-        {
             // 允许非 .json 文件，但记录警告
             Log.Warning($"正在加载非 .json 扩展名的文件: {archiveFile.FileName}");
-            // return BadRequest("无效的文件类型。请上传一个 .json 文件。"); // 可以取消注释以强制执行
-        }
-
+        // return BadRequest("无效的文件类型。请上传一个 .json 文件。"); // 可以取消注释以强制执行
         try
         {
             // 使用 using 确保流被正确释放

@@ -95,7 +95,9 @@ builder.Services.AddSignalR()
 builder.Services.AddSingleton<IBlockManager, BlockManager>();
 
 // NotifierService depends on IHubContext, BlockManager, usually Singleton
-builder.Services.AddSingleton<INotifierService, SignalRNotifierService>();
+builder.Services.AddSingleton<SignalRNotifierService>()
+    .AddSingleton<INotifierService>(sp => sp.GetRequiredService<SignalRNotifierService>())
+    .AddSingleton<IWorkflowNotifierService>(sp => sp.GetRequiredService<SignalRNotifierService>());
 
 // WorkflowService depends on IBlockManager and INotifierService, make it Singleton or Scoped.
 // Singleton is fine if it doesn't hold per-request state.
@@ -185,26 +187,23 @@ app.Run();
 namespace YAESandBox.API
 {
     // --- Records/Classes used in Program.cs ---
-    record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
+    internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
     {
         public int TemperatureF => 32 + (int)(this.TemperatureC / 0.5556);
     }
 
 // Helper class for Swagger Enum Display
-    public class EnumSchemaFilter : Swashbuckle.AspNetCore.SwaggerGen.ISchemaFilter
+    public class EnumSchemaFilter : ISchemaFilter
     {
         public void Apply(OpenApiSchema schema,
-            Swashbuckle.AspNetCore.SwaggerGen.SchemaFilterContext context)
+            SchemaFilterContext context)
         {
             if (context.Type.IsEnum)
             {
                 schema.Enum.Clear();
                 schema.Type = "string"; // Represent enum as string
                 schema.Format = null;
-                foreach (string enumName in Enum.GetNames(context.Type))
-                {
-                    schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(enumName));
-                }
+                foreach (string enumName in Enum.GetNames(context.Type)) schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(enumName));
             }
         }
     }

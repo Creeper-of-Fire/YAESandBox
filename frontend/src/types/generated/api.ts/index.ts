@@ -9,6 +9,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AtomicOperationRequestDto } from './models/AtomicOperationRequestDto';
 export type { BatchAtomicRequestDto } from './models/BatchAtomicRequestDto';
+export { BlockDataFields } from './models/BlockDataFields';
 export type { BlockDetailDto } from './models/BlockDetailDto';
 export { BlockStatusCode } from './models/BlockStatusCode';
 export type { BlockStatusUpdateDto } from './models/BlockStatusUpdateDto';

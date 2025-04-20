@@ -13,6 +13,7 @@
             margin: 0;
             background-color: #f4f4f4;
         }
+
         header {
             background-color: #333;
             color: white;
@@ -22,13 +23,26 @@
             align-items: center;
             flex-shrink: 0; /* 防止 header 压缩 */
         }
+
         #connectionStatus {
             font-weight: bold;
         }
-        .status-disconnected { color: red; }
-        .status-connected { color: limegreen; }
-        .status-connecting { color: orange; }
-        .status-reconnecting { color: yellow; }
+
+        .status-disconnected {
+            color: red;
+        }
+
+        .status-connected {
+            color: limegreen;
+        }
+
+        .status-connecting {
+            color: orange;
+        }
+
+        .status-reconnecting {
+            color: yellow;
+        }
 
         main {
             display: flex;
@@ -44,6 +58,7 @@
             flex-shrink: 0; /* 防止控制面板压缩 */
             overflow-y: auto; /* 如果内容过多允许滚动 */
         }
+
         #controls button {
             padding: 10px 15px;
             font-size: 1em;
@@ -56,14 +71,17 @@
             display: block; /* 让按钮占据整行 */
             width: 100%;
         }
+
         #controls button:disabled {
             background-color: #aaa;
             cursor: not-allowed;
         }
+
         #controls label {
             display: block;
             margin-bottom: 5px;
         }
+
         #parentBlockIdInput {
             width: calc(100% - 12px); /* 适应 padding 和 border */
             padding: 5px;
@@ -88,6 +106,7 @@
             background-color: white;
             box-sizing: border-box; /* 让 padding 不增加高度 */
         }
+
         #logContainer {
             border-bottom: none; /* 最后一个区域不需要底部分隔线 */
         }
@@ -104,12 +123,14 @@
             padding: 0;
             margin: 0;
         }
+
         #blockList li, #logMessages li { /* Applies to both block items and log items */
             padding: 8px 5px;
             border-bottom: 1px dotted #eee;
             font-size: 0.9em;
             word-wrap: break-word; /* 允许长文本换行 */
         }
+
         #blockList li:last-child, #logMessages li:last-child {
             border-bottom: none;
         }
@@ -124,9 +145,11 @@
             cursor: pointer; /* Indicate clickable */
             transition: background-color 0.2s ease; /* Smooth selection */
         }
+
         .block-item:hover {
             background-color: #f0f8ff; /* Light blue on hover */
         }
+
         .block-header {
             display: flex;
             justify-content: space-between;
@@ -135,14 +158,18 @@
             padding-bottom: 5px;
             border-bottom: 1px dotted #eee;
         }
+
         .block-id {
             font-family: monospace;
             margin-right: 10px;
             font-weight: bold;
         }
+
         .block-parent {
-            font-size:0.8em; color: #666;
+            font-size: 0.8em;
+            color: #666;
         }
+
         .block-status {
             font-weight: bold;
             padding: 2px 6px;
@@ -152,11 +179,33 @@
             text-align: center;
             min-width: 60px; /* Ensure status has some width */
         }
-        .status-Loading { background-color: #ffc107; color: #333;} /* Yellow */
-        .status-Idle { background-color: #28a745; } /* Green */
-        .status-ResolvingConflict { background-color: #fd7e14; } /* Orange */
-        .status-Error { background-color: #dc3545; } /* Red */
-        .status-Unknown { background-color: #6c757d; } /* Gray */
+
+        .status-Loading {
+            background-color: #ffc107;
+            color: #333;
+        }
+
+        /* Yellow */
+        .status-Idle {
+            background-color: #28a745;
+        }
+
+        /* Green */
+        .status-ResolvingConflict {
+            background-color: #fd7e14;
+        }
+
+        /* Orange */
+        .status-Error {
+            background-color: #dc3545;
+        }
+
+        /* Red */
+        .status-Unknown {
+            background-color: #6c757d;
+        }
+
+        /* Gray */
 
         .block-content-stream {
             margin-top: 8px;
@@ -171,6 +220,7 @@
             overflow-y: auto;
             word-wrap: break-word; /* Ensure long words wrap */
         }
+
         .block-content-stream:empty::before {
             content: "等待流式内容..."; /* Placeholder text */
             color: #aaa;
@@ -183,13 +233,35 @@
             font-size: 0.8em;
             margin-right: 8px;
         }
-        .log-type-status { color: blue; }
-        .log-type-state { color: purple; }
-        .log-type-info { color: #555; }
-        .log-type-warn { color: orange; }
-        .log-type-error { color: red; font-weight: bold;}
-        .log-type-complete { color: green; }
-        .log-type-conflict { color: darkorange;}
+
+        .log-type-status {
+            color: blue;
+        }
+
+        .log-type-state {
+            color: purple;
+        }
+
+        .log-type-info {
+            color: #555;
+        }
+
+        .log-type-warn {
+            color: orange;
+        }
+
+        .log-type-error {
+            color: red;
+            font-weight: bold;
+        }
+
+        .log-type-complete {
+            color: green;
+        }
+
+        .log-type-conflict {
+            color: darkorange;
+        }
 
 
     </style>
@@ -323,7 +395,7 @@
                          <div class="block-header">
                              <div>
                                  <span class="block-id">${blockId}</span>
-                                 <span class="block-parent" id="parent-${blockId}">(父: ${block.parentId ? block.parentId.substring(0,8)+'...' : '未知'})</span>
+                                 <span class="block-parent" id="parent-${blockId}">(父: ${block.parentId ? block.parentId.substring(0, 8) + '...' : '未知'})</span>
                              </div>
                              <span class="block-status" id="status-${blockId}"></span>
                          </div>
@@ -355,7 +427,7 @@
             // Update parent display if available and element exists
             const parentEl = document.getElementById(`parent-${blockId}`);
             if (parentEl && block.parentId && block.parentId !== '未知') { // Update only if parentId is known
-                parentEl.textContent = `(父: ${block.parentId.substring(0,8)}...)`;
+                parentEl.textContent = `(父: ${block.parentId.substring(0, 8)}...)`;
             } else if (parentEl && !block.parentId) {
                 parentEl.textContent = '(根)'; // Handle root case if parentId is explicitly null/empty
             }
@@ -460,7 +532,7 @@
                 // Also update the in-memory representation
                 if (!blockData[blockId]) {
                     // Stream arrived before StatusUpdate? Create temporary data.
-                    blockData[blockId] = { status: 'Loading', parentId: '未知', contentStream: contentChunk };
+                    blockData[blockId] = {status: 'Loading', parentId: '未知', contentStream: contentChunk};
                     logMessage('warn', `Block ${blockId} 的流更新先于状态更新到达，已创建临时条目。`);
                     renderBlockList(); // Render the new block now
                 } else {
@@ -483,13 +555,13 @@
         const status = completion.executionStatus === 'success' ? '成功' : '失败';
         const logType = completion.executionStatus === 'success' ? 'complete' : 'error';
         let message = `工作流完成 (${completion.blockId}): 状态=${status}`;
-        if(completion.errorMessage) message += `, 错误: ${completion.errorMessage}`;
+        if (completion.errorMessage) message += `, 错误: ${completion.errorMessage}`;
 
         logMessage(logType, message);
 
         // Update the block's final state in the UI if needed
         const contentEl = document.getElementById(`content-${completion.blockId}`);
-        if(contentEl){
+        if (contentEl) {
             // Append a final status message to the stream area
             const statusMsg = document.createElement('div');
             statusMsg.style.marginTop = '10px';

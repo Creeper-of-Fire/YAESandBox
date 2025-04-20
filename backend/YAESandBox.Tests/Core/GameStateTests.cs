@@ -10,7 +10,10 @@ namespace YAESandBox.Tests.Core;
 /// </summary>
 public class GameStateTests
 {
-    private GameState CreateTestGameState() => new();
+    private GameState CreateTestGameState()
+    {
+        return new GameState();
+    }
 
     /// <summary>
     /// 测试使用索引器设置和获取不同类型的值。
@@ -20,11 +23,11 @@ public class GameStateTests
     {
         // Arrange
         var gs = this.CreateTestGameState();
-        var stringVal = "test string";
-        var intVal = 42;
-        var boolVal = false;
+        string stringVal = "test string";
+        int intVal = 42;
+        bool boolVal = false;
         var listVal = new List<int> { 1, 2, 3 };
-        var nullVal = (object?)null;
+        object? nullVal = (object?)null;
 
         // Act
         gs["stringKey"] = stringVal;
@@ -55,18 +58,18 @@ public class GameStateTests
 
         // Act & Assert
         // 成功获取
-        gs.TryGetValue<int>("age", out var age).Should().BeTrue();
+        gs.TryGetValue<int>("age", out int age).Should().BeTrue();
         age.Should().Be(30);
 
-        gs.TryGetValue<string>("name", out var name).Should().BeTrue();
+        gs.TryGetValue<string>("name", out string? name).Should().BeTrue();
         name.Should().Be("Alice");
 
         // 获取不存在的键
-        gs.TryGetValue<bool>("isActive", out var isActive).Should().BeFalse();
+        gs.TryGetValue<bool>("isActive", out bool isActive).Should().BeFalse();
         isActive.Should().Be(default); // false
 
         // 类型不匹配
-        gs.TryGetValue<string>("age", out var ageString).Should().BeFalse();
+        gs.TryGetValue<string>("age", out string? ageString).Should().BeFalse();
         ageString.Should().Be(default); // null
     }
 
@@ -82,8 +85,8 @@ public class GameStateTests
         gs["keyToKeep"] = 123;
 
         // Act
-        var resultRemoved = gs.Remove("keyToRemove");
-        var resultNonExistent = gs.Remove("nonExistentKey");
+        bool resultRemoved = gs.Remove("keyToRemove");
+        bool resultNonExistent = gs.Remove("nonExistentKey");
 
         // Assert
         resultRemoved.Should().BeTrue();
@@ -122,10 +125,9 @@ public class GameStateTests
         // 如果返回的是 Dictionary 的副本，可以这样测试：
         if (settings is Dictionary<string, object?> settingsDict) // 确认是字典实例
         {
-             settingsDict["setting1"] = "newValue"; // 修改副本
-             gs["setting1"].Should().Be("value1"); // 确认原始 GameState 未改变
+            settingsDict["setting1"] = "newValue"; // 修改副本
+            gs["setting1"].Should().Be("value1"); // 确认原始 GameState 未改变
         }
-
     }
 
     /// <summary>

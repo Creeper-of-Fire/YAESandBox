@@ -62,9 +62,15 @@ public abstract class NodeBlock(string blockId, string? parentBlockId) : IBlockN
     //     set => field = value ?? this.ChildrenList.Last();
     // }
 
-    public void AddChildren(Block childBlock) => this.AddChildren(childBlock.BlockId);
+    public void AddChildren(Block childBlock)
+    {
+        this.AddChildren(childBlock.BlockId);
+    }
 
-    private void AddChildren(string childBlockId) => this.ChildrenList.Add(childBlockId);
+    private void AddChildren(string childBlockId)
+    {
+        this.ChildrenList.Add(childBlockId);
+    }
 }
 
 /// <summary>
@@ -132,7 +138,10 @@ public class Block : NodeBlock
     /// </summary>
     /// <param name="key">要移除的键。</param>
     /// <returns>如果成功移除则为 true，否则为 false（例如键不存在）。</returns>
-    internal bool RemoveMetaData(string key) => this._metadata.Remove(key);
+    internal bool RemoveMetaData(string key)
+    {
+        return this._metadata.Remove(key);
+    }
 
     /// <summary>
     /// (仅父 Block 存储) 触发子 Block 时使用的参数。只会保存一个，不会为不同的子 Block 保存不同的参数。
@@ -175,7 +184,7 @@ public class Block : NodeBlock
     {
         triggerParams ??= new Dictionary<string, object?>();
         return new LoadingBlockStatus(
-            new Block(blockId, parentBlockId,workFlowName, sourceWorldState, sourceGameState, triggerParams));
+            new Block(blockId, parentBlockId, workFlowName, sourceWorldState, sourceGameState, triggerParams));
     }
 
 
@@ -248,7 +257,6 @@ public class Block : NodeBlock
 
         // 第二次遍历：更新后续引用了被重命名实体的用户操作
         if (renamedUserEntities.Any())
-        {
             for (int i = 0; i < resolvedUserCommands.Count; i++)
             {
                 var userOp = resolvedUserCommands[i];
@@ -261,7 +269,6 @@ public class Block : NodeBlock
                 Log.Debug(
                     $"Block '{this.BlockId}': Updated user operation targeting renamed entity {targetTypedId} to use new ID '{newId}'. Operation: {userOp.OperationType}");
             }
-        }
 
         // --- 2. 处理 Modify/Modify 冲突 (同一实体，同一属性) ---
         // 使用 HashSet 存储 AI 修改的 (实体, 属性) 对以提高查找效率
@@ -362,7 +369,7 @@ public class Block : NodeBlock
         switch (op.OperationType)
         {
             case AtomicOperationType.CreateEntity:
-                var existing = worldState.FindEntityById(op.EntityId, op.EntityType, includeDestroyed: false);
+                var existing = worldState.FindEntityById(op.EntityId, op.EntityType, false);
                 if (existing != null)
                     return Conflict(op, $"实体 '{op.EntityType}:{op.EntityId}' 已存在。").ToResult();
 
@@ -377,7 +384,7 @@ public class Block : NodeBlock
 
             case AtomicOperationType.ModifyEntity:
                 var entityToModify =
-                    worldState.FindEntityById(op.EntityId, op.EntityType, includeDestroyed: false);
+                    worldState.FindEntityById(op.EntityId, op.EntityType, false);
                 if (entityToModify == null)
                     return NotFound(op, $"实体 '{op.EntityType}:{op.EntityId}' 未找到或已被销毁。").ToResult();
                 // 注意：这里的检查需要根据你的 AtomicOperation 定义调整
@@ -394,7 +401,7 @@ public class Block : NodeBlock
                 return Result.Ok(op);
 
             case AtomicOperationType.DeleteEntity:
-                var entityToDelete = worldState.FindEntityById(op.EntityId, op.EntityType, includeDestroyed: false);
+                var entityToDelete = worldState.FindEntityById(op.EntityId, op.EntityType, false);
                 if (entityToDelete != null)
                     entityToDelete.IsDestroyed = true;
 
@@ -413,7 +420,7 @@ public class Block : NodeBlock
             EntityType.Item => new Item(id),
             EntityType.Character => new Character(id),
             EntityType.Place => new Place(id),
-            _ => throw new ArgumentOutOfRangeException(nameof(type)),
+            _ => throw new ArgumentOutOfRangeException(nameof(type))
         };
     }
 

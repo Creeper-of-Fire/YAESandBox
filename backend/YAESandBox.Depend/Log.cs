@@ -33,11 +33,30 @@ public class Logger : ILogger
 
 public static class Log
 {
-    private static readonly Logger _logger = new Logger();
+    private static readonly Logger _logger = new();
 
-    public static void Info(string message) => _logger.Info(message);
-    public static void Warning(string message) => _logger.Warning(message);
-    public static void Error(string message) => _logger.Error(message);
-    public static void Error(Exception exception,string message) => _logger.Error(message);
-    public static void Debug(string message) => _logger.Debug(message);
+    public static void Info(string message)
+    {
+        _logger.Info(message);
+    }
+
+    public static void Warning(string message)
+    {
+        _logger.Warning(message);
+    }
+
+    public static void Error(string message)
+    {
+        _logger.Error(message);
+    }
+
+    public static void Error(Exception exception, string message)
+    {
+        _logger.Error(message);
+    }
+
+    public static void Debug(string message)
+    {
+        _logger.Debug(message);
+    }
 }

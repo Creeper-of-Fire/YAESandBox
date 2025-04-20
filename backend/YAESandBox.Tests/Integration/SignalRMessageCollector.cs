@@ -32,11 +32,9 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
         this._connection.On<TMessage>(methodName, (message) =>
         {
             if (message is DisplayUpdateDto dto)
-            {
                 this._output.WriteLine(
                     $"[SignalRCollector Callback] Method '{methodName}' received ({messageType.Name}): {dto.Content}");
-            }
-            
+
             // *** 日志结束 ***
             if (this._receivedMessages.TryGetValue(messageType, out var queue))
             {
@@ -84,16 +82,13 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
         var messageType = typeof(TMessage);
         if (!this._messageSemaphores.TryGetValue(messageType, out var semaphore) ||
             !this._receivedMessages.TryGetValue(messageType, out var queue))
-        {
             throw new InvalidOperationException($"消息类型 '{messageType.Name}' 的处理器尚未注册。");
-        }
 
         var stopwatch = System.Diagnostics.Stopwatch.StartNew();
         while (stopwatch.Elapsed < timeout)
         {
             // 尝试立即获取已排队且满足条件的消息
-            if (queue.TryPeek(out var messageObj) && messageObj is TMessage typedMessage && predicate(typedMessage))
-            {
+            if (queue.TryPeek(out object? messageObj) && messageObj is TMessage typedMessage && predicate(typedMessage))
                 // 从队列中实际移除
                 if (queue.TryDequeue(out _))
                 {
@@ -108,7 +103,6 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
                         $"[SignalRCollector] Found matching message but semaphore wait failed (likely already consumed).");
                     // 如果信号量已被消耗（可能在并发检查中），继续循环等待新的信号
                 }
-            }
 
 
             // 计算剩余等待时间
@@ -180,18 +174,13 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
     public void ClearMessages<TMessage>() where TMessage : class
     {
         var messageType = typeof(TMessage);
-        if (this._receivedMessages.TryGetValue(messageType, out var queue))
-        {
-            queue.Clear();
-        }
+        if (this._receivedMessages.TryGetValue(messageType, out var queue)) queue.Clear();
 
         if (this._messageSemaphores.TryGetValue(messageType, out var semaphore))
-        {
             // 不断尝试获取信号量，直到为0，以清空计数
             while (semaphore.Wait(0))
             {
             }
-        }
     }
 
     /// <summary>
@@ -199,17 +188,12 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
     /// </summary>
     public void ClearAllMessages()
     {
-        foreach (var queue in this._receivedMessages.Values)
-        {
-            queue.Clear();
-        }
+        foreach (var queue in this._receivedMessages.Values) queue.Clear();
 
         foreach (var semaphore in this._messageSemaphores.Values)
-        {
             while (semaphore.Wait(0))
             {
             }
-        }
     }
 }
 // --- END OF FILE SignalRMessageCollector.cs ---

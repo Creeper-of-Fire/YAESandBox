@@ -12,7 +12,10 @@ namespace YAESandBox.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/entities")] // /api/entities
-public class EntitiesController(IBlockWritService writServices, IBlockReadService readServices, INotifierService notifierService)
+public class EntitiesController(
+    IBlockWritService writServices,
+    IBlockReadService readServices,
+    INotifierService notifierService)
     : APINotifyControllerBase(readServices, writServices, notifierService)
 {
     /// <summary>
@@ -27,7 +30,7 @@ public class EntitiesController(IBlockWritService writServices, IBlockReadServic
     [ProducesResponseType(typeof(IEnumerable<EntitySummaryDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)] // Missing blockId
     [ProducesResponseType(StatusCodes.Status404NotFound)] // Block not found
-    public async Task<IActionResult> GetAllEntities([FromQuery, Required] string blockId)
+    public async Task<IActionResult> GetAllEntities([FromQuery] [Required] string blockId)
     {
         // BlockManager 需要一个方法来根据 blockId 及其当前目标 WorldState 获取实体
         var entities = await this.blockReadService.GetAllEntitiesSummaryAsync(blockId);
@@ -54,7 +57,7 @@ public class EntitiesController(IBlockWritService writServices, IBlockReadServic
     [ProducesResponseType(typeof(EntityDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)] // Missing blockId or invalid entityType/entityId format
     [ProducesResponseType(StatusCodes.Status404NotFound)] // Block or Entity not found
-    public async Task<IActionResult> GetEntityDetail(EntityType entityType, string entityId, [FromQuery, Required] string blockId)
+    public async Task<IActionResult> GetEntityDetail(EntityType entityType, string entityId, [FromQuery] [Required] string blockId)
     {
         if (string.IsNullOrWhiteSpace(entityId))
             return this.BadRequest("实体 ID 不能为空。");

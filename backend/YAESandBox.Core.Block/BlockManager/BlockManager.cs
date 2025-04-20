@@ -11,9 +11,8 @@ namespace YAESandBox.Core.Block;
 
 public partial class BlockManager : IBlockManager
 {
-    
     public const string DEBUG_WorkFlowName = "";
-    
+
     /// <summary>
     /// 构造函数，创建默认根节点。
     /// </summary>
@@ -22,9 +21,7 @@ public partial class BlockManager : IBlockManager
     {
         var rootBlock = Block.CreateBlock(WorldRootId, null, DEBUG_WorkFlowName, new WorldState(), new GameState());
         if (this.blocks.TryAdd(WorldRootId, rootBlock.ForceIdleState()))
-        {
             Log.Info("BlockManager: 根节点已创建并设置为空闲。");
-        }
         else
             throw new Exception($"添加默认根 Block '{WorldRootId}' 失败。");
     }
@@ -41,18 +38,25 @@ public partial class BlockManager : IBlockManager
     /// 用于控制对单个 Block 的并发访问。
     /// </summary>
     /// <returns></returns>
-    private AsyncLock GetLockForBlock(string blockId) => this.blockLocks.GetOrAdd(blockId, _ => new AsyncLock());
+    private AsyncLock GetLockForBlock(string blockId)
+    {
+        return this.blockLocks.GetOrAdd(blockId, _ => new AsyncLock());
+    }
 
     // /// <summary>
     // /// 全局锁，用于控制对单个 BlockManager 的并发访问。
     // /// </summary>
     // private AsyncLock globalLoadLock { get; } = new AsyncLock();
 
-    public IReadOnlyDictionary<string, Block> GetBlocks() =>
-        this.blocks.ToDictionary(kv => kv.Key, kv => kv.Value.Block);
+    public IReadOnlyDictionary<string, Block> GetBlocks()
+    {
+        return this.blocks.ToDictionary(kv => kv.Key, kv => kv.Value.Block);
+    }
 
-    public IReadOnlyDictionary<string, IBlockNode> GetNodeOnlyBlocks() =>
-        this.blocks.ToDictionary(kv => kv.Key, IBlockNode (kv) => kv.Value.Block);
+    public IReadOnlyDictionary<string, IBlockNode> GetNodeOnlyBlocks()
+    {
+        return this.blocks.ToDictionary(kv => kv.Key, IBlockNode (kv) => kv.Value.Block);
+    }
 
     /// <summary>
     /// 创建子Block，需要父BlockId和触发参数，以及触发所用的工作流的名称
@@ -114,10 +118,7 @@ public partial class BlockManager : IBlockManager
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
-            if (!this.blocks.TryGetValue(blockId, out var blockStatus))
-            {
-                return BlockResultCode.NotFound;
-            }
+            if (!this.blocks.TryGetValue(blockId, out var blockStatus)) return BlockResultCode.NotFound;
 
             // *** 关键：只允许在 Idle 状态下修改 ***
             if (blockStatus is not IdleBlockStatus idleBlock)
@@ -138,7 +139,6 @@ public partial class BlockManager : IBlockManager
 
             // 更新 Metadata
             if (metadataUpdates != null)
-            {
                 foreach (var kvp in metadataUpdates)
                 {
                     if (kvp.Value == null) // 值为 null 表示移除
@@ -155,21 +155,15 @@ public partial class BlockManager : IBlockManager
 
                     updated = true;
                 }
-            }
 
             if (updated)
-            {
                 Log.Info($"Block '{blockId}': 内容或元数据已成功更新。");
-                // 可以在这里添加持久化逻辑，如果需要立即保存这些更改
-                // await PersistBlockAsync(idleBlock.Block);
-
-                // 决定是否发送通知。目前我们不发送 SignalR 通知。
-                // 如果需要，可以在此调用 notifierService.NotifyStateUpdateSignal(blockId);
-            }
+            // 可以在这里添加持久化逻辑，如果需要立即保存这些更改
+            // await PersistBlockAsync(idleBlock.Block);
+            // 决定是否发送通知。目前我们不发送 SignalR 通知。
+            // 如果需要，可以在此调用 notifierService.NotifyStateUpdateSignal(blockId);
             else
-            {
                 Log.Debug($"Block '{blockId}': 收到更新请求，但没有提供有效的更新内容或元数据。");
-            }
 
             return BlockResultCode.Success;
         }
@@ -264,19 +258,19 @@ public partial class BlockManager : IBlockManager
     /// <param name="blockId"></param>
     /// <param name="settingsToUpdate"></param>
     /// <returns></returns>
-    public async Task<UpdateResult> UpdateBlockGameStateAsync(
+    public async Task<BlockResultCode> UpdateBlockGameStateAsync(
         string blockId, Dictionary<string, object?> settingsToUpdate)
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
             if (!this.blocks.TryGetValue(blockId, out var block))
-                return UpdateResult.NotFound;
+                return BlockResultCode.NotFound;
 
             foreach (var kvp in settingsToUpdate)
                 block.Block.GameState[kvp.Key] = kvp.Value;
 
             Log.Debug($"Block '{blockId}': GameState 已更新。");
-            return UpdateResult.Success;
+            return BlockResultCode.Success;
         }
     }
 
@@ -327,7 +321,7 @@ public partial class BlockManager : IBlockManager
         // 遍历内存中的 Blocks
         foreach (var kvp in this.blocks)
         {
-            var blockId = kvp.Key;
+            string blockId = kvp.Key;
             var blockStatus = kvp.Value; // This is BlockStatus (Idle, Loading etc.)
             var coreBlock = blockStatus.Block; // The actual Block instance
 
@@ -379,10 +373,8 @@ public partial class BlockManager : IBlockManager
             this.blockLocks.Clear();
             // Ensure root block exists if starting fresh
             if (!this.blocks.ContainsKey(WorldRootId))
-            {
                 this.blocks.TryAdd(WorldRootId,
                     Block.CreateBlock(WorldRootId, null, DEBUG_WorkFlowName, new WorldState(), new GameState()));
-            }
 
             return null;
         }
@@ -494,10 +486,8 @@ public partial class BlockManager : IBlockManager
         where TEntity : BaseEntity
     {
         foreach (var kvp in sourceDict)
-        {
             // 在序列化时，不需要担心 object? 问题，System.Text.Json 会处理
             targetDict.Add(kvp.Key, new EntityDto { Attributes = kvp.Value.GetAllAttributes() });
-        }
     }
 
     #endregion
@@ -583,13 +573,9 @@ public partial class BlockManager : IBlockManager
 
             // 应用初始元数据
             if (initialMetadata != null)
-            {
                 foreach (var kvp in initialMetadata)
-                {
                     // 假设 AddOrSetMetaData 是线程安全的或在此锁内安全
                     finalIdleBlock.Block.AddOrSetMetaData(kvp.Key, kvp.Value);
-                }
-            }
 
             Log.Info($"手动创建的 Block '{newBlockId}' 已成功设置为 Idle 状态。");
         } // 释放新节点锁
@@ -665,10 +651,7 @@ public partial class BlockManager : IBlockManager
         try
         {
             Log.Debug($"准备获取删除操作所需的锁: {string.Join(", ", sortedLockIds)}");
-            foreach (var lockId in sortedLockIds)
-            {
-                acquiredLocks.Add(await this.GetLockForBlock(lockId).LockAsync());
-            }
+            foreach (string lockId in sortedLockIds) acquiredLocks.Add(await this.GetLockForBlock(lockId).LockAsync());
 
             Log.Debug("删除操作所需锁已全部获取。");
 
@@ -683,8 +666,7 @@ public partial class BlockManager : IBlockManager
 
             // 3.2 移除 Block 字典中的条目
             int removedCount = 0;
-            foreach (var idToRemove in blocksToDelete)
-            {
+            foreach (string idToRemove in blocksToDelete)
                 if (this.blocks.TryRemove(idToRemove, out _))
                 {
                     this.blockLocks.TryRemove(idToRemove, out _); // 同时移除锁对象，避免内存泄漏
@@ -695,20 +677,15 @@ public partial class BlockManager : IBlockManager
                 {
                     Log.Warning($"尝试删除 Block '{idToRemove}' 时发现它已不在字典中。");
                 }
-            }
 
             // 3.3 从父节点的 ChildrenList 中移除
             if (parentIdToUpdate != null && parentStatus != null)
             {
                 if (parentStatus.Block.ChildrenList.Remove(blockId))
-                {
                     Log.Debug($"Block '{blockId}' 已从父节点 '{parentIdToUpdate}' 的子列表中移除。");
-                    // 可能需要持久化父节点变更
-                }
+                // 可能需要持久化父节点变更
                 else
-                {
                     Log.Warning($"尝试从父节点 '{parentIdToUpdate}' 移除子节点 '{blockId}' 时发现它不存在于列表中。");
-                }
             }
 
             Log.Info($"手动删除操作完成。共移除 {removedCount} 个 Block (请求删除 {blocksToDelete.Count} 个)。");
@@ -722,10 +699,7 @@ public partial class BlockManager : IBlockManager
         finally
         {
             // 确保所有锁都被释放
-            foreach (var lck in acquiredLocks)
-            {
-                lck.Dispose();
-            }
+            foreach (var lck in acquiredLocks) lck.Dispose();
 
             Log.Debug("删除操作的锁已释放。");
         }
@@ -766,14 +740,11 @@ public partial class BlockManager : IBlockManager
         }
 
         if (oldParentId == null)
-        {
             // 尝试移动一个直接在根下的 Block (旧父节点是 __WORLD__?)
             // 这种情况通常是允许的，但需要确认 oldParentId == WorldRootId
             // 如果 oldParentId 真的是 null (数据错误?)，则可能需要特殊处理或报错
             Log.Warning($"Block '{blockId}' 的 ParentId 为 null，但它不是根节点。数据可能存在问题。");
-            // 根据策略决定是否继续或返回错误
-        }
-
+        // 根据策略决定是否继续或返回错误
 
         // 2. 锁定所有相关 Block (要移动的, 旧父, 新父)
         var lockIds = new List<string> { blockId, newParentBlockId };
@@ -784,10 +755,7 @@ public partial class BlockManager : IBlockManager
         try
         {
             Log.Debug($"准备获取移动操作所需的锁: {string.Join(", ", sortedLockIds)}");
-            foreach (var lockId in sortedLockIds)
-            {
-                acquiredLocks.Add(await this.GetLockForBlock(lockId).LockAsync());
-            }
+            foreach (string lockId in sortedLockIds) acquiredLocks.Add(await this.GetLockForBlock(lockId).LockAsync());
 
             Log.Debug("移动操作所需锁已全部获取。");
 
@@ -810,15 +778,11 @@ public partial class BlockManager : IBlockManager
                 this.blocks.TryGetValue(oldParentId, out var oldParentStatus)) // 确保 oldParent 变量已更新
             {
                 if (!oldParentStatus.Block.ChildrenList.Remove(blockId))
-                {
                     Log.Warning($"尝试从旧父节点 '{oldParentId}' 移除子节点 '{blockId}' 时未找到。数据可能不一致。");
-                    // 可能需要决定是否继续
-                }
+                // 可能需要决定是否继续
                 else
-                {
                     Log.Debug($"Block '{blockId}' 已从旧父节点 '{oldParentId}' 的子列表中移除。");
-                    // 持久化旧父节点变更
-                }
+                // 持久化旧父节点变更
             }
 
             // 3.3 更新 Block 的 ParentBlockId
@@ -865,14 +829,11 @@ public partial class BlockManager : IBlockManager
             return null; // 起始节点不存在
         }
 
-        foreach (var childId in startBlockStatus.Block.ChildrenList)
-        {
-            queue.Enqueue(childId);
-        }
+        foreach (string childId in startBlockStatus.Block.ChildrenList) queue.Enqueue(childId);
 
         while (queue.Count > 0)
         {
-            var currentId = queue.Dequeue();
+            string currentId = queue.Dequeue();
             if (descendants.Contains(currentId)) continue; // 避免循环引用导致的无限循环
 
             if (!this.blocks.TryGetValue(currentId, out var currentBlockStatus))
@@ -883,10 +844,7 @@ public partial class BlockManager : IBlockManager
 
             descendants.Add(currentId);
 
-            foreach (var childId in currentBlockStatus.Block.ChildrenList)
-            {
-                queue.Enqueue(childId);
-            }
+            foreach (string childId in currentBlockStatus.Block.ChildrenList) queue.Enqueue(childId);
         }
 
         return descendants;
@@ -898,16 +856,27 @@ public partial class BlockManager : IBlockManager
 public record BlockStatusError(BlockResultCode Code, string Message, BlockStatus? FailedBlockStatus) : LazyInitError(Message)
 {
     public static BlockStatusError NotFound(BlockStatus? block, string message)
-        => new(BlockResultCode.NotFound, message, block);
+    {
+        return new BlockStatusError(BlockResultCode.NotFound, message, block);
+    }
 
     public static BlockStatusError Conflict(BlockStatus block, string message)
-        => new(BlockResultCode.Conflict, message, block);
+    {
+        return new BlockStatusError(BlockResultCode.Conflict, message, block);
+    }
 
     public static BlockStatusError InvalidInput(BlockStatus block, string message)
-        => new(BlockResultCode.InvalidInput, message, block);
+    {
+        return new BlockStatusError(BlockResultCode.InvalidInput, message, block);
+    }
 
     public static BlockStatusError Error(BlockStatus block, string message)
-        => new(BlockResultCode.Error, message, block);
+    {
+        return new BlockStatusError(BlockResultCode.Error, message, block);
+    }
 
-    public static implicit operator Result(BlockStatusError initError) => initError.ToResult();
+    public static implicit operator Result(BlockStatusError initError)
+    {
+        return initError.ToResult();
+    }
 }

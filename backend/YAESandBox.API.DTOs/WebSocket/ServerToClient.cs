@@ -91,8 +91,9 @@ public record ConflictDetectedDto(
 /// 鼓励客户端根据需要重新获取该 Block 的详细信息或相关实体的最新状态。
 /// </summary>
 /// <param name="BlockId">状态可能已发生变化的 Block 的 ID。</param>
-/// <param name="ChangedEntityIds">（可选）如果变化是由原子操作引起的，这里可以包含受影响的实体的 ID 列表，以便前端进行更精细的更新。如果为 null 或空，表示通用状态变更或未知具体实体。</param>
-public record StateUpdateSignalDto(string BlockId, List<string>? ChangedEntityIds = null);
+/// <param name="ChangedFields">（可选）如果变化是由原子操作引起的，这里可以包含受影响的 Block 数据字段的枚举值，以便前端进行更精细的更新。如果为 null 或空，表示通用状态变更。</param>
+/// <param name="ChangedEntityIds">（可选）如果变化是由原子操作引起的，这里可以包含受影响的实体的 ID 列表，以便前端进行更精细的更新。如果为 null 或空，表示未知具体实体。</param>
+public record StateUpdateSignalDto(string BlockId, List<BlockDataFields>? ChangedFields = null, List<string>? ChangedEntityIds = null);
 
 /// <summary>
 /// 指示 <see cref="DisplayUpdateDto"/> 消息在流式传输过程中的状态。

@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <PackageReference Include="FluentResults" Version="3.16.0" PrivateAssets="all" />
+        <PackageReference Include="FluentResults" Version="3.16.0" PrivateAssets="all"/>
     </ItemGroup>
 
 </Project>

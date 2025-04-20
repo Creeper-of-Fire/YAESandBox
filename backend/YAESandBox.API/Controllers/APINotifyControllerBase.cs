@@ -10,7 +10,10 @@ namespace YAESandBox.API.Controllers;
 /// <param name="writServices"></param>
 /// <param name="notifierService"></param>
 [ApiController]
-public class APINotifyControllerBase(IBlockReadService readServices, IBlockWritService writServices, INotifierService notifierService)
+public class APINotifyControllerBase(
+    IBlockReadService readServices,
+    IBlockWritService writServices,
+    INotifierService notifierService)
     : ControllerBase
 {
     /// <summary>

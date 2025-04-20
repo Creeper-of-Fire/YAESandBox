@@ -12,17 +12,13 @@ namespace YAESandBox.API.Services;
 /// SignalRNotifierService 是一个实现 INotifierService 接口的服务，用于通过 SignalR 发送通知。
 /// 在RestAPI中，不应该存在INotifierService的调用
 /// </summary>
-public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext, IBlockManager blockManager) : INotifierService
+public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext, IBlockManager blockManager)
+    : INotifierService, IWorkflowNotifierService
 {
     private IHubContext<GameHub, IGameClient> hubContext { get; } = hubContext;
     private IBlockManager blockManager { get; } = blockManager;
 
-    /// <summary>
-    /// 发送Block的状态码更新到前端
-    /// </summary>
-    /// <param name="blockId"></param>
-    /// <param name="newStatusCode"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public async Task NotifyBlockStatusUpdateAsync(string blockId, BlockStatusCode newStatusCode)
     {
         // Try to get the block to include parent info (this might be slightly racy if called during creation/deletion)
@@ -52,25 +48,22 @@ public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext
         Log.Debug($"BlockStatusUpdate for {blockId} 已发送。");
     }
 
-    /// <summary>
-    /// 发送State状态更新到前端
-    /// </summary>
-    /// <param name="blockId"></param>
-    /// <param name="changedEntityIds"></param>
-    /// <returns></returns>
-    public async Task NotifyStateUpdateAsync(string blockId, IEnumerable<string>? changedEntityIds = null)
+    /// <inheritdoc/>>
+    public async Task NotifyBlockUpdateAsync(string blockId,
+        IEnumerable<BlockDataFields> changedFields,
+        IEnumerable<string>? changedEntityIds = null)
     {
-        var signal = new StateUpdateSignalDto(BlockId: blockId, ChangedEntityIds: changedEntityIds?.ToList());
+        var signal = new StateUpdateSignalDto(blockId, ChangedEntityIds: changedEntityIds?.ToList());
         Log.Debug($"准备通过 SignalR 发送 StateUpdateSignal: BlockId={blockId}");
-        await this.hubContext.Clients.All.ReceiveStateUpdateSignal(signal);
+        await this.hubContext.Clients.All.ReceiveBlockUpdateSignal(signal);
         Log.Debug($"StateUpdateSignal for {blockId} 已发送。");
     }
 
     /// <inheritdoc/>>
-    [Obsolete("目前我们不使用这个玩意，而是只通知可能发生变更的Block。",true)]
+    [Obsolete("目前我们不使用这个玩意，而是只通知可能发生变更的Block。", true)]
     public async Task NotifyBlockDetailUpdateAsync(string blockId, params BlockDetailFields[] changedFields)
     {
-        var block = await blockManager.GetBlockAsync(blockId);
+        var block = await this.blockManager.GetBlockAsync(blockId);
         if (block == null)
         {
             Log.Error($"BlockManagementService: 尝试发送 BlockDetailUpdateSignal 时，找不到 Block '{blockId}'。");

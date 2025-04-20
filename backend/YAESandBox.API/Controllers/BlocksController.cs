@@ -15,7 +15,10 @@ namespace YAESandBox.API.Controllers;
 /// <param name="readServices"></param>
 [ApiController]
 [Route("api/[controller]")] // /api/blocks
-public class BlocksController(IBlockWritService writServices, IBlockReadService readServices, INotifierService notifierService)
+public class BlocksController(
+    IBlockWritService writServices,
+    IBlockReadService readServices,
+    INotifierService notifierService)
     : APINotifyControllerBase(readServices, writServices, notifierService)
 {
     /// <summary>
@@ -45,10 +48,7 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     public async Task<IActionResult> GetBlockDetail(string blockId)
     {
         var detail = await this.blockReadService.GetBlockDetailDtoAsync(blockId); // 实现这个方法
-        if (detail == null)
-        {
-            return this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。");
-        }
+        if (detail == null) return this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。");
 
         return this.Ok(detail);
     }
@@ -74,11 +74,9 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
             var topologyJson = await this.blockReadService.GetBlockTopologyJsonAsync(blockId);
 
             if (topologyJson != null)
-            {
                 // 直接返回 JSON 字符串，设置正确的 ContentType
                 // ContentResult 会自动处理字符串内容和 ContentType
                 return this.Ok(topologyJson);
-            }
 
             // 如果 service 返回 null，表示生成失败
             Log.Error("GetTopology API: BlockReadService.GetBlockTopologyJsonAsync 返回值为空，生成失败。");
@@ -118,19 +116,19 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateBlockDetails(string blockId, [FromBody] UpdateBlockDetailsDto updateDto)
     {
-        if (!ModelState.IsValid) // 基本模型验证
-        {
-            return BadRequest(ModelState);
-        }
+        if (!this.ModelState.IsValid) // 基本模型验证
+            return this.BadRequest(this.ModelState);
 
         // 可以在这里添加一个检查，确保至少提供了一项更新
         if (updateDto.Content == null && (updateDto.MetadataUpdates == null || !updateDto.MetadataUpdates.Any()))
-        {
-            // return BadRequest("必须提供 Content 或 MetadataUpdates 中的至少一项来进行更新。");
-            // 或者根据服务层的行为，允许无操作请求并返回 204
-        }
+            return BadRequest("必须提供 Content 或 MetadataUpdates 中的至少一项来进行更新。");
 
         var result = await this.blockWritService.UpdateBlockDetailsAsync(blockId, updateDto);
+
+        if (updateDto.Content != null)
+            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.BlockContent);
+        if (updateDto.MetadataUpdates != null && updateDto.MetadataUpdates.Any())
+            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.Metadata);
 
         return result switch
         {

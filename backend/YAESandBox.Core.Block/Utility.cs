@@ -9,7 +9,7 @@ public static class OneOfExtensions
     {
         return source;
     }
-    
+
     /// <summary>
     /// 将 T0 拓宽为包含更多类型的目标 OneOf 类型 TTarget。
     /// </summary>
@@ -64,19 +64,27 @@ public static class OneOfExtensions
     }
 
 
-    public static Result<OneOf<T0, TTarget>> Widen<T0, TTarget>(this Result<OneOf<T0>> source) =>
-        source.Map<OneOf<T0, TTarget>>(s => s.Widen<T0, TTarget>());
+    public static Result<OneOf<T0, TTarget>> Widen<T0, TTarget>(this Result<OneOf<T0>> source)
+    {
+        return source.Map<OneOf<T0, TTarget>>(s => s.Widen<T0, TTarget>());
+    }
 
-    public static Result<OneOf<T0, T1, TTarget>> Widen<T0, T1, TTarget>(this Result<OneOf<T0, T1>> source) =>
-        source.Map<OneOf<T0, T1, TTarget>>(s => s.Widen<T0, T1, TTarget>());
+    public static Result<OneOf<T0, T1, TTarget>> Widen<T0, T1, TTarget>(this Result<OneOf<T0, T1>> source)
+    {
+        return source.Map<OneOf<T0, T1, TTarget>>(s => s.Widen<T0, T1, TTarget>());
+    }
 
     public static Result<OneOf<T0, T1, T2, TTarget>>
-        Widen<T0, T1, T2, TTarget>(this Result<OneOf<T0, T1, T2>> source) =>
-        source.Map<OneOf<T0, T1, T2, TTarget>>(s => s.Widen<T0, T1, T2, TTarget>());
+        Widen<T0, T1, T2, TTarget>(this Result<OneOf<T0, T1, T2>> source)
+    {
+        return source.Map<OneOf<T0, T1, T2, TTarget>>(s => s.Widen<T0, T1, T2, TTarget>());
+    }
 
     public static Result<OneOf<T0, T1, T2, T3, TTarget>> Widen<T0, T1, T2, T3, TTarget>(
-        this Result<OneOf<T0, T1, T2, T3>> source) =>
-        source.Map<OneOf<T0, T1, T2, T3, TTarget>>(s => s.Widen<T0, T1, T2, T3, TTarget>());
+        this Result<OneOf<T0, T1, T2, T3>> source)
+    {
+        return source.Map<OneOf<T0, T1, T2, T3, TTarget>>(s => s.Widen<T0, T1, T2, T3, TTarget>());
+    }
 
 
     public static TResult ForceResult<T0, T1, TTarget, TResult>(this OneOf<T0, T1> source,

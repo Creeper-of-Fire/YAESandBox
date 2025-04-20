@@ -38,7 +38,7 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
     //     // 注册需要监听的消息类型
     //     collector.RegisterHandler<BlockStatusUpdateDto>("ReceiveBlockStatusUpdate");
     //     collector.RegisterHandler<DisplayUpdateDto>("ReceiveDisplayUpdate");
-    //     collector.RegisterHandler<StateUpdateSignalDto>("ReceiveStateUpdateSignal");
+    //     collector.RegisterHandler<StateUpdateSignalDto>("ReceiveBlockUpdateSignal");
     //     collector.RegisterHandler<ConflictDetectedDto>("ReceiveConflictDetected"); // 即使本测试不期待冲突，也注册以防万一
     //
     //     await ConnectHubAsync(connection);
@@ -237,8 +237,9 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
     public async Task 持久化_保存和加载状态_应恢复数据和盲存()
     {
         // --- Arrange: 先执行一些操作改变状态 ---
-        var initialBlockId = BlockManager.WorldRootId;
-        var operation = AtomicOperation.Create(EntityType.Character, "hero_save_test", new() { { "name", "持久化英雄" } });
+        string initialBlockId = BlockManager.WorldRootId;
+        var operation = AtomicOperation.Create(EntityType.Character, "hero_save_test",
+            new Dictionary<string, object?> { { "name", "持久化英雄" } });
         var batchRequest = new BatchAtomicRequestDto { Operations = [operation.ToAtomicOperationRequestDto()] };
 
         var postResponse = await this.HttpClient.PostAsJsonAsync($"/api/atomic/{initialBlockId}", batchRequest);
@@ -284,7 +285,7 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
         this._output.WriteLine($"持久化: 加载 API 响应状态: {loadResponse.StatusCode}");
 
         // 调试输出响应内容
-        var responseContent = await loadResponse.Content.ReadAsStringAsync();
+        string responseContent = await loadResponse.Content.ReadAsStringAsync();
         this._output.WriteLine($"持久化: 加载 API 响应内容: {responseContent}");
 
 
@@ -314,7 +315,7 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
         var blockDetailResponse = await this.HttpClient.GetAsync($"/api/blocks/{initialBlockId}");
 
         // (可选，用于调试) 打印原始响应内容
-        var responseContent0 = await blockDetailResponse.Content.ReadAsStringAsync();
+        string responseContent0 = await blockDetailResponse.Content.ReadAsStringAsync();
         this._output.WriteLine($"持久化: /api/blocks/{initialBlockId} 响应内容: {responseContent0}");
 
         Assert.Equal(HttpStatusCode.OK, blockDetailResponse.StatusCode);

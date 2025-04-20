@@ -13,6 +13,7 @@ public interface IGameClient
 {
     /// <summary>
     /// Block的状态码更新了
+    /// 收到这个讯号以后建议做一次全量更新
     /// </summary>
     /// <param name="update"></param>
     /// <returns></returns>
@@ -37,8 +38,8 @@ public interface IGameClient
     /// </summary>
     /// <param name="signal"></param>
     /// <returns></returns>
-    Task ReceiveStateUpdateSignal(StateUpdateSignalDto signal);
-    
+    Task ReceiveBlockUpdateSignal(StateUpdateSignalDto signal);
+
     /// <summary>
     /// Block的非WorldState/GameState内容存在更新，建议重新获取
     /// </summary>
@@ -51,7 +52,7 @@ public interface IGameClient
     /// </summary>
     /// <param name="partiallyFilledDto">部分填充的 BlockDetailDto，包含各种已更新的字段。</param>
     /// <returns></returns>
-    [Obsolete("目前我们不使用这个玩意，而是只通知可能发生变更的Block。",true)]
+    [Obsolete("目前我们不使用这个玩意，而是只通知可能发生变更的Block。", true)]
     Task ReceiveBlockDetailUpdateSignal(BlockDetailDto partiallyFilledDto);
 }
 
@@ -65,7 +66,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
     /// <param name="request"></param>
     public async Task TriggerMainWorkflow(TriggerMainWorkflowRequestDto request)
     {
-        var connectionId = this.Context.ConnectionId;
+        string connectionId = this.Context.ConnectionId;
         // *** 确认日志存在 ***
         Log.Info(
             $"GameHub: 收到来自 {connectionId} 的主工作流触发请求: {request.RequestId}, Workflow: {request.WorkflowName}, ParentBlock: {request.ParentBlockId}");
@@ -86,7 +87,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
     /// <param name="request"></param>
     public async Task TriggerMicroWorkflow(TriggerMicroWorkflowRequestDto request)
     {
-        var connectionId = this.Context.ConnectionId;
+        string connectionId = this.Context.ConnectionId;
         Log.Info(
             $"GameHub: 收到来自 {connectionId} 的微工作流触发请求: {request.RequestId}, Workflow:{request.WorkflowName}, Element:{request.TargetElementId}, Block:{request.ContextBlockId}");
         try
@@ -105,7 +106,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
     /// <param name="request"></param>
     public async Task ResolveConflict(ResolveConflictRequestDto request)
     {
-        var connectionId = this.Context.ConnectionId;
+        string connectionId = this.Context.ConnectionId;
         // *** 确认日志存在 ***
         Log.Info($"GameHub: 收到来自 {connectionId} 的 ResolveConflict 请求: {request.RequestId}, Block: {request.BlockId}");
         try
@@ -138,10 +139,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
         // *** 确认日志存在 ***
         Log.Info(
             $"GameHub: Client disconnected. ConnectionId: {this.Context.ConnectionId}. Reason: {exception?.Message ?? "Normal disconnect"}");
-        if (exception != null)
-        {
-            Log.Error(exception, $"GameHub: Disconnect exception details for {this.Context.ConnectionId}:");
-        }
+        if (exception != null) Log.Error(exception, $"GameHub: Disconnect exception details for {this.Context.ConnectionId}:");
 
         await base.OnDisconnectedAsync(exception);
     }

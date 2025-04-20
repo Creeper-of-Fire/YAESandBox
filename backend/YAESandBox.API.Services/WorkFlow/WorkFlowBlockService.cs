@@ -12,14 +12,21 @@ namespace YAESandBox.API.Services.WorkFlow;
 /// </summary>
 /// <param name="notifierService"></param>
 /// <param name="blockManager"></param>
-public class WorkFlowBlockService(INotifierService notifierService,IBlockManager blockManager) : IWorkFlowBlockService
+public class WorkFlowBlockService(INotifierService notifierService, IBlockManager blockManager)
+    : IWorkFlowBlockService
 {
-    private INotifierService notifierService { get; } = notifierService;
+    private INotifierService NotifierService { get; } = notifierService;
     private IBlockManager blockManager { get; } = blockManager;
+
     /// <inheritdoc/>
     public async Task<LoadingBlockStatus?> CreateChildBlockAsync(string parentBlockId, string workFlowName,
-        Dictionary<string, object?> triggerParams) =>
-        await this.blockManager.CreateChildBlock_Async(parentBlockId, workFlowName, triggerParams);
+        Dictionary<string, object?> triggerParams)
+    {
+        var childBlock = await this.blockManager.CreateChildBlock_Async(parentBlockId, workFlowName, triggerParams);
+        if (childBlock != null)
+            await this.NotifierService.NotifyBlockStatusUpdateAsync(childBlock.Block.BlockId, childBlock.StatusCode);
+        return childBlock;
+    }
 
     /// <inheritdoc/>
     public async Task ApplyResolvedCommandsAsync(string blockId, List<AtomicOperationRequestDto> resolvedCommands)
@@ -30,12 +37,12 @@ public class WorkFlowBlockService(INotifierService notifierService,IBlockManager
         var blockStatus = await this.blockManager.GetBlockAsync(blockId);
 
         if (blockStatus != null)
-            await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, blockStatus.StatusCode);
+            await this.NotifierService.NotifyBlockStatusUpdateAsync(blockId, blockStatus.StatusCode);
 
         var successes = atomicOp.Value.ToList();
 
         if (successes.Any())
-            await this.notifierService.NotifyStateUpdateAsync(blockId, successes.Select(x => x.EntityId));
+            await this.NotifierService.NotifyBlockUpdateAsync(blockId, successes.Select(x => x.EntityId));
     }
 
     /// <inheritdoc/>
@@ -62,12 +69,12 @@ public class WorkFlowBlockService(INotifierService notifierService,IBlockManager
 
         Log.Info("工作流生成的指令和当前修改存在冲突，等待手动解决。");
 
-        await this.notifierService.NotifyConflictDetectedAsync(new ConflictDetectedDto(BlockId: blockId,
-            RequestId: requestId,
-            AiCommands: conflictBlock.AiCommands.ToAtomicOperationRequests(),
-            UserCommands: conflictBlock.UserCommands.ToAtomicOperationRequests(),
-            ConflictingAiCommands: conflictBlock.conflictingAiCommands.ToAtomicOperationRequests(),
-            ConflictingUserCommands: conflictBlock.conflictingUserCommands.ToAtomicOperationRequests()));
+        await this.NotifierService.NotifyConflictDetectedAsync(new ConflictDetectedDto(blockId,
+            requestId,
+            conflictBlock.AiCommands.ToAtomicOperationRequests(),
+            conflictBlock.UserCommands.ToAtomicOperationRequests(),
+            conflictBlock.conflictingAiCommands.ToAtomicOperationRequests(),
+            conflictBlock.conflictingUserCommands.ToAtomicOperationRequests()));
         return conflictBlock;
     }
 
@@ -83,7 +90,7 @@ public class WorkFlowBlockService(INotifierService notifierService,IBlockManager
             return loadingStatus;
         // *** 成功启动，由 Service 层负责发送通知 ***
         Log.Info($"BlockWritService: Block '{blockId}' 已成功启动重新生成流程，状态转为 Loading。");
-        await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, loadingStatus.Value.StatusCode);
+        await this.NotifierService.NotifyBlockStatusUpdateAsync(blockId, loadingStatus.Value.StatusCode);
 
         return loadingStatus;
     }

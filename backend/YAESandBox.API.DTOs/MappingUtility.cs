@@ -56,9 +56,11 @@ public static class MappingUtility
     /// <param name="blockStatus"></param>
     /// <param name="fields"></param>
     /// <returns></returns>
-    public static BlockDetailDto CreatePartial(this BlockStatus blockStatus, params BlockDetailFields[] fields) =>
-        blockStatus.Block.CreatePartial(fields);
-    
+    public static BlockDetailDto CreatePartial(this BlockStatus blockStatus, params BlockDetailFields[] fields)
+    {
+        return blockStatus.Block.CreatePartial(fields);
+    }
+
     /// <summary>
     /// 将 BlockStatus 转换为 BlockDetailDto
     /// </summary>

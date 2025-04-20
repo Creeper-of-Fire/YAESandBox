@@ -86,7 +86,7 @@ public static class AtomicOperationRequestDtoHelper
         };
     }
 
-    
+
     // public static AtomicOperation ToAtomicOperation(this AtomicOperationRequestDto dto)
     // {
     //     return new AtomicOperation
@@ -132,14 +132,9 @@ public static class AtomicOperationRequestDtoHelper
 
             case AtomicOperationType.ModifyEntity:
                 // 验证 Modify 操作必需的字段
-                if (string.IsNullOrWhiteSpace(dto.AttributeKey))
-                {
-                    throw new ArgumentException("ModifyEntity 操作必须提供属性键 (AttributeKey)。");
-                }
+                if (string.IsNullOrWhiteSpace(dto.AttributeKey)) throw new ArgumentException("ModifyEntity 操作必须提供属性键 (AttributeKey)。");
                 if (string.IsNullOrWhiteSpace(dto.ModifyOperator))
-                {
                     throw new ArgumentException("ModifyEntity 操作必须提供修改操作符 (ModifyOperator)。");
-                }
                 // ModifyValue 可以为 null，取决于业务逻辑，工厂方法接受 object?
 
                 Operator op;
