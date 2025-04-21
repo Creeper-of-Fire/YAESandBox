@@ -91,11 +91,11 @@
 </template>
 
 <script setup lang="ts">
-import {computed} from 'vue';
+import {computed, onMounted} from 'vue';
 import {v4 as uuidv4} from 'uuid';
 import {useTopologyStore} from '@/stores/topologyStore';
 import {useBlockContentStore} from '@/stores/blockContentStore';
-import {useBlockStatusStore} from '@/stores/blockStatusStore';
+import { useBlockStatusStore } from '@/stores/useBlockStatusStore';
 import {BlockStatusCode, type RegenerateBlockRequestDto} from '@/types/generated/api'; // 引入 Enum
 import type {ProcessedBlockNode} from '@/stores/topologyStore'; // 引入处理后的节点类型
 import {signalrService} from '@/services/signalrService'; // <--- 导入 signalrService
@@ -161,6 +161,18 @@ const globalLoadingAction = computed(() => blockStatusStore.isLoadingAction);
 const isCurrentLeaf = computed(() => topologyStore.currentPathLeafId === props.blockId);
 
 // 不再需要 activeConflict 的 computed，除非要在 Bubble 内显示冲突细节
+
+// --- 新增：在挂载时检查并获取内容 ---
+onMounted(() => {
+  // 检查内容缓存中是否存在此 Block 的详情
+  if (!blockContentStore.getBlockById(props.blockId)) {
+    console.log(`BlockBubble [${props.blockId}] Mounted: 内容未缓存，触发获取...`);
+    // 调用 Store 的 action 获取详情，不需要强制刷新，因为本来就没有
+    blockContentStore.fetchBlockDetails(props.blockId);
+  } else {
+    // console.log(`BlockBubble [${props.blockId}] Mounted: 内容已缓存。`);
+  }
+});
 
 // --- Methods ---
 

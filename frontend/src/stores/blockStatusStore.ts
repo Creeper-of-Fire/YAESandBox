@@ -59,6 +59,7 @@ export const useBlockStatusStore = defineStore('blockStatus', {
     },
 
     actions: {
+        //TODO 临时举措
         /**
          * [SignalR Handler] 处理 Block 状态更新。
          */
@@ -82,21 +83,16 @@ export const useBlockStatusStore = defineStore('blockStatus', {
                 this.activeConflict = null;
             }
 
-            // 根据状态转换执行操作
-            if (newStatusCode === BlockStatusCode.LOADING) {
-                // 进入 Loading 状态
-                // 检查 Block 内容是否已知，如果未知，则获取
-                if (!blockContentStore.getBlockById(blockId)) {
-                    console.log(`BlockStatusStore: Block ${blockId} 进入 Loading 状态，但内容未知，获取详情...`);
-                    // 异步获取，不阻塞状态更新
-                    blockContentStore.fetchBlockDetails(blockId);
-                    // 注意：如果这是第一次出现 (新 Block)，还需要更新拓扑
-                    // 这个逻辑判断比较复杂，依赖于是否能确定它是“新”的
-                    // 暂时简化：假定新 Block 的信号会伴随拓扑更新信号（或等待临时方案触发）
-                } else {
-                    console.log(`BlockStatusStore: Block ${blockId} 进入 Loading 状态。`);
-                }
-            } else if (
+            // *** 新增：处理新 Block 出现 (首次出现且为 Loading) ***
+            if (oldStatusCode === undefined && newStatusCode === BlockStatusCode.LOADING) {
+                console.warn(`BlockStatusStore: 检测到新的 Block ${blockId} (状态 Loading)，触发拓扑更新！(临时方案)`);
+                topologyStore.fetchAndUpdateTopology(); // <--- 触发拓扑更新
+                // 同时，获取这个新 Block 的初始详情
+                console.log(`BlockStatusStore: (新 Block) 获取 Block ${blockId} 详情...`);
+                blockContentStore.fetchBlockDetails(blockId); // 无需等待
+            }
+            // *** 结束新增逻辑 ***
+            else if (
                 newStatusCode === BlockStatusCode.IDLE ||
                 newStatusCode === BlockStatusCode.ERROR ||
                 newStatusCode === BlockStatusCode.RESOLVING_CONFLICT
@@ -128,6 +124,40 @@ export const useBlockStatusStore = defineStore('blockStatus', {
                 topologyStore.fetchAndUpdateTopology();
             }
         },
+
+        //TODO 临时举措
+        /**
+         * [内部调用] 直接设置指定 Block 的状态码。
+         * 主要供 BlockContentStore 在 fetchBlockDetails 后同步状态使用。
+         * @param blockId Block ID
+         * @param statusCode 新的状态码
+         */
+        setBlockStatusDirectly(blockId: string, statusCode: BlockStatusCode) {
+            if (!blockId || !statusCode) return;
+
+            const oldStatusCode = this.blockStatuses[blockId];
+            if (oldStatusCode !== statusCode) {
+                console.log(`BlockStatusStore [DirectSet]: 设置 Block ${blockId} 状态: ${oldStatusCode} -> ${statusCode}`);
+                this.blockStatuses[blockId] = statusCode;
+
+                // 如果新状态不是 ResolvingConflict，清理可能存在的旧冲突
+                if (statusCode !== BlockStatusCode.RESOLVING_CONFLICT && this.activeConflict?.blockId === blockId) {
+                    this.activeConflict = null;
+                }
+                // 如果状态是 Deleted 或 NotFound，也清理冲突
+                if ((statusCode === BlockStatusCode.DELETED || statusCode === BlockStatusCode.NOT_FOUND) && this.activeConflict?.blockId === blockId) {
+                    this.activeConflict = null;
+                }
+
+            } else {
+                // console.log(`BlockStatusStore [DirectSet]: Block ${blockId} 状态已经是 ${statusCode}，无需更新。`);
+                // 即使状态没变，也确保它在 map 里存在
+                if (!(blockId in this.blockStatuses)) {
+                    this.blockStatuses[blockId] = statusCode;
+                }
+            }
+        },
+
 
         /**
          * [SignalR Handler] 处理显示内容更新 (主流程/重新生成)。
@@ -246,7 +276,7 @@ export const useBlockStatusStore = defineStore('blockStatus', {
                 field === BlockDataFields.BLOCK_CONTENT ||
                 field === BlockDataFields.METADATA
             );
-            
+
             // 目前如果有其他字段就触发全部的刷新
 
             // 如果需要获取详情 (且拓扑没触发全局刷新，或者就是需要最新的内容)

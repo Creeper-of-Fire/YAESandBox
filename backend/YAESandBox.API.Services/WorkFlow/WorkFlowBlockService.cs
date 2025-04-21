@@ -24,7 +24,11 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
     {
         var childBlock = await this.blockManager.CreateChildBlock_Async(parentBlockId, workFlowName, triggerParams);
         if (childBlock != null)
+        {
+            await this.NotifierService.NotifyBlockUpdateAsync(parentBlockId, BlockDataFields.ChildrenInfo);
             await this.NotifierService.NotifyBlockStatusUpdateAsync(childBlock.Block.BlockId, childBlock.StatusCode);
+        }
+
         return childBlock;
     }
 

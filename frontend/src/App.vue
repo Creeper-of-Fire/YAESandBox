@@ -119,7 +119,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, watch, defineAsyncComponent, shallowRef} from 'vue';
+import {ref, computed, onMounted, watch, defineAsyncComponent, shallowRef, nextTick} from 'vue';
 import {
   NConfigProvider, NLayout, NLayoutHeader, NLayoutSider, NLayoutContent, NDrawer, NDrawerContent,
   NButton, NIcon, NSpin, NMessageProvider, NNotificationProvider, NDialogProvider,
@@ -135,7 +135,7 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 // 导入 Stores
 import {useTopologyStore} from '@/stores/topologyStore';
 import {useBlockContentStore} from '@/stores/blockContentStore';
-import {useBlockStatusStore} from '@/stores/blockStatusStore';
+import { useBlockStatusStore } from './stores/useBlockStatusStore';
 import {useUiStore} from '@/stores/uiStore'; // 引入 UI Store
 import {useConnectionStore} from '@/stores/connectionStore'; // 用于 SignalR 连接
 
@@ -180,50 +180,14 @@ const rightPanelWidth = computed(() => uiStore.rightPanelWidth);
 // --- Lifecycle and Watchers ---
 
 onMounted(async () => {
-  // 在开始关键初始化前，设置全局加载状态
-  blockStatusStore.setLoadingAction(true, '正在初始化应用...'); // <--- 设置加载状态
-
-  try {
-    // 尝试连接 SignalR
-    await connectionStore.connectSignalR();
-
-    // 连接成功后，获取初始数据
-    if (connectionStore.isSignalRConnected) {
-      console.log("App: SignalR 连接成功，开始获取初始拓扑...");
-      await topologyStore.fetchAndUpdateTopology();
-      console.log("App: 初始拓扑获取完成。");
-
-      // 获取根节点和叶节点内容
-      const fetches = [];
-      if (topologyStore.rootNode?.id) {
-        fetches.push(blockContentStore.fetchBlockDetails(topologyStore.rootNode.id));
-      }
-      if (topologyStore.currentPathLeafId && topologyStore.currentPathLeafId !== topologyStore.rootNode?.id) {
-        fetches.push(blockContentStore.fetchBlockDetails(topologyStore.currentPathLeafId));
-      }
-      if (fetches.length > 0) {
-        console.log("App: 开始获取初始 Block 内容...");
-        await Promise.allSettled(fetches);
-        console.log("App: 初始 Block 内容获取尝试完成。");
-      }
-
-      // 可能需要等待 DOM 更新后滚动条才能正确计算？ (如果 fetchAndUpdateTopology 后需要立即滚动)
-      // await nextTick();
-
-    } else {
-      // 处理连接失败
-      console.error("App: SignalR 连接失败，无法加载初始数据。");
-      // 显示错误提示给用户 (可以使用 Naive UI 的全局 API)
-      // 例如: message.error("无法连接到服务器，请检查网络或刷新页面。");
-    }
-  } catch (error) {
-    console.error("App: 初始化过程中发生错误:", error);
-    // 显示通用错误提示
-    // message.error(`初始化失败: ${error instanceof Error ? error.message : '未知错误'}`);
-  } finally {
-    // 无论成功或失败，最后都要取消全局加载状态
-    blockStatusStore.setLoadingAction(false); // <--- 取消加载状态
-    console.log("App: 初始化流程结束。");
+  // 初始化流程大大简化，只调用连接方法
+  console.log("App [onMounted]: 开始连接 SignalR...");
+  await connectionStore.connectSignalR(); // 连接和初始化逻辑已移到 store 内部
+  // 可以在这里检查 connectionStore.connectionError 来处理初始连接失败的 UI
+  if (connectionStore.connectionError) {
+    console.error("App [onMounted]: SignalR 初始连接失败。", connectionStore.connectionError);
+    // 显示全局错误提示，例如使用 useMessage
+    // message.error(`连接服务器失败: ${connectionStore.connectionError}`);
   }
 });
 
@@ -236,7 +200,7 @@ onMounted(async () => {
 //       console.log(`App: 路径叶节点变为 ${newLeafId} (索引 ${index})，尝试滚动到视图...`);
 //       // 等待 DOM 更新后滚动
 //       nextTick(() => {
-//         blockScrollerRef.value?.scrollToItem(index, { behavior: 'smooth', block: 'nearest' });
+//         blockScrollerRef.value?.scrollToItem(index, {behavior: 'smooth', block: 'nearest'});
 //         // 'nearest' 会尝试让元素尽可能少地滚动就能出现在视口中
 //         // 'center' 或 'start' 可能更适合我们的场景？需要测试
 //       });
@@ -246,19 +210,19 @@ onMounted(async () => {
 //   }
 // });
 
-// 监听拓扑变化，确保必要的 Block 内容被加载
-watch(() => topologyStore.nodes, (newNodes, oldNodes) => {
-  if (newNodes.size > 0) {
-    console.log("App: 拓扑节点发生变化，检查并获取当前路径 Block 内容...");
-    const pathIds = topologyStore.getCurrentPathNodes.map(n => n.id);
-    pathIds.forEach(id => {
-      // 如果内容不在缓存中，或者需要强制刷新（例如拓扑重建后），则获取
-      if (!blockContentStore.getBlockById(id)) {
-        blockContentStore.fetchBlockDetails(id);
-      }
-    });
-  }
-}, {deep: false}); // 浅监听 Map 对象本身的变化
+// // 监听拓扑变化，确保必要的 Block 内容被加载
+// watch(() => topologyStore.nodes, (newNodes, oldNodes) => {
+//   if (newNodes.size > 0) {
+//     console.log("App: 拓扑节点发生变化，检查并获取当前路径 Block 内容...");
+//     const pathIds = topologyStore.getCurrentPathNodes.map(n => n.id);
+//     pathIds.forEach(id => {
+//       // 如果内容不在缓存中，或者需要强制刷新（例如拓扑重建后），则获取
+//       if (!blockContentStore.getBlockById(id)) {
+//         blockContentStore.fetchBlockDetails(id);
+//       }
+//     });
+//   }
+// }, {deep: false}); // 浅监听 Map 对象本身的变化
 
 </script>
 

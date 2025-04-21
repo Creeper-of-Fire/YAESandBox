@@ -1,7 +1,7 @@
 ﻿// src/services/signalrService.ts
 import * as signalR from "@microsoft/signalr";
 import {OpenAPI} from '@/types/generated/api/core/OpenAPI'; // 用于获取 BASE URL
-import {useBlockStatusStore} from '@/stores/blockStatusStore';
+import { useBlockStatusStore } from '@/stores/useBlockStatusStore';
 import {useConnectionStore} from '@/stores/connectionStore';
 // TopologyStore 和 BlockContentStore 通常不由 SignalR Service 直接调用，
 // 它们的状态更新由 BlockStatusStore 在处理完信号后触发。

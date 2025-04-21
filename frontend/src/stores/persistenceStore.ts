@@ -90,7 +90,7 @@ export const usePersistenceStore = defineStore('persistence', () => {
         // 0. (可选) 停止 SignalR 连接，防止加载过程中收到干扰信息？
         //    或者让 BlockStatusStore 在加载期间忽略某些更新？
         //    暂时先不停止，依赖后续的状态重置
-        const wasConnected = connectionStore.isSignalRConnected;
+        const wasConnected = connectionStore.isConnected;
         if(wasConnected) {
             console.warn("PersistenceStore: 正在加载存档，SignalR 仍连接，可能会收到旧消息。");
             // await connectionStore.disconnectSignalR(); // 考虑是否需要断开

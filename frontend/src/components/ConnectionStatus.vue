@@ -25,19 +25,19 @@ const connectionStore = useConnectionStore();
 const notification = useNotification(); // 获取 notification API
 
 const statusClass = computed(() => {
-  if (connectionStore.isSignalRConnecting) return 'connecting';
-  if (connectionStore.isSignalRConnected) return 'connected';
+  if (connectionStore.isConnecting) return 'connecting';
+  if (connectionStore.isConnected) return 'connected';
   return 'disconnected';
 });
 
 const statusText = computed(() => {
-  if (connectionStore.isSignalRConnecting) return '连接中...';
-  if (connectionStore.isSignalRConnected) return 'SignalR 已连接';
+  if (connectionStore.isConnecting) return '连接中...';
+  if (connectionStore.isConnected) return 'SignalR 已连接';
   return 'SignalR 已断开 (点击重连)'; // 修改提示文本
 });
 
 // 计算是否可以尝试重连 (未连接且不处于连接中状态)
-const canAttemptReconnect = computed(() => !connectionStore.isSignalRConnected && !connectionStore.isSignalRConnecting);
+const canAttemptReconnect = computed(() => !connectionStore.isConnected && !connectionStore.isConnecting);
 
 // 尝试重新连接的方法
 const attemptReconnect = async () => {
@@ -57,7 +57,7 @@ const attemptReconnect = async () => {
     await connectionStore.connectSignalR();
     // 连接成功/失败的状态更新由 connectSignalR 内部处理
     // 可以在这里根据结果再显示成功/失败通知，但 connectSignalR 内部可能已有日志
-    if (connectionStore.isSignalRConnected) {
+    if (connectionStore.isConnected) {
       notification.success({
         title: 'SignalR 连接',
         content: '重新连接成功！',
