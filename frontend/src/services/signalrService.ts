@@ -1,6 +1,13 @@
 ﻿// src/services/signalrService.ts
 import * as signalR from "@microsoft/signalr";
-import { useNarrativeStore } from '@/stores/narrativeStore'; // 引入 Pinia Store
+import {OpenAPI} from '@/types/generated/api/core/OpenAPI'; // 用于获取 BASE URL
+import {useBlockStatusStore} from '@/stores/blockStatusStore';
+import {useConnectionStore} from '@/stores/connectionStore';
+// TopologyStore 和 BlockContentStore 通常不由 SignalR Service 直接调用，
+// 它们的状态更新由 BlockStatusStore 在处理完信号后触发。
+// import { useTopologyStore } from '../stores/topologyStore';
+// import { useBlockContentStore } from '../stores/blockContentStore';
+import {eventBus} from './eventBus'; // 导入事件总线
 import type {
     BlockStatusUpdateDto,
     BlockUpdateSignalDto,
@@ -9,21 +16,46 @@ import type {
     RegenerateBlockRequestDto,
     ResolveConflictRequestDto,
     TriggerMainWorkflowRequestDto,
-    TriggerMicroWorkflowRequestDto
-} from "@/types/generated/api.ts"; // 引入需要的 DTO 类型
+    TriggerMicroWorkflowRequestDto,
+    // Enums for event data payload
+} from "@/types/generated/api";
+
+import {StreamStatus, UpdateMode} from "@/types/generated/api";
+
 
 // SignalR Hub 的相对路径
 const HUB_URL = "/gamehub";
 
 let connection: signalR.HubConnection | null = null;
-let store: ReturnType<typeof useNarrativeStore> | null = null;
 
-// 获取 Pinia Store 实例的函数 (延迟初始化)
-function getStore() {
-    if (!store) {
-        store = useNarrativeStore();
+// 不再需要全局 store 实例
+
+/**
+ * 延迟获取 BlockStatusStore 实例的函数。
+ * 确保在 Pinia 初始化后调用。
+ */
+function getStatusStore() {
+    // 这里假设 Pinia 已经初始化
+    // 在实际应用中，你可能需要在调用此函数前确保 Pinia 设置完成
+    try {
+        return useBlockStatusStore();
+    } catch (error) {
+        console.error("SignalR Service: 无法获取 Pinia Store (BlockStatusStore)。请确保 Pinia 已初始化。", error);
+        // 返回一个模拟对象或抛出错误，防止后续代码出错
+        throw new Error("Pinia store (BlockStatusStore) not available.");
+        // 或者返回一个安全的空操作对象：
+        // return { setSignalRConnectionStatus: () => {}, handleBlockStatusUpdate: () => {}, ... };
     }
-    return store;
+}
+
+// --- 辅助函数获取 Store ---
+function getConnectionStore() {
+    try {
+        return useConnectionStore();
+    } catch (error) {
+        console.error("SignalR Service: 无法获取 Pinia Store (ConnectionStore)。请确保 Pinia 已初始化。", error);
+        throw new Error("Pinia store (ConnectionStore) not available.");
+    }
 }
 
 /**
@@ -31,6 +63,8 @@ function getStore() {
  * @param baseUrl 服务器的基础 URL (例如 http://localhost:5000)
  */
 async function startConnection(baseUrl: string): Promise<void> {
+    const connectionStore = getConnectionStore(); // 获取一次 store 实例
+
     if (connection && connection.state === signalR.HubConnectionState.Connected) {
         console.log("SignalR 连接已存在。");
         return;
@@ -49,73 +83,118 @@ async function startConnection(baseUrl: string): Promise<void> {
     }
 
     connection = new signalR.HubConnectionBuilder()
-        .withUrl(hubUrl, {
-            // skipNegotiation: true, // 如果需要，可以配置选项
-            // transport: signalR.HttpTransportType.WebSockets // 强制使用 WebSockets
-        })
+        .withUrl(hubUrl)
         .withAutomaticReconnect({
             nextRetryDelayInMilliseconds: retryContext => {
-                // 设置重连间隔，例如 0, 2, 10, 30 秒... 最大 60 秒
                 const delay = Math.min(Math.pow(2, retryContext.previousRetryCount) * 1000, 60000);
                 console.log(`SignalR 连接丢失，将在 ${delay / 1000} 秒后尝试重连 (${retryContext.previousRetryCount + 1} 次尝试)...`);
                 return delay;
             }
         })
-        .configureLogging(signalR.LogLevel.Information) // 配置日志级别
+        .configureLogging(signalR.LogLevel.Information)
         .build();
 
     // --- 注册服务器 -> 客户端的方法处理器 ---
-    // 这些处理器会调用 Pinia Store 的 actions 来更新状态
 
+    // Block 状态更新 -> BlockStatusStore
     connection.on("ReceiveBlockStatusUpdate", (data: BlockStatusUpdateDto) => {
         console.log("SignalR: 收到 BlockStatusUpdate", data);
-        getStore().handleBlockStatusUpdate(data);
+        try {
+            getStatusStore().handleBlockStatusUpdate(data);
+        } catch (error) {
+            console.error("SignalR: 处理 BlockStatusUpdate 时出错:", error);
+        }
     });
 
+    // 显示更新 -> 分发给 BlockStatusStore 或 EventBus
     connection.on("ReceiveDisplayUpdate", (data: DisplayUpdateDto) => {
         console.log("SignalR: 收到 DisplayUpdate", data);
-        getStore().handleDisplayUpdate(data);
+        try {
+            if (data.targetElementId) {
+                // --- 微工作流更新 -> EventBus ---
+                const targetId = data.targetElementId;
+                const eventName = `microWorkflowUpdate:${targetId}` as const;
+                const eventData = {
+                    content: data.content ?? null,
+                    status: data.streamingStatus ?? StreamStatus.COMPLETE,
+                    updateMode: data.updateMode ?? UpdateMode.FULL_SNAPSHOT, // 假设默认是 FullSnapshot
+                    // 可以添加 requestId: data.requestId 等其他信息
+                };
+                console.log(`SignalR: 发布事件 ${eventName}`, eventData);
+                eventBus.emit(eventName, eventData);
+
+            } else if (data.contextBlockId) {
+                // --- 主流程/重新生成更新 -> BlockStatusStore ---
+                getStatusStore().handleBlockDisplayUpdate(data);
+            } else {
+                console.warn("SignalR: 收到无效的 DisplayUpdate DTO (无 contextBlockId 或 targetElementId)", data);
+            }
+        } catch (error) {
+            console.error("SignalR: 处理 DisplayUpdate 时出错:", error);
+        }
     });
 
+    // 冲突检测 -> BlockStatusStore
     connection.on("ReceiveConflictDetected", (data: ConflictDetectedDto) => {
         console.warn("SignalR: 收到 ConflictDetected", data);
-        getStore().handleConflictDetected(data);
+        try {
+            getStatusStore().handleConflictDetected(data);
+        } catch (error) {
+            console.error("SignalR: 处理 ConflictDetected 时出错:", error);
+        }
     });
 
+    // Block 更新信号 -> BlockStatusStore
     connection.on("ReceiveBlockUpdateSignal", (data: BlockUpdateSignalDto) => {
         console.log("SignalR: 收到 BlockUpdateSignal", data);
-        getStore().handleBlockUpdateSignal(data);
+        try {
+            getStatusStore().handleBlockUpdateSignal(data);
+        } catch (error) {
+            console.error("SignalR: 处理 BlockUpdateSignal 时出错:", error);
+        }
     });
 
     // --- 处理连接状态变化 ---
 
     connection.onreconnecting(error => {
         console.warn(`SignalR 正在重连... 原因: ${error}`);
-        getStore().setSignalRConnectionStatus(false, true); // isConnected: false, isConnecting: true
+        try {
+            // 调用 BlockStatusStore 更新全局连接状态
+            connectionStore.setSignalRConnectionStatus(false, true); // isConnected: false, isConnecting: true
+        } catch (storeError) {
+            console.error("SignalR: 更新重连状态时出错:", storeError);
+        }
     });
 
     connection.onreconnected(connectionId => {
         console.log(`SignalR 重连成功！Connection ID: ${connectionId}`);
-        getStore().setSignalRConnectionStatus(true, false); // isConnected: true, isConnecting: false
+        try {
+            connectionStore.setSignalRConnectionStatus(true, false); // isConnected: true, isConnecting: false
+        } catch (storeError) {
+            console.error("SignalR: 更新重连成功状态时出错:", storeError);
+        }
     });
 
     connection.onclose(error => {
         console.error(`SignalR 连接已关闭。原因: ${error}`);
-        getStore().setSignalRConnectionStatus(false, false); // isConnected: false, isConnecting: false
-        // 可以在这里尝试手动重启连接，或者让 withAutomaticReconnect 处理
+        try {
+            connectionStore.setSignalRConnectionStatus(false, false); // isConnected: false, isConnecting: false
+        } catch (storeError) {
+            console.error("SignalR: 更新关闭状态时出错:", storeError);
+        }
+        connection = null; // 清理连接对象
     });
 
     // --- 启动连接 ---
     try {
-        getStore().setSignalRConnectionStatus(false, true); // isConnected: false, isConnecting: true
+        connectionStore.setSignalRConnectionStatus(false, true);
         await connection.start();
         console.log("SignalR 连接成功！Connection ID:", connection.connectionId);
-        getStore().setSignalRConnectionStatus(true, false); // isConnected: true, isConnecting: false
+        connectionStore.setSignalRConnectionStatus(true, false);
     } catch (err) {
         console.error("SignalR 连接失败:", err);
-        getStore().setSignalRConnectionStatus(false, false); // isConnected: false, isConnecting: false
-        connection = null; // 清理连接对象
-        // 可以抛出错误或进行其他处理
+        connectionStore.setSignalRConnectionStatus(false, false);
+        connection = null;
         throw new Error(`无法连接到 SignalR Hub: ${err}`);
     }
 }
@@ -124,19 +203,31 @@ async function startConnection(baseUrl: string): Promise<void> {
  * 停止 SignalR 连接
  */
 async function stopConnection(): Promise<void> {
-    if (connection && connection.state === signalR.HubConnectionState.Connected) {
+    let connectionStore: ReturnType<typeof useConnectionStore> | null = null; // 获取 store 实例用于更新状态
+    try {
+        connectionStore = getConnectionStore();
+    } catch (error) {
+        console.error("SignalR Service: 停止连接时无法获取 BlockStatusStore。");
+    }
+
+
+    if (connection && connection.state !== signalR.HubConnectionState.Disconnected) {
         try {
             await connection.stop();
             console.log("SignalR 连接已手动停止。");
         } catch (err) {
             console.error("停止 SignalR 连接时出错:", err);
         } finally {
-            getStore().setSignalRConnectionStatus(false, false);
-            connection = null; // 确保清理
+            if (connectionStore) {
+                connectionStore.setSignalRConnectionStatus(false, false);
+            }
+            connection = null;
         }
     } else {
         console.log("SignalR 连接未建立或已关闭。");
-        getStore().setSignalRConnectionStatus(false, false);
+        if (connectionStore) {
+            connectionStore.setSignalRConnectionStatus(false, false);
+        }
         connection = null;
     }
 }
@@ -149,6 +240,8 @@ async function stopConnection(): Promise<void> {
 function ensureConnected(): signalR.HubConnection {
     if (!connection || connection.state !== signalR.HubConnectionState.Connected) {
         console.error("SignalR 连接未建立或已断开。");
+        // 可以尝试自动重连或提示用户
+        // getStatusStore()?.connectSignalR(); // 考虑是否要自动重连
         throw new Error("SignalR is not connected.");
     }
     return connection;
@@ -164,8 +257,7 @@ async function triggerMainWorkflow(request: TriggerMainWorkflowRequestDto): Prom
         console.log("SignalR: TriggerMainWorkflow 已发送", request);
     } catch (error) {
         console.error("调用 TriggerMainWorkflow 失败:", error);
-        // 可以在这里通知用户或进行重试
-        throw error; // 重新抛出错误，让调用者处理
+        throw error; // 重新抛出错误，让调用者 (Store 或组件) 处理 UI 反馈
     }
 }
 
@@ -177,9 +269,17 @@ async function triggerMicroWorkflow(request: TriggerMicroWorkflowRequestDto): Pr
     try {
         await ensureConnected().invoke("TriggerMicroWorkflow", request);
         console.log("SignalR: TriggerMicroWorkflow 已发送", request);
+        // 注意：这里不直接更新状态，等待 ReceiveDisplayUpdate 通过 EventBus 分发
     } catch (error) {
         console.error("调用 TriggerMicroWorkflow 失败:", error);
-        throw error;
+        // 可以考虑通过 EventBus 发送一个错误事件给对应的 targetElementId
+        const eventName = `microWorkflowUpdate:${request.targetElementId}` as const;
+        eventBus.emit(eventName, {
+            content: `请求失败: ${error instanceof Error ? error.message : error}`,
+            status: StreamStatus.ERROR,
+            updateMode: UpdateMode.FULL_SNAPSHOT // 出错时通常是替换
+        });
+        throw error; // 同时重新抛出错误
     }
 }
 
@@ -219,6 +319,16 @@ export const signalrService = {
     triggerMicroWorkflow,
     regenerateBlock,
     resolveConflict,
-    // 可能需要一个获取当前连接状态的方法
     isConnected: () => connection?.state === signalR.HubConnectionState.Connected,
+    getConnection: () => connection, // 可能需要暴露 connection 实例给高级用法？(谨慎使用)
 };
+
+// 添加一个辅助函数，用于在 signalrService 外部设置连接状态 (例如，在 App 初始化时)
+// 这不是必需的，但有时可能有用
+export function setSignalRStatusInStore(isConnected: boolean, isConnecting: boolean) {
+    try {
+        getConnectionStore().setSignalRConnectionStatus(isConnected, isConnecting);
+    } catch (error) {
+        console.error("SignalR Service Helper: 更新状态时出错:", error);
+    }
+}

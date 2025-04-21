@@ -34,7 +34,7 @@ public interface IGameClient
     Task ReceiveConflictDetected(ConflictDetectedDto conflict);
 
     /// <summary>
-    /// Block内部的WorldState/GameState存在更新，建议重新获取
+    /// Block内部数据存在更新，建议重新获取
     /// </summary>
     /// <param name="signal"></param>
     /// <returns></returns>

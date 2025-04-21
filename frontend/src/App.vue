@@ -1,195 +1,322 @@
 <template>
-  <div>
-    <h1>YAESandBox 前端</h1>
+  <n-config-provider :theme="lightTheme" class="app-container">
 
-    <!-- SignalR 连接状态 -->
-    <p>
-      SignalR:
-      <span v-if="narrativeStore.isSignalRConnecting">连接中...</span>
-      <span v-else-if="narrativeStore.isSignalRConnected" style="color: green;">已连接</span>
-      <span v-else style="color: red;">已断开</span>
-      <button @click="narrativeStore.connectSignalR" :disabled="narrativeStore.isSignalRConnected || narrativeStore.isSignalRConnecting">连接</button>
-      <button @click="narrativeStore.disconnectSignalR" :disabled="!narrativeStore.isSignalRConnected">断开</button>
-    </p>
+    <n-notification-provider>
+      <n-layout style="height: 100vh;"> <!-- 顶层布局，占据整个视口 -->
 
-    <!-- 加载/保存 -->
-    <div>
-      <button @click="handleLoadClick" :disabled="narrativeStore.isLoadingAction">加载存档</button>
-      <input type="file" ref="fileInput" @change="handleFileSelected" accept=".json" style="display: none;" />
-      <button @click="narrativeStore.saveState()" :disabled="narrativeStore.isLoadingAction || !narrativeStore.isSignalRConnected">保存存档</button>
-      <span v-if="narrativeStore.isLoadingAction"> 操作中...</span>
-    </div>
+        <!-- 1. 顶部工具栏 (Header) -->
+        <n-layout-header bordered class="app-header">
+          <AppToolbar @toggle-left-panel="uiStore.toggleLeftPanel" @toggle-right-panel="uiStore.toggleRightPanel"/>
+        </n-layout-header>
 
-    <!-- 加载状态 -->
-    <p v-if="narrativeStore.isLoadingBlocks || narrativeStore.isLoadingTopology">
-      正在加载核心数据...
-    </p>
+        <!-- 2. 主内容区布局 (包含侧边栏和中央内容) -->
+        <n-layout has-sider position="absolute" style="top: 64px; bottom: 0;"> <!-- 高度排除 Header -->
 
-    <!-- 冲突提示 -->
-    <div v-if="activeConflict" style="border: 2px solid orange; padding: 10px; margin: 10px 0;">
-      <h3>检测到冲突 (Block: {{ activeConflict.blockId }})</h3>
-      <p>请解决冲突后提交。</p>
-      <pre>AI 指令: {{ JSON.stringify(activeConflict.aiCommands, null, 2) }}</pre>
-      <pre>用户指令: {{ JSON.stringify(activeConflict.userCommands, null, 2) }}</pre>
-      <button @click="resolveSampleConflict(activeConflict)" :disabled="narrativeStore.isLoadingAction">
-        (示例) 接受 AI 指令解决冲突
-      </button>
-      <button @click="narrativeStore.activeConflict = null">暂时忽略</button> {/* 不推荐 */}
-    </div>
+          <!-- 2.1 左侧抽屉 (Drawer) -->
+          <n-drawer
+              v-model:show="uiStore.isLeftPanelOpen"
+              :width="leftPanelWidth"
+              placement="left"
+              :trap-focus="false"
+              :block-scroll="false"
+              :close-on-esc="!uiStore.isLeftPanelPinned"
+              :mask-closable="!uiStore.isLeftPanelPinned"
+              native-scrollbar
+              class="side-panel left-panel"
+          >
+            <n-drawer-content :title="leftPanelTitle" body-content-style="padding: 10px;">
+              <template #header>
+                <div class="panel-header">
+                  <span>{{ leftPanelTitle }}</span>
+                  <n-button text @click="uiStore.toggleLeftPanelPin">
+                    <template #icon>
+                      <n-icon :component="uiStore.isLeftPanelPinned ? LockClosedIcon : LockOpenIcon"/>
+                    </template>
+                  </n-button>
+                </div>
+              </template>
+              <!-- 动态加载左侧面板组件 -->
+              <component :is="uiStore.activeLeftPanelComponent"/>
+            </n-drawer-content>
+          </n-drawer>
 
-    <!-- 主 Block 流 -->
-    <div class="block-stream" v-if="narrativeStore.topology && currentPathBlocks.length > 0">
-      <h2>当前路径</h2>
-      <div v-for="block in currentPathBlocks" :key="block.blockId" class="block-bubble">
-        <BlockBubble :block-id="block.blockId" />
-      </div>
-    </div>
-    <div v-else-if="!narrativeStore.isLoadingBlocks && !narrativeStore.isLoadingTopology">
-      <p>没有可显示的 Block。尝试触发第一个工作流？</p>
-      <button @click="triggerFirstWorkflow" v-if="narrativeStore.rootBlockId">开始</button>
-    </div>
+          <!-- 2.2 中央内容区 -->
+          <n-layout-content
+              ref="mainContentRef"
+              class="main-content-area"
+              :native-scrollbar="false"
+              :content-style="{ height: '100%', overflow: 'hidden' }"
+          >
+            <!-- 使用 DynamicScroller 渲染 BlockBubble 流 -->
+            <DynamicScroller
+                :items="currentPathBlocks"
+                :min-item-size="100"
+                class="block-scroller"
+                key-field="id"
+                ref="blockScrollerRef"
+            >
+              <template v-slot="{ item, index, active }">
+                <DynamicScrollerItem
+                    :item="item"
+                    :active="active"
+                    :size-dependencies="[
+                     blockContentStore.getBlockById(item.id)?.blockContent, // 主要依赖内容
+                     blockStatusStore.getBlockStatus(item.id) // 状态变化也可能影响高度（如显示错误信息）
+                   ]"
+                    :data-index="index"
+                    :key="item.id"
+                    class="block-scroller-item-wrapper"
+                >
+                  <!-- 真实的 BlockBubble 组件 -->
+                  <BlockBubble :block-id="item.id"/>
+                </DynamicScrollerItem>
+              </template>
+              <!-- 可选: 滚动到顶部/底部的加载提示 -->
+              <!-- <template #before-all><div>...</div></template> -->
+              <!-- <template #after-all><div>...</div></template> -->
+            </DynamicScroller>
+          </n-layout-content>
 
-    <!-- 微工作流测试 -->
-    <div style="margin-top: 20px; border: 1px solid #ccc; padding: 10px;">
-      <h3>微工作流测试 (润色)</h3>
-      <textarea v-model="textToPolish" rows="3" style="width: 90%;"></textarea>
-      <button @click="polishText" :disabled="!narrativeStore.currentPathLeafId || !narrativeStore.isSignalRConnected">✨ 润色</button>
-      <div v-if="polishResult">
-        <h4>润色结果:</h4>
-        <p v-if="polishResult.status === 'Streaming'" style="color: gray;">处理中...</p>
-        <p v-if="polishResult.status === 'Error'" style="color: red;">错误: {{ polishResult.content }}</p>
-        <p v-if="polishResult.status === 'Complete'">{{ polishResult.content }}</p>
-      </div>
-    </div>
+          <!-- 2.3 右侧抽屉 (Drawer) -->
+          <n-drawer
+              v-model:show="uiStore.isRightPanelOpen"
+              :width="rightPanelWidth"
+              placement="right"
+              :trap-focus="false"
+              :block-scroll="false"
+              :close-on-esc="!uiStore.isRightPanelPinned"
+              :mask-closable="!uiStore.isRightPanelPinned"
+              native-scrollbar
+              class="side-panel right-panel"
+          >
+            <n-drawer-content :title="rightPanelTitle" body-content-style="padding: 10px;">
+              <template #header>
+                <div class="panel-header">
+                  <span>{{ rightPanelTitle }}</span>
+                  <n-button text @click="uiStore.toggleRightPanelPin">
+                    <template #icon>
+                      <n-icon :component="uiStore.isRightPanelPinned ? LockClosedIcon : LockOpenIcon"/>
+                    </template>
+                  </n-button>
+                </div>
+              </template>
+              <!-- 动态加载右侧面板组件 -->
+              <component :is="uiStore.activeRightPanelComponent"/>
+            </n-drawer-content>
+          </n-drawer>
 
-  </div>
+        </n-layout> <!-- End Main Content Layout -->
+
+        <!-- 可选：全局加载覆盖层 -->
+        <n-spin :show="blockStatusStore.isLoadingAction" class="global-loading-spinner">
+          <template #description>
+            {{ blockStatusStore.loadingActionMessage || '处理中...' }}
+          </template>
+        </n-spin>
+      </n-layout> <!-- End Top Level Layout -->
+    </n-notification-provider>
+  </n-config-provider>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, watch } from 'vue';
-import { useNarrativeStore } from '@/stores/narrativeStore.js';
-import BlockBubble from '@/components/BlockBubble.vue'; // 假设你有一个 BlockBubble 组件
-import type { ConflictDetectedDto, BlockDetailDto } from '@/types/generated/api.ts';
-import { StreamStatus } from '@/types/generated/api.ts';
+import {ref, computed, onMounted, watch, defineAsyncComponent, shallowRef} from 'vue';
+import {
+  NConfigProvider, NLayout, NLayoutHeader, NLayoutSider, NLayoutContent, NDrawer, NDrawerContent,
+  NButton, NIcon, NSpin, NMessageProvider, NNotificationProvider, NDialogProvider,
+  lightTheme, // 使用亮色主题
+} from 'naive-ui';
+import {LockClosedOutline as LockClosedIcon, LockOpenOutline as LockOpenIcon} from '@vicons/ionicons5';
 
-const narrativeStore = useNarrativeStore();
-const fileInput = ref<HTMLInputElement | null>(null);
-const textToPolish = ref("这是一段需要润色的示例文本。");
-const POLISH_TARGET_ID = "text-polisher-output"; // 微工作流目标 ID
+// 导入 DynamicScroller
+//@ts-ignore
+import {DynamicScroller, DynamicScrollerItem} from 'vue-virtual-scroller';
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 
-// --- 计算属性 ---
+// 导入 Stores
+import {useTopologyStore} from '@/stores/topologyStore';
+import {useBlockContentStore} from '@/stores/blockContentStore';
+import {useBlockStatusStore} from '@/stores/blockStatusStore';
+import {useUiStore} from '@/stores/uiStore'; // 引入 UI Store
+import {useConnectionStore} from '@/stores/connectionStore'; // 用于 SignalR 连接
 
-// 获取当前路径上的 Block 详细信息
-const currentPathBlocks = computed((): BlockDetailDto[] => {
-  const ids = narrativeStore.getCurrentPathBlockIds;
-  return ids.map(id => narrativeStore.getBlockById(id)).filter(Boolean) as BlockDetailDto[];
-});
+// 导入子组件
+import AppToolbar from '@/components/AppToolbar.vue';
+import BlockBubble from '@/components/BlockBubble.vue';
 
-// 获取当前激活的冲突
-const activeConflict = computed(() => narrativeStore.getActiveConflict);
+// --- 异步加载面板组件 ---
+// 使用 shallowRef 存储组件引用，避免不必要的深度响应
+const EntityListPanel = shallowRef(defineAsyncComponent(() => import('@/components/panels/EntityListPanel.vue')));
+const GameStatePanel = shallowRef(defineAsyncComponent(() => import('@/components/panels/GameStatePanel.vue')));
+const SettingsPanel = shallowRef(defineAsyncComponent(() => import('@/components/panels/SettingsPanel.vue')));
+// ... 其他面板
 
-// 获取润色结果
-const polishResult = computed(() => narrativeStore.getMicroWorkflowUpdate(POLISH_TARGET_ID));
+// --- Store 实例 ---
+const topologyStore = useTopologyStore();
+const blockContentStore = useBlockContentStore();
+const blockStatusStore = useBlockStatusStore();
+const uiStore = useUiStore(); // UI Store
+const connectionStore = useConnectionStore();
 
+// --- Refs ---
+const mainContentRef = ref<HTMLElement | null>(null); // 中央内容区引用 (可能不需要)
+const blockScrollerRef = ref<InstanceType<typeof DynamicScroller> | null>(null); // 滚动器引用
 
-// --- 生命周期钩子 ---
+// --- Computed ---
+
+// 当前路径上的 Block 节点 (用于 DynamicScroller)
+const currentPathBlocks = computed(() => topologyStore.getCurrentPathNodes);
+
+// 左/右面板标题和宽度 (可以从 uiStore 获取)
+const leftPanelTitle = computed(() => uiStore.leftPanelTitle || '左侧面板');
+const rightPanelTitle = computed(() => uiStore.rightPanelTitle || '右侧面板');
+const leftPanelWidth = computed(() => uiStore.leftPanelWidth);
+const rightPanelWidth = computed(() => uiStore.rightPanelWidth);
+
+// --- Methods ---
+
+// 打开/关闭面板的方法 (Toolbar 会调用)
+// 现在由 uiStore 处理，Toolbar 直接调用 uiStore.toggleLeftPanel(...) 等
+
+// --- Lifecycle and Watchers ---
+
 onMounted(async () => {
-  // 组件挂载时尝试连接 SignalR 并加载初始数据
-  if (!narrativeStore.isSignalRConnected) {
-    await narrativeStore.connectSignalR();
-  }
-  // 只有连接成功后才加载数据
-  if (narrativeStore.isSignalRConnected) {
-    if (!narrativeStore.topology) {
-      await narrativeStore.fetchTopology();
+  // 在开始关键初始化前，设置全局加载状态
+  blockStatusStore.setLoadingAction(true, '正在初始化应用...'); // <--- 设置加载状态
+
+  try {
+    // 尝试连接 SignalR
+    await connectionStore.connectSignalR();
+
+    // 连接成功后，获取初始数据
+    if (connectionStore.isSignalRConnected) {
+      console.log("App: SignalR 连接成功，开始获取初始拓扑...");
+      await topologyStore.fetchAndUpdateTopology();
+      console.log("App: 初始拓扑获取完成。");
+
+      // 获取根节点和叶节点内容
+      const fetches = [];
+      if (topologyStore.rootNode?.id) {
+        fetches.push(blockContentStore.fetchBlockDetails(topologyStore.rootNode.id));
+      }
+      if (topologyStore.currentPathLeafId && topologyStore.currentPathLeafId !== topologyStore.rootNode?.id) {
+        fetches.push(blockContentStore.fetchBlockDetails(topologyStore.currentPathLeafId));
+      }
+      if (fetches.length > 0) {
+        console.log("App: 开始获取初始 Block 内容...");
+        await Promise.allSettled(fetches);
+        console.log("App: 初始 Block 内容获取尝试完成。");
+      }
+
+      // 可能需要等待 DOM 更新后滚动条才能正确计算？ (如果 fetchAndUpdateTopology 后需要立即滚动)
+      // await nextTick();
+
+    } else {
+      // 处理连接失败
+      console.error("App: SignalR 连接失败，无法加载初始数据。");
+      // 显示错误提示给用户 (可以使用 Naive UI 的全局 API)
+      // 例如: message.error("无法连接到服务器，请检查网络或刷新页面。");
     }
-    if (Object.keys(narrativeStore.blocks).length === 0) {
-      await narrativeStore.fetchBlocks();
-    }
+  } catch (error) {
+    console.error("App: 初始化过程中发生错误:", error);
+    // 显示通用错误提示
+    // message.error(`初始化失败: ${error instanceof Error ? error.message : '未知错误'}`);
+  } finally {
+    // 无论成功或失败，最后都要取消全局加载状态
+    blockStatusStore.setLoadingAction(false); // <--- 取消加载状态
+    console.log("App: 初始化流程结束。");
   }
 });
 
-// --- 方法 ---
+// // 监听当前路径叶节点变化，滚动到视图
+// watch(() => topologyStore.currentPathLeafId, (newLeafId, oldLeafId) => {
+//   if (newLeafId && blockScrollerRef.value) {
+//     // 找到新叶节点在 currentPathBlocks 数组中的索引
+//     const index = currentPathBlocks.value.findIndex(node => node.id === newLeafId);
+//     if (index !== -1) {
+//       console.log(`App: 路径叶节点变为 ${newLeafId} (索引 ${index})，尝试滚动到视图...`);
+//       // 等待 DOM 更新后滚动
+//       nextTick(() => {
+//         blockScrollerRef.value?.scrollToItem(index, { behavior: 'smooth', block: 'nearest' });
+//         // 'nearest' 会尝试让元素尽可能少地滚动就能出现在视口中
+//         // 'center' 或 'start' 可能更适合我们的场景？需要测试
+//       });
+//     } else {
+//       console.warn(`App: 新叶节点 ${newLeafId} 在当前路径数组中未找到，无法滚动。`);
+//     }
+//   }
+// });
 
-// 加载文件处理
-const handleLoadClick = () => {
-  fileInput.value?.click();
-};
-const handleFileSelected = (event: Event) => {
-  const target = event.target as HTMLInputElement;
-  if (target.files && target.files[0]) {
-    narrativeStore.loadState(target.files[0]);
+// 监听拓扑变化，确保必要的 Block 内容被加载
+watch(() => topologyStore.nodes, (newNodes, oldNodes) => {
+  if (newNodes.size > 0) {
+    console.log("App: 拓扑节点发生变化，检查并获取当前路径 Block 内容...");
+    const pathIds = topologyStore.getCurrentPathNodes.map(n => n.id);
+    pathIds.forEach(id => {
+      // 如果内容不在缓存中，或者需要强制刷新（例如拓扑重建后），则获取
+      if (!blockContentStore.getBlockById(id)) {
+        blockContentStore.fetchBlockDetails(id);
+      }
+    });
   }
-};
-
-// 示例：解决冲突（简单地接受 AI 的指令）
-const resolveSampleConflict = (conflict: ConflictDetectedDto) => {
-  if (!conflict || !conflict.requestId || !conflict.blockId) return;
-  // 在实际应用中，你需要一个 UI 来让用户选择或合并指令
-  const resolvedCommands = conflict.aiCommands ?? []; // 这里简单接受 AI 的
-  narrativeStore.resolveConflict(conflict.requestId, conflict.blockId, resolvedCommands);
-};
-
-// 示例：触发第一个工作流 (如果根节点存在)
-const triggerFirstWorkflow = () => {
-  if (narrativeStore.rootBlockId) {
-    narrativeStore.triggerMainWorkflow(
-        narrativeStore.rootBlockId,
-        "DefaultStartWorkflow", // 假设有一个默认的开始工作流
-        { prompt: "在一个宁静的幻想村庄开始故事。" } // 示例参数
-    );
-  }
-};
-
-// 示例：调用文本润色微工作流
-const polishText = () => {
-  const contextBlockId = narrativeStore.currentPathLeafId;
-  if (!contextBlockId) {
-    alert("请先选择一个 Block 作为上下文！");
-    return;
-  }
-  narrativeStore.triggerMicroWorkflow(
-      contextBlockId,
-      POLISH_TARGET_ID, // 目标元素 ID
-      "PolishTextWorkflow", // 假设的微工作流名称
-      { text: textToPolish.value } // 传递需要润色的文本
-  );
-};
-
-// 监视连接状态变化，成功连接后加载数据
-watch(() => narrativeStore.isSignalRConnected, async (isConnected) => {
-  if (isConnected) {
-    console.log("连接成功，开始加载初始数据...");
-    if (!narrativeStore.topology) {
-      await narrativeStore.fetchTopology();
-    }
-    if (Object.keys(narrativeStore.blocks).length === 0) {
-      await narrativeStore.fetchBlocks();
-    }
-  }
-});
-
-// 监视润色结果，完成后更新输入框 (可选)
-watch(polishResult, (newResult) => {
-  if (newResult?.status === StreamStatus.COMPLETE && newResult.content) {
-    // textToPolish.value = newResult.content; // 取消注释以自动更新输入框
-  }
-})
+}, {deep: false}); // 浅监听 Map 对象本身的变化
 
 </script>
 
 <style scoped>
-.block-stream {
-  margin-top: 20px;
-  border: 1px solid #eee;
-  padding: 10px;
+.app-container {
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden; /* 防止根容器滚动 */
 }
-.block-bubble {
-  margin-bottom: 15px;
-  padding: 10px;
+
+.app-header {
+  height: 64px; /* Naive UI 默认高度 */
+  padding: 0 20px;
+  display: flex;
+  align-items: center;
+  position: sticky; /* 或者 fixed，取决于设计 */
+  top: 0;
+  z-index: 100; /* 确保在 Drawer 上方 */
+}
+
+.main-content-area {
+  /* background-color: #f5f5f5; */ /* 可选的背景色 */
+  /* 确保内容区有内边距，避免 Bubble 贴边 */
+  /* padding: 10px; 这会导致滚动条计算问题，padding 应该加在滚动器内部或项目上 */
+}
+
+.block-scroller {
+  height: 100%; /* 滚动器占满内容区 */
+}
+
+.block-scroller-item-wrapper {
+  padding: 5px 15px; /* 给 Bubble 提供左右边距和上下间距 */
+  box-sizing: border-box;
+}
+
+
+.side-panel .panel-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+/* 全局加载指示器样式 */
+.global-loading-spinner {
+  position: fixed !important; /* Naive UI Spin 默认可能是 absolute */
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999; /* 最高层级 */
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 20px;
   border-radius: 8px;
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
 }
-/* 可以添加更多样式 */
+
+/* 强制 Drawer 内容区使用系统滚动条 */
+:deep(.n-drawer-body-content-wrapper) {
+  overflow-y: auto !important;
+}
+
 </style>

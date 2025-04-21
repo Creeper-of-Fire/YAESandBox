@@ -975,7 +975,7 @@
           "GameState"
         ],
         "type": "string",
-        "description": "用于标识 Block 中可能过时的字段。"
+        "description": "用于标识 Block 中可能过时的字段。\r\n临时举措：看到ParentBlockId和ChildrenInfo时，进行一次拓扑更新。以后这个逻辑可能会迁移到专门的通知。"
       },
       "BlockDetailDto": {
         "required": [
@@ -987,11 +987,6 @@
             "minLength": 1,
             "type": "string",
             "description": "Block 的唯一标识符。"
-          },
-          "parentBlockId": {
-            "type": "string",
-            "description": "父 Block 的 ID。如果为根节点，则为 null。",
-            "nullable": true
           },
           "statusCode": {
             "$ref": "#/components/schemas/BlockStatusCode"
@@ -1007,14 +1002,6 @@
               "type": "string"
             },
             "description": "与 Block 相关的元数据字典 (键值对均为字符串)。",
-            "nullable": true
-          },
-          "childrenInfo": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            },
-            "description": "该 Block 的直接子 Block 的 ID 列表。",
             "nullable": true
           }
         },
@@ -1284,22 +1271,28 @@
         "description": "用于 API 响应，表示一个 Block 的 GameState。"
       },
       "JsonBlockNode": {
+        "required": [
+          "children",
+          "id"
+        ],
         "type": "object",
         "properties": {
           "id": {
+            "minLength": 1,
             "type": "string",
-            "nullable": true
+            "description": "节点 ID。"
           },
           "children": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/JsonBlockNode"
             },
-            "nullable": true,
+            "description": "子节点列表。",
             "readOnly": true
           }
         },
-        "additionalProperties": false
+        "additionalProperties": false,
+        "description": "用于序列化为 JSON 的内部节点表示。"
       },
       "ProblemDetails": {
         "type": "object",

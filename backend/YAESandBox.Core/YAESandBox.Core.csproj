@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <RootNamespace>YAESandBox.Core</RootNamespace>
         <LangVersion>preview</LangVersion>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
     </PropertyGroup>
 
     <ItemGroup>

@@ -6,6 +6,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <RootNamespace>YAESandBox.API</RootNamespace>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <!-- 定义输出路径，可以根据你的项目结构调整 -->
         <SwaggerJsonPath>$(MSBuildProjectDirectory)/../../frontend/src/api-client/swagger.json</SwaggerJsonPath>
         <!-- 定义 Web API 项目的 DLL 路径 -->
@@ -19,11 +20,11 @@
         <!-- 定义 Swagger JSON 输出路径 -->
         <SwaggerJsonOutputPath>$(FrontendProjectDir)/src/api-client/swagger.json</SwaggerJsonOutputPath>
         <!-- 定义 OpenAPI 生成的 TS 类型输出路径 -->
-        <ApiTypesOutputPath>$(FrontendProjectDir)/src/types/generated/api.ts</ApiTypesOutputPath>
+        <ApiTypesOutputPath>$(FrontendProjectDir)/src/types/generated/api</ApiTypesOutputPath>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0-preview.3.25172.1" />
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0-preview.3.25172.1"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1"/>
         <InternalsVisibleTo Include="YAESandBox.Tests"/>
@@ -38,7 +39,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Folder Include="wwwroot\" />
+        <Folder Include="wwwroot\"/>
     </ItemGroup>
 
     <!--    <Target Name="CreateSwaggerJson" AfterTargets="Build" Condition="$(Configuration)=='Debug'">-->
@@ -79,5 +80,44 @@
         <Message Text="TypeScript API 客户端和类型已生成到: $(ApiTypesOutputPath)" Importance="high"/>
         <Message Text="------------------------------------------------------------------" Importance="high"/>
     </Target>
+
+    <!-- Target to generate NuGet license report after build -->
+    <Target Name="GenerateLicenseReportForSolution" AfterTargets="Build">
+        <!--
+          这个 Target 会在每次成功构建 API 项目后运行 nuget-license，
+          扫描位于解决方案根目录的 .sln 文件，并将报告生成在 backend 目录下。
+          前提条件: nuget-license 工具已全局安装 (dotnet tool install -global nuget-license)
+    
+          MSBuild 属性说明:
+          $(SolutionDir)   : 解决方案文件 (.sln) 所在的目录 (例如 "YAESandBox\")
+          $(ProjectDir)    : 当前项目文件 (.csproj) 所在的目录 (例如 "YAESandBox\backend\YAESandBox.API\")
+          $(SolutionFileName): 解决方案文件的名称 (例如 "YAESandBox.sln")
+        -->
+        <Message Text="%(Target.Name): Generating NuGet license report for solution '$(SolutionFileName)'..." Importance="high" />
+
+        <!-- 定义输入解决方案文件的路径 -->
+        <PropertyGroup>
+            <SolutionFilePath Condition="Exists('$(SolutionDir)$(SolutionFileName)')">$(SolutionDir)$(SolutionFileName)</SolutionFilePath>
+            <!-- 定义输出文件的路径 -->
+            <LicenseOutputPath>$(SolutionDir)backend\licenses.json</LicenseOutputPath>
+            <!-- 定义输出目录的路径 (用于检查) -->
+            <LicenseOutputDir>$(SolutionDir)backend\</LicenseOutputDir>
+        </PropertyGroup>
+
+        <!-- 检查解决方案文件是否存在 -->
+        <Error Text="Solution file not found at '$(SolutionDir)$(SolutionFileName)'. Cannot generate license report." Condition="'$(SolutionFilePath)' == ''" />
+        <!-- 检查输出目录是否存在 (可选，Exec 可能会自动创建？保险起见) -->
+        <MakeDir Directories="$(LicenseOutputDir)" Condition="!Exists('$(LicenseOutputDir)')" />
+
+        <!-- 执行 nuget-license 命令 -->
+        <Exec Command="nuget-license -i $(SolutionFilePath) -t -o jsonPretty -fo $(LicenseOutputPath) -exclude-projects *Tests*"
+        ContinueOnError="false"
+        Condition="'$(SolutionFilePath)' != ''" />
+        <!-- 你可以在这里添加 -exclude-projects 参数来排除测试项目 -->
+        <!-- 例如: -exclude-projects "*Tests*" -->
+
+        <Message Text="%(Target.Name): NuGet license report generated at $(LicenseOutputPath)" Importance="high" Condition="Exists('$(LicenseOutputPath)')" />
+    </Target>
+
 
 </Project>

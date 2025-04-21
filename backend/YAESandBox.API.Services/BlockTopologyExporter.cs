@@ -1,8 +1,11 @@
-﻿using System.Text.Json.Serialization;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using FluentResults;
+using YAESandBox.Core;
+using YAESandBox.Core.Block;
 using YAESandBox.Depend;
 
-namespace YAESandBox.Core.Block;
+namespace YAESandBox.API.Services;
 
 public static class BlockTopologyExporter
 {
@@ -11,9 +14,19 @@ public static class BlockTopologyExporter
     /// </summary>
     public record JsonBlockNode(string Id)
     {
-        [JsonPropertyName("id")] public string Id { get; set; } = Id;
+        /// <summary>
+        /// 节点 ID。
+        /// </summary>
+        [Required]
+        [JsonPropertyName("id")]
+        public string Id { get; set; } = Id;
 
-        [JsonPropertyName("children")] public List<JsonBlockNode> Children { get; } = new();
+        /// <summary>
+        /// 子节点列表。
+        /// </summary>
+        [Required]
+        [JsonPropertyName("children")]
+        public List<JsonBlockNode> Children { get; } = new();
     }
 
     /// <summary>

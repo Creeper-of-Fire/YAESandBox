@@ -2,7 +2,15 @@
 import { createApp } from 'vue';
 import { createPinia } from 'pinia';
 import App from './App.vue';
-import { OpenAPI } from './types/generated/api.ts'; // 确认路径正确
+import { OpenAPI } from './types/generated/api'; // 确认路径正确
+// 通用字体
+import 'vfonts/Lato.css'
+// 等宽字体
+import 'vfonts/FiraCode.css'
+import naive from "naive-ui";
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'; // Import base CSS
+// @ts-ignore
+import VueVirtualScroller from 'vue-virtual-scroller'
 
 // 配置后端 API 的基础 URL
 // 通常从环境变量读取，例如 Vite 的 import.meta.env
@@ -12,7 +20,9 @@ const app = createApp(App);
 const pinia = createPinia();
 
 app.use(pinia);
-app.mount('#app');
+app.use(naive)
+app.use(VueVirtualScroller)
+app.mount('#app')
 
 // 可以在这里或 App.vue 的 onMounted 中初始化 SignalR 连接
 // import { useNarrativeStore } from './stores/narrativeStore';

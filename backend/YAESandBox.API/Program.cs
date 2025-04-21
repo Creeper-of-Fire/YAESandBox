@@ -27,8 +27,8 @@ builder.Services.AddCors(options =>
         {
             policy.WithOrigins(
                     // *** 把这里替换成你的 Vite 前端开发服务器的确切地址! ***
-                    "http://localhost:5173", // 示例 Vite 默认端口
-                    "http://127.0.0.1:5173"  // 有时也需要加上 127.0.0.1
+                    "http://localhost:4173", // 示例 Vite 默认端口
+                    "http://127.0.0.1:4173"  // 有时也需要加上 127.0.0.1
                     // 如果你的前端运行在其他地址，也要加进去
                 )
                 .AllowAnyHeader()       // 允许所有请求头

@@ -11,10 +11,6 @@ export type BlockDetailDto = {
      * Block 的唯一标识符。
      */
     blockId: string;
-    /**
-     * 父 Block 的 ID。如果为根节点，则为 null。
-     */
-    parentBlockId?: string | null;
     statusCode?: BlockStatusCode;
     /**
      * Block 的主要文本内容 (例如 AI 生成的文本、配置等)。
@@ -24,9 +20,5 @@ export type BlockDetailDto = {
      * 与 Block 相关的元数据字典 (键值对均为字符串)。
      */
     metadata?: Record<string, string> | null;
-    /**
-     * 该 Block 的直接子 Block 的 ID 列表。
-     */
-    childrenInfo?: Array<string> | null;
 };
 

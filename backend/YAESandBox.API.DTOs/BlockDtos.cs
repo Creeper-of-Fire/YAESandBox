@@ -18,11 +18,6 @@ public record BlockDetailDto
     public required string BlockId { get; init; } = null!;
 
     /// <summary>
-    /// 父 Block 的 ID。如果为根节点，则为 null。
-    /// </summary>
-    public string? ParentBlockId { get; init; }
-
-    /// <summary>
     /// Block 当前的状态码 (例如 Idle, Loading, ResolvingConflict, Error)。
     /// </summary>
     public BlockStatusCode? StatusCode { get; init; }
@@ -36,16 +31,13 @@ public record BlockDetailDto
     /// 与 Block 相关的元数据字典 (键值对均为字符串)。
     /// </summary>
     public Dictionary<string, string>? Metadata { get; init; }
-
-    /// <summary>
-    /// 该 Block 的直接子 Block 的 ID 列表。
-    /// </summary>
-    public List<string>? ChildrenInfo { get; init; }
-    // 注意：WsInput, WsPostAI, WsPostUser, WsTemp 不应直接通过 API 暴露
+    
+    // 注意：WsInput, WsPostAI, WsPostUser, WsTemp, ChildrenInfo, ParentBlockId 不应直接通过 这个DTO 暴露
 }
 
 /// <summary>
 /// 用于标识 Block 中可能过时的字段。
+/// 临时举措：看到ParentBlockId和ChildrenInfo时，进行一次拓扑更新。以后这个逻辑可能会迁移到专门的通知。
 /// </summary>
 public enum BlockDataFields
 {

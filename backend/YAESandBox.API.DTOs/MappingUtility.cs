@@ -18,8 +18,6 @@ public static class MappingUtility
         {
             { BlockDetailFields.Content, (dto, block) => dto with { BlockContent = block.BlockContent } },
             { BlockDetailFields.Metadata, (dto, block) => dto with { Metadata = new Dictionary<string, string>(block.Metadata) } },
-            { BlockDetailFields.Children, (dto, block) => dto with { ChildrenInfo = new List<string>(block.ChildrenList) } },
-            { BlockDetailFields.Parent, (dto, block) => dto with { ParentBlockId = block.ParentBlockId } }
         };
 
     /// <summary>
@@ -70,11 +68,9 @@ public static class MappingUtility
         return new BlockDetailDto
         {
             BlockId = block.BlockId,
-            ParentBlockId = block.ParentBlockId,
             StatusCode = blockStatus.StatusCode,
             BlockContent = block.BlockContent,
-            Metadata = new Dictionary<string, string>(block.Metadata),
-            ChildrenInfo = new List<string>(block.ChildrenList)
+            Metadata = new Dictionary<string, string>(block.Metadata)
         };
     }
 }
@@ -86,6 +82,4 @@ public enum BlockDetailFields
 {
     Content,
     Metadata,
-    Children,
-    Parent
 }

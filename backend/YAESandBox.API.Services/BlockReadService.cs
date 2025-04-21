@@ -5,7 +5,7 @@ using YAESandBox.Core.Block;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
-using static YAESandBox.Core.Block.BlockTopologyExporter;
+using static YAESandBox.API.Services.BlockTopologyExporter;
 
 namespace YAESandBox.API.Services;
 
@@ -98,11 +98,9 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
         return new BlockDetailDto
         {
             BlockId = block.Block.BlockId,
-            ParentBlockId = block.Block.ParentBlockId,
             StatusCode = block.StatusCode,
             BlockContent = block.Block.BlockContent,
-            Metadata = new Dictionary<string, string>(block.Block.Metadata), // Return copy
-            ChildrenInfo = new List<string>(block.Block.ChildrenList) // Return copy
+            Metadata = new Dictionary<string, string>(block.Block.Metadata)
         };
     }
 }
