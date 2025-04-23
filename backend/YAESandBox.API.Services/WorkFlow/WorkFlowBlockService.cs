@@ -72,16 +72,9 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
         }
 
         Log.Info("工作流生成的指令和当前修改存在冲突，等待手动解决。");
+        
+        await this.NotifierService.NotifyConflictDetectedAsync(blockId);
 
-        await this.NotifierService.NotifyConflictDetectedAsync(new ConflictDetectedDto
-        {
-            RequestId = requestId,
-            BlockId = blockId,
-            AiCommands = conflictBlock.AiCommands.ToAtomicOperationRequests(),
-            UserCommands = conflictBlock.UserCommands.ToAtomicOperationRequests(),
-            ConflictingAiCommands = conflictBlock.conflictingAiCommands.ToAtomicOperationRequests(),
-            ConflictingUserCommands = conflictBlock.conflictingUserCommands.ToAtomicOperationRequests(),
-        });
         return conflictBlock;
     }
 

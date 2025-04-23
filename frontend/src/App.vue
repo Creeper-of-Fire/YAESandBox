@@ -135,7 +135,7 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
 // 导入 Stores
 import {useTopologyStore} from '@/stores/topologyStore';
 import {useBlockContentStore} from '@/stores/blockContentStore';
-import { useBlockStatusStore } from './stores/useBlockStatusStore';
+import { useBlockStatusStore } from './stores/blockStatusStore';
 import {useUiStore} from '@/stores/uiStore'; // 引入 UI Store
 import {useConnectionStore} from '@/stores/connectionStore'; // 用于 SignalR 连接
 
@@ -191,6 +191,7 @@ onMounted(async () => {
   }
 });
 
+// TODO QOL：滚动/切换到最新生成的block
 // // 监听当前路径叶节点变化，滚动到视图
 // watch(() => topologyStore.currentPathLeafId, (newLeafId, oldLeafId) => {
 //   if (newLeafId && blockScrollerRef.value) {

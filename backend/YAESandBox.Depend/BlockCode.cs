@@ -30,12 +30,7 @@ public enum BlockStatusCode
     /// Block 不存在。某些地方强制要求返回一个返回值，但是没找到block又不想返回null时使用。
     /// 也有可能是获取状态时确实没找到。
     /// </summary>
-    NotFound,
-    
-    /// <summary>
-    /// Block 已删除。
-    /// </summary>
-    Deleted
+    NotFound
 }
 
 /// <summary>

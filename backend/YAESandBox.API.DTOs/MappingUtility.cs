@@ -1,4 +1,5 @@
-﻿using YAESandBox.Core.Block;
+﻿using YAESandBox.API.DTOs.WebSocket;
+using YAESandBox.Core.Block;
 using YAESandBox.Depend;
 
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
@@ -65,12 +66,25 @@ public static class MappingUtility
     public static BlockDetailDto MapToDetailDto(this BlockStatus blockStatus)
     {
         var block = blockStatus.Block;
+
         return new BlockDetailDto
         {
             BlockId = block.BlockId,
             StatusCode = blockStatus.StatusCode,
             BlockContent = block.BlockContent,
-            Metadata = new Dictionary<string, string>(block.Metadata)
+            Metadata = new Dictionary<string, string>(block.Metadata),
+            ConflictDetected = (blockStatus as ConflictBlockStatus)?.MapToConflictDetectedDto(),
+        };
+    }
+
+    public static ConflictDetectedDto MapToConflictDetectedDto(this ConflictBlockStatus conflictBlockStatus)
+    {
+        return new ConflictDetectedDto
+        {
+            AiCommands = conflictBlockStatus.AiCommands.ToAtomicOperationRequests(),
+            UserCommands = conflictBlockStatus.UserCommands.ToAtomicOperationRequests(),
+            ConflictingAiCommands = conflictBlockStatus.conflictingAiCommands.ToAtomicOperationRequests(),
+            ConflictingUserCommands = conflictBlockStatus.conflictingUserCommands.ToAtomicOperationRequests(),
         };
     }
 }

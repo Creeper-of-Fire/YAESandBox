@@ -42,7 +42,7 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
     public async Task<BlockDetailDto?> GetBlockDetailDtoAsync(string blockId)
     {
         var block = await this.GetBlockAsync(blockId);
-        return block == null ? null : this.MapToDetailDto(block);
+        return block?.MapToDetailDto();
     }
 
     ///<inheritdoc/>
@@ -90,17 +90,5 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
             Log.Error(ex, $"Block '{blockId}': 获取实体 '{entityRef}' 详情时出错: {ex.Message}");
             return null;
         }
-    }
-
-    // --- DTO Mapping Helpers ---
-    private BlockDetailDto MapToDetailDto(BlockStatus block)
-    {
-        return new BlockDetailDto
-        {
-            BlockId = block.Block.BlockId,
-            StatusCode = block.StatusCode,
-            BlockContent = block.Block.BlockContent,
-            Metadata = new Dictionary<string, string>(block.Block.Metadata)
-        };
     }
 }

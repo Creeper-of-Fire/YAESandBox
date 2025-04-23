@@ -10,14 +10,6 @@ import type { AtomicOperationRequestDto } from './AtomicOperationRequestDto';
  */
 export type ConflictDetectedDto = {
     /**
-     * 发生冲突的 Block 的 ID。
-     */
-    blockId: string;
-    /**
-     * 关联的原始工作流请求 ID。
-     */
-    requestId: string;
-    /**
      * 工作流（AI）生成的 **完整** 原子操作列表。
      */
     aiCommands: Array<AtomicOperationRequestDto>;

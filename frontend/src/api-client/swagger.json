@@ -1003,6 +1003,9 @@
             },
             "description": "与 Block 相关的元数据字典 (键值对均为字符串)。",
             "nullable": true
+          },
+          "conflictDetected": {
+            "$ref": "#/components/schemas/ConflictDetectedDto"
           }
         },
         "additionalProperties": false,
@@ -1014,8 +1017,7 @@
           "Idle",
           "ResolvingConflict",
           "Error",
-          "NotFound",
-          "Deleted"
+          "NotFound"
         ],
         "type": "string",
         "description": "表示 Block 的不同状态。"
@@ -1073,24 +1075,12 @@
       "ConflictDetectedDto": {
         "required": [
           "aiCommands",
-          "blockId",
           "conflictingAiCommands",
           "conflictingUserCommands",
-          "requestId",
           "userCommands"
         ],
         "type": "object",
         "properties": {
-          "blockId": {
-            "minLength": 1,
-            "type": "string",
-            "description": "发生冲突的 Block 的 ID。"
-          },
-          "requestId": {
-            "minLength": 1,
-            "type": "string",
-            "description": "关联的原始工作流请求 ID。"
-          },
           "aiCommands": {
             "type": "array",
             "items": {

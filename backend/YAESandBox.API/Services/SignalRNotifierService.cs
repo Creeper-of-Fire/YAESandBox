@@ -95,12 +95,12 @@ public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext
     /// <summary>
     /// 检测到指令冲突就发送这个通知
     /// </summary>
-    /// <param name="conflict"></param>
+    /// <param name="blockId"></param>
     /// <returns></returns>
-    public async Task NotifyConflictDetectedAsync(ConflictDetectedDto conflict)
+    public async Task NotifyConflictDetectedAsync(string blockId)
     {
-        Log.Debug($"准备通过 SignalR 发送 ConflictDetected: RequestId={conflict.RequestId}, BlockId={conflict.BlockId}");
-        await this.hubContext.Clients.All.ReceiveConflictDetected(conflict);
-        Log.Debug($"ConflictDetected for RequestId={conflict.RequestId} 已发送。");
+        Log.Debug($"准备通过 SignalR 发送 ConflictDetected: BlockId={blockId}");
+        await this.hubContext.Clients.All.ReceiveConflictDetected(blockId);
+        Log.Debug($"ConflictDetected 已发送。");
     }
 }

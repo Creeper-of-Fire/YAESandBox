@@ -29,9 +29,9 @@ public interface IGameClient
     /// <summary>
     /// 检测到主工作流存在冲突
     /// </summary>
-    /// <param name="conflict"></param>
+    /// <param name="blockId"></param>
     /// <returns></returns>
-    Task ReceiveConflictDetected(ConflictDetectedDto conflict);
+    Task ReceiveConflictDetected(string blockId);
 
     /// <summary>
     /// Block内部数据存在更新，建议重新获取

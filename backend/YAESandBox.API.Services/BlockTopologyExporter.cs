@@ -89,7 +89,7 @@ public static class BlockTopologyExporter
 
         if (!currentBlockStatus.ChildrenList.Any())
             return jsonNode;
-        if (depth == -1) //不太确定，可能应该是0才是“假设为单链情况下，最大深度”，不过这应该不影响任何东西，毕竟深度只是个保险。
+        if (depth <= 0) //不太确定，可能应该是0才是“假设为单链情况下，最大深度”，不过这应该不影响任何东西，毕竟深度只是个保险。
             return jsonNode;
 
         // 递归处理所有子节点

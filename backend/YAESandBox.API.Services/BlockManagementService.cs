@@ -77,7 +77,8 @@ public class BlockManagementService(IBlockManager blockManager, INotifierService
 
             if (result != ManagementResult.Success)
                 return result;
-            await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, BlockStatusCode.Deleted);
+            // TODO 换成其他的更新方式或者不更新
+            // await this.notifierService.NotifyBlockStatusUpdateAsync(blockId, BlockStatusCode.Deleted);
 
             // 通知父 Block 结构变化
             if (oldParentId != null)

@@ -68,6 +68,8 @@ public class BlockManagementController(
                 return this.StatusCode(StatusCodes.Status500InternalServerError, "创建 Block 时发生内部错误。");
         }
     }
+    
+    //TODO 增加一个复制节点的功能
 
     /// <summary>
     /// 手动删除一个指定的 Block。

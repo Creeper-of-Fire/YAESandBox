@@ -45,13 +45,14 @@ public interface INotifierService
     /// <returns></returns>
     [Obsolete("目前我们不使用这个玩意，而是只通知可能发生变更的Block。", true)]
     Task NotifyBlockDetailUpdateAsync(string blockId, params BlockDetailFields[] changedFields);
-
+    
+        
     /// <summary>
     /// 检测到指令冲突就发送这个通知
     /// </summary>
-    /// <param name="conflict"></param>
+    /// <param name="blockId"></param>
     /// <returns></returns>
-    Task NotifyConflictDetectedAsync(ConflictDetectedDto conflict);
+    Task NotifyConflictDetectedAsync(string blockId);
 
     /// <summary>
     /// 发送Block状态更新到前端

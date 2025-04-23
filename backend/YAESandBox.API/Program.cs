@@ -28,12 +28,14 @@ builder.Services.AddCors(options =>
             policy.WithOrigins(
                     // *** 把这里替换成你的 Vite 前端开发服务器的确切地址! ***
                     "http://localhost:4173", // 示例 Vite 默认端口
-                    "http://127.0.0.1:4173"  // 有时也需要加上 127.0.0.1
+                    "http://127.0.0.1:4173", // 有时也需要加上 127.0.0.1
+                    "http://localhost:5173", // 示例 Vite 默认端口
+                    "http://127.0.0.1:5173" // 有时也需要加上 127.0.0.1
                     // 如果你的前端运行在其他地址，也要加进去
                 )
-                .AllowAnyHeader()       // 允许所有请求头
-                .AllowAnyMethod()       // 允许所有 HTTP 方法 (GET, POST, PUT, etc.)
-                .AllowCredentials();    // *** SignalR 必须允许凭据 ***
+                .AllowAnyHeader() // 允许所有请求头
+                .AllowAnyMethod() // 允许所有 HTTP 方法 (GET, POST, PUT, etc.)
+                .AllowCredentials(); // *** SignalR 必须允许凭据 ***
         });
 });
 
@@ -43,6 +45,14 @@ builder.Services.AddControllers()
     {
         // Serialize enums as strings in requests/responses
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        
+        // --- 增加最大序列化深度 ---
+        // 设置一个足够大的值以容纳你预期的最大嵌套层级。
+        // 注意：非常大的值可能会消耗更多内存和序列化时间。
+        // 64 是一个常见的起点，如果不够可以增加到 128 或更高。
+        // 0 表示没有限制，但不推荐，因为它可能隐藏无限递归问题或导致性能问题。
+        options.JsonSerializerOptions.MaxDepth = 0; // <<< 增加最大深度，例如 128 层
+        // --- 最大深度设置结束 ---
     });
 
 // --- OpenAPI / Swagger ---

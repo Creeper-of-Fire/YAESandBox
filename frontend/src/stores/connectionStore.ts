@@ -115,10 +115,10 @@ export const useConnectionStore = defineStore('connection', () => {
             // 2. 获取根节点和当前路径叶节点的内容
             const fetches = [];
             if (topologyStore.rootNode?.id) {
-                fetches.push(blockContentStore.fetchBlockDetails(topologyStore.rootNode.id));
+                fetches.push(blockContentStore.fetchAllBlockDetails(topologyStore.rootNode.id));
             }
             if (topologyStore.currentPathLeafId && topologyStore.currentPathLeafId !== topologyStore.rootNode?.id) {
-                fetches.push(blockContentStore.fetchBlockDetails(topologyStore.currentPathLeafId));
+                fetches.push(blockContentStore.fetchAllBlockDetails(topologyStore.currentPathLeafId));
             }
             if (fetches.length > 0) {
                 console.log("ConnectionStore: 获取初始 Block 内容...");

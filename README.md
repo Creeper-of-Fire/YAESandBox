@@ -47,7 +47,7 @@
     *   **服务器 -> 客户端:**
         *   `ReceiveBlockStatusUpdate`: 通知 Block 状态变化 (Idle, Loading, ResolvingConflict, Error)。
         *   `ReceiveDisplayUpdate`: 推送工作流生成的内容（流式或完整），并通过 `TargetElementId` 区分是更新主 Block 显示区还是特定 UI 元素。使用 `StreamStatus` 指示流状态。
-        *   `ReceiveConflictDetected`: 当主工作流完成但检测到与用户修改冲突时发送，包含冲突详情。
+        *   `ReceiveConflictDetected`: 当主工作流完成但检测到与用户修改冲突时发送。
         *   `ReceiveStateUpdateSignal`: 轻量级信号，提示客户端某个 Block 的状态可能已更新，鼓励重新获取数据。
 
 *   **核心状态管理 (`BlockManager`)**:

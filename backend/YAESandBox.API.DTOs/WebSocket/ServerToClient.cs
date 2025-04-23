@@ -96,17 +96,17 @@ public record DisplayUpdateDto(
 /// </summary>
 public record ConflictDetectedDto
 {
-    /// <summary>
-    /// 发生冲突的 Block 的 ID。
-    /// </summary>
-    [Required]
-    public required string BlockId { get; init; }
-
-    /// <summary>
-    /// 关联的原始工作流请求 ID。
-    /// </summary>
-    [Required]
-    public required string RequestId { get; init; }
+    // /// <summary>
+    // /// 发生冲突的 Block 的 ID。
+    // /// </summary>
+    // [Required]
+    // public required string BlockId { get; init; }
+    //
+    // /// <summary>
+    // /// 关联的原始工作流请求 ID。
+    // /// </summary>
+    // [Required]
+    // public required string RequestId { get; init; }
 
     /// <summary>工作流（AI）生成的 **完整** 原子操作列表。</summary>
     [Required]

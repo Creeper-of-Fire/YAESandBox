@@ -54,6 +54,7 @@ export const useTopologyStore = defineStore('topology', {
                 path.push(currentNode);
                 currentNode = currentNode.parent;
             }
+            console.log(`TopologyStore: 调用节点生成，长度：${path.length}`);
             return path.reverse(); // 从根到叶
         },
         /** 获取指定节点的所有子节点引用 */
@@ -97,7 +98,7 @@ export const useTopologyStore = defineStore('topology', {
                 this._buildGraphFromTopology(newRawTopology);
 
                 // 验证并设置路径
-                this._validateAndSetPath();
+                this._updateLeafAndPathRecursivelyFromRoot();
 
                 console.log("TopologyStore: 拓扑更新完成。根节点:", this.rootNode?.id, "叶节点:", this.currentPathLeafId);
 
@@ -155,7 +156,7 @@ export const useTopologyStore = defineStore('topology', {
 
 
         /**
-         * [内部方法] 在拓扑重建后，验证当前路径选择和叶节点是否有效，
+         * [内部方法] 在刷新页面/载入后，验证当前路径选择和叶节点是否有效，
          * 如果无效或不存在，则设置默认路径。
          */
         _validateAndSetPath() {
@@ -175,14 +176,14 @@ export const useTopologyStore = defineStore('topology', {
                 }
                 this.currentPathLeafId = null;
                 this.pathSelection = {};
-                this.setDefaultPathSelection();
+                this._updateLeafAndPathRecursivelyFromRoot();
             }
-            // 可选：再次检查叶节点是否存在于 BlockContentStore (内容缓存)
-            if (this.currentPathLeafId && !blockContentStore.getBlockById(this.currentPathLeafId)) {
-                console.warn(`TopologyStore: 当前叶节点 ${this.currentPathLeafId} 在内容缓存中不存在，可能需要获取其内容。`);
-                // 可以在这里触发获取叶节点内容
-                // blockContentStore.fetchBlockDetails(this.currentPathLeafId);
-            }
+            // // 可选：再次检查叶节点是否存在于 BlockContentStore (内容缓存)
+            // if (this.currentPathLeafId && !blockContentStore.getBlockById(this.currentPathLeafId)) {
+            //     console.warn(`TopologyStore: 当前叶节点 ${this.currentPathLeafId} 在内容缓存中不存在，可能需要获取其内容。`);
+            //     // 可以在这里触发获取叶节点内容
+            //     // blockContentStore.fetchBlockDetails(this.currentPathLeafId);
+            // }
         },
 
         /**
@@ -232,9 +233,9 @@ export const useTopologyStore = defineStore('topology', {
                     nextNode = children.find(child => child.id === currentSelection);
                 }
 
-                // 如果没有有效选择，或选择无效，则默认选第一个
+                // 如果没有有效选择，或选择无效，则默认选最后一个
                 if (!nextNode) {
-                    nextNode = children[0];
+                    nextNode = children[children.length - 1];
                     this.pathSelection[parentId] = nextNode.id; // 更新选择
                     console.log(`TopologyStore: (递归更新) 父 ${parentId} 默认/更新选择子 ${nextNode.id}`);
                 }
@@ -273,9 +274,9 @@ export const useTopologyStore = defineStore('topology', {
         },
 
         /**
-         * 设置默认的路径选择（通常是根节点的第一个子孙的最深处）。
+         * 从根节点开始，递归设置路径和叶节点。
          */
-        setDefaultPathSelection() {
+        _updateLeafAndPathRecursivelyFromRoot() {
             console.log("TopologyStore: 尝试设置默认路径选择...");
             if (!this.rootNode || this.rootNode.children.length === 0) {
                 console.log("TopologyStore: 无法设置默认路径，根节点或其子节点不存在。");
@@ -318,6 +319,7 @@ export const useTopologyStore = defineStore('topology', {
             console.log("TopologyStore: 从存档恢复当前叶节点:", this.currentPathLeafId);
             // 恢复后，通常需要调用 _validateAndSetPath() 来确保与当前加载的拓扑一致
             this._validateAndSetPath();
+            // TODO 之后应该存储所有叶节点，以及当前选择路径的叶节点，用于全面恢复数据
         }
     }
 });

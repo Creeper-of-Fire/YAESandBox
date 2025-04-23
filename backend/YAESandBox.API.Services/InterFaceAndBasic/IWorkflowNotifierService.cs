@@ -15,4 +15,5 @@ public interface IWorkflowNotifierService
     /// <param name="update"></param>
     /// <returns></returns>
     Task NotifyDisplayUpdateAsync(DisplayUpdateDto update);
+
 }

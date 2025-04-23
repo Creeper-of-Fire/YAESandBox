@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using YAESandBox.API.DTOs.WebSocket;
 using YAESandBox.Core.Block;
 using YAESandBox.Depend;
 
@@ -31,6 +32,11 @@ public record BlockDetailDto
     /// 与 Block 相关的元数据字典 (键值对均为字符串)。
     /// </summary>
     public Dictionary<string, string>? Metadata { get; init; }
+    
+    /// <summary>
+    /// 冲突信息（如果有冲突）
+    /// </summary>
+    public ConflictDetectedDto? ConflictDetected { get; init; }
     
     // 注意：WsInput, WsPostAI, WsPostUser, WsTemp, ChildrenInfo, ParentBlockId 不应直接通过 这个DTO 暴露
 }

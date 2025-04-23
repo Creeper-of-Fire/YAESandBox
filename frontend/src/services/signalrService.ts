@@ -1,12 +1,10 @@
 ﻿// src/services/signalrService.ts
 import * as signalR from "@microsoft/signalr";
 import {OpenAPI} from '@/types/generated/api/core/OpenAPI'; // 用于获取 BASE URL
-import { useBlockStatusStore } from '@/stores/useBlockStatusStore';
+import { useBlockStatusStore } from '@/stores/blockStatusStore';
 import {useConnectionStore} from '@/stores/connectionStore';
-// TopologyStore 和 BlockContentStore 通常不由 SignalR Service 直接调用，
-// 它们的状态更新由 BlockStatusStore 在处理完信号后触发。
 // import { useTopologyStore } from '../stores/topologyStore';
-// import { useBlockContentStore } from '../stores/blockContentStore';
+import { useBlockContentStore } from '../stores/blockContentStore';
 import {eventBus} from './eventBus'; // 导入事件总线
 import type {
     BlockStatusUpdateDto,
@@ -43,6 +41,20 @@ function getStatusStore() {
         console.error("SignalR Service: 无法获取 Pinia Store (BlockStatusStore)。请确保 Pinia 已初始化。", error);
         // 返回一个模拟对象或抛出错误，防止后续代码出错
         throw new Error("Pinia store (BlockStatusStore) not available.");
+        // 或者返回一个安全的空操作对象：
+        // return { setSignalRConnectionStatus: () => {}, handleBlockStatusUpdate: () => {}, ... };
+    }
+}
+
+function getBlockStore() {
+    // 这里假设 Pinia 已经初始化
+    // 在实际应用中，你可能需要在调用此函数前确保 Pinia 设置完成
+    try {
+        return useBlockContentStore();
+    } catch (error) {
+        console.error("SignalR Service: 无法获取 Pinia Store (BlockContentStore)。请确保 Pinia 已初始化。", error);
+        // 返回一个模拟对象或抛出错误，防止后续代码出错
+        throw new Error("Pinia store (BlockContentStore) not available.");
         // 或者返回一个安全的空操作对象：
         // return { setSignalRConnectionStatus: () => {}, handleBlockStatusUpdate: () => {}, ... };
     }
@@ -100,7 +112,7 @@ async function startConnection(baseUrl: string): Promise<void> {
     connection.on("ReceiveBlockStatusUpdate", (data: BlockStatusUpdateDto) => {
         console.log("SignalR: 收到 BlockStatusUpdate", data);
         try {
-            getStatusStore().handleBlockStatusUpdate(data);
+            getStatusStore().handleBlockStatusUpdate(data.blockId, data.statusCode);
         } catch (error) {
             console.error("SignalR: 处理 BlockStatusUpdate 时出错:", error);
         }
@@ -122,9 +134,13 @@ async function startConnection(baseUrl: string): Promise<void> {
                 };
                 console.log(`SignalR: 发布事件 ${eventName}`, eventData);
                 eventBus.emit(eventName, eventData);
-
+                // 由于微工作流也可能含有 contextBlockId，因此在这里截断。
+                return;
             } else if (data.contextBlockId) {
                 // --- 主流程/重新生成更新 -> BlockStatusStore ---
+                if (data.streamingStatus === StreamStatus.COMPLETE){
+                    getBlockStore().fetchAllBlockDetails(data.contextBlockId);
+                }
                 getStatusStore().handleBlockDisplayUpdate(data);
             } else {
                 console.warn("SignalR: 收到无效的 DisplayUpdate DTO (无 contextBlockId 或 targetElementId)", data);
@@ -135,12 +151,12 @@ async function startConnection(baseUrl: string): Promise<void> {
     });
 
     // 冲突检测 -> BlockStatusStore
-    connection.on("ReceiveConflictDetected", (data: ConflictDetectedDto) => {
-        console.warn("SignalR: 收到 ConflictDetected", data);
+    connection.on("ReceiveConflictDetected", (blockId: string) => {
+        console.warn("SignalR: 收到 ConflictDetected", blockId);
         try {
-            getStatusStore().handleConflictDetected(data);
+            getStatusStore().handleConflictDetected(blockId);
         } catch (error) {
-            console.error("SignalR: 处理 ConflictDetected 时出错:", error);
+            console.error("SignalR: 处理 ConflictDetected 时出错:", blockId);
         }
     });
 

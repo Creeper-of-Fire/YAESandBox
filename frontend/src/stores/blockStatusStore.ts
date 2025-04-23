@@ -11,15 +11,11 @@ import {useBlockContentStore} from './blockContentStore';
 import {eventBus} from "@/services/eventBus.ts";
 
 interface BlockStatusState {
-    blockStatuses: Record<string, BlockStatusCode>; // Block ID -> 实时状态码
-    activeConflict: ConflictDetectedDto | null;    // 当前待解决的冲突
     isLoadingAction: boolean;                   // 全局操作加载状态标志
     loadingActionMessage: string | null;       // （可选）加载时显示的消息
 }
 
 const defaultState: BlockStatusState = {
-    blockStatuses: {},
-    activeConflict: null,
     isLoadingAction: false,
     loadingActionMessage: null,
 };
@@ -29,12 +25,16 @@ export const useBlockStatusStore = defineStore('blockStatus', {
 
     getters: {
         /** 获取指定 ID 的 Block 实时状态码 */
-        getBlockStatus(state): (id: string) => BlockStatusCode | undefined {
-            return (id: string) => state.blockStatuses[id];
-        },
-        /** 获取当前激活的冲突信息 */
-        getActiveConflict(state): ConflictDetectedDto | null {
-            return state.activeConflict;
+        getBlockStatus(): (id: string) => BlockStatusCode | undefined {
+            const blockContentStore = useBlockContentStore();
+
+            return (id: string) => {
+                let status: BlockStatusCode | undefined;
+                status = blockContentStore.blocks[id]?.statusCode;
+                // if (status)
+                //     console.log(`BlockStatusState: ${id}statusCode改变为${status.toString()}`);
+                return status;
+            };
         },
         /** 获取全局操作加载状态 */
         getIsLoadingAction(state): boolean {
@@ -46,116 +46,50 @@ export const useBlockStatusStore = defineStore('blockStatus', {
         },
         /** 检查指定 Block 是否处于加载状态 */
         isBlockLoading(): (id: string) => boolean {
-            return (id: string) => this.blockStatuses[id] === BlockStatusCode.LOADING;
+            return (id: string) => this.getBlockStatus(id) === BlockStatusCode.LOADING;
         },
         /** 检查指定 Block 是否处于冲突待解决状态 */
         isBlockResolvingConflict(): (id: string) => boolean {
-            return (id: string) => this.blockStatuses[id] === BlockStatusCode.RESOLVING_CONFLICT;
+            return (id: string) => this.getBlockStatus(id) === BlockStatusCode.RESOLVING_CONFLICT;
         },
         /** 检查指定 Block 是否处于错误状态 */
         isBlockInError(): (id: string) => boolean {
-            return (id: string) => this.blockStatuses[id] === BlockStatusCode.ERROR;
+            return (id: string) => this.getBlockStatus(id) === BlockStatusCode.ERROR;
         },
     },
 
     actions: {
-        //TODO 临时举措
+
         /**
          * [SignalR Handler] 处理 Block 状态更新。
          */
-        handleBlockStatusUpdate(data: BlockStatusUpdateDto) {
-            if (!data.blockId || !data.statusCode) return;
+        handleBlockStatusUpdate(blockID: string, statusCode: BlockStatusCode) {
+            if (!blockID || !statusCode) return;
 
-            const blockId = data.blockId;
-            const newStatusCode = data.statusCode;
-            const oldStatusCode = this.blockStatuses[blockId];
+            const blockId = blockID;
+            const newStatusCode = statusCode;
+            const oldStatusCode = this.getBlockStatus(blockId);
             const blockContentStore = useBlockContentStore();
-            const topologyStore = useTopologyStore();
 
             console.log(`BlockStatusStore: 收到 Block ${blockId} 状态更新: ${oldStatusCode} -> ${newStatusCode}`);
+            blockContentStore.fetchAllBlockDetails(blockId);
 
-            // 统一更新状态码
-            this.blockStatuses[blockId] = newStatusCode;
+            // 不再在这里统一更新状态码，而是在处理完成以后进行一次全量更新
 
-            // 清理旧冲突 (如果状态不再是 ResolvingConflict)
-            if (newStatusCode !== BlockStatusCode.RESOLVING_CONFLICT && this.activeConflict?.blockId === blockId) {
-                console.log(`BlockStatusStore: Block ${blockId} 状态不再是 ResolvingConflict，清除激活的冲突状态。`);
-                this.activeConflict = null;
-            }
-
-            // *** 新增：处理新 Block 出现 (首次出现且为 Loading) ***
-            if (oldStatusCode === undefined && newStatusCode === BlockStatusCode.LOADING) {
-                console.warn(`BlockStatusStore: 检测到新的 Block ${blockId} (状态 Loading)，触发拓扑更新！(临时方案)`);
-                topologyStore.fetchAndUpdateTopology(); // <--- 触发拓扑更新
-                // 同时，获取这个新 Block 的初始详情
-                console.log(`BlockStatusStore: (新 Block) 获取 Block ${blockId} 详情...`);
-                blockContentStore.fetchBlockDetails(blockId); // 无需等待
-            }
-            // *** 结束新增逻辑 ***
-            else if (
-                newStatusCode === BlockStatusCode.IDLE ||
-                newStatusCode === BlockStatusCode.ERROR ||
-                newStatusCode === BlockStatusCode.RESOLVING_CONFLICT
-            ) {
-                // 工作流完成（或进入冲突解决）
-                console.log(`BlockStatusStore: Block ${blockId} 变为 ${newStatusCode}，获取最终详情...`);
-                // 确保获取最终的 Block 内容和元数据
-                blockContentStore.fetchBlockDetails(blockId, true); // 强制刷新
-            } else if (newStatusCode === BlockStatusCode.DELETED) {
-                // Block 被删除
-                console.log(`BlockStatusStore: Block ${blockId} 状态变为 Deleted，清理状态并通知拓扑更新...`);
-                delete this.blockStatuses[blockId];
-                if (this.activeConflict?.blockId === blockId) {
-                    this.activeConflict = null;
-                }
-                // 清理 ContentStore 缓存 (虽然 fetch 404 也会做，但这里更主动)
-                delete blockContentStore.blocks[blockId];
-                // 触发拓扑更新
-                topologyStore.fetchAndUpdateTopology();
-            } else if (newStatusCode === BlockStatusCode.NOT_FOUND) {
-                // 后端明确告知未找到
-                console.warn(`BlockStatusStore: Block ${blockId} 状态为 NotFound，清理状态。`);
-                delete this.blockStatuses[blockId];
-                delete blockContentStore.blocks[blockId];
-                if (this.activeConflict?.blockId === blockId) {
-                    this.activeConflict = null;
-                }
-                // 考虑是否需要更新拓扑
-                topologyStore.fetchAndUpdateTopology();
-            }
-        },
-
-        //TODO 临时举措
-        /**
-         * [内部调用] 直接设置指定 Block 的状态码。
-         * 主要供 BlockContentStore 在 fetchBlockDetails 后同步状态使用。
-         * @param blockId Block ID
-         * @param statusCode 新的状态码
-         */
-        setBlockStatusDirectly(blockId: string, statusCode: BlockStatusCode) {
-            if (!blockId || !statusCode) return;
-
-            const oldStatusCode = this.blockStatuses[blockId];
-            if (oldStatusCode !== statusCode) {
-                console.log(`BlockStatusStore [DirectSet]: 设置 Block ${blockId} 状态: ${oldStatusCode} -> ${statusCode}`);
-                this.blockStatuses[blockId] = statusCode;
-
-                // 如果新状态不是 ResolvingConflict，清理可能存在的旧冲突
-                if (statusCode !== BlockStatusCode.RESOLVING_CONFLICT && this.activeConflict?.blockId === blockId) {
-                    this.activeConflict = null;
-                }
-                // 如果状态是 Deleted 或 NotFound，也清理冲突
-                if ((statusCode === BlockStatusCode.DELETED || statusCode === BlockStatusCode.NOT_FOUND) && this.activeConflict?.blockId === blockId) {
-                    this.activeConflict = null;
-                }
-
-            } else {
-                // console.log(`BlockStatusStore [DirectSet]: Block ${blockId} 状态已经是 ${statusCode}，无需更新。`);
-                // 即使状态没变，也确保它在 map 里存在
-                if (!(blockId in this.blockStatuses)) {
-                    this.blockStatuses[blockId] = statusCode;
-                }
-            }
+            // if (newStatusCode === BlockStatusCode.LOADING ||
+            //     newStatusCode === BlockStatusCode.IDLE ||
+            //     newStatusCode === BlockStatusCode.ERROR ||
+            //     newStatusCode === BlockStatusCode.RESOLVING_CONFLICT
+            // ) {
+            //     // 工作流完成（或进入冲突解决）
+            //     console.log(`BlockStatusStore: Block ${blockId} 变为 ${newStatusCode}，获取全量更新...`);
+            //     // 确保获取最终的 Block 内容和元数据
+            //     blockContentStore.fetchAllBlockDetails(blockId);
+            // } else if (newStatusCode === BlockStatusCode.NOT_FOUND) {
+            //     // 后端明确告知未找到
+            //     console.warn(`BlockStatusStore: Block ${blockId} 状态为 NotFound，清理状态。`);
+            //     delete blockContentStore.blocks[blockId];
+            // } 删除逻辑也完全在blockContentStore实现了
         },
 
 
@@ -179,7 +113,7 @@ export const useBlockStatusStore = defineStore('blockStatus', {
             if (!blockContentStore.getBlockById(blockId)) {
                 console.warn(`BlockStatusStore: 收到 Block ${blockId} 内容更新，但其详情不在缓存中，先获取详情...`);
                 // 异步获取，本次更新可能应用不上，后续更新会应用
-                blockContentStore.fetchBlockDetails(blockId).then(() => {
+                blockContentStore.fetchAllBlockDetails(blockId).then(() => {
                     // 获取成功后，尝试应用一次收到的内容（如果状态允许）
                     // 这里的逻辑比较微妙，可能需要更复杂的处理来确保不丢失更新
                     // 简单起见：依赖后续的 DisplayUpdate
@@ -205,19 +139,16 @@ export const useBlockStatusStore = defineStore('blockStatus', {
         /**
          * [SignalR Handler] 处理检测到的冲突。
          */
-        handleConflictDetected(data: ConflictDetectedDto) {
-            if (!data.blockId) return;
+        handleConflictDetected(blockId: string) {
+            const blockContentStore = useBlockContentStore();
+            if (!blockId) return;
 
             // 检查 Block 是否还存在 (可能在收到冲突前被删了)
-            if (!this.blockStatuses[data.blockId] || this.blockStatuses[data.blockId] === BlockStatusCode.DELETED) {
-                console.warn(`BlockStatusStore: 收到已删除或未知 Block ${data.blockId} 的冲突信息，忽略。`);
+            if (!this.getBlockStatus(blockId)) {
+                console.warn(`BlockStatusStore: 收到已删除或未知 Block ${blockId} 的冲突信息，忽略。`);
                 return;
             }
-
-            this.activeConflict = data;
-            // 强制设置状态为 ResolvingConflict
-            this.blockStatuses[data.blockId] = BlockStatusCode.RESOLVING_CONFLICT;
-            console.warn(`BlockStatusStore: Block ${data.blockId} 检测到冲突，状态强制设为 ResolvingConflict。`);
+            blockContentStore.fetchAllBlockDetails(blockId)
         },
 
         /**
@@ -232,7 +163,7 @@ export const useBlockStatusStore = defineStore('blockStatus', {
             console.log(`BlockStatusStore: 收到 Block ${blockId} 的更新信号`, changedFields);
 
             // 检查 Block 是否已知，如果未知则忽略信号 (或获取详情?)
-            if (!this.blockStatuses[blockId] || this.blockStatuses[blockId] === BlockStatusCode.DELETED) {
+            if (!this.getBlockStatus(blockId)) {
                 console.warn(`BlockStatusStore: 收到未知或已删除 Block ${blockId} 的更新信号，忽略。`);
                 return;
             }
@@ -282,12 +213,12 @@ export const useBlockStatusStore = defineStore('blockStatus', {
             // 如果需要获取详情 (且拓扑没触发全局刷新，或者就是需要最新的内容)
             if (requiresDetailFetch && !hasTopologyChange) {
                 console.log(`BlockStatusStore: 信号指示内容/元数据等改变，获取 Block ${blockId} 详情...`);
-                blockContentStore.fetchBlockDetails(blockId, true); // 强制刷新
+                blockContentStore.fetchAllBlockDetails(blockId); // 强制刷新
             } else if (requiresDetailFetch && hasTopologyChange) {
                 console.log(`BlockStatusStore: 拓扑已触发更新，但信号也包含其他字段，为保险起见，仍获取 Block ${blockId} 详情...`);
                 // 在拓扑更新后可能需要再次获取详情，或者依赖拓扑更新后的路径验证逻辑
                 // 简单起见，也获取一次
-                blockContentStore.fetchBlockDetails(blockId, true);
+                blockContentStore.fetchAllBlockDetails(blockId);
             }
         },
 
@@ -308,8 +239,6 @@ export const useBlockStatusStore = defineStore('blockStatus', {
          * 清除所有状态 (用于加载新存档前)。
          */
         clearAllStatuses() {
-            this.blockStatuses = {};
-            this.activeConflict = null;
             this.isLoadingAction = false;
             this.loadingActionMessage = null;
             console.log("BlockStatusStore: 状态已清除。");

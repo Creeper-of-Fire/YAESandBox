@@ -143,7 +143,7 @@ export const usePersistenceStore = defineStore('persistence', () => {
             // 6. (可选) 触发加载当前路径上 Block 的内容 (fetchAndUpdateTopology 可能已部分处理)
             console.log("PersistenceStore: 触发加载当前路径 Block 内容...");
             const pathIds = topologyStore.getCurrentPathNodes.map(n => n.id);
-            const fetchPromises = pathIds.map(id => blockContentStore.fetchBlockDetails(id));
+            const fetchPromises = pathIds.map(id => blockContentStore.fetchAllBlockDetails(id));
             await Promise.allSettled(fetchPromises); // 等待所有内容获取尝试完成
 
             console.log("PersistenceStore: 会话加载完成。");

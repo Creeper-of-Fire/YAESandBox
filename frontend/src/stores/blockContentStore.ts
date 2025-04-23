@@ -1,16 +1,15 @@
 ﻿import {defineStore} from 'pinia';
 import type {BlockDetailDto, UpdateBlockDetailsDto} from '@/types/generated/api';
 import {BlocksService, BlockStatusCode} from '@/types/generated/api'; // 引入用于检查状态
-import { useBlockStatusStore } from './blockStatusStore';
+import {useBlockStatusStore} from './blockStatusStore';
+import {useTopologyStore} from './topologyStore';
 
 interface BlockContentState {
     blocks: Record<string, BlockDetailDto>; // ID -> Detail DTO 缓存
-    isLoading: Set<string>;
 }
 
 const defaultState: BlockContentState = {
     blocks: {},
-    isLoading: new Set(),
 };
 
 export const useBlockContentStore = defineStore('blockContent', {
@@ -24,54 +23,38 @@ export const useBlockContentStore = defineStore('blockContent', {
     },
 
     actions: {
+
         /**
-         * 获取指定 Block 的详细信息并更新缓存，同时同步状态码到 BlockStatusStore。
+         * 获取指定 Block 的全部详细信息并更新缓存。
          * @param blockId 要获取的 Block ID。
-         * @param forceRefetch 是否强制重新获取，即使缓存中已存在。
          */
-        async fetchBlockDetails(blockId: string, forceRefetch: boolean = false) {
-            // 引入 BlockStatusStore
-            const statusStore = useBlockStatusStore();
-
-            if (this.isLoading.has(blockId)) return;
-            // 仅当非强制且缓存存在，并且状态缓存也存在时才跳过 (确保状态也被初始化了)
-            // if (!forceRefetch && this.blocks[blockId] && statusStore.getBlockStatus(blockId)) return;
-            // 简化：如果缓存存在，通常状态也应该存在或即将通过此方法设置，所以只检查缓存
-            if (!forceRefetch && this.blocks[blockId]) return;
-
-
-            this.isLoading.add(blockId);
-            console.log(`BlockContentStore: 开始获取 Block ${blockId} 详情 (强制: ${forceRefetch})...`);
+        async fetchAllBlockDetails(blockId: string) {
+            console.log(`BlockContentStore: 开始获取 Block ${blockId} 详情...`);
             try {
-                const blockData = await BlocksService.getApiBlocks1({ blockId });
+                const blockData = await BlocksService.getApiBlocks1({blockId});
+                const topologyStore = useTopologyStore();
                 console.log(`BlockContentStore: Block ${blockId} 详情获取成功，状态码: ${blockData.statusCode}`);
 
                 // 检查获取到的 Block 是否有效
-                if (blockData.statusCode === BlockStatusCode.DELETED || blockData.statusCode === BlockStatusCode.NOT_FOUND) {
+                if (blockData.statusCode === BlockStatusCode.NOT_FOUND) {
                     console.warn(`BlockContentStore: 获取到 Block ${blockId} 状态为 ${blockData.statusCode}，从内容缓存移除。`);
                     delete this.blocks[blockId];
-                    // 同步状态到 StatusStore (标记为 Deleted 或 NotFound)
-                    statusStore.setBlockStatusDirectly(blockId, blockData.statusCode); // <--- 新增方法调用
                 } else {
                     // 更新内容缓存
+                    if (!this.blocks[blockId])
+                        await topologyStore.fetchAndUpdateTopology();
+
+                    console.log(`BlockStatusState: ${blockId}statusCode改变为${blockData.statusCode}`);
+
                     this.blocks[blockId] = blockData;
                     console.log(`BlockContentStore: Block ${blockId} 详情已更新缓存。`);
-
-                    // *** 关键：将获取到的状态码同步到 BlockStatusStore ***
-                    statusStore.setBlockStatusDirectly(blockId, blockData.statusCode ?? BlockStatusCode.IDLE); // <--- 新增方法调用 (提供默认 Idle 以防万一)
-                    console.log(`BlockContentStore: 已同步 Block ${blockId} 状态 (${blockData.statusCode ?? 'Idle'}) 到 StatusStore。`);
                 }
             } catch (error: any) {
                 console.error(`BlockContentStore: 获取 Block ${blockId} 详情失败`, error);
                 if ((error as any).status === 404) {
                     console.warn(`BlockContentStore: 获取 Block ${blockId} 详情失败 (404)，从内容缓存移除。`);
                     delete this.blocks[blockId];
-                    // 同步状态为 NotFound
-                    statusStore.setBlockStatusDirectly(blockId, BlockStatusCode.NOT_FOUND); // <--- 新增方法调用
                 }
-                // 其他错误，暂时保留旧缓存（如果有），状态也可能保持不变或未知
-            } finally {
-                this.isLoading.delete(blockId);
             }
         },
 
@@ -94,8 +77,7 @@ export const useBlockContentStore = defineStore('blockContent', {
                 // 可能是 BlockStatusUpdate 比 fetchBlockDetails 先到
                 console.warn(`BlockContentStore: 尝试更新未知 Block ${blockId} 的内容。可能丢失更新。尝试获取其详情...`);
                 // 触发一次详情获取，希望能补上
-                this.fetchBlockDetails(blockId);
-                // 注意：这次更新可能丢失，因为 fetch 是异步的。更好的做法是 BlockStatusStore 在处理 DisplayUpdate 时检查 contentStore 中是否存在 block，如果不存在则先 fetch 再更新。
+                this.fetchAllBlockDetails(blockId);
             }
         },
 
@@ -156,7 +138,6 @@ export const useBlockContentStore = defineStore('blockContent', {
          */
         clearAllBlocks() {
             this.blocks = {};
-            this.isLoading.clear();
             console.log("BlockContentStore: 缓存已清除。");
         },
     }

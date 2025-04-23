@@ -299,8 +299,9 @@ public class WorkflowService(
             Log.Error(ex, $"Block '{blockId}': 工作流 '{request.WorkflowName}' 执行过程中发生异常: {ex.Message}");
         }
 
-        await this.blockServices.HandleWorkflowCompletionAsync(blockId, request.RequestId,
+        var blockResult = await this.blockServices.HandleWorkflowCompletionAsync(blockId, request.RequestId,
             success, rawTextResult, generatedCommands.ToAtomicOperationRequests(), outputVariables);
+        
         Log.Debug($"Block '{blockId}': 已通知 BlockManager 工作流完成状态: Success={success}");
 
         // 发送最终完成状态 (如果需要单独通知)

@@ -150,11 +150,6 @@
 *   **方法名:** `ReceiveConflictDetected`
 *   **参数:** `ConflictDetectedDto`
     *   `blockId` (string): 发生冲突的 Block ID。
-    *   `requestId` (string): 关联的原始工作流请求 ID。
-    *   `aiCommands` (List<`AtomicOperationRequestDto`>): 工作流生成的指令。
-    *   `userCommands` (List<`AtomicOperationRequestDto`>): 用户提交的指令。
-    *   `conflictingAiCommands` (List<`AtomicOperationRequestDto`>): 冲突的 AI 指令子集。
-    *   `conflictingUserCommands` (List<`AtomicOperationRequestDto`>): 冲突的用户指令子集。
 *   **客户端处理:**
     *   找到 `blockId` 对应的 Block。
     *   向用户展示冲突详情，提供解决界面。
