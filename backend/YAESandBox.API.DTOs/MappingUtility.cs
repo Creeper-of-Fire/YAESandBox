@@ -87,6 +87,15 @@ public static class MappingUtility
             ConflictingUserCommands = conflictBlockStatus.conflictingUserCommands.ToAtomicOperationRequests(),
         };
     }
+    
+    public static BlockTopologyNodeDto MapToBlockTopologyNodeDto(this Block block)
+    {
+        return new BlockTopologyNodeDto
+        {
+            BlockId = block.BlockId,
+            ParentBlockId = block.ParentBlockId,
+        };
+    }
 }
 
 /// <summary>

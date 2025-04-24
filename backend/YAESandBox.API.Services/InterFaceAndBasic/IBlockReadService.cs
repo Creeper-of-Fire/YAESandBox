@@ -8,7 +8,7 @@ namespace YAESandBox.API.Services.InterFaceAndBasic;
 public interface IBlockReadService
 {
     Task<IReadOnlyDictionary<string, BlockDetailDto>> GetAllBlockDetailsAsync();
-    Task<BlockTopologyExporter.JsonBlockNode?> GetBlockTopologyJsonAsync(string? blockId);
+    Task<List<BlockTopologyNodeDto>> GetBlockTopologyListAsync(string? blockId);
     Task<BlockDetailDto?> GetBlockDetailDtoAsync(string blockId);
     Task<GameState?> GetBlockGameStateAsync(string blockId);
     Task<IEnumerable<BaseEntity>?> GetAllEntitiesSummaryAsync(string blockId); // 返回 Core 对象供 Controller 映射

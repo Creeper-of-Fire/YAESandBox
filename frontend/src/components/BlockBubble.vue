@@ -1,4 +1,5 @@
 ﻿<template>
+  <!-- TODO 改成Naive样式 -->
   <div
       class="block-bubble-container"
       :class="{
@@ -70,7 +71,7 @@
           class="action-button"
           title="重新生成当前 Block 内容"
       >
-        🔄 重新生成
+        🔄 重新生成(WIP)
       </button>
 
       <!-- 删除 -->
@@ -95,8 +96,8 @@ import {computed, onMounted} from 'vue';
 import {v4 as uuidv4} from 'uuid';
 import {useTopologyStore} from '@/stores/topologyStore';
 import {useBlockContentStore} from '@/stores/blockContentStore';
-import { useBlockStatusStore } from '@/stores/blockStatusStore';
-import {BlockStatusCode, type RegenerateBlockRequestDto} from '@/types/generated/api'; // 引入 Enum
+import {useBlockStatusStore} from '@/stores/blockStatusStore';
+import {BlockStatusCode, type ConflictDetectedDto, type RegenerateBlockRequestDto} from '@/types/generated/api'; // 引入 Enum
 import type {ProcessedBlockNode} from '@/stores/topologyStore'; // 引入处理后的节点类型
 import {signalrService} from '@/services/signalrService'; // <--- 导入 signalrService
 import {BlockManagementService} from '@/types/generated/api'; // <--- 导入用于删除的 REST API Service
@@ -121,14 +122,16 @@ const blockDetail = computed(() => blockContentStore.getBlockById(props.blockId)
 /** 获取当前 Block 的状态码 */
 const status = computed<BlockStatusCode | undefined>(() => blockStatusStore.getBlockStatus(props.blockId));
 
+// --- 基于状态码的计算属性 ---
 /** 是否处于加载状态 */
 const isLoading = computed(() => status.value === BlockStatusCode.LOADING);
-
 /** 是否处于错误状态 */
 const isError = computed(() => status.value === BlockStatusCode.ERROR);
-
 /** 是否处于冲突解决状态 */
 const isResolvingConflict = computed(() => status.value === BlockStatusCode.RESOLVING_CONFLICT);
+
+/** 获取冲突详情 */
+const conflictDetails = computed<ConflictDetectedDto | undefined>(() => blockDetail.value?.conflictDetected);
 
 /** 获取要显示的内容 */
 const displayContent = computed(() => blockDetail.value?.blockContent ?? ""); // 直接从详情获取
@@ -211,7 +214,12 @@ const pageRight = () => {
   }
 };
 
+/** TODO 以后可能我们还需要一个复制本block为兄弟节点，或者把对当前Block的修改应用到一个新生成的父节点上的功能。
+ 比如，可能我们对IDLE状态的Block的修改都是临时修改，而点击生成按钮就会自动应用，然后除了“应用并生成”以外还有一个“复制并生成”的按钮。
+ **/
+
 /** 重新生成当前 Block */
+// TODO 目前逻辑是完全错误的，我们实际上需要获得父节点的相关内容之类的。而且父节点不可用时也需要锁死这个按钮。
 const regenerate = async () => {
   if (globalLoadingAction.value) return;
   // 状态检查已在 :disabled 中完成

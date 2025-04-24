@@ -1,6 +1,5 @@
 ﻿import {defineStore} from 'pinia';
-import {BlocksService} from '@/types/generated/api';
-import type {JsonBlockNode} from '@/types/generated/api';
+import {BlocksService, type BlockTopologyNodeDto} from '@/types/generated/api';
 import {useBlockContentStore} from './blockContentStore'; // Needed for checking node existence during rebuild
 
 // 内部处理后的节点结构，包含父子引用
@@ -12,7 +11,7 @@ export interface ProcessedBlockNode {
 }
 
 interface TopologyState {
-    rawTopology: JsonBlockNode | null;         // 从 API 获取的原始拓扑 JSON
+    rawTopology: BlockTopologyNodeDto[] | null;         // 从 API 获取的原始拓扑 JSON
     nodes: Map<string, ProcessedBlockNode>;    // ID -> ProcessedBlockNode 映射，方便快速查找
     rootNode: ProcessedBlockNode | null;       // 内存图中根节点的引用
     pathSelection: Record<string, string>;     // 父节点ID -> 选择的子节点ID
@@ -28,6 +27,9 @@ const defaultState: TopologyState = {
     currentPathLeafId: null,
     isLoading: false,
 };
+
+// 定义根节点 ID 常量 (与后端一致)
+const WORLD_ROOT_ID = "__WORLD__";
 
 export const useTopologyStore = defineStore('topology', {
     state: (): TopologyState => ({...defaultState}),
@@ -114,44 +116,94 @@ export const useTopologyStore = defineStore('topology', {
         },
 
         /**
-         * [内部方法] 根据原始 JsonBlockNode 递归构建内存图 (ProcessedBlockNode)。
-         * @param rawNode - 当前处理的原始 JSON 节点。
-         * @param parentNode - 当前节点的父节点 (ProcessedBlockNode 引用)。
-         * @returns 构建好的 ProcessedBlockNode。
+         * [内部方法] 根据扁平的 BlockTopologyNodeDto 列表构建内存图 (ProcessedBlockNode)。
+         * @param flatList - 从 API 获取的扁平节点列表。
          */
-        _buildGraphFromTopology(rawNode: JsonBlockNode | null, parentNode: ProcessedBlockNode | null = null): ProcessedBlockNode | null {
-            if (!rawNode) return null;
-
+        _buildGraphFromTopology(flatList: BlockTopologyNodeDto[] | null) {
             // 清空旧图，准备重建
             this.nodes.clear();
             this.rootNode = null;
-            console.log("TopologyStore: 开始构建内存图...");
 
-            const recursiveBuild = (
-                currentRaw: JsonBlockNode,
-                currentParent: ProcessedBlockNode | null
-            ): ProcessedBlockNode => {
-                // 创建新节点
+            if (!flatList || flatList.length === 0) {
+                console.warn("TopologyStore: 接收到的扁平拓扑列表为空，无法构建图。");
+                return; // 如果列表为空，直接返回
+            }
+
+            console.log("TopologyStore: 开始从扁平列表构建内存图...");
+
+            // 第一次遍历：创建所有节点实例并放入 Map
+            for (const dto of flatList) {
+                // 基本验证
+                if (!dto.blockId) {
+                    console.warn("TopologyStore: 发现缺少 blockId 的节点数据，已跳过:", dto);
+                    continue;
+                }
                 const newNode: ProcessedBlockNode = {
-                    id: currentRaw.id,
-                    parent: currentParent,
-                    children: [], // 先初始化为空
+                    id: dto.blockId,
+                    parent: null, // 稍后设置
+                    children: [],  // 稍后设置
                 };
+                if (!this.nodes.has(newNode.id)) { // 防止重复 ID (理论上不应发生)
+                    this.nodes.set(newNode.id, newNode);
+                } else {
+                    console.warn(`TopologyStore: 发现重复的 Block ID '${newNode.id}'，已忽略。`);
+                }
+            }
+            console.log(`TopologyStore: 第一遍完成，创建了 ${this.nodes.size} 个节点实例。`);
 
-                // 存入 Map
-                this.nodes.set(newNode.id, newNode);
 
-                // 处理子节点
-                newNode.children = currentRaw.children
-                    .map(rawChild => recursiveBuild(rawChild, newNode)) // 递归构建子节点
-                    .filter(child => child !== null) as ProcessedBlockNode[]; // 过滤掉可能的 null (虽然理论上不应有)
+            // 第二次遍历：连接父子关系
+            let foundRoot: ProcessedBlockNode | null = null;
+            for (const node of this.nodes.values()) { // 遍历 Map 中的节点
+                // 从原始 DTO 中找到对应的数据来获取 parentId (或者在第一次遍历时存起来)
+                const dto = flatList.find(d => d.blockId === node.id); // 效率稍低，但简单
+                // 优化：可以在第一次遍历时创建一个 Map<string, string | null> 来存储 parentId
 
-                return newNode;
-            };
+                if (!dto) {
+                    console.error(`TopologyStore: 逻辑错误，无法在原始列表中找到节点 ${node.id} 的 DTO。`);
+                    continue;
+                }
 
-            this.rootNode = recursiveBuild(rawNode, null);
-            console.log(`TopologyStore: 内存图构建完成，共 ${this.nodes.size} 个节点。`);
-            return this.rootNode; // 返回根节点，虽然主要目的是更新 state.nodes 和 state.rootNode
+                const parentId = dto.parentBlockId;
+
+                if (parentId) {
+                    const parentNode = this.nodes.get(parentId);
+                    if (parentNode) {
+                        node.parent = parentNode;
+                        // 确保不重复添加子节点 (虽然理论上第二次遍历不会重复)
+                        if (!parentNode.children.some(child => child.id === node.id)) {
+                            parentNode.children.push(node);
+                        }
+                    } else {
+                        // 父节点 ID 存在，但在 Map 中找不到 -> 数据不一致
+                        console.warn(`TopologyStore: 节点 ${node.id} 的父节点 ID '${parentId}' 在节点列表中未找到，可能数据不一致或父节点在子树范围外。`);
+                        // 这种节点视为孤儿节点或次级根节点 (如果允许的话)
+                    }
+                } else {
+                    // parentId 为 null 或 undefined，这应该是根节点
+                    if (node.id === WORLD_ROOT_ID) { // 确认是全局根节点
+                        foundRoot = node;
+                    } else {
+                        // 如果允许非 __WORLD__ 的根节点（例如获取子树时）
+                        // 或者是有父ID但父节点丢失的情况
+                        if (!foundRoot) foundRoot = node; // 如果还没找到根，将第一个无父节点设为根
+                        console.warn(`TopologyStore: 节点 ${node.id} 没有父节点，被视为根节点或孤儿节点。`);
+                    }
+                }
+            }
+
+            // 设置根节点
+            if (foundRoot) {
+                this.rootNode = foundRoot;
+                console.log(`TopologyStore: 内存图构建完成，根节点已设置为 ${this.rootNode.id}。`);
+            } else if (this.nodes.size > 0) {
+                console.error("TopologyStore: 内存图构建完成，但未找到有效的根节点！");
+                // 尝试找第一个节点作为根？或者报错？
+                this.rootNode = this.nodes.values().next().value ?? null;
+                if(this.rootNode) console.warn(`TopologyStore: 回退：将第一个节点 ${this.rootNode.id} 设置为根节点。`);
+            } else {
+                console.log("TopologyStore: 内存图构建完成，没有节点被创建。");
+            }
         },
 
 

@@ -428,12 +428,12 @@
         "tags": [
           "Blocks"
         ],
-        "summary": "基于特定根节点，获取以其为根的 Block 树的拓扑结构 (基于 ID 的嵌套关系)。\r\n返回一个表示 Block 树层级结构的 JSON 对象，最外层即为根节点。",
+        "summary": "获取扁平化的 Block 拓扑结构信息。\r\n返回一个包含所有 Block (或指定子树下所有 Block) 的拓扑信息的列表，\r\n每个对象包含其 ID 和父节点 ID，用于在客户端重建层级关系。",
         "parameters": [
           {
             "name": "blockId",
             "in": "query",
-            "description": "目标根节点的ID。如果为空则指向**最高根节点**，能返回整个树的完整拓扑结构。",
+            "description": "（可选）目标根节点的 ID。\r\n如果提供，则返回以此节点为根的子树（包含自身）的扁平拓扑信息。\r\n如果为 null 或空，则返回从最高根节点 (__WORLD__) 开始的整个应用的完整扁平拓扑结构。",
             "schema": {
               "type": "string"
             }
@@ -441,17 +441,56 @@
         ],
         "responses": {
           "200": {
-            "description": "成功返回 JSON 格式的拓扑结构。\r\n            形如：{ \"id\": \"__WORLD__\", \"children\": [{ \"id\": \"child1\", \"children\": [] },{ \"id\": \"child2\", \"children\": [] }] }",
+            "description": "成功返回扁平化的拓扑节点列表。\r\n            列表中的每个对象形如：{ \"blockId\": \"some-id\", \"parentBlockId\": \"parent-id\" } 或 { \"blockId\": \"__WORLD__\", \"parentBlockId\": null }。\r\n            例如：[ { \"blockId\": \"__WORLD__\", \"parentBlockId\": null }, { \"blockId\": \"child1\", \"parentBlockId\": \"__WORLD__\" }, ... ]",
             "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlockTopologyNodeDto"
+                  }
+                }
+              },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/JsonBlockNode"
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlockTopologyNodeDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlockTopologyNodeDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "如果指定了 blockId，但未找到具有该 ID 的 Block。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
           },
           "500": {
-            "description": "生成拓扑结构时发生内部服务器错误。"
+            "description": "获取拓扑结构时发生内部服务器错误。"
           }
         }
       }
@@ -1041,6 +1080,26 @@
         "additionalProperties": false,
         "description": "(服务器 -> 客户端)\r\n通知客户端某个 Block 的状态码发生了变化。"
       },
+      "BlockTopologyNodeDto": {
+        "required": [
+          "blockId"
+        ],
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Block 的唯一标识符。"
+          },
+          "parentBlockId": {
+            "type": "string",
+            "description": "父 Block 的 ID。如果为根节点，则为 null。",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "表示扁平化拓扑结构中的单个节点信息。"
+      },
       "BlockUpdateSignalDto": {
         "required": [
           "blockId"
@@ -1259,30 +1318,6 @@
         },
         "additionalProperties": false,
         "description": "用于 API 响应，表示一个 Block 的 GameState。"
-      },
-      "JsonBlockNode": {
-        "required": [
-          "children",
-          "id"
-        ],
-        "type": "object",
-        "properties": {
-          "id": {
-            "minLength": 1,
-            "type": "string",
-            "description": "节点 ID。"
-          },
-          "children": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/JsonBlockNode"
-            },
-            "description": "子节点列表。",
-            "readOnly": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "用于序列化为 JSON 的内部节点表示。"
       },
       "ProblemDetails": {
         "type": "object",

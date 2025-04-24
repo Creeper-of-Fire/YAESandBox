@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { BlockDetailDto } from '../models/BlockDetailDto';
-import type { JsonBlockNode } from '../models/JsonBlockNode';
+import type { BlockTopologyNodeDto } from '../models/BlockTopologyNodeDto';
 import type { UpdateBlockDetailsDto } from '../models/UpdateBlockDetailsDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -82,20 +82,24 @@ export class BlocksService {
         });
     }
     /**
-     * 基于特定根节点，获取以其为根的 Block 树的拓扑结构 (基于 ID 的嵌套关系)。
-     * 返回一个表示 Block 树层级结构的 JSON 对象，最外层即为根节点。
-     * @returns JsonBlockNode 成功返回 JSON 格式的拓扑结构。
-     * 形如：{ "id": "__WORLD__", "children": [{ "id": "child1", "children": [] },{ "id": "child2", "children": [] }] }
+     * 获取扁平化的 Block 拓扑结构信息。
+     * 返回一个包含所有 Block (或指定子树下所有 Block) 的拓扑信息的列表，
+     * 每个对象包含其 ID 和父节点 ID，用于在客户端重建层级关系。
+     * @returns BlockTopologyNodeDto 成功返回扁平化的拓扑节点列表。
+     * 列表中的每个对象形如：{ "blockId": "some-id", "parentBlockId": "parent-id" } 或 { "blockId": "__WORLD__", "parentBlockId": null }。
+     * 例如：[ { "blockId": "__WORLD__", "parentBlockId": null }, { "blockId": "child1", "parentBlockId": "__WORLD__" }, ... ]
      * @throws ApiError
      */
     public static getApiBlocksTopology({
         blockId,
     }: {
         /**
-         * 目标根节点的ID。如果为空则指向**最高根节点**，能返回整个树的完整拓扑结构。
+         * （可选）目标根节点的 ID。
+         * 如果提供，则返回以此节点为根的子树（包含自身）的扁平拓扑信息。
+         * 如果为 null 或空，则返回从最高根节点 (__WORLD__) 开始的整个应用的完整扁平拓扑结构。
          */
         blockId?: string,
-    }): CancelablePromise<JsonBlockNode> {
+    }): CancelablePromise<Array<BlockTopologyNodeDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Blocks/topology',
@@ -103,7 +107,8 @@ export class BlocksService {
                 'blockId': blockId,
             },
             errors: {
-                500: `生成拓扑结构时发生内部服务器错误。`,
+                404: `如果指定了 blockId，但未找到具有该 ID 的 Block。`,
+                500: `获取拓扑结构时发生内部服务器错误。`,
             },
         });
     }

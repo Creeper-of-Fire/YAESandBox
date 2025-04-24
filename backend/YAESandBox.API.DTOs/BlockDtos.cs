@@ -32,12 +32,12 @@ public record BlockDetailDto
     /// 与 Block 相关的元数据字典 (键值对均为字符串)。
     /// </summary>
     public Dictionary<string, string>? Metadata { get; init; }
-    
+
     /// <summary>
     /// 冲突信息（如果有冲突）
     /// </summary>
     public ConflictDetectedDto? ConflictDetected { get; init; }
-    
+
     // 注意：WsInput, WsPostAI, WsPostUser, WsTemp, ChildrenInfo, ParentBlockId 不应直接通过 这个DTO 暴露
 }
 
@@ -76,4 +76,21 @@ public record UpdateBlockDetailsDto
     /// 如果整个字典为 null，则不修改 Metadata。
     /// </summary>
     public Dictionary<string, string?>? MetadataUpdates { get; init; }
+}
+
+/// <summary>
+/// 表示扁平化拓扑结构中的单个节点信息。
+/// </summary>
+public class BlockTopologyNodeDto
+{
+    /// <summary>
+    /// Block 的唯一标识符。
+    /// </summary>
+    [Required]
+    public required string BlockId { get; set; }
+
+    /// <summary>
+    /// 父 Block 的 ID。如果为根节点，则为 null。
+    /// </summary>
+    public string? ParentBlockId { get; set; }
 }

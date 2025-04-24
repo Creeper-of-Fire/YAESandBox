@@ -15,7 +15,7 @@ namespace YAESandBox.API.Controllers;
 /// <param name="readServices"></param>
 [ApiController]
 [Route("api/[controller]")] // /api/blocks
-public class BlocksController(IBlockWritService writServices, IBlockReadService readServices) 
+public class BlocksController(IBlockWritService writServices, IBlockReadService readServices)
     : APIControllerBase(readServices, writServices)
 {
     /// <summary>
@@ -51,39 +51,58 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     }
 
     /// <summary>
-    /// 基于特定根节点，获取以其为根的 Block 树的拓扑结构 (基于 ID 的嵌套关系)。
-    /// 返回一个表示 Block 树层级结构的 JSON 对象，最外层即为根节点。
+    /// 获取扁平化的 Block 拓扑结构信息。
+    /// 返回一个包含所有 Block (或指定子树下所有 Block) 的拓扑信息的列表，
+    /// 每个对象包含其 ID 和父节点 ID，用于在客户端重建层级关系。
     /// </summary>
-    /// <param name="blockId">目标根节点的ID。如果为空则指向**最高根节点**，能返回整个树的完整拓扑结构。</param>
-    /// <returns>表示 Block 拓扑结构的 JSON 对象。</returns>
-    /// <response code="200">成功返回 JSON 格式的拓扑结构。
-    /// 形如：{ "id": "__WORLD__", "children": [{ "id": "child1", "children": [] },{ "id": "child2", "children": [] }] }</response>
-    /// <response code="500">生成拓扑结构时发生内部服务器错误。</response>
-    [HttpGet("topology")]
-    [ProducesResponseType(typeof(BlockTopologyExporter.JsonBlockNode), StatusCodes.Status200OK, "application/json")]
-    // 明确内容类型和返回类型
+    /// <param name="blockId">
+    /// （可选）目标根节点的 ID。
+    /// 如果提供，则返回以此节点为根的子树（包含自身）的扁平拓扑信息。
+    /// 如果为 null 或空，则返回从最高根节点 (__WORLD__) 开始的整个应用的完整扁平拓扑结构。
+    /// </param>
+    /// <returns>包含 Block 节点信息的扁平列表。</returns>
+    /// <response code="200">成功返回扁平化的拓扑节点列表。
+    /// 列表中的每个对象形如：{ "blockId": "some-id", "parentBlockId": "parent-id" } 或 { "blockId": "__WORLD__", "parentBlockId": null }。
+    /// 例如：[ { "blockId": "__WORLD__", "parentBlockId": null }, { "blockId": "child1", "parentBlockId": "__WORLD__" }, ... ]
+    /// </response>
+    /// <response code="404">如果指定了 blockId，但未找到具有该 ID 的 Block。</response>
+    /// <response code="500">获取拓扑结构时发生内部服务器错误。</response>
+    [HttpGet("topology")] 
+    [ProducesResponseType(typeof(List<BlockTopologyNodeDto>), StatusCodes.Status200OK)] // 返回 DTO 列表
+    [ProducesResponseType(StatusCodes.Status404NotFound)] // 添加 404
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> GetTopology(string? blockId)
+    public async Task<ActionResult<List<BlockTopologyNodeDto>>> GetTopology(string? blockId) // 方法名修改，返回类型修改
     {
         try
         {
-            // 调用 Service 获取 JSON 字符串
-            var topologyJson = await this.blockReadService.GetBlockTopologyJsonAsync(blockId);
+            // 调用 Service 获取扁平列表 (需要 BlockReadService 实现新方法)
+            var flatTopologyList = await this.blockReadService.GetBlockTopologyListAsync(blockId);
 
-            if (topologyJson != null)
-                // 直接返回 JSON 字符串，设置正确的 ContentType
-                // ContentResult 会自动处理字符串内容和 ContentType
-                return this.Ok(topologyJson);
+            // 检查 Service 返回结果
+            if (flatTopologyList.Any()) 
+                return this.Ok(flatTopologyList); // 成功获取到列表 (即使是空列表也算成功)
+            
+            // 如果提供了 blockId 但 Service 返回 null，通常意味着 blockId 不存在
+            if (!string.IsNullOrEmpty(blockId))
+            {
+                Log.Warning($"GetFlatTopology API: 未找到指定的根节点 blockId '{blockId}'。");
+                return this.NotFound($"未找到指定的根节点 blockId '{blockId}'。");
+            }
 
-            // 如果 service 返回 null，表示生成失败
-            Log.Error("GetTopology API: BlockReadService.GetBlockTopologyJsonAsync 返回值为空，生成失败。");
-            return this.StatusCode(StatusCodes.Status500InternalServerError, "无法生成 Block 拓扑结构。");
+            // 如果 blockId 为空但仍然返回 null，说明获取整个拓扑失败
+            Log.Error("GetFlatTopology API: BlockReadService.GetBlockHierarchyAsync 返回 null，获取完整拓扑失败。");
+            return this.StatusCode(StatusCodes.Status500InternalServerError, "无法获取 Block 拓扑结构。");
+        }
+        catch (ArgumentException ex) // 可以捕获更具体的服务层异常，例如 ID 不存在
+        {
+            Log.Warning(ex, $"GetFlatTopology API: 处理请求时参数无效 (可能 blockId 不存在)。 BlockId: {blockId}");
+            return this.NotFound($"未找到或处理节点 blockId '{blockId}' 时出错。");
         }
         catch (Exception ex)
         {
-            // 捕获 Service 层或更深层可能抛出的未处理异常
-            Log.Error(ex, "GetTopology API: 生成拓扑结构时发生意外错误。");
-            return this.StatusCode(StatusCodes.Status500InternalServerError, "发生意外错误。");
+            // 捕获其他未处理异常
+            Log.Error(ex, $"GetFlatTopology API: 获取扁平拓扑结构时发生意外错误。BlockId: {blockId}");
+            return this.StatusCode(StatusCodes.Status500InternalServerError, "获取拓扑结构时发生意外错误。");
         }
     }
 
@@ -115,7 +134,7 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     {
         if (!this.ModelState.IsValid) // 基本模型验证
             return this.BadRequest(this.ModelState);
-        
+
         var result = await this.blockWritService.UpdateBlockDetailsAsync(blockId, updateDto);
 
         return result switch

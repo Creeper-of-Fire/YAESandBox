@@ -45,6 +45,12 @@ public static class Log
         _logger.Warning(message);
     }
 
+    public static void Warning(Exception exception, string message)
+    {
+        _logger.Warning(message);
+    }
+
+    
     public static void Error(string message)
     {
         _logger.Error(message);

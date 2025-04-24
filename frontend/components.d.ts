@@ -10,9 +10,11 @@ declare module 'vue' {
   export interface GlobalComponents {
     AppToolbar: typeof import('./src/components/AppToolbar.vue')['default']
     BlockBubble: typeof import('./src/components/BlockBubble.vue')['default']
+    BlockBubbleStream: typeof import('./src/components/BlockBubbleStream.vue')['default']
     ConnectionStatus: typeof import('./src/components/ConnectionStatus.vue')['default']
     EntityListPanel: typeof import('./src/components/panels/EntityListPanel.vue')['default']
     GameStatePanel: typeof import('./src/components/panels/GameStatePanel.vue')['default']
+    MainLayout: typeof import('./src/components/MainLayout.vue')['default']
     SettingsPanel: typeof import('./src/components/panels/SettingsPanel.vue')['default']
   }
 }

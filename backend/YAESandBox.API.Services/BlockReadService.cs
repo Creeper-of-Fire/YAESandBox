@@ -28,14 +28,14 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
     }
 
     ///<inheritdoc/>
-    public Task<JsonBlockNode?> GetBlockTopologyJsonAsync(string? blockID)
+    public Task<List<BlockTopologyNodeDto>> GetBlockTopologyListAsync(string? blockID)
     {
-        var result = GenerateTopologyJson(this.blockManager.GetNodeOnlyBlocks(), blockID ?? BlockManager.WorldRootId);
+        var result = GenerateTopologyList(this.blockManager.GetNodeOnlyBlocks(), blockID ?? BlockManager.WorldRootId);
         foreach (var e in result.Errors)
             Log.Error(e.Message);
         if (result.IsFailed)
-            return Task.FromResult<JsonBlockNode?>(null);
-        return Task.FromResult<JsonBlockNode?>(result.Value);
+            return Task.FromResult<List<BlockTopologyNodeDto>>([]);
+        return Task.FromResult(result.Value);
     }
 
     ///<inheritdoc/>
