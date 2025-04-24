@@ -1,8 +1,8 @@
 ﻿<template>
   <!-- 虚拟滚动容器 -->
   <DynamicScroller
-      :items="blocks"
-      :min-item-size="minItemSize"
+      :items="currentPathBlocks"
+      :min-item-size=100
       class="block-scroller"
       key-field="id"
       ref="blockScrollerRef"
@@ -19,7 +19,7 @@
           class="block-scroller-item-wrapper"
       >
         <!-- 实际渲染的 BlockBubble 组件 -->
-        <BlockBubble :block-id="item.id" />
+        <BlockBubble :block-id="item.id"/>
       </DynamicScrollerItem>
     </template>
 
@@ -32,47 +32,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, nextTick, type PropType } from 'vue';
+import {ref, computed, watch, nextTick} from 'vue';
 // 导入 DynamicScroller 相关组件
 // @ts-ignore 因为 vue-virtual-scroller 的类型定义可能不完美
-import { DynamicScroller, DynamicScrollerItem } from 'vue-virtual-scroller';
+import {DynamicScroller, DynamicScrollerItem} from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'; // 确保样式被引入
 
 // 导入子组件
 import BlockBubble from '@/components/BlockBubble.vue';
 
 // 导入 Stores
-import { useTopologyStore } from '@/stores/topologyStore';
-import { useBlockContentStore } from '@/stores/blockContentStore';
-import { useBlockStatusStore } from '@/stores/blockStatusStore';
-
-// --- 类型定义 ---
-interface BlockNode {
-  id: string;
-  // 可能包含其他节点信息，但 id 是必须的
-  [key: string]: any;
-}
-
-// --- Props ---
-const props = defineProps({
-  /**
-   * 需要在流中显示的 Block 节点数组。
-   * 通常是 topologyStore.getCurrentPathNodes 的结果。
-   */
-  blocks: {
-    type: Array as PropType<BlockNode[]>,
-    required: true,
-    default: () => [] // 提供默认空数组防止渲染错误
-  },
-  /**
-   * DynamicScroller 的最小项目高度，用于初始渲染和性能优化。
-   * 可以根据实际 BlockBubble 的大致最小高度进行调整。
-   */
-  minItemSize: {
-    type: Number,
-    default: 100 // 默认最小高度 100px
-  }
-});
+import {useTopologyStore} from '@/stores/topologyStore';
+import {useBlockContentStore} from '@/stores/blockContentStore';
+import {useBlockStatusStore} from '@/stores/blockStatusStore';
 
 // --- Store 实例 ---
 const topologyStore = useTopologyStore();
@@ -86,6 +58,8 @@ const blockScrollerRef = ref<InstanceType<typeof DynamicScroller> | null>(null);
 // --- Computed ---
 // 当前路径的叶子节点 ID，用于触发滚动
 const currentLeafId = computed(() => topologyStore.currentPathLeafId);
+// 当前路径上的 blocks
+const currentPathBlocks = computed(() => topologyStore.getCurrentPathNodes);
 
 // --- Methods ---
 
@@ -127,14 +101,14 @@ const getSizeDependencies = (blockId: string) => {
  * @param index 要滚动到的项目在 `props.blocks` 数组中的索引。
  */
 const scrollToBlockIndex = (index: number) => {
-  if (blockScrollerRef.value && index >= 0 && index < props.blocks.length) {
+  if (blockScrollerRef.value && index >= 0 && index < currentPathBlocks.value.length) {
     console.log(`BlockBubbleStream: 尝试滚动到索引 ${index}...`);
     // 使用 'smooth' 实现平滑滚动，'auto' 为即时滚动
     // 'block: 'end'' 尝试将项目的底部与滚动容器的底部对齐，适合查看最新消息
     // 'block: 'nearest'' 滚动最小距离使其可见
-    blockScrollerRef.value.scrollToItem(index, { behavior: 'smooth', block: 'end' });
+    blockScrollerRef.value.scrollToItem(index, {behavior: 'smooth', block: 'end'});
   } else {
-    console.warn(`BlockBubbleStream: 无法滚动到索引 ${index}。滚动器引用: ${!!blockScrollerRef.value}, 索引范围: 0-${props.blocks.length - 1}`);
+    console.warn(`BlockBubbleStream: 无法滚动到索引 ${index}。滚动器引用: ${!!blockScrollerRef.value}, 索引范围: 0-${currentPathBlocks.value.length - 1}`);
   }
 };
 
@@ -146,7 +120,7 @@ watch(currentLeafId, (newLeafId, oldLeafId) => {
   if (newLeafId && newLeafId !== oldLeafId) {
     console.log(`BlockBubbleStream: 检测到叶子节点变化 -> ${newLeafId}`);
     // 找到新叶子节点在当前 blocks 数组中的索引
-    const index = props.blocks.findIndex(block => block.id === newLeafId);
+    const index = currentPathBlocks.value.findIndex(block => block.id === newLeafId);
 
     if (index !== -1) {
       // 等待 DOM 更新后再执行滚动操作，确保目标项已渲染
@@ -164,7 +138,7 @@ watch(currentLeafId, (newLeafId, oldLeafId) => {
 });
 
 // 可选：监听 blocks 数组本身的变化，例如在路径切换导致数组完全替换时滚动到底部
-watch(() => props.blocks, (newBlocks, oldBlocks) => {
+watch(() => currentPathBlocks.value, (newBlocks, oldBlocks) => {
   // 判断是否是显著变化（例如，数组引用改变或长度显著变化）
   if (newBlocks && oldBlocks && newBlocks !== oldBlocks) {
     // 路径切换或大量添加时，滚动到底部
@@ -174,12 +148,12 @@ watch(() => props.blocks, (newBlocks, oldBlocks) => {
         // 切换路径时可能用 'auto' 更快到达底部
         if (blockScrollerRef.value) {
           console.log(`BlockBubbleStream: blocks 数组变化，滚动到末尾索引 ${lastIndex}`);
-          blockScrollerRef.value.scrollToItem(lastIndex, { behavior: 'auto', block: 'end' });
+          blockScrollerRef.value.scrollToItem(lastIndex, {behavior: 'auto', block: 'end'});
         }
       });
     }
   }
-}, { deep: false }); // 浅监听数组引用变化即可
+}, {deep: false}); // 浅监听数组引用变化即可
 
 // --- Lifecycle Hooks ---
 // onMounted(() => {

@@ -1,153 +1,157 @@
-﻿import { defineStore } from 'pinia';
-import {shallowRef, markRaw, defineAsyncComponent} from 'vue';
-import type { Component } from 'vue';
+﻿// --- START OF FILE uiStore.ts ---
 
-// 预定义面板类型
-const EntityListPanel = markRaw(defineAsyncComponent(() => import('@/components/panels/EntityListPanel.vue')));
-const GameStatePanel = markRaw(defineAsyncComponent(() => import('@/components/panels/GameStatePanel.vue')));
-const SettingsPanel = markRaw(defineAsyncComponent(() => import('@/components/panels/SettingsPanel.vue')));
-// ... 其他面板
+import { defineStore } from 'pinia';
+import { shallowRef, type Component } from 'vue'; // shallowRef 用于存储组件引用
 
-interface PanelInfo {
-    component: Component | null;
-    title: string;
-    props?: Record<string, any>; // 可以给面板传递 props
-}
+// 不再需要 PanelNames 常量
+// export const PanelNames = { ... } as const;
+// export type PanelName = ...;
+
+type MobileFocusTarget = 'left' | 'right' | 'main';
 
 interface UiState {
-    isLeftPanelOpen: boolean;
-    isRightPanelOpen: boolean;
-    isLeftPanelPinned: boolean;
-    isRightPanelPinned: boolean;
-    activeLeftPanel: PanelInfo;
-    activeRightPanel: PanelInfo;
-    leftPanelWidth: number;
-    rightPanelWidth: number;
+    isMobileLayout: boolean;
+    /**
+     * 当前在左侧区域激活的组件引用。null 表示无激活组件。
+     */
+    activeLeftComponent: Component | null;
+    /**
+     * 当前在右侧区域激活的组件引用。null 表示无激活组件。
+     */
+    activeRightComponent: Component | null;
+    /**
+     * 移动端当前焦点所在的虚拟区域。
+     */
+    mobileFocusTarget: MobileFocusTarget;
 }
 
 export const useUiStore = defineStore('ui', {
     state: (): UiState => ({
-        isLeftPanelOpen: false,
-        isRightPanelOpen: false,
-        isLeftPanelPinned: false,
-        isRightPanelPinned: false,
-        activeLeftPanel: { component: null, title: '' },
-        activeRightPanel: { component: null, title: '' },
-        leftPanelWidth: 350, // 默认宽度
-        rightPanelWidth: 400, // 默认宽度
+        isMobileLayout: false,
+        // 使用 shallowRef 存储组件引用，避免深度响应式处理整个组件对象
+        activeLeftComponent: shallowRef(null),
+        activeRightComponent: shallowRef(null),
+        mobileFocusTarget: 'main',
     }),
+
     getters: {
-        activeLeftPanelComponent: (state) => state.activeLeftPanel.component,
-        activeRightPanelComponent: (state) => state.activeRightPanel.component,
-        leftPanelTitle: (state) => state.activeLeftPanel.title,
-        rightPanelTitle: (state) => state.activeRightPanel.title,
+        /**
+         * 计算移动端当前应显示的组件引用。
+         * @returns Component 引用或 null
+         */
+        getMobileViewComponent: (state): Component | null => {
+            if (!state.isMobileLayout) return null;
+
+            switch (state.mobileFocusTarget) {
+                case 'left':
+                    // 如果焦点在左，返回左侧组件 (如果存在)
+                    return state.activeLeftComponent;
+                case 'right':
+                    // 如果焦点在右，返回右侧组件 (如果存在)
+                    return state.activeRightComponent;
+                case 'main':
+                default:
+                    // 焦点在中间，返回 null (App.vue 会渲染 BubbleStream)
+                    return null;
+            }
+        },
     },
+
     actions: {
-        openLeftPanel(component: Component, title: string, props?: Record<string, any>) {
-            this.activeLeftPanel = { component: shallowRef(component), title, props };
-            this.isLeftPanelOpen = true;
-            console.log(`UIStore: 打开左侧面板 - ${title}`);
-        },
-        openRightPanel(component: Component, title: string, props?: Record<string, any>) {
-            this.activeRightPanel = { component: shallowRef(component), title, props };
-            this.isRightPanelOpen = true;
-            console.log(`UIStore: 打开右侧面板 - ${title}`);
-        },
-        closeLeftPanel() {
-            if (!this.isLeftPanelPinned) {
-                this.isLeftPanelOpen = false;
-                // 可以考虑延迟清空组件，给动画留时间
-                // setTimeout(() => { this.activeLeftPanel = { component: null, title: '' }; }, 300);
-                this.activeLeftPanel = { component: null, title: '' }; // 暂时立即清空
-                console.log('UIStore: 关闭左侧面板');
-            }
-        },
-        closeRightPanel() {
-            if (!this.isRightPanelPinned) {
-                this.isRightPanelOpen = false;
-                this.activeRightPanel = { component: null, title: '' };
-                console.log('UIStore: 关闭右侧面板');
-            }
-        },
-        toggleLeftPanelPin() {
-            this.isLeftPanelPinned = !this.isLeftPanelPinned;
-            console.log(`UIStore: 左侧面板锁定状态: ${this.isLeftPanelPinned}`);
-        },
-        toggleRightPanelPin() {
-            this.isRightPanelPinned = !this.isRightPanelPinned;
-            console.log(`UIStore: 右侧面板锁定状态: ${this.isRightPanelPinned}`);
-        },
-        
-        // --- 新增：通用的切换方法 ---
         /**
-         * 切换左侧面板的显示状态，如果未打开则加载指定组件。
-         * @param component 要加载的组件
-         * @param title 面板标题
-         * @param props 传递给组件的 props
+         * 设置当前是否为移动端布局。
          */
-        toggleLeftPanel(component: Component, title: string, props?: Record<string, any>) {
-            // 情况 1: 左侧已打开且显示的是当前要切换的组件 -> 关闭 (如果未锁定)
-            if (this.isLeftPanelOpen && this.activeLeftPanel.component === component) {
-                this.closeLeftPanel();
-            }
-            // 情况 2: 左侧未打开，或打开的不是当前组件 -> 打开/切换到新组件
-            else {
-                // 如果打开的是其他组件，先关闭（如果未锁定）
-                if (this.isLeftPanelOpen && !this.isLeftPanelPinned) {
-                    this.closeLeftPanel();
-                    // 需要一点延迟确保关闭动画后再打开新的，或者 openLeftPanel 内部处理
-                    setTimeout(() => {
-                        this.openLeftPanel(component, title, props);
-                        // 考虑是否自动关闭右侧未锁定面板
-                        if (!this.isRightPanelPinned) this.closeRightPanel();
-                    }, this.isLeftPanelOpen ? 310 : 0); // 如果之前是打开的，稍微延迟
-                } else if (!this.isLeftPanelOpen) {
-                    this.openLeftPanel(component, title, props);
-                    // 考虑是否自动关闭右侧未锁定面板
-                    if (!this.isRightPanelPinned) this.closeRightPanel();
-                } else { // 已打开且已锁定，但请求打开不同组件 -> 替换内容
-                    this.openLeftPanel(component, title, props);
-                    if (!this.isRightPanelPinned) this.closeRightPanel();
-                }
-            }
-        },
-        /**
-         * 切换右侧面板的显示状态，如果未打开则加载指定组件。
-         * @param component 要加载的组件
-         * @param title 面板标题
-         * @param props 传递给组件的 props
-         */
-        toggleRightPanel(component: Component, title: string, props?: Record<string, any>) {
-            if (this.isRightPanelOpen && this.activeRightPanel.component === component) {
-                this.closeRightPanel();
-            } else {
-                if (this.isRightPanelOpen && !this.isRightPanelPinned) {
-                    this.closeRightPanel();
-                    setTimeout(() => {
-                        this.openRightPanel(component, title, props);
-                        if (!this.isLeftPanelPinned) this.closeLeftPanel();
-                    }, this.isRightPanelOpen ? 310 : 0);
-                } else if (!this.isRightPanelOpen) {
-                    this.openRightPanel(component, title, props);
-                    if (!this.isLeftPanelPinned) this.closeLeftPanel();
+        setIsMobileLayout(isMobile: boolean) {
+            if (this.isMobileLayout !== isMobile) {
+                console.log(`UIStore: 切换布局模式 -> ${isMobile ? '移动端' : '桌面端'}`);
+                this.isMobileLayout = isMobile;
+                // 切换到移动端时，根据当前激活的组件重置焦点
+                if (isMobile) {
+                    // 优先级：如果右侧有，焦点在右；否则如果左侧有，焦点在左；都无则在 main
+                    if (this.activeRightComponent) this.mobileFocusTarget = 'right';
+                    else if (this.activeLeftComponent) this.mobileFocusTarget = 'left';
+                    else this.mobileFocusTarget = 'main';
+                    console.log(`UIStore: (移动端) 初始/切换后焦点 -> ${this.mobileFocusTarget}`);
                 } else {
-                    this.openRightPanel(component, title, props);
-                    if (!this.isLeftPanelPinned) this.closeLeftPanel();
+                    this.mobileFocusTarget = 'main'; // 切回桌面，焦点回 main
                 }
             }
         },
 
+        /**
+         * 设置或清除指定区域的激活组件。包含切换逻辑。
+         * @param target - 目标区域 'left' 或 'right'
+         * @param component - 要设置的组件引用，或 null 来清除/关闭
+         */
+        setActiveComponent(target: 'left' | 'right', component: Component | null) {
+            let panelClosed = false;
+            let panelOpenedOrSwitched = false;
+            let currentComponentRef: Component | null = null;
 
-        // --- Toolbar 调用的具体面板方法 (现在调用 toggle) ---
-        showEntityList() {
-            this.toggleLeftPanel(EntityListPanel, '实体列表');
+            // 获取当前目标区域的组件引用
+            if (target === 'left') {
+                currentComponentRef = this.activeLeftComponent;
+            } else {
+                currentComponentRef = this.activeRightComponent;
+            }
+
+            // 判断操作类型：打开/切换 vs 关闭
+            if (component === null) { // 请求关闭
+                if (currentComponentRef !== null) {
+                    panelClosed = true;
+                    console.log(`UIStore: 关闭 ${target} 面板`);
+                }
+            } else { // 请求打开或切换
+                if (currentComponentRef !== component) {
+                    panelOpenedOrSwitched = true;
+                    console.log(`UIStore: 打开/切换 ${target} 面板`);
+                } else {
+                    // 请求打开的组件已在目标位置打开 -> 变为关闭操作
+                    component = null; // 将操作转为关闭
+                    panelClosed = true;
+                    console.log(`UIStore: 关闭 ${target} 面板 (点击已激活按钮)`);
+                }
+            }
+
+            // 更新目标区域的组件引用
+            if (target === 'left') {
+                // 使用 markRaw 防止组件对象本身被代理，shallowRef 只跟踪引用变化
+                this.activeLeftComponent = component ? shallowRef(component) : null;
+            } else {
+                this.activeRightComponent = component ? shallowRef(component) : null;
+            }
+
+            // 更新移动端焦点
+            if (this.isMobileLayout) {
+                if (panelClosed) {
+                    // 关闭了面板，检查另一侧是否打开，决定焦点
+                    const otherPanelComponent = (target === 'left') ? this.activeRightComponent : this.activeLeftComponent;
+                    this.mobileFocusTarget = otherPanelComponent ? (target === 'left' ? 'right' : 'left') : 'main';
+                    console.log(`UIStore: (移动端) 关闭 ${target} 面板，焦点移至 -> ${this.mobileFocusTarget}`);
+                } else if (panelOpenedOrSwitched) {
+                    // 打开或切换了面板，焦点移到该面板
+                    this.mobileFocusTarget = target;
+                    console.log(`UIStore: (移动端) 打开/切换 ${target} 面板，焦点移至 -> ${target}`);
+                }
+                // 如果是点击已打开面板关闭，panelClosed 为 true，逻辑已处理
+            }
         },
-        showSettings() {
-            this.toggleRightPanel(SettingsPanel, '设置');
+
+        /**
+         * 显式将移动端焦点设置回中间 (Bubble Stream)。
+         */
+        setMobileFocusToMain() {
+            if (this.isMobileLayout) {
+                this.mobileFocusTarget = 'main';
+                console.log("UIStore: (移动端) 显式设置焦点到 -> main");
+            } else {
+                // 桌面端也可选择关闭两侧面板
+                this.activeLeftComponent = null;
+                this.activeRightComponent = null;
+                console.log("UIStore: (桌面端) 返回主内容视图，关闭侧边面板");
+            }
         },
-        showGameStateEditor() {
-            this.toggleLeftPanel(GameStatePanel, '游戏状态');
-        },
-        // ... 其他面板的打开方法
     }
 });
+
+// --- END OF FILE uiStore.ts ---

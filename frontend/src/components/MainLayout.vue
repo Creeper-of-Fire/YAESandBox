@@ -13,14 +13,14 @@
         class="main-layout-grid"
         >
         <!-- 1. 左侧面板插槽 (仅桌面端渲染) -->
-        <n-gi v-if="!isMobile" span="1" class="side-panel-area left-panel-area">
+        <n-gi v-if="!isMobile" span="2" class="side-panel-area left-panel-area">
           <div class="panel-wrapper">
             <slot name="left-panel"></slot>
           </div>
         </n-gi>
 
         <!-- 2. 中间核心内容区 -->
-        <n-gi span="1" class="center-content-area">
+        <n-gi span="6" class="center-content-area">
           <div class="center-content-wrapper">
             <!-- 2a. 顶部工具栏 (始终存在) -->
             <n-layout-header bordered class="app-header">
@@ -41,7 +41,7 @@
         </n-gi>
 
         <!-- 3. 右侧面板插槽 (仅桌面端渲染) -->
-        <n-gi v-if="!isMobile" span="1" class="side-panel-area right-panel-area">
+        <n-gi v-if="!isMobile" span="2" class="side-panel-area right-panel-area">
           <div class="panel-wrapper">
             <slot name="right-panel"></slot>
           </div>
@@ -60,21 +60,25 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import {computed, ref} from 'vue';
 import {
   NConfigProvider, NLayout, NLayoutHeader, NLayoutContent,
   NNotificationProvider, NGrid, NGi,
   lightTheme
 } from 'naive-ui';
 import { useMediaQuery } from '@vueuse/core';
+// --- 常量定义 ---
+// 使用 CSS 变量来统一定义，便于维护和在 <style> 中使用 v-bind
+const SIDE_PANEL_WIDTH_DESKTOP = ref('250px'); // 桌面端侧边空白/抽屉宽度 (使用 ref 以便 v-bind)
+const TOOLBAR_HEIGHT = ref('64px');           // 工具栏高度 (使用 ref 以便 v-bind)
 
 // --- 响应式状态 ---
 // 根据 Naive UI 的 'm' 断点 (768px)
 const isMobile = useMediaQuery('(max-width: 767.9px)');
 
 // --- Computed ---
-// Grid 列数：移动端 1 列，桌面端 3 列
-const gridCols = computed(() => (isMobile.value ? 1 : 3));
+// Grid 列数：移动端 1 列，桌面端 4 列
+const gridCols = computed(() => (isMobile.value ? 1 : 10));
 
 // 可以选择性地将 isMobile 暴露出去，如果父组件需要的话
 // defineExpose({ isMobile });
@@ -117,7 +121,7 @@ const gridCols = computed(() => (isMobile.value ? 1 : 3));
   width: 100%;
 }
 .app-header {
-  height: var(--toolbar-height, 64px); /* 使用 CSS 变量或固定值 */
+  height: var(64px); /* 使用 CSS 变量或固定值 */
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -142,6 +146,10 @@ const gridCols = computed(() => (isMobile.value ? 1 : 3));
 .left-panel-area {
   border-right: 1px solid #e0e0e6; /* 左侧边栏右边框 */
   border-left: none; /* 左侧无边框 */
+}
+.right-panel-area {
+  border-left: 1px solid #e0e0e6; /* 右侧边栏左边框 */
+  border-right: none; /* 右侧无边框 */
 }
 
 </style>

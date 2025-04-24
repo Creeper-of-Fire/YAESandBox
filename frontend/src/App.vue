@@ -1,36 +1,37 @@
 <template>
   <MainLayout>
-    <!-- Toolbar 插槽 -->
     <template #toolbar>
-      <AppToolbar @toggle-panel="handleTogglePanel"/>
+      <!-- Toolbar 负责导入组件引用并调用 store.setActiveComponent -->
+      <AppToolbar />
     </template>
 
     <!-- 左侧面板插槽 -->
     <template #left-panel>
-      <component :is="activeLeftPanel" v-if="activeLeftPanel"/>
-      <div v-else class="panel-placeholder">选择左侧面板</div>
+      <!-- 直接渲染 store 中的组件引用 -->
+      <component :is="uiStore.activeLeftComponent" v-if="uiStore.activeLeftComponent"/>
     </template>
 
     <!-- 主要内容插槽 -->
     <template #main-content>
-      <!-- 桌面端或移动端显示 Bubble 流时 -->
-      <BlockBubbleStream
-          v-if="shouldShowBubbleStream"
-          :blocks="currentPathBlocksForStream"
-          :min-item-size="100"
-          ref="bubbleStreamRef"
-      />
-      <!-- 移动端显示其他面板 -->
-      <component v-else-if="isMobileLayout" :is="activeMobileMainComponent" />
+      <template v-if="isMobileLayout">
+        <!-- 移动端根据 getter 决定显示哪个已激活的组件 -->
+        <component :is="uiStore.getMobileViewComponent" v-if="uiStore.getMobileViewComponent"/>
+        <!-- 如果 getter 返回 null，显示 BubbleStream -->
+        <BlockBubbleStream v-else />
+      </template>
+      <template v-else>
+        <!-- 桌面端固定显示 BubbleStream -->
+        <BlockBubbleStream />
+      </template>
     </template>
 
     <!-- 右侧面板插槽 -->
     <template #right-panel>
-      <component :is="activeRightPanel" v-if="activeRightPanel"/>
-      <div v-else class="panel-placeholder">选择右侧面板</div>
+      <!-- 直接渲染 store 中的组件引用 -->
+      <component :is="uiStore.activeRightComponent" v-if="uiStore.activeRightComponent"/>
     </template>
 
-    <!-- 全局元素插槽 -->
+    <!-- 其他插槽 -->
     <template #global-elements>
       <n-spin v-if="blockStatusStore.isLoadingAction" class="global-loading-spinner">
         <template #description>
@@ -38,140 +39,46 @@
         </template>
       </n-spin>
     </template>
-
-    <!-- 如果需要其他 Drawer (例如设置) -->
-    <!--
-    <template #drawers>
-        <n-drawer v-model:show="showSettingsDrawer" placement="right">
-            <SettingsPanel />
-        </n-drawer>
-    </template>
-    -->
-
   </MainLayout>
 </template>
 
 <script setup lang="ts">
-import {ref, computed, onMounted, watch, defineAsyncComponent, shallowRef, nextTick, onUnmounted, type CSSProperties} from 'vue';
+import {ref, onMounted, watch, onUnmounted} from 'vue';
 import {
-  NConfigProvider, NLayout, NLayoutHeader, NLayoutContent, NDrawer, NDrawerContent,
-  NButton, NIcon, NSpin, NNotificationProvider,
-  lightTheme, NGrid, NGi // 引入 Grid 和 Grid Item
+  NSpin// 引入 Grid 和 Grid Item
 } from 'naive-ui';
-import {LockClosedOutline as LockClosedIcon, LockOpenOutline as LockOpenIcon} from '@vicons/ionicons5';
 import {useMediaQuery} from '@vueuse/core'; // 推荐使用 @vueuse/core
 
-//@ts-ignore
-import {DynamicScroller, DynamicScrollerItem} from 'vue-virtual-scroller';
-import 'vue-virtual-scroller/dist/vue-virtual-scroller.css';
-
 // 导入 Stores
-import {useTopologyStore} from '@/stores/topologyStore';
-import {useBlockContentStore} from '@/stores/blockContentStore';
 import {useBlockStatusStore} from './stores/blockStatusStore';
 import {useUiStore} from '@/stores/uiStore';
 import {useConnectionStore} from '@/stores/connectionStore';
 
 // 导入子组件
 import AppToolbar from '@/components/AppToolbar.vue';
-import BlockBubble from '@/components/BlockBubble.vue';
 import MainLayout from "@/components/MainLayout.vue";
 import BlockBubbleStream from "@/components/BlockBubbleStream.vue";
-
-// --- 常量定义 ---
-// 使用 CSS 变量来统一定义，便于维护和在 <style> 中使用 v-bind
-const SIDE_PANEL_WIDTH_DESKTOP = ref('250px'); // 桌面端侧边空白/抽屉宽度 (使用 ref 以便 v-bind)
-const TOOLBAR_HEIGHT = ref('64px');           // 工具栏高度 (使用 ref 以便 v-bind)
-
-// --- 异步加载面板组件 ---
-const EntityListPanel = shallowRef(defineAsyncComponent(() => import('@/components/panels/EntityListPanel.vue')));
-const GameStatePanel = shallowRef(defineAsyncComponent(() => import('@/components/panels/GameStatePanel.vue')));
-const SettingsPanel = shallowRef(defineAsyncComponent(() => import('@/components/panels/SettingsPanel.vue')));
-// ... 其他面板
 
 // Store 实例
 const uiStore = useUiStore();
 const blockStatusStore = useBlockStatusStore();
-const topologyStore = useTopologyStore();
-
-const bubbleStreamRef = ref<InstanceType<typeof BlockBubbleStream> | null>(null); // 引用
-
-// 计算传递给 BlockBubbleStream 的 blocks 数组
-const currentPathBlocksForStream = computed(() => topologyStore.getCurrentPathNodes);
-
-// 计算当前是否应该显示 Bubble 流
-const shouldShowBubbleStream = computed(() => {
-  if (!isMobileLayout.value) {
-    return true; // 桌面端主内容区总是显示 Bubble 流
-  } else {
-    // 移动端根据 uiStore 的状态决定
-    return uiStore.activeMobileComponentName === 'BubbleStream';
-  }
-});
+const connectionStore = useConnectionStore();
 
 // 响应式状态
 const isMobileLayout = useMediaQuery('(max-width: 767.9px)');
 
-// 监视媒体查询结果并更新 store (如果 store 需要知道)
+// 监视媒体查询结果并更新 store
 watch(isMobileLayout, (value) => {
-  uiStore.setIsMobileLayout(value); // 假设 store 有这个 action
+  uiStore.setIsMobileLayout(value);
 }, { immediate: true });
 
 
 // --- Computed Properties for Dynamic Components ---
 
-const activeLeftPanel = computed(() => {
-  // 从 uiStore 获取当前活动的左侧面板组件引用或名称
-  // return uiStore.currentLeftPanel; // 示例
-  switch (uiStore.activeLeftPanelName) { // 假设 store 存的是名称
-    case 'EntityList': return EntityListPanel.value;
-    case 'GameState': return GameStatePanel.value; // 示例：也可以放左边
-    default: return null;
-  }
-});
-
-const activeRightPanel = computed(() => {
-  // 从 uiStore 获取当前活动的右侧面板组件引用或名称
-  // return uiStore.currentRightPanel; // 示例
-  switch (uiStore.activeRightPanelName) {
-    case 'GameState': return GameStatePanel.value;
-    case 'Settings': return SettingsPanel.value; // 示例：设置也可以放右边
-    default: return null;
-  }
-});
-
-const activeMobileMainContent = computed(() => {
-  // 从 uiStore 获取移动端主区域应显示的组件
-  // 默认显示 Bubble 流
-  switch (uiStore.activeMobileComponentName) {
-    case 'EntityList': return EntityListPanel.value;
-    case 'GameState': return GameStatePanel.value;
-    case 'Settings': return SettingsPanel.value;
-    case 'BubbleStream': // 显式处理或作为默认值
-    default: return BlockBubbleStream; // 直接引用 Bubble 流组件
-  }
-});
-
-
 // --- Event Handlers ---
-const handleTogglePanel = (payload: { panelName: string; target: 'left' | 'right' | 'mobile' | 'toggleDrawer' }) => {
-  // 这个方法需要根据 payload 更新 uiStore 的状态
-  console.log('Toolbar wants to toggle:', payload);
-  if (isMobileLayout.value) {
-    // 移动端逻辑：切换主内容区
-    uiStore.setActiveMobileComponent(payload.panelName); // panelName 可能是 'BubbleStream'
-  } else {
-    // 桌面端逻辑：切换侧边栏
-    if (payload.target === 'left') {
-      uiStore.setActiveLeftPanel(payload.panelName);
-    } else if (payload.target === 'right') {
-      uiStore.setActiveRightPanel(payload.panelName);
-    }
-    // 可能还需要处理关闭逻辑，例如传入 null 或 ''
-  }
-  // 处理其他类型的切换，如打开设置 Drawer
-  // if (payload.target === 'toggleDrawer' && payload.panelName === 'Settings') { ... }
-};
+
+// 处理来自 Toolbar 的通用面板切换请求
+
 
 // --- Methods ---
 // (如果需要手动处理 resize，可以在这里添加 handleResize 方法)
@@ -221,12 +128,6 @@ onUnmounted(() => {
 </script>
 
 <style scoped>
-.panel-placeholder {
-  color: #aaa;
-  text-align: center;
-  padding-top: 20px;
-  font-style: italic;
-}
 /* 全局 Spin 样式 */
 .global-loading-spinner {
   position: fixed !important; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999 !important;

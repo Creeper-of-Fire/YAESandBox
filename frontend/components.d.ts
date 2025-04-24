@@ -15,6 +15,11 @@ declare module 'vue' {
     EntityListPanel: typeof import('./src/components/panels/EntityListPanel.vue')['default']
     GameStatePanel: typeof import('./src/components/panels/GameStatePanel.vue')['default']
     MainLayout: typeof import('./src/components/MainLayout.vue')['default']
+    NConfigProvider: typeof import('naive-ui')['NConfigProvider']
+    NGi: typeof import('naive-ui')['NGi']
+    NGrid: typeof import('naive-ui')['NGrid']
+    NLayout: typeof import('naive-ui')['NLayout']
+    NNotificationProvider: typeof import('naive-ui')['NNotificationProvider']
     SettingsPanel: typeof import('./src/components/panels/SettingsPanel.vue')['default']
   }
 }
