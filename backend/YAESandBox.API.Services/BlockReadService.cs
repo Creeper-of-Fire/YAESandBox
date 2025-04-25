@@ -13,7 +13,6 @@ namespace YAESandBox.API.Services;
 /// BlockReadService专注于单个 Block 的数据查询服务（主要是其中的worldState和gameState），仅限只读操作。
 /// 它也提供对于整体的总结服务。
 /// </summary>
-/// <param name="blockManager"></param>
 public class BlockReadService(IBlockManager blockManager, INotifierService notifierService)
     : BasicBlockService(blockManager, notifierService), IBlockReadService
 {

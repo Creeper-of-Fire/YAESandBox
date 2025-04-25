@@ -24,6 +24,6 @@ export type TriggerMainWorkflowRequestDto = {
     /**
      * 传递给工作流的参数字典。键值对的具体内容取决于所调用的工作流。
      */
-    params: Record<string, any>;
+    params: Record<string, string>;
 };
 

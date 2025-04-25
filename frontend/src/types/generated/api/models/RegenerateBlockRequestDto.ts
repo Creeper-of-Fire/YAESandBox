@@ -16,13 +16,5 @@ export type RegenerateBlockRequestDto = {
      * 要重新生成的 Block 的 ID。
      */
     blockId: string;
-    /**
-     * 用于重新生成的工作流名称。
-     */
-    workflowName: string;
-    /**
-     * 传递给重新生成工作流的参数。
-     */
-    params: Record<string, any>;
 };
 

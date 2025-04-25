@@ -58,15 +58,9 @@ public partial class BlockManager : IBlockManager
         return this.blocks.ToDictionary(kv => kv.Key, IBlockNode (kv) => kv.Value.Block);
     }
 
-    /// <summary>
-    /// 创建子Block，需要父BlockId和触发参数，以及触发所用的工作流的名称
-    /// </summary>
-    /// <param name="parentBlockId"></param>
-    /// <param name="workFlowName"></param>
-    /// <param name="triggerParams"></param>
-    /// <returns></returns>
+    /// <inheritdoc/>
     public async Task<LoadingBlockStatus?> CreateChildBlock_Async(
-        string? parentBlockId, string workFlowName, Dictionary<string, object?> triggerParams)
+        string? parentBlockId, string workFlowName, Dictionary<string, string> triggerParams)
     {
         parentBlockId ??= WorldRootId;
         using (await this.GetLockForBlock(parentBlockId).LockAsync()) // Lock parent to add child info
@@ -329,14 +323,14 @@ public partial class BlockManager : IBlockManager
             {
                 BlockId = coreBlock.BlockId,
                 ParentBlockId = coreBlock.ParentBlockId,
-                WorkFlowName = coreBlock.WorkFlowName,
+                WorkFlowName = coreBlock.WorkflowName,
                 ChildrenIds = new List<string>(coreBlock.ChildrenList), // Copy list
                 BlockContent = coreBlock.BlockContent,
-                Metadata = coreBlock.Metadata.ToDictionary(entry => entry.Key,
-                    entry => entry.Value), // Shallow copy Metadata
-                TriggeredChildParams =
-                    coreBlock.TriggeredChildParams.ToDictionary(entry => entry.Key,
-                        entry => entry.Value), // Shallow copy Params
+                // Shallow copy Metadata
+                Metadata = coreBlock.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value), 
+                // Shallow copy Params
+                TriggeredChildParams = coreBlock.TriggeredChildParams.ToDictionary(entry => entry.Key, entry => entry.Value),
+                TriggeredParams = coreBlock.TriggeredParams.ToDictionary(entry => entry.Key, entry => entry.Value),
                 GameState = coreBlock.GameState.GetAllSettings()
                     .ToDictionary(entry => entry.Key, entry => entry.Value)
             };
@@ -390,10 +384,10 @@ public partial class BlockManager : IBlockManager
         {
             // --- 恢复状态 ---
             var gameState = PersistenceMapper.MapGameState(blockDto.GameState);
-            // Metadata and TriggeredChildParams might need deep copy or type recovery if complex objects are stored
-            var metadata = blockDto.Metadata.ToDictionary();
-            var triggeredParams = blockDto.TriggeredChildParams.ToDictionary(entry => entry.Key,
-                entry => PersistenceMapper.DeserializeObjectValue(entry.Value));
+            // Metadata and TriggeredChildParams might need deep copy?
+            var metadata = blockDto.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value);
+            var triggeredChildParams = blockDto.TriggeredChildParams.ToDictionary(entry => entry.Key, entry => entry.Value);
+            var triggerParams = blockDto.TriggeredParams.ToDictionary(entry => entry.Key, entry => entry.Value);
 
             // --- 恢复 WorldState 快照 ---
             var wsInput = PersistenceMapper.MapWorldState(blockDto.WorldStates.GetValueOrDefault("wsInput"));
@@ -420,7 +414,8 @@ public partial class BlockManager : IBlockManager
                     blockDto.ChildrenIds,
                     blockDto.BlockContent,
                     metadata,
-                    triggeredParams,
+                    triggeredChildParams,
+                    triggerParams,
                     gameState,
                     wsInput, // wsInput is mandatory now (except maybe root)
                     wsPostAI,
@@ -533,8 +528,7 @@ public partial class BlockManager : IBlockManager
             var gameStateClone = updatedIdleParentBlock.Block.GameState.Clone();
 
             // 使用标准方式创建 Block (返回 Loading)
-            var tempLoadingBlock = Block.CreateBlock(newBlockId, parentBlockId, DEBUG_WorkFlowName, wsInputClone, gameStateClone,
-                new Dictionary<string, object?>());
+            var tempLoadingBlock = Block.CreateBlock(newBlockId, parentBlockId, DEBUG_WorkFlowName, wsInputClone, gameStateClone,[]);
 
             // 添加到字典 (仍然需要锁新 Block ID，虽然概率极低，但保险起见)
             using (await this.GetLockForBlock(newBlockId).LockAsync())

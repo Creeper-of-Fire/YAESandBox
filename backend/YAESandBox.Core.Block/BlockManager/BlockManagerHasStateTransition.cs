@@ -113,8 +113,7 @@ public partial class BlockManager
 
     /// <inheritdoc/>
     [HasBlockStateTransition]
-    public async Task<Result<LoadingBlockStatus>> StartRegenerationAsync(string blockId, string workFlowName,
-        Dictionary<string, object?> triggerParams)
+    public async Task<Result<LoadingBlockStatus>> StartRegenerationAsync(string blockId)
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
@@ -141,8 +140,6 @@ public partial class BlockManager
 
 
             // 3. 更新触发参数和元数据
-            coreBlock.WorkFlowName = workFlowName;
-            coreBlock.TriggeredChildParams = triggerParams ?? new Dictionary<string, object?>(); // 确保存储的是有效字典
             coreBlock.AddOrSetMetaData("RegenerationStartTime", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
             // 可以考虑移除旧的 WorkflowOutputVariables 或其他相关元数据
             coreBlock.RemoveMetaData("WorkflowOutputVariables"); // 示例：移除旧输出

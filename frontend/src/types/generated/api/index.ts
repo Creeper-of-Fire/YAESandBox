@@ -30,6 +30,7 @@ export type { TriggerMicroWorkflowRequestDto } from './models/TriggerMicroWorkfl
 export type { UpdateBlockDetailsDto } from './models/UpdateBlockDetailsDto';
 export type { UpdateGameStateRequestDto } from './models/UpdateGameStateRequestDto';
 export { UpdateMode } from './models/UpdateMode';
+export type { WorkflowDto } from './models/WorkflowDto';
 
 export { AtomicService } from './services/AtomicService';
 export { BlockManagementService } from './services/BlockManagementService';

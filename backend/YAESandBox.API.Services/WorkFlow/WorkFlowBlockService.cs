@@ -20,7 +20,7 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
 
     /// <inheritdoc/>
     public async Task<LoadingBlockStatus?> CreateChildBlockAsync(string parentBlockId, string workFlowName,
-        Dictionary<string, object?> triggerParams)
+        Dictionary<string, string> triggerParams)
     {
         var childBlock = await this.blockManager.CreateChildBlock_Async(parentBlockId, workFlowName, triggerParams);
         if (childBlock != null)
@@ -80,11 +80,10 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
 
 
     /// <inheritdoc/>
-    public async Task<Result<LoadingBlockStatus>> TryStartRegenerationAsync(string blockId, string workFlowName,
-        Dictionary<string, object?> triggerParams)
+    public async Task<Result<LoadingBlockStatus>> TryStartRegenerationAsync(string blockId)
     {
         // 调用 BlockManager 的核心逻辑
-        var loadingStatus = await this.blockManager.StartRegenerationAsync(blockId, workFlowName, triggerParams);
+        var loadingStatus = await this.blockManager.StartRegenerationAsync(blockId);
 
         if (!loadingStatus.IsSuccess)
             return loadingStatus;

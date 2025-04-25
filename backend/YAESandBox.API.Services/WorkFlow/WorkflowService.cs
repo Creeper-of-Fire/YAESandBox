@@ -49,19 +49,21 @@ public class WorkflowService(
     /// <inheritdoc/>
     public async Task HandleRegenerateBlockAsync(RegenerateBlockRequestDto request)
     {
+        // 1. 尝试将 Block 置于 Loading 状态
+        //    注意：这里调用的是 BlockWritService 的方法，它会负责调用 BlockManager 并发送初始通知
+        var loadingStatus = await this.blockServices.TryStartRegenerationAsync(request.BlockId);
+
+        var block = loadingStatus.Value.Block;
         var newRequest = new TriggerMainWorkflowRequestDto()
         {
             RequestId = request.RequestId,
-            WorkflowName = request.WorkflowName,
+            WorkflowName = block.WorkflowName,
             ParentBlockId = request.BlockId,
-            Params = request.Params
+            Params = block.TriggeredParams
         };
 
-        Log.Info($"WorkflowService: 处理重新生成请求: RequestId={request.RequestId}, BlockId={request.BlockId}, Workflow={request.WorkflowName}");
-
-        // 1. 尝试将 Block 置于 Loading 状态
-        //    注意：这里调用的是 BlockWritService 的方法，它会负责调用 BlockManager 并发送初始通知
-        var loadingStatus = await this.blockServices.TryStartRegenerationAsync(request.BlockId, request.WorkflowName, request.Params);
+        Log.Info(
+            $"WorkflowService: 处理重新生成请求: RequestId={request.RequestId}, BlockId={request.BlockId}, Workflow={block.WorkflowName}");
 
         if (!loadingStatus.IsSuccess)
         {
@@ -74,11 +76,11 @@ public class WorkflowService(
             return;
         }
 
-        Log.Info($"WorkflowService: Block '{request.BlockId}' 已成功进入 Loading 状态，准备执行重新生成工作流 '{request.WorkflowName}'。");
+        Log.Info($"WorkflowService: Block '{request.BlockId}' 已成功进入 Loading 状态，准备执行重新生成工作流 '{block.WorkflowName}'。");
 
         // 2. 异步执行工作流逻辑 (使用 Task.Run)
         //    我们将创建一个新的执行方法或重用/改造 ExecuteMainWorkflowAsync
-        _ = Task.Run<Task>(() => this.StartMainExecuteWorkflowAsync(newRequest, loadingStatus.Value.Block.BlockId)); // 传入 Block ID
+        _ = Task.Run<Task>(() => this.StartMainExecuteWorkflowAsync(newRequest, block.BlockId)); // 传入 Block ID
     }
 
     ///<inheritdoc/>
@@ -254,15 +256,7 @@ public class WorkflowService(
             }
 
             // === 模拟指令生成 ===
-            // (这里我们不再从 DeepFake 文本中解析，而是直接写死一些指令)
-            if (request.Params.TryGetValue("create_item_id", out object? itemIdObj) && itemIdObj is string itemId)
-            {
-                generatedCommands.Add(AtomicOperation.Create(EntityType.Item, itemId,
-                    new Dictionary<string, object?>
-                        { { "name", $"Item {itemId} (from workflow)" }, { "created_by", request.WorkflowName } }));
-                Log.Debug($"Block '{blockId}': Workflow generated command to create item {itemId}.");
-            }
-
+            
             // 假设需要创建 DeepFake 提到的地点和角色 (如果它们在 WsInput 不存在)
             // 注意：实际应用中需要检查是否存在，避免重复创建错误
             generatedCommands.Add(AtomicOperation.Create(EntityType.Place, "castle-entrance",
@@ -301,7 +295,7 @@ public class WorkflowService(
 
         var blockResult = await this.blockServices.HandleWorkflowCompletionAsync(blockId, request.RequestId,
             success, rawTextResult, generatedCommands.ToAtomicOperationRequests(), outputVariables);
-        
+
         Log.Debug($"Block '{blockId}': 已通知 BlockManager 工作流完成状态: Success={success}");
 
         // 发送最终完成状态 (如果需要单独通知)

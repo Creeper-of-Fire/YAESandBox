@@ -118,6 +118,25 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
             Log.Error(ex, $"GameHub: ResolveConflict 处理时发生异常: {ex.Message}");
         }
     }
+    
+    /// <summary>
+    /// 重新生成
+    /// </summary>
+    /// <param name="request"></param>
+    public async Task RegenerateBlock(RegenerateBlockRequestDto request)
+    {
+        string connectionId = this.Context.ConnectionId;
+        // *** 确认日志存在 ***
+        Log.Info($"GameHub: 收到来自 {connectionId} 的 RegenerateBlock 请求: {request.RequestId}, Block: {request.BlockId}");
+        try
+        {
+            await this.workflowService.HandleRegenerateBlockAsync(request);
+        }
+        catch (Exception ex)
+        {
+            Log.Error(ex, $"GameHub: RegenerateBlock 处理时发生异常: {ex.Message}");
+        }
+    }
 
     // --- Hub 生命周期事件 ---
     ///<inheritdoc/>

@@ -114,7 +114,7 @@ public class Block : NodeBlock
     /// <summary>
     /// 触发这个的Bloc内容的工作流的名称。
     /// </summary>
-    public string WorkFlowName { get; internal set; }
+    public string WorkflowName { get; internal set; }
 
     /// <summary>
     /// 存储与 Block 相关的任意元数据（例如创建时间、触发的工作流名称）。
@@ -146,13 +146,18 @@ public class Block : NodeBlock
     /// <summary>
     /// (仅父 Block 存储) 触发子 Block 时使用的参数。只会保存一个，不会为不同的子 Block 保存不同的参数。
     /// </summary>
-    public Dictionary<string, object?> TriggeredChildParams { get; internal set; } = new();
+    public Dictionary<string, string> TriggeredChildParams { get; internal set; } = new();
+
+    /// <summary>
+    /// 被触发时使用的参数。用于重新生成之类的。
+    /// </summary>
+    public Dictionary<string, string> TriggeredParams { get; internal set; }
 
     /// <summary>
     /// 创建一个新的子 Block (由 BlockManager 调用)。
     /// </summary>
-    private Block(string blockId, string? parentBlockId, string workFlowName, WorldState sourceWorldState, GameState sourceGameState,
-        Dictionary<string, object?> triggerParams) : base(blockId, parentBlockId)
+    private Block(string blockId, string? parentBlockId, string workflowName, WorldState sourceWorldState, GameState sourceGameState,
+        Dictionary<string, string> triggerParams) : base(blockId, parentBlockId)
     {
         if (string.IsNullOrWhiteSpace(blockId))
             throw new ArgumentException("Block ID cannot be null or whitespace.", nameof(blockId));
@@ -160,8 +165,8 @@ public class Block : NodeBlock
         //     throw new ArgumentException("Parent Block ID cannot be null or whitespace.", nameof(parentBlockId));
 
         this.AddOrSetMetaData("CreationTime", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
-        this.AddOrSetMetaData("TriggerParams", JsonSerializer.Serialize(triggerParams));
-        this.WorkFlowName = workFlowName;
+        this.TriggeredParams = triggerParams;
+        this.WorkflowName = workflowName;
 
         // --- 在构造函数内部完成克隆 ---
         this.wsInput = sourceWorldState.Clone(); // 创建 wsInput 的隔离副本
@@ -180,11 +185,10 @@ public class Block : NodeBlock
     /// <param name="triggerParams"></param>
     /// <returns></returns>
     public static LoadingBlockStatus CreateBlock(string blockId, string? parentBlockId, string workFlowName, WorldState sourceWorldState,
-        GameState sourceGameState, Dictionary<string, object?>? triggerParams = null)
+        GameState sourceGameState, Dictionary<string, string>? triggerParams = null)
     {
-        triggerParams ??= new Dictionary<string, object?>();
         return new LoadingBlockStatus(
-            new Block(blockId, parentBlockId, workFlowName, sourceWorldState, sourceGameState, triggerParams));
+            new Block(blockId, parentBlockId, workFlowName, sourceWorldState, sourceGameState, triggerParams ?? []));
     }
 
 
@@ -430,11 +434,12 @@ public class Block : NodeBlock
     private Block(
         string blockId,
         string? parentBlockId,
-        string workFlowName,
+        string workflowName,
         List<string> childrenIds,
         string blockContent,
         Dictionary<string, string> metadata,
-        Dictionary<string, object?> triggeredChildParams,
+        Dictionary<string, string> triggeredChildParams,
+        Dictionary<string, string> triggeredParams,
         GameState gameState, // 传入重建好的 GameState
         WorldState? wsInput, // 传入重建好的 WorldState 快照
         WorldState? wsPostAI,
@@ -443,9 +448,10 @@ public class Block : NodeBlock
     {
         // 直接赋值
         this.BlockContent = blockContent;
-        this.WorkFlowName = workFlowName;
+        this.WorkflowName = workflowName;
         this._metadata = metadata; // 注意：这里是引用赋值，如果DTO的字典是新建的就没问题
         this.TriggeredChildParams = triggeredChildParams;
+        this.TriggeredParams = triggeredParams;
         this.GameState = gameState;
         this.wsInput = wsInput ?? throw new ArgumentNullException(nameof(wsInput),
             $"Block '{blockId}' loaded without wsInput, which is required."); // wsInput 必须有
@@ -466,7 +472,8 @@ public class Block : NodeBlock
         List<string> childrenIds,
         string blockContent,
         Dictionary<string, string> metadata,
-        Dictionary<string, object?> triggeredChildParams,
+        Dictionary<string, string> triggeredChildParams,
+        Dictionary<string, string> triggeredParams,
         GameState gameState, // 传入重建好的 GameState
         WorldState? wsInput, // 传入重建好的 WorldState 快照
         WorldState? wsPostAI,
@@ -480,6 +487,7 @@ public class Block : NodeBlock
             blockContent,
             metadata,
             triggeredChildParams,
+            triggeredParams,
             gameState,
             wsInput,
             wsPostAI,

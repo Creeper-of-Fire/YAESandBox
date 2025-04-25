@@ -14,7 +14,6 @@ namespace YAESandBox.API.Services;
 /// BlockWritService 用于管理 Block 的链接和交互。
 /// 同时也提供输入原子化指令修改其内容的服务（修改Block数据的唯一入口），之后可能分离。
 /// </summary>
-/// <param name="blockManager"></param>
 public class BlockWritService(IBlockManager blockManager, INotifierService notifierService)
     : BasicBlockService(blockManager, notifierService), IBlockWritService
 {

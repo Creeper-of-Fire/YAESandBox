@@ -72,20 +72,24 @@ public record BlockDto
     [JsonPropertyName("workFlowName")]
     public string WorkFlowName { get; set; } = string.Empty;
 
+    /// <summary>
+    /// （仅父 Block 存储）触发此 Block 的某个子 Block 时所使用的参数。
+    /// 注意：当前设计只保存最后一次触发子节点时的参数。
+    /// </summary>
+    [JsonPropertyName("triggeredChildParams")]
+    public Dictionary<string, string> TriggeredChildParams { get; set; } = new();
+
+    /// <summary>
+    /// 被触发时使用的参数。用于重新生成之类的。
+    /// </summary>
+    [JsonPropertyName("triggeredParams")]
+    public Dictionary<string, string> TriggeredParams { get; set; } = new();
 
     /// <summary>
     /// 与 Block 相关的元数据字典。键值对均为字符串。
     /// </summary>
     [JsonPropertyName("metadata")]
     public Dictionary<string, string> Metadata { get; set; } = new();
-
-    /// <summary>
-    /// （仅父 Block 存储）触发此 Block 的某个子 Block 时所使用的参数。
-    /// 注意：当前设计只保存最后一次触发子节点时的参数。
-    /// 值类型为 object?，序列化时会保留其原始 JSON 类型。
-    /// </summary>
-    [JsonPropertyName("triggeredChildParams")]
-    public Dictionary<string, object?> TriggeredChildParams { get; set; } = new();
 
     /// <summary>
     /// 持久化的 GameState。存储为键值对字典，值类型为 object?。

@@ -21,7 +21,7 @@ public interface IWorkFlowBlockService
     /// <param name="triggerParams">触发工作流的参数。</param>
     /// <returns>新创建的子 Block，如果失败则返回 null。</returns>
     Task<LoadingBlockStatus?> CreateChildBlockAsync(string parentBlockId, string workFlowName,
-        Dictionary<string, object?> triggerParams);
+        Dictionary<string, string> triggerParams);
 
     /// <summary>
     /// 处理工作流执行完成后的回调。
@@ -41,9 +41,6 @@ public interface IWorkFlowBlockService
     /// 仅当 Block 处于 Idle 或 Error 状态时有效。
     /// </summary>
     /// <param name="blockId">要重新生成的 Block ID。</param>
-    /// <param name="workFlowName">触发工作流的名字</param>
-    /// <param name="triggerParams">触发工作流的参数。</param>
     /// <returns>如果成功启动，返回新的 LoadingBlockStatus；否则返回 null。</returns>
-    Task<Result<LoadingBlockStatus>> TryStartRegenerationAsync(string blockId, string workFlowName,
-        Dictionary<string, object?> triggerParams);
+    Task<Result<LoadingBlockStatus>> TryStartRegenerationAsync(string blockId);
 }

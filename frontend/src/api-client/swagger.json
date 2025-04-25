@@ -1045,6 +1045,9 @@
           },
           "conflictDetected": {
             "$ref": "#/components/schemas/ConflictDetectedDto"
+          },
+          "workflowInfo": {
+            "$ref": "#/components/schemas/WorkflowDto"
           }
         },
         "additionalProperties": false,
@@ -1349,9 +1352,7 @@
       "RegenerateBlockRequestDto": {
         "required": [
           "blockId",
-          "params",
-          "requestId",
-          "workflowName"
+          "requestId"
         ],
         "type": "object",
         "properties": {
@@ -1364,18 +1365,6 @@
             "minLength": 1,
             "type": "string",
             "description": "要重新生成的 Block 的 ID。"
-          },
-          "workflowName": {
-            "minLength": 1,
-            "type": "string",
-            "description": "用于重新生成的工作流名称。"
-          },
-          "params": {
-            "type": "object",
-            "additionalProperties": {
-              "nullable": true
-            },
-            "description": "传递给重新生成工作流的参数。"
           }
         },
         "additionalProperties": false,
@@ -1446,7 +1435,7 @@
           "params": {
             "type": "object",
             "additionalProperties": {
-              "nullable": true
+              "type": "string"
             },
             "description": "传递给工作流的参数字典。键值对的具体内容取决于所调用的工作流。"
           }
@@ -1540,6 +1529,37 @@
         ],
         "type": "string",
         "description": "指示 YAESandBox.API.DTOs.WebSocket.DisplayUpdateDto.Content 的更新方式。"
+      },
+      "WorkflowDto": {
+        "required": [
+          "triggeredChildParams",
+          "triggeredParams",
+          "workflowName"
+        ],
+        "type": "object",
+        "properties": {
+          "workflowName": {
+            "minLength": 1,
+            "type": "string",
+            "description": "存储触发block时所使用的工作流名称。"
+          },
+          "triggeredChildParams": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "（仅父 Block 存储）触发此 Block 的某个子 Block 时所使用的参数。\r\n注意：当前设计只保存最后一次触发子节点时的参数。"
+          },
+          "triggeredParams": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "被触发时使用的参数。用于重新生成之类的。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "工作流 的 DTO。"
       }
     }
   }

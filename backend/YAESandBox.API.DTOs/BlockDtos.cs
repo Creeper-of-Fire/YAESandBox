@@ -37,8 +37,38 @@ public record BlockDetailDto
     /// 冲突信息（如果有冲突）
     /// </summary>
     public ConflictDetectedDto? ConflictDetected { get; init; }
+    
+    /// <summary>
+    /// 工作流相关的信息
+    /// </summary>
+    public WorkflowDto? WorkflowInfo { get; init; }
 
     // 注意：WsInput, WsPostAI, WsPostUser, WsTemp, ChildrenInfo, ParentBlockId 不应直接通过 这个DTO 暴露
+}
+
+/// <summary>
+/// 工作流 的 DTO。
+/// </summary>
+public record WorkflowDto
+{
+    /// <summary>
+    /// 存储触发block时所使用的工作流名称。
+    /// </summary>
+    [Required]
+    public string WorkflowName { get; set; } = string.Empty;
+    
+    /// <summary>
+    /// （仅父 Block 存储）触发此 Block 的某个子 Block 时所使用的参数。
+    /// 注意：当前设计只保存最后一次触发子节点时的参数。
+    /// </summary>
+    [Required]
+    public Dictionary<string, string> TriggeredChildParams { get; set; } = new();
+    
+    /// <summary>
+    /// 被触发时使用的参数。用于重新生成之类的。
+    /// </summary>
+    [Required]
+    public Dictionary<string, string> TriggeredParams { get; set; } = new();
 }
 
 /// <summary>

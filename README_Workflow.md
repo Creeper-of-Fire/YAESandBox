@@ -124,7 +124,7 @@ YAESandBox 工作流引擎是系统核心逻辑的处理单元。它负责根据
     *   (可能包含) 工作流级别的元数据或设置。
 
 2.  **触发参数 (Trigger Parameters):**
-    *   一个字典 (`Dictionary<string, object?>`)，包含从前端或其他触发源传递过来的初始参数。
+    *   一个字典 (`Dictionary<string, string>`)，包含从前端或其他触发源传递过来的初始参数。
     *   工作流配置应**声明**其期望的参数及其类型（用于文档或前端提示），但引擎本身可能不强制校验。
 
 3.  **数据查询委托 (`Func<>` Delegates - Data Access API):**

@@ -71,7 +71,7 @@
           class="action-button"
           title="重新生成当前 Block 内容"
       >
-        🔄 重新生成(WIP)
+        🔄 重新生成
       </button>
 
       <!-- 删除 -->
@@ -228,8 +228,6 @@ const regenerate = async () => {
       {
         requestId: uuidv4(),
         blockId: props.blockId,
-        workflowName: "DefaultRegenerateWorkflow",
-        params: {originalContent: displayContent.value}
       }
   );
 };

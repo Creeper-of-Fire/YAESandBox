@@ -74,9 +74,26 @@ public static class MappingUtility
             BlockContent = block.BlockContent,
             Metadata = new Dictionary<string, string>(block.Metadata),
             ConflictDetected = (blockStatus as ConflictBlockStatus)?.MapToConflictDetectedDto(),
+            WorkflowInfo = block.MapToWorkflowDto()
         };
     }
 
+    /// <summary>
+    /// Block 转换为 WorkflowDto
+    /// </summary>
+    public static WorkflowDto MapToWorkflowDto(this Block block)
+    {
+        return new WorkflowDto
+        {
+            WorkflowName = block.WorkflowName,
+            TriggeredParams = block.TriggeredParams,
+            TriggeredChildParams = block.TriggeredChildParams,
+        };
+    }
+
+    /// <summary>
+    /// BlockStatus 转换为 ConflictDetectedDto
+    /// </summary>
     public static ConflictDetectedDto MapToConflictDetectedDto(this ConflictBlockStatus conflictBlockStatus)
     {
         return new ConflictDetectedDto
@@ -87,8 +104,13 @@ public static class MappingUtility
             ConflictingUserCommands = conflictBlockStatus.conflictingUserCommands.ToAtomicOperationRequests(),
         };
     }
-    
-    public static BlockTopologyNodeDto MapToBlockTopologyNodeDto(this Block block)
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="block"></param>
+    /// <returns></returns>
+    public static BlockTopologyNodeDto MapToBlockTopologyNodeDto(this IBlockNode block)
     {
         return new BlockTopologyNodeDto
         {

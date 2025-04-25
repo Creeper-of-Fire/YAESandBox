@@ -89,12 +89,7 @@ public static class BlockTopologyExporter
                 }
 
                 // 创建 DTO 并添加到列表
-                flatList.Add(new BlockTopologyNodeDto
-                {
-                    BlockId = currentNode.BlockId,
-                    ParentBlockId = currentNode.ParentBlockId // 直接从 IBlockNode 获取父 ID
-                    // 可以按需添加其他摘要信息
-                });
+                flatList.Add(currentNode.MapToBlockTopologyNodeDto());
 
                 // 将子节点加入队列进行处理
                 foreach (string childId in currentNode.ChildrenList)
