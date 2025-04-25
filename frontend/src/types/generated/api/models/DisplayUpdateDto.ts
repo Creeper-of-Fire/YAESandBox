@@ -30,12 +30,6 @@ export type DisplayUpdateDto = {
      */
     targetElementId?: string | null;
     /**
-     * (可选) 指示前端应使用哪个脚本或渲染器来处理 <cref name="Content" />。
-     * 主要用于主 Block 显示，例如指定使用 Markdown 渲染器、自定义图表脚本等。
-     * 微工作流通常不需要此字段。
-     */
-    scriptId?: string | null;
-    /**
      * (可选，仅当 <cref name="UpdateMode" /> 为 YAESandBox.API.DTOs.WebSocket.UpdateMode.Incremental 时相关)
      * 指示增量更新的类型，例如 "JsonPatch", "DiffMatchPatch", "SimpleAppend" 等。
      * 具体值和解释取决于前后端约定。

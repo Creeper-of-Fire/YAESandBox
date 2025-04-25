@@ -15,7 +15,23 @@ YAESandBox 工作流引擎是系统核心逻辑的处理单元。它负责根据
 *   **内部变量 (Internal Variables):** 工作流在执行期间，可以在其内存中维护一套临时的、可读写的变量。这些变量用于在步骤之间传递数据、存储中间结果或控制流程。**这些变量不会被持久化。**
 *   **输出 (Output):** 工作流执行完成后产生的主要结果：
     *   **原子化指令列表 (`AtomicOperation[]`):** 一系列描述如何修改 WorldState 或 GameState 的指令。这些指令**不会**被引擎直接执行，而是返回给调用者（`WorkflowService`），最终由 `BlockManager` 根据工作流类型（主/微工作流）和当前 Block 状态决定如何应用。
-    *   **原始文本 (`raw_text`):** 工作流执行产生的主要文本结果，通常用于存档、历史记录，并作为最终显示内容的基础。
+    *   **结构化原始文本 (`string raw_text`):** 工作流产生的**单一文本字符串**。此字符串包含普通的文本内容，并**嵌入了特殊的自定义标签**来标记需要特殊渲染的内容块。这是用于存档、历史记录以及最终前端渲染的基础。
+
+## `raw_text` 格式详解
+
+`raw_text` 是一个混合了普通文本和自定义标签块的字符串。标签的格式为：`[YAE-BLOCK:scriptId]DATA_CONTENT[/YAE-BLOCK]`
+
+*   `[YAE-BLOCK:scriptId]`: 开始标签，其中 `scriptId` 是一个字符串标识符，**指示前端**应该使用哪个**渲染脚本或组件**来处理 `DATA_CONTENT`。
+*   `DATA_CONTENT`: 标签包裹的数据内容，其本身是一个**纯文本字符串**。这个字符串的**内部格式**（例如，普通文本、`|` 分隔列表、JSON 字符串等）由对应的 `scriptId` 的**约定**决定。
+*   `[/YAE-BLOCK]`: 结束标签。
+
+**示例 `raw_text`:**
+```
+这是故事的第一段。
+[YAE-BLOCK:char-quote]{"char": "老王", "text": "今天天气不错！"}[/YAE-BLOCK]
+请选择：
+[YAE-BLOCK:options]吃饭|喝水|睡觉[/YAE-BLOCK]
+```
 
 ## 工作流执行流程 (Workflow Execution Flow)
 
@@ -23,9 +39,10 @@ YAESandBox 工作流引擎是系统核心逻辑的处理单元。它负责根据
 2.  **初始化:** 引擎创建临时的内部变量上下文。
 3.  **顺序执行步骤:** 引擎按照工作流配置中定义的顺序，依次执行每一个步骤。
 4.  **步骤执行:** 每个步骤内部执行其定义的逻辑（见下文“步骤详解”）。步骤可以读取输入、读写内部变量、生成原子化指令（暂存）。
-5.  **指令累积:** 步骤生成的原子化指令被添加到工作流实例持有的一个临时列表中。
-6.  **完成:** 所有步骤执行完毕后，引擎将累积的原子化指令列表和最终生成的 `raw_text` 作为结果返回给 `WorkflowService`。
-7.  **清理:** 引擎实例销毁，内部变量被丢弃。
+5.  **完成:** 所有步骤执行完毕，引擎返回：
+    *   累积的 `AtomicOperation` 列表。
+    *   最终构建完成的 `raw_text` 字符串。
+6.  **清理:** 引擎实例销毁，内部变量被丢弃。
 
 ## 步骤详解 (Step Details)
 
@@ -47,7 +64,7 @@ YAESandBox 工作流引擎是系统核心逻辑的处理单元。它负责根据
     *   **流处理回调脚本 (Stream Processing Callback Script - 可选且独立):**
         *   **仅当 AI 服务以流式方式返回响应时，** C# 后端在接收到**新的文本块 (`chunk`)** 时，会调用为此步骤配置的**这个特定脚本**。
         *   **输入:** `step_execution_time`, `ai_stream_output_added`, `ai_stream_output_total`, 内部变量 (可读写)。
-        *   **职责:** 主要负责**生成并请求发送**用于实时前端更新的 `DisplayUpdateDto` (含 `Content`, `ScriptId/Script`, `StreamingStatus=Streaming`)。应避免复杂逻辑。
+        *   **职责:** 主要负责**生成并请求发送**用于实时前端更新的 `DisplayUpdateDto` (含 `Content`, `StreamingStatus=Streaming`)。应避免复杂逻辑。
 
 3.  **主处理脚本执行 (Main Processing Script Execution):**
     *   **触发时机:** 在 AI 调用**完全结束后** (无论是否流式，成功或失败)，C# 后端会调用步骤配置的**主处理脚本**。
@@ -143,9 +160,8 @@ YAESandBox 工作流引擎是系统核心逻辑的处理单元。它负责根据
     *   引擎（及其脚本）通过调用此委托来**请求** C# 发送一个**中间的**显示更新给前端。
     *   **委托签名示例:** `Action<DisplayUpdateRequestPayload>`
     *   **`DisplayUpdateRequestPayload` 结构:**
-        *   `Content`: (string) 要显示的内容 (文本、HTML 片段、JSON 等)。
+        *   `Content`: (string) 要显示的内容 (文本、HTML 片段、JSON 等)。它可以看作是一个临时的 `raw_text` ，使用相同的格式约定，并且被前端 **等同处理** 。
         *   `UpdateMode`: (UpdateMode Enum - `FullSnapshot` 或 `Incremental`) 内容是替换还是增量。
-        *   `ScriptId`: (string, 可选) 用于渲染 `Content` 的脚本 ID。
         *   `IncrementalType`: (string, 可选) 如果 `UpdateMode` 是 `Incremental`，则指定增量类型 (如 "json-patch")。
     *   **注意:** 调用此委托**不保证**消息立即发送或一定成功，它只是向 C# 发出请求。C# 的 `INotifierService` 负责实际的 SignalR 推送，并会填充 `DisplayUpdateDto` 的其他字段 (如 `RequestId`, `StreamingStatus`)。
 
@@ -170,7 +186,6 @@ YAESandBox 工作流引擎是系统核心逻辑的处理单元。它负责根据
     *   **ID/名称:** 唯一标识符。
     *   **步骤列表:** 按顺序引用的步骤配置 ID/名称。
     *   **声明的输入参数:** (文档性质) 描述此工作流期望接收哪些触发参数。
-    *   **最终显示脚本 ID (`FinalDisplayScriptId`, 可选):** 引用一个用于渲染此工作流产生的 `raw_text` 的显示脚本。这个脚本在 Block 加载时或历史记录查看时使用。如果未指定，可能使用默认渲染方式。
 
 2.  **步骤配置:**
     *   **ID/名称:** 唯一标识符。
