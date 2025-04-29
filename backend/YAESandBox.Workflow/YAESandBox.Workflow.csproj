@@ -1,0 +1,16 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\YAESandBox.API.DTOs\YAESandBox.API.DTOs.csproj" />
+      <ProjectReference Include="..\YAESandBox.API.Services\YAESandBox.API.Services.csproj" />
+      <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj" />
+      <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" />
+    </ItemGroup>
+
+</Project>

@@ -14,34 +14,6 @@ public enum AtomicOperationType
     ModifyEntity,
     DeleteEntity
 }
-//
-// /// <summary>
-// /// 表示单个原子操作的执行结果。
-// /// </summary>
-// public readonly record struct OperationResult
-// {
-//     /// <summary>
-//     /// 指示操作是否成功执行。
-//     /// </summary>
-//     public bool Success { get; init; }
-//
-//     /// <summary>
-//     /// 如果操作失败，则包含错误信息；否则为 null。
-//     /// </summary>
-//     public string? ErrorMessage { get; init; }
-//
-//     /// <summary>
-//     /// 导致此结果的原始操作。
-//     /// </summary>
-//     public AtomicOperation OriginalOperation { get; init; }
-//
-//     // 可以添加一个静态工厂方法方便创建
-//     public static OperationResult Ok(AtomicOperation operation) =>
-//         new() { Success = true, ErrorMessage = null, OriginalOperation = operation };
-//
-//     public static OperationResult Fail(AtomicOperation operation, string error) =>
-//         new() { Success = false, ErrorMessage = error, OriginalOperation = operation };
-// }
 
 /// <summary>
 /// 封装一个原子化操作及其参数。
