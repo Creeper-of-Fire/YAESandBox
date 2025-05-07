@@ -41,25 +41,25 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
     {
         List<DoubaoChatMessage> doubaoMessages = [.. prompts.Select(p => p.ToDoubaoMessage())];
 
-        var responseFormatParam = new DoubaoResponseFormat(this._config.ResponseFormatType ?? "text");
+        var responseFormatParam = new DoubaoResponseFormat(this._config.ResponseFormatType);
 
         var requestPayload = new DoubaoChatRequest(
-            Model: _config.ModelName,
+            Model: this._config.ModelName,
             Messages: doubaoMessages,
             Stream: true,
-            Temperature: _config.Temperature,
-            MaxTokens: _config.MaxTokens,
-            TopP: _config.TopP,
-            Stop: _config.StopSequences,
+            Temperature: this._config.Temperature,
+            MaxTokens: this._config.MaxTokens,
+            TopP: this._config.TopP,
+            Stop: this._config.StopSequences,
             ResponseFormat: responseFormatParam,
-            FrequencyPenalty: _config.FrequencyPenalty,
-            PresencePenalty: _config.PresencePenalty,
-            StreamOptions: _config.StreamOptions,
-            ServiceTier: _config.ServiceTier,
-            Logprobs: _config.Logprobs,
-            TopLogprobs: _config.TopLogprobs,
-            LogitBias: _config.LogitBias?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-            Tools: _config.Tools?.ToList()
+            FrequencyPenalty: this._config.FrequencyPenalty,
+            PresencePenalty: this._config.PresencePenalty,
+            StreamOptions: this._config.StreamOptions,
+            ServiceTier: this._config.ServiceTier,
+            Logprobs: this._config.Logprobs,
+            TopLogprobs: this._config.TopLogprobs,
+            LogitBias: this._config.LogitBias?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+            Tools: this._config.Tools?.ToList()
         );
 
         var request = new HttpRequestMessage(HttpMethod.Post, "https://ark.cn-beijing.volces.com/api/v3/chat/completions")
@@ -71,7 +71,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
                     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
                 })
         };
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", _config.ApiKey); // 从 _config 获取 ApiKey
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this._config.ApiKey); // 从 _config 获取 ApiKey
 
         string? lastFinishReason = null;
 

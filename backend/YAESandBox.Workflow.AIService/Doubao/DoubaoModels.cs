@@ -37,7 +37,12 @@ internal record DoubaoFunctionDefinition(
     object Parameters // JSON Schema 对象
 );
 
-internal record DoubaoResponseFormat([property: JsonPropertyName("type")] string Type = "text");
+internal record DoubaoResponseFormat
+{
+    public DoubaoResponseFormat(string? Type = null) => this.Type = Type ?? "text";
+
+    [JsonPropertyName("type")] public string Type { get; private init; }
+}
 
 internal record DoubaoChatRequest(
     [property: JsonPropertyName("model")] string Model,
@@ -50,7 +55,7 @@ internal record DoubaoChatRequest(
     int? MaxTokens = null,
     [property: JsonPropertyName("service_tier")]
     string? ServiceTier = null,
-    [property: JsonPropertyName("stop")] IReadOnlyList<string>? Stop = null, // 保持 JsonElement 的灵活性
+    [property: JsonPropertyName("stop")] IReadOnlyList<string>? Stop = null,
     [property: JsonPropertyName("response_format")]
     DoubaoResponseFormat? ResponseFormat = null,
     [property: JsonPropertyName("frequency_penalty")]

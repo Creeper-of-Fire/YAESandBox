@@ -23,9 +23,9 @@ public class AiModule : IWorkflowModule
         switch (isStream)
         {
             case true:
-                return ExecuteStreamAsync(aiProcessor, prompts);
+                return this.ExecuteStreamAsync(aiProcessor, prompts);
             case false:
-                return ExecuteNonStreamAsync(aiProcessor, prompts);
+                return this.ExecuteNonStreamAsync(aiProcessor, prompts);
         }
     }
 

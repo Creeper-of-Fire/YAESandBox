@@ -3,8 +3,8 @@
 /// <summary>
 /// 豆包的AI配置
 /// </summary>
-internal record DoubaoAiProcessorConfig(string ConfigName, string UUID, string ApiKey, string ModelName)
-    : AbstractAiProcessorConfig(ConfigName, UUID, nameof(DoubaoAiProcessorConfig))
+internal record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string ModelName)
+    : AbstractAiProcessorConfig(ConfigName, nameof(DoubaoAiProcessorConfig))
 {
     // public required string ApiKey { get; init; } = ApiKey;
     //
