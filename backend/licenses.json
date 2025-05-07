@@ -30,6 +30,96 @@
     "LicenseInformationOrigin": 0
   },
   {
+    "PackageId": "Microsoft.Extensions.Configuration",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Configuration.Abstractions",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Configuration.Binder",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.DependencyInjection",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.DependencyInjection.Abstractions",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Diagnostics",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Diagnostics.Abstractions",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Http",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Logging",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
     "PackageId": "Microsoft.Extensions.Logging.Abstractions",
     "PackageVersion": "2.1.1",
     "PackageProjectUrl": "https://asp.net/",
@@ -38,6 +128,46 @@
     "License": "Apache-2.0",
     "LicenseUrl": "https://raw.githubusercontent.com/aspnet/Home/2.0.0/LICENSE.txt",
     "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Logging.Abstractions",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Options",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Options.ConfigurationExtensions",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Primitives",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
   },
   {
     "PackageId": "Microsoft.OpenApi",
@@ -183,6 +313,16 @@
     "PackageId": "System.Collections.Immutable",
     "PackageVersion": "1.7.1",
     "PackageProjectUrl": "https://github.com/dotnet/corefx",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Diagnostics.DiagnosticSource",
+    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
     "License": "MIT",

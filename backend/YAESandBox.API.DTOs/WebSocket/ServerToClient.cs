@@ -69,13 +69,6 @@ public record DisplayUpdateDto(
     public string? TargetElementId { get; set; }
 
     /// <summary>
-    /// (可选，仅当 <cref name="UpdateMode"/> 为 <see cref="UpdateMode.Incremental"/> 时相关)
-    /// 指示增量更新的类型，例如 "JsonPatch", "DiffMatchPatch", "SimpleAppend" 等。
-    /// 具体值和解释取决于前后端约定。
-    /// </summary>
-    public string? IncrementalType { get; set; }
-
-    /// <summary>
     /// (可选) 消息的序列号，用于处理乱序或重复的消息。
     /// 客户端可以根据需要实现排序和去重逻辑。
     /// </summary>
@@ -170,7 +163,6 @@ public enum UpdateMode
 
     /// <summary>
     /// <see cref="DisplayUpdateDto.Content"/> 包含对现有内容的增量更改。
-    /// 需要根据 <see cref="DisplayUpdateDto.IncrementalType"/> 来应用更改。
     /// </summary>
     Incremental
 }

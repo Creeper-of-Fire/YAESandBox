@@ -1,5 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using YAESandBox.Depend;
 
 namespace YAESandBox.API.DTOs.WebSocket;
 

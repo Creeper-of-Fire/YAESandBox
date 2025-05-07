@@ -4,6 +4,7 @@
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AControllerBase_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F5141a427cf0d4f86875b167827a87e691de928_003F9c_003F66fa3253_003FControllerBase_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AControllerBase_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FSourcesCache_003F6fa05d7dbf2e454ce78b261b422234da1f1ccedee678fd997e5ef4afe6df6e_003FControllerBase_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AEnumerable_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F505d92d4dd474b5baf908fd6bb70bae4a0938_003Fb9_003F9bd8c547_003FEnumerable_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
+	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AEnum_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2025_002E1_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003Fc73b3c6c598640c592fd3c6fa226c286e90908_003Fb9_003F5011ea52_003FEnum_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AError_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FSourcesCache_003F7131fcb823152524b974cf9714eeea465987b9aeec2f874695367eabeddb_003FError_002Ecs_002Fz_003A2_002D1/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AExceptionDispatchInfo_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FSourcesCache_003Fbd1d5c50194fea68ff3559c160230b0ab50f5acf4ce3061bffd6d62958e2182_003FExceptionDispatchInfo_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
 	<s:String x:Key="/Default/CodeInspection/ExcludedFiles/FilesAndFoldersToSkip2/=7020124F_002D9FFC_002D4AC3_002D8F3D_002DAAB8E0240759_002Ff_003AGenerationSpec_002Ecs_002Fl_003A_002E_002E_003F_002E_002E_003F_002E_002E_003FAppData_003FRoaming_003FJetBrains_003FRider2024_002E3_003Fresharper_002Dhost_003FDecompilerCache_003Fdecompiler_003F1341ca501f964a198b6fe8be2e03fd101fc00_003F7f_003F2317a6eb_003FGenerationSpec_002Ecs/@EntryIndexedValue">ForceIncluded</s:String>
@@ -43,26 +44,12 @@
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Users\Creeper10\.nuget\packages\oneof\3.0.271\lib\netstandard2.0\OneOf.dll" /&gt;&#xD;
 &lt;/AssemblyExplorer&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=0cb99430_002D0bc3_002D4865_002Da0be_002D900ce45ffa8f/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="ExecuteAtomicOperations_当操作被排队时_应返回AcceptedResult并包含消息" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::66DBE303-0FA0-44B0-BC8B-769227A3FE55::net9.0::YAESandBox.Tests.API.Controllers.AtomicControllerTests.ExecuteAtomicOperations_当操作被排队时_应返回AcceptedResult并包含消息&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=274f71a8_002Dd825_002D489a_002D9167_002De20232a5a3f2/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" IsActive="True" Name="解决方案中的所有测试" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Solution /&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=346b06a5_002D3105_002D4692_002D8e8e_002D9ff48db40e32/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="持久化_保存和加载状态_应恢复数据和盲存" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;TestAncestor&gt;&#xD;
-    &lt;TestId&gt;xUnit::66DBE303-0FA0-44B0-BC8B-769227A3FE55::net9.0::YAESandBox.Tests.Integration.MainWorkflowIntegrationTests.持久化_保存和加载状态_应恢复数据和盲存&lt;/TestId&gt;&#xD;
-  &lt;/TestAncestor&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
 	
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=6a13b028_002De785_002D4a85_002D9062_002D7852758cb69d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="解决方案中的所有测试" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Solution /&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
-	<s:String x:Key="/Default/Environment/UnitTesting/UnitTestSessionStore/Sessions/=aa962a77_002D74dd_002D4caf_002D8e76_002D49bfa44ceb0d/@EntryIndexedValue">&lt;SessionState ContinuousTestingMode="0" Name="NotifyConflictDetectedAsync_应调用ClientsAllReceiveConflictDetected" xmlns="urn:schemas-jetbrains-com:jetbrains-ut-session"&gt;&#xD;
-  &lt;Solution /&gt;&#xD;
-&lt;/SessionState&gt;</s:String>
+	
+	
+	
+	
+	
 	
 	
 	

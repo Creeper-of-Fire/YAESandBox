@@ -1211,11 +1211,6 @@
             "description": "(关键区分) 目标 UI 元素或逻辑区域的 ID。\r\n- 如果为 **null** 或空字符串：表示这是一个 **主工作流** 更新，应更新与 <cref name=\"ContextBlockId\" /> 关联的主要显示区域。\r\n- 如果 **非 null**：表示这是一个 **微工作流** 更新，应更新 ID 与此值匹配的特定 UI 元素或区域。",
             "nullable": true
           },
-          "incrementalType": {
-            "type": "string",
-            "description": "(可选，仅当 <cref name=\"UpdateMode\" /> 为 YAESandBox.API.DTOs.WebSocket.UpdateMode.Incremental 时相关)\r\n指示增量更新的类型，例如 \"JsonPatch\", \"DiffMatchPatch\", \"SimpleAppend\" 等。\r\n具体值和解释取决于前后端约定。",
-            "nullable": true
-          },
           "sequenceNumber": {
             "type": "integer",
             "description": "(可选) 消息的序列号，用于处理乱序或重复的消息。\r\n客户端可以根据需要实现排序和去重逻辑。",

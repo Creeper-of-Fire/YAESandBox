@@ -30,12 +30,6 @@ export type DisplayUpdateDto = {
      */
     targetElementId?: string | null;
     /**
-     * (可选，仅当 <cref name="UpdateMode" /> 为 YAESandBox.API.DTOs.WebSocket.UpdateMode.Incremental 时相关)
-     * 指示增量更新的类型，例如 "JsonPatch", "DiffMatchPatch", "SimpleAppend" 等。
-     * 具体值和解释取决于前后端约定。
-     */
-    incrementalType?: string | null;
-    /**
      * (可选) 消息的序列号，用于处理乱序或重复的消息。
      * 客户端可以根据需要实现排序和去重逻辑。
      */

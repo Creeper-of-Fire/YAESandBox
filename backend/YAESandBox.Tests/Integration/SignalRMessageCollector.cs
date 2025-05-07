@@ -3,7 +3,6 @@
 using System.Collections.Concurrent;
 using Microsoft.AspNetCore.SignalR.Client;
 using Xunit.Abstractions;
-using YAESandBox.API.DTOs;
 using YAESandBox.API.DTOs.WebSocket;
 
 namespace YAESandBox.Tests.Integration;
