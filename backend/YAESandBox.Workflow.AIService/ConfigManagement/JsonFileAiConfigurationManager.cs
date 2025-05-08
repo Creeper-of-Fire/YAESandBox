@@ -3,6 +3,7 @@
 using FluentResults;
 using System.Text.Json;
 using YAESandBox.Depend;
+using YAESandBox.Workflow.AIService.AiConfig;
 
 // 为了使用 AbstractAiProcessorConfig 和 AiError
 
@@ -82,7 +83,7 @@ public class JsonFileAiConfigurationManager(string? configFilePath = null) : IAi
         try
         {
             string? directory = Path.GetDirectoryName(this.filePath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory)) 
+            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 Directory.CreateDirectory(directory); // 确保目录存在
 
             await File.WriteAllTextAsync(this.filePath, json);

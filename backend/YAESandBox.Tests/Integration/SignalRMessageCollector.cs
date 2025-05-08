@@ -177,9 +177,7 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
 
         if (this._messageSemaphores.TryGetValue(messageType, out var semaphore))
             // 不断尝试获取信号量，直到为0，以清空计数
-            while (semaphore.Wait(0))
-            {
-            }
+            while (semaphore.Wait(0)) { }
     }
 
     /// <summary>
@@ -190,9 +188,7 @@ public class SignalRMessageCollector(HubConnection connection, ITestOutputHelper
         foreach (var queue in this._receivedMessages.Values) queue.Clear();
 
         foreach (var semaphore in this._messageSemaphores.Values)
-            while (semaphore.Wait(0))
-            {
-            }
+            while (semaphore.Wait(0)) { }
     }
 }
 // --- END OF FILE SignalRMessageCollector.cs ---

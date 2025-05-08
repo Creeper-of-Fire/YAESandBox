@@ -2,6 +2,7 @@
 
 using FluentResults;
 using YAESandBox.Depend;
+using YAESandBox.Workflow.AIService.AiConfig;
 
 // 使用 Task 但用户不要求 CancellationToken
 

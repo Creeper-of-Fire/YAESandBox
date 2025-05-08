@@ -327,7 +327,7 @@ public partial class BlockManager : IBlockManager
                 ChildrenIds = new List<string>(coreBlock.ChildrenList), // Copy list
                 BlockContent = coreBlock.BlockContent,
                 // Shallow copy Metadata
-                Metadata = coreBlock.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value), 
+                Metadata = coreBlock.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value),
                 // Shallow copy Params
                 TriggeredChildParams = coreBlock.TriggeredChildParams.ToDictionary(entry => entry.Key, entry => entry.Value),
                 TriggeredParams = coreBlock.TriggeredParams.ToDictionary(entry => entry.Key, entry => entry.Value),
@@ -528,7 +528,7 @@ public partial class BlockManager : IBlockManager
             var gameStateClone = updatedIdleParentBlock.Block.GameState.Clone();
 
             // 使用标准方式创建 Block (返回 Loading)
-            var tempLoadingBlock = Block.CreateBlock(newBlockId, parentBlockId, DEBUG_WorkFlowName, wsInputClone, gameStateClone,[]);
+            var tempLoadingBlock = Block.CreateBlock(newBlockId, parentBlockId, DEBUG_WorkFlowName, wsInputClone, gameStateClone, []);
 
             // 添加到字典 (仍然需要锁新 Block ID，虽然概率极低，但保险起见)
             using (await this.GetLockForBlock(newBlockId).LockAsync())

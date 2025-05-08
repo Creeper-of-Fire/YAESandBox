@@ -64,7 +64,7 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     /// </response>
     /// <response code="404">如果指定了 blockId，但未找到具有该 ID 的 Block。</response>
     /// <response code="500">获取拓扑结构时发生内部服务器错误。</response>
-    [HttpGet("topology")] 
+    [HttpGet("topology")]
     [ProducesResponseType(typeof(List<BlockTopologyNodeDto>), StatusCodes.Status200OK)] // 返回 DTO 列表
     [ProducesResponseType(StatusCodes.Status404NotFound)] // 添加 404
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -76,9 +76,9 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
             var flatTopologyList = await this.blockReadService.GetBlockTopologyListAsync(blockId);
 
             // 检查 Service 返回结果
-            if (flatTopologyList.Any()) 
+            if (flatTopologyList.Any())
                 return this.Ok(flatTopologyList); // 成功获取到列表 (即使是空列表也算成功)
-            
+
             // 如果提供了 blockId 但 Service 返回 null，通常意味着 blockId 不存在
             if (!string.IsNullOrEmpty(blockId))
             {

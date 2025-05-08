@@ -15,8 +15,7 @@ public static class OneOfExtensions
     /// </summary>
     public static OneOf<T0, TTarget> Widen<T0, TTarget>(this OneOf<T0> source)
     {
-        return source.Match<OneOf<T0, TTarget>>(
-            t0 => t0
+        return source.Match<OneOf<T0, TTarget>>(t0 => t0
         );
     }
 

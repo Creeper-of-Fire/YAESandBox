@@ -373,7 +373,5 @@ public class MainWorkflowIntegrationTests(ITestOutputHelper output) : Integratio
 
 // 需要在某个地方定义这个集合，确保顺序执行
 [CollectionDefinition("SequentialPersistence", DisableParallelization = true)]
-public class SequentialPersistenceCollection
-{
-}
+public class SequentialPersistenceCollection { }
 // --- END OF FILE MainWorkflowIntegrationTests.cs ---

@@ -255,7 +255,7 @@ public class WorkflowService(
             }
 
             // === 模拟指令生成 ===
-            
+
             // 假设需要创建 DeepFake 提到的地点和角色 (如果它们在 WsInput 不存在)
             // 注意：实际应用中需要检查是否存在，避免重复创建错误
             generatedCommands.Add(AtomicOperation.Create(EntityType.Place, "castle-entrance",

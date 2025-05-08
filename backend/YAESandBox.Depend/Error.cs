@@ -89,6 +89,7 @@ public interface IHandledIssue : IReason
     /// </summary>
     public List<IReason> Reasons { get; }
 }
+
 /// <summary>
 /// 错误的Helper
 /// </summary>

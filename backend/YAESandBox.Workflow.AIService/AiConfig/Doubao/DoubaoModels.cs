@@ -2,17 +2,17 @@
 
 using System.Text.Json.Serialization;
 
-namespace YAESandBox.Workflow.AIService.Doubao;
+namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
 
 // --- 请求体模型 ---
-internal record DoubaoChatMessage(
+public record DoubaoChatMessage(
     [property: JsonPropertyName("role")] string Role,
     [property: JsonPropertyName("content")]
     string Content,
     [property: JsonPropertyName("name")] string? Name = null
 );
 
-internal record DoubaoStreamOptions(
+public record DoubaoStreamOptions(
     [property: JsonPropertyName("include_usage")]
     bool? IncludeUsage = null
 );
@@ -20,7 +20,7 @@ internal record DoubaoStreamOptions(
 /// <summary>
 /// 工具定义 (请求时可能用到)
 /// </summary>
-internal record DoubaoTool(
+public record DoubaoTool(
     [property: JsonPropertyName("type")] string Type, // "function"
     [property: JsonPropertyName("function")]
     DoubaoFunctionDefinition Function
@@ -29,7 +29,7 @@ internal record DoubaoTool(
 /// <summary>
 /// 工具的函数定义 (请求时可能用到)
 /// </summary>
-internal record DoubaoFunctionDefinition(
+public record DoubaoFunctionDefinition(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("description")]
     string Description,
@@ -37,7 +37,7 @@ internal record DoubaoFunctionDefinition(
     object Parameters // JSON Schema 对象
 );
 
-internal record DoubaoResponseFormat
+public record DoubaoResponseFormat
 {
     public DoubaoResponseFormat(string? Type = null) => this.Type = Type ?? "text";
 

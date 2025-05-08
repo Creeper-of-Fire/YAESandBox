@@ -3,9 +3,7 @@ using OneOf;
 using YAESandBox.Core.Action;
 using YAESandBox.Depend;
 
-namespace YAESandBox.Core.Block
-{
-}
+namespace YAESandBox.Core.Block { }
 
 namespace YAESandBox.Core.Block
 {

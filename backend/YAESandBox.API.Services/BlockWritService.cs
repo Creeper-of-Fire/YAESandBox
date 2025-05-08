@@ -60,7 +60,7 @@ public class BlockWritService(IBlockManager blockManager, INotifierService notif
         }
 
         var resultCode = await this.blockManager.UpdateBlockDetailsAsync(blockId, updateDto.Content, updateDto.MetadataUpdates);
-        
+
         if (updateDto.Content != null)
             await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.BlockContent);
         if (updateDto.MetadataUpdates != null && updateDto.MetadataUpdates.Any())

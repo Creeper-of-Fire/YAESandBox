@@ -1,4 +1,6 @@
-﻿namespace YAESandBox.Workflow.AIService.ConfigManagement;
+﻿using YAESandBox.Workflow.AIService.AiConfig;
+
+namespace YAESandBox.Workflow.AIService.ConfigManagement;
 
 public interface IAiConfigurationProvider
 {

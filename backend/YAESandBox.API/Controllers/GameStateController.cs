@@ -61,7 +61,7 @@ public class GameStateController(
         switch (result)
         {
             case BlockResultCode.Success:
-                
+
                 return this.NoContent(); // 204 No Content
             case BlockResultCode.NotFound:
                 return this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。"); // 404 Not Found

@@ -52,6 +52,7 @@ public class BlockManagementController(
                     Log.Error("CreateBlockManuallyAsync 返回 Success 但 BlockStatus 为 null。");
                     return this.StatusCode(StatusCodes.Status500InternalServerError, "创建成功但无法获取 Block 信息。");
                 }
+
                 var newBlockDto = newBlockStatus.MapToDetailDto(); // 使用辅助方法映射
                 // 使用 GetBlockDetail 的路由名和参数创建 Location Header
                 return this.CreatedAtAction(nameof(BlocksController.GetBlockDetail), "Blocks",
@@ -67,7 +68,7 @@ public class BlockManagementController(
                 return this.StatusCode(StatusCodes.Status500InternalServerError, "创建 Block 时发生内部错误。");
         }
     }
-    
+
     //TODO 增加一个复制节点的功能
 
     /// <summary>

@@ -2,8 +2,6 @@
 
 namespace YAESandBox.Core;
 
-
-
 public record NormalHandledIssue(BlockResultCode Code, string Message) : LazyInitHandledIssue(Message)
 {
     public static NormalHandledIssue NotFound(string message)

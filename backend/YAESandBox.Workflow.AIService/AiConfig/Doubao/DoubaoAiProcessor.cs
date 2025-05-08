@@ -5,7 +5,7 @@ using System.Net.Http.Json;
 using System.Text.Json;
 using FluentResults;
 
-namespace YAESandBox.Workflow.AIService.Doubao;
+namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
 
 file static class PromptRoleMapper
 {
@@ -54,12 +54,12 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             ResponseFormat: responseFormatParam,
             FrequencyPenalty: this._config.FrequencyPenalty,
             PresencePenalty: this._config.PresencePenalty,
-            StreamOptions: this._config.StreamOptions,
+            StreamOptions: new DoubaoStreamOptions(this._config.StreamOptions_IncludeUsage),
             ServiceTier: this._config.ServiceTier,
             Logprobs: this._config.Logprobs,
             TopLogprobs: this._config.TopLogprobs,
             LogitBias: this._config.LogitBias?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
-            Tools: this._config.Tools?.ToList()
+            Tools: null
         );
 
         var request = new HttpRequestMessage(HttpMethod.Post, "https://ark.cn-beijing.volces.com/api/v3/chat/completions")

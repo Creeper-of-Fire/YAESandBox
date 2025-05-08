@@ -69,7 +69,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
             Log.Error(ex, $"GameHub: ResolveConflict 处理时发生异常: {ex.Message}");
         }
     }
-    
+
     /// <summary>
     /// 重新生成
     /// </summary>

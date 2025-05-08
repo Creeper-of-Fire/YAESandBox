@@ -9,8 +9,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj" />
-      <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj" />
+        <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
 
 </Project>

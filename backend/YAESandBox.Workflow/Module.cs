@@ -41,6 +41,7 @@ public class AiModule : IWorkflowModule
             return result;
         return fullAiReturn;
     }
+
     private async Task<Result<string>> ExecuteNonStreamAsync(IAiProcessor aiProcessor, List<(PromptRole role, string prompt)> prompts)
     {
         // var result = await aiProcessor.RequestAsync(prompts);

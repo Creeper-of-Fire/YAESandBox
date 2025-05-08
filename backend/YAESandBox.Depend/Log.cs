@@ -50,7 +50,7 @@ public static class Log
         _logger.Warning(message);
     }
 
-    
+
     public static void Error(string message)
     {
         _logger.Error(message);

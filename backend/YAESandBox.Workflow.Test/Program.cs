@@ -2,7 +2,8 @@
 
 using System.Text;
 using YAESandBox.Workflow.AIService;
-using YAESandBox.Workflow.AIService.Doubao;
+using YAESandBox.Workflow.AIService.AiConfig;
+using YAESandBox.Workflow.AIService.AiConfig.Doubao;
 
 namespace YAESandBox.Workflow.Test;
 
@@ -24,7 +25,7 @@ internal class Program
         var dependencies = new AiProcessorDependencies(httpClient);
 
         // 3. 准备 AiRequestParameters
-        var requestParameters = new DoubaoAiProcessorConfig("Doubao",DOUBAO_API_KEY, DOUBAO_MODEL_NAME)
+        var requestParameters = new DoubaoAiProcessorConfig("Doubao", DOUBAO_API_KEY, DOUBAO_MODEL_NAME)
         {
             Temperature = DEFAULT_TEMPERATURE
         };
@@ -122,6 +123,7 @@ internal class Program
                         // 假设 result.Errors 至少有一个错误
                         Console.WriteLine($"错误: {result.Errors[0].Message}");
                     }
+
                     Console.ResetColor();
                     // 请求失败时，不应将用户输入或部分回复计入历史
                 }

@@ -43,7 +43,7 @@ public record PromptRole
     /// 部分高级AI模型可以识别角色名称，因此可以指定角色名称。
     /// </summary>
     public string name { get; private init; } = "";
-    
+
     public static PromptRole System(string name = "") => new() { type = PromptRoleType.System, name = name };
     public static PromptRole User(string name = "") => new() { type = PromptRoleType.User, name = name };
     public static PromptRole Assistant(string name = "") => new() { type = PromptRoleType.Assistant, name = name };

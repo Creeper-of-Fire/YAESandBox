@@ -11,7 +11,7 @@ internal static class ConfigLocator
     {
         throw new NotImplementedException();
     }
-    
+
     internal static IModuleConfig findModuleConfig(string moduleID)
     {
         throw new NotImplementedException();

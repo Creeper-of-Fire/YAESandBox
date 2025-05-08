@@ -1,0 +1,86 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+    <!-- 
+      Microsoft ResX Schema 
+      
+      Version 2.0
+      
+      The primary goals of this format is to allow a simple XML format 
+      that is mostly human readable. The generation and parsing of the 
+      various data types are done through the TypeConverter classes 
+      associated with the data types.
+      
+      Example:
+      
+      ... ado.net/XML headers & schema ...
+      <resheader name="resmimetype">text/microsoft-resx</resheader>
+      <resheader name="version">2.0</resheader>
+      <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+      <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+      <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+      <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+      <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+          <value>[base64 mime encoded serialized .NET Framework object]</value>
+      </data>
+      <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object. политико.base64">
+          <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+      </data>
+                  
+      NOTES:
+      
+      UserState entries are not persisted and are removed during generation.
+      
+      If you have data types that are not common types, you will need to create 
+      strong typed classes based on the data types.
+      
+      Delete this section if you don't want it.
+      
+      -->
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>2.0</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </value>
+    </resheader>
+
+    <!-- AbstractAiProcessorConfig.ConfigName -->
+    <data name="AbstractAiProcessorConfig_ConfigName_Label" xml:space="preserve">
+    <value>配置名称</value>
+        <comment>用于 AbstractAiProcessorConfig.ConfigName 属性的标签</comment>
+  </data>
+    <data name="AbstractAiProcessorConfig_ConfigName_Description" xml:space="preserve">
+    <value>为此AI服务配置指定一个易于识别的名称。建议确保其唯一性，以便管理。</value>
+        <comment>用于 AbstractAiProcessorConfig.ConfigName 属性的描述信息</comment>
+  </data>
+
+    <!-- AbstractAiProcessorConfig.ModuleType -->
+    <data name="AbstractAiProcessorConfig_ModuleType_Label" xml:space="preserve">
+    <value>模块类型</value>
+        <comment>用于 AbstractAiProcessorConfig.ModuleType 属性的标签</comment>
+  </data>
+    <data name="AbstractAiProcessorConfig_ModuleType_Description" xml:space="preserve">
+    <value>AI模型的内部类型标识符。此字段由系统根据具体配置类型自动设置，通常用于区分不同的AI服务实现，用户不应手动修改。</value>
+        <comment>用于 AbstractAiProcessorConfig.ModuleType 属性的描述信息</comment>
+  </data>
+
+    <!-- 通用验证消息 (如果需要，可以放在更通用的资源文件中) -->
+    <data name="Validation_Required" xml:space="preserve">
+    <value>此字段为必填项。</value>
+        <comment>通用的必填字段验证错误消息</comment>
+  </data>
+    <data name="Validation_Range" xml:space="preserve">
+    <value>值必须在 {0} 和 {1} 之间。</value>
+        <comment>通用的范围验证错误消息，{0}是最小值，{1}是最大值</comment>
+  </data>
+
+</root>

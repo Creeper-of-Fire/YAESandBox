@@ -1,4 +1,5 @@
-﻿using YAESandBox.Workflow.AIService.ConfigManagement; // 用于缓存 IAiProcessor 实例 (可选)
+﻿using YAESandBox.Workflow.AIService.AiConfig;
+using YAESandBox.Workflow.AIService.ConfigManagement; // 用于缓存 IAiProcessor 实例 (可选)
 
 namespace YAESandBox.Workflow.AIService;
 
@@ -22,7 +23,7 @@ public class MasterAiService(IHttpClientFactory httpClientFactory, IAiConfigurat
         var config = this._configProvider.GetConfiguration(aiProcessorConfigUUID);
 
         if (config == null) return null;
-        
+
         var httpClient = this._httpClientFactory.CreateClient(config.ConfigName); // 使用配置的标识名称作为客户端名称
 
         var dependencies = new AiProcessorDependencies(httpClient);
