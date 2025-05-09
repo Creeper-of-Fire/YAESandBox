@@ -495,6 +495,177 @@
         }
       }
     },
+    "/api/ai-configuration-management/schemas/{configTypeName}": {
+      "get": {
+        "tags": [
+          "ConfigSchemas"
+        ],
+        "summary": "获取指定 AI 配置类型的表单 Schema 结构。\r\n用于前端动态生成该类型配置的【新建】或【编辑】表单骨架。",
+        "parameters": [
+          {
+            "name": "configTypeName",
+            "in": "path",
+            "description": "AI 配置的类型名称 (例如 \"DoubaoAiProcessorConfig\")。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FormFieldSchema"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FormFieldSchema"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/FormFieldSchema"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai-configuration-management/available-config-types": {
+      "get": {
+        "tags": [
+          "ConfigSchemas"
+        ],
+        "summary": "获取所有可用的 AI 配置【类型定义】列表。\r\n用于前端展示可以【新建】哪些类型的 AI 配置。",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOption"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOption"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOption"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai-configuration-management/saved-configurations": {
+      "get": {
+        "tags": [
+          "ConfigSchemas"
+        ],
+        "summary": "获取所有【已保存的 AI 配置实例】的摘要列表。\r\n用于前端生成一个下拉框或列表，让用户选择一个已存在的配置进行【编辑】或【使用】。",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOption"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOption"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOption"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
     "/api/entities": {
       "get": {
         "tags": [
@@ -1175,6 +1346,32 @@
         "additionalProperties": false,
         "description": "(服务器 -> 客户端)\r\n当主工作流执行完成后，检测到 AI 生成的指令与用户在 Loading 状态下提交的指令存在冲突时发送。\r\n前端应使用此信息向用户展示冲突详情，并提供解决冲突的界面。"
       },
+      "DictionaryKeyInfo": {
+        "required": [
+          "keyType"
+        ],
+        "type": "object",
+        "properties": {
+          "keyType": {
+            "$ref": "#/components/schemas/SchemaDataType"
+          },
+          "enumOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SelectOption"
+            },
+            "description": "如果 KeyType 是 Enum，这里提供枚举的选项列表。",
+            "nullable": true
+          },
+          "rawKeyTypeName": {
+            "type": "string",
+            "description": "原始C#键类型名称，用于调试或特定场景。",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "描述字典类型字段中“键”的相关信息。"
+      },
       "DisplayUpdateDto": {
         "required": [
           "content",
@@ -1295,6 +1492,99 @@
         ],
         "type": "string"
       },
+      "FormFieldSchema": {
+        "required": [
+          "isEditableSelectOptions",
+          "isReadOnly",
+          "isRequired",
+          "label",
+          "name",
+          "order",
+          "schemaDataType"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "minLength": 1,
+            "type": "string",
+            "description": "字段的编程名称（通常是C#属性名）。"
+          },
+          "label": {
+            "minLength": 1,
+            "type": "string",
+            "description": "字段在UI上显示的标签文本。"
+          },
+          "description": {
+            "type": "string",
+            "description": "对字段的额外描述或提示信息，显示在标签下方或作为tooltip。",
+            "nullable": true
+          },
+          "placeholder": {
+            "type": "string",
+            "description": "输入框的占位提示文本 (placeholder)。",
+            "nullable": true
+          },
+          "schemaDataType": {
+            "$ref": "#/components/schemas/SchemaDataType"
+          },
+          "isReadOnly": {
+            "type": "boolean",
+            "description": "字段是否为只读。"
+          },
+          "isRequired": {
+            "type": "boolean",
+            "description": "字段是否为必填。"
+          },
+          "defaultValue": {
+            "description": "字段的默认值。",
+            "nullable": true
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SelectOption"
+            },
+            "description": "用于选择类型（如枚举、下拉列表）的选项列表。\r\n如果 YAESandBox.Workflow.AIService.AiConfigSchema.FormFieldSchema.IsEditableSelectOptions 为 true，这些是建议选项，用户仍可输入自定义值。\r\n默认先选择第一个，如果YAESandBox.Workflow.AIService.AiConfigSchema.FormFieldSchema.DefaultValue不为空，尝试从YAESandBox.Workflow.AIService.AiConfigSchema.SelectOption.Value和YAESandBox.Workflow.AIService.AiConfigSchema.SelectOption.Label属性中进行匹配",
+            "nullable": true
+          },
+          "isEditableSelectOptions": {
+            "type": "boolean",
+            "description": "如果为 true，并且 Options 不为空，表示这是一个可编辑的下拉框 (combobox)。\r\n用户可以选择建议的 Options，也可以输入不在列表中的自定义值。\r\n例如，如果 SchemaDataType 是 String，且 Options 为 null 或空，但此值为 true，\r\n暗示前端可能需要一个普通的文本输入，但可能带有某种自动完成或建议机制（如果 OptionsProviderEndpoint 指定）。"
+          },
+          "optionsProviderEndpoint": {
+            "type": "string",
+            "description": "如果提供，表示该字段的选项可以从这个API端点动态获取。\r\n前端可以调用此端点（通常是GET请求）来刷新或获取选项列表。\r\n端点应返回 SelectOption[] 或类似结构。\r\n例如：\"/api/ai-models/doubao/available-models\"",
+            "nullable": true
+          },
+          "validation": {
+            "$ref": "#/components/schemas/ValidationRules"
+          },
+          "nestedSchema": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FormFieldSchema"
+            },
+            "description": "如果 SchemaDataType 是 Object，此属性包含该嵌套对象的字段定义。",
+            "nullable": true
+          },
+          "arrayItemSchema": {
+            "$ref": "#/components/schemas/FormFieldSchema"
+          },
+          "keyInfo": {
+            "$ref": "#/components/schemas/DictionaryKeyInfo"
+          },
+          "dictionaryValueSchema": {
+            "$ref": "#/components/schemas/FormFieldSchema"
+          },
+          "order": {
+            "type": "integer",
+            "description": "字段在表单中的显示顺序，值越小越靠前。",
+            "format": "int32"
+          }
+        },
+        "additionalProperties": false,
+        "description": "用于描述表单字段的元数据，传递给前端以动态生成表单。"
+      },
       "GameStateDto": {
         "required": [
           "settings"
@@ -1388,6 +1678,44 @@
         },
         "additionalProperties": false,
         "description": "(客户端 -> 服务器)\r\n用于通过 SignalR 提交 **冲突解决方案** 的请求。\r\n当主工作流完成后检测到与用户修改冲突时，前端会收到 YAESandBox.API.DTOs.WebSocket.ConflictDetectedDto。\r\n用户解决冲突后，通过此 DTO 将最终确定的原子操作列表提交回后端。"
+      },
+      "SchemaDataType": {
+        "enum": [
+          "String",
+          "Number",
+          "Boolean",
+          "Enum",
+          "Object",
+          "Array",
+          "MultilineText",
+          "Password",
+          "Integer",
+          "DateTime",
+          "GUID",
+          "Dictionary",
+          "Unknown"
+        ],
+        "type": "string",
+        "description": "定义了Schema字段支持的主要数据类型，供前端进行UI渲染决策。"
+      },
+      "SelectOption": {
+        "required": [
+          "label",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "description": "选项的实际值。"
+          },
+          "label": {
+            "minLength": 1,
+            "type": "string",
+            "description": "选项在UI上显示的文本。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "代表一个选择项，用于下拉列表或单选/复选按钮组。"
       },
       "StreamStatus": {
         "enum": [
@@ -1519,6 +1847,47 @@
         ],
         "type": "string",
         "description": "指示 YAESandBox.API.DTOs.WebSocket.DisplayUpdateDto.Content 的更新方式。"
+      },
+      "ValidationRules": {
+        "type": "object",
+        "properties": {
+          "min": {
+            "type": "number",
+            "description": "对于数字类型，允许的最小值。",
+            "format": "double",
+            "nullable": true
+          },
+          "max": {
+            "type": "number",
+            "description": "对于数字类型，允许的最大值。",
+            "format": "double",
+            "nullable": true
+          },
+          "minLength": {
+            "type": "integer",
+            "description": "对于字符串类型，允许的最小长度。",
+            "format": "int32",
+            "nullable": true
+          },
+          "maxLength": {
+            "type": "integer",
+            "description": "对于字符串类型，允许的最大长度。",
+            "format": "int32",
+            "nullable": true
+          },
+          "pattern": {
+            "type": "string",
+            "description": "正则表达式模式，用于校验输入。\r\n也可用于特殊标记，如 \"url\"，由前端特定处理。",
+            "nullable": true
+          },
+          "errorMessage": {
+            "type": "string",
+            "description": "当校验失败时显示的通用错误信息。\r\n如果多个校验特性都提供了错误信息，它们可能会被合并。",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "包含字段的校验规则。"
       },
       "WorkflowDto": {
         "required": [

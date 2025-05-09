@@ -36,6 +36,8 @@
         <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj"/>
         <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj"/>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj" />
+        <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj" />
     </ItemGroup>
 
     <ItemGroup>

@@ -12,6 +12,8 @@ using YAESandBox.API.Services.InterFaceAndBasic;
 using YAESandBox.API.Services.WorkFlow;
 using YAESandBox.Core.Block;
 using YAESandBox.Depend;
+using YAESandBox.Workflow.AIService.AiConfigSchema;
+using YAESandBox.Workflow.AIService.ConfigManagement;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -41,6 +43,7 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 builder.Services.AddControllers()
+    .AddApplicationPart(typeof(ConfigSchemasController).Assembly)
     .AddJsonOptions(options => // Configure JSON options
     {
         // Serialize enums as strings in requests/responses
@@ -98,6 +101,8 @@ builder.Services.AddSwaggerGen(options =>
 
     options.AddSwaggerDocumentation(typeof(BlockResultCode).Assembly);
 
+    options.AddSwaggerDocumentation(typeof(ConfigSchemasController).Assembly);
+
     // Add Enum Schema Filter to display enums as strings in Swagger UI
     options.SchemaFilter<EnumSchemaFilter>(); // 假设 EnumSchemaFilter 已定义
 
@@ -129,6 +134,11 @@ builder.Services.AddSingleton<IWorkflowService, WorkflowService>();
 builder.Services.AddSingleton<IBlockManagementService, BlockManagementService>();
 builder.Services.AddSingleton<IBlockWritService, BlockWritService>();
 builder.Services.AddSingleton<IBlockReadService, BlockReadService>();
+
+// AiConfigManager
+builder.Services.AddSingleton(_ => new JsonFileAiConfigurationManager(builder.Configuration.GetValue<string?>("AiConfigs:JsonFilePath")))
+    .AddSingleton<IAiConfigurationManager>(sp => sp.GetRequiredService<JsonFileAiConfigurationManager>())
+    .AddSingleton<IAiConfigurationProvider>(sp => sp.GetRequiredService<JsonFileAiConfigurationManager>());
 
 
 // --- CORS (Configure as needed, especially for development) ---

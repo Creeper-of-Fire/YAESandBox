@@ -216,7 +216,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig.Doubao {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 指定是否使用TPM保障包。生效对象为购买了保障包推理接入点。取值范围
+        ///   Looks up a localized string similar to 指定是否使用TPM保障包。生效对象为购买了保障包推理接入点。取值范围：
         ///auto：优先使用TPM保障包。如果有TPM保障包额度的推理接入点，本次请求将会使用 TPM 保障包用量，获得更高限流以及响应速度。否则不使用，使用默认的限流和普通的服务响应速度。
         ///default：本次请求，不使用 TPM 保障包，使用默认的限流和普通的服务响应速度，即使请求的是有TPM保障包额度的推理接入点。.
         /// </summary>

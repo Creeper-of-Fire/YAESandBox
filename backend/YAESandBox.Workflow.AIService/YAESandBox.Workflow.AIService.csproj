@@ -5,6 +5,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
     </PropertyGroup>
 
     <ItemGroup>
@@ -16,6 +17,7 @@
 
     <ItemGroup>
         <PackageReference Include="FluentResults" Version="3.16.0"/>
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0" />
         <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0-preview.3.25171.5"/>
     </ItemGroup>
 

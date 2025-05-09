@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using YAESandBox.Workflow.AIService.AiConfigSchema;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
@@ -36,6 +37,13 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ErrorMessageResourceName = "Validation_Required",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
+    [SelectOptions(
+        "doubao-1-5-vision-pro-32k-250115",
+        "doubao-1-5-lite-32k-250115",
+        "doubao-1-5-pro-32k-250115",
+        "doubao-1-5-pro-32k-character-250228",
+        IsEditableSelectOptions = true)]
+    [DefaultValue("doubao-1-5-lite-32k-250115")]
     public string ModelName { get; init; } = ModelName;
 
     [Display(
@@ -47,6 +55,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ErrorMessageResourceName = "Validation_Range",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
+    [DefaultValue(1.0)]
     public double? Temperature { get; init; }
 
     [Display(
@@ -80,6 +89,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ResourceType = typeof(DoubaoConfigResources)
     )]
     [SelectOptions("text", "json_object")]
+    [DefaultValue("text")]
     public string? ResponseFormatType { get; init; }
 
     // 如果需要ResponseFormatType支持 json_schema，则需要更复杂的类型，例如:
@@ -120,7 +130,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         Description = "DoubaoAiProcessorConfig_ServiceTier_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    [SelectOptions("auto", "default")]
+    [SelectOptions("default", "auto")]
     public string? ServiceTier { get; init; }
 
     [Display(
