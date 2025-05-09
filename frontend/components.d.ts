@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    AiConfigEditorPanel: typeof import('./src/components/panels/AiConfigEditorPanel.vue')['default']
     AppToolbar: typeof import('./src/components/AppToolbar.vue')['default']
     BlockBubble: typeof import('./src/components/BlockBubble.vue')['default']
     BlockBubbleStream: typeof import('./src/components/BlockBubbleStream.vue')['default']
@@ -15,6 +16,9 @@ declare module 'vue' {
     EntityListPanel: typeof import('./src/components/panels/EntityListPanel.vue')['default']
     GameStatePanel: typeof import('./src/components/panels/GameStatePanel.vue')['default']
     MainLayout: typeof import('./src/components/MainLayout.vue')['default']
+    NDialogProvider: typeof import('naive-ui')['NDialogProvider']
+    NMessageProvider: typeof import('naive-ui')['NMessageProvider']
+    SchemaDrivenForm: typeof import('./src/components/schema/SchemaDrivenForm.vue')['default']
     SettingsPanel: typeof import('./src/components/panels/SettingsPanel.vue')['default']
   }
 }

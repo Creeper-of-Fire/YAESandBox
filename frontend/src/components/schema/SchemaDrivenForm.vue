@@ -136,7 +136,8 @@
                   style="width:100%; padding: 5px; border: 1px dashed #ccc; margin-bottom: 5px;">
                 <SchemaDrivenForm
                     :schema="fieldSchema.arrayItemSchema!.nestedSchema!"
-                    v-model="arrayItemModel"
+                    :model-value="arrayItemModel"
+                    @update:model-value="newValue => handleArrayItemUpdate(fieldSchema.name, index, newValue)"
                     :disabled="fieldSchema.isReadOnly || disabled"
                     :base-path="getArrayItemPath(fieldSchema.name, index)"
                     :label-width="nestedLabelWidth"
@@ -156,7 +157,7 @@
               :on-create="() => ({ key: null, value: createDefaultItem(fieldSchema.dictionaryValueSchema!) })"
               item-style="padding-bottom: 10px;"
               :disabled="fieldSchema.isReadOnly || disabled"
-              @update:value="(val: Array<{ key: any; value: any }>) => handleDictionaryUpdate(fieldSchema.name, val)"
+              @update:value="(val) => handleFieldUpdate(fieldSchema.name, val)"
           >
             <template #default="{ value: dictEntry }">
               <div style="display: flex; align-items: flex-start; width: 100%; gap: 8px;">
@@ -615,6 +616,31 @@ function handleFieldUpdate(fieldName: string, value: any) {
   // });
 }
 
+function handleArrayItemUpdate(arrayFieldName: string, index: number, newValue: any) {
+  // internalModel.value[arrayFieldName] 是 n-dynamic-input 绑定的数组
+  // 对于对象数组，其元素就是对象本身，可以直接赋值
+  if (
+      internalModel.value[arrayFieldName] &&
+      Array.isArray(internalModel.value[arrayFieldName]) &&
+      index >= 0 &&
+      index < internalModel.value[arrayFieldName].length
+  ) {
+    // 直接修改内部模型数组中对应索引的项
+    internalModel.value[arrayFieldName][index] = newValue;
+
+    // 重要：由于我们直接修改了 internalModel 数组中的一个对象的内部，
+    // 这可能不会触发外层 n-dynamic-input 的 @update:value 事件（它主要关心项的增删）。
+    // 因此，我们需要手动调用 handleFieldUpdate 来确保整个数组字段的更新被正确地 emit 出去。
+    // handleFieldUpdate 会从 internalModel 中取出 arrayFieldName 对应的整个数组 (现在已包含修改后的项),
+    // 然后进行必要的转换 (例如字典格式转换) 并 emit('update:modelValue', ...)。
+    handleFieldUpdate(arrayFieldName, internalModel.value[arrayFieldName]);
+  } else {
+    console.warn(
+        `[SchemaDrivenForm ${props.basePath}] 尝试更新无效的数组成员: ${arrayFieldName}[${index}]`
+    );
+  }
+}
+
 function handleDictionaryUpdate(fieldName: string, value: Array<{ key: any, value: any }>) {
   // Dictionary 的 n-dynamic-input v-model:value 直接是数组，
   // internalModel[fieldName] 已经是这个数组。
@@ -658,6 +684,7 @@ async function fetchOptions(fieldSchema: FormFieldSchema) {
     const response = await fetch(OpenAPI.BASE + fieldSchema.optionsProviderEndpoint);
     if (!response.ok) {
       console.error(`[SchemaDrivenForm] Failed to fetch options from ${fieldSchema.optionsProviderEndpoint}: ${response.statusText}`);
+      return;
     }
     fieldOptionsMap.value[fieldSchema.name] = await response.json() as ApiSelectOption[];
   } catch (error) {

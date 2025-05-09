@@ -16,7 +16,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// <summary>
     /// Api文档的GroupName
     /// </summary>
-    public const string AiConfigGroupName = "AiConfig";
+    public const string AiConfigGroupName = "aiconfig";
 
     private IAiConfigurationManager configurationManager { get; } = configurationManager;
 

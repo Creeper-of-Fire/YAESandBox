@@ -48,16 +48,32 @@ public class ConfigSchemasBuildHelper
     /// <returns>一个包含该类型所有可读公共属性对应FormFieldSchema的列表，按Order排序。</returns>
     public static List<FormFieldSchema> GenerateSchemaForType(Type type, int baseOrder = 0)
     {
-        var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-            .Where(p => p.CanRead); // 确保属性可读
+        var allProperties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+            .Where(p => p.CanRead && p.Name != nameof(AbstractAiProcessorConfig.ModuleType))
+            .OrderBy(p => p.DeclaringType == typeof(AbstractAiProcessorConfig) ? 0 : 1) // 基类属性优先
+            .ThenBy(p => p.Name == nameof(AbstractAiProcessorConfig.ConfigName)
+                ? 0
+                : (p.Name == nameof(AbstractAiProcessorConfig.ModuleType) ? 1 : 2)) // ConfigName, ModuleType 再优先
+            .ThenBy(p => p.MetadataToken); // 保持其他属性的稳定顺序
+        // 或者使用 DisplayAttribute.Order (如果定义了)
 
         int currentOrder = baseOrder;
-        var schemaList = properties
-            .Select(prop => MakeFormFieldSchema(prop, ref currentOrder))
-            .OrderBy(s => s.Order) // 根据Order字段排序
-            .ToList();
+        var schemaList = new List<FormFieldSchema>();
 
-        return schemaList;
+        foreach (var prop in allProperties)
+        {
+            // 传递给 MakeFormFieldSchema 的 currentOrder 应该是相对于当前 schemaList 的
+            // 或者 MakeFormFieldSchema 自己管理一个内部的 order 计数器，并接受一个基数
+            int tempOrder = currentOrder; // 捕获当前 baseOrder for this property
+            var fieldSchema = MakeFormFieldSchema(prop, ref tempOrder);
+            // MakeFormFieldSchema 内部 currentOrder += 10; fieldSchema.Order = currentOrder;
+            // 这里的 MakeFormFieldSchema 需要被调整，它的 ref currentOrder 是为了让调用者知道下一个起始点
+            // 如果是这样，那么每次调用 MakeFormFieldSchema 都会更新 currentOrder
+            schemaList.Add(MakeFormFieldSchema(prop, ref currentOrder));
+        }
+
+        // 最后排序确保所有 Order 生效
+        return schemaList.OrderBy(s => s.Order).ToList();
     }
 
     /// <summary>
@@ -70,8 +86,25 @@ public class ConfigSchemasBuildHelper
     private static FormFieldSchema MakeFormFieldSchema(PropertyInfo prop, ref int currentOrder)
     {
         var fieldSchema = new FormFieldSchema { Name = prop.Name };
-        currentOrder += 10; // 为每个属性的Order值增加步长，方便后续插入或调整
-        fieldSchema.Order = currentOrder;
+        // 特殊处理 ModuleType 和 ConfigName 的 Order
+        if (prop.DeclaringType == typeof(AbstractAiProcessorConfig))
+        {
+            if (prop.Name == nameof(AbstractAiProcessorConfig.ConfigName))
+                fieldSchema.Order = 1; // 非常小的固定 Order
+            else if (prop.Name == nameof(AbstractAiProcessorConfig.ModuleType))
+                fieldSchema.Order = 2;
+            else
+            {
+                // 其他基类属性（如果有的话）
+                currentOrder += 10;
+                fieldSchema.Order = currentOrder;
+            }
+        }
+        else // 子类属性
+        {
+            currentOrder += 10; // 保证子类属性的 orderCounter 初始值就比基类大
+            fieldSchema.Order = currentOrder;
+        }
 
         // 填充显示相关的元数据 (Label, Description, Placeholder, IsReadOnly, IsRequired)
         PopulateDisplayProperties(prop, fieldSchema);
@@ -190,11 +223,12 @@ public class ConfigSchemasBuildHelper
                 dictionaryInterface = propertyType;
             }
         } // 如果不是直接的字典类型，再检查接口
+
         dictionaryInterface ??= propertyType.GetInterfaces()
             .FirstOrDefault(i => i.IsGenericType &&
                                  (i.GetGenericTypeDefinition() == typeof(IDictionary<,>) ||
                                   i.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>)));
-        
+
         if (dictionaryInterface != null)
         {
             schema.SchemaDataType = SchemaDataType.Dictionary;
@@ -205,11 +239,11 @@ public class ConfigSchemasBuildHelper
             schema.DictionaryValueSchema = CreateItemSchemaForCollection(valueType, "value", baseOrderForNesting + 20000);
             return;
         }
-        
+
         // 4. 处理数组/列表 (List<T>)
         // 检查是否为 IEnumerable<T> 且不是字典
         if (typeof(IEnumerable).IsAssignableFrom(propertyType) && // 必须是可枚举的
-            propertyType != typeof(string) &&                   // 但不是字符串本身
+            propertyType != typeof(string) && // 但不是字符串本身
             !typeof(IDictionary).IsAssignableFrom(propertyType) && // 也不是任何形式的字典
             !SimpleTypeMappings.ContainsKey(propertyType)) // 并且不是已知的简单类型
         {

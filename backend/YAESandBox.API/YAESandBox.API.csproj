@@ -54,7 +54,7 @@
         <Exec Command="swagger tofile --output $(SwaggerJsonPath) $(OutputPath)$(AssemblyName).dll v1-public" WorkingDirectory="$(ProjectDir)"/>
         <Message Text="v1-public.json 已生成到: $(SwaggerJsonPath)" Importance="high"/>
 
-        <Exec Command="swagger tofile --output $(SwaggerJsonAiConfigPath) $(OutputPath)$(AssemblyName).dll AiConfig" WorkingDirectory="$(ProjectDir)"/>
+        <Exec Command="swagger tofile --output $(SwaggerJsonAiConfigPath) $(OutputPath)$(AssemblyName).dll aiconfig" WorkingDirectory="$(ProjectDir)"/>
         <Message Text="aiconfig.json 已生成到: $(SwaggerJsonAiConfigPath)" Importance="high"/>
         <Message Text="------------------------------------------------------------------" Importance="high"/>
     </Target>

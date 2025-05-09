@@ -221,10 +221,6 @@ app.Run();
 namespace YAESandBox.API
 {
     // --- Records/Classes used in Program.cs ---
-    internal record WeatherForecast(DateOnly Date, int TemperatureC, string? Summary)
-    {
-        public int TemperatureF => 32 + (int)(this.TemperatureC / 0.5556);
-    }
 
 // Helper class for Swagger Enum Display
     public class EnumSchemaFilter : ISchemaFilter

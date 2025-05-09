@@ -94,6 +94,18 @@ export default defineConfig({
           ]
         }),
     ],
+    server: {
+        port: 5173, // 你前端的运行端口
+        proxy: {
+            // 将所有以 /api 开头的请求代理到后端服务器
+            '/api': {
+                target: 'http://localhost:7018', // <--- 你的后端 API 服务器地址和端口
+                changeOrigin: true, // 必须，对于虚拟主机站点是必需的
+                // secure: false, // 如果后端是 https 且证书无效，可能需要
+                // rewrite: (path) => path.replace(/^\/api/, '/api') // 通常不需要，除非后端路径也需要调整
+            }
+        }
+    },
     resolve: {
         alias: {
             '@': path.resolve(__dirname, './src'), // <--- 检查这行或类似配置是否存在且正确

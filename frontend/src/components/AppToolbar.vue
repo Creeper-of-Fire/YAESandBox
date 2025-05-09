@@ -4,16 +4,18 @@
       <!-- 持久化按钮 -->
       <n-button @click="persistenceStore.saveSession" :loading="persistenceStore.isSaving">保存</n-button>
       <n-button @click="triggerLoad">加载</n-button>
-      <input type="file" ref="loadInputRef" @change="handleFileSelect" accept=".json" style="display: none;" />
+      <input type="file" ref="loadInputRef" @change="handleFileSelect" accept=".json" style="display: none;"/>
 
-      <n-divider vertical />
+      <n-divider vertical/>
 
       <!-- 实体列表按钮 -->
       <n-tooltip trigger="hover">
         <template #trigger>
           <!-- 调用 togglePanel 辅助函数 -->
           <n-button text @click="togglePanel('left', EntityListPanel)" :type="isActive('left', EntityListPanel) ? 'primary' : 'default'">
-            <template #icon><n-icon :component="ListIcon" /></template>
+            <template #icon>
+              <n-icon :component="ListIcon"/>
+            </template>
           </n-button>
         </template>
         实体列表
@@ -24,54 +26,71 @@
         <template #trigger>
           <!-- 假设游戏状态放右边 -->
           <n-button text @click="togglePanel('right', GameStatePanel)" :type="isActive('right', GameStatePanel) ? 'primary' : 'default'">
-            <template #icon><n-icon :component="GameControllerIcon" /></template>
+            <template #icon>
+              <n-icon :component="GameControllerIcon"/>
+            </template>
           </n-button>
         </template>
         游戏状态
       </n-tooltip>
 
-      <n-divider vertical />
+      <n-divider vertical/>
 
       <!-- 设置按钮 -->
       <n-tooltip trigger="hover">
         <template #trigger>
           <!-- 假设设置放右边 -->
           <n-button text @click="togglePanel('right', SettingsPanel)" :type="isActive('right', SettingsPanel) ? 'primary' : 'default'">
-            <template #icon><n-icon :component="SettingsIcon" /></template>
+            <template #icon>
+              <n-icon :component="SettingsIcon"/>
+            </template>
           </n-button>
         </template>
         设置
       </n-tooltip>
 
+      <!-- AI配置按钮 -->
+      <n-tooltip trigger="hover">
+        <template #trigger>
+          <n-button text @click="togglePanel('right', AiConfigEditorPanel)"
+                    :type="isActive('right', AiConfigEditorPanel) ? 'primary' : 'default'">
+            <template #icon>
+              <n-icon :component="SettingsIcon"/>
+            </template>
+          </n-button>
+        </template>
+        AI配置
+      </n-tooltip>
+
       <!-- 移动端返回主界面按钮，可能没什么必要 -->
-<!--      <n-button-->
-<!--          v-if="uiStore.isMobileLayout && uiStore.mobileFocusTarget !== 'main'"-->
-<!--          text-->
-<!--          @click="uiStore.setMobileFocusToMain"-->
-<!--          title="返回主界面"-->
-<!--      >-->
-<!--        <template #icon><n-icon :component="HomeIcon" /></template> &lt;!&ndash; 使用 Home 图标示例 &ndash;&gt;-->
-<!--      </n-button>-->
+      <!--      <n-button-->
+      <!--          v-if="uiStore.isMobileLayout && uiStore.mobileFocusTarget !== 'main'"-->
+      <!--          text-->
+      <!--          @click="uiStore.setMobileFocusToMain"-->
+      <!--          title="返回主界面"-->
+      <!--      >-->
+      <!--        <template #icon><n-icon :component="HomeIcon" /></template> &lt;!&ndash; 使用 Home 图标示例 &ndash;&gt;-->
+      <!--      </n-button>-->
 
       <!-- 其他按钮 -->
     </n-space>
 
     <!-- SignalR 连接状态指示 -->
-    <ConnectionStatus />
+    <ConnectionStatus/>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, defineAsyncComponent, markRaw, type Component } from 'vue'; // 引入 Component 类型
-import { NSpace, NButton, NDivider, NIcon, NTooltip } from 'naive-ui';
+import {ref, defineAsyncComponent, markRaw, type Component} from 'vue'; // 引入 Component 类型
+import {NSpace, NButton, NDivider, NIcon, NTooltip} from 'naive-ui';
 import {
   ListOutline as ListIcon,
   SettingsOutline as SettingsIcon,
   GameControllerOutline as GameControllerIcon,
   HomeOutline as HomeIcon // 引入 Home 图标
 } from '@vicons/ionicons5';
-import { useUiStore } from '@/stores/uiStore';
-import { usePersistenceStore } from '@/stores/persistenceStore';
+import {useUiStore} from '@/stores/uiStore';
+import {usePersistenceStore} from '@/stores/persistenceStore';
 import ConnectionStatus from './ConnectionStatus.vue';
 
 // --- Store ---
@@ -86,6 +105,7 @@ const loadInputRef = ref<HTMLInputElement | null>(null);
 const EntityListPanel = markRaw(defineAsyncComponent(() => import('@/components/panels/EntityListPanel.vue')));
 const GameStatePanel = markRaw(defineAsyncComponent(() => import('@/components/panels/GameStatePanel.vue')));
 const SettingsPanel = markRaw(defineAsyncComponent(() => import('@/components/panels/SettingsPanel.vue')));
+const AiConfigEditorPanel = markRaw(defineAsyncComponent(() => import("@/components/panels/AiConfigEditorPanel.vue")));
 // ... 其他面板
 
 // --- Toolbar 方法 ---
@@ -143,6 +163,7 @@ const handleFileSelect = (event: Event) => {
   height: 100%;
   padding: 0 10px; /* 给左右留点空隙 */
 }
+
 .n-button[text] { /* 只针对文本按钮增大图标 */
   font-size: 1.3em;
 }
