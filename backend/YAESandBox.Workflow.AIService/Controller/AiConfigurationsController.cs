@@ -8,10 +8,16 @@ using YAESandBox.Workflow.AIService.AiConfig; // AbstractAiProcessorConfig
 using YAESandBox.Workflow.AIService.ConfigManagement; // IAiConfigurationManager
 using Microsoft.Extensions.Logging; // 用于日志记录
 
+[ApiExplorerSettings(GroupName = AiConfigGroupName)]
 [ApiController]
 [Route("api/ai-configurations")] // API 路由前缀
 public class AiConfigurationsController(IAiConfigurationManager configurationManager) : ControllerBase
 {
+    /// <summary>
+    /// Api文档的GroupName
+    /// </summary>
+    public const string AiConfigGroupName = "AiConfig";
+
     private IAiConfigurationManager configurationManager { get; } = configurationManager;
 
     /// <summary>

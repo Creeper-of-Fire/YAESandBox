@@ -8,6 +8,7 @@ using YAESandBox.Workflow.AIService.ConfigManagement;
 
 namespace YAESandBox.Workflow.AIService.Controller;
 
+[ApiExplorerSettings(GroupName = AiConfigurationsController.AiConfigGroupName)]
 [ApiController]
 [Route("api/ai-configuration-management")] // 更改路由以反映其更广泛的职责（如果合并了实例列表）或保持 schema 特定
 public class AiConfigSchemasController(IAiConfigurationManager configurationManager) : ControllerBase
@@ -73,7 +74,7 @@ public class AiConfigSchemasController(IAiConfigurationManager configurationMana
             {
                 var displayAttr = type.GetCustomAttribute<DisplayAttribute>();
                 string label = displayAttr?.GetName() ?? type.Name; // 尝试获取本地化名称
-                
+
                 if (label.EndsWith("AiProcessorConfig", StringComparison.OrdinalIgnoreCase))
                 {
                     label = label.Substring(0, label.Length - "AiProcessorConfig".Length).Trim();
@@ -94,42 +95,42 @@ public class AiConfigSchemasController(IAiConfigurationManager configurationMana
         return this.Ok(result);
     }
 
-    /// <summary>
-    /// 获取所有【已保存的 AI 配置实例】的摘要列表。
-    /// 用于前端生成一个下拉框或列表，让用户选择一个已存在的配置进行【编辑】或【使用】。
-    /// </summary>
-    /// <returns>一个列表，每个 SelectOption 包含：
-    /// 'Value': 配置实例的唯一标识符 (UUID)。
-    /// 'Label': 配置实例的用户定义名称 (ConfigName)。
-    /// </returns>
-    [HttpGet("saved-configurations")]
-    [ProducesResponseType(typeof(List<SelectOption>), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<List<SelectOption>>> GetSavedConfigurationInstances()
-    {
-        var allConfigsResult = await this.configurationManager.GetAllConfigurationsAsync();
-
-        if (allConfigsResult.IsFailed)
-        {
-            return this.StatusCode(StatusCodes.Status500InternalServerError, "获取已保存配置列表时发生错误。");
-        }
-
-        if (allConfigsResult.Value == null || !allConfigsResult.Value.Any())
-        {
-            return this.Ok(new List<SelectOption>());
-        }
-
-        var selectOptions = allConfigsResult.Value
-            .Select(kvp => new SelectOption
-            {
-                Value = kvp.Key, // UUID 作为 Value
-                Label = string.IsNullOrWhiteSpace(kvp.Value.ConfigName)
-                    ? $"配置 ({kvp.Value.ModuleType}, UUID: {kvp.Key.Substring(0, 8)}...)"
-                    : kvp.Value.ConfigName
-            })
-            .OrderBy(so => so.Label)
-            .ToList();
-
-        return this.Ok(selectOptions);
-    }
+    // /// <summary>
+    // /// 获取所有【已保存的 AI 配置实例】的摘要列表。
+    // /// 用于前端生成一个下拉框或列表，让用户选择一个已存在的配置进行【编辑】或【使用】。
+    // /// </summary>
+    // /// <returns>一个列表，每个 SelectOption 包含：
+    // /// 'Value': 配置实例的唯一标识符 (UUID)。
+    // /// 'Label': 配置实例的用户定义名称 (ConfigName)。
+    // /// </returns>
+    // [HttpGet("saved-configurations")]
+    // [ProducesResponseType(typeof(List<SelectOption>), StatusCodes.Status200OK)]
+    // [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    // public async Task<ActionResult<List<SelectOption>>> GetSavedConfigurationInstances()
+    // {
+    //     var allConfigsResult = await this.configurationManager.GetAllConfigurationsAsync();
+    //
+    //     if (allConfigsResult.IsFailed)
+    //     {
+    //         return this.StatusCode(StatusCodes.Status500InternalServerError, "获取已保存配置列表时发生错误。");
+    //     }
+    //
+    //     if (allConfigsResult.Value == null || !allConfigsResult.Value.Any())
+    //     {
+    //         return this.Ok(new List<SelectOption>());
+    //     }
+    //
+    //     var selectOptions = allConfigsResult.Value
+    //         .Select(kvp => new SelectOption
+    //         {
+    //             Value = kvp.Key, // UUID 作为 Value
+    //             Label = string.IsNullOrWhiteSpace(kvp.Value.ConfigName)
+    //                 ? $"配置 ({kvp.Value.ModuleType}, UUID: {kvp.Key.Substring(0, 8)}...)"
+    //                 : kvp.Value.ConfigName
+    //         })
+    //         .OrderBy(so => so.Label)
+    //         .ToList();
+    //
+    //     return this.Ok(selectOptions);
+    // }
 }

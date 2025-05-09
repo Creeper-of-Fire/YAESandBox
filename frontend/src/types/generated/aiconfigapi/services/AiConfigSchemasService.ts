@@ -46,19 +46,4 @@ export class AiConfigSchemasService {
             url: '/api/ai-configuration-management/available-config-types',
         });
     }
-    /**
-     * 获取所有【已保存的 AI 配置实例】的摘要列表。
-     * 用于前端生成一个下拉框或列表，让用户选择一个已存在的配置进行【编辑】或【使用】。
-     * @returns SelectOption OK
-     * @throws ApiError
-     */
-    public static getApiAiConfigurationManagementSavedConfigurations(): CancelablePromise<Array<SelectOption>> {
-        return __request(OpenAPI, {
-            method: 'GET',
-            url: '/api/ai-configuration-management/saved-configurations',
-            errors: {
-                500: `Internal Server Error`,
-            },
-        });
-    }
 }

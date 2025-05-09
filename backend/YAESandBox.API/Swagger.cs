@@ -15,6 +15,18 @@ public class SignalRDtoDocumentFilter(ISchemaGenerator schemaGenerator) : IDocum
 
     public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
     {
+        // 检查当前正在生成的文档是否是我们想要应用此 Filter 的目标文档
+        // 例如，我们可能只希望在 "v1-internal"和"v-public" 文档中包含这些 SignalR DTOs，
+        // 或者在一个专门的 "v1-signalr" 文档中。
+        if (context.DocumentName is not (GlobalSwaggerConstants.PublicApiGroupName or GlobalSwaggerConstants.InternalApiGroupName))
+        {
+            // 如果不是目标文档，则不执行任何操作
+            Console.WriteLine($"SignalRDtoDocumentFilter: 跳过文档 '{context.DocumentName}'，因为非目标文档。");
+            return;
+        }
+
+        Console.WriteLine($"SignalRDtoDocumentFilter: 正在为文档 '{context.DocumentName}' 应用 SignalR DTO 注入。");
+
         // 定义包含 SignalR DTOs 的程序集和命名空间
         var targetAssembly = typeof(TriggerMainWorkflowRequestDto).Assembly; // 获取 DTO 所在的程序集
         string? targetNamespace = typeof(TriggerMainWorkflowRequestDto).Namespace; // 获取 DTO 所在的命名空间

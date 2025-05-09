@@ -44,7 +44,7 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(AiConfigSchemasController).Assembly)
+    .AddApplicationPart(typeof(AiConfigurationsController).Assembly)
     .AddJsonOptions(options => // Configure JSON options
     {
         // Serialize enums as strings in requests/responses
@@ -71,6 +71,15 @@ builder.Services.AddSwaggerGen(options =>
         Description = "包含所有 API，包括内部调试接口。"
     });
 
+    // --- 定义 AiService 模块 API 文档 ---
+    options.SwaggerDoc(AiConfigurationsController.AiConfigGroupName, new OpenApiInfo
+    {
+        Title = "YAESandBox API (AI Config)", 
+        Version = "v1",
+        Description = "包含AI服务配置相关的API。"
+    });
+
+
     // --- 告诉 Swashbuckle 如何根据 GroupName 分配 API ---
     // 如果 API 没有明确的 GroupName，默认可以将其分配给公开文档
     options.DocInclusionPredicate((docName, apiDesc) =>
@@ -82,6 +91,10 @@ builder.Services.AddSwaggerGen(options =>
             // 或者，如果当前生成的是 Internal 文档，包含所有 API (Public + Internal)
             if (docName == GlobalSwaggerConstants.InternalApiGroupName) // 内部文档包含所有公共 API 和标记为 internal 的 API
                 return groupName is GlobalSwaggerConstants.PublicApiGroupName or GlobalSwaggerConstants.InternalApiGroupName;
+            // 新增对 AiConfig 的处理
+            if (docName == AiConfigurationsController.AiConfigGroupName)
+                return apiDesc.GroupName == AiConfigurationsController.AiConfigGroupName;
+            
             // 否则，生成的是 Public 文档
             // 公开文档只包含 GroupName 为 Public 的 API
             return groupName == GlobalSwaggerConstants.PublicApiGroupName;
@@ -102,7 +115,7 @@ builder.Services.AddSwaggerGen(options =>
 
     options.AddSwaggerDocumentation(typeof(BlockResultCode).Assembly);
 
-    options.AddSwaggerDocumentation(typeof(AiConfigSchemasController).Assembly);
+    options.AddSwaggerDocumentation(typeof(AiConfigurationsController).Assembly);
 
     // Add Enum Schema Filter to display enums as strings in Swagger UI
     options.SchemaFilter<EnumSchemaFilter>(); // 假设 EnumSchemaFilter 已定义
@@ -175,6 +188,8 @@ if (app.Environment.IsDevelopment())
         c.SwaggerEndpoint($"/swagger/{GlobalSwaggerConstants.PublicApiGroupName}/swagger.json", $"YAESandBox API (Public)");
         // 端点 2: 内部 API
         c.SwaggerEndpoint($"/swagger/{GlobalSwaggerConstants.InternalApiGroupName}/swagger.json", $"YAESandBox API (Internal)");
+        // 端点 2: 内部 API
+        c.SwaggerEndpoint($"/swagger/{AiConfigurationsController.AiConfigGroupName}/swagger.json", $"YAESandBox API (AI Config)");
 
         // (可选) 设置默认展开级别等 UI 选项
         c.DefaultModelsExpandDepth(-1); // 折叠模型定义
@@ -200,22 +215,6 @@ app.MapControllers(); // Map attribute-routed controllers
 
 // Map SignalR Hub
 app.MapHub<GameHub>("/gamehub"); // Define the SignalR endpoint URL
-
-// Minimal API example (keep or remove)
-// app.MapGet("/weatherforecast", () =>
-//     {
-//         var forecast = Enumerable.Range(1, 5).Select(index =>
-//                 new WeatherForecast
-//                 (
-//                     DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-//                     Random.Shared.Next(-20, 55),
-//                     "Sample" // Simplified
-//                 ))
-//             .ToArray();
-//         return forecast;
-//     })
-//     .WithName("GetWeatherForecast")
-//     .RequireCors("AllowAll"); // Apply CORS to minimal APIs too
 
 app.Run();
 
