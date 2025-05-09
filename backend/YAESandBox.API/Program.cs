@@ -14,6 +14,7 @@ using YAESandBox.Core.Block;
 using YAESandBox.Depend;
 using YAESandBox.Workflow.AIService.AiConfigSchema;
 using YAESandBox.Workflow.AIService.ConfigManagement;
+using YAESandBox.Workflow.AIService.Controller;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -43,7 +44,7 @@ builder.Services.AddCors(options =>
 
 // Add services to the container.
 builder.Services.AddControllers()
-    .AddApplicationPart(typeof(ConfigSchemasController).Assembly)
+    .AddApplicationPart(typeof(AiConfigSchemasController).Assembly)
     .AddJsonOptions(options => // Configure JSON options
     {
         // Serialize enums as strings in requests/responses
@@ -101,7 +102,7 @@ builder.Services.AddSwaggerGen(options =>
 
     options.AddSwaggerDocumentation(typeof(BlockResultCode).Assembly);
 
-    options.AddSwaggerDocumentation(typeof(ConfigSchemasController).Assembly);
+    options.AddSwaggerDocumentation(typeof(AiConfigSchemasController).Assembly);
 
     // Add Enum Schema Filter to display enums as strings in Swagger UI
     options.SchemaFilter<EnumSchemaFilter>(); // 假设 EnumSchemaFilter 已定义

@@ -7,6 +7,7 @@ export { CancelablePromise, CancelError } from './core/CancelablePromise';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
+export type { AbstractAiProcessorConfig } from './models/AbstractAiProcessorConfig';
 export type { AtomicOperationRequestDto } from './models/AtomicOperationRequestDto';
 export type { BatchAtomicRequestDto } from './models/BatchAtomicRequestDto';
 export { BlockDataFields } from './models/BlockDataFields';
@@ -37,10 +38,11 @@ export { UpdateMode } from './models/UpdateMode';
 export type { ValidationRules } from './models/ValidationRules';
 export type { WorkflowDto } from './models/WorkflowDto';
 
+export { AiConfigSchemasService } from './services/AiConfigSchemasService';
+export { AiConfigurationsService } from './services/AiConfigurationsService';
 export { AtomicService } from './services/AtomicService';
 export { BlockManagementService } from './services/BlockManagementService';
 export { BlocksService } from './services/BlocksService';
-export { ConfigSchemasService } from './services/ConfigSchemasService';
 export { EntitiesService } from './services/EntitiesService';
 export { GameStateService } from './services/GameStateService';
 export { PersistenceService } from './services/PersistenceService';

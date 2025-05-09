@@ -34,7 +34,8 @@ public class FormFieldSchema
     /// <summary>
     /// 字段的数据类型，用于前端决定渲染何种输入控件。
     /// </summary>
-    [Required] public SchemaDataType SchemaDataType { get; set; } = SchemaDataType.String;
+    [Required]
+    public SchemaDataType SchemaDataType { get; set; } = SchemaDataType.String;
 
     /// <summary>
     /// 字段是否为只读。
@@ -66,7 +67,8 @@ public class FormFieldSchema
     /// 例如，如果 SchemaDataType 是 String，且 Options 为 null 或空，但此值为 true，
     /// 暗示前端可能需要一个普通的文本输入，但可能带有某种自动完成或建议机制（如果 OptionsProviderEndpoint 指定）。
     /// </summary>
-    [Required] public bool IsEditableSelectOptions { get; set; } = false;
+    [Required]
+    public bool IsEditableSelectOptions { get; set; } = false;
 
     /// <summary>
     /// 如果提供，表示该字段的选项可以从这个API端点动态获取。
@@ -104,11 +106,25 @@ public class FormFieldSchema
     /// <summary>
     /// 字段在表单中的显示顺序，值越小越靠前。
     /// </summary>
-    [Required]  public int Order { get; set; }
+    [Required]
+    public int Order { get; set; }
 }
 
 /// <summary>
 /// 定义了Schema字段支持的主要数据类型，供前端进行UI渲染决策。
+/// String, // 普通字符串
+/// Number, // 包含整数和浮点数
+/// Boolean, // 布尔值 (true/false)
+/// Enum, // 枚举类型，通常配合 Options 使用
+/// Object, // 嵌套的复杂对象，其结构由 NestedSchema 定义
+/// Array, // 数组/列表，其元素结构由 ArrayItemSchema 定义
+/// MultilineText, // 多行文本输入 (textarea)
+/// Password, // 密码输入框
+/// Integer, // 专指整数
+/// DateTime, // 日期或日期时间
+/// GUID, // GUID 全局唯一标识符
+/// Dictionary, // 字典/映射类型，键信息由 KeyInfo 定义，值结构由 DictionaryValueSchema 定义
+/// Unknown // 未知或不支持的类型
 /// </summary>
 public enum SchemaDataType
 {
@@ -135,12 +151,14 @@ public class SelectOption
     /// <summary>
     /// 选项的实际值。
     /// </summary>
-    [Required] public object Value { get; init; } = string.Empty;
+    [Required]
+    public object Value { get; init; } = string.Empty;
 
     /// <summary>
     /// 选项在UI上显示的文本。
     /// </summary>
-    [Required] public string Label { get; init; } = string.Empty;
+    [Required]
+    public string Label { get; init; } = string.Empty;
 }
 
 /// <summary>
@@ -189,7 +207,8 @@ public class DictionaryKeyInfo
     /// <summary>
     /// 字典键的基础数据类型 (如 String, Integer, Enum, Guid)。
     /// </summary>
-    [Required]  public SchemaDataType KeyType { get; set; }
+    [Required]
+    public SchemaDataType KeyType { get; set; }
 
     /// <summary>
     /// 如果 KeyType 是 Enum，这里提供枚举的选项列表。

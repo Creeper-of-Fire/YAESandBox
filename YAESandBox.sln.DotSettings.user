@@ -49,7 +49,7 @@
 	<s:String x:Key="/Default/Environment/AssemblyExplorer/XmlDocument/@EntryValue">&lt;AssemblyExplorer&gt;&#xD;
   &lt;Assembly Path="C:\Users\Creeper10\.nuget\packages\oneof\3.0.271\lib\netstandard2.0\OneOf.dll" /&gt;&#xD;
 &lt;/AssemblyExplorer&gt;</s:String>
-	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=backend_002FYAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FAiProcessorConfigResources/@EntryIndexedValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=backend_002FYAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FAiProcessorConfigResources/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=backend_002FYAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FDoubao_002FDoubaoConfigResources/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=backend_002FYAESandBox_002EWorkflow_002EAIService_002FDoubao_002FDoubaoConfigDisplay/@EntryIndexedValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=backend_002FYAESandBox_002EWorkflow_002EAIService_002FDoubao_002FDoubaoConfigDisplay/@EntryIndexRemoved">True</s:Boolean>

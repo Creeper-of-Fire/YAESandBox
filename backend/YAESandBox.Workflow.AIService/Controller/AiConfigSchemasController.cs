@@ -2,19 +2,17 @@
 using System.Reflection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using YAESandBox.Workflow.AIService.AiConfig;
+using YAESandBox.Workflow.AIService.AiConfigSchema;
 using YAESandBox.Workflow.AIService.ConfigManagement;
 
-namespace YAESandBox.Workflow.AIService.AiConfigSchema;
+namespace YAESandBox.Workflow.AIService.Controller;
 
 [ApiController]
 [Route("api/ai-configuration-management")] // 更改路由以反映其更广泛的职责（如果合并了实例列表）或保持 schema 特定
-public class ConfigSchemasController(IAiConfigurationManager configurationManager, ILogger<ConfigSchemasController> logger)
-    : ControllerBase
+public class AiConfigSchemasController(IAiConfigurationManager configurationManager) : ControllerBase
 {
     private IAiConfigurationManager configurationManager { get; } = configurationManager;
-    private ILogger<ConfigSchemasController> logger { get; } = logger;
 
     /// <summary>
     /// 获取指定 AI 配置类型的表单 Schema 结构。
@@ -28,10 +26,8 @@ public class ConfigSchemasController(IAiConfigurationManager configurationManage
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public ActionResult<List<FormFieldSchema>> GetSchemaForConfigType(string configTypeName)
     {
-        this.logger.LogInformation("请求获取 AI 配置类型 '{ConfigTypeName}' 的 Schema。", configTypeName);
         if (string.IsNullOrWhiteSpace(configTypeName))
         {
-            this.logger.LogWarning("请求的配置类型名称为空。");
             return this.BadRequest("配置类型名称 (configTypeName) 不能为空。");
         }
 
@@ -39,27 +35,22 @@ public class ConfigSchemasController(IAiConfigurationManager configurationManage
 
         if (configType == null)
         {
-            this.logger.LogWarning("未找到名为 '{ConfigTypeName}' 的 AI 配置类型。", configTypeName);
             return this.NotFound($"名为 '{configTypeName}' 的 AI 配置类型未找到。");
         }
 
         // GetTypeByName 已经确保了它是 AbstractAiProcessorConfig 的子类，但可以再加一层防御
         if (!typeof(AbstractAiProcessorConfig).IsAssignableFrom(configType))
         {
-            this.logger.LogError("类型 '{ConfigTypeName}' ('{ActualTypeName}') 不是 AbstractAiProcessorConfig 的有效子类。", configTypeName,
-                configType.FullName);
             return this.BadRequest($"类型 '{configTypeName}' 不是一个有效的 AI 配置类型。");
         }
 
         try
         {
             var schema = ConfigSchemasBuildHelper.GenerateSchemaForType(configType);
-            this.logger.LogInformation("成功为 AI 配置类型 '{ConfigTypeName}' 生成 Schema。", configTypeName);
             return this.Ok(schema);
         }
         catch (Exception ex)
         {
-            this.logger.LogError(ex, "为 AI 配置类型 '{ConfigTypeName}' 生成 Schema 时发生错误。", configTypeName);
             return this.StatusCode(StatusCodes.Status500InternalServerError, $"为类型 '{configTypeName}' 生成 Schema 时发生内部错误。");
         }
     }
@@ -76,15 +67,13 @@ public class ConfigSchemasController(IAiConfigurationManager configurationManage
     [ProducesResponseType(typeof(List<SelectOption>), StatusCodes.Status200OK)]
     public ActionResult<List<SelectOption>> GetAvailableConfigTypeDefinitions()
     {
-        this.logger.LogInformation("请求获取所有可用的 AI 配置类型定义。");
         var availableTypes = ConfigSchemasBuildHelper.GetAvailableAiConfigConcreteTypes();
 
         var result = availableTypes.Select(type =>
             {
                 var displayAttr = type.GetCustomAttribute<DisplayAttribute>();
                 string label = displayAttr?.GetName() ?? type.Name; // 尝试获取本地化名称
-
-                // 简化标签，例如 "DoubaoAiProcessorConfig" -> "豆包" 或 "Doubao"
+                
                 if (label.EndsWith("AiProcessorConfig", StringComparison.OrdinalIgnoreCase))
                 {
                     label = label.Substring(0, label.Length - "AiProcessorConfig".Length).Trim();
@@ -102,7 +91,6 @@ public class ConfigSchemasController(IAiConfigurationManager configurationManage
             .OrderBy(so => so.Label)
             .ToList();
 
-        this.logger.LogInformation("返回了 {Count} 个可用的 AI 配置类型定义。", result.Count);
         return this.Ok(result);
     }
 
@@ -119,19 +107,15 @@ public class ConfigSchemasController(IAiConfigurationManager configurationManage
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<List<SelectOption>>> GetSavedConfigurationInstances()
     {
-        this.logger.LogInformation("请求获取所有已保存的 AI 配置实例列表。");
         var allConfigsResult = await this.configurationManager.GetAllConfigurationsAsync();
 
         if (allConfigsResult.IsFailed)
         {
-            this.logger.LogError("从 IAiConfigurationManager 获取所有配置失败: {Errors}",
-                string.Join(", ", allConfigsResult.Errors.Select(e => e.Message)));
             return this.StatusCode(StatusCodes.Status500InternalServerError, "获取已保存配置列表时发生错误。");
         }
 
         if (allConfigsResult.Value == null || !allConfigsResult.Value.Any())
         {
-            this.logger.LogInformation("没有已保存的 AI 配置实例。");
             return this.Ok(new List<SelectOption>());
         }
 
@@ -146,7 +130,6 @@ public class ConfigSchemasController(IAiConfigurationManager configurationManage
             .OrderBy(so => so.Label)
             .ToList();
 
-        this.logger.LogInformation("返回了 {Count} 个已保存的 AI 配置实例摘要。", selectOptions.Count);
         return this.Ok(selectOptions);
     }
 }

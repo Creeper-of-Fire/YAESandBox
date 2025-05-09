@@ -23,6 +23,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ErrorMessageResourceName = "Validation_Required",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources) // 通用验证消息
     )]
+    [DataType(DataType.Password)]
     public string ApiKey { get; init; } = ApiKey;
 
     /// <summary>

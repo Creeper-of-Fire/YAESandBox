@@ -102,9 +102,7 @@ public class ConfigSchemasBuildHelper
         schema.Placeholder = displayAttr?.GetPrompt();
 
         var readOnlyAttr = prop.GetCustomAttribute<ReadOnlyAttribute>();
-        // 如果属性被标记为ReadOnly，或者它没有公共的set访问器，则认为是只读的
-        schema.IsReadOnly =
-            (readOnlyAttr?.IsReadOnly ?? false) || prop.SetMethod == null || !prop.SetMethod.IsPublic;
+        schema.IsReadOnly = readOnlyAttr?.IsReadOnly ?? false;
 
         schema.IsRequired = prop.GetCustomAttribute<RequiredAttribute>() != null;
 
@@ -159,7 +157,7 @@ public class ConfigSchemasBuildHelper
             var dataTypeAttr = prop.GetCustomAttribute<DataTypeAttribute>();
             if (dataTypeAttr?.DataType == DataType.MultilineText)
                 schema.SchemaDataType = SchemaDataType.MultilineText;
-            else if (prop.GetCustomAttribute<PasswordPropertyTextAttribute>()?.Password ?? false)
+            else if (dataTypeAttr?.DataType == DataType.Password)
                 schema.SchemaDataType = SchemaDataType.Password;
             else
                 schema.SchemaDataType = SchemaDataType.String; // 默认字符串
@@ -181,25 +179,22 @@ public class ConfigSchemasBuildHelper
             return;
         }
 
-        // 3. 处理数组/列表 (List<T>)
-        if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(List<>))
+        // 3. 处理字典 (IDictionary<TKey, TValue> 或 Dictionary<TKey, TValue>)
+        // 确保检查 Dictionary<,> 和 IDictionary<,> 以及 IReadOnlyDictionary<,>
+        Type? dictionaryInterface = null;
+        if (propertyType.IsGenericType)
         {
-            schema.SchemaDataType = SchemaDataType.Array;
-            Type itemType = propertyType.GetGenericArguments()[0];
-            // 为数组项创建Schema
-            // 数组项的Order通常不直接影响顶层布局，但在其内部复杂对象中可能需要
-            schema.ArrayItemSchema = CreateItemSchemaForCollection(itemType, "item", baseOrderForNesting + 10000); // 使用较大的Order偏移避免冲突
-            return;
-        }
-
-        // 4. 处理字典 (IDictionary<TKey, TValue> 或 Dictionary<TKey, TValue>)
-        Type? dictionaryInterface = propertyType.GetInterfaces()
-            .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IDictionary<,>));
-        if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(Dictionary<,>)) // 直接是 Dictionary<,>
-        {
-            dictionaryInterface = propertyType;
-        }
-
+            var genericDef = propertyType.GetGenericTypeDefinition();
+            if (genericDef == typeof(Dictionary<,>) || genericDef == typeof(IDictionary<,>) || genericDef == typeof(IReadOnlyDictionary<,>))
+            {
+                dictionaryInterface = propertyType;
+            }
+        } // 如果不是直接的字典类型，再检查接口
+        dictionaryInterface ??= propertyType.GetInterfaces()
+            .FirstOrDefault(i => i.IsGenericType &&
+                                 (i.GetGenericTypeDefinition() == typeof(IDictionary<,>) ||
+                                  i.GetGenericTypeDefinition() == typeof(IReadOnlyDictionary<,>)));
+        
         if (dictionaryInterface != null)
         {
             schema.SchemaDataType = SchemaDataType.Dictionary;
@@ -207,9 +202,51 @@ public class ConfigSchemasBuildHelper
             Type valueType = dictionaryInterface.GetGenericArguments()[1];
 
             schema.KeyInfo = CreateDictionaryKeyInfo(keyType);
-            // 为字典的值创建Schema
             schema.DictionaryValueSchema = CreateItemSchemaForCollection(valueType, "value", baseOrderForNesting + 20000);
             return;
+        }
+        
+        // 4. 处理数组/列表 (List<T>)
+        // 检查是否为 IEnumerable<T> 且不是字典
+        if (typeof(IEnumerable).IsAssignableFrom(propertyType) && // 必须是可枚举的
+            propertyType != typeof(string) &&                   // 但不是字符串本身
+            !typeof(IDictionary).IsAssignableFrom(propertyType) && // 也不是任何形式的字典
+            !SimpleTypeMappings.ContainsKey(propertyType)) // 并且不是已知的简单类型
+        {
+            Type? itemType = null;
+            if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(List<>))
+            {
+                itemType = propertyType.GetGenericArguments()[0];
+            }
+            else if (propertyType.IsGenericType && propertyType.GetGenericTypeDefinition() == typeof(IReadOnlyList<>))
+            {
+                itemType = propertyType.GetGenericArguments()[0];
+            }
+            else if (propertyType.IsArray) // 例如 string[]
+            {
+                itemType = propertyType.GetElementType();
+            }
+            // 可以添加对其他常见集合类型的显式检查，或者更通用地获取元素类型
+            else
+            {
+                // 尝试从 IEnumerable<T> 获取 T
+                var enumerableInterface = propertyType.GetInterfaces()
+                    .FirstOrDefault(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
+                if (enumerableInterface != null && !typeof(IDictionary).IsAssignableFrom(propertyType)) //再次确认不是字典
+                {
+                    itemType = enumerableInterface.GetGenericArguments()[0];
+                }
+            }
+
+            if (itemType != null)
+            {
+                schema.SchemaDataType = SchemaDataType.Array;
+                schema.ArrayItemSchema = CreateItemSchemaForCollection(itemType, "item", baseOrderForNesting + 10000);
+                // 对于 StopSequences，前端可能需要一个可以添加/删除字符串的 UI
+                // ArrayItemSchema 的 Name 可能是 "item"，Label 应该是用户友好的，比如 "停止词"
+                // 它的 SchemaDataType 应该是 String。
+                return;
+            }
         }
 
         // 5. 处理其他被认为是“复杂对象”的类型 (非简单类型、非数组、非字典)

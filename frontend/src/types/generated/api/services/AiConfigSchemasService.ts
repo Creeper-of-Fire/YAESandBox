@@ -7,7 +7,7 @@ import type { SelectOption } from '../models/SelectOption';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
-export class ConfigSchemasService {
+export class AiConfigSchemasService {
     /**
      * 获取指定 AI 配置类型的表单 Schema 结构。
      * 用于前端动态生成该类型配置的【新建】或【编辑】表单骨架。

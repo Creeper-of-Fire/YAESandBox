@@ -1,11 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Workflow.AIService.AiConfig.Doubao;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;
 
 /// <summary>
-/// 这个是内部新建Ai服务类时使用的东西。
+/// 这个是Ai服务配置的基类，仅含绝对必须的字段。
 /// </summary>
 /// <param name="ConfigName"><see cref="ConfigName"/>></param>
 /// <param name="ModuleType"><see cref="ModuleType"/> </param>
@@ -32,6 +33,13 @@ public abstract record AbstractAiProcessorConfig(string ConfigName, string Modul
     public string ConfigName { get; init; } = ConfigName;
 
     /// <summary>模型的类型，持久化时工厂模式会使用它</summary>
+    [Display(
+        Name = "AbstractAiProcessorConfig_ModuleType_Label",
+        Description = "AbstractAiProcessorConfig_ModuleType_Description",
+        ResourceType = typeof(AiProcessorConfigResources)
+    )]
+    [Required]
+    [ReadOnly(true)]
     public string ModuleType { get; init; } = ModuleType;
 }
 
