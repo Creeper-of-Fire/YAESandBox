@@ -144,24 +144,6 @@ namespace YAESandBox.Workflow.AIService.AiConfig.Doubao {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 指定模型在单次请求中生成的最大Token数量。这会影响输出的长度和请求成本。.
-        /// </summary>
-        public static string DoubaoAiProcessorConfig_MaxTokens_Description {
-            get {
-                return ResourceManager.GetString("DoubaoAiProcessorConfig_MaxTokens_Description", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Looks up a localized string similar to 最大Token数 (Max Tokens).
-        /// </summary>
-        public static string DoubaoAiProcessorConfig_MaxTokens_Label {
-            get {
-                return ResourceManager.GetString("DoubaoAiProcessorConfig_MaxTokens_Label", resourceCulture);
-            }
-        }
-        
-        /// <summary>
         ///   Looks up a localized string similar to 要使用的豆包AI模型名称，例如 &apos;doubao-pro-32k&apos; 或 &apos;doubao-lite-128k&apos;。.
         /// </summary>
         public static string DoubaoAiProcessorConfig_ModelName_Description {

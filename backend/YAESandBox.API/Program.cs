@@ -4,6 +4,7 @@ using System.Reflection;
 using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.API;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Hubs;
@@ -74,7 +75,7 @@ builder.Services.AddSwaggerGen(options =>
     // --- 定义 AiService 模块 API 文档 ---
     options.SwaggerDoc(AiConfigurationsController.AiConfigGroupName, new OpenApiInfo
     {
-        Title = "YAESandBox API (AI Config)", 
+        Title = "YAESandBox API (AI Config)",
         Version = "v1",
         Description = "包含AI服务配置相关的API。"
     });
@@ -94,7 +95,7 @@ builder.Services.AddSwaggerGen(options =>
             // 新增对 AiConfig 的处理
             if (docName == AiConfigurationsController.AiConfigGroupName)
                 return apiDesc.GroupName == AiConfigurationsController.AiConfigGroupName;
-            
+
             // 否则，生成的是 Public 文档
             // 公开文档只包含 GroupName 为 Public 的 API
             return groupName == GlobalSwaggerConstants.PublicApiGroupName;
@@ -183,17 +184,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwagger(); // 启用 Swagger 中间件 (提供 JSON)
     app.UseSwaggerUI(c =>
     {
-        // --- 配置 UI 以显示两个文档版本 ---
+        // --- 配置 UI 以显示文档版本 ---
         // 端点 1: 公开 API
         c.SwaggerEndpoint($"/swagger/{GlobalSwaggerConstants.PublicApiGroupName}/swagger.json", $"YAESandBox API (Public)");
         // 端点 2: 内部 API
         c.SwaggerEndpoint($"/swagger/{GlobalSwaggerConstants.InternalApiGroupName}/swagger.json", $"YAESandBox API (Internal)");
-        // 端点 2: 内部 API
+        // 端点 3: AI API
         c.SwaggerEndpoint($"/swagger/{AiConfigurationsController.AiConfigGroupName}/swagger.json", $"YAESandBox API (AI Config)");
 
         // (可选) 设置默认展开级别等 UI 选项
         c.DefaultModelsExpandDepth(-1); // 折叠模型定义
-        c.DocExpansion(Swashbuckle.AspNetCore.SwaggerUI.DocExpansion.List); // 列表形式展开操作
+        c.DocExpansion(DocExpansion.List); // 列表形式展开操作
     });
 }
 else

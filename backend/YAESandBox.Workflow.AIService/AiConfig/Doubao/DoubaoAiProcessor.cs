@@ -48,7 +48,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             Messages: doubaoMessages,
             Stream: true,
             Temperature: this._config.Temperature,
-            MaxTokens: this._config.MaxTokens,
+            MaxTokens: this._config.MaxOutputTokens,
             TopP: this._config.TopP,
             Stop: this._config.StopSequences,
             ResponseFormat: responseFormatParam,

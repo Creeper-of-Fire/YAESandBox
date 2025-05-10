@@ -44,14 +44,6 @@
     <value>控制生成文本的随机性。较低的值（如0.2）使输出更具确定性和重点，较高的值（如0.8）使其更随机。默认值通常为0.7或0.9，具体取决于模型。取值范围一般为 0.0 到 2.0。</value>
   </data>
 
-    <!-- DoubaoAiProcessorConfig.MaxTokens -->
-    <data name="DoubaoAiProcessorConfig_MaxTokens_Label" xml:space="preserve">
-    <value>最大Token数 (Max Tokens)</value>
-  </data>
-    <data name="DoubaoAiProcessorConfig_MaxTokens_Description" xml:space="preserve">
-    <value>指定模型在单次请求中生成的最大Token数量。这会影响输出的长度和请求成本。</value>
-  </data>
-
     <!-- DoubaoAiProcessorConfig.TopP -->
     <data name="DoubaoAiProcessorConfig_TopP_Label" xml:space="preserve">
     <value>Top P采样</value>

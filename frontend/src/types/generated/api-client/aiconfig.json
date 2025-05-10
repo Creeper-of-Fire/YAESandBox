@@ -683,6 +683,12 @@
             "format": "double",
             "nullable": true
           },
+          "step": {
+            "type": "number",
+            "description": "对于数字类型，调整的步长。",
+            "format": "double",
+            "nullable": true
+          },
           "minLength": {
             "type": "integer",
             "description": "对于字符串类型，允许的最小长度。",

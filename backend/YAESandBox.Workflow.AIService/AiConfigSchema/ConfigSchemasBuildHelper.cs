@@ -383,6 +383,8 @@ public class ConfigSchemasBuildHelper
                 {
                     validationRules.Min = Convert.ToDouble(rangeAttr.Minimum);
                     validationRules.Max = Convert.ToDouble(rangeAttr.Maximum);
+                    if (rangeAttr is CustomRangeAttribute customRangeAttr)
+                        validationRules.Step = Convert.ToDouble(customRangeAttr.Step);
                     hasRules = true;
                     if (!string.IsNullOrEmpty(rangeAttr.ErrorMessage)) errorMessages.Add(rangeAttr.ErrorMessage);
                 }
@@ -396,8 +398,7 @@ public class ConfigSchemasBuildHelper
         // StringLengthAttribute: 用于字符串长度
         var lengthAttr = prop.GetCustomAttribute<StringLengthAttribute>();
         if (lengthAttr != null &&
-            (schema.SchemaDataType == SchemaDataType.String || schema.SchemaDataType == SchemaDataType.MultilineText ||
-             schema.SchemaDataType == SchemaDataType.Password))
+            schema.SchemaDataType is SchemaDataType.String or SchemaDataType.MultilineText or SchemaDataType.Password)
         {
             validationRules.MinLength = lengthAttr.MinimumLength;
             validationRules.MaxLength = lengthAttr.MaximumLength; // MaxLength 是必须的
@@ -408,8 +409,7 @@ public class ConfigSchemasBuildHelper
         // MinLengthAttribute (System.ComponentModel.DataAnnotations)
         var minLengthAttr = prop.GetCustomAttribute<MinLengthAttribute>();
         if (minLengthAttr != null && validationRules.MinLength == null && // 避免与StringLength冲突
-            (schema.SchemaDataType == SchemaDataType.String || schema.SchemaDataType == SchemaDataType.MultilineText ||
-             schema.SchemaDataType == SchemaDataType.Password))
+            schema.SchemaDataType is SchemaDataType.String or SchemaDataType.MultilineText or SchemaDataType.Password)
         {
             validationRules.MinLength = minLengthAttr.Length;
             hasRules = true;
@@ -419,8 +419,7 @@ public class ConfigSchemasBuildHelper
         // MaxLengthAttribute (System.ComponentModel.DataAnnotations)
         var maxLengthAttr = prop.GetCustomAttribute<MaxLengthAttribute>();
         if (maxLengthAttr != null && validationRules.MaxLength == null && // 避免与StringLength冲突
-            (schema.SchemaDataType == SchemaDataType.String || schema.SchemaDataType == SchemaDataType.MultilineText ||
-             schema.SchemaDataType == SchemaDataType.Password))
+            schema.SchemaDataType is SchemaDataType.String or SchemaDataType.MultilineText or SchemaDataType.Password)
         {
             validationRules.MaxLength = maxLengthAttr.Length;
             hasRules = true;

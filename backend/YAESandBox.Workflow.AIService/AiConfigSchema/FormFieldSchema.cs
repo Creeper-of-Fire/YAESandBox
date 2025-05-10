@@ -177,6 +177,12 @@ public class ValidationRules
     public double? Max { get; set; }
 
     /// <summary>
+    /// 对于数字类型，调整的步长。
+    /// </summary>
+    /// <returns></returns>
+    public double? Step { get; set; }
+
+    /// <summary>
     /// 对于字符串类型，允许的最小长度。
     /// </summary>
     public int? MinLength { get; set; }

@@ -41,6 +41,21 @@ public abstract record AbstractAiProcessorConfig(string ConfigName, string Modul
     [Required]
     [ReadOnly(true)]
     public string ModuleType { get; init; } = ModuleType;
+    
+    /// <summary>
+    /// 最大输出Token数
+    /// </summary>
+    [Display(
+        Name = "AbstractAiProcessorConfig_MaxOutputTokens_Label",
+        Description = "AbstractAiProcessorConfig_MaxOutputTokens_Description",
+        ResourceType = typeof(AiProcessorConfigResources)
+    )]
+    public int? MaxOutputTokens { get; init; }
+    
+    /// <summary>
+    /// 最大输入Token数。不出现在请求体中，但是在其他地方（如历史记录生成）会有用。
+    /// </summary>
+    public int? MaxInputTokens { get; init; }
 }
 
 /// <summary>

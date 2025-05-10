@@ -65,6 +65,7 @@ public interface ILogger<T>
 public static class Log
 {
     private static readonly Logger _logger = new();
+
     public static ILogger<T> CreateLogger<T>()
     {
         return new Logger<T>();

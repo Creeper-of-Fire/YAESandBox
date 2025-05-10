@@ -23,7 +23,6 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ErrorMessageResourceName = "Validation_Required",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources) // 通用验证消息
     )]
-    [DataType(DataType.Password)]
     public string ApiKey { get; init; } = ApiKey;
 
     /// <summary>
@@ -58,13 +57,6 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
     )]
     [DefaultValue(1.0)]
     public double? Temperature { get; init; }
-
-    [Display(
-        Name = "DoubaoAiProcessorConfig_MaxTokens_Label",
-        Description = "DoubaoAiProcessorConfig_MaxTokens_Description",
-        ResourceType = typeof(DoubaoConfigResources)
-    )]
-    public int? MaxTokens { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_TopP_Label",

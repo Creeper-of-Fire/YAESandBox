@@ -14,11 +14,15 @@ declare module 'vue' {
     BlockBubbleStream: typeof import('./src/components/BlockBubbleStream.vue')['default']
     ConnectionStatus: typeof import('./src/components/ConnectionStatus.vue')['default']
     EntityListPanel: typeof import('./src/components/panels/EntityListPanel.vue')['default']
+    FieldDescriptionTooltip: typeof import('./src/components/schema/FieldDescriptionTooltip.vue')['default']
     GameStatePanel: typeof import('./src/components/panels/GameStatePanel.vue')['default']
     MainLayout: typeof import('./src/components/MainLayout.vue')['default']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
+    NumberInputControl: typeof import('./src/components/schema/fields/NumberInputControl.vue')['default']
     SchemaDrivenForm: typeof import('./src/components/schema/SchemaDrivenForm.vue')['default']
     SettingsPanel: typeof import('./src/components/panels/SettingsPanel.vue')['default']
+    StringInputControl: typeof import('./src/components/schema/fields/StringInputControl.vue')['default']
+    UnknownField: typeof import('./src/components/schema/fields/UnknownField.vue')['default']
   }
 }

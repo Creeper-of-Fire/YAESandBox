@@ -78,6 +78,24 @@ namespace YAESandBox.Workflow.AIService.AiConfig {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 指定模型在单次请求中生成的最大Token数量。这会影响输出的长度和请求成本。.
+        /// </summary>
+        public static string AbstractAiProcessorConfig_MaxOutputTokens_Description {
+            get {
+                return ResourceManager.GetString("AbstractAiProcessorConfig_MaxOutputTokens_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 最大输出Token数 (Max Tokens).
+        /// </summary>
+        public static string AbstractAiProcessorConfig_MaxOutputTokens_Label {
+            get {
+                return ResourceManager.GetString("AbstractAiProcessorConfig_MaxOutputTokens_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to AI模型的内部类型标识符。此字段由系统根据具体配置类型自动设置，通常用于区分不同的AI服务实现，用户不应手动修改。.
         /// </summary>
         public static string AbstractAiProcessorConfig_ModuleType_Description {

@@ -15,6 +15,10 @@ export type ValidationRules = {
      */
     max?: number | null;
     /**
+     * 对于数字类型，调整的步长。
+     */
+    step?: number | null;
+    /**
      * 对于字符串类型，允许的最小长度。
      */
     minLength?: number | null;
