@@ -2,33 +2,32 @@
   <MainLayout>
     <template #toolbar>
       <!-- Toolbar 负责导入组件引用并调用 store.setActiveComponent -->
-      <AppToolbar />
+      <AppToolbar/>
     </template>
 
     <!-- 左侧面板插槽 -->
+
     <template #left-panel>
       <!-- 直接渲染 store 中的组件引用 -->
-      <component :is="uiStore.activeLeftComponent" v-if="uiStore.activeLeftComponent"/>
+      <KeepAlive>
+        <component :is="uiStore.activeLeftComponent"/>
+      </KeepAlive>
     </template>
+
 
     <!-- 主要内容插槽 -->
     <template #main-content>
-      <template v-if="isMobileLayout">
-        <!-- 移动端根据 getter 决定显示哪个已激活的组件 -->
-        <component :is="uiStore.getMobileViewComponent" v-if="uiStore.getMobileViewComponent"/>
-        <!-- 如果 getter 返回 null，显示 BubbleStream -->
-        <BlockBubbleStream v-else />
-      </template>
-      <template v-else>
-        <!-- 桌面端固定显示 BubbleStream -->
-        <BlockBubbleStream />
-      </template>
+      <KeepAlive>
+        <component :is="currentMainComponent"/>
+      </KeepAlive>
     </template>
 
     <!-- 右侧面板插槽 -->
     <template #right-panel>
       <!-- 直接渲染 store 中的组件引用 -->
-      <component :is="uiStore.activeRightComponent" v-if="uiStore.activeRightComponent"/>
+      <KeepAlive>
+        <component :is="uiStore.activeRightComponent"/>
+      </KeepAlive>
     </template>
 
     <!-- 其他插槽 -->
@@ -43,7 +42,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, onMounted, watch, onUnmounted} from 'vue';
+import {ref, onMounted, watch, onUnmounted, computed} from 'vue';
 import {
   NSpin// 引入 Grid 和 Grid Item
 } from 'naive-ui';
@@ -70,11 +69,29 @@ const isMobileLayout = useMediaQuery('(max-width: 767.9px)');
 // 监视媒体查询结果并更新 store
 watch(isMobileLayout, (value) => {
   uiStore.setIsMobileLayout(value);
-}, { immediate: true });
+}, {immediate: true});
 
 
 // --- Computed Properties for Dynamic Components ---
-
+/**
+ * 计算当前主内容区域应该渲染的组件。
+ * 核心逻辑：
+ * - 移动端：根据 uiStore.getMobileViewComponent (它会返回左/右激活组件或 null) 决定。
+ * - 桌面端：固定显示 BlockBubbleStream。
+ * - 任何情况下，如果特定视图组件不存在，则回退到 BlockBubbleStream。
+ */
+const currentMainComponent = computed(() => {
+  if (isMobileLayout.value) {
+    // uiStore.getMobileViewComponent 返回的是 store 中的 shallowRef 包装的组件或 null
+    const focusedComponent = uiStore.getMobileViewComponent;
+    if (focusedComponent) { // 如果是 shallowRef(actualComponent)
+      return focusedComponent; // 直接返回 shallowRef 实例，:is 会处理
+    }
+    // 如果 getMobileViewComponent 返回 null (焦点在 main)，则显示 BlockBubbleStream
+  }
+  // 桌面端，或移动端焦点在 main 时
+  return BlockBubbleStream;
+});
 // --- Event Handlers ---
 
 // 处理来自 Toolbar 的通用面板切换请求
@@ -130,7 +147,13 @@ onUnmounted(() => {
 <style scoped>
 /* 全局 Spin 样式 */
 .global-loading-spinner {
-  position: fixed !important; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 9999 !important;
-  background-color: rgba(255, 255, 255, 0.7); padding: 20px; border-radius: 8px;
+  position: fixed !important;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 9999 !important;
+  background-color: rgba(255, 255, 255, 0.7);
+  padding: 20px;
+  border-radius: 8px;
 }
 </style>

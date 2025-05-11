@@ -68,7 +68,6 @@
             :key="formRenderKey"
             v-model="currentConfigSet.configurations[selectedAiModuleType]"
             :schema="currentSchema"
-            :widgets="customWidgets"
             :form-props="formGlobalProps"
             @change="onFormChange"
             :form-footer={show:false}
@@ -151,11 +150,6 @@ const formRenderKey = ref(0); // 用于强制重新渲染 vue-form
 
 // ----------- 自定义组件与表单 Props -----------
 const MyCustomStringAutoComplete = markRaw(defineAsyncComponent(() => import('@/components/ai-config/MyCustomStringAutoComplete.vue'))); // 确保路径正确
-
-const customWidgets = {
-  MyCustomStringAutoComplete: MyCustomStringAutoComplete,
-  // TokenSliderWithNullCheckboxWidget: TokenSliderWithNullCheckboxWidget, // 如果你有这个
-};
 
 const formGlobalProps = computed(() => ({
   // 这些是传递给 Naive UI NForm 组件的 props

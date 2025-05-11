@@ -15,14 +15,17 @@
                 class="main-layout-grid"
             >
               <!-- 1. 左侧面板插槽 (仅桌面端渲染) -->
-              <n-gi v-if="!isMobile" span="2" class="side-panel-area left-panel-area">
+              <n-gi
+                  v-show="!isMobile"
+                  :span="leftPanelGridSpan"
+                  class="side-panel-area left-panel-area">
                 <div class="panel-wrapper">
                   <slot name="left-panel"></slot>
                 </div>
               </n-gi>
 
               <!-- 2. 中间核心内容区 -->
-              <n-gi span="6" class="center-content-area">
+              <n-gi :span="mainContentGridSpan" class="center-content-area">
                 <div class="center-content-wrapper">
                   <!-- 2a. 顶部工具栏 (始终存在) -->
                   <n-layout-header bordered class="app-header">
@@ -43,7 +46,9 @@
               </n-gi>
 
               <!-- 3. 右侧面板插槽 (仅桌面端渲染) -->
-              <n-gi v-if="!isMobile" span="2" class="side-panel-area right-panel-area">
+              <n-gi v-show="!isMobile" 
+                    :span="rightPanelGridSpan" 
+                    class="side-panel-area right-panel-area">
                 <div class="panel-wrapper">
                   <slot name="right-panel"></slot>
                 </div>
@@ -83,6 +88,29 @@ const isMobile = useMediaQuery('(max-width: 767.9px)');
 // --- Computed ---
 // Grid 列数：移动端 1 列，桌面端 4 列
 const gridCols = computed(() => (isMobile.value ? 1 : 10));
+
+// 各区域的 Grid Span
+// 注意：即使在移动端为侧边栏分配 span=1，它们也会因为 v-show="false" 而不显示。
+// Naive UI 的 n-gi 在其父 n-grid 的 cols=1 时，span 大于1会被视为1。
+const leftPanelGridSpan = computed(() => (isMobile.value ? 1 : 2));
+const mainContentGridSpan = computed(() => {
+  if (isMobile.value) {
+    return 1; // 移动端，主内容区占满整个单列
+  }
+  // 桌面端，主内容区的 span 可以根据侧边栏是否显示来动态调整，以填满空间
+  // 但为了简单起见并保持 KeepAlive 的稳定性，我们让 MainLayout 的结构固定。
+  // 如果侧边栏通过 v-show 隐藏，它们在布局上仍占据空间（只是 display:none）。
+  // 如果希望主内容区在侧边栏隐藏时扩展，则需要更复杂的 span 计算或不同的 grid 定义。
+  // 当前实现：桌面端主内容区固定 span=6。如果侧边栏隐藏，会出现空白区域。
+  // 如果需要主内容区扩展，可以调整这里的逻辑，例如：
+  // let span = 10;
+  // if (props.isLeftPanelActive) span -= 2;
+  // if (props.isRightPanelActive) span -= 2;
+  // return span;
+  // 但要注意，这可能让布局在侧边栏切换时跳动。当前保持固定 span=6。
+  return 6;
+});
+const rightPanelGridSpan = computed(() => (isMobile.value ? 1 : 2));
 
 // 可以选择性地将 isMobile 暴露出去，如果父组件需要的话
 // defineExpose({ isMobile });
