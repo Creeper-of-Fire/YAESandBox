@@ -58,7 +58,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             ServiceTier: this._config.ServiceTier,
             Logprobs: this._config.Logprobs,
             TopLogprobs: this._config.TopLogprobs,
-            LogitBias: this._config.LogitBias?.ToDictionary(kvp => kvp.Key, kvp => kvp.Value),
+            LogitBias: this._config.LogitBias?.ToDictionary(kvp => kvp.TokenId, kvp => kvp.BiasValue),
             Tools: null
         );
 

@@ -39,10 +39,15 @@ public class StepProcessor
             switch (module)
             {
                 case AiModule aiModule:
-                    var aiProcessor = this.workflowProcessor.MasterAiService.CreateAiProcessor(this.stepAiConfig.aiProcessorConfigUUID);
+                    if (this.stepAiConfig.SelectedAiModuleType == null)
+                        return AiError.Error($"请先配置 {this.stepAiConfig.AiProcessorConfigUUID} 的AI类型。");
+                    var aiProcessor = this.workflowProcessor.MasterAiService.CreateAiProcessor(
+                        this.stepAiConfig.AiProcessorConfigUUID,
+                        this.stepAiConfig.SelectedAiModuleType);
                     if (aiProcessor == null)
-                        return AiError.Error($"未找到 AI 配置: {this.stepAiConfig.aiProcessorConfigUUID}").ToResult();
-                    var result = await aiModule.ExecuteAsync(aiProcessor, this.content.prompts, this.stepAiConfig.isStream);
+                        return AiError
+                            .Error($"未找到 AI 配置 {this.stepAiConfig.AiProcessorConfigUUID}配置下的类型：{this.stepAiConfig.SelectedAiModuleType}");
+                    var result = await aiModule.ExecuteAsync(aiProcessor, this.content.prompts, this.stepAiConfig.IsStream);
                     if (result.IsFailed)
                         return result.ToResult();
                     this.content.fullAiReturn = result.Value;
@@ -65,6 +70,7 @@ public record StepProcessorConfig(StepAiConfig stepAiConfig, List<string> module
 /// <summary>
 /// 步骤本身的 AI 配置。
 /// </summary>
-/// <param name="aiProcessorConfigUUID">AI服务的配置的UUID</param>
-/// <param name="isStream"></param>
-public record StepAiConfig(string aiProcessorConfigUUID, bool isStream);
+/// <param name="AiProcessorConfigUUID">AI服务的配置的UUID</param>
+/// <param name="SelectedAiModuleType">当前选中的AI模型的类型名，需要通过<see cref="IMasterAiService.GetAbleAiProcessorType"/>获取</param>
+/// <param name="IsStream">是否为流式传输</param>
+public record StepAiConfig(string AiProcessorConfigUUID, string? SelectedAiModuleType, bool IsStream);

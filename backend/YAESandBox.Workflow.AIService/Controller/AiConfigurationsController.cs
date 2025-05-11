@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
+using YAESandBox.Workflow.AIService.AiConfigSchema;
 
 namespace YAESandBox.Workflow.AIService.Controller;
 
@@ -22,31 +23,31 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     private IAiConfigurationManager configurationManager { get; } = configurationManager;
 
     /// <summary>
-    /// 获取所有已保存的 AI 配置的完整列表。
+    /// 获取所有已保存的 AI 配置集的完整列表。
     /// </summary>
-    /// <returns>包含所有 AI 配置的字典，键为 UUID，值为配置对象。</returns>
+    /// <returns>包含所有 AI 配置集的字典，键为 UUID，值为配置集对象。</returns>
     [HttpGet]
-    [ProducesResponseType(typeof(IReadOnlyDictionary<string, AbstractAiProcessorConfig>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(IReadOnlyDictionary<string, AiConfigurationSet>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IReadOnlyDictionary<string, AbstractAiProcessorConfig>>> GetAllConfigurations()
+    public async Task<ActionResult<IReadOnlyDictionary<string, AiConfigurationSet>>> GetAllConfigurations()
     {
         var result = await this.configurationManager.GetAllConfigurationsAsync();
         if (result.IsSuccess)
             return this.Ok(result.Value);
 
-        return this.StatusCode(StatusCodes.Status500InternalServerError, "获取配置列表时发生内部错误。");
+        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.First().Message);
     }
 
     /// <summary>
-    /// 根据 UUID 获取一个特定的 AI 配置。
+    /// 根据 UUID 获取一个特定的 AI 配置集。
     /// </summary>
-    /// <param name="uuid">配置的唯一标识符。</param>
-    /// <returns>找到的 AI 配置对象。</returns>
+    /// <param name="uuid">配置集的唯一标识符。</param>
+    /// <returns>找到的 AI 配置集对象。</returns>
     [HttpGet("{uuid}")]
-    [ProducesResponseType(typeof(AbstractAiProcessorConfig), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AiConfigurationSet), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<AbstractAiProcessorConfig>> GetConfigurationByUuid(string uuid)
+    public async Task<ActionResult<AiConfigurationSet>> GetConfigurationByUuid(string uuid)
     {
         if (string.IsNullOrWhiteSpace(uuid))
             return this.BadRequest("UUID 不能为空。");
@@ -58,19 +59,19 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (result.HasError<AIConfigError>(e => e.Message.Contains("未找到")))
             return this.NotFound(result.Errors.First().Message);
 
-        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.FirstOrDefault()?.Message ?? "获取配置时发生内部错误。");
+        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.FirstOrDefault()?.Message ?? "获取配置集时发生内部错误。");
     }
 
     /// <summary>
-    /// 添加一个新的 AI 配置。
+    /// 添加一个新的 AI 配置集。
     /// </summary>
-    /// <param name="config">要添加的 AI 配置对象。请求体中需要包含 'ModuleType' 辨别器属性。</param>
-    /// <returns>新创建配置的 UUID。</returns>
+    /// <param name="configs">要添加的 AI 配置集对象。</param>
+    /// <returns>新创建配置集的 UUID。</returns>
     [HttpPost]
     [ProducesResponseType(typeof(string), StatusCodes.Status201Created)] // 返回新资源的 UUID
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<string>> AddConfiguration([FromBody] AbstractAiProcessorConfig config)
+    public async Task<ActionResult<string>> AddConfiguration([FromBody] AiConfigurationSet configs)
     {
         // 模型绑定器和 JSON 反序列化器会根据请求体中的 "ModuleType" 字段
         // 自动将 JSON 反序列化为正确的 AbstractAiProcessorConfig 子类型 (如 DoubaoAiProcessorConfig)。
@@ -78,7 +79,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (!this.ModelState.IsValid) // 检查数据注解验证 (如 [Required] 在 AbstractAiProcessorConfig 或其子类上)
             return this.BadRequest(this.ModelState);
 
-        var result = await this.configurationManager.AddConfigurationAsync(config);
+        var result = await this.configurationManager.AddConfigurationAsync(configs);
         if (result.IsSuccess)
         {
             // 返回 201 Created，并在 Location header 指向新创建的资源 (可选但推荐)
@@ -86,21 +87,21 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
             return this.CreatedAtAction(nameof(this.GetConfigurationByUuid), new { uuid = result.Value }, result.Value);
         }
 
-        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.FirstOrDefault()?.Message ?? "添加配置时发生内部错误。");
+        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.FirstOrDefault()?.Message ?? "添加配置集时发生内部错误。");
     }
 
     /// <summary>
-    /// 更新一个已存在的 AI 配置。
+    /// 更新一个已存在的 AI 配置集。
     /// </summary>
-    /// <param name="uuid">要更新的配置的唯一标识符。</param>
-    /// <param name="config">包含更新信息的 AI 配置对象。ModuleType 应与现有配置匹配。</param>
+    /// <param name="uuid">要更新的配置集的唯一标识符。</param>
+    /// <param name="config">包含更新信息的 AI 配置集对象。</param>
     /// <returns>无内容响应表示成功。</returns>
     [HttpPut("{uuid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)] // 成功更新，无内容返回
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateConfiguration(string uuid, [FromBody] AbstractAiProcessorConfig config)
+    public async Task<IActionResult> UpdateConfiguration(string uuid, [FromBody] AiConfigurationSet config)
     {
         if (string.IsNullOrWhiteSpace(uuid))
         {
@@ -113,15 +114,10 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (existingConfigResult.IsFailed)
         {
             if (existingConfigResult.HasError<AIConfigError>(e => e.Message.Contains("未找到")))
-                return this.NotFound($"未找到 UUID 为 '{uuid}' 的配置。");
+                return this.NotFound($"未找到 UUID 为 '{uuid}' 的配置集。");
 
-            return this.StatusCode(StatusCodes.Status500InternalServerError, "更新配置前检查配置失败。");
+            return this.StatusCode(StatusCodes.Status500InternalServerError, "更新配置前检查配置集失败。");
         }
-
-        if (existingConfigResult.Value.ModuleType != config.ModuleType)
-            return this.BadRequest(
-                $"无法更改配置的 ModuleType。现有类型为 '{existingConfigResult.Value.ModuleType}'，请求类型为 '{config.ModuleType}'。请删除后重新创建不同类型的配置。");
-
 
         if (!this.ModelState.IsValid)
             return this.BadRequest(this.ModelState);
@@ -132,13 +128,13 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
 
         // UpdateConfigurationAsync 内部可能已处理 "未找到" 的情况，这里可能不需要重复检查 NotFound
         // 但如果 Manager 返回了特定的错误，可以据此返回不同的状态码
-        return this.StatusCode(StatusCodes.Status500InternalServerError, updateResult.Errors.FirstOrDefault()?.Message ?? "更新配置时发生内部错误。");
+        return this.StatusCode(StatusCodes.Status500InternalServerError, updateResult.Errors.FirstOrDefault()?.Message ?? "更新配置集时发生内部错误。");
     }
 
     /// <summary>
-    /// 根据 UUID 删除一个 AI 配置。
+    /// 根据 UUID 删除一个 AI 配置集。
     /// </summary>
-    /// <param name="uuid">要删除的配置的唯一标识符。</param>
+    /// <param name="uuid">要删除的配置集的唯一标识符。</param>
     /// <returns>无内容响应表示成功（即使配置原先不存在，删除也是幂等的）。</returns>
     [HttpDelete("{uuid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -153,6 +149,6 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (result.IsSuccess)
             return this.NoContent();
 
-        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.FirstOrDefault()?.Message ?? "删除配置时发生内部错误。");
+        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.FirstOrDefault()?.Message ?? "删除配置集时发生内部错误。");
     }
 }

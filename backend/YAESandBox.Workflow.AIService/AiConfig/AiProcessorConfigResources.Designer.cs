@@ -78,6 +78,24 @@ namespace YAESandBox.Workflow.AIService.AiConfig {
         }
         
         /// <summary>
+        ///   Looks up a localized string similar to 最大输入Token数。不出现在请求体中，但是在其他地方（如历史记录生成）会有用。.
+        /// </summary>
+        public static string AbstractAiProcessorConfig_MaxInputTokens_Description {
+            get {
+                return ResourceManager.GetString("AbstractAiProcessorConfig_MaxInputTokens_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 最大输入Token数 (Max Tokens).
+        /// </summary>
+        public static string AbstractAiProcessorConfig_MaxInputTokens_Label {
+            get {
+                return ResourceManager.GetString("AbstractAiProcessorConfig_MaxInputTokens_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Looks up a localized string similar to 指定模型在单次请求中生成的最大Token数量。这会影响输出的长度和请求成本。.
         /// </summary>
         public static string AbstractAiProcessorConfig_MaxOutputTokens_Description {
@@ -110,6 +128,24 @@ namespace YAESandBox.Workflow.AIService.AiConfig {
         public static string AbstractAiProcessorConfig_ModuleType_Label {
             get {
                 return ResourceManager.GetString("AbstractAiProcessorConfig_ModuleType_Label", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 为此组AI配置指定一个易于识别的名称。.
+        /// </summary>
+        public static string AiConfigurationSet_ConfigSetName_Description {
+            get {
+                return ResourceManager.GetString("AiConfigurationSet_ConfigSetName_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Looks up a localized string similar to 配置集名称.
+        /// </summary>
+        public static string AiConfigurationSet_ConfigSetName_Label {
+            get {
+                return ResourceManager.GetString("AiConfigurationSet_ConfigSetName_Label", resourceCulture);
             }
         }
         

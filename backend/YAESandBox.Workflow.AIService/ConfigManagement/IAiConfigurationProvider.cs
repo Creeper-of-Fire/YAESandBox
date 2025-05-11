@@ -1,4 +1,5 @@
 ﻿using YAESandBox.Workflow.AIService.AiConfig;
+using YAESandBox.Workflow.AIService.AiConfigSchema;
 
 namespace YAESandBox.Workflow.AIService.ConfigManagement;
 
@@ -9,5 +10,5 @@ public interface IAiConfigurationProvider
     /// </summary>
     /// <param name="aiConfigKey">配置的唯一键，用于查找。</param>
     /// <returns>IAiProcessorConfig 实例，如果未找到则为 null。</returns>
-    internal AbstractAiProcessorConfig? GetConfiguration(string aiConfigKey);
+    internal AiConfigurationSet? GetConfigurationSet(string aiConfigKey);
 }

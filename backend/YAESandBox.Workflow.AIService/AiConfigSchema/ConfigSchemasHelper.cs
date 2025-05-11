@@ -13,7 +13,7 @@ namespace YAESandBox.Workflow.AIService.AiConfigSchema;
 /// 帮助类，用于根据C#类型定义动态生成前端表单所需的Schema结构。
 /// 它通过反射读取类型的属性及其关联的DataAnnotations特性。
 /// </summary>
-public class ConfigSchemasHelper
+internal class ConfigSchemasHelper
 {
     private static List<Type>? _availableConfigTypesCache;
     private static readonly Lock _lockAvailableConfigTypes = new();
@@ -23,7 +23,7 @@ public class ConfigSchemasHelper
     /// 使用缓存以提高性能。
     /// </summary>
     /// <returns>类型列表。</returns>
-    public static IEnumerable<Type> GetAvailableAiConfigConcreteTypes()
+    internal static IEnumerable<Type> GetAvailableAiConfigConcreteTypes()
     {
         // 先尝试快速返回（无锁）
         var cached = _availableConfigTypesCache;
@@ -56,7 +56,7 @@ public class ConfigSchemasHelper
     /// </summary>
     /// <param name="typeName">类型的名称 (例如 "DoubaoAiProcessorConfig")。</param>
     /// <returns>如果找到则返回类型，否则返回 null。</returns>
-    public static Type? GetTypeByName(string typeName) // 使用 new 关键字隐藏基类或其他同名方法（如果存在）
+    internal static Type? GetTypeByName(string typeName) // 使用 new 关键字隐藏基类或其他同名方法（如果存在）
     {
         if (string.IsNullOrWhiteSpace(typeName)) return null;
         return GetAvailableAiConfigConcreteTypes()

@@ -236,7 +236,8 @@ namespace YAESandBox.Workflow.AIService.AiConfig.Doubao {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 是否包含本次请求的 token 用量统计信息。.
+        ///   Looks up a localized string similar to 流式调用时，默认不统计 token 用量信息，返回值为null。
+        ///如需统计，需设置 stream_options.include_usage为true。.
         /// </summary>
         public static string DoubaoAiProcessorConfig_StreamOptions_IncludeUsage_Description {
             get {
@@ -245,7 +246,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig.Doubao {
         }
         
         /// <summary>
-        ///   Looks up a localized string similar to 流式传输选项——token用量.
+        ///   Looks up a localized string similar to 流式响应选项——token用量.
         /// </summary>
         public static string DoubaoAiProcessorConfig_StreamOptions_IncludeUsage_Label {
             get {

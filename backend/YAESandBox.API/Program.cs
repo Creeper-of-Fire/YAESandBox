@@ -1,6 +1,7 @@
 // --- START OF FILE Program.cs ---
 
 using System.Reflection;
+using System.Text.Encodings.Web;
 using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -49,6 +50,7 @@ builder.Services.AddControllers()
     {
         // Serialize enums as strings in requests/responses
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
+        options.JsonSerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
     });
 
 // --- OpenAPI / Swagger ---

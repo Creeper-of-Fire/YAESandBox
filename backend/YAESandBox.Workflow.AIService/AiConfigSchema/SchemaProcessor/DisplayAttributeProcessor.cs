@@ -29,16 +29,15 @@ public class DisplayAttributeProcessor : ISchemaProcessor
         }
 
         var prompt = displayAttribute.GetPrompt(); // 支持本地化资源 (placeholder)
+        context.Schema.ExtensionData ??= new Dictionary<string, object?>();
         if (!string.IsNullOrWhiteSpace(prompt))
         {
-            context.Schema.ExtensionData ??= new Dictionary<string, object?>();
             context.Schema.ExtensionData["ui:placeholder"] = prompt;
         }
 
         var order = displayAttribute.GetOrder();
         if (order.HasValue)
         {
-            context.Schema.ExtensionData ??= new Dictionary<string, object>();
             // 暂存排序值，供后续全局 ui:order 构建
             context.Schema.ExtensionData["x-temp-ui-order"] = order.Value;
         }

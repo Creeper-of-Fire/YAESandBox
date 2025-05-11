@@ -49,7 +49,7 @@ public static class VueFormSchemaGenerator
         // 添加自定义 Schema Processors
         settings.SchemaProcessors.Add(new DisplayAttributeProcessor());
         settings.SchemaProcessors.Add(new StringOptionsProcessor());
-        // settings.SchemaProcessors.Add(new CustomRangeProcessor());
+        settings.SchemaProcessors.Add(new RangeProcessor());
 
         // 允许外部进一步配置
         configureSettings?.Invoke(settings);
@@ -71,29 +71,41 @@ public static class VueFormSchemaGenerator
             return;
         }
 
-        var orderedProperties = rootSchema.Properties
-            .Select(prop => new
+        int originalIndex = 0; // 用于记录原始迭代顺序
+        var propertiesWithOrderInfo = rootSchema.Properties
+            .Select(propKvp => new
             {
-                Name = prop.Key,
-                Order = prop.Value.ExtensionData?.TryGetValue("x-temp-ui-order", out var orderVal) == true && orderVal is int orderInt
+                Name = propKvp.Key,
+                Order = propKvp.Value.ExtensionData?.TryGetValue("x-temp-ui-order", out object? orderVal) == true && orderVal is int orderInt
                     ? orderInt
-                    : int.MaxValue,
-                PropertySchema = prop.Value
+                    : int.MaxValue, // 没有显式 order 的排在后面
+                OriginalIndex = originalIndex++, // 记录原始迭代顺序
+                PropertySchema = propKvp.Value
             })
-            .OrderBy(p => p.Order)
-            .ThenBy(p => p.Name) // 确保相同 order 的属性有一个稳定排序
+            .ToList(); // 物化列表，确保 OriginalIndex 被正确赋值
+
+        var orderedProperties = propertiesWithOrderInfo
+            .OrderBy(p => p.Order)          // 主要排序：按显式 Order
+            .ThenBy(p => p.OriginalIndex) // 次要排序：按原始迭代顺序
             .ToList();
 
         var uiOrderList = orderedProperties.Select(p => p.Name).ToList();
 
-        // 如果所有属性都没有指定顺序，则不生成 ui:order (可选行为)
-        // if (orderedProperties.All(p => p.Order == int.MaxValue) && orderedProperties.Count == rootSchema.Properties.Count)
+        // 可选：如果所有属性都没有有效的显式 Order (即 Order 都是 int.MaxValue)
+        // 并且列表不为空，那么 uiOrderList 已经是按 OriginalIndex 排序的了。
+        // 这种情况下，是否添加 ui:order 取决于是否总是希望显式指定顺序。
+        // 如果希望只有在至少有一个显式 Order 时才添加 ui:order，可以取消下面的注释。
+        // if (orderedProperties.All(p => p.Order == int.MaxValue) && orderedProperties.Any())
         // {
-        //     return;
+        //     // 如果不希望在这种情况下添加 ui:order，可以在这里返回或不设置 ExtensionData["ui:order"]
+        //     // 但通常，即使没有显式 order，提供一个稳定的顺序（基于迭代序）也是有益的。
         // }
 
-        rootSchema.ExtensionData ??= new Dictionary<string, object?>();
-        rootSchema.ExtensionData["ui:order"] = uiOrderList;
+        if (uiOrderList.Any()) // 仅当有属性时才添加 ui:order
+        {
+            rootSchema.ExtensionData ??= new Dictionary<string, object?>();
+            rootSchema.ExtensionData["ui:order"] = uiOrderList;
+        }
 
         // 清理临时的 x-temp-ui-order
         foreach (var prop in orderedProperties)

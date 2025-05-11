@@ -8,21 +8,17 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AiConfigEditorPanel: typeof import('./src/components/panels/AiConfigEditorPanel.vue')['default']
+    AiConfigEditorPanel: typeof import('./src/components/ai-config/AiConfigEditorPanel.vue')['default']
     AppToolbar: typeof import('./src/components/AppToolbar.vue')['default']
     BlockBubble: typeof import('./src/components/BlockBubble.vue')['default']
     BlockBubbleStream: typeof import('./src/components/BlockBubbleStream.vue')['default']
     ConnectionStatus: typeof import('./src/components/ConnectionStatus.vue')['default']
     EntityListPanel: typeof import('./src/components/panels/EntityListPanel.vue')['default']
-    FieldDescriptionTooltip: typeof import('./src/components/schema/FieldDescriptionTooltip.vue')['default']
     GameStatePanel: typeof import('./src/components/panels/GameStatePanel.vue')['default']
     MainLayout: typeof import('./src/components/MainLayout.vue')['default']
+    MyCustomStringAutoComplete: typeof import('./src/components/ai-config/MyCustomStringAutoComplete.vue')['default']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
-    NumberInputControl: typeof import('./src/components/schema/fields/NumberInputControl.vue')['default']
-    SchemaDrivenForm: typeof import('./src/components/schema/SchemaDrivenForm.vue')['default']
     SettingsPanel: typeof import('./src/components/panels/SettingsPanel.vue')['default']
-    StringInputControl: typeof import('./src/components/schema/fields/StringInputControl.vue')['default']
-    UnknownField: typeof import('./src/components/schema/fields/UnknownField.vue')['default']
   }
 }

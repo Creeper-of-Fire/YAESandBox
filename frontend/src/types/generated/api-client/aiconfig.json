@@ -102,7 +102,7 @@
         "tags": [
           "AiConfigurations"
         ],
-        "summary": "获取所有已保存的 AI 配置的完整列表。",
+        "summary": "获取所有已保存的 AI 配置集的完整列表。",
         "responses": {
           "200": {
             "description": "OK",
@@ -111,7 +111,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": {
-                    "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                    "$ref": "#/components/schemas/AiConfigurationSet"
                   }
                 }
               },
@@ -119,7 +119,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": {
-                    "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                    "$ref": "#/components/schemas/AiConfigurationSet"
                   }
                 }
               },
@@ -127,7 +127,7 @@
                 "schema": {
                   "type": "object",
                   "additionalProperties": {
-                    "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                    "$ref": "#/components/schemas/AiConfigurationSet"
                   }
                 }
               }
@@ -142,23 +142,23 @@
         "tags": [
           "AiConfigurations"
         ],
-        "summary": "添加一个新的 AI 配置。",
+        "summary": "添加一个新的 AI 配置集。",
         "requestBody": {
-          "description": "要添加的 AI 配置对象。请求体中需要包含 'ModuleType' 辨别器属性。",
+          "description": "要添加的 AI 配置集对象。",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                "$ref": "#/components/schemas/AiConfigurationSet"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                "$ref": "#/components/schemas/AiConfigurationSet"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                "$ref": "#/components/schemas/AiConfigurationSet"
               }
             }
           }
@@ -215,12 +215,12 @@
         "tags": [
           "AiConfigurations"
         ],
-        "summary": "根据 UUID 获取一个特定的 AI 配置。",
+        "summary": "根据 UUID 获取一个特定的 AI 配置集。",
         "parameters": [
           {
             "name": "uuid",
             "in": "path",
-            "description": "配置的唯一标识符。",
+            "description": "配置集的唯一标识符。",
             "required": true,
             "schema": {
               "type": "string"
@@ -233,17 +233,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                  "$ref": "#/components/schemas/AiConfigurationSet"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                  "$ref": "#/components/schemas/AiConfigurationSet"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                  "$ref": "#/components/schemas/AiConfigurationSet"
                 }
               }
             }
@@ -294,12 +294,12 @@
         "tags": [
           "AiConfigurations"
         ],
-        "summary": "更新一个已存在的 AI 配置。",
+        "summary": "更新一个已存在的 AI 配置集。",
         "parameters": [
           {
             "name": "uuid",
             "in": "path",
-            "description": "要更新的配置的唯一标识符。",
+            "description": "要更新的配置集的唯一标识符。",
             "required": true,
             "schema": {
               "type": "string"
@@ -307,21 +307,21 @@
           }
         ],
         "requestBody": {
-          "description": "包含更新信息的 AI 配置对象。ModuleType 应与现有配置匹配。",
+          "description": "包含更新信息的 AI 配置集对象。",
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                "$ref": "#/components/schemas/AiConfigurationSet"
               }
             },
             "text/json": {
               "schema": {
-                "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                "$ref": "#/components/schemas/AiConfigurationSet"
               }
             },
             "application/*+json": {
               "schema": {
-                "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                "$ref": "#/components/schemas/AiConfigurationSet"
               }
             }
           }
@@ -379,12 +379,12 @@
         "tags": [
           "AiConfigurations"
         ],
-        "summary": "根据 UUID 删除一个 AI 配置。",
+        "summary": "根据 UUID 删除一个 AI 配置集。",
         "parameters": [
           {
             "name": "uuid",
             "in": "path",
-            "description": "要删除的配置的唯一标识符。",
+            "description": "要删除的配置集的唯一标识符。",
             "required": true,
             "schema": {
               "type": "string"
@@ -425,38 +425,40 @@
   "components": {
     "schemas": {
       "AbstractAiProcessorConfig": {
-        "required": [
-          "configName",
-          "moduleType"
-        ],
         "type": "object",
         "properties": {
-          "configName": {
-            "minLength": 1,
-            "type": "string",
-            "description": "配置的名称，不唯一（防止不小心搞错了），建议保证其是唯一的"
-          },
-          "moduleType": {
-            "minLength": 1,
-            "type": "string",
-            "description": "模型的类型，持久化时工厂模式会使用它",
-            "readOnly": true
-          },
-          "maxOutputTokens": {
-            "type": "integer",
-            "description": "最大输出Token数",
-            "format": "int32",
-            "nullable": true
-          },
           "maxInputTokens": {
             "type": "integer",
             "description": "最大输入Token数。不出现在请求体中，但是在其他地方（如历史记录生成）会有用。",
             "format": "int32",
-            "nullable": true
+            "default": 2147483647
           }
         },
         "additionalProperties": false,
-        "description": "这个是Ai服务配置的基类，仅含绝对必须的字段。"
+        "description": "这个是Ai服务配置的基类，仅含绝对存在的字段。"
+      },
+      "AiConfigurationSet": {
+        "required": [
+          "configSetName",
+          "configurations"
+        ],
+        "type": "object",
+        "properties": {
+          "configSetName": {
+            "minLength": 1,
+            "type": "string",
+            "description": "用户为配置集指定的名称，用于在 UI 上显示和识别。"
+          },
+          "configurations": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+            },
+            "description": "包含在此配置集中的具体 AI 配置。\r\nKey 是 AI 配置的模块类型 (ModuleType, 例如 \"DoubaoAiProcessorConfig\")。\r\nValue 是该模块类型的具体配置数据对象 (不包含 ConfigName 和 ModuleType 字段本身)。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "代表一个 AI 配置集，它包含了一组特定类型的 AI 配置。"
       },
       "ProblemDetails": {
         "type": "object",

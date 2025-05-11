@@ -2,17 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AbstractAiProcessorConfig } from '../models/AbstractAiProcessorConfig';
+import type { AiConfigurationSet } from '../models/AiConfigurationSet';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class AiConfigurationsService {
     /**
-     * 获取所有已保存的 AI 配置的完整列表。
-     * @returns AbstractAiProcessorConfig OK
+     * 获取所有已保存的 AI 配置集的完整列表。
+     * @returns AiConfigurationSet OK
      * @throws ApiError
      */
-    public static getApiAiConfigurations(): CancelablePromise<Record<string, AbstractAiProcessorConfig>> {
+    public static getApiAiConfigurations(): CancelablePromise<Record<string, AiConfigurationSet>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/ai-configurations',
@@ -22,7 +22,7 @@ export class AiConfigurationsService {
         });
     }
     /**
-     * 添加一个新的 AI 配置。
+     * 添加一个新的 AI 配置集。
      * @returns string Created
      * @throws ApiError
      */
@@ -30,9 +30,9 @@ export class AiConfigurationsService {
         requestBody,
     }: {
         /**
-         * 要添加的 AI 配置对象。请求体中需要包含 'ModuleType' 辨别器属性。
+         * 要添加的 AI 配置集对象。
          */
-        requestBody?: AbstractAiProcessorConfig,
+        requestBody?: AiConfigurationSet,
     }): CancelablePromise<string> {
         return __request(OpenAPI, {
             method: 'POST',
@@ -46,18 +46,18 @@ export class AiConfigurationsService {
         });
     }
     /**
-     * 根据 UUID 获取一个特定的 AI 配置。
-     * @returns AbstractAiProcessorConfig OK
+     * 根据 UUID 获取一个特定的 AI 配置集。
+     * @returns AiConfigurationSet OK
      * @throws ApiError
      */
     public static getApiAiConfigurations1({
         uuid,
     }: {
         /**
-         * 配置的唯一标识符。
+         * 配置集的唯一标识符。
          */
         uuid: string,
-    }): CancelablePromise<AbstractAiProcessorConfig> {
+    }): CancelablePromise<AiConfigurationSet> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/ai-configurations/{uuid}',
@@ -71,7 +71,7 @@ export class AiConfigurationsService {
         });
     }
     /**
-     * 更新一个已存在的 AI 配置。
+     * 更新一个已存在的 AI 配置集。
      * @returns void
      * @throws ApiError
      */
@@ -80,13 +80,13 @@ export class AiConfigurationsService {
         requestBody,
     }: {
         /**
-         * 要更新的配置的唯一标识符。
+         * 要更新的配置集的唯一标识符。
          */
         uuid: string,
         /**
-         * 包含更新信息的 AI 配置对象。ModuleType 应与现有配置匹配。
+         * 包含更新信息的 AI 配置集对象。
          */
-        requestBody?: AbstractAiProcessorConfig,
+        requestBody?: AiConfigurationSet,
     }): CancelablePromise<void> {
         return __request(OpenAPI, {
             method: 'PUT',
@@ -104,7 +104,7 @@ export class AiConfigurationsService {
         });
     }
     /**
-     * 根据 UUID 删除一个 AI 配置。
+     * 根据 UUID 删除一个 AI 配置集。
      * @returns void
      * @throws ApiError
      */
@@ -112,7 +112,7 @@ export class AiConfigurationsService {
         uuid,
     }: {
         /**
-         * 要删除的配置的唯一标识符。
+         * 要删除的配置集的唯一标识符。
          */
         uuid: string,
     }): CancelablePromise<void> {

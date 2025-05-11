@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using YAESandBox.Workflow.AIService.AiConfigSchema;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
@@ -7,9 +8,19 @@ namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
 /// <summary>
 /// 豆包的AI配置
 /// </summary>
-public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string ModelName)
-    : AbstractAiProcessorConfig(ConfigName, nameof(DoubaoAiProcessorConfig))
+public record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : AbstractAiProcessorConfig
 {
+    /// <summary>
+    /// 最大输出Token数
+    /// </summary>
+    [Display(
+        Name = "AbstractAiProcessorConfig_MaxOutputTokens_Label",
+        Description = "AbstractAiProcessorConfig_MaxOutputTokens_Description",
+        ResourceType = typeof(AiProcessorConfigResources)
+    )]
+    [DefaultValue(8192)]
+    public int MaxOutputTokens { get; init; }
+
     /// <summary>
     /// Apikey
     /// </summary>
@@ -56,7 +67,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
     [DefaultValue(1.0)]
-    public double? Temperature { get; init; }
+    public double Temperature { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_TopP_Label",
@@ -67,14 +78,15 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ErrorMessageResourceName = "Validation_Range",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
-    public float? TopP { get; init; }
+    [DefaultValue(0.7)]
+    public float TopP { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_StopSequences_Label",
         Description = "DoubaoAiProcessorConfig_StopSequences_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    public IReadOnlyList<string>? StopSequences { get; init; }
+    public IReadOnlyList<string> StopSequences { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_ResponseFormatType_Label",
@@ -83,7 +95,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
     )]
     [StringOptions("text", "json_object")]
     [DefaultValue("text")]
-    public string? ResponseFormatType { get; init; }
+    public string ResponseFormatType { get; init; }
 
     // 如果需要ResponseFormatType支持 json_schema，则需要更复杂的类型，例如:
     // public DoubaoResponseFormatJsonSchema? JsonSchemaResponseFormat { get; init; }
@@ -97,7 +109,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ErrorMessageResourceName = "Validation_Range",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
-    public float? FrequencyPenalty { get; init; }
+    public float FrequencyPenalty { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_PresencePenalty_Label",
@@ -108,7 +120,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ErrorMessageResourceName = "Validation_Range",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
-    public float? PresencePenalty { get; init; }
+    public float PresencePenalty { get; init; }
 
 
     [Display(
@@ -116,7 +128,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         Description = "DoubaoAiProcessorConfig_StreamOptions_IncludeUsage_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    public bool? StreamOptions_IncludeUsage { get; init; }
+    public bool StreamOptions_IncludeUsage { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_ServiceTier_Label",
@@ -124,14 +136,14 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ResourceType = typeof(DoubaoConfigResources)
     )]
     [StringOptions("default", "auto")]
-    public string? ServiceTier { get; init; }
+    public string ServiceTier { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_Logprobs_Label",
         Description = "DoubaoAiProcessorConfig_Logprobs_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    public bool? Logprobs { get; init; }
+    public bool Logprobs { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_TopLogprobs_Label",
@@ -142,14 +154,26 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ErrorMessageResourceName = "Validation_Range",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
-    public int? TopLogprobs { get; init; }
+    public int TopLogprobs { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_LogitBias_Label",
         Description = "DoubaoAiProcessorConfig_LogitBias_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    public IReadOnlyDictionary<string, float>? LogitBias { get; init; }
+    public IReadOnlyList<LogitBiasItemDto> LogitBias { get; init; }
+
+    public class LogitBiasItemDto
+    {
+        [JsonPropertyName("tokenId")]
+        [Required]
+        public string TokenId { get; set; }
+
+        [JsonPropertyName("biasValue")]
+        [Range(-100, 100)]
+        [Required]
+        public float BiasValue { get; set; }
+    }
 
     public override IAiProcessor ToAiProcessor(AiProcessorDependencies dependencies)
     {

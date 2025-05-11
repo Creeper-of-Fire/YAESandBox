@@ -3,6 +3,7 @@
 using FluentResults;
 using YAESandBox.Depend;
 using YAESandBox.Workflow.AIService.AiConfig;
+using YAESandBox.Workflow.AIService.AiConfigSchema;
 
 // 使用 Task 但用户不要求 CancellationToken
 
@@ -19,7 +20,7 @@ public interface IAiConfigurationManager : IAiConfigurationProvider
     /// </summary>
     /// <param name="config">要添加的配置对象。</param>
     /// <returns>操作结果。如果成功，返回新的配置的UUID。</returns>
-    Task<Result<string>> AddConfigurationAsync(AbstractAiProcessorConfig config);
+    Task<Result<string>> AddConfigurationAsync(AiConfigurationSet config);
 
     /// <summary>
     /// 更新一个已存在的 AI 配置。
@@ -27,7 +28,7 @@ public interface IAiConfigurationManager : IAiConfigurationProvider
     /// <param name="uuid">UUID 用于查找并替换现有配置。</param>
     /// <param name="config">包含更新信息的配置对象。</param>
     /// <returns>操作结果。如果成功，Result 为 Ok；如果具有该 UUID 的配置未找到，则返回错误。</returns>
-    Task<Result> UpdateConfigurationAsync(string uuid, AbstractAiProcessorConfig config);
+    Task<Result> UpdateConfigurationAsync(string uuid, AiConfigurationSet config);
 
     /// <summary>
     /// 根据 UUID 删除一个 AI 配置。
@@ -41,13 +42,13 @@ public interface IAiConfigurationManager : IAiConfigurationProvider
     /// </summary>
     /// <param name="uuid">配置的唯一标识符。</param>
     /// <returns>一个 Result 对象，成功时包含 AI 配置；如果未找到，则 Result 失败并携带错误信息。</returns>
-    Task<Result<AbstractAiProcessorConfig>> GetConfigurationByUuidAsync(string uuid);
+    Task<Result<AiConfigurationSet>> GetConfigurationByUuidAsync(string uuid);
 
     /// <summary>
-    /// 获取所有已存储的 AI 配置。
+    /// 获取所有已存储的 AI 配置集。
     /// </summary>
     /// <returns>一个 Result 对象，成功时包含所有 AI 配置的列表。</returns>
-    Task<Result<IReadOnlyDictionary<string, AbstractAiProcessorConfig>>> GetAllConfigurationsAsync();
+    Task<Result<IReadOnlyDictionary<string, AiConfigurationSet>>> GetAllConfigurationsAsync();
 }
 
 public record AIConfigError(string Message) : LazyInitError(Message)

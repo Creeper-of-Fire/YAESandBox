@@ -52,8 +52,8 @@
       <!-- AI配置按钮 -->
       <n-tooltip trigger="hover">
         <template #trigger>
-          <n-button text @click="togglePanel('right', AiConfigEditorPanel)"
-                    :type="isActive('right', AiConfigEditorPanel) ? 'primary' : 'default'">
+          <n-button text @click="togglePanel('left', AiConfigEditorPanel)"
+                    :type="isActive('left', AiConfigEditorPanel) ? 'primary' : 'default'">
             <template #icon>
               <n-icon :component="SettingsIcon"/>
             </template>
@@ -105,7 +105,7 @@ const loadInputRef = ref<HTMLInputElement | null>(null);
 const EntityListPanel = markRaw(defineAsyncComponent(() => import('@/components/panels/EntityListPanel.vue')));
 const GameStatePanel = markRaw(defineAsyncComponent(() => import('@/components/panels/GameStatePanel.vue')));
 const SettingsPanel = markRaw(defineAsyncComponent(() => import('@/components/panels/SettingsPanel.vue')));
-const AiConfigEditorPanel = markRaw(defineAsyncComponent(() => import("@/components/panels/AiConfigEditorPanel.vue")));
+const AiConfigEditorPanel = markRaw(defineAsyncComponent(() => import("@/components/ai-config/AiConfigEditorPanel.vue")));
 // ... 其他面板
 
 // --- Toolbar 方法 ---

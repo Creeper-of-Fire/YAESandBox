@@ -6,15 +6,9 @@ using YAESandBox.Workflow.AIService.AiConfig.Doubao;
 namespace YAESandBox.Workflow.AIService.AiConfig;
 
 /// <summary>
-/// 这个是Ai服务配置的基类，仅含绝对必须的字段。
+/// 这个是Ai服务配置的基类，仅含绝对存在的字段。
 /// </summary>
-/// <param name="ConfigName"><see cref="ConfigName"/>></param>
-/// <param name="ModuleType"><see cref="ModuleType"/> </param>
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "ModuleType")]
-[JsonDerivedType(typeof(DoubaoAiProcessorConfig), nameof(DoubaoAiProcessorConfig))]
-// 提示：如果将来添加了其他类型的配置，例如 MyOtherAiConfig，需要在这里也为它添加一个 [JsonDerivedType] 特性：
-// [JsonDerivedType(typeof(MyOtherAiConfig), nameof(MyOtherAiConfig))]
-public abstract record AbstractAiProcessorConfig(string ConfigName, string ModuleType)
+public abstract record AbstractAiProcessorConfig
 {
     /// <summary>
     /// 根据此配置创建一个具体的 AI 处理器实例。
@@ -23,39 +17,16 @@ public abstract record AbstractAiProcessorConfig(string ConfigName, string Modul
     /// <returns>一个 IAiProcessor 实例。</returns>
     public abstract IAiProcessor ToAiProcessor(AiProcessorDependencies dependencies);
 
-    /// <summary>配置的名称，不唯一（防止不小心搞错了），建议保证其是唯一的</summary>
-    [Display(
-        Name = "AbstractAiProcessorConfig_ConfigName_Label",
-        Description = "AbstractAiProcessorConfig_ConfigName_Description",
-        ResourceType = typeof(AiProcessorConfigResources)
-    )]
-    [Required(ErrorMessageResourceName = "Validation_Required", ErrorMessageResourceType = typeof(AiProcessorConfigResources))]
-    public string ConfigName { get; init; } = ConfigName;
-
-    /// <summary>模型的类型，持久化时工厂模式会使用它</summary>
-    [Display(
-        Name = "AbstractAiProcessorConfig_ModuleType_Label",
-        Description = "AbstractAiProcessorConfig_ModuleType_Description",
-        ResourceType = typeof(AiProcessorConfigResources)
-    )]
-    [Required]
-    [ReadOnly(true)]
-    public string ModuleType { get; init; } = ModuleType;
-    
-    /// <summary>
-    /// 最大输出Token数
-    /// </summary>
-    [Display(
-        Name = "AbstractAiProcessorConfig_MaxOutputTokens_Label",
-        Description = "AbstractAiProcessorConfig_MaxOutputTokens_Description",
-        ResourceType = typeof(AiProcessorConfigResources)
-    )]
-    public int? MaxOutputTokens { get; init; }
-    
     /// <summary>
     /// 最大输入Token数。不出现在请求体中，但是在其他地方（如历史记录生成）会有用。
     /// </summary>
-    public int? MaxInputTokens { get; init; }
+    [Display(
+        Name = "AbstractAiProcessorConfig_MaxInputTokens_Label",
+        Description = "AbstractAiProcessorConfig_MaxInputTokens_Description",
+        ResourceType = typeof(AiProcessorConfigResources)
+    )]
+    [DefaultValue(int.MaxValue)]
+    public int MaxInputTokens { get; init; } = int.MaxValue;
 }
 
 /// <summary>

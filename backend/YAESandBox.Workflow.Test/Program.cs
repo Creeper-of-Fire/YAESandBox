@@ -25,7 +25,7 @@ internal class Program
         var dependencies = new AiProcessorDependencies(httpClient);
 
         // 3. 准备 AiRequestParameters
-        var requestParameters = new DoubaoAiProcessorConfig("Doubao", DOUBAO_API_KEY, DOUBAO_MODEL_NAME)
+        var requestParameters = new DoubaoAiProcessorConfig(DOUBAO_API_KEY, DOUBAO_MODEL_NAME)
         {
             Temperature = DEFAULT_TEMPERATURE
         };

@@ -8,7 +8,8 @@ namespace YAESandBox.Workflow.AIService;
 /// </summary>
 public interface IMasterAiService
 {
-    IAiProcessor? CreateAiProcessor(string aiProcessorConfigUUID);
+    public List<string>? GetAbleAiProcessorType(string aiProcessorConfigUUID);
+    IAiProcessor? CreateAiProcessor(string aiProcessorConfigUUID, string aiModuleType);
 }
 
 public class MasterAiService(IHttpClientFactory httpClientFactory, IAiConfigurationProvider configProvider) : IMasterAiService
@@ -16,20 +17,25 @@ public class MasterAiService(IHttpClientFactory httpClientFactory, IAiConfigurat
     private readonly IHttpClientFactory _httpClientFactory = httpClientFactory;
     private readonly IAiConfigurationProvider _configProvider = configProvider;
 
-    public IAiProcessor? CreateAiProcessor(string aiProcessorConfigUUID)
+    public List<string>? GetAbleAiProcessorType(string aiProcessorConfigUUID) =>
+        this._configProvider.GetConfigurationSet(aiProcessorConfigUUID)?.GetAllDefinedTypes();
+
+    public IAiProcessor? CreateAiProcessor(string aiProcessorConfigUUID, string aiModuleType)
     {
         if (string.IsNullOrEmpty(aiProcessorConfigUUID)) return null;
 
-        var config = this._configProvider.GetConfiguration(aiProcessorConfigUUID);
+        var configs = this._configProvider.GetConfigurationSet(aiProcessorConfigUUID);
 
-        if (config == null) return null;
+        if (configs == null) return null;
 
-        var httpClient = this._httpClientFactory.CreateClient(config.ConfigName); // 使用配置的标识名称作为客户端名称
+        var httpClient = this._httpClientFactory.CreateClient(configs.ConfigSetName); // 使用配置的标识名称作为客户端名称
 
         var dependencies = new AiProcessorDependencies(httpClient);
 
         // 调用配置对象的工厂方法
-        var specificService = config.ToAiProcessor(dependencies);
+        var config = configs.FindAiConfig(aiModuleType);
+        if (config.IsFailed) return null;
+        var specificService = config.Value.ToAiProcessor(dependencies);
         // --- 变化结束 ---
 
         return specificService;
