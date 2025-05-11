@@ -37,7 +37,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         ErrorMessageResourceName = "Validation_Required",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
-    [SelectOptions(
+    [StringOptions(
         "doubao-1-5-vision-pro-32k-250115",
         "doubao-1-5-lite-32k-250115",
         "doubao-1-5-pro-32k-250115",
@@ -81,7 +81,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         Description = "DoubaoAiProcessorConfig_ResponseFormatType_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    [SelectOptions("text", "json_object")]
+    [StringOptions("text", "json_object")]
     [DefaultValue("text")]
     public string? ResponseFormatType { get; init; }
 
@@ -123,7 +123,7 @@ public record DoubaoAiProcessorConfig(string ConfigName, string ApiKey, string M
         Description = "DoubaoAiProcessorConfig_ServiceTier_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    [SelectOptions("default", "auto")]
+    [StringOptions("default", "auto")]
     public string? ServiceTier { get; init; }
 
     [Display(

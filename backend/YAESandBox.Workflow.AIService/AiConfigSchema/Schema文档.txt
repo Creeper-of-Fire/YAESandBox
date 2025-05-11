@@ -1,0 +1,189 @@
+﻿ui-schema
+类型：object
+默认值：{}
+非必须：ui 也可直接配置在 schema 中
+0.0.16 之后版本支持配置 ui-schema 在 schema 参数中 点击查看
+0.1.0 之后版本支持配置 error-schema 在 ui-schema 中。（ui-schema 和 error-schema 格式完全相同，且同属ui显示，一份可方便配置）
+用于配置表单展示样式，普通json数据，非 JSON Schema 规范
+
+#fui:xxx function配置
+1.9.0 版本之后，所有ui配置支持通过 fui:xxx 使用函数形式的配置，可接受 parentFormData、rootFormData、 prop 三个参数。
+// 例如配置一个动态的 placeholder 属性
+'fui:placeholder': (parent, root, prop) => {
+    console.log(parent, root, prop);
+    return parent.txtColor;
+}
+#ui-schema 表达式
+0.2 版本之后，所有 ui:xxx 形式的配置都支持表达式（ui:options内不支持表达式以便区分） mustache 表达式可使用 parentFormData、rootFormData 两个内置变量。
+parentFormData 当前节点父级的 FormData值
+rootFormData 根节点的 FormData值
+配置表达式会通过 new Function return 出结果，所以实际你在表达式中也可以访问到全局变量。
+
+比如：（参考这里：uiSchema 使用表达式 (opens new window)）
+
+'ui:title': `{{ parentFormData.age > 18 ? '呵呵呵' : '嘿嘿嘿' }}`
+提示
+
+配置数据结构和 schema 保持一致，所有的ui配置属性 ui: 开头
+也可以在 ui:options 内配置所有的属性，不需要 ui: 开头
+如果配置了ui:xx 和 ui:options 内配置了xx属性，ui:options内的优先级更高，实际上你可以把所有的参数都配置在 ui:options 内；这里可以按照个人习惯，推荐使用如下参数格式
+注：ui-schema 为普通json数据，并非 JSON Schema 规范语法
+
+注意
+
+ui:hidden ui:widget ui:field ui:fieldProps 不支持配置在 ui:options 中
+通用参数格式如下：
+uiSchema = {
+     // 覆盖schema title
+    'ui:title': '覆盖schema title',
+
+    // 覆盖schema description
+    'ui:description': '覆盖schema description描述信息',
+
+    // 通过 fui:xxx  配置function 来计算当前的ui options
+    'fui:placeholder': (parent, root, prop) => {
+        console.log(parent, root, prop);
+        return parent.txtColor;
+    },
+
+    // 针对单个字段配置是否需要 required，优先级高于schema的配置'
+    // bool 类型， 'ui:required': true,
+    // 默认 undefined
+    'ui:required': true,
+
+    // 针对数组项的操作回调
+    // 默认 undefined
+    // command 枚举值 moveUp | moveDown | remove | add | batchPush | setNewTarget
+    'ui:afterArrayOperate': (formData, command, payload) => {
+        debugger;
+    },
+
+    // 表单元素输入为空时的值，默认 undefined
+    'ui:emptyValue': undefined,
+
+     // 是否隐藏当前节点，支持配置表达式，(不支持配置在options中)
+    // https://vue-json-schema-form.lljj.me/zh/guide/data-linkage.html#ui-schema%E9%85%8D%E7%BD%AE%E8%A1%A8%E8%BE%BE%E5%BC%8F
+    'ui:hidden': false,
+
+     // 自定义field (不支持配置在options中)
+    // https://vue-json-schema-form.lljj.me/zh/guide/adv-config.html#%E8%87%AA%E5%AE%9A%E4%B9%89field
+    'ui:field': 'componentName',
+
+    // 自定义field时 传给field的额外props，通过 props: { fieldProps } 接收参数，(不支持配置在options中)
+    'ui:fieldProps': undefined,
+
+    // 自定义widget组件，(不支持配置在options中)
+    // https://vue-json-schema-form.lljj.me/zh/guide/adv-config.html#%E8%87%AA%E5%AE%9A%E4%B9%89widget
+    'ui:widget': 'el-slider',
+
+    // 传给formItem 组件 labelWidth，优先级更高（antdv formItem 没有该参数，可使用fieldAttrs配置labelCol控制label宽度）
+    // 也可在 fieldAttrs 中配置 labelWidth': '50px'
+    'ui:labelWidth': '50px',
+
+    'ui:options': {
+            // scoped slots 使用render函数来实现
+            // 配置 renderScopedSlots 返回对象key为slotName，函数体返回vnode
+            // render 函数参考：https://cn.vuejs.org/v2/guide/render-function.html#%E6%B7%B1%E5%85%A5%E6%95%B0%E6%8D%AE%E5%AF%B9%E8%B1%A1
+            renderScopedSlots(h) {
+                return {
+                    append: (props) => h('span', '.com')
+                };
+            },
+
+            // slots，需要使用render函数来实现
+            // 配置 renderChildren ，返回 Vnode[] 其中slot即为slotName
+            // render 函数参考：https://cn.vuejs.org/v2/guide/render-function.html#%E6%B7%B1%E5%85%A5%E6%95%B0%E6%8D%AE%E5%AF%B9%E8%B1%A1
+            renderChildren(h) {
+                return [
+                    h('span', {
+                        slot: 'suffix',
+                    }, '后缀')
+                ];
+            },
+
+            // 获取widget组件实例，非必要场景不建议使用
+            // widget组件 mounted 组件后回调该方法传出vm实例
+            // 支持版本: "0.4.1"
+            getWidget: (widgetVm) => {
+                console.log(widgetVm);
+            },
+
+            // onChange
+            // 支持版本 1.3
+            /**
+             *
+             * @param curVal 当前值
+             * @param preVal 上一次的值
+             * @param parentFormData 当前父节点的值，响应式的值可在这里设置其它需要联动的值
+             * @param rootFormData 当前父节点的值，响应式的值可在这里设置其它需要联动的值
+             */
+            onChange({ curVal, preVal, parentFormData, rootFormData }) {
+                console.log('change:', curVal, preVal, parentFormData, rootFormData);
+            },
+
+            // 显示标题？只对 type为`object`、`array` 类型有效
+            showTitle: true,
+
+             // 显示描述？ 只对type为 `object`、`array` 类型有效
+            showDescription: false,
+
+            // 默认不配置，0.2 版本新增，用于在多列布局时快速配置列宽度，当然你也可以使用fieldStyle配置样式实现
+            width: '100px',
+
+            attrs: {
+                // 通过 vue render函数 attrs 传递给 Widget 组件，只能配置在叶子节点
+                // 你也配置在外层，程序会合并 attrs 和 其它外层属性 通过 attrs 传递给子组件
+                // 配置在这里的参数都会传给widget组件，当widget组件props和uiSchema通用参数冲突时可以使用attr配置
+                autofocus: true,
+                width: '99px', // 这里直接传给widget组件，而非外层的width配置
+            },
+            style: {
+                // 通过 vue render函数 style 传递给 Widget 组件，只能配置在叶子节点
+                boxShadow: '0 0 6px 2px #2b9939'
+            },
+            class: {
+                // 0.1.0 版本添加
+                // 通过 vue render函数 class 传递给 Widget 组件，只能配置在叶子节点
+                className_hei: true
+            },
+            fieldStyle: {
+                // 0.1.0 版本添加
+                // 通过 vue render函数 style 传递给 Field 组件，支持所有field节点
+                background: 'red'
+            },
+            fieldClass: {
+                // 0.1.0 版本添加
+                // 通过 vue render函数 class 传递给 Field 组件，支持所有field节点
+                fieldClass: true
+            },
+            fieldAttrs: {
+                // 通过 vue render函数 attrs 传递给 Field 组件，支持所有节点
+                'attr-x': 'xxx'
+            },
+
+            // 其它所有参数会合并到 attrs 传递给 Widget 组件
+            type: 'textarea',
+            placeholder: '请输入你的内容'
+    }
+}
+
+
+error-schema
+类型：object
+默认值：{}
+非必须：ui 也可直接配置在 schema 中
+0.0.16 之后版本支持配置 error-schema 在 schema 参数中 点击查看
+0.1.0 之后版本支持配置 error-schema 在 ui-schema 中。（ui-schema 和 error-schema 格式完全相同，且同属ui显示，一份可方便配置）
+用于配置表单校验错误文案信息，普通json数据，非 JSON Schema 规范
+
+数据配置和 ui-schema 保存一致，区别在于：
+
+使用 err: 做前缀
+使用配置的 schema 错误类型的 err:${name} 做key，比如 err:format 、err:required 、err:type
+提示
+
+配置数据结构和schema保持一致，所有的 error 配置属性 err: 开头
+也可以在 err:options 内配置所有的属性，不需要 err: 开头
+如果配置了err:xx 和 err:options 内配置了xx属性，err:options内优先级更高，实际上你可以把所有的参数都配置在 err:options 内；这里可以按照个人习惯
+注：error-schema 为标准json数据，并非JSON Schema规范语法
+

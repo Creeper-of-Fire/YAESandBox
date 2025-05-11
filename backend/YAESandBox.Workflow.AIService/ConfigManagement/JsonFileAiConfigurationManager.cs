@@ -2,7 +2,6 @@
 
 using FluentResults;
 using System.Text.Json;
-using YAESandBox.Depend;
 using YAESandBox.Workflow.AIService.AiConfig;
 
 // 为了使用 AbstractAiProcessorConfig 和 AiError

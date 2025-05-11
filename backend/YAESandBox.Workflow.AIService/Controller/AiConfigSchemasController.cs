@@ -1,5 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Workflow.AIService.AiConfig;
@@ -11,48 +13,64 @@ namespace YAESandBox.Workflow.AIService.Controller;
 [ApiExplorerSettings(GroupName = AiConfigurationsController.AiConfigGroupName)]
 [ApiController]
 [Route("api/ai-configuration-management")] // 更改路由以反映其更广泛的职责（如果合并了实例列表）或保持 schema 特定
-public class AiConfigSchemasController(IAiConfigurationManager configurationManager) : ControllerBase
+public class AiConfigSchemasController : ControllerBase
 {
-    private IAiConfigurationManager configurationManager { get; } = configurationManager;
-
     /// <summary>
-    /// 获取指定 AI 配置类型的表单 Schema 结构。
+    /// 获取指定 AI 配置类型的表单 Schema 结构 (JSON Schema 格式，包含 ui: 指令)。
     /// 用于前端动态生成该类型配置的【新建】或【编辑】表单骨架。
     /// </summary>
     /// <param name="configTypeName">AI 配置的类型名称 (例如 "DoubaoAiProcessorConfig")。</param>
-    /// <returns>包含该类型所有可配置属性的 FormFieldSchema 列表。</returns>
+    /// <returns>一个 JSON 字符串，代表符合 JSON Schema 标准并包含 vue-json-schema-form UI 指令的 Schema。</returns>
     [HttpGet("schemas/{configTypeName}")]
-    [ProducesResponseType(typeof(List<FormFieldSchema>), StatusCodes.Status200OK)]
+    [Produces("application/json")] // 明确指定返回 application/json
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)] // 返回的是 JSON Schema 对象，typeof(object) 比较通用
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public ActionResult<List<FormFieldSchema>> GetSchemaForConfigType(string configTypeName)
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public ActionResult<object> GetSchemaForConfigType(string configTypeName) // 返回 ActionResult<object> 以便返回原始 JSON
     {
         if (string.IsNullOrWhiteSpace(configTypeName))
         {
-            return this.BadRequest("配置类型名称 (configTypeName) 不能为空。");
+            return BadRequest("配置类型名称 (configTypeName) 不能为空。");
         }
 
-        Type? configType = ConfigSchemasBuildHelper.GetTypeByName(configTypeName);
+        Type? configType = ConfigSchemasHelper.GetTypeByName(configTypeName);
 
         if (configType == null)
         {
-            return this.NotFound($"名为 '{configTypeName}' 的 AI 配置类型未找到。");
+            return NotFound($"名为 '{configTypeName}' 的 AI 配置类型未找到。");
         }
 
-        // GetTypeByName 已经确保了它是 AbstractAiProcessorConfig 的子类，但可以再加一层防御
+        // GetTypeByName 已经确保了它是 AbstractAiProcessorConfig 的子类
+        // 但可以保留这个检查作为额外的防御层
         if (!typeof(AbstractAiProcessorConfig).IsAssignableFrom(configType))
         {
-            return this.BadRequest($"类型 '{configTypeName}' 不是一个有效的 AI 配置类型。");
+            // 这个情况理论上不会发生，因为 GetTypeByName 已经筛选过了
+            return BadRequest($"类型 '{configTypeName}' 不是一个有效的 AI 配置类型。");
         }
 
         try
         {
-            var schema = ConfigSchemasBuildHelper.GenerateSchemaForType(configType);
-            return this.Ok(schema);
+            string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(configType);
+
+            // 为了确保返回的是一个有效的 JSON 对象而不是字符串，我们可以解析它
+            // 这也有助于捕获生成阶段可能出现的序列化问题
+            try
+            {
+                var jsonDocument = JsonDocument.Parse(schemaJson);
+                return Ok(jsonDocument.RootElement.Clone()); // 返回 JsonElement，ASP.NET Core 会正确序列化它
+            }
+            catch (JsonException jsonEx)
+            {
+                // Log the error: schemaJson
+                // Log the exception: jsonEx
+                return StatusCode(StatusCodes.Status500InternalServerError, $"生成的 Schema 不是有效的 JSON 格式。错误: {jsonEx.Message}");
+            }
         }
         catch (Exception ex)
         {
-            return this.StatusCode(StatusCodes.Status500InternalServerError, $"为类型 '{configTypeName}' 生成 Schema 时发生内部错误。");
+            // Log the exception: ex
+            return StatusCode(StatusCodes.Status500InternalServerError, $"为类型 '{configTypeName}' 生成 Schema 时发生内部错误: {ex.Message}");
         }
     }
 
@@ -65,16 +83,18 @@ public class AiConfigSchemasController(IAiConfigurationManager configurationMana
     /// 'Label': 用户友好的类型显示名称 (如 "豆包AI模型")。
     /// </returns>
     [HttpGet("available-config-types")]
-    [ProducesResponseType(typeof(List<SelectOption>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(List<SelectOption>), StatusCodes.Status200OK)] // SelectOption 来自 AiConfigSchema 命名空间
     public ActionResult<List<SelectOption>> GetAvailableConfigTypeDefinitions()
     {
-        var availableTypes = ConfigSchemasBuildHelper.GetAvailableAiConfigConcreteTypes();
+        var availableTypes = ConfigSchemasHelper.GetAvailableAiConfigConcreteTypes();
 
         var result = availableTypes.Select(type =>
             {
-                var displayAttr = type.GetCustomAttribute<DisplayAttribute>();
-                string label = displayAttr?.GetName() ?? type.Name; // 尝试获取本地化名称
+                // 尝试从 DisplayAttribute 获取用户友好的名称
+                var displayAttr = type.GetCustomAttribute<DisplayAttribute>(false); // false: 不检查继承链
+                string label = displayAttr?.GetName() ?? type.Name;
 
+                // 简化标签名称的逻辑 (与你之前提供的 AiConfigSchemasController 类似)
                 if (label.EndsWith("AiProcessorConfig", StringComparison.OrdinalIgnoreCase))
                 {
                     label = label.Substring(0, label.Length - "AiProcessorConfig".Length).Trim();
@@ -84,53 +104,13 @@ public class AiConfigSchemasController(IAiConfigurationManager configurationMana
                     label = label.Substring(0, label.Length - "Config".Length).Trim();
                 }
 
-                if (string.IsNullOrEmpty(label)) label = type.Name;
+                if (string.IsNullOrEmpty(label)) label = type.Name; // Fallback
 
-                // 对于类型选择，Value 是类型本身的名称
                 return new SelectOption { Value = type.Name, Label = label };
             })
             .OrderBy(so => so.Label)
             .ToList();
 
-        return this.Ok(result);
+        return Ok(result);
     }
-
-    // /// <summary>
-    // /// 获取所有【已保存的 AI 配置实例】的摘要列表。
-    // /// 用于前端生成一个下拉框或列表，让用户选择一个已存在的配置进行【编辑】或【使用】。
-    // /// </summary>
-    // /// <returns>一个列表，每个 SelectOption 包含：
-    // /// 'Value': 配置实例的唯一标识符 (UUID)。
-    // /// 'Label': 配置实例的用户定义名称 (ConfigName)。
-    // /// </returns>
-    // [HttpGet("saved-configurations")]
-    // [ProducesResponseType(typeof(List<SelectOption>), StatusCodes.Status200OK)]
-    // [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    // public async Task<ActionResult<List<SelectOption>>> GetSavedConfigurationInstances()
-    // {
-    //     var allConfigsResult = await this.configurationManager.GetAllConfigurationsAsync();
-    //
-    //     if (allConfigsResult.IsFailed)
-    //     {
-    //         return this.StatusCode(StatusCodes.Status500InternalServerError, "获取已保存配置列表时发生错误。");
-    //     }
-    //
-    //     if (allConfigsResult.Value == null || !allConfigsResult.Value.Any())
-    //     {
-    //         return this.Ok(new List<SelectOption>());
-    //     }
-    //
-    //     var selectOptions = allConfigsResult.Value
-    //         .Select(kvp => new SelectOption
-    //         {
-    //             Value = kvp.Key, // UUID 作为 Value
-    //             Label = string.IsNullOrWhiteSpace(kvp.Value.ConfigName)
-    //                 ? $"配置 ({kvp.Value.ModuleType}, UUID: {kvp.Key.Substring(0, 8)}...)"
-    //                 : kvp.Value.ConfigName
-    //         })
-    //         .OrderBy(so => so.Label)
-    //         .ToList();
-    //
-    //     return this.Ok(selectOptions);
-    // }
 }

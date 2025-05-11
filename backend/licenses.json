@@ -180,16 +180,6 @@
     "LicenseInformationOrigin": 1
   },
   {
-    "PackageId": "Microsoft.CSharp",
-    "PackageVersion": "4.0.1",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseInformationOrigin": 1
-  },
-  {
     "PackageId": "Microsoft.DotNet.PlatformAbstractions",
     "PackageVersion": "2.1.0",
     "PackageProjectUrl": "https://dot.net/",
@@ -430,13 +420,23 @@
     "LicenseInformationOrigin": 0
   },
   {
+    "PackageId": "Namotion.Reflection",
+    "PackageVersion": "3.4.2",
+    "PackageProjectUrl": "https://github.com/RicoSuter/Namotion.Reflection",
+    "Authors": "Namotion.Reflection",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
     "PackageId": "Newtonsoft.Json",
-    "PackageVersion": "9.0.1",
-    "PackageProjectUrl": "http://www.newtonsoft.com/json",
+    "PackageVersion": "13.0.3",
+    "PackageProjectUrl": "https://www.newtonsoft.com/json",
+    "Copyright": "Copyright \u00A9 James Newton-King 2008",
     "Authors": "James Newton-King",
     "License": "MIT",
-    "LicenseUrl": "https://raw.github.com/JamesNK/Newtonsoft.Json/master/LICENSE.md",
-    "LicenseInformationOrigin": 1
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
   },
   {
     "PackageId": "Nito.AsyncEx",
@@ -515,6 +515,26 @@
     "PackageVersion": "2.2.1",
     "PackageProjectUrl": "https://github.com/StephenCleary/Disposables",
     "Authors": "Stephen Cleary",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "NJsonSchema",
+    "PackageVersion": "11.3.2",
+    "PackageProjectUrl": "http://njsonschema.org/",
+    "Copyright": "Copyright \u00A9 Rico Suter, 2022",
+    "Authors": "Rico Suter",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "NJsonSchema.Annotations",
+    "PackageVersion": "11.3.2",
+    "PackageProjectUrl": "http://njsonschema.org/",
+    "Copyright": "Copyright \u00A9 Rico Suter, 2022",
+    "Authors": "Rico Suter",
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
     "LicenseInformationOrigin": 0
@@ -637,16 +657,6 @@
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
     "LicenseInformationOrigin": 0
-  },
-  {
-    "PackageId": "System.Diagnostics.Tools",
-    "PackageVersion": "4.0.1",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseInformationOrigin": 1
   },
   {
     "PackageId": "System.Dynamic.Runtime",
@@ -859,27 +869,7 @@
     "LicenseInformationOrigin": 1
   },
   {
-    "PackageId": "System.Runtime.Serialization.Primitives",
-    "PackageVersion": "4.1.1",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseInformationOrigin": 1
-  },
-  {
     "PackageId": "System.Text.Encoding",
-    "PackageVersion": "4.0.11",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseInformationOrigin": 1
-  },
-  {
-    "PackageId": "System.Text.Encoding.Extensions",
     "PackageVersion": "4.0.11",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
@@ -897,16 +887,6 @@
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
     "LicenseInformationOrigin": 0
-  },
-  {
-    "PackageId": "System.Text.RegularExpressions",
-    "PackageVersion": "4.1.0",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseInformationOrigin": 1
   },
   {
     "PackageId": "System.Threading",
@@ -947,25 +927,5 @@
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
     "LicenseInformationOrigin": 0
-  },
-  {
-    "PackageId": "System.Xml.ReaderWriter",
-    "PackageVersion": "4.0.11",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseInformationOrigin": 1
-  },
-  {
-    "PackageId": "System.Xml.XDocument",
-    "PackageVersion": "4.0.11",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
-    "LicenseInformationOrigin": 1
   }
 ]

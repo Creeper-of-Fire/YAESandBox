@@ -1,12 +1,12 @@
 ﻿namespace YAESandBox.Workflow.AIService.AiConfigSchema;
 
 [AttributeUsage(AttributeTargets.Property)]
-public class SelectOptionsAttribute(params SelectOption[] options) : Attribute
+public class StringOptionsAttribute(params (string Value, string Label)[] options) : Attribute
 {
     /// <summary>
     /// 静态定义的选项列表。
     /// </summary>
-    public SelectOption[] Options { get; } = options;
+    public (string Value, string Label)[] Options { get; } = options;
 
     /// <summary>
     /// 如果提供，表示该字段的选项可以从这个API端点动态获取。
@@ -27,12 +27,11 @@ public class SelectOptionsAttribute(params SelectOption[] options) : Attribute
     /// 空构造函数，主要用于当只希望指定 OptionsProviderEndpoint 和/或 IsCreatable，
     /// 而不提供任何初始静态选项时。
     /// </summary>
-    public SelectOptionsAttribute() : this(Array.Empty<SelectOption>()) { }
+    public StringOptionsAttribute() : this(Array.Empty<string>()) { }
 
     /// <summary>
-    /// 使用字符串数组构造，每个字符串同时作为 Value 和 Label。
+    /// Value=Label时的构造函数
     /// </summary>
-    /// <param name="options">选项字符串数组。</param>
-    public SelectOptionsAttribute(params string[] options) : this(options.ToList()
-        .ConvertAll(str => new SelectOption { Value = str, Label = str }).ToArray()) { }
+    /// <param name="options"></param>
+    public StringOptionsAttribute(params string[] options) : this(options.ToList().ConvertAll(option => (option, option)).ToArray()) { }
 }

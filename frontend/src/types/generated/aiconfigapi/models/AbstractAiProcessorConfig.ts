@@ -14,5 +14,13 @@ export type AbstractAiProcessorConfig = {
      * 模型的类型，持久化时工厂模式会使用它
      */
     readonly moduleType: string;
+    /**
+     * 最大输出Token数
+     */
+    maxOutputTokens?: number | null;
+    /**
+     * 最大输入Token数。不出现在请求体中，但是在其他地方（如历史记录生成）会有用。
+     */
+    maxInputTokens?: number | null;
 };
 

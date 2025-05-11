@@ -1,7 +1,6 @@
 ﻿// CustomRangeAttribute.cs (在你的 AiConfigSchema 或共享的特性命名空间下)
 
 using System.ComponentModel.DataAnnotations; // 为了能配合 ValidationAttribute 的逻辑 (如果需要)
-using System.Globalization;
 
 namespace YAESandBox.Workflow.AIService.AiConfigSchema;
 // 或者你选择的命名空间
