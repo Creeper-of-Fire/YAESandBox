@@ -1,5 +1,7 @@
 ﻿#nullable enable // 启用 nullable 上下文
 
+using System.Text.Json.Serialization;
+
 // For TryGetValue
 
 // For LINQ operations if needed later, like in FindEntityByName
@@ -22,13 +24,11 @@ public enum EntityType
 /// <summary>
 /// 类型化的实体ID，用于精确引用。使用 record struct 实现值相等性。
 /// </summary>
+[JsonConverter(typeof(TypedIdConverter))]
 public readonly record struct TypedID(EntityType Type, string Id)
 {
     // 提供一个方便的字符串表示，用于日志或调试
-    public override string ToString()
-    {
-        return $"{this.Type}:{this.Id}";
-    }
+    public override string ToString() => $"{this.Type}:{this.Id}";
 }
 
 // --- WorldState 定义 ---

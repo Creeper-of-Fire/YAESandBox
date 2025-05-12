@@ -61,16 +61,16 @@ namespace YAESandBox.Core.Block
         /// <summary>
         /// 将当前 BlockManager 的状态保存到流中。
         /// </summary>
-        /// <param name="stream">要写入的流。</param>
+        /// <param name="saveAction">要写入的回调。</param>
         /// <param name="frontEndBlindData">前端提供的盲存数据。</param>
-        Task SaveToFileAsync(Stream stream, object? frontEndBlindData);
+        Task SaveToFileAsync(Func<ArchiveDto, Task> saveAction, object? frontEndBlindData);
 
         /// <summary>
         /// 从流中加载 BlockManager 的状态。
         /// </summary>
-        /// <param name="stream">要读取的流。</param>
+        /// <param name="loadAction">要读取的回调。</param>
         /// <returns>恢复的前端盲存数据。</returns>
-        Task<object?> LoadFromFileAsync(Stream stream);
+        Task<object?> LoadFromFileAsync(Func<Task<ArchiveDto?>> loadAction);
 
         /// <summary>
         /// (内部实现) 手动创建新的 Idle Block。

@@ -18,6 +18,12 @@ public class AiConfigurationSet
     public static AiConfigurationSet MakeDefault() => new() { ConfigSetName = "Default" };
 
     /// <summary>
+    /// 创建一个 AI 配置集字典，并且放入 一个默认的配置集。
+    /// </summary>
+    /// <returns></returns>
+    public static Dictionary<string, AiConfigurationSet> MakeDefaultDictionary() => new() { { Guid.NewGuid().ToString(), MakeDefault() } };
+
+    /// <summary>
     /// 用户为配置集指定的名称，用于在 UI 上显示和识别。
     /// </summary>
     [Display(

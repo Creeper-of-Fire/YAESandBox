@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services.InterFaceAndBasic;
-using YAESandBox.Depend; // For mapping DTO to Core object
+using YAESandBox.Depend;
 
 namespace YAESandBox.API.Controllers;
 

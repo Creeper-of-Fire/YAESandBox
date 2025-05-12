@@ -1,9 +1,11 @@
 ﻿// --- START OF FILE PersistenceController.cs ---
 
-using Microsoft.AspNetCore.Mvc;
 using System.Text.Json;
+using Microsoft.AspNetCore.Mvc;
+using YAESandBox.Core;
 using YAESandBox.Core.Block; // For BlockManager
-using YAESandBox.Depend; // For Log
+using YAESandBox.Depend;
+using YAESandBox.Depend.Storage; // For Log
 
 namespace YAESandBox.API.Controllers;
 
@@ -36,7 +38,9 @@ public class PersistenceController(IBlockManager blockManager) : ControllerBase
             // 使用 MemoryStream 避免在存档文件较小时产生临时文件
             var memoryStream = new MemoryStream();
             // 调用 BlockManager 保存状态，并传入盲存数据
-            await this.blockManager.SaveToFileAsync(memoryStream, blindStorageData);
+            await this.blockManager.SaveToFileAsync(
+                async dto => await JsonSerializer.SerializeAsync(memoryStream, dto, YAESandBoxJsonHelper.JsonSerializerOptions),
+                blindStorageData);
             memoryStream.Position = 0; // 重置流位置以便读取
 
             // 返回文件下载结果
@@ -84,7 +88,9 @@ public class PersistenceController(IBlockManager blockManager) : ControllerBase
             // 使用 using 确保流被正确释放
             await using var stream = archiveFile.OpenReadStream();
             // 调用 BlockManager 加载状态，并获取盲存数据
-            object? blindStorage = await this.blockManager.LoadFromFileAsync(stream);
+            object? blindStorage =
+                await this.blockManager.LoadFromFileAsync(async () =>
+                    await JsonSerializer.DeserializeAsync<ArchiveDto>(stream, YAESandBoxJsonHelper.JsonSerializerOptions));
 
             // TODO: (可选) 通知所有连接的客户端状态已重置？
             // 可以通过 INotifierService 实现一个全局通知方法

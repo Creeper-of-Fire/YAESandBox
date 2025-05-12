@@ -1,8 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using YAESandBox.Workflow.AIService.AiConfigSchema.SchemaProcessor;
 using NJsonSchema;
 using NJsonSchema.Generation;
+using YAESandBox.Workflow.AIService.AiConfigSchema.SchemaProcessor;
 
 namespace YAESandBox.Workflow.AIService.AiConfigSchema;
 

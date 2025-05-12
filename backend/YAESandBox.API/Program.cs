@@ -14,6 +14,7 @@ using YAESandBox.API.Services.InterFaceAndBasic;
 using YAESandBox.API.Services.WorkFlow;
 using YAESandBox.Core.Block;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.ConfigManagement;
 using YAESandBox.Workflow.AIService.Controller;
 
@@ -150,9 +151,11 @@ builder.Services.AddSingleton<IWorkflowService, WorkflowService>();
 builder.Services.AddSingleton<IBlockManagementService, BlockManagementService>();
 builder.Services.AddSingleton<IBlockWritService, BlockWritService>();
 builder.Services.AddSingleton<IBlockReadService, BlockReadService>();
+builder.Services.AddSingleton<IGeneralJsonStorage, JsonFileJsonStorage>(_ =>
+    new JsonFileJsonStorage(builder.Configuration.GetValue<string?>("DataFiles:RootDirectory")));
 
 // AiConfigManager
-builder.Services.AddSingleton(_ => new JsonFileAiConfigurationManager(builder.Configuration.GetValue<string?>("AiConfigs:JsonFilePath")))
+builder.Services.AddSingleton<JsonFileAiConfigurationManager>()
     .AddSingleton<IAiConfigurationManager>(sp => sp.GetRequiredService<JsonFileAiConfigurationManager>())
     .AddSingleton<IAiConfigurationProvider>(sp => sp.GetRequiredService<JsonFileAiConfigurationManager>());
 

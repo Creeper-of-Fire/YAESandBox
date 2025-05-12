@@ -65,7 +65,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
         var request = new HttpRequestMessage(HttpMethod.Post, "https://ark.cn-beijing.volces.com/api/v3/chat/completions")
         {
             Content = JsonContent.Create(requestPayload,
-                mediaType: new System.Net.Http.Headers.MediaTypeHeaderValue("application/json"),
+                mediaType: new MediaTypeHeaderValue("application/json"),
                 options: new JsonSerializerOptions
                 {
                     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,

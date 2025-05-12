@@ -11,6 +11,7 @@
 
     <ItemGroup>
         <PackageReference Include="FluentResults" Version="3.16.0" PrivateAssets="all"/>
+        <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
     </ItemGroup>
 
 </Project>

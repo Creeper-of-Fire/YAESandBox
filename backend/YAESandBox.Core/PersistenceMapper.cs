@@ -1,21 +1,13 @@
 ﻿using System.Text.Json;
-using System.Text.Json.Serialization;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Storage;
 
 namespace YAESandBox.Core;
 
-// 可能还需要一个辅助方法来将 DTO 映射到 Core 类型
 internal static class PersistenceMapper
 {
-    public static readonly JsonSerializerOptions JsonOptions = new()
-    {
-        WriteIndented = true, // For readability
-        Converters = { new JsonStringEnumConverter(), new TypedIdConverter() }, // 注册转换器
-        PropertyNameCaseInsensitive = true // Optional for loading flexibility
-    };
-
     // Helper to convert DTOs back to Core objects
     public static WorldState? MapWorldState(WorldStateDto? wsDto)
     {
@@ -143,7 +135,7 @@ internal static class PersistenceMapper
                 {
                     // 注意：需要确保 JsonSerializerOptions 传递正确
                     // 这里的 options 需要包含 TypedIdConverter 和 JsonStringEnumConverter
-                    var options = JsonOptions; // 假设 BlockManager 中的 _jsonOptions 可访问或重新创建
+                    var options = YAESandBoxJsonHelper.JsonSerializerOptions; // 假设 BlockManager 中的 _jsonOptions 可访问或重新创建
                     var typedId = element.Deserialize<TypedID>(options);
                     // 如果反序列化成功（没有抛异常），并且结果不为 null
                     if (typedId != default) // 检查是否为默认值，因为 record struct 不是 null

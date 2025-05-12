@@ -1,12 +1,9 @@
 ﻿// 文件: JsonFileAiConfigurationManager.cs
 
-using System.Text.Encodings.Web;
 using FluentResults;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using Nito.AsyncEx;
+using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.AiConfig;
-using YAESandBox.Workflow.AIService.AiConfigSchema;
 
 // 为了使用 AbstractAiProcessorConfig 和 AiError
 
@@ -15,22 +12,11 @@ namespace YAESandBox.Workflow.AIService.ConfigManagement;
 /// <summary>
 /// 使用 JSON 文件持久化 AI 配置的管理器。
 /// </summary>
-public class JsonFileAiConfigurationManager(string? configFilePath = null) : IAiConfigurationManager
+public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStorage) : IAiConfigurationManager
 {
-    private const string DefaultConfigFileName = "ai_configurations.json"; // 默认配置文件名
-    private const string DefaultConfigDirectoryName = "AiConfigs"; // 默认配置存储目录名 (位于程序运行目录下)
-
-    private static readonly JsonSerializerOptions jsonSerializerOptions =
-        new()
-        {
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
-            Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-        };
-
-    private string filePath { get; } = string.IsNullOrWhiteSpace(configFilePath)
-        ? Path.Combine(Path.Combine(AppContext.BaseDirectory, DefaultConfigDirectoryName), DefaultConfigFileName)
-        : configFilePath;
+    private const string ConfigFileName = "ai_configurations.json"; // 默认配置文件名
+    private const string ConfigDirectory = "Configurations"; // 默认配置存储目录名 (位于程序运行目录下)
+    private IGeneralJsonStorage generalJsonStorage { get; } = generalJsonStorage;
 
     private AsyncLock fileLock { get; } = new();
 
@@ -45,42 +31,14 @@ public class JsonFileAiConfigurationManager(string? configFilePath = null) : IAi
     /// </summary>
     private async Task<Result<Dictionary<string, AiConfigurationSet>>> LoadConfigurationsFromFileAsync()
     {
-        try
-        {
-            string? directory = Path.GetDirectoryName(this.filePath);
-            if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                Directory.CreateDirectory(directory); // 如果目录不存在，则创建它
+        var result = await this.generalJsonStorage.LoadAllAsync<Dictionary<string, AiConfigurationSet>>(ConfigDirectory, ConfigFileName);
+        if (result.IsFailed)
+            return result.ToResult();
 
-            if (!File.Exists(this.filePath))
-            {
-                var result = await this.SaveConfigurationsToFileAsync(new Dictionary<string, AiConfigurationSet>
-                    { { Guid.NewGuid().ToString(), AiConfigurationSet.MakeDefault() } });
-                if (result.IsFailed)
-                    return AIConfigError.Error($"文件{this.filePath}不存在，并且在尝试新建默认文件时失败。");
-            }
-
-            if (!File.Exists(this.filePath))
-                return AIConfigError.Error($"文件{this.filePath}不存在");
-
-            string json = await File.ReadAllTextAsync(this.filePath);
-            if (string.IsNullOrWhiteSpace(json))
-            {
-                return AIConfigError.Error($"文件{this.filePath}为空");
-            }
-
-            var configs = JsonSerializer.Deserialize<Dictionary<string, AiConfigurationSet>>(json, jsonSerializerOptions);
-            if (configs == null)
-                return AIConfigError.Error($"反序列化 AI 配置时出错 ({this.filePath}) 的序列化结果为 null");
-            return configs;
-        }
-        catch (JsonException ex)
-        {
-            return AIConfigError.Error($"反序列化 AI 配置时出错 ({this.filePath}): {ex.Message}");
-        }
-        catch (Exception ex) // 捕获其他文件操作等潜在错误
-        {
-            return AIConfigError.Error($"加载 AI 配置时出错 ({this.filePath}): {ex.Message}");
-        }
+        var sets = result.Value;
+        if (sets == null || sets.Count == 0)
+            return AiConfigurationSet.MakeDefaultDictionary();
+        return sets;
     }
 
     /// <summary>
@@ -89,27 +47,14 @@ public class JsonFileAiConfigurationManager(string? configFilePath = null) : IAi
     /// </summary>
     private async Task<Result> SaveConfigurationsToFileAsync(Dictionary<string, AiConfigurationSet> configs)
     {
-        string json = JsonSerializer.Serialize(configs, jsonSerializerOptions);
-        using (await this.fileLock.LockAsync())
+        var result = await this.generalJsonStorage.SaveAllAsync(ConfigDirectory, ConfigFileName, configs);
+        if (result.IsFailed)
+            return result;
+
+        // 文件保存成功后，更新内存缓存
+        lock (this.cacheLock)
         {
-            try
-            {
-                string? directory = Path.GetDirectoryName(this.filePath);
-                if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
-                    Directory.CreateDirectory(directory); // 确保目录存在
-
-                await File.WriteAllTextAsync(this.filePath, json);
-
-                // 文件保存成功后，更新内存缓存
-                lock (this.cacheLock)
-                {
-                    this.cachedConfigurations = new Dictionary<string, AiConfigurationSet>(configs); // 创建副本存入缓存
-                }
-            }
-            catch (Exception ex) // 捕获文件写入等潜在错误
-            {
-                return AIConfigError.Error($"保存 AI 配置时出错 ({this.filePath}): {ex.Message}");
-            }
+            this.cachedConfigurations = new Dictionary<string, AiConfigurationSet>(configs); // 创建副本存入缓存
         }
 
         return Result.Ok();

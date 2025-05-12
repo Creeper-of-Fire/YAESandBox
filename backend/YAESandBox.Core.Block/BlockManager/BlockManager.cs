@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.Text.Json;
 using FluentResults;
 using Nito.AsyncEx;
 using YAESandBox.Core.Action;
@@ -11,7 +10,7 @@ namespace YAESandBox.Core.Block;
 
 public partial class BlockManager : IBlockManager
 {
-    public const string DEBUG_WorkFlowName = "";
+    private const string DEBUG_WorkFlowName = "";
 
     /// <summary>
     /// 构造函数，创建默认根节点。
@@ -302,9 +301,9 @@ public partial class BlockManager : IBlockManager
     /// <summary>
     /// 将当前 BlockManager 的状态保存到流中。
     /// </summary>
-    /// <param name="stream">要写入的流。</param>
+    /// <param name="saveAction">要写入的回调。</param>
     /// <param name="frontEndBlindData">前端提供的盲存数据。</param>
-    public async Task SaveToFileAsync(Stream stream, object? frontEndBlindData)
+    public async Task SaveToFileAsync(Func<ArchiveDto, Task> saveAction, object? frontEndBlindData)
     {
         var archive = new ArchiveDto
         {
@@ -313,10 +312,8 @@ public partial class BlockManager : IBlockManager
         };
 
         // 遍历内存中的 Blocks
-        foreach (var kvp in this.blocks)
+        foreach ((string blockId, var blockStatus) in this.blocks)
         {
-            string blockId = kvp.Key;
-            var blockStatus = kvp.Value; // This is BlockStatus (Idle, Loading etc.)
             var coreBlock = blockStatus.Block; // The actual Block instance
 
             var blockDto = new BlockDto
@@ -324,7 +321,7 @@ public partial class BlockManager : IBlockManager
                 BlockId = coreBlock.BlockId,
                 ParentBlockId = coreBlock.ParentBlockId,
                 WorkFlowName = coreBlock.WorkflowName,
-                ChildrenIds = new List<string>(coreBlock.ChildrenList), // Copy list
+                ChildrenIds = [..coreBlock.ChildrenList], // Copy list
                 BlockContent = coreBlock.BlockContent,
                 // Shallow copy Metadata
                 Metadata = coreBlock.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value),
@@ -345,18 +342,18 @@ public partial class BlockManager : IBlockManager
             archive.Blocks.Add(blockId, blockDto);
         }
 
-        await JsonSerializer.SerializeAsync(stream, archive, PersistenceMapper.JsonOptions);
+        await saveAction(archive);
         Log.Info($"BlockManager state saved. Blocks count: {archive.Blocks.Count}");
     }
 
     /// <summary>
     /// 从流中加载 BlockManager 的状态。
     /// </summary>
-    /// <param name="stream">要读取的流。</param>
+    /// <param name="loadAction">要读取的回调。</param>
     /// <returns>恢复的前端盲存数据。</returns>
-    public async Task<object?> LoadFromFileAsync(Stream stream)
+    public async Task<object?> LoadFromFileAsync(Func<Task<ArchiveDto?>> loadAction)
     {
-        var archive = await JsonSerializer.DeserializeAsync<ArchiveDto>(stream, PersistenceMapper.JsonOptions);
+        var archive = await loadAction();
 
         if (archive == null)
         {
@@ -380,7 +377,7 @@ public partial class BlockManager : IBlockManager
         var newBlocks = new ConcurrentDictionary<string, BlockStatus>();
         var newLocks = new ConcurrentDictionary<string, AsyncLock>();
 
-        foreach ((string? blockId, var blockDto) in archive.Blocks)
+        foreach ((string blockId, var blockDto) in archive.Blocks)
         {
             // --- 恢复状态 ---
             var gameState = PersistenceMapper.MapGameState(blockDto.GameState);

@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Http;
-using YAESandBox.Workflow.AIService.AiConfigSchema;
 
 namespace YAESandBox.Workflow.AIService.Controller;
 

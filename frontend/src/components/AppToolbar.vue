@@ -55,7 +55,7 @@
           <n-button text @click="togglePanel('left', AiConfigEditorPanel)"
                     :type="isActive('left', AiConfigEditorPanel) ? 'primary' : 'default'">
             <template #icon>
-              <n-icon :component="SettingsIcon"/>
+              <n-icon :component="HardwareChipIcon"/>
             </template>
           </n-button>
         </template>
@@ -87,7 +87,7 @@ import {
   ListOutline as ListIcon,
   SettingsOutline as SettingsIcon,
   GameControllerOutline as GameControllerIcon,
-  HomeOutline as HomeIcon // 引入 Home 图标
+  HardwareChipOutline as HardwareChipIcon // 引入 Home 图标
 } from '@vicons/ionicons5';
 import {useUiStore} from '@/stores/uiStore';
 import {usePersistenceStore} from '@/stores/persistenceStore';
