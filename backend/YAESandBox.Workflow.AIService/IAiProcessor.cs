@@ -8,7 +8,7 @@ namespace YAESandBox.Workflow.AIService;
 public interface IAiProcessor
 {
     /// <summary>
-    /// 向 AI 服务发起流式请求 (修正版)
+    /// 向 AI 服务发起流式请求
     /// </summary>
     /// <param name="prompts">完整的提示词</param>
     /// <param name="onChunkReceived">
@@ -25,6 +25,16 @@ public interface IAiProcessor
         Action<string> onChunkReceived,
         CancellationToken cancellationToken = default
     );
+
+    /// <summary>
+    /// 向 AI 服务发起非流式请求
+    /// </summary>
+    /// <param name="prompts">完整的提示词</param>
+    /// <param name="cancellationToken">用于取消操作</param>
+    /// <returns>包含最终响应</returns>
+    Task<Result<string>> NonStreamRequestAsync(
+        List<(PromptRole role, string prompt)> prompts,
+        CancellationToken cancellationToken = default);
 
     // ... 可能还有非流式请求的方法，或者把流式/非流式打包为同一个方法？ ...
 }

@@ -53,6 +53,9 @@ public record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstrac
         "doubao-1-5-lite-32k-250115",
         "doubao-1-5-pro-32k-250115",
         "doubao-1-5-pro-32k-character-250228",
+        "doubao-1.5-thinking-pro-250415",
+        "doubao-1.5-pro-256k-250115",
+        "deepseek-r1-250120",
         IsEditableSelectOptions = true)]
     [DefaultValue("doubao-1-5-lite-32k-250115")]
     public string ModelName { get; init; } = ModelName;

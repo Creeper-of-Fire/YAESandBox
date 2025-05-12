@@ -27,14 +27,13 @@ public class MasterAiService(IHttpClientFactory httpClientFactory, IAiConfigurat
         var configs = this._configProvider.GetConfigurationSet(aiProcessorConfigUUID);
 
         if (configs == null) return null;
-
-        var httpClient = this._httpClientFactory.CreateClient(configs.ConfigSetName); // 使用配置的标识名称作为客户端名称
-
-        var dependencies = new AiProcessorDependencies(httpClient);
-
+        
         // 调用配置对象的工厂方法
         var config = configs.FindAiConfig(aiModuleType);
         if (config.IsFailed) return null;
+        
+        var httpClient = this._httpClientFactory.CreateClient(aiModuleType); // 使用配置的类型作为客户端名称
+        var dependencies = new AiProcessorDependencies(httpClient);
         var specificService = config.Value.ToAiProcessor(dependencies);
         // --- 变化结束 ---
 

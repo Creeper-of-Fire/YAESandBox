@@ -58,6 +58,16 @@
             确定要从配置集 "{{ currentConfigSet?.configSetName }}" 中移除模型 "{{ selectedAiModuleType }}" 的配置吗？
             此操作将删除该模型的定制配置，恢复到使用全局默认值，需要点击“保存变更”才会生效。 <!-- 提示文本修改 -->
           </n-popconfirm>
+
+          <!-- AI 配置测试组件 -->
+          <!-- 仅当选择了配置集和 AI 模型类型时显示测试器 -->
+          <ai-config-tester
+              v-if="selectedConfigSetUuid && selectedAiModuleType && currentConfigSet"
+              :form-data-copy="formDataCopy"
+              :config-set-name="currentConfigSet?.configSetName || '未知配置集'"
+              :module-type="selectedAiModuleType"
+              :key="`${selectedConfigSetUuid}-${selectedAiModuleType}`"
+          />
         </n-flex>
       </n-card>
 
@@ -125,6 +135,7 @@ import type {AiConfigurationSet} from '@/types/generated/aiconfigapi/models/AiCo
 import type {SelectOption as ApiSelectOption} from '@/types/generated/aiconfigapi/models/SelectOption';
 import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi/models/AbstractAiProcessorConfig";
 import {useAiConfigSchemaStore} from "@/components/ai-config/schemaStore.ts";
+import AiConfigTester from "@/components/ai-config/AiConfigTester.vue";
 
 
 // ----------- 全局状态与工具 -----------

@@ -9,6 +9,7 @@ export {}
 declare module 'vue' {
   export interface GlobalComponents {
     AiConfigEditorPanel: typeof import('./src/components/ai-config/AiConfigEditorPanel.vue')['default']
+    AiConfigTester: typeof import('./src/components/ai-config/AiConfigTester.vue')['default']
     AppToolbar: typeof import('./src/components/AppToolbar.vue')['default']
     BlockBubble: typeof import('./src/components/BlockBubble.vue')['default']
     BlockBubbleStream: typeof import('./src/components/BlockBubbleStream.vue')['default']

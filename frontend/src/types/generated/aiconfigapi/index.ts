@@ -11,6 +11,7 @@ export type { AbstractAiProcessorConfig } from './models/AbstractAiProcessorConf
 export type { AiConfigurationSet } from './models/AiConfigurationSet';
 export type { ProblemDetails } from './models/ProblemDetails';
 export type { SelectOption } from './models/SelectOption';
+export type { TestAiDto } from './models/TestAiDto';
 
 export { AiConfigSchemasService } from './services/AiConfigSchemasService';
 export { AiConfigurationsService } from './services/AiConfigurationsService';

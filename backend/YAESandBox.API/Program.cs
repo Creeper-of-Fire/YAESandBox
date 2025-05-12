@@ -126,6 +126,7 @@ builder.Services.AddSwaggerGen(options =>
     options.DocumentFilter<SignalRDtoDocumentFilter>();
 });
 
+builder.Services.AddHttpClient();
 
 // --- SignalR ---
 builder.Services.AddSignalR()

@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AiConfigurationSet } from '../models/AiConfigurationSet';
+import type { TestAiDto } from '../models/TestAiDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -124,6 +125,37 @@ export class AiConfigurationsService {
             },
             errors: {
                 400: `Bad Request`,
+                500: `Internal Server Error`,
+            },
+        });
+    }
+    /**
+     * 测试Ai配置
+     * @returns string OK
+     * @throws ApiError
+     */
+    public static postApiAiConfigurationsAiConfigTest({
+        moduleType,
+        requestBody,
+    }: {
+        /**
+         * 配置的类型。
+         */
+        moduleType: string,
+        /**
+         * 配置和测试文本。
+         */
+        requestBody?: TestAiDto,
+    }): CancelablePromise<string> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/ai-configurations/ai-config-test/{moduleType}',
+            path: {
+                'moduleType': moduleType,
+            },
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
                 500: `Internal Server Error`,
             },
         });

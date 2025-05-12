@@ -8,7 +8,7 @@ namespace YAESandBox.Workflow.AIService.AiConfigSchema.SchemaProcessor;
 // For LINQ methods like Select
 using NJsonSchema; // For JsonSchema, JsonObjectType
 using NJsonSchema.Generation; // For ISchemaProcessor, SchemaProcessorContext
-using YAESandBox.Workflow.AIService.AiConfigSchema; // For StringOptionsAttribute
+using AiConfigSchema; // For StringOptionsAttribute
 
 /// <summary>
 /// 处理带有 [Range] 的属性，

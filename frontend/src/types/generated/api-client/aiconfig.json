@@ -420,6 +420,70 @@
           }
         }
       }
+    },
+    "/api/ai-configurations/ai-config-test/{moduleType}": {
+      "post": {
+        "tags": [
+          "AiConfigurations"
+        ],
+        "summary": "测试Ai配置",
+        "parameters": [
+          {
+            "name": "moduleType",
+            "in": "path",
+            "description": "配置的类型。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "配置和测试文本。",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestAiDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestAiDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestAiDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
     }
   },
   "components": {
@@ -505,6 +569,22 @@
         },
         "additionalProperties": false,
         "description": "代表一个选择项，用于下拉列表或单选/复选按钮组。"
+      },
+      "TestAiDto": {
+        "type": "object",
+        "properties": {
+          "configJson": {
+            "description": "测试的Config，序列化后的AbstractAiProcessorConfig",
+            "nullable": true
+          },
+          "testText": {
+            "type": "string",
+            "description": "测试文本",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "测试用DTO"
       }
     }
   }

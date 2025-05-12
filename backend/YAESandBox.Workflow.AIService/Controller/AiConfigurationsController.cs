@@ -1,18 +1,20 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics;
+using System.Text.Json;
+using FluentResults;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+using YAESandBox.Depend.Storage;
+using YAESandBox.Workflow.AIService.AiConfig;
+using YAESandBox.Workflow.AIService.AiConfigSchema;
+using YAESandBox.Workflow.AIService.ConfigManagement;
 
 namespace YAESandBox.Workflow.AIService.Controller;
 
-using Microsoft.AspNetCore.Mvc;
-// 如果你想在 Controller Action 中直接处理 Result 对象
-using YAESandBox.Workflow.AIService.AiConfig; // AbstractAiProcessorConfig
-using YAESandBox.Workflow.AIService.ConfigManagement; // IAiConfigurationManager
-
-// 用于日志记录
-
 [ApiExplorerSettings(GroupName = AiConfigGroupName)]
 [ApiController]
-[Route("api/ai-configurations")] // API 路由前缀
-public class AiConfigurationsController(IAiConfigurationManager configurationManager) : ControllerBase
+[Route("api/ai-configurations")]
+public class AiConfigurationsController(IAiConfigurationManager configurationManager, IHttpClientFactory httpClientFactory) : ControllerBase
 {
     /// <summary>
     /// Api文档的GroupName
@@ -20,6 +22,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     public const string AiConfigGroupName = "aiconfig";
 
     private IAiConfigurationManager configurationManager { get; } = configurationManager;
+    private IHttpClientFactory httpClientFactory { get; } = httpClientFactory;
 
     /// <summary>
     /// 获取所有已保存的 AI 配置集的完整列表。
@@ -34,7 +37,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (result.IsSuccess)
             return this.Ok(result.Value);
 
-        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.First().Message);
+        return this.Get500ErrorResult(result, "获取所有已保存的 AI 配置集的完整列表时发生内部错误。");
     }
 
     /// <summary>
@@ -58,7 +61,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (result.HasError<AIConfigError>(e => e.Message.Contains("未找到")))
             return this.NotFound(result.Errors.First().Message);
 
-        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.FirstOrDefault()?.Message ?? "获取配置集时发生内部错误。");
+        return this.Get500ErrorResult(result, "获取配置集时发生内部错误。");
     }
 
     /// <summary>
@@ -86,7 +89,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
             return this.CreatedAtAction(nameof(this.GetConfigurationByUuid), new { uuid = result.Value }, result.Value);
         }
 
-        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.FirstOrDefault()?.Message ?? "添加配置集时发生内部错误。");
+        return this.Get500ErrorResult(result, "添加配置集时发生内部错误。");
     }
 
     /// <summary>
@@ -127,7 +130,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
 
         // UpdateConfigurationAsync 内部可能已处理 "未找到" 的情况，这里可能不需要重复检查 NotFound
         // 但如果 Manager 返回了特定的错误，可以据此返回不同的状态码
-        return this.StatusCode(StatusCodes.Status500InternalServerError, updateResult.Errors.FirstOrDefault()?.Message ?? "更新配置集时发生内部错误。");
+        return this.Get500ErrorResult(updateResult, "更新配置集时发生内部错误。");
     }
 
     /// <summary>
@@ -148,6 +151,58 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (result.IsSuccess)
             return this.NoContent();
 
-        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.FirstOrDefault()?.Message ?? "删除配置集时发生内部错误。");
+        return this.Get500ErrorResult(result, "删除配置集时发生内部错误。");
+    }
+
+    /// <summary>
+    /// 测试Ai配置
+    /// </summary>
+    /// <param name="moduleType">配置的类型。</param>
+    /// <param name="testAiDto">配置和测试文本。</param>
+    /// <returns></returns>
+    [HttpPost("ai-config-test/{moduleType}")]
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public async Task<ActionResult<string>> TestAiConfig(string moduleType, [FromBody] TestAiDto testAiDto)
+    {
+        var httpClient = this.httpClientFactory.CreateClient();
+
+        var dependencies = new AiProcessorDependencies(httpClient);
+
+        var type = ConfigSchemasHelper.GetTypeByName(moduleType);
+
+
+        if (type == null || !typeof(AbstractAiProcessorConfig).IsAssignableFrom(type))
+        {
+            return this.NotFound(
+                $"Unknown or invalid ModuleType '{moduleType}' found as dictionary key. Cannot determine concrete type for AbstractAiProcessorConfig.");
+        }
+
+        var config = (AbstractAiProcessorConfig?)testAiDto.configJson.Deserialize(type, YAESandBoxJsonHelper.JsonSerializerOptions);
+        if (config == null)
+            return this.NotFound();
+
+        var result = await config.ToAiProcessor(dependencies).NonStreamRequestAsync([(PromptRole.System(), testAiDto.testText)]);
+        if (result.IsSuccess)
+            return this.Ok(result.Value);
+
+        return this.Get500ErrorResult(result, "生成测试文本时发生内部错误。");
+    }
+
+    /// <summary>
+    /// 测试用DTO
+    /// </summary>
+    /// <param name="configJson">测试的Config，序列化后的AbstractAiProcessorConfig</param>
+    /// <param name="testText">测试文本</param>
+    public record TestAiDto([Required]JsonDocument configJson,[Required] string testText);
+
+    private ObjectResult Get500ErrorResult<T>(Result<T> result, string defaultMessage) =>
+        this.Get500ErrorResult(result.ToResult(), defaultMessage);
+
+    private ObjectResult Get500ErrorResult(Result result, string defaultMessage)
+    {
+        if (result.IsSuccess)
+            throw new UnreachableException($"GetErrorResult: {result} 必定是失败的，但却输入了成功的情况。");
+        return this.StatusCode(StatusCodes.Status500InternalServerError, result.Errors.FirstOrDefault()?.Message ?? defaultMessage);
     }
 }
