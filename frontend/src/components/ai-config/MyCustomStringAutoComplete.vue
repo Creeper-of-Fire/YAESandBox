@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, defineProps, defineEmits, useAttrs} from 'vue';
+import {computed, ref, watch, useAttrs} from 'vue';
 import {NAutoComplete} from 'naive-ui';
 import type {AutoCompleteOption} from 'naive-ui';
 

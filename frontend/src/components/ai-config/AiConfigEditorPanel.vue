@@ -1,19 +1,19 @@
 ﻿<template>
-  <n-spin :show="loading > 0">
-    <n-space vertical size="large">
+  <n-spin :show="componentLoading > 0">
+    <n-flex vertical size="large">
       <!-- 上方控制区域：配置集选择与操作 -->
       <n-card title="AI 配置集管理">
-        <n-space align="center" justify="space-between" style="margin-bottom: 16px;">
-          <n-form-item label="选择配置集" style="min-width: 300px; margin-bottom: 0;">
+        <n-flex align="center" justify="space-between" style="margin-bottom: 16px;">
+          <n-form-item label="选择配置集" style="flex-grow: 1;margin-bottom: 0;">
             <n-select
-                v-model:value="selectedConfigSetUuid"
+                :value="selectedConfigSetUuid"
                 :options="configSetOptions"
                 placeholder="请选择一个配置集"
                 clearable
                 @update:value="handleConfigSetSelectionChange"
             />
           </n-form-item>
-          <n-space>
+          <n-flex>
             <n-button type="primary" @click="handleSaveConfigSet" :disabled="!canSaveChanges">
               保存变更
             </n-button>
@@ -26,69 +26,83 @@
               </template>
               确定要删除选中的配置集 "{{ currentConfigSet?.configSetName }}" 吗？此操作不可恢复。
             </n-popconfirm>
-          </n-space>
-        </n-space>
+          </n-flex>
+        </n-flex>
       </n-card>
 
       <!-- 中间区域：AI 类型选择 -->
       <n-card v-if="currentConfigSet" title="AI 模型配置">
-        <n-form-item label="选择或添加 AI 模型类型" style="min-width: 300px;">
-          <n-select
-              v-model:value="selectedAiModuleType"
-              :options="aiTypeOptionsWithMarker"
-              placeholder="选择 AI 模型类型"
-              clearable
-              @update:value="handleAiTypeSelectionChange"
-              :disabled="availableAiTypes.length === 0"
-          />
-          <div v-if="availableAiTypes.length === 0 && loading === 0" style="color: grey; font-size: 12px; margin-top: 4px;">
-            未能加载到可用的AI模型类型。
-          </div>
-        </n-form-item>
-        <n-popconfirm
-            v-if="selectedAiModuleType && currentConfigSet?.configurations?.[selectedAiModuleType]"
-            @positive-click="handleClearCurrentAiConfig"
-        >
-          <template #trigger>
-            <n-button type="warning" tertiary
-                      :disabled="!selectedAiModuleType || !currentConfigSet?.configurations?.[selectedAiModuleType]">
-              清空当前模型配置
-            </n-button>
-          </template>
-          确定要清空当前模型 "{{ selectedAiModuleType }}" 的所有配置项吗？
-          此操作会将其恢复到默认状态，但需要点击“保存变更”才会生效。
-        </n-popconfirm>
+        <!-- 使用 NFlex 将下拉框和按钮放在同一行 -->
+        <n-flex justify="space-between" align="center">
+          <n-form-item label="选择或添加 AI 模型类型" style="flex-grow: 1;">
+            <n-select
+                :value="selectedAiModuleType"
+                :options="aiTypeOptionsWithMarker"
+                placeholder="选择 AI 模型类型"
+                clearable
+                :disabled="availableAiTypes.length === 0"
+                @update:value="handleAiTypeSelectionChange"
+            />
+            <div v-if="availableAiTypes.length === 0 && componentLoading === 0" style="color: grey; font-size: 12px; margin-top: 4px;">
+              未能加载到可用的AI模型类型。
+            </div>
+          </n-form-item>
+
+          <n-popconfirm @positive-click="handleRemoveCurrentAiConfig">
+            <template #trigger>
+              <n-button type="warning" tertiary
+                        :disabled="!selectedAiModuleType || !currentConfigSet?.configurations?.[selectedAiModuleType]">
+                移除当前模型配置 <!-- 按钮文本修改 -->
+              </n-button>
+            </template>
+            确定要从配置集 "{{ currentConfigSet?.configSetName }}" 中移除模型 "{{ selectedAiModuleType }}" 的配置吗？
+            此操作将删除该模型的定制配置，恢复到使用全局默认值，需要点击“保存变更”才会生效。 <!-- 提示文本修改 -->
+          </n-popconfirm>
+        </n-flex>
       </n-card>
 
       <!-- 下方区域：动态表单 -->
       <n-card v-if="currentConfigSet && selectedAiModuleType && currentSchema"
               :title="`配置模型: ${selectedAiModuleType}`">
-        <vue-form
-            v-if="formRenderKey > 0 && currentConfigSet.configurations && typeof currentConfigSet.configurations[selectedAiModuleType] === 'object'"
-            :key="formRenderKey"
-            v-model="currentConfigSet.configurations[selectedAiModuleType]"
-            :schema="currentSchema"
-            :form-props="formGlobalProps"
-            @change="onFormChange"
-            :form-footer={show:false}
-            ref="jsonFormRef"
-        >
-        </vue-form>
-        <n-empty v-else-if="loading > 0 && !currentSchema" description="正在加载模型 Schema..."/>
-        <n-empty v-else description="表单数据或Schema准备中..."/>
+        <n-spin :show="isCurrentSchemaLoading" description="正在加载模型 Schema...">
+          <!-- Schema 加载错误 -->
+          <div v-if="currentSchemaFetchError" style="padding: 20px;">
+            <n-alert title="Schema 加载错误" type="error">
+              {{ currentSchemaFetchError }}
+            </n-alert>
+          </div>
+          <vue-form
+              v-if="formRenderKey > 0 && typeof formDataCopy === 'object'"
+              :key="formRenderKey"
+              v-model="formDataCopy"
+              :schema="currentSchema"
+              :form-props="formGlobalProps"
+              @change="checkFormChange"
+              :form-footer={show:false}
+              ref="jsonFormRef"
+              style="flex-grow: 1;"
+          >
+          </vue-form>
+          <n-empty v-else-if="!currentSchema" description="Schema 未加载或不存在。"/>
+          <n-empty
+              v-else-if="typeof formDataCopy !== 'object'"
+              description="请先添加或配置此模型类型。"/>
+        </n-spin>
       </n-card>
 
-      <n-empty v-if="!selectedConfigSetUuid && Object.keys(allConfigSets).length > 0 && loading === 0" description="请先选择一个AI配置集。"/>
-      <n-empty v-else-if="Object.keys(allConfigSets).length === 0 && loading === 0" description="暂无配置集，请新建一个。"/>
-      <n-empty v-else-if="currentConfigSet && !selectedAiModuleType && loading === 0"
+      <!-- 整体空状态 -->
+      <n-empty v-if="!selectedConfigSetUuid && Object.keys(allConfigSets).length > 0 && componentLoading === 0"
+               description="请先选择一个AI配置集。"/>
+      <n-empty v-else-if="Object.keys(allConfigSets).length === 0 && componentLoading === 0" description="暂无配置集，请新建一个。"/>
+      <n-empty v-else-if="currentConfigSet && !selectedAiModuleType && componentLoading === 0"
                description="请选择一个AI模型类型进行配置。"/>
 
-    </n-space>
+    </n-flex>
   </n-spin>
 </template>
 
 <script setup lang="ts">
-import {computed, defineAsyncComponent, h, markRaw, nextTick, onMounted, reactive, ref} from 'vue';
+import {computed, defineAsyncComponent, h, markRaw, nextTick, onMounted, reactive, ref, watch} from 'vue';
 import {
   NButton,
   NCard,
@@ -104,22 +118,27 @@ import {
   useMessage
 } from 'naive-ui';
 import VueForm from '@lljj/vue3-form-naive'; // 确认此库的准确导入名称和方式
+import {cloneDeep, isEqual} from 'lodash-es';
 import {AiConfigurationsService} from '@/types/generated/aiconfigapi/services/AiConfigurationsService';
 import {AiConfigSchemasService} from '@/types/generated/aiconfigapi/services/AiConfigSchemasService';
 import type {AiConfigurationSet} from '@/types/generated/aiconfigapi/models/AiConfigurationSet';
 import type {SelectOption as ApiSelectOption} from '@/types/generated/aiconfigapi/models/SelectOption';
-import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi/models/AbstractAiProcessorConfig"; // 虽然字段少了，但类型可能仍被引用
+import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi/models/AbstractAiProcessorConfig";
+import {useAiConfigSchemaStore} from "@/components/ai-config/schemaStore.ts";
 
 
 // ----------- 全局状态与工具 -----------
 const message = useMessage();
 const dialog = useDialog();
-const loading = ref(0); // 活动API调用计数器
+const componentLoading = ref(0); // 活动API调用计数器
 const jsonFormRef = ref<any>(null); // vue-form 实例引用
+const schemaStore = useAiConfigSchemaStore();
 
 // ----------- 配置集状态 -----------
 // 使用 reactive 包裹 Record 本身，使其内部属性的增删也能被侦测
 const allConfigSets = reactive<Record<string, AiConfigurationSet>>({});
+// **新增**: 用于存储当前编辑表单的数据副本
+const formDataCopy = ref<AbstractAiProcessorConfig | null>(null);
 const selectedConfigSetUuid = ref<string | null>(null);
 const formChanged = ref(false); // 标记当前表单是否有未保存的修改
 
@@ -137,6 +156,14 @@ const configSetOptions = computed<NaiveSelectOption[]>(() =>
     }))
 );
 
+const isCurrentSchemaLoading = computed(() => {
+  return selectedAiModuleType.value ? schemaStore.isSchemaLoading(selectedAiModuleType.value) : false;
+});
+
+const currentSchemaFetchError = computed(() => {
+  return selectedAiModuleType.value ? schemaStore.getSchemaError(selectedAiModuleType.value) : null;
+});
+
 const canSaveChanges = computed(() => {
   // 必须选中一个配置集，并且表单有变动
   return !!selectedConfigSetUuid.value && formChanged.value;
@@ -150,14 +177,13 @@ const formRenderKey = ref(0); // 用于强制重新渲染 vue-form
 
 // ----------- 自定义组件与表单 Props -----------
 const MyCustomStringAutoComplete = markRaw(defineAsyncComponent(() => import('@/components/ai-config/MyCustomStringAutoComplete.vue'))); // 确保路径正确
+const SliderWithInputWidget = markRaw(defineAsyncComponent(() => import('@/components/ai-config/SliderWithInputWidget.vue')))
 
 const formGlobalProps = computed(() => ({
   // 这些是传递给 Naive UI NForm 组件的 props
   labelPlacement: 'top' as const,
   labelWidth: 'auto' as const,
   isMiniDes: true,
-  // submitButton: false, // @lljj/vue3-form-naive 可能有自己的提交按钮控制
-  // hideSubmitButton: true, // 或类似的方式隐藏默认提交按钮
 }));
 
 /**
@@ -181,10 +207,22 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
       // 但既然你提议对 ui:widget 赋值，直接修改 fieldProps 里的 ui:widget 更直接
 
       // 规则1: 有 maximum 和 minimum -> SliderWidget
-      if (fieldProps.hasOwnProperty('maximum') && fieldProps.hasOwnProperty('minimum') && fieldProps.type && (fieldProps.type === 'integer' || fieldProps.type === 'number')) {
-        // 优先使用已有的 ui:widget (如果后端偶尔还是会传)，否则按约定赋值
+      if (fieldProps.type && (fieldProps.type === 'integer' || fieldProps.type === 'number')) {
         if (!fieldProps['ui:widget']) {
-          fieldProps['ui:widget'] = 'SliderWidget'; // 你需要确保 SliderWidget 已经注册或由库提供
+          if (fieldProps.hasOwnProperty('maximum') && fieldProps.hasOwnProperty('minimum')) {
+            // 优先使用已有的 ui:widget (如果后端偶尔还是会传)，否则按约定赋值
+
+            fieldProps['ui:options'].step = fieldProps['multipleOf'];
+            fieldProps['ui:options'].default = fieldProps.default;
+            fieldProps['ui:options'].max = fieldProps.maximum;
+            fieldProps['ui:options'].min = fieldProps.minimum;
+            if (fieldProps.type != 'integer')
+              delete fieldProps['multipleOf'];
+            fieldProps['ui:widget'] = SliderWithInputWidget; // 你需要确保 SliderWidget 已经注册或由库提供
+          } else {
+            fieldProps['ui:widget'] = 'InputNumberWidget';
+            fieldProps['ui:options'].showButton = false;
+          }
         }
       }
 
@@ -219,7 +257,6 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
       if (Object.keys(fieldProps['ui:options']).length === 0) {
         delete fieldProps['ui:options'];
       }
-
     }
   }
 
@@ -245,7 +282,7 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
 
 // ----------- API 调用封装 -----------
 async function callApi<T>(fn: () => Promise<T>, successMessage?: string, autoHandleError = true): Promise<T | undefined> {
-  loading.value++;
+  componentLoading.value++;
   try {
     const result = await fn();
     if (successMessage) {
@@ -259,7 +296,7 @@ async function callApi<T>(fn: () => Promise<T>, successMessage?: string, autoHan
     }
     return undefined;
   } finally {
-    loading.value--;
+    componentLoading.value--;
   }
 }
 
@@ -298,63 +335,6 @@ onMounted(async () => {
 });
 
 // ----------- 配置集操作逻辑 -----------
-
-const canClearCurrentAiConfig = computed(() => {
-  return !!(selectedAiModuleType.value &&
-      currentConfigSet.value &&
-      currentConfigSet.value.configurations &&
-      currentConfigSet.value.configurations[selectedAiModuleType.value]);
-});
-
-async function handleClearCurrentAiConfig() {
-  if (!canClearCurrentAiConfig.value) {
-    message.warning('没有可清空的当前AI模型配置。');
-    return;
-  }
-
-  const moduleTypeToClear = selectedAiModuleType.value!; // 已经用 canClearCurrentAiConfig 保证了非 null
-
-  // 选项 A: 重置为空对象，让 vue-form 根据 schema default 填充
-  if (currentConfigSet.value!.configurations[moduleTypeToClear]) {
-    // 为了触发 vue-form 的重新计算和基于 default 的填充，
-    // 我们不能简单地 currentConfigSet.value.configurations[moduleTypeToClear] = {};
-    // 因为 vue-form 可能已经持有对原对象的引用。
-    // 更好的方式是，如果 vue-form 的 v-model 绑定的是一个对象的属性，
-    // 我们可以清空该对象的所有键，或者用一个全新的空对象替换它。
-    // 如果 v-model 的目标是 currentConfigSet.value.configurations[moduleTypeToClear] 本身，
-    // 那么将其重置为 {} 是可以的。
-
-    // 遍历并删除所有属性，或者直接替换为一个新的响应式空对象
-    // currentConfigSet.value!.configurations[moduleTypeToClear] = reactive({});
-
-    // 或者，如果想确保 vue-form 完全重新处理，可以先删除再添加回去
-    // (但要注意这可能导致 vue-form 内部状态丢失，如果它有的话)
-    // delete currentConfigSet.value!.configurations[moduleTypeToClear];
-    // await nextTick(); // 给 Vue 一个周期去处理删除
-    // currentConfigSet.value!.configurations[moduleTypeToClear] = reactive({});
-
-    // 最稳妥的方式，如果 vue-form 内部对 v-model 传入对象的引用敏感：
-    // 创建一个新的空对象，并让父级 configurations 对象知道这个 moduleType 的值变了。
-    // 如果 currentConfigSet.configurations 本身是 reactive 的，
-    // 那么对其属性的直接赋值 (替换对象) 应该是能被侦测到的。
-    currentConfigSet.value!.configurations[moduleTypeToClear] = reactive({});
-
-
-    message.info(`模型 "${moduleTypeToClear}" 的配置已清空至默认值。请点击“保存变更”以应用。`);
-    formChanged.value = true;
-
-    // 强制 vue-form 重新渲染，以应用 schema 的 default 值
-    // (如果 vue-form 在 v-model 的值从有数据对象变为 {} 时，能自动应用 default)
-    // 递增 formRenderKey 通常是一个可靠的强制刷新方法
-    formRenderKey.value++;
-    await nextTick(); // 等待DOM更新
-
-  } else {
-    message.error('无法找到要清空的配置数据。'); // 理论上不应发生，因为有 canClearCurrentAiConfig 控制
-  }
-}
-
-
 // 封装放弃更改的确认逻辑
 async function confirmAbandonChanges(title: string, content: string): Promise<boolean> {
   if (!formChanged.value) return true; // 没有更改，直接允许
@@ -364,35 +344,20 @@ async function confirmAbandonChanges(title: string, content: string): Promise<bo
       content,
       positiveText: '确定放弃',
       negativeText: '取消操作',
-      onPositiveClick: () => resolve(true),
-      onNegativeClick: () => resolve(false),
-      onClose: () => resolve(false),
+      onPositiveClick() {
+        resetFormChangeFlag();
+        return resolve(true);
+      },
+      onNegativeClick() {
+        // resetFormChangeFlag();
+        return resolve(false);
+      },
+      onClose() {
+        // resetFormChangeFlag();
+        return resolve(false);
+      },
     });
   });
-}
-
-// 当配置集选择变化时
-async function handleConfigSetSelectionChange(uuid: string | null) {
-  const oldUuid = selectedConfigSetUuid.value;
-  if (uuid === oldUuid) return;
-
-  if (oldUuid) { // 如果之前有选中的项
-    const canProceed = await confirmAbandonChanges(
-        '放弃未保存的更改？',
-        `配置集 "${allConfigSets[oldUuid]?.configSetName}" 有未保存的更改。切换配置集将丢失这些更改。`
-    );
-    if (!canProceed) {
-      await nextTick(); // 等待 select 组件状态回滚
-      selectedConfigSetUuid.value = oldUuid; // 恢复原选择
-      return;
-    }
-  }
-
-  selectedConfigSetUuid.value = uuid; // 更新选择
-  resetFormChangeFlag(); // 重置表单修改标记
-  selectedAiModuleType.value = null; // 清空AI类型选择
-  currentSchema.value = null;      // 清空当前Schema
-  formRenderKey.value = 0;         // 重置表单渲染key
 }
 
 // 保存对当前配置集的所有变更 (集成了校验)
@@ -431,12 +396,17 @@ async function handleSaveConfigSet() {
   }
   // 如果 selectedAiModuleType.value 为 null，说明当前没有活动的表单，无需校验。
 
+  if (selectedAiModuleType.value && currentConfigSet.value && formDataCopy.value !== null) {
+    // cloneDeep(formDataCopy.value) 的结果也符合 AbstractAiProcessorConfig
+    currentConfigSet.value.configurations[selectedAiModuleType.value] = cloneDeep(formDataCopy.value);
+    resetFormChangeFlag();
+  }
+
   // 2. 调用 API 保存
   await callApi(() => AiConfigurationsService.putApiAiConfigurations({
     uuid: selectedConfigSetUuid.value!,
     requestBody: currentConfigSet.value!, // 包含所有已修改的数据
   }), '配置集保存成功！');
-  resetFormChangeFlag();
 }
 
 // 提示并执行新建配置集
@@ -564,7 +534,6 @@ async function executeDeleteSet() {
   selectedConfigSetUuid.value = null; // 清空选择
   selectedAiModuleType.value = null;
   currentSchema.value = null;
-  resetFormChangeFlag();
 
   // 从 allConfigSets 中移除已删除的项
   if (allConfigSets[oldSelectedUuid]) {
@@ -582,6 +551,37 @@ async function executeDeleteSet() {
 }
 
 // ----------- AI 类型与表单逻辑 -----------
+/**
+ * 删除当前选中的 AI 配置
+ */
+async function handleRemoveCurrentAiConfig() {
+  // 可用性已在模板 popconfirm 的 v-if 和 disabled 中控制，此处不再需要额外的 if 检查参数有效性
+  const moduleTypeToRemove = selectedAiModuleType.value!;
+  const currentConfigSetData = currentConfigSet.value!; // 已确保存在
+
+  if (currentConfigSetData.configurations && currentConfigSetData.configurations[moduleTypeToRemove]) {
+    // **核心修改：删除对应的键值对**
+    delete currentConfigSetData.configurations[moduleTypeToRemove];
+
+    message.info(`模型 "${moduleTypeToRemove}" 的配置已从配置集中移除。请点击“保存变更”以应用。`);
+    selectedAiModuleType.value = null;
+
+    // 删除后，当前选中的 AI 类型实际上已经没有对应的配置数据了
+    // 如果希望 UI 立即反映移除状态（表单消失），可以清空 selectedAiModuleType
+    // selectedAiModuleType.value = null; // 可选，取决于交互流程
+    // 清空后需要重新触发选择AI类型或显示空状态
+    // 如果不清空，表单区域也会因为 v-if 条件不满足而消失
+    // 为了避免 watch selectedAiModuleType 再次触发加载 schema/数据，不清空可能更好
+    // 让表单区域消失，并提示用户选择其他AI类型
+
+    // 强制 vue-form 重新渲染通常不再需要，因为 v-if 条件变化会触发其销毁和重建（如果下次再选中）
+    // formRenderKey.value++; // 移除或保留看实际测试效果
+  } else {
+    // 理论上不会走到这里，因为按钮已禁用
+    message.warning('当前AI模型配置不存在或已被移除。');
+  }
+}
+
 const aiTypeOptionsWithMarker = computed<NaiveSelectOption[]>(() => {
   return availableAiTypes.value.map(type => {
     const isConfigured = !!(currentConfigSet.value?.configurations && currentConfigSet.value.configurations[type.value as string]);
@@ -592,55 +592,107 @@ const aiTypeOptionsWithMarker = computed<NaiveSelectOption[]>(() => {
   });
 });
 
-// 当AI模型类型选择变化时
-async function handleAiTypeSelectionChange(moduleType: string | null) {
-  const oldModuleType = selectedAiModuleType.value;
-  if (moduleType === oldModuleType && currentSchema.value) return;
+async function handleConfigSetSelectionChange(newUuid: string | null) {
+  const oldUuid = selectedConfigSetUuid.value;
+  console.log(`[AttemptChange] User wants to change from ${oldUuid} to ${newUuid}`);
+  if (newUuid === oldUuid) return;
 
-  if (oldModuleType && currentConfigSet.value?.configurations?.[oldModuleType]) {
+  if (oldUuid) { // 如果之前有选中的项
+    const canProceed = await confirmAbandonChanges(
+        '放弃未保存的更改？',
+        `配置集 "${allConfigSets[oldUuid]?.configSetName}" 有未保存的更改。切换配置集将丢失这些更改。`
+    );
+    if (!canProceed)
+      return;
+  }
+  
+  console.log(`[AttemptChange] User change from ${oldUuid} to ${newUuid}`)
+  selectedConfigSetUuid.value = newUuid;
+}
+
+
+// 当配置集选择变化时
+watch(selectedConfigSetUuid, async (newUuid, oldUuid) => {
+  console.log(`watchConfigSetSelectionChange: ${oldUuid} -> ${newUuid}`)
+  if (newUuid === oldUuid) return;
+  
+  // selectedConfigSetUuid.value = newUuid; // 更新选择
+  selectedAiModuleType.value = null; // 清空AI类型选择
+  currentSchema.value = null;      // 清空当前Schema
+  formRenderKey.value = 0;         // 重置表单渲染key
+})
+
+// 事件处理器，用于拦截 aiTypeSelect 的变化
+async function handleAiTypeSelectionChange(newModuleType: string | null) {
+  const oldModuleType = selectedAiModuleType.value;
+  console.log(`[AttemptChange] User wants to change from ${oldModuleType} to ${newModuleType}`);
+  if (newModuleType === oldModuleType) return;
+
+  if (oldModuleType && formDataCopy.value) {
     const canProceed = await confirmAbandonChanges(
         '放弃未保存的更改？',
         `AI模型 "${oldModuleType}" 的配置有未保存的更改。切换类型将丢失这些更改。`
     );
-    if (!canProceed) {
-      await nextTick();
-      selectedAiModuleType.value = oldModuleType;
+    if (!canProceed) 
       return;
-    }
   }
-  resetFormChangeFlag();
-  selectedAiModuleType.value = moduleType;
 
-  if (moduleType && currentConfigSet.value) {
-    const rawSchema = await callApi(() => AiConfigSchemasService.getApiAiConfigurationManagementSchemas({configTypeName: moduleType}));
-    if (rawSchema) {
-      // --- 在这里使用预处理器 ---
-      currentSchema.value = preprocessSchemaForWidgets(rawSchema);
-      // -------------------------
-
-      if (!currentConfigSet.value.configurations) {
-        currentConfigSet.value.configurations = reactive({});
-      }
-      if (!currentConfigSet.value.configurations[moduleType]) {
-        const initialData: AbstractAiProcessorConfig = {};
-        // 让 vue-form 根据（可能已预处理过的）schema 的 default 自动填充
-        currentConfigSet.value.configurations[moduleType] = reactive(initialData);
-        formChanged.value = true;
-      }
-      formRenderKey.value++;
-      await nextTick();
-
-    } else {
-      currentSchema.value = null;
-      message.error(`加载模型 "${moduleType}" 的 Schema 失败。`);
-    }
-  } else {
-    currentSchema.value = null;
-  }
+  // 如果没有更改，或者用户确认放弃更改，则实际更新 selectedAiModuleType
+  // 这会触发下面的 watch
+  console.log(`[AttemptChange] User change from ${oldModuleType} to ${newModuleType}`);
+  selectedAiModuleType.value = newModuleType;
 }
 
-function onFormChange() {
-  formChanged.value = true;
+
+// 当AI模型类型选择变化时
+watch(selectedAiModuleType, async (newModuleType, oldModuleType) => {
+  console.log(`watchAiTypeSelectionChange: ${oldModuleType} -> ${newModuleType}`)
+  if (newModuleType === oldModuleType) return; // 避免重复操作
+  
+  if (!newModuleType || !currentConfigSet.value) {
+    currentSchema.value = null;
+    formDataCopy.value = null;
+    return
+  }
+  console.time(`[Schema Perf] Get/Fetch Schema: ${newModuleType}`);
+  const rawSchema = await schemaStore.getOrFetchSchema(newModuleType);
+  console.timeEnd(`[Schema Perf] Get/Fetch Schema: ${newModuleType}`);
+  if (!rawSchema || schemaStore.getSchemaError(newModuleType)) {
+    currentSchema.value = null;
+    formDataCopy.value = null;
+    message.error(`加载模型 "${newModuleType}" 的 Schema 失败。`);
+    return
+  }
+  // --- 在这里使用预处理器 ---
+  console.time(`[Schema Perf] Preprocess Schema: ${newModuleType}`);
+  currentSchema.value = preprocessSchemaForWidgets(rawSchema);
+  console.log(`[Schema Perf] Preprocess RawSchema:`, currentSchema.value);
+  console.timeEnd(`[Schema Perf] Preprocess Schema: ${newModuleType}`);
+  // -------------------------
+  console.time(`[Schema Perf] State Update & Tick: ${newModuleType}`);
+  if (!currentConfigSet.value.configurations) {
+    currentConfigSet.value.configurations = reactive({});
+  }
+  let originalConfig = currentConfigSet.value.configurations[newModuleType];
+  if (!originalConfig) {
+    const initialData: AbstractAiProcessorConfig = {};
+    // 让 vue-form 根据（可能已预处理过的）schema 的 default 自动填充
+    originalConfig = reactive(initialData);
+  }
+  formDataCopy.value = cloneDeep(originalConfig);
+  formRenderKey.value++;
+  await nextTick();
+  console.timeEnd(`[Schema Perf] State Update & Tick: ${newModuleType}`);
+})
+
+function checkFormChange() {
+  if (!selectedAiModuleType.value || !currentConfigSet.value?.configurations || formDataCopy.value === null) {
+    formChanged.value = false;
+    return;
+  }
+  const originalData = currentConfigSet.value.configurations[selectedAiModuleType.value];
+  // console.log('Form changed:', formDataCopy.value, originalData);
+  formChanged.value = !isEqual(originalData, formDataCopy.value);
 }
 
 function resetFormChangeFlag() {

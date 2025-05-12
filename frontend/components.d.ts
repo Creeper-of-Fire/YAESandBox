@@ -17,8 +17,11 @@ declare module 'vue' {
     GameStatePanel: typeof import('./src/components/panels/GameStatePanel.vue')['default']
     MainLayout: typeof import('./src/components/MainLayout.vue')['default']
     MyCustomStringAutoComplete: typeof import('./src/components/ai-config/MyCustomStringAutoComplete.vue')['default']
+    NAlert: typeof import('naive-ui')['NAlert']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
+    NFlex: typeof import('naive-ui')['NFlex']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
     SettingsPanel: typeof import('./src/components/panels/SettingsPanel.vue')['default']
+    SliderWithInputWidget: typeof import('./src/components/ai-config/SliderWithInputWidget.vue')['default']
   }
 }

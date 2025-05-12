@@ -5,29 +5,31 @@
       <AppToolbar/>
     </template>
 
+    <!--  开发期间删除KeepAlive，方便开发  -->
+
     <!-- 左侧面板插槽 -->
 
     <template #left-panel>
       <!-- 直接渲染 store 中的组件引用 -->
-      <KeepAlive>
-        <component :is="uiStore.activeLeftComponent"/>
-      </KeepAlive>
+      <!--      <KeepAlive>-->
+      <component :is="uiStore.activeLeftComponent"/>
+      <!--      </KeepAlive>-->
     </template>
 
 
     <!-- 主要内容插槽 -->
     <template #main-content>
-      <KeepAlive>
-        <component :is="currentMainComponent"/>
-      </KeepAlive>
+      <!--      <KeepAlive>-->
+      <component :is="currentMainComponent"/>
+      <!--      </KeepAlive>-->
     </template>
 
     <!-- 右侧面板插槽 -->
     <template #right-panel>
       <!-- 直接渲染 store 中的组件引用 -->
-      <KeepAlive>
-        <component :is="uiStore.activeRightComponent"/>
-      </KeepAlive>
+      <!--      <KeepAlive>-->
+      <component :is="uiStore.activeRightComponent"/>
+      <!--      </KeepAlive>-->
     </template>
 
     <!-- 其他插槽 -->

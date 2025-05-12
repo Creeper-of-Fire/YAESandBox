@@ -30,6 +30,9 @@ public class RangeProcessor : ISchemaProcessor
         if (attribute is CustomRangeAttribute customRangeAttribute)
             context.Schema.MultipleOf = Convert.ToDecimal(customRangeAttribute.Step);
         else if (context.Schema.Type == JsonObjectType.Number)
-            context.Schema.MultipleOf = (Convert.ToDecimal(attribute.Maximum) - Convert.ToDecimal(attribute.Minimum)) / 100;
+        {
+            decimal step = (Convert.ToDecimal(attribute.Maximum) - Convert.ToDecimal(attribute.Minimum)) / 100;
+            context.Schema.MultipleOf = decimal.Min(step, 0.01m);
+        }
     }
 }

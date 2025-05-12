@@ -76,7 +76,8 @@ public static class VueFormSchemaGenerator
             .Select(propKvp => new
             {
                 Name = propKvp.Key,
-                Order = propKvp.Value.ExtensionData?.TryGetValue("x-temp-ui-order", out object? orderVal) == true && orderVal is int orderInt
+                Order = propKvp.Value.ExtensionData?.TryGetValue("x-temp-ui-order", out object? orderVal) == true &&
+                        orderVal is int orderInt
                     ? orderInt
                     : int.MaxValue, // 没有显式 order 的排在后面
                 OriginalIndex = originalIndex++, // 记录原始迭代顺序
@@ -85,7 +86,7 @@ public static class VueFormSchemaGenerator
             .ToList(); // 物化列表，确保 OriginalIndex 被正确赋值
 
         var orderedProperties = propertiesWithOrderInfo
-            .OrderBy(p => p.Order)          // 主要排序：按显式 Order
+            .OrderBy(p => p.Order) // 主要排序：按显式 Order
             .ThenBy(p => p.OriginalIndex) // 次要排序：按原始迭代顺序
             .ToList();
 

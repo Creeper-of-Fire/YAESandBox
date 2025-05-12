@@ -21,9 +21,10 @@ public class JsonFileAiConfigurationManager(string? configFilePath = null) : IAi
     private const string DefaultConfigDirectoryName = "AiConfigs"; // 默认配置存储目录名 (位于程序运行目录下)
 
     private static readonly JsonSerializerOptions jsonSerializerOptions =
-        new() {
+        new()
+        {
             WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull, 
+            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull,
             Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
         };
 

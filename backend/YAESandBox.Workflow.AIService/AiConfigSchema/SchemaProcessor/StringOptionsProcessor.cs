@@ -67,7 +67,7 @@ public class StringOptionsProcessor : ISchemaProcessor
 
             var defaultAttribute = context.ContextualType.GetContextAttribute<DefaultValueAttribute>(true);
             if (defaultAttribute == null)
-                context.Schema.Default = optionsAttribute.Options.First().Value;
+                context.Schema.ExtensionData["default"] = optionsAttribute.Options.First().Value;
         }
 
         // // 2. 指定使用自定义的自动完成 Widget
