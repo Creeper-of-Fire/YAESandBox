@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using FluentResults;
-using YAESandBox.Workflow.AIService.AiConfigSchema;
 using YAESandBox.Workflow.AIService.ConfigManagement;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;

@@ -5,7 +5,7 @@
 /**
  * 代表一个选择项，用于下拉列表或单选/复选按钮组。
  */
-export type SelectOption = {
+export type SelectOptionDto = {
     /**
      * 选项的实际值。
      */

@@ -38,7 +38,7 @@ internal class Program
 
         // 初始化聊天历史记录列表
         // 我们将存储 (角色, 内容) 的元组
-        var chatHistory = new List<(PromptRole Role, string Content)>();
+        var chatHistory = new List<RoledPromptDto>();
 
         while (true)
         {
@@ -65,17 +65,17 @@ internal class Program
 
             // 构建本次请求的 prompts
             // 使用 C# 12+ 集合表达式可以使这里更简洁
-            var prompts = new List<(PromptRole role, string prompt)>
+            var prompts = new List<RoledPromptDto>
             {
-                (PromptRole.System(), "你是一个乐于助人的AI助手。") // 系统提示始终放在最前面
+                RoledPromptDto.System("你是一个乐于助人的AI助手。") // 系统提示始终放在最前面
             };
 
             // 添加历史记录到 prompts
             // 使用 LINQ 的 Select 转换历史记录项
-            prompts.AddRange(chatHistory.Select(item => (item.Role, item.Content)));
+            prompts.AddRange(chatHistory.ToList());
 
             // 添加当前用户输入
-            prompts.Add((PromptRole.User("小明"), userInput));
+            prompts.Add(RoledPromptDto.User(userInput,"小明"));
 
 
             Console.WriteLine("\nAI 正在回复 (流式):");
@@ -104,8 +104,8 @@ internal class Program
                     Console.WriteLine("--- 流式传输成功完成 ---");
 
                     // 将当前的用户输入和AI的完整回复添加到历史记录中
-                    chatHistory.Add((PromptRole.User("小明"), userInput));
-                    chatHistory.Add((PromptRole.Assistant(), accumulatedResponse.ToString()));
+                    chatHistory.Add(RoledPromptDto.User(userInput,"小明"));
+                    chatHistory.Add(RoledPromptDto.Assistant(accumulatedResponse.ToString()));
 
                     // 可选: 限制历史记录的长度，例如只保留最近 N 轮对话
                     // int maxHistoryItems = 10; // 保留最近5轮对话 (用户+AI = 2项/轮)

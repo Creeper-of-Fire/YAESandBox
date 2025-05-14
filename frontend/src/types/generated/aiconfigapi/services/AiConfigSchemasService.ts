@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { SelectOption } from '../models/SelectOption';
+import type { SelectOptionDto } from '../models/SelectOptionDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -37,10 +37,10 @@ export class AiConfigSchemasService {
     /**
      * 获取所有可用的 AI 配置【类型定义】列表。
      * 用于前端展示可以【新建】哪些类型的 AI 配置。
-     * @returns SelectOption OK
+     * @returns SelectOptionDto OK
      * @throws ApiError
      */
-    public static getApiAiConfigurationManagementAvailableConfigTypes(): CancelablePromise<Array<SelectOption>> {
+    public static getApiAiConfigurationManagementAvailableConfigTypes(): CancelablePromise<Array<SelectOptionDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/ai-configuration-management/available-config-types',

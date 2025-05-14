@@ -1,14 +1,15 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using YAESandBox.Workflow.AIService.AiConfigSchema;
+using YAESandBox.Depend.Schema;
+using YAESandBox.Depend.Schema.Attributes;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
 
 /// <summary>
 /// 豆包的AI配置
 /// </summary>
-public record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : AbstractAiProcessorConfig
+internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : AbstractAiProcessorConfig
 {
     /// <summary>
     /// 最大输出Token数

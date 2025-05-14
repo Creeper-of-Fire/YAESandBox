@@ -1,14 +1,18 @@
 ﻿using System.ComponentModel;
 using Namotion.Reflection;
+using NJsonSchema;
+using NJsonSchema.Generation;
+using YAESandBox.Depend.Schema.Attributes;
 
-namespace YAESandBox.Workflow.AIService.AiConfigSchema.SchemaProcessor;
+namespace YAESandBox.Depend.Schema.SchemaProcessor;
 
 // StringOptionsProcessor.cs
 // For PropertyInfo
 // For LINQ methods like Select
-using NJsonSchema; // For JsonSchema, JsonObjectType
-using NJsonSchema.Generation; // For ISchemaProcessor, SchemaProcessorContext
-using AiConfigSchema; // For StringOptionsAttribute
+// For JsonSchema, JsonObjectType
+// For ISchemaProcessor, SchemaProcessorContext
+
+// For StringOptionsAttribute
 
 /// <summary>
 /// 处理带有 [StringOptionsAttribute] 的属性，
@@ -16,10 +20,7 @@ using AiConfigSchema; // For StringOptionsAttribute
 /// </summary>
 public class StringOptionsProcessor : ISchemaProcessor
 {
-    /// <summary>
-    /// 处理给定的 Schema 上下文。
-    /// </summary>
-    /// <param name="context">Schema 生成的上下文。</param>
+    /// <inheritdoc/>
     public void Process(SchemaProcessorContext context)
     {
         // 获取属性上的 StringOptionsAttribute
@@ -71,24 +72,24 @@ public class StringOptionsProcessor : ISchemaProcessor
         }
 
         // // 2. 指定使用自定义的自动完成 Widget
-        // if (attribute.IsEditableSelectOptions)
+        // if (attribute.isEditableSelectOptions)
         //     context.Schema.ExtensionData["ui:widget"] = "MyCustomStringAutoComplete"; // 前端自定义组件的名称
         // else
         //     context.Schema.ExtensionData["ui:widget"] = "RadioWidget";
 
-        var uiOptions = SchemaProcessorHelper.GetOrCreateUiOptions(context.Schema);
+        var uiOptions = SchemaUISetting.GetOrCreateUiOptions(context.Schema);
 
         if (optionsAttribute.IsEditableSelectOptions)
-            uiOptions["isEditableSelectOptions"] = true;
+            uiOptions.isEditableSelectOptions = true;
 
-        // 3. 如果有 OptionsProviderEndpoint，则将其传递给 Widget
+        // 3. 如果有 optionsProviderEndpoint，则将其传递给 Widget
         if (!string.IsNullOrWhiteSpace(optionsAttribute.OptionsProviderEndpoint))
-            uiOptions["remoteSearchEndpoint"] = optionsAttribute.OptionsProviderEndpoint;
+            uiOptions.optionsProviderEndpoint = optionsAttribute.OptionsProviderEndpoint;
 
-        // 备注: IsEditableSelectOptions 属性目前没有直接用于改变 Schema 生成逻辑，
+        // 备注: isEditableSelectOptions 属性目前没有直接用于改变 Schema 生成逻辑，
         // 因为我们选择的 MyCustomStringAutoComplete Widget 本身就是可编辑的。
-        // 如果需要，可以将 attribute.IsEditableSelectOptions 的值也通过 uiOptions 传递给 Widget。
+        // 如果需要，可以将 attribute.isEditableSelectOptions 的值也通过 uiOptions 传递给 Widget。
         // var uiOpt = SchemaProcessorHelper.GetOrCreateUiOptions(context.Schema);
-        // uiOpt["isEditableFlagForWidget"] = attribute.IsEditableSelectOptions;
+        // uiOpt["isEditableFlagForWidget"] = attribute.isEditableSelectOptions;
     }
 }

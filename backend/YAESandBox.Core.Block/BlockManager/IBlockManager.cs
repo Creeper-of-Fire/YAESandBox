@@ -1,4 +1,5 @@
-﻿using FluentResults;
+﻿using System.Text.Json;
+using FluentResults;
 using OneOf;
 using YAESandBox.Core.Action;
 using YAESandBox.Depend;
@@ -63,14 +64,14 @@ namespace YAESandBox.Core.Block
         /// </summary>
         /// <param name="saveAction">要写入的回调。</param>
         /// <param name="frontEndBlindData">前端提供的盲存数据。</param>
-        Task SaveToFileAsync(Func<ArchiveDto, Task> saveAction, object? frontEndBlindData);
+        Task SaveToFileAsync(Func<ArchiveDto, JsonSerializerOptions, Task> saveAction, object? frontEndBlindData);
 
         /// <summary>
         /// 从流中加载 BlockManager 的状态。
         /// </summary>
         /// <param name="loadAction">要读取的回调。</param>
         /// <returns>恢复的前端盲存数据。</returns>
-        Task<object?> LoadFromFileAsync(Func<Task<ArchiveDto?>> loadAction);
+        Task<object?> LoadFromFileAsync(Func<JsonSerializerOptions,Task<ArchiveDto?>> loadAction);
 
         /// <summary>
         /// (内部实现) 手动创建新的 Idle Block。

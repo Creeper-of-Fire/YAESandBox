@@ -2,13 +2,14 @@
 using Namotion.Reflection;
 using NJsonSchema.Generation;
 
-namespace YAESandBox.Workflow.AIService.AiConfigSchema.SchemaProcessor;
+namespace YAESandBox.Depend.Schema.SchemaProcessor;
 
 /// <summary>
 /// 处理 [DisplayAttribute] 为 Schema 添加 title, description, placeholder, 和排序信息。
 /// </summary>
 public class DisplayAttributeProcessor : ISchemaProcessor
 {
+    /// <inheritdoc/>
     public void Process(SchemaProcessorContext context)
     {
         if (context.ContextualType.GetContextAttribute<DisplayAttribute>(true) is not { } displayAttribute)

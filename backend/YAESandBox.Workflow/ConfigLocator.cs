@@ -1,4 +1,6 @@
-﻿namespace YAESandBox.Workflow;
+﻿using YAESandBox.Workflow.Module;
+
+namespace YAESandBox.Workflow;
 
 internal static class ConfigLocator
 {
@@ -12,7 +14,7 @@ internal static class ConfigLocator
         throw new NotImplementedException();
     }
 
-    internal static IModuleConfig findModuleConfig(string moduleID)
+    internal static AbstractModuleConfig<IWorkflowModule> findModuleConfig(string moduleID)
     {
         throw new NotImplementedException();
     }

@@ -3,8 +3,9 @@ using System.Reflection;
 using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using YAESandBox.Depend.Schema;
+using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.AIService.AiConfig;
-using YAESandBox.Workflow.AIService.AiConfigSchema;
 
 namespace YAESandBox.Workflow.AIService.Controller;
 
@@ -29,14 +30,14 @@ public class AiConfigSchemasController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(configTypeName))
         {
-            return BadRequest("配置类型名称 (configTypeName) 不能为空。");
+            return this.BadRequest("配置类型名称 (configTypeName) 不能为空。");
         }
 
         Type? configType = ConfigSchemasHelper.GetTypeByName(configTypeName);
 
         if (configType == null)
         {
-            return NotFound($"名为 '{configTypeName}' 的 AI 配置类型未找到。");
+            return this.NotFound($"名为 '{configTypeName}' 的 AI 配置类型未找到。");
         }
 
         // GetTypeByName 已经确保了它是 AbstractAiProcessorConfig 的子类
@@ -44,7 +45,7 @@ public class AiConfigSchemasController : ControllerBase
         if (!typeof(AbstractAiProcessorConfig).IsAssignableFrom(configType))
         {
             // 这个情况理论上不会发生，因为 GetTypeByName 已经筛选过了
-            return BadRequest($"类型 '{configTypeName}' 不是一个有效的 AI 配置类型。");
+            return this.BadRequest($"类型 '{configTypeName}' 不是一个有效的 AI 配置类型。");
         }
 
         try
@@ -56,19 +57,19 @@ public class AiConfigSchemasController : ControllerBase
             try
             {
                 var jsonDocument = JsonDocument.Parse(schemaJson);
-                return Ok(jsonDocument.RootElement.Clone()); // 返回 JsonElement，ASP.NET Core 会正确序列化它
+                return this.Ok(jsonDocument.RootElement.Clone()); // 返回 JsonElement，ASP.NET Core 会正确序列化它
             }
             catch (JsonException jsonEx)
             {
                 // Log the error: schemaJson
                 // Log the exception: jsonEx
-                return StatusCode(StatusCodes.Status500InternalServerError, $"生成的 Schema 不是有效的 JSON 格式。错误: {jsonEx.Message}");
+                return this.StatusCode(StatusCodes.Status500InternalServerError, $"生成的 Schema 不是有效的 JSON 格式。错误: {jsonEx.Message}");
             }
         }
         catch (Exception ex)
         {
             // Log the exception: ex
-            return StatusCode(StatusCodes.Status500InternalServerError, $"为类型 '{configTypeName}' 生成 Schema 时发生内部错误: {ex.Message}");
+            return this.StatusCode(StatusCodes.Status500InternalServerError, $"为类型 '{configTypeName}' 生成 Schema 时发生内部错误: {ex.Message}");
         }
     }
 
@@ -76,13 +77,13 @@ public class AiConfigSchemasController : ControllerBase
     /// 获取所有可用的 AI 配置【类型定义】列表。
     /// 用于前端展示可以【新建】哪些类型的 AI 配置。
     /// </summary>
-    /// <returns>一个列表，每个 SelectOption 包含：
+    /// <returns>一个列表，每个 SelectOptionDto 包含：
     /// 'Value': 配置类型的编程名称 (如 "DoubaoAiProcessorConfig")，用于后续请求 Schema。
     /// 'Label': 用户友好的类型显示名称 (如 "豆包AI模型")。
     /// </returns>
     [HttpGet("available-config-types")]
-    [ProducesResponseType(typeof(List<SelectOption>), StatusCodes.Status200OK)] // SelectOption 来自 AiConfigSchema 命名空间
-    public ActionResult<List<SelectOption>> GetAvailableConfigTypeDefinitions()
+    [ProducesResponseType(typeof(List<SelectOptionDto>), StatusCodes.Status200OK)] // SelectOptionDto 来自 Schema 命名空间
+    public ActionResult<List<SelectOptionDto>> GetAvailableConfigTypeDefinitions()
     {
         var availableTypes = ConfigSchemasHelper.GetAvailableAiConfigConcreteTypes();
 
@@ -104,11 +105,29 @@ public class AiConfigSchemasController : ControllerBase
 
                 if (string.IsNullOrEmpty(label)) label = type.Name; // Fallback
 
-                return new SelectOption { Value = type.Name, Label = label };
+                return new SelectOptionDto { Value = type.Name, Label = label };
             })
             .OrderBy(so => so.Label)
             .ToList();
 
-        return Ok(result);
+        return this.Ok(result);
     }
+}
+
+/// <summary>
+/// 代表一个选择项，用于下拉列表或单选/复选按钮组。
+/// </summary>
+public class SelectOptionDto
+{
+    /// <summary>
+    /// 选项的实际值。
+    /// </summary>
+    [Required]
+    public object Value { get; init; } = string.Empty;
+
+    /// <summary>
+    /// 选项在UI上显示的文本。
+    /// </summary>
+    [Required]
+    public string Label { get; init; } = string.Empty;
 }

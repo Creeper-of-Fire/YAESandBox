@@ -1,13 +1,14 @@
 ﻿using FluentResults;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.Module;
 
 namespace YAESandBox.Workflow;
 
 //step的信息：
 // 使用的脚本模块们的UUID（注意，脚本模块本身就是绑定在步骤上的，如果需要把模块复制到更广的地方，可以考虑直接复制步骤之类的）
-public class StepProcessor
+internal class StepProcessor
 {
-    internal StepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor,
+    public StepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor,
         StepProcessorConfig config,
         Dictionary<string, object> stepInput)
     {
@@ -21,7 +22,7 @@ public class StepProcessor
     {
         // TODO 之后应该根据需求进行拷贝
         public dynamic stepInput { get; } = stepInput.ToDictionary(kv => kv.Key, kv => kv.Value);
-        public List<(PromptRole role, string prompt)> prompts { get; } = [];
+        public List<RoledPromptDto> prompts { get; } = [];
         public string? fullAiReturn { get; set; }
     }
 
@@ -61,7 +62,7 @@ public class StepProcessor
 
 public record StepProcessorConfig(StepAiConfig stepAiConfig, List<string> moduleIds)
 {
-    public StepProcessor ToStepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor, Dictionary<string, object> stepInput)
+    internal StepProcessor ToStepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor, Dictionary<string, object> stepInput)
     {
         return new StepProcessor(workflowProcessor, this, stepInput);
     }

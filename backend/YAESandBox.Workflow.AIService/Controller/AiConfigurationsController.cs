@@ -6,7 +6,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.AiConfig;
-using YAESandBox.Workflow.AIService.AiConfigSchema;
 using YAESandBox.Workflow.AIService.ConfigManagement;
 
 namespace YAESandBox.Workflow.AIService.Controller;
@@ -182,7 +181,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (config == null)
             return this.NotFound();
 
-        var result = await config.ToAiProcessor(dependencies).NonStreamRequestAsync([(PromptRole.System(), testAiDto.testText)]);
+        var result = await config.ToAiProcessor(dependencies).NonStreamRequestAsync([RoledPromptDto.System(testAiDto.testText)]);
         if (result.IsSuccess)
             return this.Ok(result.Value);
 

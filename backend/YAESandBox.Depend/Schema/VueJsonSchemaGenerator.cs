@@ -2,9 +2,9 @@
 using System.Text.Json.Serialization;
 using NJsonSchema;
 using NJsonSchema.Generation;
-using YAESandBox.Workflow.AIService.AiConfigSchema.SchemaProcessor;
+using YAESandBox.Depend.Schema.SchemaProcessor;
 
-namespace YAESandBox.Workflow.AIService.AiConfigSchema;
+namespace YAESandBox.Depend.Schema;
 
 /// <summary>
 /// 生成与 vue-json-schema-form 兼容的 JSON Schema。
@@ -50,6 +50,10 @@ public static class VueFormSchemaGenerator
         settings.SchemaProcessors.Add(new DisplayAttributeProcessor());
         settings.SchemaProcessors.Add(new StringOptionsProcessor());
         settings.SchemaProcessors.Add(new RangeProcessor());
+        settings.SchemaProcessors.Add(new NormalActionProcessor(context =>
+        {
+            SchemaUISetting.ProcessUiOption(context.Schema);
+        }));
 
         // 允许外部进一步配置
         configureSettings?.Invoke(settings);

@@ -3,9 +3,8 @@
 using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Core;
-using YAESandBox.Core.Block; // For BlockManager
+using YAESandBox.Core.Block;
 using YAESandBox.Depend;
-using YAESandBox.Depend.Storage; // For Log
 
 namespace YAESandBox.API.Controllers;
 
@@ -39,7 +38,7 @@ public class PersistenceController(IBlockManager blockManager) : ControllerBase
             var memoryStream = new MemoryStream();
             // 调用 BlockManager 保存状态，并传入盲存数据
             await this.blockManager.SaveToFileAsync(
-                async dto => await JsonSerializer.SerializeAsync(memoryStream, dto, YAESandBoxJsonHelper.JsonSerializerOptions),
+                async (dto, jsonOptions) => await JsonSerializer.SerializeAsync(memoryStream, dto, jsonOptions),
                 blindStorageData);
             memoryStream.Position = 0; // 重置流位置以便读取
 
@@ -89,8 +88,8 @@ public class PersistenceController(IBlockManager blockManager) : ControllerBase
             await using var stream = archiveFile.OpenReadStream();
             // 调用 BlockManager 加载状态，并获取盲存数据
             object? blindStorage =
-                await this.blockManager.LoadFromFileAsync(async () =>
-                    await JsonSerializer.DeserializeAsync<ArchiveDto>(stream, YAESandBoxJsonHelper.JsonSerializerOptions));
+                await this.blockManager.LoadFromFileAsync(async jsonOptions =>
+                    await JsonSerializer.DeserializeAsync<ArchiveDto>(stream, jsonOptions));
 
             // TODO: (可选) 通知所有连接的客户端状态已重置？
             // 可以通过 INotifierService 实现一个全局通知方法

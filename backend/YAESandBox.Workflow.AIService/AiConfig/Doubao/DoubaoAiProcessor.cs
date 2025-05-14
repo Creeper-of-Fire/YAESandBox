@@ -17,14 +17,14 @@ file static class PromptRoleMapper
     //     _ => throw new ArgumentOutOfRangeException(nameof(role), $"不支持的角色: {role}") // 已改为中文
     // };
 
-    public static DoubaoChatMessage ToDoubaoMessage(this (PromptRole role, string content) promptTuple)
+    public static DoubaoChatMessage ToDoubaoMessage(this RoledPromptDto prompt)
     {
-        return promptTuple.role.type switch
+        return prompt.Type switch
         {
-            PromptRoleType.System => new DoubaoChatMessage("system", promptTuple.content),
-            PromptRoleType.User => new DoubaoChatMessage("user", promptTuple.content, Name: promptTuple.role.name),
-            PromptRoleType.Assistant => new DoubaoChatMessage("assistant", promptTuple.content),
-            _ => throw new ArgumentOutOfRangeException(nameof(promptTuple.role.type), $"不支持的角色: {promptTuple.role.type}")
+            PromptRoleType.System => new DoubaoChatMessage("system", prompt.Content),
+            PromptRoleType.User => new DoubaoChatMessage("user", prompt.Content, Name: prompt.Name),
+            PromptRoleType.Assistant => new DoubaoChatMessage("assistant", prompt.Content),
+            _ => throw new ArgumentOutOfRangeException(nameof(prompt.Type), $"不支持的角色: {prompt.Type}")
         };
     }
 }
@@ -35,7 +35,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
     private readonly DoubaoAiProcessorConfig _config = parameters;
 
     public async Task<Result> StreamRequestAsync(
-        List<(PromptRole role, string prompt)> prompts,
+        List<RoledPromptDto> prompts,
         Action<string> onChunkReceived,
         CancellationToken cancellationToken = default)
     {
@@ -204,7 +204,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
     }
     
     public async Task<Result<string>> NonStreamRequestAsync(
-        List<(PromptRole role, string prompt)> prompts,
+        List<RoledPromptDto> prompts,
         CancellationToken cancellationToken = default)
     {
         List<DoubaoChatMessage> doubaoMessages = [.. prompts.Select(p => p.ToDoubaoMessage())];

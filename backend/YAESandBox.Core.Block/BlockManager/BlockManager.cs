@@ -1,10 +1,12 @@
 ﻿using System.Collections.Concurrent;
+using System.Text.Json;
 using FluentResults;
 using Nito.AsyncEx;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Storage;
 
 namespace YAESandBox.Core.Block;
 
@@ -303,7 +305,7 @@ public partial class BlockManager : IBlockManager
     /// </summary>
     /// <param name="saveAction">要写入的回调。</param>
     /// <param name="frontEndBlindData">前端提供的盲存数据。</param>
-    public async Task SaveToFileAsync(Func<ArchiveDto, Task> saveAction, object? frontEndBlindData)
+    public async Task SaveToFileAsync(Func<ArchiveDto, JsonSerializerOptions, Task> saveAction, object? frontEndBlindData)
     {
         var archive = new ArchiveDto
         {
@@ -342,7 +344,7 @@ public partial class BlockManager : IBlockManager
             archive.Blocks.Add(blockId, blockDto);
         }
 
-        await saveAction(archive);
+        await saveAction(archive, YAESandBoxJsonHelper.JsonSerializerOptions);
         Log.Info($"BlockManager state saved. Blocks count: {archive.Blocks.Count}");
     }
 
@@ -351,9 +353,9 @@ public partial class BlockManager : IBlockManager
     /// </summary>
     /// <param name="loadAction">要读取的回调。</param>
     /// <returns>恢复的前端盲存数据。</returns>
-    public async Task<object?> LoadFromFileAsync(Func<Task<ArchiveDto?>> loadAction)
+    public async Task<object?> LoadFromFileAsync(Func<JsonSerializerOptions, Task<ArchiveDto?>> loadAction)
     {
-        var archive = await loadAction();
+        var archive = await loadAction(YAESandBoxJsonHelper.JsonSerializerOptions);
 
         if (archive == null)
         {

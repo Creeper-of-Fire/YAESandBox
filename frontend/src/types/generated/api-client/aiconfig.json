@@ -72,7 +72,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SelectOption"
+                    "$ref": "#/components/schemas/SelectOptionDto"
                   }
                 }
               },
@@ -80,7 +80,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SelectOption"
+                    "$ref": "#/components/schemas/SelectOptionDto"
                   }
                 }
               },
@@ -88,7 +88,7 @@
                 "schema": {
                   "type": "array",
                   "items": {
-                    "$ref": "#/components/schemas/SelectOption"
+                    "$ref": "#/components/schemas/SelectOptionDto"
                   }
                 }
               }
@@ -551,7 +551,7 @@
         },
         "additionalProperties": { }
       },
-      "SelectOption": {
+      "SelectOptionDto": {
         "required": [
           "label",
           "value"

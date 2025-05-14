@@ -73,7 +73,7 @@
 
       <!-- 下方区域：动态表单 -->
       <n-card v-if="currentConfigSet && selectedAiModuleType && currentSchema"
-              :title="`配置模型: ${selectedAiModuleType}`">
+              :title="currentSchema.description">
         <n-spin :show="isCurrentSchemaLoading" description="正在加载模型 Schema...">
           <!-- Schema 加载错误 -->
           <div v-if="currentSchemaFetchError" style="padding: 20px;">
@@ -132,7 +132,7 @@ import {cloneDeep, isEqual} from 'lodash-es';
 import {AiConfigurationsService} from '@/types/generated/aiconfigapi/services/AiConfigurationsService';
 import {AiConfigSchemasService} from '@/types/generated/aiconfigapi/services/AiConfigSchemasService';
 import type {AiConfigurationSet} from '@/types/generated/aiconfigapi/models/AiConfigurationSet';
-import type {SelectOption as ApiSelectOption} from '@/types/generated/aiconfigapi/models/SelectOption';
+import type {SelectOptionDto as ApiSelectOption} from '@/types/generated/aiconfigapi/models/SelectOptionDto.ts';
 import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi/models/AbstractAiProcessorConfig";
 import {useAiConfigSchemaStore} from "@/components/ai-config/schemaStore.ts";
 import AiConfigTester from "@/components/ai-config/AiConfigTester.vue";
@@ -616,7 +616,7 @@ async function handleConfigSetSelectionChange(newUuid: string | null) {
     if (!canProceed)
       return;
   }
-  
+
   console.log(`[AttemptChange] User change from ${oldUuid} to ${newUuid}`)
   selectedConfigSetUuid.value = newUuid;
 }
@@ -626,7 +626,7 @@ async function handleConfigSetSelectionChange(newUuid: string | null) {
 watch(selectedConfigSetUuid, async (newUuid, oldUuid) => {
   console.log(`watchConfigSetSelectionChange: ${oldUuid} -> ${newUuid}`)
   if (newUuid === oldUuid) return;
-  
+
   // selectedConfigSetUuid.value = newUuid; // 更新选择
   selectedAiModuleType.value = null; // 清空AI类型选择
   currentSchema.value = null;      // 清空当前Schema
@@ -644,7 +644,7 @@ async function handleAiTypeSelectionChange(newModuleType: string | null) {
         '放弃未保存的更改？',
         `AI模型 "${oldModuleType}" 的配置有未保存的更改。切换类型将丢失这些更改。`
     );
-    if (!canProceed) 
+    if (!canProceed)
       return;
   }
 
@@ -659,7 +659,7 @@ async function handleAiTypeSelectionChange(newModuleType: string | null) {
 watch(selectedAiModuleType, async (newModuleType, oldModuleType) => {
   console.log(`watchAiTypeSelectionChange: ${oldModuleType} -> ${newModuleType}`)
   if (newModuleType === oldModuleType) return; // 避免重复操作
-  
+
   if (!newModuleType || !currentConfigSet.value) {
     currentSchema.value = null;
     formDataCopy.value = null;
@@ -677,6 +677,11 @@ watch(selectedAiModuleType, async (newModuleType, oldModuleType) => {
   // --- 在这里使用预处理器 ---
   console.time(`[Schema Perf] Preprocess Schema: ${newModuleType}`);
   currentSchema.value = preprocessSchemaForWidgets(rawSchema);
+  if (!currentSchema.value["ui:options"]) {
+    currentSchema.value["ui:options"] = {}
+  }
+  currentSchema.value["ui:options"].showTitle = false;
+  currentSchema.value["ui:options"].showDescription = false;
   console.log(`[Schema Perf] Preprocess RawSchema:`, currentSchema.value);
   console.timeEnd(`[Schema Perf] Preprocess Schema: ${newModuleType}`);
   // -------------------------

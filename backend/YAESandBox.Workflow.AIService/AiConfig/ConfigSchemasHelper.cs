@@ -1,10 +1,9 @@
 ﻿// ConfigSchemasHelper.cs
 
 using System.Reflection;
-using YAESandBox.Depend; // 假设 Log 在这里
-using YAESandBox.Workflow.AIService.AiConfig; // For IDictionary
+using YAESandBox.Depend;
 
-namespace YAESandBox.Workflow.AIService.AiConfigSchema;
+namespace YAESandBox.Workflow.AIService.AiConfig;
 
 /// <summary>
 /// 帮助类，用于根据C#类型定义动态生成前端表单所需的Schema结构。

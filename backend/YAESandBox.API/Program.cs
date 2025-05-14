@@ -2,6 +2,7 @@
 
 using System.Reflection;
 using System.Text.Encodings.Web;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -50,8 +51,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options => // Configure JSON options
     {
         // Serialize enums as strings in requests/responses
-        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter());
-        options.JsonSerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
+        YAESandBoxJsonHelper.CopyFrom(options.JsonSerializerOptions, YAESandBoxJsonHelper.JsonSerializerOptions);
     });
 
 // --- OpenAPI / Swagger ---
