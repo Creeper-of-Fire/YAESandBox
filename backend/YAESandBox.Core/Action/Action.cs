@@ -1,5 +1,6 @@
 ﻿using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Results;
 
 // For EntityType, Operator
 

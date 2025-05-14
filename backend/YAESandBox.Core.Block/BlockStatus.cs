@@ -3,6 +3,7 @@ using OneOf;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Core.Block;
 
@@ -48,23 +49,23 @@ public class BlockStatus(Block block) : IBlockStatus
             {
                 case IdleBlockStatus:
                 case ErrorBlockStatus:
-                    if (this.Block.wsPostUser != null)
-                        return this.Block.wsPostUser;
+                    if (this.Block.WsPostUser != null)
+                        return this.Block.WsPostUser;
                     // 理论上不应发生，wsPostUser 在进入 Idle/Error 前应已创建
                     Log.Error(
                         $"Block '{this.Block.BlockId}' is Idle/Error but wsPostUser is null. 尝试拷贝WsInput以修复.");
-                    this.Block.wsPostUser = this.Block.wsInput.Clone(); // 尝试恢复
-                    return this.Block.wsPostUser;
+                    this.Block.WsPostUser = this.Block.WsInput.Clone(); // 尝试恢复
+                    return this.Block.WsPostUser;
 
                 case LoadingBlockStatus:
                 case ConflictBlockStatus:
-                    if (this.Block.wsTemp != null)
-                        return this.Block.wsTemp;
+                    if (this.Block.WsTemp != null)
+                        return this.Block.WsTemp;
                     // 理论上不应发生，wsTemp 在进入 Loading/Resolving 前应已创建
                     Log.Error(
                         $"Block '{this.Block.BlockId}' is Loading/Resolving but wsTemp is null. 尝试拷贝WsInput以修复.");
-                    this.Block.wsTemp = this.Block.wsInput.Clone(); // 尝试恢复
-                    return this.Block.wsTemp;
+                    this.Block.WsTemp = this.Block.WsInput.Clone(); // 尝试恢复
+                    return this.Block.WsTemp;
                 default:
                     throw new InvalidOperationException($"Block '{this.Block.BlockId}' 处于错误的状态.");
             }
@@ -92,14 +93,14 @@ public class IdleBlockStatus(Block block) : BlockStatus(block), ICanApplyOperati
     internal (string newBlockId, LoadingBlockStatus newChildblock) CreateNewChildrenBlock(string workFlowName)
     {
         string newBlockId = $"blk_{Guid.NewGuid()}";
-        if (this.Block.wsPostUser == null)
+        if (this.Block.WsPostUser == null)
         {
             Log.Error($"block错误，空闲状态必定创建了wsPostUser，请检查。已自动修复。");
-            this.Block.wsPostUser = this.Block.wsInput.Clone();
+            this.Block.WsPostUser = this.Block.WsInput.Clone();
         }
 
         var newChildBlock = Block.CreateBlock(newBlockId, this.Block.BlockId, workFlowName,
-            this.Block.wsPostUser, this.Block.GameState, this.Block.TriggeredChildParams);
+            this.Block.WsPostUser, this.Block.GameState, this.Block.TriggeredChildParams);
         return (newBlockId, newChildBlock);
     }
 }
@@ -138,33 +139,35 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
     /// 尝试完成工作流并进入 Idle 状态，如果存在冲突，则进入 Conflict 状态。
     /// </summary>
     /// <param name="rawContent"></param>
-    /// <param name="pendingAICommands"></param>
+    /// <param name="pendingAiCommands"></param>
     /// <returns></returns>
     [HasBlockStateTransition]
     internal OneOf<(IdleBlockStatus blockStatus, Result<IEnumerable<AtomicOperation>> atomicOp), ConflictBlockStatus>
-        TryFinalizeSuccessfulWorkflow(string rawContent, List<AtomicOperation> pendingAICommands)
+        TryFinalizeSuccessfulWorkflow(string rawContent, List<AtomicOperation> pendingAiCommands)
     {
-        (bool hasConflict, var simpleResolvedAiCommands, var simpleResolvedUserCommands, var conflictAI,
+        (bool hasConflict, var simpleResolvedAiCommands, var simpleResolvedUserCommands, var conflictAi,
                 var conflictUser) =
-            this.Block.DetectAndHandleConflicts(this.PendingUserCommands, pendingAICommands);
+            this.Block.DetectAndHandleConflicts(this.PendingUserCommands, pendingAiCommands);
 
-        if (conflictAI == null || conflictUser == null)
+        if (conflictAi == null || conflictUser == null)
         {
             Log.Warning($"Block '{this.Block.BlockId}' 有冲突，但是冲突内容为空。");
-            var tuple = this._FinalizeSuccessfulWorkflow(rawContent, [..pendingAICommands.Concat(simpleResolvedUserCommands)]);
+            var tuple = this._FinalizeSuccessfulWorkflow(rawContent,
+                (List<AtomicOperation>) [..pendingAiCommands.Concat(simpleResolvedUserCommands)]);
             return tuple;
         }
 
         if (!hasConflict)
         {
-            var tuple = this._FinalizeSuccessfulWorkflow(rawContent, [..pendingAICommands.Concat(simpleResolvedUserCommands)]);
+            var tuple = this._FinalizeSuccessfulWorkflow(rawContent,
+                (List<AtomicOperation>) [..pendingAiCommands.Concat(simpleResolvedUserCommands)]);
             return tuple;
         }
 
 
         Log.Info($"Block '{this.Block.BlockId}' has conflict commands. Entering Conflict State.");
         return this.EnterConflictState(rawContent,
-            simpleResolvedAiCommands, simpleResolvedUserCommands, conflictAI, conflictUser);
+            simpleResolvedAiCommands, simpleResolvedUserCommands, conflictAi, conflictUser);
     }
 
     /// <summary>
@@ -175,12 +178,12 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
     /// <returns></returns>
     [HasBlockStateTransition]
     internal (IdleBlockStatus blockStatus, Result<IEnumerable<AtomicOperation>> atomicOp)
-        _FinalizeSuccessfulWorkflow(string rawContent, List<AtomicOperation> commands)
+        _FinalizeSuccessfulWorkflow(string rawContent, IEnumerable<AtomicOperation> commands)
     {
         var newSelf = new IdleBlockStatus(this.Block);
 
-        this.Block.wsPostAI = this.Block.wsInput.Clone();
-        var applyResults = Block.ApplyOperationsTo(this.Block.wsPostAI, commands).CollectValue();
+        this.Block.WsPostAi = this.Block.WsInput.Clone();
+        var applyResults = Block.ApplyOperationsTo(this.Block.WsPostAi, commands).CollectValue();
         // if (applyResults.IfAtLeastOneFail())
         // {
         //     // 进入 Error 状态
@@ -197,8 +200,8 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
 
         this.Block.BlockContent = rawContent;
         this.PendingUserCommands.Clear();
-        this.Block.wsTemp = null;
-        this.Block.wsPostUser = this.Block.wsPostAI.Clone();
+        this.Block.WsTemp = null;
+        this.Block.WsPostUser = this.Block.WsPostAi.Clone();
         Log.Info($"Block '{this.Block.BlockId}': Workflow finalized successfully. StatusCode set to Idle.");
         return (newSelf, applyResults);
     }
@@ -224,8 +227,8 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
 
         //TODO 解决冲突的逻辑
         this.Block.BlockContent = rawContent;
-        this.Block.wsPostAI = null; // 冲突时尚未生成
-        this.Block.wsPostUser = null; // 冲突时尚未生成
+        this.Block.WsPostAi = null; // 冲突时尚未生成
+        this.Block.WsPostUser = null; // 冲突时尚未生成
         Log.Info($"Block '{this.Block.BlockId}': Entering conflict state.");
         return newSelf;
     }
@@ -239,8 +242,8 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
     {
         var newSelf = new IdleBlockStatus(this.Block);
 
-        this.Block.wsPostAI = this.Block.wsInput.Clone(); // wsPostAI 直接变为 wsInput 的副本
-        this.Block.wsPostUser = this.Block.wsPostAI.Clone(); // 强行创建 wsPostUser
+        this.Block.WsPostAi = this.Block.WsInput.Clone(); // wsPostAI 直接变为 wsInput 的副本
+        this.Block.WsPostUser = this.Block.WsPostAi.Clone(); // 强行创建 wsPostUser
         Log.Info($"Block '{this.Block.BlockId}': Force idle state.");
         return newSelf;
     }
@@ -250,7 +253,7 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
     /// </summary>
     /// <returns></returns>
     [HasBlockStateTransition]
-    public ErrorBlockStatus toErrorStatus()
+    public ErrorBlockStatus ToErrorStatus()
     {
         return new ErrorBlockStatus(this.Block);
     }
@@ -261,18 +264,18 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
 /// </summary>
 public class ConflictBlockStatus(
     Block block,
-    List<AtomicOperation> conflictAiCommands,
-    List<AtomicOperation> conflictUserCommands,
-    List<AtomicOperation> aiCommands,
-    List<AtomicOperation> userCommands)
+    IEnumerable<AtomicOperation> conflictAiCommands,
+    IEnumerable<AtomicOperation> conflictUserCommands,
+    IEnumerable<AtomicOperation> aiCommands,
+    IEnumerable<AtomicOperation> userCommands)
     : BlockStatus(block)
 {
     // --- 冲突信息 (仅在 ResolvingConflict 状态下有意义) ---
-    public List<AtomicOperation> conflictingAiCommands { get; } = conflictAiCommands;
-    public List<AtomicOperation> conflictingUserCommands { get; } = conflictUserCommands;
+    public IEnumerable<AtomicOperation> ConflictingAiCommands { get; } = conflictAiCommands;
+    public IEnumerable<AtomicOperation> ConflictingUserCommands { get; } = conflictUserCommands;
 
-    public List<AtomicOperation> AiCommands { get; } = aiCommands;
-    public List<AtomicOperation> UserCommands { get; } = userCommands;
+    public IEnumerable<AtomicOperation> AiCommands { get; } = aiCommands;
+    public IEnumerable<AtomicOperation> UserCommands { get; } = userCommands;
 
     /// <summary>
     /// 冲突已由用户解决。
@@ -283,7 +286,7 @@ public class ConflictBlockStatus(
     /// <returns>如果最终化成功则为 true，否则 false。</returns>
     [HasBlockStateTransition]
     internal (IdleBlockStatus block, Result<IEnumerable<AtomicOperation>> atomicOp)
-        FinalizeConflictResolution(string rawContent, List<AtomicOperation> resolvedCommands)
+        FinalizeConflictResolution(string rawContent, IEnumerable<AtomicOperation> resolvedCommands)
     {
         var newSelf = new LoadingBlockStatus(this.Block);
         return newSelf._FinalizeSuccessfulWorkflow(rawContent, resolvedCommands);
@@ -305,7 +308,7 @@ public class ErrorBlockStatus(Block block) : BlockStatus(block);
 // AttributeTargets.Class: 也可以标记整个类（如果类主要负责状态转换）
 // Inherited = false: 此属性不被派生类继承
 // AllowMultiple = false: 同一个目标上只能应用一次此属性
-public sealed class HasBlockStateTransition(string? description = null) : Attribute
+internal sealed class HasBlockStateTransitionAttribute(string? description = null) : Attribute
 {
     /// <summary>
     /// 可选的描述信息，说明转换的性质或需要注意的地方。

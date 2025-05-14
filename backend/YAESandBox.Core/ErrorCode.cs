@@ -1,4 +1,5 @@
 ﻿using YAESandBox.Depend;
+using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Core;
 

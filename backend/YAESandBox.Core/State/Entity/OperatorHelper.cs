@@ -65,7 +65,7 @@ public static class OperatorHelper
 
         switch (oldValue)
         {
-            case TypedID value: return op.ChangeTypedIdValue(value, newValue);
+            case TypedId value: return op.ChangeTypedIdValue(value, newValue);
             case string value: return op.ChangeStringValue(value, newValue);
             case List<object> value: return op.ChangeListValue(value, newValue);
             case Dictionary<string, object> value: return op.ChangeDictionaryValue(value, newValue);
@@ -74,9 +74,9 @@ public static class OperatorHelper
         return oldValue;
     }
 
-    private static TypedID ChangeTypedIdValue(this Operator op, TypedID oldValue, object newValue)
+    private static TypedId ChangeTypedIdValue(this Operator op, TypedId oldValue, object newValue)
     {
-        if (newValue is not TypedID newTypedId)
+        if (newValue is not TypedId newTypedId)
         {
             Log.Warning($"newValue 必须是 TypedID 类型，但传入的值是 {newValue.GetType()}");
             return oldValue;
@@ -155,7 +155,7 @@ public static class OperatorHelper
         return result;
     }
 
-    private static List<object> ChangeListValue(this Operator op, List<object> oldValue, object newValue)
+    private static List<object> ChangeListValue(this Operator op, IEnumerable<object> oldValue, object newValue)
     {
         var result = new List<object>(oldValue);
         if (newValue is IList newIList)

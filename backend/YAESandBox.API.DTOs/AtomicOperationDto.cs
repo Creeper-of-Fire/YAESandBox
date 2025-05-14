@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Diagnostics;
-using YAESandBox.Core.Action; // For Operator enum reference if needed, or use strings
-using YAESandBox.Core.State.Entity; // For EntityType
+using YAESandBox.Core.Action;
+using YAESandBox.Core.State.Entity;
 
 namespace YAESandBox.API.DTOs;
 
@@ -170,20 +170,16 @@ public static class AtomicOperationRequestDtoHelper
     /// <param name="dto"></param>
     /// <returns></returns>
     /// <exception cref="ArgumentException">无效的操作类型、实体 ID 为空、操作缺乏键、操作符无效</exception>
-    public static List<AtomicOperation> ToAtomicOperations(this List<AtomicOperationRequestDto> dto)
-    {
-        return dto.Select(ToAtomicOperation).ToList();
-    }
+    public static List<AtomicOperation> ToAtomicOperations(this IEnumerable<AtomicOperationRequestDto> dto) =>
+        dto.Select(ToAtomicOperation).ToList();
 
     /// <summary>
     /// 将 AtomicOperation 列表转换为 AtomicOperationRequestDto 列表。
     /// </summary>
     /// <param name="operations"></param>
     /// <returns></returns>
-    public static List<AtomicOperationRequestDto> ToAtomicOperationRequests(this List<AtomicOperation> operations)
-    {
-        return operations.Select(ToAtomicOperationRequestDto).ToList();
-    }
+    public static List<AtomicOperationRequestDto> ToAtomicOperationRequests(this IEnumerable<AtomicOperation> operations) =>
+        operations.Select(ToAtomicOperationRequestDto).ToList();
 }
 
 /// <summary>

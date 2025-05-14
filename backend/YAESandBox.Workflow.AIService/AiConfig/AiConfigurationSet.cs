@@ -56,7 +56,7 @@ public class AiConfigurationSet
     {
         this.Configurations.TryGetValue(moduleType, out var config);
         if (config == null)
-            return AIConfigError.Error($"{this.ConfigSetName}中未定义 AI 配置类型: {moduleType}");
+            return AiConfigError.Error($"{this.ConfigSetName}中未定义 AI 配置类型: {moduleType}");
         return Result.Ok(config);
     }
 

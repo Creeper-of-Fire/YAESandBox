@@ -1,10 +1,10 @@
 ﻿// src/services/signalrService.ts
 import * as signalR from "@microsoft/signalr";
 import {OpenAPI} from '@/types/generated/api/core/OpenAPI'; // 用于获取 BASE URL
-import { useBlockStatusStore } from '@/stores/blockStatusStore';
+import {useBlockStatusStore} from '@/stores/blockStatusStore';
 import {useConnectionStore} from '@/stores/connectionStore';
 // import { useTopologyStore } from '../stores/topologyStore';
-import { useBlockContentStore } from '../stores/blockContentStore';
+import {useBlockContentStore} from '../stores/blockContentStore';
 import {eventBus} from './eventBus'; // 导入事件总线
 import type {
     BlockStatusUpdateDto,
@@ -138,7 +138,7 @@ async function startConnection(baseUrl: string): Promise<void> {
                 return;
             } else if (data.contextBlockId) {
                 // --- 主流程/重新生成更新 -> BlockStatusStore ---
-                if (data.streamingStatus === StreamStatus.COMPLETE){
+                if (data.streamingStatus === StreamStatus.COMPLETE) {
                     getBlockStore().fetchAllBlockDetails(data.contextBlockId);
                 }
                 getStatusStore().handleBlockDisplayUpdate(data);

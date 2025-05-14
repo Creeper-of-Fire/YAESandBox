@@ -2,7 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BlockDataFields } from './BlockDataFields';
+import type {BlockDataFields} from './BlockDataFields';
+
 /**
  * (服务器 -> 客户端)
  * 一个轻量级信号，通知客户端指定 Block 的状态 (WorldState 或 GameState) 可能已发生变化。

@@ -16,7 +16,7 @@ namespace YAESandBox.API.Controllers;
 public class PersistenceController(IBlockManager blockManager) : ControllerBase
 {
     // 注入 BlockManager
-    private IBlockManager blockManager { get; } = blockManager;
+    private IBlockManager BlockManager { get; } = blockManager;
 
 
     /// <summary>
@@ -37,7 +37,7 @@ public class PersistenceController(IBlockManager blockManager) : ControllerBase
             // 使用 MemoryStream 避免在存档文件较小时产生临时文件
             var memoryStream = new MemoryStream();
             // 调用 BlockManager 保存状态，并传入盲存数据
-            await this.blockManager.SaveToFileAsync(
+            await this.BlockManager.SaveToFileAsync(
                 async (dto, jsonOptions) => await JsonSerializer.SerializeAsync(memoryStream, dto, jsonOptions),
                 blindStorageData);
             memoryStream.Position = 0; // 重置流位置以便读取
@@ -88,7 +88,7 @@ public class PersistenceController(IBlockManager blockManager) : ControllerBase
             await using var stream = archiveFile.OpenReadStream();
             // 调用 BlockManager 加载状态，并获取盲存数据
             object? blindStorage =
-                await this.blockManager.LoadFromFileAsync(async jsonOptions =>
+                await this.BlockManager.LoadFromFileAsync(async jsonOptions =>
                     await JsonSerializer.DeserializeAsync<ArchiveDto>(stream, jsonOptions));
 
             // TODO: (可选) 通知所有连接的客户端状态已重置？

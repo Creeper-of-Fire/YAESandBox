@@ -1,6 +1,7 @@
 ﻿using FluentResults;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services.InterFaceAndBasic;
+using YAESandBox.Core.Action;
 using YAESandBox.Core.Block;
 using YAESandBox.Depend;
 
@@ -15,13 +16,13 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
     : IWorkFlowBlockService
 {
     private INotifierService NotifierService { get; } = notifierService;
-    private IBlockManager blockManager { get; } = blockManager;
+    private IBlockManager BlockManager { get; } = blockManager;
 
     /// <inheritdoc/>
     public async Task<LoadingBlockStatus?> CreateChildBlockAsync(string parentBlockId, string workFlowName,
         Dictionary<string, string> triggerParams)
     {
-        var childBlock = await this.blockManager.CreateChildBlock_Async(parentBlockId, workFlowName, triggerParams);
+        var childBlock = await this.BlockManager.CreateChildBlock_Async(parentBlockId, workFlowName, triggerParams);
         if (childBlock != null)
         {
             await this.NotifierService.NotifyBlockUpdateAsync(parentBlockId, BlockDataFields.ChildrenInfo);
@@ -34,18 +35,20 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
     /// <inheritdoc/>
     public async Task ApplyResolvedCommandsAsync(string blockId, List<AtomicOperationRequestDto> resolvedCommands)
     {
-        var atomicOp = await this.blockManager.ApplyResolvedCommandsAsync(blockId, resolvedCommands.ToAtomicOperations());
+        var atomicOp = await this.BlockManager.ApplyResolvedCommandsAsync(blockId, resolvedCommands.ToAtomicOperations());
 
         // 提取最终的状态码
-        var blockStatus = await this.blockManager.GetBlockAsync(blockId);
+        var blockStatus = await this.BlockManager.GetBlockAsync(blockId);
 
         if (blockStatus != null)
             await this.NotifierService.NotifyBlockStatusUpdateAsync(blockId, blockStatus.StatusCode);
 
-        var successes = atomicOp.Value.ToList();
-
-        if (successes.Any())
-            await this.NotifierService.NotifyBlockUpdateAsync(blockId, successes.Select(x => x.EntityId));
+        if (atomicOp.TryGetValue(out var atomicOps))
+        {
+            var successes = atomicOps.ToList();
+            if (successes.Any())
+                await this.NotifierService.NotifyBlockUpdateAsync(blockId, successes.Select(x => x.EntityId));
+        }
     }
 
     /// <inheritdoc/>
@@ -53,15 +56,15 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
         string rawText,
         List<AtomicOperationRequestDto> firstPartyCommands, Dictionary<string, object?> outputVariables)
     {
-        var val = await this.blockManager.HandleWorkflowCompletionAsync(blockId, success, rawText, firstPartyCommands.ToAtomicOperations(),
+        var val = await this.BlockManager.HandleWorkflowCompletionAsync(blockId, success, rawText, firstPartyCommands.ToAtomicOperations(),
             outputVariables);
-        if (val.TryPickT3(out var ErrorOrWarning, out var IdleOrErrorOrConflictBlock))
-            return Result.Ok().WithReason(ErrorOrWarning);
+        if (val.TryPickT3(out var errorOrWarning, out var idleOrErrorOrConflictBlock))
+            return Result.Ok().WithReason(errorOrWarning);
 
-        if (IdleOrErrorOrConflictBlock.TryPickT0(out var tempTuple, out var conflictOrErrorBlock))
+        if (idleOrErrorOrConflictBlock.TryPickT0(out var tempTuple, out var conflictOrErrorBlock))
         {
-            var (IdleBlock, results) = tempTuple;
-            return IdleBlock;
+            var (idleBlock, results) = tempTuple;
+            return idleBlock;
         }
 
         if (conflictOrErrorBlock.TryPickT1(out var errorBlock, out var conflictBlock))
@@ -82,14 +85,13 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
     public async Task<Result<LoadingBlockStatus>> TryStartRegenerationAsync(string blockId)
     {
         // 调用 BlockManager 的核心逻辑
-        var loadingStatus = await this.blockManager.StartRegenerationAsync(blockId);
+        var loadingStatusResult = await this.BlockManager.StartRegenerationAsync(blockId);
 
-        if (!loadingStatus.IsSuccess)
-            return loadingStatus;
+        if (!loadingStatusResult.TryGetValue(out var loadingStatus))
+            return loadingStatusResult;
         // *** 成功启动，由 Service 层负责发送通知 ***
         Log.Info($"BlockWritService: Block '{blockId}' 已成功启动重新生成流程，状态转为 Loading。");
-        await this.NotifierService.NotifyBlockStatusUpdateAsync(blockId, loadingStatus.Value.StatusCode);
-
-        return loadingStatus;
+        await this.NotifierService.NotifyBlockStatusUpdateAsync(blockId, loadingStatus.StatusCode);
+        return loadingStatusResult;
     }
 }

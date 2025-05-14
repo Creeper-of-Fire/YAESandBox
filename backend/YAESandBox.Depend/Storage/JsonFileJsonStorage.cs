@@ -2,6 +2,7 @@
 using System.Text.Json;
 using FluentResults;
 using Nito.AsyncEx;
+using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Depend.Storage;
 
@@ -21,14 +22,14 @@ public class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonStorage
     /// <summary>
     /// 并发控制
     /// </summary>
-    private ConcurrentDictionary<string, AsyncLock> filesLocks { get; } = new();
+    private ConcurrentDictionary<string, AsyncLock> FilesLocks { get; } = new();
 
     /// <summary>
     /// 用于控制对单个 Block 的并发访问。
     /// </summary>
     /// <param name="filesPath">文件地址。</param>
     /// <returns></returns>
-    private AsyncLock GetLockForFile(FilePath filesPath) => this.filesLocks.GetOrAdd(filesPath.SubPath, _ => new AsyncLock());
+    private AsyncLock GetLockForFile(FilePath filesPath) => this.FilesLocks.GetOrAdd(filesPath.SubPath, _ => new AsyncLock());
 
     private FilePath MakeNewFilePath(string directory, string fileName) => new(this.DataRootPath, directory, fileName);
 
@@ -42,7 +43,7 @@ public class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonStorage
     /// <inheritdoc/>
     public async Task<Result<JsonDocument?>> LoadAllAsync(string subDirectory, string fileName)
     {
-        JsonDocument getEmptyDoc() => JsonDocument.Parse("{}");
+        JsonDocument GetEmptyDoc() => JsonDocument.Parse("{}");
         var filePath = this.MakeNewFilePath(subDirectory, fileName);
         using (await this.GetLockForFile(filePath).LockAsync()) // 确保文件访问的线程安全
         {
@@ -53,7 +54,7 @@ public class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonStorage
                 if (!File.Exists(filePath.TotalPath))
                 {
                     // 文件不存在，创建默认的空 JSON 对象文件
-                    var result = await SaveAllInternalAsync(filePath, getEmptyDoc());
+                    var result = await SaveAllInternalAsync(filePath, GetEmptyDoc());
                     if (result.IsFailed)
                         return JsonError.Error($"文件{filePath}不存在，并且在尝试新建默认文件时失败。");
                     return Result.Ok<JsonDocument?>(null); // 返回新创建的空文档
@@ -85,7 +86,7 @@ public class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonStorage
     /// <inheritdoc/>
     public async Task<Result> SaveAllAsync<T>(string subDirectory, string fileName, T needSaveObj)
     {
-        var json = JsonSerializer.SerializeToDocument(needSaveObj, YAESandBoxJsonHelper.JsonSerializerOptions);
+        var json = JsonSerializer.SerializeToDocument(needSaveObj, YaeSandBoxJsonHelper.JsonSerializerOptions);
         return await this.SaveAllAsync(subDirectory, fileName, json);
     }
 
@@ -95,12 +96,12 @@ public class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonStorage
         try
         {
             var jsonResult = await this.LoadAllAsync(subDirectory, fileName);
-            if (jsonResult.IsFailed)
+            if (!jsonResult.TryGetValue(out var value))
                 return jsonResult.ToResult();
-            if (jsonResult.Value == null)
+            if (value == null)
                 return Result.Ok<T?>(default);
 
-            var obj = jsonResult.Value.Deserialize<T>(YAESandBoxJsonHelper.JsonSerializerOptions);
+            var obj = value.Deserialize<T>(YaeSandBoxJsonHelper.JsonSerializerOptions);
             if (obj == null)
                 return JsonError.Error($"反序列化数据为类型 {typeof(T).Name} 时出错: 序列化结果为 null");
             return obj;
@@ -130,7 +131,7 @@ public class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonStorage
             if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
                 Directory.CreateDirectory(directory); // 确保目录存在
             // 将 JsonDocument 序列化为 JSON 字符串
-            string json = JsonSerializer.Serialize(configDocument.RootElement, YAESandBoxJsonHelper.JsonSerializerOptions);
+            string json = JsonSerializer.Serialize(configDocument.RootElement, YaeSandBoxJsonHelper.JsonSerializerOptions);
             await File.WriteAllTextAsync(filePath.TotalPath, json);
             return Result.Ok();
         }

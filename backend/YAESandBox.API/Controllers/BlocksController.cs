@@ -13,7 +13,7 @@ namespace YAESandBox.API.Controllers;
 [ApiController]
 [Route("api/[controller]")] // /api/blocks
 public class BlocksController(IBlockWritService writServices, IBlockReadService readServices)
-    : APIControllerBase(readServices, writServices)
+    : ApiControllerBase(readServices, writServices)
 {
     /// <summary>
     /// 获取所有 Block 的摘要信息字典。
@@ -25,7 +25,7 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     [ProducesResponseType(typeof(IReadOnlyDictionary<string, BlockDetailDto>), StatusCodes.Status200OK)]
     public async Task<IActionResult> GetBlocks()
     {
-        var summaries = await this.blockReadService.GetAllBlockDetailsAsync();
+        var summaries = await this.BlockReadService.GetAllBlockDetailsAsync();
         return this.Ok(summaries);
     }
 
@@ -41,7 +41,7 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetBlockDetail(string blockId)
     {
-        var detail = await this.blockReadService.GetBlockDetailDtoAsync(blockId); // 实现这个方法
+        var detail = await this.BlockReadService.GetBlockDetailDtoAsync(blockId); // 实现这个方法
         if (detail == null) return this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。");
 
         return this.Ok(detail);
@@ -73,7 +73,7 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
         try
         {
             // 调用 Service 获取扁平列表 (需要 BlockReadService 实现新方法)
-            var flatTopologyList = await this.blockReadService.GetBlockTopologyListAsync(blockId);
+            var flatTopologyList = await this.BlockReadService.GetBlockTopologyListAsync(blockId);
 
             // 检查 Service 返回结果
             if (flatTopologyList.Any())
@@ -132,7 +132,7 @@ public class BlocksController(IBlockWritService writServices, IBlockReadService 
         if (!this.ModelState.IsValid) // 基本模型验证
             return this.BadRequest(this.ModelState);
 
-        var result = await this.blockWritService.UpdateBlockDetailsAsync(blockId, updateDto);
+        var result = await this.BlockWritService.UpdateBlockDetailsAsync(blockId, updateDto);
 
         return result switch
         {

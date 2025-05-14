@@ -9,7 +9,7 @@ namespace YAESandBox.API.Controllers;
 /// <param name="readServices"></param>
 /// <param name="writServices"></param>
 [ApiController]
-public class APIControllerBase(
+public class ApiControllerBase(
     IBlockReadService readServices,
     IBlockWritService writServices)
     : ControllerBase
@@ -17,12 +17,12 @@ public class APIControllerBase(
     /// <summary>
     /// 写入服务
     /// </summary>
-    protected IBlockReadService blockReadService { get; } = readServices;
+    protected IBlockReadService BlockReadService { get; } = readServices;
 
     /// <summary>
     /// 读取服务
     /// </summary>
-    protected IBlockWritService blockWritService { get; } = writServices;
+    protected IBlockWritService BlockWritService { get; } = writServices;
 
     // /// <summary>
     // /// 通知服务

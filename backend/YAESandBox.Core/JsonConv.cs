@@ -4,9 +4,9 @@ using YAESandBox.Core.State.Entity;
 
 namespace YAESandBox.Core;
 
-public class TypedIdConverter : JsonConverter<TypedID>
+public class TypedIdConverter : JsonConverter<TypedId>
 {
-    public override TypedID Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+    public override TypedId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
         if (reader.TokenType != JsonTokenType.StartObject) throw new JsonException("Expected StartObject token for TypedID");
 
@@ -20,7 +20,7 @@ public class TypedIdConverter : JsonConverter<TypedID>
             if (reader.TokenType == JsonTokenType.EndObject)
             {
                 if (!typeRead || !idRead) throw new JsonException("TypedID object missing 'type' or 'id' property.");
-                return new TypedID(type, id);
+                return new TypedId(type, id);
             }
 
             if (reader.TokenType == JsonTokenType.PropertyName)
@@ -48,7 +48,7 @@ public class TypedIdConverter : JsonConverter<TypedID>
         throw new JsonException("Unexpected end when reading TypedID.");
     }
 
-    public override void Write(Utf8JsonWriter writer, TypedID value, JsonSerializerOptions options)
+    public override void Write(Utf8JsonWriter writer, TypedId value, JsonSerializerOptions options)
     {
         writer.WriteStartObject();
         // Use EnumConverter to write string enums

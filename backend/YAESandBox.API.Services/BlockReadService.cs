@@ -19,7 +19,7 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
     ///<inheritdoc/>
     public async Task<IReadOnlyDictionary<string, BlockDetailDto>> GetAllBlockDetailsAsync()
     {
-        var tasks = this.blockManager.GetBlocks().Keys
+        var tasks = this.BlockManager.GetBlocks().Keys
             .Select(this.GetBlockDetailDtoAsync)
             .ToList();
         var results = await tasks.WhenAll();
@@ -27,14 +27,14 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
     }
 
     ///<inheritdoc/>
-    public Task<List<BlockTopologyNodeDto>> GetBlockTopologyListAsync(string? blockID)
+    public Task<List<BlockTopologyNodeDto>> GetBlockTopologyListAsync(string? blockId)
     {
-        var result = GenerateTopologyList(this.blockManager.GetNodeOnlyBlocks(), blockID ?? BlockManager.WorldRootId);
+        var result = GenerateTopologyList(this.BlockManager.GetNodeOnlyBlocks(), blockId ?? Core.Block.BlockManager.WorldRootId);
         foreach (var e in result.Errors)
             Log.Error(e.Message);
-        if (result.IsFailed)
-            return Task.FromResult<List<BlockTopologyNodeDto>>([]);
-        return Task.FromResult(result.Value);
+        if (result.TryGetValue(out var dtos))
+            return Task.FromResult(dtos);
+        return Task.FromResult<List<BlockTopologyNodeDto>>([]);
     }
 
     ///<inheritdoc/>
@@ -74,7 +74,7 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
     }
 
     ///<inheritdoc/>
-    public async Task<BaseEntity?> GetEntityDetailAsync(string blockId, TypedID entityRef)
+    public async Task<BaseEntity?> GetEntityDetailAsync(string blockId, TypedId entityRef)
     {
         var block = await this.GetBlockAsync(blockId);
         if (block == null) return null;

@@ -4,8 +4,9 @@ using YAESandBox.Workflow.AIService.AiConfig;
 
 namespace YAESandBox.Workflow.AIService.ConfigManagement;
 
-public class AiConfigurationSetDictionaryConverter : JsonConverter<Dictionary<string, AbstractAiProcessorConfig>>
+internal class AiConfigurationSetDictionaryConverter : JsonConverter<Dictionary<string, AbstractAiProcessorConfig>>
 {
+    /// <inheritdoc />
     public override Dictionary<string, AbstractAiProcessorConfig> Read(
         ref Utf8JsonReader reader,
         Type typeToConvert,

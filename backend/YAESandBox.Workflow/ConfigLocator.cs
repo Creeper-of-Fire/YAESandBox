@@ -4,17 +4,17 @@ namespace YAESandBox.Workflow;
 
 internal static class ConfigLocator
 {
-    internal static WorkflowProcessorConfig findWorkflowProcessorConfig(string workflowId)
+    internal static WorkflowProcessorConfig FindWorkflowProcessorConfig(string workflowId)
     {
         throw new NotImplementedException();
     }
 
-    internal static StepProcessorConfig findStepProcessorConfig(string stepID)
+    internal static StepProcessorConfig FindStepProcessorConfig(string stepId)
     {
         throw new NotImplementedException();
     }
 
-    internal static AbstractModuleConfig<IWorkflowModule> findModuleConfig(string moduleID)
+    internal static AbstractModuleConfig<IWorkflowModule> FindModuleConfig(string moduleId)
     {
         throw new NotImplementedException();
     }

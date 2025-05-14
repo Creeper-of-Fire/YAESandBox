@@ -1,7 +1,7 @@
 ﻿using System.Diagnostics.CodeAnalysis;
 using FluentResults;
 
-namespace YAESandBox.Depend;
+namespace YAESandBox.Depend.Results;
 
 /// <summary>
 /// 方便的错误创建，使用了懒加载提高性能/减少内存使用
@@ -47,50 +47,6 @@ public abstract record LazyInitError(string Message) : IError
 }
 
 /// <summary>
-/// 方便的已解决问题的创建，使用了懒加载提高性能/减少内存使用
-/// </summary>
-/// <param name="Message"></param>
-public abstract record LazyInitHandledIssue(string Message) : IHandledIssue
-{
-    /// <summary>转为Result</summary>
-    public Result ToResult()
-    {
-        return Result.Ok().WithReason(this);
-    }
-
-    /// <summary>转为Result</summary>
-    public Result<T> ToResult<T>()
-    {
-        return Result.Ok().WithReason(this);
-    }
-
-    /// <summary>
-    /// 元数据
-    /// </summary>
-    [field: AllowNull]
-    [field: MaybeNull]
-    public Dictionary<string, object> Metadata => field ??= [];
-
-    /// <summary>
-    /// 原因
-    /// </summary>
-    [field: AllowNull]
-    [field: MaybeNull]
-    public List<IReason> Reasons => field ??= [];
-}
-
-/// <summary>
-/// 错误已经被处理，但是相关的信息依旧需要得到保留
-/// </summary>
-public interface IHandledIssue : IReason
-{
-    /// <summary>
-    /// 内部的“形成这个问题的原因列表”
-    /// </summary>
-    public List<IReason> Reasons { get; }
-}
-
-/// <summary>
 /// 错误的Helper
 /// </summary>
 public static class ErrorHelper
@@ -123,7 +79,18 @@ public static class ErrorHelper
     /// <returns></returns>
     public static IEnumerable<T> SelectSuccessValue<T>(this IEnumerable<Result<T>> results)
     {
-        return results.Where(op => !op.Errors.Any() && !op.HandledIssue().Any()).Select(op => op.Value);
+        return results.Where(op => !op.Errors.Any() && !op.HandledIssue().Any()).SelectNotFailedValue();
+    }
+
+    /// <summary>
+    /// 实际上类似于results.Select(op => op.Value)
+    /// </summary>
+    /// <param name="results"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    private static IEnumerable<T> SelectNotFailedValue<T>(this IEnumerable<Result<T>> results)
+    {
+        return results.Select(op => op.TryGetValue(out var value) ? value : default).Where(op => op != null).Select(op => op!);
     }
 
     // /// <summary>
@@ -157,7 +124,7 @@ public static class ErrorHelper
         var finalResult = Result.Ok<IEnumerable<TValue>>(new List<TValue>())
             .WithReasons(resultList.SelectMany(result => result.Reasons));
 
-        finalResult.WithValue(resultList.Select(r => r.Value).ToList());
+        finalResult.WithValue(resultList.SelectNotFailedValue().ToList());
 
         return finalResult;
     }

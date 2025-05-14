@@ -10,9 +10,9 @@ namespace YAESandBox.Workflow.Test;
 internal class Program
 {
     // 使用你的实际 API Key
-    private const string DOUBAO_API_KEY = "fe18c009-4586-4f73-b0f0-a905f0f48286"; // 请替换为你的有效API Key
-    private const string DOUBAO_MODEL_NAME = "doubao-1-5-lite-32k-250115"; // 或者其他你测试的模型
-    private const double DEFAULT_TEMPERATURE = 0.7;
+    private const string DoubaoApiKey = "fe18c009-4586-4f73-b0f0-a905f0f48286"; // 请替换为你的有效API Key
+    private const string DoubaoModelName = "doubao-1-5-lite-32k-250115"; // 或者其他你测试的模型
+    private const double DefaultTemperature = 0.7;
 
     internal static async Task Main(string[] args)
     {
@@ -25,15 +25,15 @@ internal class Program
         var dependencies = new AiProcessorDependencies(httpClient);
 
         // 3. 准备 AiRequestParameters
-        var requestParameters = new DoubaoAiProcessorConfig(DOUBAO_API_KEY, DOUBAO_MODEL_NAME)
+        var requestParameters = new DoubaoAiProcessorConfig(DoubaoApiKey, DoubaoModelName)
         {
-            Temperature = DEFAULT_TEMPERATURE
+            Temperature = DefaultTemperature
         };
 
         // 4. 手动创建 DoubaoAiProcessor 实例
         IAiProcessor doubaoProcessor = new DoubaoAiProcessor(dependencies, requestParameters);
 
-        Console.WriteLine($"正在使用模型: {DOUBAO_MODEL_NAME}");
+        Console.WriteLine($"正在使用模型: {DoubaoModelName}");
         Console.WriteLine("请输入你的问题 (输入 'quit' 退出, 输入 'clear' 清空历史记录):"); // 新增 'clear' 命令
 
         // 初始化聊天历史记录列表
@@ -75,7 +75,7 @@ internal class Program
             prompts.AddRange(chatHistory.ToList());
 
             // 添加当前用户输入
-            prompts.Add(RoledPromptDto.User(userInput,"小明"));
+            prompts.Add(RoledPromptDto.User(userInput, "小明"));
 
 
             Console.WriteLine("\nAI 正在回复 (流式):");
@@ -104,7 +104,7 @@ internal class Program
                     Console.WriteLine("--- 流式传输成功完成 ---");
 
                     // 将当前的用户输入和AI的完整回复添加到历史记录中
-                    chatHistory.Add(RoledPromptDto.User(userInput,"小明"));
+                    chatHistory.Add(RoledPromptDto.User(userInput, "小明"));
                     chatHistory.Add(RoledPromptDto.Assistant(accumulatedResponse.ToString()));
 
                     // 可选: 限制历史记录的长度，例如只保留最近 N 轮对话

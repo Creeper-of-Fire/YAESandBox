@@ -200,7 +200,7 @@ export const useTopologyStore = defineStore('topology', {
                 console.error("TopologyStore: 内存图构建完成，但未找到有效的根节点！");
                 // 尝试找第一个节点作为根？或者报错？
                 this.rootNode = this.nodes.values().next().value ?? null;
-                if(this.rootNode) console.warn(`TopologyStore: 回退：将第一个节点 ${this.rootNode.id} 设置为根节点。`);
+                if (this.rootNode) console.warn(`TopologyStore: 回退：将第一个节点 ${this.rootNode.id} 设置为根节点。`);
             } else {
                 console.log("TopologyStore: 内存图构建完成，没有节点被创建。");
             }

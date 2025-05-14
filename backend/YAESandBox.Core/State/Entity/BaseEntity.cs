@@ -32,7 +32,7 @@ public abstract class BaseEntity
     /// <summary>
     /// 获取实体的 TypedID 表示。
     /// </summary>
-    public TypedID TypedId =>
+    public TypedId TypedId =>
         new(this.EntityType, this.EntityId);
 
     // 主构造函数，确保核心属性被初始化
@@ -79,18 +79,18 @@ public abstract class BaseEntity
         }
 
         // 特殊处理：如果期望 TypedID? 而存储的是 TypedID
-        if (typeof(T) == typeof(TypedID?) && rawValue is TypedID typedIdValue)
+        if (typeof(T) == typeof(TypedId?) && rawValue is TypedId typedIdValue)
         {
             value = (T)(object)typedIdValue; // 需要强制转换
             return true;
         }
 
         // 特殊处理：如果期望 List<TypedID> 而存储的是 List<object> 或其他兼容列表
-        if (typeof(T) == typeof(List<TypedID>) && rawValue is List<object> objectList)
+        if (typeof(T) == typeof(List<TypedId>) && rawValue is List<object> objectList)
             try
             {
                 // 尝试将 object 列表转换为 TypedID 列表
-                var typedIdList = objectList.Cast<TypedID>().ToList();
+                var typedIdList = objectList.Cast<TypedId>().ToList();
                 value = (T)(object)typedIdList;
                 return true;
             }

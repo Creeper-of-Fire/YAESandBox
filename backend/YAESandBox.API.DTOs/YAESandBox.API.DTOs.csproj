@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <AnalysisModeConfigureAwait>Library</AnalysisModeConfigureAwait>
     </PropertyGroup>
 
     <ItemGroup>

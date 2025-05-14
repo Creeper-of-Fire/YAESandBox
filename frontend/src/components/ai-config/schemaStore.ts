@@ -1,7 +1,7 @@
 ﻿// src/stores/schemaStore.ts
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { AiConfigSchemasService } from '@/types/generated/aiconfigapi/services/AiConfigSchemasService'; // Adjust path
+import {defineStore} from 'pinia';
+import {ref} from 'vue';
+import {AiConfigSchemasService} from '@/types/generated/aiconfigapi/services/AiConfigSchemasService'; // Adjust path
 
 export const useAiConfigSchemaStore = defineStore('schemaStore', () => {
     const schemas = ref<Record<string, Record<string, any>>>({});
@@ -20,7 +20,7 @@ export const useAiConfigSchemaStore = defineStore('schemaStore', () => {
         fetchError.value[configTypeName] = null;
 
         try {
-            const schema = await AiConfigSchemasService.getApiAiConfigurationManagementSchemas({ configTypeName });
+            const schema = await AiConfigSchemasService.getApiAiConfigurationManagementSchemas({configTypeName});
             if (schema) {
                 schemas.value[configTypeName] = schema; // Cache it
                 return schema;

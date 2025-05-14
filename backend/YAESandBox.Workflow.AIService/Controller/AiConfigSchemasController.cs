@@ -12,6 +12,7 @@ namespace YAESandBox.Workflow.AIService.Controller;
 [ApiExplorerSettings(GroupName = AiConfigurationsController.AiConfigGroupName)]
 [ApiController]
 [Route("api/ai-configuration-management")] // 更改路由以反映其更广泛的职责（如果合并了实例列表）或保持 schema 特定
+[Obsolete("现在应当从其他地方获取表单结构")]
 public class AiConfigSchemasController : ControllerBase
 {
     /// <summary>
@@ -72,62 +73,4 @@ public class AiConfigSchemasController : ControllerBase
             return this.StatusCode(StatusCodes.Status500InternalServerError, $"为类型 '{configTypeName}' 生成 Schema 时发生内部错误: {ex.Message}");
         }
     }
-
-    /// <summary>
-    /// 获取所有可用的 AI 配置【类型定义】列表。
-    /// 用于前端展示可以【新建】哪些类型的 AI 配置。
-    /// </summary>
-    /// <returns>一个列表，每个 SelectOptionDto 包含：
-    /// 'Value': 配置类型的编程名称 (如 "DoubaoAiProcessorConfig")，用于后续请求 Schema。
-    /// 'Label': 用户友好的类型显示名称 (如 "豆包AI模型")。
-    /// </returns>
-    [HttpGet("available-config-types")]
-    [ProducesResponseType(typeof(List<SelectOptionDto>), StatusCodes.Status200OK)] // SelectOptionDto 来自 Schema 命名空间
-    public ActionResult<List<SelectOptionDto>> GetAvailableConfigTypeDefinitions()
-    {
-        var availableTypes = ConfigSchemasHelper.GetAvailableAiConfigConcreteTypes();
-
-        var result = availableTypes.Select(type =>
-            {
-                // 尝试从 DisplayAttribute 获取用户友好的名称
-                var displayAttr = type.GetCustomAttribute<DisplayAttribute>(false); // false: 不检查继承链
-                string label = displayAttr?.GetName() ?? type.Name;
-
-                // 简化标签名称的逻辑 (与你之前提供的 AiConfigSchemasController 类似)
-                if (label.EndsWith("AiProcessorConfig", StringComparison.OrdinalIgnoreCase))
-                {
-                    label = label.Substring(0, label.Length - "AiProcessorConfig".Length).Trim();
-                }
-                else if (label.EndsWith("Config", StringComparison.OrdinalIgnoreCase))
-                {
-                    label = label.Substring(0, label.Length - "Config".Length).Trim();
-                }
-
-                if (string.IsNullOrEmpty(label)) label = type.Name; // Fallback
-
-                return new SelectOptionDto { Value = type.Name, Label = label };
-            })
-            .OrderBy(so => so.Label)
-            .ToList();
-
-        return this.Ok(result);
-    }
-}
-
-/// <summary>
-/// 代表一个选择项，用于下拉列表或单选/复选按钮组。
-/// </summary>
-public class SelectOptionDto
-{
-    /// <summary>
-    /// 选项的实际值。
-    /// </summary>
-    [Required]
-    public object Value { get; init; } = string.Empty;
-
-    /// <summary>
-    /// 选项在UI上显示的文本。
-    /// </summary>
-    [Required]
-    public string Label { get; init; } = string.Empty;
 }

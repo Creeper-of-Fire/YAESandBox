@@ -1,8 +1,10 @@
 ﻿using FluentResults;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Workflow.AIService;
 
+/// <inheritdoc cref="AiError.Error"/>
 public record AiError(string Message) : LazyInitError(Message)
 {
     /// <summary>
@@ -10,8 +12,5 @@ public record AiError(string Message) : LazyInitError(Message)
     /// </summary>
     /// <param name="message"></param>
     /// <returns></returns>
-    public static Result Error(string message)
-    {
-        return new AiError(message);
-    }
+    public static Result Error(string message) => new AiError(message);
 }

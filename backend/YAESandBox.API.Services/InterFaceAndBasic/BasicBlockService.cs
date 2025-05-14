@@ -7,12 +7,12 @@ public class BasicBlockService(IBlockManager blockManager, INotifierService noti
     /// <summary>
     /// 通知服务
     /// </summary>
-    protected INotifierService notifierService { get; } = notifierService;
+    protected INotifierService NotifierService { get; } = notifierService;
 
     /// <summary>
     /// Block管理器
     /// </summary>
-    protected IBlockManager blockManager { get; } = blockManager;
+    protected IBlockManager BlockManager { get; } = blockManager;
 
     /// <summary>
     /// 获得原始Block对象——不暴露给外部类
@@ -21,6 +21,6 @@ public class BasicBlockService(IBlockManager blockManager, INotifierService noti
     /// <returns></returns>
     protected Task<BlockStatus?> GetBlockAsync(string blockId)
     {
-        return this.blockManager.GetBlockAsync(blockId);
+        return this.BlockManager.GetBlockAsync(blockId);
     }
 }

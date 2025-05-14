@@ -14,7 +14,7 @@ public static class MappingUtility
     // 定义一个静态只读字典作为“表”
     // Key: 字段名 (小写)
     // Value: 一个函数，接收当前的 DTO 和 Block，返回应用了该字段更新后的新 DTO
-    private static readonly IReadOnlyDictionary<BlockDetailFields, Func<BlockDetailDto, Block, BlockDetailDto>> _fieldUpdaters =
+    private static readonly IReadOnlyDictionary<BlockDetailFields, Func<BlockDetailDto, Block, BlockDetailDto>> FieldUpdaters =
         new Dictionary<BlockDetailFields, Func<BlockDetailDto, Block, BlockDetailDto>>
         {
             { BlockDetailFields.Content, (dto, block) => dto with { BlockContent = block.BlockContent } },
@@ -35,7 +35,7 @@ public static class MappingUtility
         // 遍历请求包含的字段名
         foreach (var fieldEnum in fields)
         {
-            if (!_fieldUpdaters.TryGetValue(fieldEnum, out var updaterFunc))
+            if (!FieldUpdaters.TryGetValue(fieldEnum, out var updaterFunc))
             {
                 Log.Warning($"CreatePartialBlockDetailDto: 请求了未知的字段名 '{fieldEnum}'，已忽略。");
                 continue;
@@ -100,8 +100,8 @@ public static class MappingUtility
         {
             AiCommands = conflictBlockStatus.AiCommands.ToAtomicOperationRequests(),
             UserCommands = conflictBlockStatus.UserCommands.ToAtomicOperationRequests(),
-            ConflictingAiCommands = conflictBlockStatus.conflictingAiCommands.ToAtomicOperationRequests(),
-            ConflictingUserCommands = conflictBlockStatus.conflictingUserCommands.ToAtomicOperationRequests(),
+            ConflictingAiCommands = conflictBlockStatus.ConflictingAiCommands.ToAtomicOperationRequests(),
+            ConflictingUserCommands = conflictBlockStatus.ConflictingUserCommands.ToAtomicOperationRequests(),
         };
     }
 

@@ -12,7 +12,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig;
 internal class ConfigSchemasHelper
 {
     private static List<Type>? _availableConfigTypesCache;
-    private static readonly Lock _lockAvailableConfigTypes = new();
+    private static readonly Lock LockAvailableConfigTypes = new();
 
     /// <summary>
     /// 获取所有继承自 AbstractAiProcessorConfig 的具体配置类型。
@@ -25,7 +25,7 @@ internal class ConfigSchemasHelper
         var cached = _availableConfigTypesCache;
         if (cached != null)
             return cached;
-        lock (_lockAvailableConfigTypes)
+        lock (LockAvailableConfigTypes)
         {
             // 双重检查锁定模式
             // 再次检查缓存是否已创建（锁内二次检查）

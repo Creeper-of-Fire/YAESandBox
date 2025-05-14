@@ -3,7 +3,7 @@ import vue from '@vitejs/plugin-vue'
 import license from 'rollup-plugin-license';
 import path from 'path'
 import AutoImport from 'unplugin-auto-import/vite'
-import { NaiveUiResolver } from 'unplugin-vue-components/resolvers'
+import {NaiveUiResolver} from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 
 // https://vite.dev/config/
@@ -81,17 +81,17 @@ export default defineConfig({
         }),
         // 按需自动导入 API (可选)
         AutoImport({
-          imports: [
-            'vue',
-            {
-              'naive-ui': [
-                'useDialog',
-                'useMessage',
-                'useNotification',
-                'useLoadingBar'
-              ]
-            }
-          ]
+            imports: [
+                'vue',
+                {
+                    'naive-ui': [
+                        'useDialog',
+                        'useMessage',
+                        'useNotification',
+                        'useLoadingBar'
+                    ]
+                }
+            ]
         }),
     ],
     server: {

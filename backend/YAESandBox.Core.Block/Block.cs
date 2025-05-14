@@ -34,34 +34,6 @@ public abstract class NodeBlock(string blockId, string? parentBlockId) : IBlockN
     /// </summary>
     public List<string> ChildrenList { get; } = [];
 
-    // 废弃代码，因为前端维护整个树结构，这些逻辑放在前端执行
-    // 对应的持久化逻辑：后端只保存“当前选择路径的最深block的ID”，并且提供一个“列出指定ID全部父类”的接口。并且采取盲存手段，前端自己解析。
-    // /// <summary>
-    // /// 获取或设置当前活跃（选中）的子 Block 的 ID。
-    // /// - Getter:
-    // ///   - 如果存在显式设置且有效的 `selectedChildId`，则返回该 ID。
-    // ///   - 否则，如果存在子节点，则默认返回最后添加的子节点的 ID。
-    // ///   - 如果没有子节点，则返回 null。
-    // /// - Setter:
-    // ///   - 允许设置一个有效的子 Block ID 进行显式选择，否则自动选择最后一个。
-    // /// </summary>
-    // public virtual string? SelectedChildId
-    // {
-    //     get
-    //     {
-    //         // 检查是否有子节点
-    //         if (this.ChildrenList.Count == 0)
-    //             return null; // 没有子节点，无法选择
-    //
-    //         // 为空，或不包含field的情况
-    //         if (field == null || !this.ChildrenList.Contains(field))
-    //             field = this.ChildrenList.Last(); // 自动设置为最后一项
-    //
-    //         return field; // 返回显式设置的有效 ID
-    //     }
-    //     set => field = value ?? this.ChildrenList.Last();
-    // }
-
     public void AddChildren(Block childBlock)
     {
         this.AddChildren(childBlock.BlockId);
@@ -82,23 +54,23 @@ public class Block : NodeBlock
     /// <summary>
     /// 输入的世界状态快照（从父节点的 wsPostUser 克隆而来）。创建后只读。
     /// </summary>
-    internal WorldState wsInput { get; }
+    internal WorldState WsInput { get; }
 
     /// <summary>
     /// 由一等公民工作流执行指令后生成的世界状态。可能为 null。
     /// </summary>
-    internal WorldState? wsPostAI { get; set; }
+    internal WorldState? WsPostAi { get; set; }
 
     /// <summary>
     /// 用户在 wsPostAI 基础上修改后的世界状态。可能为 null。
     /// 这是生成下一个子节点时 wsInput 的来源。
     /// </summary>
-    internal WorldState? wsPostUser { get; set; }
+    internal WorldState? WsPostUser { get; set; }
 
     /// <summary>
     /// 一等公民工作流执行指令期间使用的临时世界状态。完成后会被丢弃。
     /// </summary>
-    internal WorldState? wsTemp { get; set; }
+    internal WorldState? WsTemp { get; set; }
 
     /// <summary>
     /// 与此 Block 相关的游戏状态设置。
@@ -169,9 +141,9 @@ public class Block : NodeBlock
         this.WorkflowName = workflowName;
 
         // --- 在构造函数内部完成克隆 ---
-        this.wsInput = sourceWorldState.Clone(); // 创建 wsInput 的隔离副本
+        this.WsInput = sourceWorldState.Clone(); // 创建 wsInput 的隔离副本
         this.GameState = sourceGameState.Clone(); // 创建 GameState 的隔离副本
-        this.wsTemp = this.wsInput.Clone(); // 初始 wsTemp 基于内部克隆的 wsInput
+        this.WsTemp = this.WsInput.Clone(); // 初始 wsTemp 基于内部克隆的 wsInput
     }
 
     /// <summary>
@@ -202,7 +174,7 @@ public class Block : NodeBlock
     /// 检测并处理用户和 AI 命令之间的冲突，采用基于属性的细粒度规则。
     /// </summary>
     /// <param name="pendingUserCommands">用户在 Loading 状态下提交的原始命令。</param>
-    /// <param name="pendingAICommands">AI 工作流生成的原始命令。</param>
+    /// <param name="pendingAiCommands">AI 工作流生成的原始命令。</param>
     /// <returns>一个包含冲突检测结果的元组：
     /// - hasBlockingConflict: bool - 是否存在需要用户解决的阻塞性冲突 (Modify/Modify 同一属性)。
     /// - resolvedAiCommands: List-AtomicOperation - AI 命令列表（当前逻辑下通常与输入相同，除非未来加入 AI 重命名逻辑）。
@@ -218,7 +190,7 @@ public class Block : NodeBlock
         List<AtomicOperation>? conflictingUserForResolution
         ) DetectAndHandleConflicts(
             List<AtomicOperation> pendingUserCommands,
-            List<AtomicOperation> pendingAICommands)
+            List<AtomicOperation> pendingAiCommands)
     {
         // 初始化返回结果结构
         bool hasBlockingConflict = false;
@@ -227,24 +199,24 @@ public class Block : NodeBlock
 
         // 复制原始列表，以便进行修改（特别是用户命令的重命名）
         // AI 命令当前不进行修改，直接引用或浅拷贝即可
-        var resolvedAiCommands = new List<AtomicOperation>(pendingAICommands);
+        var resolvedAiCommands = new List<AtomicOperation>(pendingAiCommands);
         var resolvedUserCommands = new List<AtomicOperation>(pendingUserCommands); // 这将是可能被修改的列表
 
         // --- 1. 处理 Create/Create 冲突 (自动重命名用户实体) ---
-        var aiCreatedEntities = pendingAICommands
+        var aiCreatedEntities = pendingAiCommands
             .Where(op => op.OperationType == AtomicOperationType.CreateEntity)
-            .Select(op => new TypedID(op.EntityType, op.EntityId))
+            .Select(op => new TypedId(op.EntityType, op.EntityId))
             .ToHashSet();
 
         // 存储重命名映射：原始 TypedID -> 新 EntityId
-        var renamedUserEntities = new Dictionary<TypedID, string>();
+        var renamedUserEntities = new Dictionary<TypedId, string>();
 
         // 第一次遍历：识别并重命名用户 Create 操作
         for (int i = 0; i < resolvedUserCommands.Count; i++)
         {
             var userOp = resolvedUserCommands[i];
             if (userOp.OperationType != AtomicOperationType.CreateEntity) continue;
-            var userTypedId = new TypedID(userOp.EntityType, userOp.EntityId);
+            var userTypedId = new TypedId(userOp.EntityType, userOp.EntityId);
             if (!aiCreatedEntities.Contains(userTypedId)) continue;
             // 冲突：AI 也创建了同名同类型实体
             string originalId = userOp.EntityId;
@@ -266,7 +238,7 @@ public class Block : NodeBlock
                 var userOp = resolvedUserCommands[i];
                 // 检查操作是否针对一个已被重命名的实体 (Create 操作已在上面处理过)
                 if (userOp.OperationType == AtomicOperationType.CreateEntity) continue;
-                var targetTypedId = new TypedID(userOp.EntityType, userOp.EntityId);
+                var targetTypedId = new TypedId(userOp.EntityType, userOp.EntityId);
                 if (!renamedUserEntities.TryGetValue(targetTypedId, out string? newId)) continue;
                 // 更新操作的目标 ID
                 resolvedUserCommands[i] = userOp with { EntityId = newId };
@@ -276,17 +248,17 @@ public class Block : NodeBlock
 
         // --- 2. 处理 Modify/Modify 冲突 (同一实体，同一属性) ---
         // 使用 HashSet 存储 AI 修改的 (实体, 属性) 对以提高查找效率
-        var aiModifications = pendingAICommands
+        var aiModifications = pendingAiCommands
             .Where(op => op.OperationType == AtomicOperationType.ModifyEntity && op.AttributeKey != null)
             // 使用元组 (TypedID, string) 作为 Key
-            .Select(op => (TargetId: new TypedID(op.EntityType, op.EntityId), AttributeKey: op.AttributeKey!))
+            .Select(op => (TargetId: new TypedId(op.EntityType, op.EntityId), AttributeKey: op.AttributeKey!))
             .ToHashSet();
 
         // 查找用户修改操作中与 AI 修改冲突的部分
         foreach (var userOp in resolvedUserCommands) // 遍历可能已重命名的用户命令
         {
             if (userOp.OperationType != AtomicOperationType.ModifyEntity || userOp.AttributeKey == null) continue;
-            var userModTarget = (TargetId: new TypedID(userOp.EntityType, userOp.EntityId), userOp.AttributeKey);
+            var userModTarget = (TargetId: new TypedId(userOp.EntityType, userOp.EntityId), userOp.AttributeKey);
 
             if (!aiModifications.Contains(userModTarget)) continue;
             // 阻塞性冲突发现！
@@ -296,11 +268,11 @@ public class Block : NodeBlock
             conflictingUserForResolution.Add(userOp);
 
             // 找到并添加导致冲突的 AI 命令 (可能多个 AI 命令修改同一属性，虽然少见)
-            var conflictingAiOps = pendingAICommands // 从原始 AI 命令中查找
+            var conflictingAiOps = pendingAiCommands // 从原始 AI 命令中查找
                 .Where(aiOp =>
                         aiOp.OperationType == AtomicOperationType.ModifyEntity &&
                         aiOp.AttributeKey == userOp.AttributeKey && // 匹配属性
-                        new TypedID(aiOp.EntityType, aiOp.EntityId) == userModTarget.TargetId // 匹配实体
+                        new TypedId(aiOp.EntityType, aiOp.EntityId) == userModTarget.TargetId // 匹配实体
                 );
             conflictingAiForResolution.AddRange(conflictingAiOps);
 
@@ -435,14 +407,14 @@ public class Block : NodeBlock
         string blockId,
         string? parentBlockId,
         string workflowName,
-        List<string> childrenIds,
+        IEnumerable<string> childrenIds,
         string blockContent,
         Dictionary<string, string> metadata,
         Dictionary<string, string> triggeredChildParams,
         Dictionary<string, string> triggeredParams,
         GameState gameState, // 传入重建好的 GameState
         WorldState? wsInput, // 传入重建好的 WorldState 快照
-        WorldState? wsPostAI,
+        WorldState? wsPostAi,
         WorldState? wsPostUser)
         : base(blockId, parentBlockId)
     {
@@ -453,16 +425,16 @@ public class Block : NodeBlock
         this.TriggeredChildParams = triggeredChildParams;
         this.TriggeredParams = triggeredParams;
         this.GameState = gameState;
-        this.wsInput = wsInput ?? throw new ArgumentNullException(nameof(wsInput),
+        this.WsInput = wsInput ?? throw new ArgumentNullException(nameof(wsInput),
             $"Block '{blockId}' loaded without wsInput, which is required."); // wsInput 必须有
-        this.wsPostAI = wsPostAI;
-        this.wsPostUser = wsPostUser;
+        this.WsPostAi = wsPostAi;
+        this.WsPostUser = wsPostUser;
 
         // 恢复 ChildrenList
         this.ChildrenList.AddRange(childrenIds);
 
         // wsTemp 在加载时总是 null，因为非 Idle 状态不保存
-        this.wsTemp = null;
+        this.WsTemp = null;
     }
 
     public static IdleBlockStatus CreateBlockFromSave(
@@ -476,7 +448,7 @@ public class Block : NodeBlock
         Dictionary<string, string> triggeredParams,
         GameState gameState, // 传入重建好的 GameState
         WorldState? wsInput, // 传入重建好的 WorldState 快照
-        WorldState? wsPostAI,
+        WorldState? wsPostAi,
         WorldState? wsPostUser)
     {
         return new IdleBlockStatus(new Block(
@@ -490,7 +462,7 @@ public class Block : NodeBlock
             triggeredParams,
             gameState,
             wsInput,
-            wsPostAI,
+            wsPostAi,
             wsPostUser));
     }
 }

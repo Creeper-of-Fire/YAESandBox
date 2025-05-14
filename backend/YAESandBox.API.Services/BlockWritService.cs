@@ -2,6 +2,7 @@
 using YAESandBox.API.Services.InterFaceAndBasic;
 using YAESandBox.Core.Block;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Results;
 
 namespace YAESandBox.API.Services;
 
@@ -17,7 +18,7 @@ public class BlockWritService(IBlockManager blockManager, INotifierService notif
         EnqueueOrExecuteAtomicOperationsAsync(string blockId, List<AtomicOperationRequestDto> operations)
     {
         var (atomicOp, blockStatus) =
-            await this.blockManager.EnqueueOrExecuteAtomicOperationsAsync(blockId, operations.ToAtomicOperations());
+            await this.BlockManager.EnqueueOrExecuteAtomicOperationsAsync(blockId, operations.ToAtomicOperations());
         if (blockStatus == null)
             return (BlockResultCode.NotFound, BlockStatusCode.NotFound);
 
@@ -30,7 +31,7 @@ public class BlockWritService(IBlockManager blockManager, INotifierService notif
         foreach (var warning in atomicOp.HandledIssue())
             Log.Warning(warning.Message);
 
-        await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.WorldState);
+        await this.NotifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.WorldState);
 
         if (hasBlockStatusError)
             return (resultCode, blockStatus.Value);
@@ -42,9 +43,9 @@ public class BlockWritService(IBlockManager blockManager, INotifierService notif
     public async Task<BlockResultCode> UpdateBlockGameStateAsync(
         string blockId, Dictionary<string, object?> settingsToUpdate)
     {
-        var code = await this.blockManager.UpdateBlockGameStateAsync(blockId, settingsToUpdate);
+        var code = await this.BlockManager.UpdateBlockGameStateAsync(blockId, settingsToUpdate);
         if (code == BlockResultCode.Success)
-            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.GameState);
+            await this.NotifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.GameState);
         return code;
     }
 
@@ -59,12 +60,12 @@ public class BlockWritService(IBlockManager blockManager, INotifierService notif
             return BlockResultCode.InvalidInput;
         }
 
-        var resultCode = await this.blockManager.UpdateBlockDetailsAsync(blockId, updateDto.Content, updateDto.MetadataUpdates);
+        var resultCode = await this.BlockManager.UpdateBlockDetailsAsync(blockId, updateDto.Content, updateDto.MetadataUpdates);
 
         if (updateDto.Content != null)
-            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.BlockContent);
+            await this.NotifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.BlockContent);
         if (updateDto.MetadataUpdates != null && updateDto.MetadataUpdates.Any())
-            await this.notifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.Metadata);
+            await this.NotifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.Metadata);
 
         return resultCode;
     }

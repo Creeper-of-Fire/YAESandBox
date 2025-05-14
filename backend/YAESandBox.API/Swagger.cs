@@ -9,10 +9,11 @@ namespace YAESandBox.API;
 /// 即使它们没有被任何 HTTP API Controller 直接引用。
 /// 这对于依赖 Swagger Schema 生成 TypeScript 类型的前端代码生成器很有用。
 /// </summary>
-public class SignalRDtoDocumentFilter(ISchemaGenerator schemaGenerator) : IDocumentFilter
+internal class SignalRDtoDocumentFilter(ISchemaGenerator schemaGenerator) : IDocumentFilter
 {
     private readonly ISchemaGenerator _schemaGenerator = schemaGenerator ?? throw new ArgumentNullException(nameof(schemaGenerator));
 
+    /// <inheritdoc />
     public void Apply(OpenApiDocument swaggerDoc, DocumentFilterContext context)
     {
         // 检查当前正在生成的文档是否是我们想要应用此 Filter 的目标文档
@@ -68,17 +69,16 @@ public class SignalRDtoDocumentFilter(ISchemaGenerator schemaGenerator) : IDocum
             .Where(t => t.IsPublic && t.Namespace == targetNamespace && t.IsEnum)
             .ToList();
 
-        if (enumTypes.Any())
+        if (!enumTypes.Any())
+            return;
+        Console.WriteLine($"找到 {enumTypes.Count} 个 SignalR 枚举类型需要确保在 Schema 中:");
+        foreach (var enumType in enumTypes)
         {
-            Console.WriteLine($"找到 {enumTypes.Count} 个 SignalR 枚举类型需要确保在 Schema 中:");
-            foreach (var enumType in enumTypes)
-            {
-                // 同样，如果枚举尚未被引用，强制生成其 Schema
-                Console.WriteLine($"- {enumType.FullName}");
-                this._schemaGenerator.GenerateSchema(enumType, context.SchemaRepository);
-            }
-
-            Console.WriteLine("SignalR 枚举 Schema 生成检查完成。");
+            // 同样，如果枚举尚未被引用，强制生成其 Schema
+            Console.WriteLine($"- {enumType.FullName}");
+            this._schemaGenerator.GenerateSchema(enumType, context.SchemaRepository);
         }
+
+        Console.WriteLine("SignalR 枚举 Schema 生成检查完成。");
     }
 }

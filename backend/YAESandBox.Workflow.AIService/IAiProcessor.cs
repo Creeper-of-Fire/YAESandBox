@@ -22,7 +22,7 @@ public interface IAiProcessor
     /// 整个函数只返回错误信息。
     /// </returns>
     Task<Result> StreamRequestAsync(
-        List<RoledPromptDto> prompts,
+        IEnumerable<RoledPromptDto> prompts,
         Action<string> onChunkReceived,
         CancellationToken cancellationToken = default
     );
@@ -34,31 +34,9 @@ public interface IAiProcessor
     /// <param name="cancellationToken">用于取消操作</param>
     /// <returns>包含最终响应</returns>
     Task<Result<string>> NonStreamRequestAsync(
-        List<RoledPromptDto> prompts,
+        IEnumerable<RoledPromptDto> prompts,
         CancellationToken cancellationToken = default);
-
-    // ... 可能还有非流式请求的方法，或者把流式/非流式打包为同一个方法？ ...
 }
-
-// /// <summary>
-// /// 提示词中扮演的角色的枚举
-// /// </summary>
-// public record PromptRole
-// {
-//     /// <summary>
-//     /// 一个枚举，表示提示词的角色。
-//     /// </summary>
-//     public required PromptRoleType type { get; init; }
-//
-//     /// <summary>
-//     /// 部分高级AI模型可以识别角色名称，因此可以指定角色名称。
-//     /// </summary>
-//     public string name { get; private init; } = "";
-//
-//     public static PromptRole System(string name = "") => new() { type = PromptRoleType.System, name = name };
-//     public static PromptRole User(string name = "") => new() { type = PromptRoleType.User, name = name };
-//     public static PromptRole Assistant(string name = "") => new() { type = PromptRoleType.Assistant, name = name };
-// }
 
 /// <summary>
 /// 提示词消息，包含角色和内容

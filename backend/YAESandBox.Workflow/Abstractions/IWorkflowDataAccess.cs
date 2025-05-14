@@ -25,7 +25,7 @@ public interface IWorkflowDataAccess
     /// <param name="entityId">要查找的实体的 TypedID。</param>
     /// <param name="includeDestroyed">是否包含已标记为销毁的实体。</param>
     /// <returns>找到的实体，如果 Block 或实体不存在则返回 null。</returns>
-    Task<BaseEntity?> GetEntityAsync(string blockId, TypedID entityId, bool includeDestroyed = false);
+    Task<BaseEntity?> GetEntityAsync(string blockId, TypedId entityId, bool includeDestroyed = false);
 
     /// <summary>
     /// 获取指定 Block 当前 WorldState 中的所有实体。

@@ -5,6 +5,12 @@ using System.Text.Json.Serialization;
 namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
 
 // --- 请求体模型 ---
+/// <summary>
+/// 聊天消息
+/// </summary>
+/// <param name="Role"></param>
+/// <param name="Content"></param>
+/// <param name="Name"></param>
 public record DoubaoChatMessage(
     [property: JsonPropertyName("role")] string Role,
     [property: JsonPropertyName("content")]
@@ -12,6 +18,10 @@ public record DoubaoChatMessage(
     [property: JsonPropertyName("name")] string? Name = null
 );
 
+/// <summary>
+/// 流式配置选项
+/// </summary>
+/// <param name="IncludeUsage"></param>
 public record DoubaoStreamOptions(
     [property: JsonPropertyName("include_usage")]
     bool? IncludeUsage = null
@@ -37,11 +47,16 @@ public record DoubaoFunctionDefinition(
     object Parameters // JSON Schema 对象
 );
 
-public record DoubaoResponseFormat
+/// <summary>
+/// 回应体的回应格式
+/// </summary>
+public record DoubaoResponseFormat(string? Type = null)
 {
-    public DoubaoResponseFormat(string? Type = null) => this.Type = Type ?? "text";
-
-    [JsonPropertyName("type")] public string Type { get; private init; }
+    /// <summary>
+    /// 返回类型，默认为text
+    /// </summary>
+    [JsonPropertyName("type")]
+    public string Type { get; private init; } = Type ?? "text";
 }
 
 internal record DoubaoChatRequest(

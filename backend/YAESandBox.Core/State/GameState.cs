@@ -9,7 +9,7 @@ public class GameState
     // 使用 ConcurrentDictionary 可以在需要时支持多线程访问，虽然目前 Block 操作是单线程的
     // 但如果未来 gameState 可能被其他并行进程读取，它是更安全的选择。
     // 如果确定是单线程访问，普通的 Dictionary<string, object?> 也可以。
-    private Dictionary<string, object?> settings { get; } = new();
+    private Dictionary<string, object?> Settings { get; } = new();
 
     /// <summary>
     /// 获取或设置游戏状态值。
@@ -18,8 +18,8 @@ public class GameState
     /// <returns>设置的值，如果键不存在则返回 null。</returns>
     public object? this[string key]
     {
-        get => this.settings.GetValueOrDefault(key);
-        set => this.settings[key] = value;
+        get => this.Settings.GetValueOrDefault(key);
+        set => this.Settings[key] = value;
     }
 
     /// <summary>
@@ -31,7 +31,7 @@ public class GameState
     /// <returns>如果键存在且类型匹配，则为 true；否则为 false。</returns>
     public bool TryGetValue<T>(string key, out T? value)
     {
-        if (this.settings.TryGetValue(key, out object? rawValue) && rawValue is T typedValue)
+        if (this.Settings.TryGetValue(key, out object? rawValue) && rawValue is T typedValue)
         {
             value = typedValue;
             return true;
@@ -48,7 +48,7 @@ public class GameState
     /// <returns>如果成功移除则为 true，否则为 false。</returns>
     public bool Remove(string key)
     {
-        return this.settings.Remove(key);
+        return this.Settings.Remove(key);
     }
 
     /// <summary>
@@ -57,7 +57,7 @@ public class GameState
     public IReadOnlyDictionary<string, object?> GetAllSettings()
     {
         // 返回一个副本以防止外部修改内部字典
-        return new Dictionary<string, object?>(this.settings);
+        return new Dictionary<string, object?>(this.Settings);
     }
 
     /// <summary>
@@ -70,7 +70,7 @@ public class GameState
     {
         var clone = new GameState();
         // 简单地拷贝字典内容（值是浅拷贝）
-        foreach (var kvp in this.settings) clone.settings[kvp.Key] = kvp.Value; // 浅拷贝
+        foreach (var kvp in this.Settings) clone.Settings[kvp.Key] = kvp.Value; // 浅拷贝
         return clone;
     }
 }

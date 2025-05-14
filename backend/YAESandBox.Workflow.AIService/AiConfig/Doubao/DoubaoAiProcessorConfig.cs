@@ -20,7 +20,7 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
         ResourceType = typeof(AiProcessorConfigResources)
     )]
     [DefaultValue(8192)]
-    public int MaxOutputTokens { get; init; }
+    public int? MaxOutputTokens { get; init; }
 
     /// <summary>
     /// Apikey
@@ -71,7 +71,7 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
     [DefaultValue(1.0)]
-    public double Temperature { get; init; }
+    public double? Temperature { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_TopP_Label",
@@ -83,14 +83,14 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
     [DefaultValue(0.7)]
-    public float TopP { get; init; }
+    public float? TopP { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_StopSequences_Label",
         Description = "DoubaoAiProcessorConfig_StopSequences_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    public IReadOnlyList<string> StopSequences { get; init; }
+    public IReadOnlyList<string>? StopSequences { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_ResponseFormatType_Label",
@@ -99,7 +99,7 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
     )]
     [StringOptions("text", "json_object")]
     [DefaultValue("text")]
-    public string ResponseFormatType { get; init; }
+    public string? ResponseFormatType { get; init; }
 
     // 如果需要ResponseFormatType支持 json_schema，则需要更复杂的类型，例如:
     // public DoubaoResponseFormatJsonSchema? JsonSchemaResponseFormat { get; init; }
@@ -113,7 +113,7 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
         ErrorMessageResourceName = "Validation_Range",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
-    public float FrequencyPenalty { get; init; }
+    public float? FrequencyPenalty { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_PresencePenalty_Label",
@@ -124,7 +124,7 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
         ErrorMessageResourceName = "Validation_Range",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
-    public float PresencePenalty { get; init; }
+    public float? PresencePenalty { get; init; }
 
 
     [Display(
@@ -132,7 +132,7 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
         Description = "DoubaoAiProcessorConfig_StreamOptions_IncludeUsage_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    public bool StreamOptions_IncludeUsage { get; init; }
+    public bool? StreamOptionsIncludeUsage { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_ServiceTier_Label",
@@ -140,14 +140,14 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
         ResourceType = typeof(DoubaoConfigResources)
     )]
     [StringOptions("default", "auto")]
-    public string ServiceTier { get; init; }
+    public string? ServiceTier { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_Logprobs_Label",
         Description = "DoubaoAiProcessorConfig_Logprobs_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    public bool Logprobs { get; init; }
+    public bool? Logprobs { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_TopLogprobs_Label",
@@ -158,20 +158,20 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
         ErrorMessageResourceName = "Validation_Range",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources)
     )]
-    public int TopLogprobs { get; init; }
+    public int? TopLogprobs { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_LogitBias_Label",
         Description = "DoubaoAiProcessorConfig_LogitBias_Description",
         ResourceType = typeof(DoubaoConfigResources)
     )]
-    public IReadOnlyList<LogitBiasItemDto> LogitBias { get; init; }
+    public IReadOnlyList<LogitBiasItemDto>? LogitBias { get; init; }
 
     public class LogitBiasItemDto
     {
         [JsonPropertyName("tokenId")]
         [Required]
-        public string TokenId { get; set; }
+        public string TokenId { get; set; } = string.Empty;
 
         [JsonPropertyName("biasValue")]
         [Range(-100, 100)]

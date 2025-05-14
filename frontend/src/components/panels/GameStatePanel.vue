@@ -2,11 +2,11 @@
   <div class="panel-container game-state-panel">
     <n-h4 prefix="bar">游戏状态 (GameState)</n-h4>
     <n-text depth="3">当前 Block: {{ currentBlockId || '未选择' }}</n-text>
-    <n-divider />
+    <n-divider/>
     <!-- TODO: 在这里实现 GameState 的编辑功能 -->
     <n-empty description="GameState 编辑器开发中..." style="margin-top: 20px;">
       <template #icon>
-        <n-icon :component="GameControllerIcon" />
+        <n-icon :component="GameControllerIcon"/>
       </template>
     </n-empty>
     <!-- 示例：监听 GameState 变化 -->
@@ -17,11 +17,11 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
-import { NH4, NText, NDivider, NEmpty, NIcon } from 'naive-ui';
-import { GameControllerOutline as GameControllerIcon } from '@vicons/ionicons5';
-import { useTopologyStore } from '@/stores/topologyStore';
-import { useBlockStateListener } from '@/composables/useBlockStateListener'; // 引入 listener
+import {computed} from 'vue';
+import {NH4, NText, NDivider, NEmpty, NIcon} from 'naive-ui';
+import {GameControllerOutline as GameControllerIcon} from '@vicons/ionicons5';
+import {useTopologyStore} from '@/stores/topologyStore';
+import {useBlockStateListener} from '@/composables/useBlockStateListener'; // 引入 listener
 
 const topologyStore = useTopologyStore();
 
@@ -30,7 +30,7 @@ const currentBlockId = computed(() => topologyStore.currentPathLeafId);
 const currentBlockIdRef = computed(() => topologyStore.currentPathLeafId); // 需要 ref 给 listener
 
 // 使用 listener 监听变化信号
-const { gameStateChangedSignal } = useBlockStateListener(currentBlockIdRef);
+const {gameStateChangedSignal} = useBlockStateListener(currentBlockIdRef);
 
 // TODO:
 // 1. 根据 currentBlockId 获取 GameState (GameStateService.getApiBlocksGameState)
@@ -44,6 +44,7 @@ const { gameStateChangedSignal } = useBlockStateListener(currentBlockIdRef);
 .panel-container {
   padding: 5px;
 }
+
 .n-h4 {
   margin-bottom: 10px;
 }

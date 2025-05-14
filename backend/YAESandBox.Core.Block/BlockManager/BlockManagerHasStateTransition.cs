@@ -12,7 +12,7 @@ public partial class BlockManager
     internal void TrySetBlock(BlockStatus? blockStatus)
     {
         if (blockStatus == null) return;
-        this.blocks.AddOrUpdate(blockStatus.Block.BlockId, _ => blockStatus, (_, _) => blockStatus);
+        this.Blocks.AddOrUpdate(blockStatus.Block.BlockId, _ => blockStatus, (_, _) => blockStatus);
     }
 
     internal void TrySetBlock<T0, T1>(OneOf<T0, T1> blockStatus)
@@ -53,7 +53,7 @@ public partial class BlockManager
         // This method might be used if we implement manual conflict resolution flow.
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
-            if (!this.blocks.TryGetValue(blockId, out var block))
+            if (!this.Blocks.TryGetValue(blockId, out var block))
                 return BlockStatusError.NotFound(null, $"尝试应用已解决指令失败: Block '{blockId}' 未找到。").ToResult();
 
             if (block is not ConflictBlockStatus conflictBlock)
@@ -83,7 +83,7 @@ public partial class BlockManager
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
-            if (!this.blocks.TryGetValue(blockId, out var blockStatus))
+            if (!this.Blocks.TryGetValue(blockId, out var blockStatus))
                 return BlockStatusError.NotFound(null, $"处理工作流完成失败: Block '{blockId}' 未找到。");
 
             if (blockStatus is not LoadingBlockStatus block)
@@ -93,8 +93,8 @@ public partial class BlockManager
             if (!success) // Workflow failed
             {
                 Log.Error($"Block '{blockId}': 工作流执行失败。已转为错误状态。");
-                var errorStatus = block.toErrorStatus();
-                this.blocks[blockId] = errorStatus;
+                var errorStatus = block.ToErrorStatus();
+                this.Blocks[blockId] = errorStatus;
                 return errorStatus;
             }
 
@@ -117,25 +117,25 @@ public partial class BlockManager
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
-            if (!this.blocks.TryGetValue(blockId, out var blockStatus))
+            if (!this.Blocks.TryGetValue(blockId, out var blockStatus))
             {
                 Log.Error($"BlockManager: 尝试为 Block '{blockId}' 启动重新生成失败：Block 未找到。");
                 return BlockStatusError.NotFound(null, $"尝试为 Block '{blockId}' 启动重新生成失败：Block 未找到。").ToResult();
             }
 
-            var sourceWsForRegen = blockStatus.Block.wsInput;
+            var sourceWsForRegen = blockStatus.Block.WsInput;
             var coreBlock = blockStatus.Block; // 获取核心 Block 对象
 
             // --- 准备 Block 以进入 Loading 状态 ---
             Log.Debug($"BlockManager: 准备将 Block '{blockId}' 从 {blockStatus.StatusCode} 转为 Loading 状态...");
 
             // 1. 清理旧的输出和临时状态
-            coreBlock.wsPostAI = null;
-            coreBlock.wsPostUser = null;
-            coreBlock.wsTemp = null;
+            coreBlock.WsPostAi = null;
+            coreBlock.WsPostUser = null;
+            coreBlock.WsTemp = null;
 
             // 2. 创建新的 wsTemp (基于选定的源)
-            coreBlock.wsTemp = sourceWsForRegen.Clone();
+            coreBlock.WsTemp = sourceWsForRegen.Clone();
             Log.Debug($"BlockManager: Block '{blockId}': wsTemp 已基于源 WorldState 重新克隆。");
 
 
@@ -149,7 +149,7 @@ public partial class BlockManager
 
             // 5. 更新 BlockManager 中的状态字典
             // 使用 AddOrUpdate 确保线程安全地替换旧状态
-            this.blocks.AddOrUpdate(blockId, newLoadingStatus, (key, oldStatus) => newLoadingStatus);
+            this.Blocks.AddOrUpdate(blockId, newLoadingStatus, (key, oldStatus) => newLoadingStatus);
 
             Log.Info($"BlockManager: Block '{blockId}' 已成功转换到 Loading 状态，准备重新生成。");
             return newLoadingStatus;

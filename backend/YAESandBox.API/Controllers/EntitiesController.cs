@@ -12,7 +12,7 @@ namespace YAESandBox.API.Controllers;
 [ApiController]
 [Route("api/entities")] // /api/entities
 public class EntitiesController(IBlockWritService writServices, IBlockReadService readServices)
-    : APIControllerBase(readServices, writServices)
+    : ApiControllerBase(readServices, writServices)
 {
     /// <summary>
     /// 获取指定 Block 当前可交互 WorldState 中的所有非销毁实体摘要信息。
@@ -29,7 +29,7 @@ public class EntitiesController(IBlockWritService writServices, IBlockReadServic
     public async Task<IActionResult> GetAllEntities([FromQuery] [Required] string blockId)
     {
         // BlockManager 需要一个方法来根据 blockId 及其当前目标 WorldState 获取实体
-        var entities = await this.blockReadService.GetAllEntitiesSummaryAsync(blockId);
+        var entities = await this.BlockReadService.GetAllEntitiesSummaryAsync(blockId);
 
         if (entities == null) // 表示 block 未找到或服务层处理了其他问题
             return this.NotFound($"未找到 ID 为 '{blockId}' 的 Block 或无法访问。");
@@ -58,8 +58,8 @@ public class EntitiesController(IBlockWritService writServices, IBlockReadServic
         if (string.IsNullOrWhiteSpace(entityId))
             return this.BadRequest("实体 ID 不能为空。");
 
-        var typedId = new TypedID(entityType, entityId);
-        var entity = await this.blockReadService.GetEntityDetailAsync(blockId, typedId);
+        var typedId = new TypedId(entityType, entityId);
+        var entity = await this.BlockReadService.GetEntityDetailAsync(blockId, typedId);
 
         if (entity == null)
             return this.NotFound($"在 Block '{blockId}' 中未找到实体 '{typedId}'，或 Block 未找到。");

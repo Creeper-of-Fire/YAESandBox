@@ -1,7 +1,7 @@
 ﻿// --- START OF FILE uiStore.ts ---
 
-import { defineStore } from 'pinia';
-import { shallowRef, type Component } from 'vue'; // shallowRef 用于存储组件引用
+import {defineStore} from 'pinia';
+import {shallowRef, type Component} from 'vue'; // shallowRef 用于存储组件引用
 
 // 不再需要 PanelNames 常量
 // export const PanelNames = { ... } as const;

@@ -7,12 +7,13 @@
         <LangVersion>preview</LangVersion>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <AnalysisModeConfigureAwait>Library</AnalysisModeConfigureAwait>
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentResults" Version="3.16.0" PrivateAssets="all"/>
+        <PackageReference Include="fluentresults.strict.creeperoffire" Version="3.16.0-strict.1.0.1"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
-        <PackageReference Include="NJsonSchema" Version="11.3.2" />
+        <PackageReference Include="NJsonSchema" Version="11.3.2"/>
     </ItemGroup>
 
 </Project>

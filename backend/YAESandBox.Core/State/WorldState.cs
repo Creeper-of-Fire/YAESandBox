@@ -59,7 +59,7 @@ public class WorldState
     /// <param name="ref">要查找的实体的 TypedID。</param>
     /// <param name="includeDestroyed">是否包含已标记为销毁的实体。</param>
     /// <returns>找到的实体，如果不存在或不满足条件则返回 null。</returns>
-    public BaseEntity? FindEntity(TypedID @ref, bool includeDestroyed = false)
+    public BaseEntity? FindEntity(TypedId @ref, bool includeDestroyed = false)
     {
         BaseEntity? entity = null;
         bool found = false;
@@ -94,7 +94,7 @@ public class WorldState
     /// </summary>
     public BaseEntity? FindEntityById(string entityId, EntityType entityType, bool includeDestroyed = false)
     {
-        return this.FindEntity(new TypedID(entityType, entityId), includeDestroyed);
+        return this.FindEntity(new TypedId(entityType, entityId), includeDestroyed);
     }
 
     /// <summary>

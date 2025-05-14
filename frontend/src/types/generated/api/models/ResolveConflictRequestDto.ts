@@ -2,7 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AtomicOperationRequestDto } from './AtomicOperationRequestDto';
+import type {AtomicOperationRequestDto} from './AtomicOperationRequestDto';
+
 /**
  * (客户端 -> 服务器)
  * 用于通过 SignalR 提交 **冲突解决方案** 的请求。

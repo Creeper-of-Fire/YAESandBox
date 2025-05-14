@@ -15,8 +15,8 @@ namespace YAESandBox.API.Services;
 public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext, IBlockManager blockManager)
     : INotifierService, IWorkflowNotifierService
 {
-    private IHubContext<GameHub, IGameClient> hubContext { get; } = hubContext;
-    private IBlockManager blockManager { get; } = blockManager;
+    private IHubContext<GameHub, IGameClient> HubContext { get; } = hubContext;
+    private IBlockManager BlockManager { get; } = blockManager;
 
     /// <inheritdoc/>
     public async Task NotifyBlockStatusUpdateAsync(string blockId, BlockStatusCode newStatusCode)
@@ -44,7 +44,7 @@ public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext
             // The frontend fix below will rely on sessionStorage fallback if ParentBlockId is null.
         };
         Log.Debug($"准备通过 SignalR 发送 BlockStatusUpdate: BlockId={blockId}, StatusCode={newStatusCode}");
-        await this.hubContext.Clients.All.ReceiveBlockStatusUpdate(update);
+        await this.HubContext.Clients.All.ReceiveBlockStatusUpdate(update);
         Log.Debug($"BlockStatusUpdate for {blockId} 已发送。");
     }
 
@@ -59,7 +59,7 @@ public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext
             ChangedEntityIds = changedEntityIds?.ToList()
         };
         Log.Debug($"准备通过 SignalR 发送 StateUpdateSignal: BlockId={blockId}");
-        await this.hubContext.Clients.All.ReceiveBlockUpdateSignal(signal);
+        await this.HubContext.Clients.All.ReceiveBlockUpdateSignal(signal);
         Log.Debug($"StateUpdateSignal for {blockId} 已发送。");
     }
 
@@ -67,7 +67,7 @@ public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext
     [Obsolete("目前我们不使用这个玩意，而是只通知可能发生变更的Block。", true)]
     public async Task NotifyBlockDetailUpdateAsync(string blockId, params BlockDetailFields[] changedFields)
     {
-        var block = await this.blockManager.GetBlockAsync(blockId);
+        var block = await this.BlockManager.GetBlockAsync(blockId);
         if (block == null)
         {
             Log.Error($"BlockManagementService: 尝试发送 BlockDetailUpdateSignal 时，找不到 Block '{blockId}'。");
@@ -75,7 +75,7 @@ public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext
         }
 
         Log.Debug($"准备通过 SignalR 发送 BlockDetailUpdate: BlockId={blockId}");
-        await this.hubContext.Clients.All.ReceiveBlockDetailUpdateSignal(block.CreatePartial(changedFields));
+        await this.HubContext.Clients.All.ReceiveBlockDetailUpdateSignal(block.CreatePartial(changedFields));
         Log.Debug($"StateUpdateSignal for {blockId} 已发送。");
     }
 
@@ -88,7 +88,7 @@ public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext
     {
         Log.Debug(
             $"准备通过 SignalR 发送 WorkflowUpdate: RequestId={update.RequestId}, BlockId={update.ContextBlockId}, UpdateMode={update.UpdateMode}");
-        await this.hubContext.Clients.All.ReceiveDisplayUpdate(update);
+        await this.HubContext.Clients.All.ReceiveDisplayUpdate(update);
         Log.Debug($"WorkflowUpdate for RequestId={update.RequestId} 已发送。");
     }
 
@@ -100,7 +100,7 @@ public class SignalRNotifierService(IHubContext<GameHub, IGameClient> hubContext
     public async Task NotifyConflictDetectedAsync(string blockId)
     {
         Log.Debug($"准备通过 SignalR 发送 ConflictDetected: BlockId={blockId}");
-        await this.hubContext.Clients.All.ReceiveConflictDetected(blockId);
+        await this.HubContext.Clients.All.ReceiveConflictDetected(blockId);
         Log.Debug($"ConflictDetected 已发送。");
     }
 }

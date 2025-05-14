@@ -2,9 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BlockStatusCode } from './BlockStatusCode';
-import type { ConflictDetectedDto } from './ConflictDetectedDto';
-import type { WorkflowDto } from './WorkflowDto';
+import type {BlockStatusCode} from './BlockStatusCode';
+import type {ConflictDetectedDto} from './ConflictDetectedDto';
+import type {WorkflowDto} from './WorkflowDto';
+
 /**
  * 用于 API 响应，表示单个 Block 的详细信息（不包含 WorldState）。
  */

@@ -16,6 +16,7 @@ public class RangeProcessor : ISchemaProcessor
     /// 如果计算得到的 MultipleOf 大于它，则设置为它
     /// </summary>
     private const decimal DefaultMultipleOf = 0.01m;
+
     /// <summary>
     /// 至少 100 个步长
     /// </summary>
@@ -31,7 +32,7 @@ public class RangeProcessor : ISchemaProcessor
         if (rangeAttribute == null && customRangeAttribute == null) return;
         if (customRangeAttribute?.Step != null)
             context.Schema.MultipleOf = Convert.ToDecimal(customRangeAttribute.Step);
-        
+
         decimal? maximum = null;
         decimal? minimum = null;
         if (rangeAttribute != null)

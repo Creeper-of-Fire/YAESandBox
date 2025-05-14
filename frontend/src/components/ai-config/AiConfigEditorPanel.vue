@@ -230,7 +230,7 @@ async function fetchAllConfigSets() {
 }
 
 async function fetchAvailableAiTypes() {
-  const response = await callApi(() => AiConfigSchemasService.getApiAiConfigurationManagementAvailableConfigTypes());
+  const response = await callApi(() => AiConfigurationsService.getApiAiConfigurationsAvailableConfigTypes());
   if (response) {
     availableAiTypes.value = response;
   }

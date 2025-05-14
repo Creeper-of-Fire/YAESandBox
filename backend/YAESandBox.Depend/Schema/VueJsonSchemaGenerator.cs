@@ -50,10 +50,7 @@ public static class VueFormSchemaGenerator
         settings.SchemaProcessors.Add(new DisplayAttributeProcessor());
         settings.SchemaProcessors.Add(new StringOptionsProcessor());
         settings.SchemaProcessors.Add(new RangeProcessor());
-        settings.SchemaProcessors.Add(new NormalActionProcessor(context =>
-        {
-            SchemaUISetting.ProcessUiOption(context.Schema);
-        }));
+        settings.SchemaProcessors.Add(new NormalActionProcessor(context => { context.Schema.ProcessUiOption(); }));
 
         // 允许外部进一步配置
         configureSettings?.Invoke(settings);

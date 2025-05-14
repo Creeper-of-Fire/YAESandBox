@@ -1,8 +1,8 @@
 // src/main.ts (示例)
-import { createApp } from 'vue';
-import { createPinia } from 'pinia';
+import {createApp} from 'vue';
+import {createPinia} from 'pinia';
 import App from './App.vue';
-import { OpenAPI } from './types/generated/api'; // 确认路径正确
+import {OpenAPI} from './types/generated/api'; // 确认路径正确
 // 通用字体
 import 'vfonts/Lato.css'
 // 等宽字体

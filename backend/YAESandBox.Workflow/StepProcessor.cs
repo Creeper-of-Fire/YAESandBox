@@ -12,46 +12,46 @@ internal class StepProcessor
         StepProcessorConfig config,
         Dictionary<string, object> stepInput)
     {
-        this.workflowProcessor = workflowProcessor;
-        this.content = new StepProcessorContent(stepInput);
-        this.modules = config.moduleIds.ConvertAll(it => ConfigLocator.findModuleConfig(it).ToModule(this.content));
-        this.stepAiConfig = config.stepAiConfig;
+        this.WorkflowProcessor = workflowProcessor;
+        this.Content = new StepProcessorContent(stepInput);
+        this.Modules = config.ModuleIds.ConvertAll(it => ConfigLocator.FindModuleConfig(it).ToModule(this.Content));
+        this.StepAiConfig = config.StepAiConfig;
     }
 
     public class StepProcessorContent(Dictionary<string, object> stepInput)
     {
         // TODO 之后应该根据需求进行拷贝
-        public dynamic stepInput { get; } = stepInput.ToDictionary(kv => kv.Key, kv => kv.Value);
-        public List<RoledPromptDto> prompts { get; } = [];
-        public string? fullAiReturn { get; set; }
+        public dynamic StepInput { get; } = stepInput.ToDictionary(kv => kv.Key, kv => kv.Value);
+        public List<RoledPromptDto> Prompts { get; } = [];
+        public string? FullAiReturn { get; set; }
     }
 
-    private StepProcessorContent content { get; }
+    private StepProcessorContent Content { get; }
 
-    private IList<IWorkflowModule> modules { get; }
-    private StepAiConfig stepAiConfig { get; }
-    private WorkflowProcessor.WorkflowProcessorContent workflowProcessor { get; }
+    private IList<IWorkflowModule> Modules { get; }
+    private StepAiConfig StepAiConfig { get; }
+    private WorkflowProcessor.WorkflowProcessorContent WorkflowProcessor { get; }
 
     public async Task<Result<Dictionary<string, object>>> ExecuteStepsAsync()
     {
         Dictionary<string, object> stepOutput = [];
-        foreach (var module in this.modules)
+        foreach (var module in this.Modules)
         {
             switch (module)
             {
                 case AiModule aiModule:
-                    if (this.stepAiConfig.SelectedAiModuleType == null)
-                        return AiError.Error($"请先配置 {this.stepAiConfig.AiProcessorConfigUUID} 的AI类型。");
-                    var aiProcessor = this.workflowProcessor.MasterAiService.CreateAiProcessor(
-                        this.stepAiConfig.AiProcessorConfigUUID,
-                        this.stepAiConfig.SelectedAiModuleType);
+                    if (this.StepAiConfig.SelectedAiModuleType == null)
+                        return AiError.Error($"请先配置 {this.StepAiConfig.AiProcessorConfigUuid} 的AI类型。");
+                    var aiProcessor = this.WorkflowProcessor.MasterAiService.CreateAiProcessor(
+                        this.StepAiConfig.AiProcessorConfigUuid,
+                        this.StepAiConfig.SelectedAiModuleType);
                     if (aiProcessor == null)
                         return AiError
-                            .Error($"未找到 AI 配置 {this.stepAiConfig.AiProcessorConfigUUID}配置下的类型：{this.stepAiConfig.SelectedAiModuleType}");
-                    var result = await aiModule.ExecuteAsync(aiProcessor, this.content.prompts, this.stepAiConfig.IsStream);
-                    if (result.IsFailed)
+                            .Error($"未找到 AI 配置 {this.StepAiConfig.AiProcessorConfigUuid}配置下的类型：{this.StepAiConfig.SelectedAiModuleType}");
+                    var result = await aiModule.ExecuteAsync(aiProcessor, this.Content.Prompts, this.StepAiConfig.IsStream);
+                    if (!result.TryGetValue(out string? value))
                         return result.ToResult();
-                    this.content.fullAiReturn = result.Value;
+                    this.Content.FullAiReturn = value;
                     break;
             }
         }
@@ -60,9 +60,10 @@ internal class StepProcessor
     }
 }
 
-public record StepProcessorConfig(StepAiConfig stepAiConfig, List<string> moduleIds)
+public record StepProcessorConfig(StepAiConfig StepAiConfig, List<string> ModuleIds)
 {
-    internal StepProcessor ToStepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor, Dictionary<string, object> stepInput)
+    internal StepProcessor ToStepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor,
+        Dictionary<string, object> stepInput)
     {
         return new StepProcessor(workflowProcessor, this, stepInput);
     }
@@ -71,7 +72,7 @@ public record StepProcessorConfig(StepAiConfig stepAiConfig, List<string> module
 /// <summary>
 /// 步骤本身的 AI 配置。
 /// </summary>
-/// <param name="AiProcessorConfigUUID">AI服务的配置的UUID</param>
+/// <param name="AiProcessorConfigUuid">AI服务的配置的UUID</param>
 /// <param name="SelectedAiModuleType">当前选中的AI模型的类型名，需要通过<see cref="IMasterAiService.GetAbleAiProcessorType"/>获取</param>
 /// <param name="IsStream">是否为流式传输</param>
-public record StepAiConfig(string AiProcessorConfigUUID, string? SelectedAiModuleType, bool IsStream);
+public record StepAiConfig(string AiProcessorConfigUuid, string? SelectedAiModuleType, bool IsStream);

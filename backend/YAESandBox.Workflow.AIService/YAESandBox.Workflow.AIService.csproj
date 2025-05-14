@@ -6,9 +6,11 @@
         <Nullable>enable</Nullable>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
+        <AnalysisModeConfigureAwait>Library</AnalysisModeConfigureAwait>
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj"/>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>YAESandBox.Workflow.Test</_Parameter1>
@@ -16,7 +18,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentResults" Version="3.16.0"/>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0"/>
         <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0-preview.3.25171.5"/>
         <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2"/>

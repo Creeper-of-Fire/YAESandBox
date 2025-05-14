@@ -23,12 +23,12 @@ var builder = WebApplication.CreateBuilder(args);
 
 
 // 1. 定义 CORS 策略名称 (可以自定义)
-var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+const string myAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 // 2. 添加 CORS 服务，并配置策略
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: MyAllowSpecificOrigins,
+    options.AddPolicy(name: myAllowSpecificOrigins,
         policy =>
         {
             policy.WithOrigins(
@@ -51,7 +51,7 @@ builder.Services.AddControllers()
     .AddJsonOptions(options => // Configure JSON options
     {
         // Serialize enums as strings in requests/responses
-        YAESandBoxJsonHelper.CopyFrom(options.JsonSerializerOptions, YAESandBoxJsonHelper.JsonSerializerOptions);
+        YaeSandBoxJsonHelper.CopyFrom(options.JsonSerializerOptions, YaeSandBoxJsonHelper.JsonSerializerOptions);
     });
 
 // --- OpenAPI / Swagger ---
@@ -213,7 +213,7 @@ else
 
 app.UseRouting(); // Add routing middleware
 
-app.UseCors(MyAllowSpecificOrigins); // Apply CORS policy - place before UseAuthorization/UseEndpoints
+app.UseCors(myAllowSpecificOrigins); // Apply CORS policy - place before UseAuthorization/UseEndpoints
 
 app.UseAuthorization(); // Add authorization middleware if needed
 
@@ -228,9 +228,11 @@ namespace YAESandBox.API
 {
     // --- Records/Classes used in Program.cs ---
 
-// Helper class for Swagger Enum Display
-    public class EnumSchemaFilter : ISchemaFilter
+    // Helper class for Swagger Enum Display
+    /// <inheritdoc />
+    internal class EnumSchemaFilter : ISchemaFilter
     {
+        /// <inheritdoc />
         public void Apply(OpenApiSchema schema,
             SchemaFilterContext context)
         {
@@ -244,22 +246,22 @@ namespace YAESandBox.API
         }
     }
 
-    public static class SwaggerHelper
+    internal static class SwaggerHelper
     {
         public static void AddSwaggerDocumentation(this SwaggerGenOptions options, Assembly assembly)
         {
             try
             {
-                string XmlFilename = $"{assembly.GetName().Name}.xml";
-                string XmlFilePath = Path.Combine(AppContext.BaseDirectory, XmlFilename);
-                if (File.Exists(XmlFilePath))
+                string xmlFilename = $"{assembly.GetName().Name}.xml";
+                string xmlFilePath = Path.Combine(AppContext.BaseDirectory, xmlFilename);
+                if (File.Exists(xmlFilePath))
                 {
-                    options.IncludeXmlComments(XmlFilePath);
-                    Console.WriteLine($"加载 XML 注释: {XmlFilePath}");
+                    options.IncludeXmlComments(xmlFilePath);
+                    Console.WriteLine($"加载 XML 注释: {xmlFilePath}");
                 }
                 else
                 {
-                    Console.WriteLine($"警告: 未找到 XML 注释文件: {XmlFilePath}");
+                    Console.WriteLine($"警告: 未找到 XML 注释文件: {xmlFilePath}");
                 }
             }
             catch (Exception ex)
@@ -269,11 +271,11 @@ namespace YAESandBox.API
         }
     }
 
-    public static class GlobalSwaggerConstants
+    internal static class GlobalSwaggerConstants
     {
         // --- 定义文档名称常量 ---
-        public const string PublicApiGroupName = "v1-public"; // 公开 API 文档
-        public const string InternalApiGroupName = "v1-internal"; // 内部/调试 API 文档
+        internal const string PublicApiGroupName = "v1-public"; // 公开 API 文档
+        internal const string InternalApiGroupName = "v1-internal"; // 内部/调试 API 文档
     }
 // --- END OF FILE Program.cs ---
 }

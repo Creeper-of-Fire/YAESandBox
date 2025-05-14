@@ -35,7 +35,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
     private readonly DoubaoAiProcessorConfig _config = parameters;
 
     public async Task<Result> StreamRequestAsync(
-        List<RoledPromptDto> prompts,
+        IEnumerable<RoledPromptDto> prompts,
         Action<string> onChunkReceived,
         CancellationToken cancellationToken = default)
     {
@@ -54,7 +54,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             ResponseFormat: responseFormatParam,
             FrequencyPenalty: this._config.FrequencyPenalty,
             PresencePenalty: this._config.PresencePenalty,
-            StreamOptions: new DoubaoStreamOptions(this._config.StreamOptions_IncludeUsage),
+            StreamOptions: new DoubaoStreamOptions(this._config.StreamOptionsIncludeUsage),
             ServiceTier: this._config.ServiceTier,
             Logprobs: this._config.Logprobs,
             TopLogprobs: this._config.TopLogprobs,
@@ -90,7 +90,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
             using var reader = new StreamReader(stream);
 
-            const string SSE_DATA_PREFIX = "data:";
+            const string sseDataPrefix = "data:";
 
             while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
             {
@@ -101,9 +101,9 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
                     continue;
 
                 string jsonData;
-                if (line.StartsWith(SSE_DATA_PREFIX, StringComparison.Ordinal))
+                if (line.StartsWith(sseDataPrefix, StringComparison.Ordinal))
                 {
-                    jsonData = line.Substring(SSE_DATA_PREFIX.Length).Trim(); // 移除 "data:" 前缀并去除首尾空格
+                    jsonData = line.Substring(sseDataPrefix.Length).Trim(); // 移除 "data:" 前缀并去除首尾空格
 
                     if (string.IsNullOrWhiteSpace(jsonData)) // 如果 "data:" 后面是空的或只有空格
                         continue;
@@ -202,9 +202,9 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             return AiError.Error($"调用豆包 API 时发生未知错误: {ex.GetType().Name} - {ex.Message}");
         }
     }
-    
+
     public async Task<Result<string>> NonStreamRequestAsync(
-        List<RoledPromptDto> prompts,
+        IEnumerable<RoledPromptDto> prompts,
         CancellationToken cancellationToken = default)
     {
         List<DoubaoChatMessage> doubaoMessages = [.. prompts.Select(p => p.ToDoubaoMessage())];
@@ -226,7 +226,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             ServiceTier: this._config.ServiceTier,
             Logprobs: this._config.Logprobs,
             TopLogprobs: this._config.TopLogprobs,
-            LogitBias: this._config.LogitBias.ToDictionary(kvp => kvp.TokenId, kvp => kvp.BiasValue),
+            LogitBias: this._config.LogitBias?.ToDictionary(kvp => kvp.TokenId, kvp => kvp.BiasValue),
             Tools: null // 当前未实现工具调用
         );
 
@@ -251,7 +251,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             if (!response.IsSuccessStatusCode)
             {
                 string errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-                 return AiError.Error(
+                return AiError.Error(
                     $"豆包 API 非流式请求失败: {response.StatusCode}. 响应: {errorContent.Substring(0, Math.Min(500, errorContent.Length))}");
             }
 
@@ -259,15 +259,15 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
             var doubaoResponse = JsonSerializer.Deserialize<DoubaoCompletionResponse>(responseBody, new JsonSerializerOptions
             {
-                 PropertyNameCaseInsensitive = true // 忽略大小写匹配属性名
+                PropertyNameCaseInsensitive = true // 忽略大小写匹配属性名
             });
 
             // 验证响应结构和内容
             if (doubaoResponse?.Choices is not { Count: > 0 })
             {
-                 // 检查是否包含错误信息，例如内容过滤导致的空 choices
-                 // 豆包文档没有明确指出错误响应的结构，这里先返回一个通用错误
-                 // 如果豆包在成功状态码下返回空 choices 且在响应体中有错误字段，可能需要调整解析逻辑
+                // 检查是否包含错误信息，例如内容过滤导致的空 choices
+                // 豆包文档没有明确指出错误响应的结构，这里先返回一个通用错误
+                // 如果豆包在成功状态码下返回空 choices 且在响应体中有错误字段，可能需要调整解析逻辑
                 return AiError.Error($"豆包 API 返回了意外的响应结构或空结果。原始响应: {responseBody.Substring(0, Math.Min(500, responseBody.Length))}");
             }
 
@@ -276,7 +276,8 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
 
             if (message == null)
             {
-                 return AiError.Error($"豆包 API 响应中 choice[0] 的 message 字段为 null。原始响应: {responseBody.Substring(0, Math.Min(500, responseBody.Length))}");
+                return AiError.Error(
+                    $"豆包 API 响应中 choice[0] 的 message 字段为 null。原始响应: {responseBody.Substring(0, Math.Min(500, responseBody.Length))}");
             }
 
             // 组装最终的回复文本，包含思维链和内容
@@ -286,6 +287,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
                 // 非流式响应中也可能包含思维链，用 <think> 标签包裹
                 combinedContent += $"<think>{message.ReasoningContent}</think>";
             }
+
             if (!string.IsNullOrEmpty(message.Content))
             {
                 combinedContent += message.Content;
@@ -293,16 +295,16 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             else if (string.IsNullOrEmpty(message.ReasoningContent))
             {
                 // 如果不是内容过滤，且内容为空，则视为非预期情况
-                 if (string.IsNullOrEmpty(choice.FinishReason) || choice.FinishReason == "stop")
-                 {
-                     // 如果是正常停止但内容为空，这很奇怪，可能是模型没生成内容
-                     // 返回一个警告或错误，或者返回空字符串Result.Ok("")取决于期望行为
-                     // 暂时返回一个警告 Result.Fail($"豆包 AI 响应成功，但未生成任何内容或思维链。")
-                      return Result.Ok(combinedContent); // 返回空字符串结果，外部调用者可以检查
-                 }
+                if (string.IsNullOrEmpty(choice.FinishReason) || choice.FinishReason == "stop")
+                {
+                    // 如果是正常停止但内容为空，这很奇怪，可能是模型没生成内容
+                    // 返回一个警告或错误，或者返回空字符串Result.Ok("")取决于期望行为
+                    // 暂时返回一个警告 Result.Fail($"豆包 AI 响应成功，但未生成任何内容或思维链。")
+                    return Result.Ok(combinedContent); // 返回空字符串结果，外部调用者可以检查
+                }
 
-                 // 如果是非正常停止且内容为空，则返回错误
-                 return AiError.Error($"豆包 AI 响应因 '{choice.FinishReason}' 提前终止，且未生成任何内容或思维链。");
+                // 如果是非正常停止且内容为空，则返回错误
+                return AiError.Error($"豆包 AI 响应因 '{choice.FinishReason}' 提前终止，且未生成任何内容或思维链。");
             }
 
 
@@ -312,22 +314,22 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             if (!string.IsNullOrEmpty(choice.FinishReason) && choice.FinishReason != "stop")
             {
                 // 例如 "length", "content_filter", "tool_calls"
-                 // 根据 StreamRequestAsync 的逻辑，这些情况都视为异常
-                 // 如果是 content_filter，上面的逻辑已经处理了内容为空的情况
-                 // 如果是 length，意味着内容被截断，可能需要返回一个警告 Result.Fail($"豆包 AI 响应因达到最大长度而截断 ('{choice.FinishReason}')，请注意内容可能不完整。").WithSuccess(combinedContent)
-                 // 但为了与流式逻辑一致，这里仍返回错误
-                 // 如果是 tool_calls，表示模型决定调用工具，这通常不是错误，而是需要特殊处理
-                 // 如果这里不处理工具调用，那么收到 tool_calls 作为一个非流式请求的完成原因确实需要标记
-                 if (choice.FinishReason == "tool_calls")
-                 {
-                      // 如果将来支持工具调用，这里需要返回一个包含工具调用信息的结果
-                      // 目前不支持，视为非预期的非流式请求完成方式
-                      return AiError.Error($"豆包 AI 响应指示需要调用工具 ('{choice.FinishReason}')，但当前处理器不支持工具调用。");
-                 }
+                // 根据 StreamRequestAsync 的逻辑，这些情况都视为异常
+                // 如果是 content_filter，上面的逻辑已经处理了内容为空的情况
+                // 如果是 length，意味着内容被截断，可能需要返回一个警告 Result.Fail($"豆包 AI 响应因达到最大长度而截断 ('{choice.FinishReason}')，请注意内容可能不完整。").WithSuccess(combinedContent)
+                // 但为了与流式逻辑一致，这里仍返回错误
+                // 如果是 tool_calls，表示模型决定调用工具，这通常不是错误，而是需要特殊处理
+                // 如果这里不处理工具调用，那么收到 tool_calls 作为一个非流式请求的完成原因确实需要标记
+                if (choice.FinishReason == "tool_calls")
+                {
+                    // 如果将来支持工具调用，这里需要返回一个包含工具调用信息的结果
+                    // 目前不支持，视为非预期的非流式请求完成方式
+                    return AiError.Error($"豆包 AI 响应指示需要调用工具 ('{choice.FinishReason}')，但当前处理器不支持工具调用。");
+                }
 
-                 // 对于 length 或 content_filter (如果上面没捕获到)，返回错误
-                 // content_filter 的情况下，responseBody可能仍然有结构但content为空
-                 return AiError.Error($"豆包 AI 响应因 '{choice.FinishReason}' 而提前终止。");
+                // 对于 length 或 content_filter (如果上面没捕获到)，返回错误
+                // content_filter 的情况下，responseBody可能仍然有结构但content为空
+                return AiError.Error($"豆包 AI 响应因 '{choice.FinishReason}' 而提前终止。");
             }
 
             // 如果 finish_reason 是 null 或 "stop"，并且内容非空，则视为成功

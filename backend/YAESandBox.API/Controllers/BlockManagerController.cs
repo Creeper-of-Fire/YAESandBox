@@ -18,9 +18,9 @@ public class BlockManagementController(
     IBlockManagementService blockManagementService,
     IBlockWritService writServices,
     IBlockReadService readServices)
-    : APIControllerBase(readServices, writServices)
+    : ApiControllerBase(readServices, writServices)
 {
-    private IBlockManagementService blockManagementService { get; } = blockManagementService;
+    private IBlockManagementService BlockManagementService { get; } = blockManagementService;
 
 
     /// <summary>
@@ -40,7 +40,7 @@ public class BlockManagementController(
             return this.BadRequest(this.ModelState);
 
         var (result, newBlockStatus) =
-            await this.blockManagementService.CreateBlockManuallyAsync(request.ParentBlockId, request.InitialMetadata);
+            await this.BlockManagementService.CreateBlockManuallyAsync(request.ParentBlockId, request.InitialMetadata);
 
         switch (result)
         {
@@ -90,7 +90,7 @@ public class BlockManagementController(
     public async Task<IActionResult> DeleteBlockManually(string blockId, [FromQuery] bool recursive = true,
         [FromQuery] bool force = false)
     {
-        var result = await this.blockManagementService.DeleteBlockManuallyAsync(blockId, recursive, force);
+        var result = await this.BlockManagementService.DeleteBlockManuallyAsync(blockId, recursive, force);
         switch (result)
         {
             case ManagementResult.Success:
@@ -130,7 +130,7 @@ public class BlockManagementController(
         if (blockId == request.NewParentBlockId) // 基本的循环检查
             return this.Conflict("不能将 Block 移动到自身之下。");
 
-        var result = await this.blockManagementService.MoveBlockManuallyAsync(blockId, request.NewParentBlockId);
+        var result = await this.BlockManagementService.MoveBlockManuallyAsync(blockId, request.NewParentBlockId);
 
         return result switch
         {

@@ -2,6 +2,7 @@
 
 using FluentResults;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService.AiConfig;
 
 // 使用 Task 但用户不要求 CancellationToken
@@ -50,10 +51,10 @@ public interface IAiConfigurationManager : IAiConfigurationProvider
     Task<Result<IReadOnlyDictionary<string, AiConfigurationSet>>> GetAllConfigurationsAsync();
 }
 
-public record AIConfigError(string Message) : LazyInitError(Message)
+internal record AiConfigError(string Message) : LazyInitError(Message)
 {
     public static Result Error(string message)
     {
-        return new AIConfigError(message);
+        return new AiConfigError(message);
     }
 }

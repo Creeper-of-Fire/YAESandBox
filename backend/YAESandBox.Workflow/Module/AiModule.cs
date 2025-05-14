@@ -12,7 +12,7 @@ namespace YAESandBox.Workflow.Module;
 internal class AiModule(Action<string> onChunkReceivedScript) : IWorkflowModule
 {
     // TODO 这里是回调函数，应该由脚本完成
-    private Action<string> onChunkReceivedScript { get; } = onChunkReceivedScript;
+    private Action<string> OnChunkReceivedScript { get; } = onChunkReceivedScript;
 
     public Task<Result<string>> ExecuteAsync(IAiProcessor aiProcessor, List<RoledPromptDto> prompts, bool isStream)
     {
@@ -31,7 +31,7 @@ internal class AiModule(Action<string> onChunkReceivedScript) : IWorkflowModule
         var result = await aiProcessor.StreamRequestAsync(prompts, chunk =>
         {
             fullAiReturn += chunk;
-            this.onChunkReceivedScript(chunk);
+            this.OnChunkReceivedScript(chunk);
         });
         if (result.IsFailed)
             return result;
@@ -41,10 +41,10 @@ internal class AiModule(Action<string> onChunkReceivedScript) : IWorkflowModule
     private async Task<Result<string>> ExecuteNonStreamAsync(IAiProcessor aiProcessor, List<RoledPromptDto> prompts)
     {
         var result = await aiProcessor.NonStreamRequestAsync(prompts);
-        if (result.IsFailed)
+        if (!result.TryGetValue(out string? value))
             return result;
-        this.onChunkReceivedScript(result.Value);
-        return result.Value;
+        this.OnChunkReceivedScript(value);
+        return value;
     }
 }
 

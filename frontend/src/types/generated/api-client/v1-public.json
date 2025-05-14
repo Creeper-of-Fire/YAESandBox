@@ -840,13 +840,13 @@
           "description": "（可选）客户端提供的任意 JSON 格式的盲存数据，将原样保存在存档文件中。",
           "content": {
             "application/json": {
-              "schema": { }
+              "schema": {}
             },
             "text/json": {
-              "schema": { }
+              "schema": {}
             },
             "application/*+json": {
-              "schema": { }
+              "schema": {}
             }
           }
         },
@@ -900,13 +900,13 @@
             "description": "成功加载状态，并返回盲存数据。",
             "content": {
               "text/plain": {
-                "schema": { }
+                "schema": {}
               },
               "application/json": {
-                "schema": { }
+                "schema": {}
               },
               "text/json": {
-                "schema": { }
+                "schema": {}
               }
             }
           },
@@ -1337,7 +1337,7 @@
             "nullable": true
           }
         },
-        "additionalProperties": { }
+        "additionalProperties": {}
       },
       "RegenerateBlockRequestDto": {
         "required": [

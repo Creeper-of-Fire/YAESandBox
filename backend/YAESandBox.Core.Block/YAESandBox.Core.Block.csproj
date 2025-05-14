@@ -6,6 +6,7 @@
         <Nullable>enable</Nullable>
         <LangVersion>preview</LangVersion>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <AnalysisModeConfigureAwait>Library</AnalysisModeConfigureAwait>
     </PropertyGroup>
 
     <ItemGroup>
@@ -17,7 +18,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="FluentResults" Version="3.16.0"/>
         <PackageReference Include="OneOf" Version="3.0.271"/>
     </ItemGroup>
 

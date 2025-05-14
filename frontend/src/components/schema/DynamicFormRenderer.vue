@@ -116,7 +116,10 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
       // 但既然你提议对 ui:widget 赋值，直接修改 fieldProps 里的 ui:widget 更直接
 
       // 规则1: 有 maximum 和 minimum -> SliderWidget
-      if (fieldProps.type && (fieldProps.type === 'integer' || fieldProps.type === 'number')) {
+      const fieldType = fieldProps.type;
+      if ((typeof fieldType === 'string' && (fieldType === 'number' || fieldType === 'integer')) ||
+          (Array.isArray(fieldType) && fieldType.some(t => t === 'number' || t === 'integer'))
+      ) {
         if (!fieldProps['ui:widget']) {
           if (fieldProps.hasOwnProperty('maximum') && fieldProps.hasOwnProperty('minimum')) {
             // 优先使用已有的 ui:widget (如果后端偶尔还是会传)，否则按约定赋值
@@ -254,7 +257,7 @@ defineExpose({
 });
 
 export interface DynamicFormRendererInstance {
-  validate: () => Promise<void>; 
+  validate: () => Promise<void>;
   resetValidation: () => void;
 }
 

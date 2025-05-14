@@ -25,7 +25,7 @@ public enum EntityType
 /// 类型化的实体ID，用于精确引用。使用 record struct 实现值相等性。
 /// </summary>
 [JsonConverter(typeof(TypedIdConverter))]
-public readonly record struct TypedID(EntityType Type, string Id)
+public readonly record struct TypedId(EntityType Type, string Id)
 {
     // 提供一个方便的字符串表示，用于日志或调试
     public override string ToString() => $"{this.Type}:{this.Id}";

@@ -2,11 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { GameStateDto } from '../models/GameStateDto';
-import type { UpdateGameStateRequestDto } from '../models/UpdateGameStateRequestDto';
-import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
+import type {GameStateDto} from '../models/GameStateDto';
+import type {UpdateGameStateRequestDto} from '../models/UpdateGameStateRequestDto';
+import type {CancelablePromise} from '../core/CancelablePromise';
+import {OpenAPI} from '../core/OpenAPI';
+import {request as __request} from '../core/request';
+
 export class GameStateService {
     /**
      * 获取指定 Block 的当前 GameState。
@@ -14,8 +15,8 @@ export class GameStateService {
      * @throws ApiError
      */
     public static getApiBlocksGameState({
-        blockId,
-    }: {
+                                            blockId,
+                                        }: {
         /**
          * 目标 Block 的 ID。
          */
@@ -32,15 +33,16 @@ export class GameStateService {
             },
         });
     }
+
     /**
      * 修改指定 Block 的 GameState。使用 PATCH 方法进行部分更新。
      * @returns void
      * @throws ApiError
      */
     public static patchApiBlocksGameState({
-        blockId,
-        requestBody,
-    }: {
+                                              blockId,
+                                              requestBody,
+                                          }: {
         /**
          * 目标 Block 的 ID。
          */

@@ -13,7 +13,7 @@ namespace YAESandBox.API.Controllers;
 public class GameStateController(
     IBlockWritService writServices,
     IBlockReadService readServices)
-    : APIControllerBase(readServices, writServices)
+    : ApiControllerBase(readServices, writServices)
 {
     /// <summary>
     /// 获取指定 Block 的当前 GameState。
@@ -27,7 +27,7 @@ public class GameStateController(
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<IActionResult> GetGameState(string blockId)
     {
-        var gameState = await this.blockReadService.GetBlockGameStateAsync(blockId); // 实现获取 GameState 的逻辑
+        var gameState = await this.BlockReadService.GetBlockGameStateAsync(blockId); // 实现获取 GameState 的逻辑
         if (gameState == null)
             return this.NotFound($"未找到 ID 为 '{blockId}' 的 Block。");
         // 将 GameState 转换为 DTO
@@ -56,7 +56,7 @@ public class GameStateController(
         if (request?.SettingsToUpdate == null)
             return this.BadRequest("请求体或要更新的设置不能为空。");
 
-        var result = await this.blockWritService.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate); // 实现更新逻辑
+        var result = await this.BlockWritService.UpdateBlockGameStateAsync(blockId, request.SettingsToUpdate); // 实现更新逻辑
 
         switch (result)
         {

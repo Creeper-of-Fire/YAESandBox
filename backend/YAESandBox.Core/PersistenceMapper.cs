@@ -135,8 +135,8 @@ internal static class PersistenceMapper
                 {
                     // 注意：需要确保 JsonSerializerOptions 传递正确
                     // 这里的 options 需要包含 TypedIdConverter 和 JsonStringEnumConverter
-                    var options = YAESandBoxJsonHelper.JsonSerializerOptions; // 假设 BlockManager 中的 _jsonOptions 可访问或重新创建
-                    var typedId = element.Deserialize<TypedID>(options);
+                    var options = YaeSandBoxJsonHelper.JsonSerializerOptions; // 假设 BlockManager 中的 _jsonOptions 可访问或重新创建
+                    var typedId = element.Deserialize<TypedId>(options);
                     // 如果反序列化成功（没有抛异常），并且结果不为 null
                     if (typedId != default) // 检查是否为默认值，因为 record struct 不是 null
                         return typedId;

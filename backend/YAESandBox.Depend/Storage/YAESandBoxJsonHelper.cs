@@ -9,7 +9,7 @@ namespace YAESandBox.Depend.Storage;
 /// <summary>
 /// 项目通用的JsonHelper
 /// </summary>
-public static class YAESandBoxJsonHelper
+public static class YaeSandBoxJsonHelper
 {
     /// <summary>
     /// 项目通用的JsonSerializerOptions
@@ -25,48 +25,12 @@ public static class YAESandBoxJsonHelper
     };
 
     /// <summary>
-    /// 把 <param name="newOptions"/> 的参数完全赋值给 <param name="oldOptions"/>
+    /// 把 <paramref name="newOptions"/> 的参数完全赋值给 <paramref name="oldOptions"/>
     /// </summary>
     /// <param name="oldOptions"></param>
     /// <param name="newOptions"></param>
     public static void CopyFrom(JsonSerializerOptions oldOptions, JsonSerializerOptions newOptions)
     {
-        // oldOptions.PropertyNamingPolicy = newOptions.PropertyNamingPolicy;
-        // oldOptions.AllowOutOfOrderMetadataProperties = newOptions.AllowOutOfOrderMetadataProperties;
-        // oldOptions.AllowTrailingCommas = newOptions.AllowTrailingCommas;
-        // oldOptions.DefaultBufferSize = newOptions.DefaultBufferSize;
-        // oldOptions.DefaultIgnoreCondition = newOptions.DefaultIgnoreCondition;
-        // oldOptions.DictionaryKeyPolicy = newOptions.DictionaryKeyPolicy;
-        // oldOptions.Encoder = newOptions.Encoder;
-        // oldOptions.IgnoreReadOnlyFields = newOptions.IgnoreReadOnlyFields;
-        // oldOptions.IgnoreReadOnlyProperties = newOptions.IgnoreReadOnlyProperties;
-        // oldOptions.IncludeFields = newOptions.IncludeFields;
-        // oldOptions.IndentCharacter = newOptions.IndentCharacter;
-        // oldOptions.IndentSize = newOptions.IndentSize;
-        // oldOptions.MaxDepth = newOptions.MaxDepth;
-        // oldOptions.NewLine = newOptions.NewLine;
-        // oldOptions.NumberHandling = newOptions.NumberHandling;
-        // oldOptions.PreferredObjectCreationHandling = newOptions.PreferredObjectCreationHandling;
-        // oldOptions.PropertyNameCaseInsensitive = newOptions.PropertyNameCaseInsensitive;
-        // oldOptions.ReadCommentHandling = newOptions.ReadCommentHandling;
-        // oldOptions.ReferenceHandler = newOptions.ReferenceHandler;
-        // oldOptions.RespectNullableAnnotations = newOptions.RespectNullableAnnotations;
-        // oldOptions.RespectRequiredConstructorParameters = newOptions.RespectRequiredConstructorParameters;
-        // oldOptions.TypeInfoResolver = newOptions.TypeInfoResolver;
-        // newOptions.TypeInfoResolverChain.ToList().ForEach(item =>
-        // {
-        //     if (!oldOptions.TypeInfoResolverChain.Contains(item)) // 避免重复添加
-        //         oldOptions.TypeInfoResolverChain.Add(item);
-        // });
-        // newOptions.Converters.ToList().ForEach(item =>
-        // {
-        //     if (!oldOptions.Converters.Contains(item)) // 避免重复添加
-        //         oldOptions.Converters.Add(item);
-        // });
-        // oldOptions.UnknownTypeHandling = newOptions.UnknownTypeHandling;
-        // oldOptions.UnmappedMemberHandling = newOptions.UnmappedMemberHandling;
-        // oldOptions.WriteIndented = newOptions.WriteIndented;
-
         ArgumentNullException.ThrowIfNull(oldOptions);
         ArgumentNullException.ThrowIfNull(newOptions);
 
@@ -137,5 +101,46 @@ public static class YAESandBoxJsonHelper
         {
             oldOptions.TypeInfoResolverChain.Add(resolver);
         }
+    }
+
+    /// <summary>
+    /// 将对象实例通过反射转换为字典，优先使用 JsonPropertyNameAttribute 指定的名称。
+    /// </summary>
+    /// <param name="obj">要转换的对象实例。</param>
+    /// <returns>一个包含属性名（或JsonPropertyName）和对应值的字典。如果输入对象为null，则返回一个空字典。</returns>
+    public static Dictionary<string, object?> ToDictionaryWithJsonPropertyNames(object obj)
+    {
+        var dictionary = new Dictionary<string, object?>();
+
+        var type = obj.GetType();
+        // 获取所有公共实例属性
+        var properties = type.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        foreach (var property in properties.Where(property => property.CanRead))
+        {
+            string key;
+            // 尝试获取 JsonPropertyNameAttribute
+            var jsonPropertyNameAttribute = property.GetCustomAttribute<JsonPropertyNameAttribute>();
+
+            if (jsonPropertyNameAttribute != null && !string.IsNullOrEmpty(jsonPropertyNameAttribute.Name))
+            {
+                // 如果特性存在且其Name属性有值，则使用它作为键
+                key = jsonPropertyNameAttribute.Name;
+            }
+            else
+            {
+                // 否则，回退到使用属性本身的名称
+                // 根据你的描述，你已经将属性名小写了，所以这里直接用 property.Name 即可
+                // 如果原始属性名是PascalCase，而你希望在没有特性时使用camelCase，可以进行转换：
+                // key = char.ToLowerInvariant(property.Name[0]) + property.Name.Substring(1);
+                // 但你的情况是属性名已经小写了。
+                key = property.Name;
+            }
+
+            object? value = property.GetValue(obj);
+            dictionary[key] = value; // 使用索引器赋值，如果key重复会覆盖（对于属性通常不会）
+        }
+
+        return dictionary;
     }
 }

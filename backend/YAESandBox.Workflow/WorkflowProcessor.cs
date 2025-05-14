@@ -7,10 +7,10 @@ namespace YAESandBox.Workflow;
 
 public class WorkflowProcessor
 {
-    private Dictionary<string, object> variables { get; }
-    private List<StepProcessor> steps { get; }
+    private Dictionary<string, object> Variables { get; }
+    private List<StepProcessor> Steps { get; }
 
-    private WorkflowProcessorContent content { get; init; }
+    private WorkflowProcessorContent Content { get; init; }
 
     public class WorkflowProcessorContent(
         IMasterAiService masterAiService,
@@ -21,11 +21,11 @@ public class WorkflowProcessor
 
         public IWorkflowDataAccess DataAccess { get; } = dataAccess;
 
-        public void RequestDisplayUpdateCallback(string Content, UpdateMode UpdateMode = UpdateMode.FullSnapshot) =>
-            requestDisplayUpdateCallback(new DisplayUpdateRequestPayload(Content, UpdateMode));
+        public void RequestDisplayUpdateCallback(string content, UpdateMode updateMode = UpdateMode.FullSnapshot) =>
+            requestDisplayUpdateCallback(new DisplayUpdateRequestPayload(content, updateMode));
 
-        public string? rawText { get; set; }
-        public List<AtomicOperation> operations { get; } = [];
+        public string? RawText { get; set; }
+        public List<AtomicOperation> Operations { get; } = [];
     }
 
 
@@ -36,23 +36,23 @@ public class WorkflowProcessor
         Action<DisplayUpdateRequestPayload> requestDisplayUpdateCallback,
         CancellationToken cancellationToken = default)
     {
-        this.content = new WorkflowProcessorContent(masterAiService, dataAccess, requestDisplayUpdateCallback);
-        var workflowProcessorConfig = ConfigLocator.findWorkflowProcessorConfig(workflowId);
-        this.variables = triggerParams.ToDictionary(kv => kv.Key, object (kv) => kv.Value);
-        this.steps = workflowProcessorConfig.stepIds.ConvertAll(it =>
-            ConfigLocator.findStepProcessorConfig(it).ToStepProcessor(this.content, this.variables));
+        this.Content = new WorkflowProcessorContent(masterAiService, dataAccess, requestDisplayUpdateCallback);
+        var workflowProcessorConfig = ConfigLocator.FindWorkflowProcessorConfig(workflowId);
+        this.Variables = triggerParams.ToDictionary(kv => kv.Key, object (kv) => kv.Value);
+        this.Steps = workflowProcessorConfig.StepIds.ConvertAll(it =>
+            ConfigLocator.FindStepProcessorConfig(it).ToStepProcessor(this.Content, this.Variables));
     }
 
     public async Task<WorkflowExecutionResult> ExecuteWorkflowAsync()
     {
-        foreach (var step in this.steps)
+        foreach (var step in this.Steps)
         {
             // TODO 变量池输出
             await step.ExecuteStepsAsync();
         }
 
-        return new WorkflowExecutionResult(true, null, null, this.content.operations, this.content.rawText ?? "");
+        return new WorkflowExecutionResult(true, null, null, this.Content.Operations, this.Content.RawText ?? "");
     }
 }
 
-public record WorkflowProcessorConfig(List<string> stepIds);
+public record WorkflowProcessorConfig(List<string> StepIds);

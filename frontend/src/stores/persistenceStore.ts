@@ -1,11 +1,11 @@
 ﻿// src/stores/persistenceStore.ts
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
-import { PersistenceService } from '@/types/generated/api'; // 引入 API Service
-import { useTopologyStore } from './topologyStore';
-import { useBlockContentStore } from './blockContentStore';
-import { useBlockStatusStore } from './blockStatusStore';
-import { useConnectionStore } from './connectionStore'; // 用于检查 SignalR 状态
+import {defineStore} from 'pinia';
+import {ref} from 'vue';
+import {PersistenceService} from '@/types/generated/api'; // 引入 API Service
+import {useTopologyStore} from './topologyStore';
+import {useBlockContentStore} from './blockContentStore';
+import {useBlockStatusStore} from './blockStatusStore';
+import {useConnectionStore} from './connectionStore'; // 用于检查 SignalR 状态
 
 // 定义盲存数据的结构 (前端关心的数据)
 interface BlindData {
@@ -48,7 +48,7 @@ export const usePersistenceStore = defineStore('persistence', () => {
 
         try {
             // 2. 调用 API 保存
-            const blob = await PersistenceService.postApiPersistenceSave({ requestBody: blindData });
+            const blob = await PersistenceService.postApiPersistenceSave({requestBody: blindData});
 
             // 3. 创建下载链接并触发下载
             const url = window.URL.createObjectURL(blob);
@@ -91,7 +91,7 @@ export const usePersistenceStore = defineStore('persistence', () => {
         //    或者让 BlockStatusStore 在加载期间忽略某些更新？
         //    暂时先不停止，依赖后续的状态重置
         const wasConnected = connectionStore.isConnected;
-        if(wasConnected) {
+        if (wasConnected) {
             console.warn("PersistenceStore: 正在加载存档，SignalR 仍连接，可能会收到旧消息。");
             // await connectionStore.disconnectSignalR(); // 考虑是否需要断开
         }
@@ -110,7 +110,7 @@ export const usePersistenceStore = defineStore('persistence', () => {
         try {
             // 2. 调用 API 加载
             const responseData = await PersistenceService.postApiPersistenceLoad({
-                formData: { archiveFile: archiveFile }
+                formData: {archiveFile: archiveFile}
             });
 
             // 3. 解析盲存数据

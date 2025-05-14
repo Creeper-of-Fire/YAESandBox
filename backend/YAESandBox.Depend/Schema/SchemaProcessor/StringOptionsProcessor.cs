@@ -6,14 +6,6 @@ using YAESandBox.Depend.Schema.Attributes;
 
 namespace YAESandBox.Depend.Schema.SchemaProcessor;
 
-// StringOptionsProcessor.cs
-// For PropertyInfo
-// For LINQ methods like Select
-// For JsonSchema, JsonObjectType
-// For ISchemaProcessor, SchemaProcessorContext
-
-// For StringOptionsAttribute
-
 /// <summary>
 /// 处理带有 [StringOptionsAttribute] 的属性，
 /// 为其生成枚举和/或指向自定义自动完成 Widget 的配置。
@@ -77,14 +69,14 @@ public class StringOptionsProcessor : ISchemaProcessor
         // else
         //     context.Schema.ExtensionData["ui:widget"] = "RadioWidget";
 
-        var uiOptions = SchemaUISetting.GetOrCreateUiOptions(context.Schema);
+        var uiOptions = context.Schema.GetOrCreateUiOptions();
 
         if (optionsAttribute.IsEditableSelectOptions)
-            uiOptions.isEditableSelectOptions = true;
+            uiOptions.IsEditableSelectOptions = true;
 
         // 3. 如果有 optionsProviderEndpoint，则将其传递给 Widget
         if (!string.IsNullOrWhiteSpace(optionsAttribute.OptionsProviderEndpoint))
-            uiOptions.optionsProviderEndpoint = optionsAttribute.OptionsProviderEndpoint;
+            uiOptions.OptionsProviderEndpoint = optionsAttribute.OptionsProviderEndpoint;
 
         // 备注: isEditableSelectOptions 属性目前没有直接用于改变 Schema 生成逻辑，
         // 因为我们选择的 MyCustomStringAutoComplete Widget 本身就是可编辑的。

@@ -9,7 +9,7 @@ namespace YAESandBox.API.Hubs;
 
 public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
 {
-    private IWorkflowService workflowService { get; } = workflowService;
+    private IWorkflowService WorkflowService { get; } = workflowService;
 
     /// <summary>
     /// 触发主工作流
@@ -23,7 +23,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
             $"GameHub: 收到来自 {connectionId} 的主工作流触发请求: {request.RequestId}, Workflow: {request.WorkflowName}, ParentBlock: {request.ParentBlockId}");
         try
         {
-            await this.workflowService.HandleMainWorkflowTriggerAsync(request);
+            await this.WorkflowService.HandleMainWorkflowTriggerAsync(request);
         }
         catch (Exception ex)
         {
@@ -43,7 +43,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
             $"GameHub: 收到来自 {connectionId} 的微工作流触发请求: {request.RequestId}, Workflow:{request.WorkflowName}, Element:{request.TargetElementId}, Block:{request.ContextBlockId}");
         try
         {
-            await this.workflowService.HandleMicroWorkflowTriggerAsync(request);
+            await this.WorkflowService.HandleMicroWorkflowTriggerAsync(request);
         }
         catch (Exception ex)
         {
@@ -62,7 +62,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
         Log.Info($"GameHub: 收到来自 {connectionId} 的 ResolveConflict 请求: {request.RequestId}, Block: {request.BlockId}");
         try
         {
-            await this.workflowService.HandleConflictResolutionAsync(request);
+            await this.WorkflowService.HandleConflictResolutionAsync(request);
         }
         catch (Exception ex)
         {
@@ -81,7 +81,7 @@ public class GameHub(IWorkflowService workflowService) : Hub<IGameClient>
         Log.Info($"GameHub: 收到来自 {connectionId} 的 RegenerateBlock 请求: {request.RequestId}, Block: {request.BlockId}");
         try
         {
-            await this.workflowService.HandleRegenerateBlockAsync(request);
+            await this.WorkflowService.HandleRegenerateBlockAsync(request);
         }
         catch (Exception ex)
         {

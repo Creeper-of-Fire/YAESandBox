@@ -46,8 +46,8 @@
               </n-gi>
 
               <!-- 3. 右侧面板插槽 (仅桌面端渲染) -->
-              <n-gi v-show="!isMobile" 
-                    :span="rightPanelGridSpan" 
+              <n-gi v-show="!isMobile"
+                    :span="rightPanelGridSpan"
                     class="side-panel-area right-panel-area">
                 <div class="panel-wrapper">
                   <slot name="right-panel"></slot>

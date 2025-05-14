@@ -22,8 +22,8 @@ public class WorkflowService(
     IWorkflowNotifierService notifierService
 ) : IWorkflowService
 {
-    private IWorkFlowBlockService blockServices { get; } = blockServices;
-    private IWorkflowNotifierService notifierService { get; } = notifierService;
+    private IWorkFlowBlockService BlockServices { get; } = blockServices;
+    private IWorkflowNotifierService NotifierService { get; } = notifierService;
     // private readonly IAiService _aiService; // 未来可能注入 AI 服务
 
     ///<inheritdoc/>
@@ -32,7 +32,7 @@ public class WorkflowService(
         Log.Info(
             $"WorkflowService: 收到主工作流触发请求: RequestId={request.RequestId}, Workflow={request.WorkflowName}, ParentBlock={request.ParentBlockId}");
         var childBlock =
-            await this.blockServices.CreateChildBlockAsync(request.ParentBlockId, request.WorkflowName, request.Params);
+            await this.BlockServices.CreateChildBlockAsync(request.ParentBlockId, request.WorkflowName, request.Params);
         if (childBlock == null)
         {
             Log.Error($"创建子 Block 失败，父 Block: {request.ParentBlockId}");
@@ -48,23 +48,12 @@ public class WorkflowService(
     /// <inheritdoc/>
     public async Task HandleRegenerateBlockAsync(RegenerateBlockRequestDto request)
     {
+        Log.Info($"WorkflowService: 处理重新生成请求: RequestId={request.RequestId}, BlockId={request.BlockId}");
         // 1. 尝试将 Block 置于 Loading 状态
         //    注意：这里调用的是 BlockWritService 的方法，它会负责调用 BlockManager 并发送初始通知
-        var loadingStatus = await this.blockServices.TryStartRegenerationAsync(request.BlockId);
+        var loadingStatusResult = await this.BlockServices.TryStartRegenerationAsync(request.BlockId);
 
-        var block = loadingStatus.Value.Block;
-        var newRequest = new TriggerMainWorkflowRequestDto()
-        {
-            RequestId = request.RequestId,
-            WorkflowName = block.WorkflowName,
-            ParentBlockId = request.BlockId,
-            Params = block.TriggeredParams
-        };
-
-        Log.Info(
-            $"WorkflowService: 处理重新生成请求: RequestId={request.RequestId}, BlockId={request.BlockId}, Workflow={block.WorkflowName}");
-
-        if (!loadingStatus.IsSuccess)
+        if (!loadingStatusResult.TryGetValue(out var loadingStatus))
         {
             // 启动失败，BlockWritService 或 BlockManager 已记录日志
             // 可能需要通知调用者失败？目前仅记录日志
@@ -74,6 +63,15 @@ public class WorkflowService(
             // 暂时不额外通知，依赖 BlockWritService 发送的状态更新（如果状态变为 Loading 的话）
             return;
         }
+
+        var block = loadingStatus.Block;
+        var newRequest = new TriggerMainWorkflowRequestDto()
+        {
+            RequestId = request.RequestId,
+            WorkflowName = block.WorkflowName,
+            ParentBlockId = request.BlockId,
+            Params = block.TriggeredParams
+        };
 
         Log.Info($"WorkflowService: Block '{request.BlockId}' 已成功进入 Loading 状态，准备执行重新生成工作流 '{block.WorkflowName}'。");
 
@@ -159,7 +157,7 @@ public class WorkflowService(
                     TargetElementId = request.TargetElementId
                     // ScriptId 通常不需要为微工作流设置
                 };
-                await this.notifierService.NotifyDisplayUpdateAsync(updateDto);
+                await this.NotifierService.NotifyDisplayUpdateAsync(updateDto);
 
                 Log.Debug(
                     $"微工作流 '{request.WorkflowName}' 发送流片段到 '{request.TargetElementId}': '{part.Substring(0, Math.Min(part.Length, 50))}...'");
@@ -191,7 +189,7 @@ public class WorkflowService(
             {
                 TargetElementId = request.TargetElementId // 确保最终状态也发往目标元素
             };
-            await this.notifierService.NotifyDisplayUpdateAsync(completeDto);
+            await this.NotifierService.NotifyDisplayUpdateAsync(completeDto);
             Log.Debug(
                 $"微工作流 '{request.WorkflowName}' for TargetElementId '{request.TargetElementId}' 发送最终状态通知: {finalStatus}");
         }
@@ -245,7 +243,7 @@ public class WorkflowService(
                     UpdateMode: UpdateMode.FullSnapshot);
                 // 使用 NotifierService 发送 (确保 NotifierService 已实现 SendWorkflowUpdate)
                 // 注意：这里需要实际调用 INotifierService 的方法，我们假设它存在并能广播
-                await this.notifierService.NotifyDisplayUpdateAsync(updateDto); // <--- 添加此行
+                await this.NotifierService.NotifyDisplayUpdateAsync(updateDto); // <--- 添加此行
                 streamChunks.Add(part); // 存储块
 
                 // 安全地截取日志摘要
@@ -292,7 +290,7 @@ public class WorkflowService(
             Log.Error(ex, $"Block '{blockId}': 工作流 '{request.WorkflowName}' 执行过程中发生异常: {ex.Message}");
         }
 
-        var blockResult = await this.blockServices.HandleWorkflowCompletionAsync(blockId, request.RequestId,
+        var blockResult = await this.BlockServices.HandleWorkflowCompletionAsync(blockId, request.RequestId,
             success, rawTextResult, generatedCommands.ToAtomicOperationRequests(), outputVariables);
 
         Log.Debug($"Block '{blockId}': 已通知 BlockManager 工作流完成状态: Success={success}");
@@ -301,7 +299,7 @@ public class WorkflowService(
         var completeDto = new DisplayUpdateDto(request.RequestId, blockId,
             StreamingStatus: success ? StreamStatus.Complete : StreamStatus.Error, Content: rawTextResult,
             UpdateMode: UpdateMode.FullSnapshot);
-        await this.notifierService.NotifyDisplayUpdateAsync(completeDto);
+        await this.NotifierService.NotifyDisplayUpdateAsync(completeDto);
     }
 
     ///<inheritdoc/>
@@ -309,7 +307,7 @@ public class WorkflowService(
     {
         Log.Info($"收到冲突解决请求: RequestId={request.RequestId}, BlockId={request.BlockId}");
 
-        await this.blockServices.ApplyResolvedCommandsAsync(
+        await this.BlockServices.ApplyResolvedCommandsAsync(
             request.BlockId,
             request.ResolvedCommands);
 
