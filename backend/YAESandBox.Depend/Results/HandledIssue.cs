@@ -10,15 +10,15 @@ namespace YAESandBox.Depend.Results;
 public abstract record LazyInitHandledIssue(string Message) : IHandledIssue
 {
     /// <summary>转为Result</summary>
-    public FluentResults.Result ToResult()
+    public Result ToResult()
     {
-        return FluentResults.Result.Ok().WithReason(this);
+        return Result.Ok().WithReason(this);
     }
 
     /// <summary>转为Result</summary>
     public Result<T> ToResult<T>()
     {
-        return FluentResults.Result.Ok().WithReason(this);
+        return Result.Ok().WithReason(this);
     }
 
     /// <summary>

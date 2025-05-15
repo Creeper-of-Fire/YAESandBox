@@ -38,11 +38,11 @@ public static class VueFormSchemaGenerator
             DefaultReferenceTypeNullHandling = ReferenceTypeNullHandling.Null, // 默认可空，除非有[Required]或NRT非空
             GenerateAbstractProperties = true, // 用于 JsonPolymorphic (在 System.Text.Json 中由 [JsonDerivedType] 处理)
             FlattenInheritanceHierarchy = true,
-            // GenerateExamples = true, // 如果需要示例
             // TypeNameGenerator = new DefaultTypeNameGenerator(), // 可以自定义类型名生成
             // SchemaNameGenerator = new DefaultSchemaNameGenerator(), // 可以自定义 Schema $id 生成
             // ExcludedTypeNames = [],
-            // UseXmlDocumentation = true, // 如果需要从 XML 文档注释生成 description
+            // UseXmlDocumentation = false, // 不需要从 XML 文档注释生成 description，而是应该手动配置
+            // GenerateExamples = true, // 如果需要示例
         };
 
 

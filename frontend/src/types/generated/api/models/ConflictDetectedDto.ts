@@ -2,8 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type {AtomicOperationRequestDto} from './AtomicOperationRequestDto';
-
+import type { AtomicOperationRequestDto } from './AtomicOperationRequestDto';
 /**
  * (服务器 -> 客户端)
  * 当主工作流执行完成后，检测到 AI 生成的指令与用户在 Loading 状态下提交的指令存在冲突时发送。

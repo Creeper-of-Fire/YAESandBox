@@ -2,10 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type {CancelablePromise} from '../core/CancelablePromise';
-import {OpenAPI} from '../core/OpenAPI';
-import {request as __request} from '../core/request';
-
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class BlockManagementService {
     /**
      * 手动删除一个指定的 Block。
@@ -13,10 +12,10 @@ export class BlockManagementService {
      * @throws ApiError
      */
     public static deleteApiManageBlocks({
-                                            blockId,
-                                            recursive = true,
-                                            force = false,
-                                        }: {
+        blockId,
+        recursive = true,
+        force = false,
+    }: {
         /**
          * 要删除的 Block ID。
          */

@@ -2,14 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type {AbstractAiProcessorConfigDataWithSchemaDto} from '../models/AbstractAiProcessorConfigDataWithSchemaDto';
-import type {AiConfigurationSet} from '../models/AiConfigurationSet';
-import type {SelectOptionDto} from '../models/SelectOptionDto';
-import type {TestAiDto} from '../models/TestAiDto';
-import type {CancelablePromise} from '../core/CancelablePromise';
-import {OpenAPI} from '../core/OpenAPI';
-import {request as __request} from '../core/request';
-
+import type { AbstractAiProcessorConfigDataWithSchemaDto } from '../models/AbstractAiProcessorConfigDataWithSchemaDto';
+import type { AiConfigurationSet } from '../models/AiConfigurationSet';
+import type { SelectOptionDto } from '../models/SelectOptionDto';
+import type { TestAiDto } from '../models/TestAiDto';
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class AiConfigurationsService {
     /**
      * 获取所有已保存的 AI 配置集的完整列表。
@@ -25,15 +24,14 @@ export class AiConfigurationsService {
             },
         });
     }
-
     /**
      * 添加一个新的 AI 配置集。
      * @returns string Created
      * @throws ApiError
      */
     public static postApiAiConfigurations({
-                                              requestBody,
-                                          }: {
+        requestBody,
+    }: {
         /**
          * 要添加的 AI 配置集对象。
          */
@@ -50,15 +48,14 @@ export class AiConfigurationsService {
             },
         });
     }
-
     /**
      * 根据 UUID 获取一个特定的 AI 配置集。
      * @returns AiConfigurationSet OK
      * @throws ApiError
      */
     public static getApiAiConfigurations1({
-                                              uuid,
-                                          }: {
+        uuid,
+    }: {
         /**
          * 配置集的唯一标识符。
          */
@@ -76,16 +73,15 @@ export class AiConfigurationsService {
             },
         });
     }
-
     /**
      * 更新一个已存在的 AI 配置集。
      * @returns void
      * @throws ApiError
      */
     public static putApiAiConfigurations({
-                                             uuid,
-                                             requestBody,
-                                         }: {
+        uuid,
+        requestBody,
+    }: {
         /**
          * 要更新的配置集的唯一标识符。
          */
@@ -110,15 +106,14 @@ export class AiConfigurationsService {
             },
         });
     }
-
     /**
      * 根据 UUID 删除一个 AI 配置集。
      * @returns void
      * @throws ApiError
      */
     public static deleteApiAiConfigurations({
-                                                uuid,
-                                            }: {
+        uuid,
+    }: {
         /**
          * 要删除的配置集的唯一标识符。
          */
@@ -136,16 +131,15 @@ export class AiConfigurationsService {
             },
         });
     }
-
     /**
      * 测试Ai配置
      * @returns string OK
      * @throws ApiError
      */
     public static postApiAiConfigurationsAiConfigTest({
-                                                          moduleType,
-                                                          requestBody,
-                                                      }: {
+        moduleType,
+        requestBody,
+    }: {
         /**
          * 配置的类型。
          */
@@ -168,7 +162,6 @@ export class AiConfigurationsService {
             },
         });
     }
-
     /**
      * 获取所有可用的 AI 配置【类型定义】列表。
      * 用于前端展示可以【新建】哪些类型的 AI 配置。
@@ -181,7 +174,6 @@ export class AiConfigurationsService {
             url: '/api/ai-configurations/available-config-types',
         });
     }
-
     /**
      * 获取指定 AI 模块类型的配置模板，包含初始默认数据和可选的 JSON Schema。
      * 用于前端为新配置项生成表单。
@@ -189,9 +181,9 @@ export class AiConfigurationsService {
      * @throws ApiError
      */
     public static getApiAiConfigurationsTemplates({
-                                                      moduleType,
-                                                      includeSchema = false,
-                                                  }: {
+        moduleType,
+        includeSchema = false,
+    }: {
         /**
          * AI 模块的类型名称 (例如 "DoubaoAiProcessorConfig")。
          */

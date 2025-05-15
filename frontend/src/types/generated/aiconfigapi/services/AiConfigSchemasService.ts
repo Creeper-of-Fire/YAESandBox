@@ -2,10 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type {CancelablePromise} from '../core/CancelablePromise';
-import {OpenAPI} from '../core/OpenAPI';
-import {request as __request} from '../core/request';
-
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class AiConfigSchemasService {
     /**
      * @deprecated
@@ -15,8 +14,8 @@ export class AiConfigSchemasService {
      * @throws ApiError
      */
     public static getApiAiConfigurationManagementSchemas({
-                                                             configTypeName,
-                                                         }: {
+        configTypeName,
+    }: {
         /**
          * AI 配置的类型名称 (例如 "DoubaoAiProcessorConfig")。
          */

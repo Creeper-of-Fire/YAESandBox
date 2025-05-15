@@ -27,7 +27,7 @@ public abstract class BaseEntity
     public bool IsDestroyed { get; set; } = false;
 
     // 用于存储动态添加的属性
-    private readonly Dictionary<string, object?> _dynamicAttributes = new();
+    private Dictionary<string, object?> DynamicAttributes { get; } = new();
 
     /// <summary>
     /// 获取实体的 TypedID 表示。
@@ -58,7 +58,7 @@ public abstract class BaseEntity
             nameof(this.EntityId) => this.EntityId,
             nameof(this.EntityType) => this.EntityType, // 注意这访问的是属性
             nameof(this.IsDestroyed) => this.IsDestroyed,
-            _ => this._dynamicAttributes.GetValueOrDefault(key, defaultValue)
+            _ => this.DynamicAttributes.GetValueOrDefault(key, defaultValue)
         };
     }
 
@@ -110,7 +110,7 @@ public abstract class BaseEntity
     /// </summary>
     public bool HasAttribute(string key)
     {
-        return CoreFields.Contains(key) || this._dynamicAttributes.ContainsKey(key);
+        return CoreFields.Contains(key) || this.DynamicAttributes.ContainsKey(key);
     }
 
     /// <summary>
@@ -126,7 +126,7 @@ public abstract class BaseEntity
             return false;
         }
 
-        bool removed = this._dynamicAttributes.Remove(key);
+        bool removed = this.DynamicAttributes.Remove(key);
         if (removed)
             Log.Debug($"实体 '{this.TypedId}': 删除动态属性 '{key}'。");
         else
@@ -150,7 +150,7 @@ public abstract class BaseEntity
         }; // 考虑是否需要忽略大小写
 
         // 合并动态属性
-        foreach (var kvp in this._dynamicAttributes)
+        foreach (var kvp in this.DynamicAttributes)
             // 简单的浅拷贝处理（对于 List 和 Dictionary）
             // 注意：这不会深拷贝嵌套的复杂对象
             allAttrs[kvp.Key] = kvp.Value switch
@@ -196,7 +196,7 @@ public abstract class BaseEntity
 
         // 设置动态属性
         // 子类覆盖时应先调用 base.SetAttribute 或在这里进行特定验证
-        this._dynamicAttributes[key] = value;
+        this.DynamicAttributes[key] = value;
         // logger.LogDebug($"实体 '{this.TypedId}': 设置动态属性 {key} = {value?.ToString() ?? "null"}");
     }
 
@@ -229,7 +229,7 @@ public abstract class BaseEntity
         }
 
         // 获取当前动态属性值
-        this._dynamicAttributes.TryGetValue(key, out object? currentValue);
+        this.DynamicAttributes.TryGetValue(key, out object? currentValue);
         object newValueToSet = op.ChangedValue(currentValue, value);
         this.SetAttribute(key, newValueToSet);
     }
@@ -258,10 +258,10 @@ public abstract class BaseEntity
         clone.IsDestroyed = this.IsDestroyed;
 
         // 3. 深拷贝动态属性
-        foreach (var kvp in this._dynamicAttributes)
+        foreach (var kvp in this.DynamicAttributes)
             // 实现基本的深拷贝逻辑 (对 List 和 Dictionary)
             // 注意: 这不会递归深拷贝复杂对象内部的引用
-            clone._dynamicAttributes[kvp.Key] = kvp.Value switch
+            clone.DynamicAttributes[kvp.Key] = kvp.Value switch
             {
                 List<object> list => new List<object>(list), // 拷贝列表本身，内部元素是浅拷贝
                 Dictionary<string, object> dict => new Dictionary<string, object>(dict), // 拷贝字典本身，内部值是浅拷贝

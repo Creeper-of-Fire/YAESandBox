@@ -2,8 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type {AbstractAiProcessorConfig} from './AbstractAiProcessorConfig';
-
+import type { AbstractAiProcessorConfig } from './AbstractAiProcessorConfig';
 /**
  * 代表一个 AI 配置集，它包含了一组特定类型的 AI 配置。
  */

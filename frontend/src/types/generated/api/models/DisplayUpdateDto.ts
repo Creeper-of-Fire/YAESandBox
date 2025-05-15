@@ -2,9 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type {StreamStatus} from './StreamStatus';
-import type {UpdateMode} from './UpdateMode';
-
+import type { StreamStatus } from './StreamStatus';
+import type { UpdateMode } from './UpdateMode';
 /**
  * (服务器 -> 客户端)
  * 携带由工作流（主工作流或微工作流）生成或处理的内容，用于更新前端显示。

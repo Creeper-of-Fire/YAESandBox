@@ -2,8 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type {AbstractAiProcessorConfig} from './AbstractAiProcessorConfig';
-
+import type { AbstractAiProcessorConfig } from './AbstractAiProcessorConfig';
 /**
  * 具有 Schema 的数据对象
  */

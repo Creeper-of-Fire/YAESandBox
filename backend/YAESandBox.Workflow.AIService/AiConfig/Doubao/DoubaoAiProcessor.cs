@@ -31,8 +31,8 @@ file static class PromptRoleMapper
 
 internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiProcessorConfig parameters) : IAiProcessor
 {
-    private readonly HttpClient _httpClient = dependencies.HttpClient;
-    private readonly DoubaoAiProcessorConfig _config = parameters;
+    private HttpClient HttpClient { get; } = dependencies.HttpClient;
+    private DoubaoAiProcessorConfig Config { get; } = parameters;
 
     public async Task<Result> StreamRequestAsync(
         IEnumerable<RoledPromptDto> prompts,
@@ -41,24 +41,24 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
     {
         List<DoubaoChatMessage> doubaoMessages = [.. prompts.Select(p => p.ToDoubaoMessage())];
 
-        var responseFormatParam = new DoubaoResponseFormat(this._config.ResponseFormatType);
+        var responseFormatParam = new DoubaoResponseFormat(this.Config.ResponseFormatType);
 
         var requestPayload = new DoubaoChatRequest(
-            Model: this._config.ModelName,
+            Model: this.Config.ModelName,
             Messages: doubaoMessages,
             Stream: true,
-            Temperature: this._config.Temperature,
-            MaxTokens: this._config.MaxOutputTokens,
-            TopP: this._config.TopP,
-            Stop: this._config.StopSequences,
+            Temperature: this.Config.Temperature,
+            MaxTokens: this.Config.MaxOutputTokens,
+            TopP: this.Config.TopP,
+            Stop: this.Config.StopSequences,
             ResponseFormat: responseFormatParam,
-            FrequencyPenalty: this._config.FrequencyPenalty,
-            PresencePenalty: this._config.PresencePenalty,
-            StreamOptions: new DoubaoStreamOptions(this._config.StreamOptionsIncludeUsage),
-            ServiceTier: this._config.ServiceTier,
-            Logprobs: this._config.Logprobs,
-            TopLogprobs: this._config.TopLogprobs,
-            LogitBias: this._config.LogitBias?.ToDictionary(kvp => kvp.TokenId, kvp => kvp.BiasValue),
+            FrequencyPenalty: this.Config.FrequencyPenalty,
+            PresencePenalty: this.Config.PresencePenalty,
+            StreamOptions: new DoubaoStreamOptions(this.Config.StreamOptionsIncludeUsage),
+            ServiceTier: this.Config.ServiceTier,
+            Logprobs: this.Config.Logprobs,
+            TopLogprobs: this.Config.TopLogprobs,
+            LogitBias: this.Config.LogitBias?.ToDictionary(kvp => kvp.TokenId, kvp => kvp.BiasValue),
             Tools: null
         );
 
@@ -71,13 +71,13 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
                     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
                 })
         };
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this._config.ApiKey); // 从 _config 获取 ApiKey
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this.Config.ApiKey); // 从 _config 获取 ApiKey
 
         string? lastFinishReason = null;
 
         try
         {
-            using var response = await this._httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response = await this.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
@@ -209,24 +209,24 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
     {
         List<DoubaoChatMessage> doubaoMessages = [.. prompts.Select(p => p.ToDoubaoMessage())];
 
-        var responseFormatParam = new DoubaoResponseFormat(this._config.ResponseFormatType);
+        var responseFormatParam = new DoubaoResponseFormat(this.Config.ResponseFormatType);
 
         var requestPayload = new DoubaoChatRequest(
-            Model: this._config.ModelName,
+            Model: this.Config.ModelName,
             Messages: doubaoMessages,
             Stream: false, // ***关键区别: 非流式请求设置为 false***
-            Temperature: this._config.Temperature,
-            MaxTokens: this._config.MaxOutputTokens,
-            TopP: this._config.TopP,
-            Stop: this._config.StopSequences,
+            Temperature: this.Config.Temperature,
+            MaxTokens: this.Config.MaxOutputTokens,
+            TopP: this.Config.TopP,
+            Stop: this.Config.StopSequences,
             ResponseFormat: responseFormatParam,
-            FrequencyPenalty: this._config.FrequencyPenalty,
-            PresencePenalty: this._config.PresencePenalty,
+            FrequencyPenalty: this.Config.FrequencyPenalty,
+            PresencePenalty: this.Config.PresencePenalty,
             StreamOptions: null, // 非流式请求不需要 StreamOptions
-            ServiceTier: this._config.ServiceTier,
-            Logprobs: this._config.Logprobs,
-            TopLogprobs: this._config.TopLogprobs,
-            LogitBias: this._config.LogitBias?.ToDictionary(kvp => kvp.TokenId, kvp => kvp.BiasValue),
+            ServiceTier: this.Config.ServiceTier,
+            Logprobs: this.Config.Logprobs,
+            TopLogprobs: this.Config.TopLogprobs,
+            LogitBias: this.Config.LogitBias?.ToDictionary(kvp => kvp.TokenId, kvp => kvp.BiasValue),
             Tools: null // 当前未实现工具调用
         );
 
@@ -240,12 +240,12 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
                     DefaultIgnoreCondition = System.Text.Json.Serialization.JsonIgnoreCondition.WhenWritingNull,
                 })
         };
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this._config.ApiKey);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this.Config.ApiKey);
 
         try
         {
             // 发送请求并等待完整的响应
-            using var response = await this._httpClient.SendAsync(request, cancellationToken);
+            using var response = await this.HttpClient.SendAsync(request, cancellationToken);
 
             // 检查响应状态码
             if (!response.IsSuccessStatusCode)

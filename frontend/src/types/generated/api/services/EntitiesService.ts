@@ -2,13 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type {EntityDetailDto} from '../models/EntityDetailDto';
-import type {EntitySummaryDto} from '../models/EntitySummaryDto';
-import type {EntityType} from '../models/EntityType';
-import type {CancelablePromise} from '../core/CancelablePromise';
-import {OpenAPI} from '../core/OpenAPI';
-import {request as __request} from '../core/request';
-
+import type { EntityDetailDto } from '../models/EntityDetailDto';
+import type { EntitySummaryDto } from '../models/EntitySummaryDto';
+import type { EntityType } from '../models/EntityType';
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class EntitiesService {
     /**
      * 获取指定 Block 当前可交互 WorldState 中的所有非销毁实体摘要信息。
@@ -16,8 +15,8 @@ export class EntitiesService {
      * @throws ApiError
      */
     public static getApiEntities({
-                                     blockId,
-                                 }: {
+        blockId,
+    }: {
         /**
          * 要查询的目标 Block 的 ID。
          */
@@ -35,17 +34,16 @@ export class EntitiesService {
             },
         });
     }
-
     /**
      * 获取指定 Block 当前可交互 WorldState 中的单个非销毁实体的详细信息。
      * @returns EntityDetailDto 成功返回实体详细信息。
      * @throws ApiError
      */
     public static getApiEntities1({
-                                      entityType,
-                                      entityId,
-                                      blockId,
-                                  }: {
+        entityType,
+        entityId,
+        blockId,
+    }: {
         /**
          * 要查询的实体的类型 (Item, Character, Place)。
          */
