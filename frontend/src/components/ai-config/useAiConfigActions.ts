@@ -13,10 +13,9 @@ interface UseAiConfigActionsParams {
     selectedConfigSetUuid: Ref<string | null>;
     currentConfigSet: ComputedRef<AiConfigurationSet | null>;
     selectedAiModuleType: Ref<string | null>;
-    currentSchema: Ref<Record<string, any> | null>; // 如果删除逻辑需要它
     formDataCopy: Ref<AbstractAiProcessorConfig | null>;
     formChanged: Ref<boolean>;
-    rawSchemaForForm: Ref<Record<string, any> | null>;
+    currentSchema: Ref<Record<string, any> | null>;
     dynamicFormRendererRef: Ref<DynamicFormRendererInstance | null>;
     callApi: <T>(fn: () => Promise<T>, successMessage?: string, autoHandleError?: boolean) => Promise<T | undefined>;
     fetchAllConfigSets: () => Promise<void>;
@@ -33,10 +32,9 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
         selectedConfigSetUuid,
         currentConfigSet,
         selectedAiModuleType,
-        currentSchema,
         formDataCopy,
         formChanged,
-        rawSchemaForForm,
+        currentSchema,
         dynamicFormRendererRef,
         callApi,
         fetchAllConfigSets,
@@ -54,7 +52,7 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
         }
 
         // 1. 手动触发表单校验 (通过 DynamicFormRenderer 实例)
-        if (dynamicFormRendererRef.value && selectedAiModuleType.value && rawSchemaForForm.value) {
+        if (dynamicFormRendererRef.value && selectedAiModuleType.value && currentSchema.value) {
             try {
                 await dynamicFormRendererRef.value.validate(); // 调用暴露的方法
             } catch (errors: any) {
@@ -62,7 +60,7 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
                 console.warn('表单校验失败:', errors);
                 return; // 校验失败，不继续保存
             }
-        } else if (selectedAiModuleType.value && rawSchemaForForm.value) {
+        } else if (selectedAiModuleType.value && currentSchema.value) {
             console.warn('无法访问表单渲染器实例进行校验，将不经验证地保存。');
         }
 

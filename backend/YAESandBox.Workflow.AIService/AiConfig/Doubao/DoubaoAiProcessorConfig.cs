@@ -9,7 +9,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
 /// <summary>
 /// 豆包的AI配置
 /// </summary>
-internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : AbstractAiProcessorConfig
+internal record DoubaoAiProcessorConfig : AbstractAiProcessorConfig
 {
     /// <summary>
     /// 最大输出Token数
@@ -35,7 +35,7 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
         ErrorMessageResourceName = "Validation_Required",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources) // 通用验证消息
     )]
-    public string ApiKey { get; init; } = ApiKey;
+    public string? ApiKey { get; init; }
 
     /// <summary>
     /// 模型名称
@@ -59,7 +59,7 @@ internal record DoubaoAiProcessorConfig(string ApiKey, string ModelName) : Abstr
         "deepseek-r1-250120",
         IsEditableSelectOptions = true)]
     [DefaultValue("doubao-1-5-lite-32k-250115")]
-    public string ModelName { get; init; } = ModelName;
+    public string? ModelName { get; init; }
 
     [Display(
         Name = "DoubaoAiProcessorConfig_Temperature_Label",

@@ -176,7 +176,8 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<AbstractAiProcessorConfig> GetConfigurationDefaultData(string moduleType)
+    [Obsolete("我们希望前端创建空对象并且实现加载默认值的功能。")]
+    public async Task<ActionResult<AbstractAiProcessorConfig>> GetConfigurationDefaultData(string moduleType)
     {
         if (string.IsNullOrWhiteSpace(moduleType))
             return this.BadRequest("AI 模块类型名称 (moduleType) 不能为空。");
@@ -189,7 +190,22 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (!typeof(AbstractAiProcessorConfig).IsAssignableFrom(configType))
             // 理论上不会发生，ConfigSchemasHelper.GetTypeByName 可能已经处理
             return this.BadRequest($"类型 '{moduleType}' 不是一个有效的 AI 配置类型。");
-        
+
+        var allSetsResult = await this.ConfigurationManager.GetAllConfigurationsAsync();
+        if (allSetsResult.TryGetValue(out var allSets))
+        {
+            var set = allSets.FirstOrDefault(s => s.Value.ConfigSetName == AiConfigurationSet.DefaultConfigSetName).Value;
+            if (set != null)
+            {
+                if (set.Configurations.TryGetValue(moduleType, out var defaultConfig))
+                {
+                    object? configWithRequiredOnly = YaeSandBoxJsonHelper.CreateObjectWithRequiredPropertiesOnly(defaultConfig, configType);
+                    if (configWithRequiredOnly is AbstractAiProcessorConfig aiProcessorConfig)
+                        return this.Ok(aiProcessorConfig);
+                }
+            }
+        }
+
         if (Activator.CreateInstance(configType) is not AbstractAiProcessorConfig initialData)
             return this.StatusCode(StatusCodes.Status500InternalServerError, $"无法为类型 '{moduleType}' 创建初始数据实例。请确保它有一个公共无参数构造函数。");
 

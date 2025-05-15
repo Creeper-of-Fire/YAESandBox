@@ -566,7 +566,8 @@
           "500": {
             "description": "Internal Server Error"
           }
-        }
+        },
+        "deprecated": true
       }
     }
   },
@@ -579,7 +580,8 @@
             "type": "integer",
             "description": "最大输入Token数。不出现在请求体中，但是在其他地方（如历史记录生成）会有用。",
             "format": "int32",
-            "default": 2147483647
+            "default": 2147483647,
+            "nullable": true
           }
         },
         "additionalProperties": false,

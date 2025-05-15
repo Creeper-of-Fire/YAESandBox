@@ -60,9 +60,9 @@ public record DoubaoResponseFormat(string? Type = null)
 }
 
 internal record DoubaoChatRequest(
-    [property: JsonPropertyName("model")] string Model,
     [property: JsonPropertyName("messages")]
     IReadOnlyList<DoubaoChatMessage> Messages,
+    [property: JsonPropertyName("model")] string? Model = null,
     [property: JsonPropertyName("stream")] bool? Stream = null,
     [property: JsonPropertyName("stream_options")]
     DoubaoStreamOptions? StreamOptions = null,

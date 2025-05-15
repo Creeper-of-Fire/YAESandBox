@@ -24,7 +24,7 @@ public abstract record AbstractAiProcessorConfig
         ResourceType = typeof(AiProcessorConfigResources)
     )]
     [DefaultValue(int.MaxValue)]
-    public int MaxInputTokens { get; init; } = int.MaxValue;
+    public int? MaxInputTokens { get; init; }
 
     // 没有流式响应的配置，因为流式应该在调用AI处配置，如工作流的AI配置。
 }

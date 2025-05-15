@@ -162,6 +162,7 @@ export class AiConfigurationsService {
         });
     }
     /**
+     * @deprecated
      * 获取指定 AI 模块类型的初始默认数据。
      * 用于前端为新配置项生成表单。
      * @returns AbstractAiProcessorConfig OK

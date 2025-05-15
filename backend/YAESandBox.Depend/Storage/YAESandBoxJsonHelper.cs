@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -142,5 +143,65 @@ public static class YaeSandBoxJsonHelper
         }
 
         return dictionary;
+    }
+
+    /// <summary>
+    /// 创建一个新的目标类型的实例，并仅从源对象复制带有 [RequiredAttribute] 标记的属性值。
+    /// 此版本适用于源和目标类型在运行时确定。
+    /// </summary>
+    /// <param name="source">源对象。</param>
+    /// <param name="targetType">要创建的目标对象的类型。</param>
+    /// <returns>一个新的目标类型实例，只包含源对象中标记为 [Required] 的属性值。如果源对象为 null 或无法创建目标实例，则返回 null。</returns>
+    public static object? CreateObjectWithRequiredPropertiesOnly(object? source, Type targetType)
+    {
+        if (source == null)
+            return null;
+
+        // 确保 targetType 可以被实例化 (例如，有无参数构造函数)
+        object? target;
+        try
+        {
+            target = Activator.CreateInstance(targetType);
+            if (target == null)
+                return null;
+        }
+        catch (Exception)
+        {
+            return null;
+        }
+
+        var sourceType = source.GetType(); // 获取源对象的实际运行时类型
+        var sourceProperties = sourceType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+
+        foreach (var sourceProperty in sourceProperties)
+        {
+            // 检查属性是否标记了 [RequiredAttribute]
+            if (!sourceProperty.IsDefined(typeof(RequiredAttribute), inherit: true))
+                continue; // inherit: true 表示也检查基类中的特性
+            // 尝试在目标对象上找到同名且类型兼容的属性
+            var targetProperty = targetType.GetProperty(
+                sourceProperty.Name,
+                BindingFlags.Public | BindingFlags.Instance,
+                null, // binder
+                sourceProperty.PropertyType, // 属性类型必须匹配
+                Type.EmptyTypes, // 无索引参数
+                null // modifiers
+            );
+
+            // 如果找到了对应的目标属性，并且它可以被写入
+            if (targetProperty == null || !targetProperty.CanWrite) continue;
+            try
+            {
+                object? value = sourceProperty.GetValue(source); // 从源对象获取值
+                targetProperty.SetValue(target, value); // 设置到目标对象
+            }
+            catch (Exception)
+            {
+                // ReSharper disable once RedundantJumpStatement
+                continue;
+            }
+        }
+
+        return target;
     }
 }

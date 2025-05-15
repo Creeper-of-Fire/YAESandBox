@@ -72,12 +72,12 @@
       </n-card>
 
       <!-- 下方区域：动态表单 -->
-      <n-card v-if="currentConfigSet && selectedAiModuleType && rawSchemaForForm"
-              :title="rawSchemaForForm.description"> <!-- 假设 description 仍然在原始 schema 中 -->
+      <n-card v-if="currentConfigSet && selectedAiModuleType && currentSchema"
+              :title="currentSchema.description"> <!-- 假设 description 仍然在原始 schema 中 -->
         <dynamic-form-renderer
             v-if="typeof formDataCopy === 'object'"
             :key="formRenderKey"
-            :schema="rawSchemaForForm"
+            :schema="currentSchema"
             v-model="formDataCopy"
             :form-props="formGlobalProps"
             :is-loading="isCurrentSchemaLoading"
@@ -141,11 +141,11 @@ const dynamicFormRendererRef = ref<DynamicFormRendererInstance | null>(null);
 
 // ----------- 配置集状态 -----------
 // 使用 reactive 包裹 Record 本身，使其内部属性的增删也能被侦测
+const DEFAULT_CONFIG_SET_NAME = "Default";
 const allConfigSets = reactive<Record<string, AiConfigurationSet>>({});
-const formDataCopy = ref<AbstractAiProcessorConfig | null>(null); // **新增**: 用于存储当前编辑表单的数据副本
+const formDataCopy = ref<AbstractAiProcessorConfig | null>(null); // 用于存储当前编辑表单的数据副本
 const selectedConfigSetUuid = ref<string | null>(null);
 const formChanged = ref(false); // 标记当前表单是否有未保存的修改
-const rawSchemaForForm = ref<Record<string, any> | null>(null); // 新增：用于存储传递给 DynamicFormRenderer 的原始 Schema
 
 const currentConfigSet = computed<AiConfigurationSet | null>(() => {
   if (selectedConfigSetUuid.value && allConfigSets[selectedConfigSetUuid.value]) {
@@ -177,8 +177,8 @@ const canSaveChanges = computed(() => {
 // ----------- AI 类型与 Schema 状态 -----------
 const availableAiTypes = ref<ApiSelectOption[]>([]);
 const selectedAiModuleType = ref<string | null>(null);
-const currentSchema = ref<Record<string, any> | null>(null);
 const formRenderKey = ref(0); // 用于强制重新渲染 vue-form
+const currentSchema = ref<Record<string, any> | null>(null); // 用于存储传递给 DynamicFormRenderer 的原始 Schema
 
 const formGlobalProps = computed(() => ({
   // 这些是传递给 Naive UI NForm 组件的 props
@@ -254,10 +254,9 @@ const {
   selectedConfigSetUuid,
   currentConfigSet,
   selectedAiModuleType,
-  currentSchema, // 确保这个 ref 被正确传递和使用
   formDataCopy,
   formChanged,
-  rawSchemaForForm,
+  currentSchema,
   dynamicFormRendererRef,
   callApi, // 传递已定义的 callApi 函数
   fetchAllConfigSets, // 传递已定义的 fetchAllConfigSets 函数
@@ -372,7 +371,7 @@ watch(selectedAiModuleType, async (newModuleType, oldModuleType) => {
     message.error(`加载模型 "${newModuleType}" 的 Schema 失败。`);
     return
   }
-  rawSchemaForForm.value = rawSchema;
+  currentSchema.value = rawSchema;
   console.timeEnd(`[Schema Perf] Get/Fetch Schema: ${newModuleType}`);
   // -------------------------
   console.time(`[Schema Perf] State Update & Tick: ${newModuleType}`);
@@ -381,16 +380,114 @@ watch(selectedAiModuleType, async (newModuleType, oldModuleType) => {
   }
   let originalConfig = currentConfigSet.value.configurations[newModuleType];
   if (!originalConfig) {
-    const initialData: AbstractAiProcessorConfig = 
-        (await callApi(() => AiConfigurationsService.getApiAiConfigurationsDefaultData({moduleType: newModuleType}))) ?? {};
-    // 让 vue-form 根据（可能已预处理过的）schema 的 default 自动填充
-    originalConfig = reactive(initialData);
+    originalConfig = reactive(buildInitialDataFromDefaultSet(newModuleType, rawSchema, allConfigSets));
   }
   formDataCopy.value = cloneDeep(originalConfig);
   formRenderKey.value++;
   await nextTick();
   console.timeEnd(`[Schema Perf] State Update & Tick: ${newModuleType}`);
 })
+
+/**
+ * 根据 Schema 的 required 字段从 "Default" 配置集中构建初始数据对象。
+ * @param moduleType 当前 AI 模块的类型名称。
+ * @param schema 当前模块的 JSON Schema 对象。
+ * @param allSets 所有配置集的 reactive Record。
+ * @param onlyExtractRequiredProperties 只需要必要的属性。
+ * @param defaultConfigSetNameOrUuid "Default" 配置集的名称或 UUID。
+ * @returns 一个包含从 "Default" 配置集中提取的必需属性的初始数据对象，或者空对象。
+ */
+function buildInitialDataFromDefaultSet(
+    moduleType: string,
+    schema: Record<string, any> | null,
+    allSets: Record<string, AiConfigurationSet>,
+    onlyExtractRequiredProperties: boolean = true,
+    defaultConfigSetNameOrUuid: string = DEFAULT_CONFIG_SET_NAME // 默认使用常量
+): AbstractAiProcessorConfig {
+  const initialData: AbstractAiProcessorConfig = {};
+
+  if (!schema) {
+    console.warn(`[buildInitialData] Schema for ${moduleType} is null, returning empty initial data.`);
+    return initialData;
+  }
+
+  // 1. 查找 "Default" 配置集
+  // 如果 defaultConfigSetNameOrUuid 是 UUID，直接用 allSets[uuid]
+  // 如果是名称，需要遍历查找
+  let defaultSetConfig: AiConfigurationSet | undefined = undefined;
+  if (allSets[defaultConfigSetNameOrUuid]) { // 优先尝试作为 UUID
+    defaultSetConfig = allSets[defaultConfigSetNameOrUuid];
+  } else { // 尝试作为名称查找
+    const foundEntry = Object.entries(allSets).find(
+        ([uuid, set]) => set.configSetName === defaultConfigSetNameOrUuid
+    );
+    if (foundEntry) {
+      defaultSetConfig = foundEntry[1];
+    }
+  }
+
+  if (!defaultSetConfig) {
+    console.warn(`[buildInitialData] "Default" configuration set (identified by "${defaultConfigSetNameOrUuid}") not found.`);
+    // 即使没有 Default Set，表单库仍会尝试应用 Schema 中的 "default" 关键字
+    return initialData; // 返回空对象，让 Schema 的 default 生效
+  }
+
+  // 2. 从 "Default" 配置集中获取对应 moduleType 的配置
+  const defaultConfigForModule = defaultSetConfig.configurations?.[moduleType];
+
+  if (!defaultConfigForModule) {
+    console.warn(`[buildInitialData] No configuration found for module "${moduleType}" in the "Default" set.`);
+    return initialData; // 返回空对象
+  }
+
+  // 3. 如果需要提取所有属性，直接返回 defaultConfigForModule的深拷贝
+  if (!onlyExtractRequiredProperties) {
+    console.log(`[buildInitialData] Returning a full deep clone of the "Default" configuration for module "${moduleType}".`);
+    return cloneDeep(defaultConfigForModule);
+  }
+
+  // 4. 解析 Schema 中的 `required` 属性列表
+  // JSON Schema 的 `required` 是一个字符串数组，列出必需的属性名
+  const requiredProperties: string[] = schema.required || [];
+
+  if (requiredProperties.length === 0) {
+    console.warn(`[buildInitialData] No 'required' properties found in schema for "${moduleType}". Returning empty data (form will use schema defaults).`);
+    // 即使没有 required 属性从 Default Set 中提取，
+    // 也可能希望返回一个 defaultConfigForModule 的克隆（如果它存在），
+    // 或者让用户决定是否要“加载所有默认值”的按钮。
+    // 目前，我们严格按“只提取required”的逻辑，所以如果schema.required为空，就不从DefaultSet提取。
+    // 如果希望即使 schema.required 为空，也加载 DefaultSet 的所有内容，可以修改这里的逻辑。
+    // 例如: return cloneDeep(defaultConfigForModule) || initialData;
+    return initialData;
+  }
+
+  console.log(`[buildInitialData] For module "${moduleType}", required properties from schema:`, requiredProperties);
+  console.log(`[buildInitialData] Default config for module from "Default" set:`, defaultConfigForModule);
+
+
+  // 我们构建一个对象，初始时其类型是 Record<string, any>
+  // 以便动态添加属性。
+  const builtData: Record<string, any> = {};
+  // 4. 从 defaultConfigForModule 中提取这些 required 属性的值
+  for (const propName of requiredProperties) {
+    // 1. 检查属性是否真的存在于 defaultConfigForModule 对象上
+    if (Object.prototype.hasOwnProperty.call(defaultConfigForModule, propName)) {
+      // 2. 如果存在，我们才尝试读取它。
+      //    由于 defaultConfigForModule 是 AbstractAiProcessorConfig 类型 (或其子类)，
+      //    而 propName 是一个 string，TypeScript 无法直接用 string 索引它。
+      //    所以我们在这里进行类型断言，告诉 TypeScript "相信我，我知道我在做什么"。
+      const valueFromDefault = (defaultConfigForModule as Record<string, any>)[propName];
+      builtData[propName] = cloneDeep(valueFromDefault);
+    } else {
+      console.warn(`[buildInitialData] Required property "${propName}" (from schema) not found in the actual "Default" configuration object for module "${moduleType}". It will rely on schema's own default or be undefined.`);
+      // 如果属性在 Default 配置中不存在，我们就不把它添加到 builtData 中。
+      // 表单库后续会根据 Schema 的 default 关键字（如果存在）来处理这个字段。
+    }
+  }
+
+  console.log(`[buildInitialData] Constructed initial data for "${moduleType}":`, builtData);
+  return builtData as AbstractAiProcessorConfig;
+}
 
 function checkFormChange() {
   if (!selectedAiModuleType.value || !currentConfigSet.value?.configurations || formDataCopy.value === null) {

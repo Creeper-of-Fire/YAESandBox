@@ -11,10 +11,15 @@ namespace YAESandBox.Workflow.AIService.AiConfig;
 public class AiConfigurationSet
 {
     /// <summary>
+    /// 默认的 AI 配置集名称。
+    /// </summary>
+    internal const string DefaultConfigSetName = "Default";
+    
+    /// <summary>
     /// 创建一个默认的 AI 配置集。
     /// </summary>
     /// <returns></returns>
-    public static AiConfigurationSet MakeDefault() => new() { ConfigSetName = "Default" };
+    public static AiConfigurationSet MakeDefault() => new() { ConfigSetName = DefaultConfigSetName };
 
     /// <summary>
     /// 创建一个 AI 配置集字典，并且放入 一个默认的配置集。

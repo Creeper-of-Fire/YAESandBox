@@ -9,6 +9,6 @@ export type AbstractAiProcessorConfig = {
     /**
      * 最大输入Token数。不出现在请求体中，但是在其他地方（如历史记录生成）会有用。
      */
-    maxInputTokens?: number;
+    maxInputTokens?: number | null;
 };
 
