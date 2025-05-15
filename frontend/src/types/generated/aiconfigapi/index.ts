@@ -8,7 +8,6 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AbstractAiProcessorConfig } from './models/AbstractAiProcessorConfig';
-export type { AbstractAiProcessorConfigDataWithSchemaDto } from './models/AbstractAiProcessorConfigDataWithSchemaDto';
 export type { AiConfigurationSet } from './models/AiConfigurationSet';
 export type { ProblemDetails } from './models/ProblemDetails';
 export type { SelectOptionDto } from './models/SelectOptionDto';

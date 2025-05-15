@@ -55,8 +55,46 @@
           "500": {
             "description": "Internal Server Error"
           }
-        },
-        "deprecated": true
+        }
+      }
+    },
+    "/api/ai-configuration-management/available-config-types": {
+      "get": {
+        "tags": [
+          "AiConfigSchemas"
+        ],
+        "summary": "获取所有可用的 AI 配置【类型定义】列表。\r\n用于前端展示可以【新建】哪些类型的 AI 配置。",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOptionDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOptionDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOptionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
       }
     },
     "/api/ai-configurations": {
@@ -447,51 +485,12 @@
         }
       }
     },
-    "/api/ai-configurations/available-config-types": {
+    "/api/ai-configurations/default-data/{moduleType}": {
       "get": {
         "tags": [
           "AiConfigurations"
         ],
-        "summary": "获取所有可用的 AI 配置【类型定义】列表。\r\n用于前端展示可以【新建】哪些类型的 AI 配置。",
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SelectOptionDto"
-                  }
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SelectOptionDto"
-                  }
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "$ref": "#/components/schemas/SelectOptionDto"
-                  }
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api/ai-configurations/templates/{moduleType}": {
-      "get": {
-        "tags": [
-          "AiConfigurations"
-        ],
-        "summary": "获取指定 AI 模块类型的配置模板，包含初始默认数据和可选的 JSON Schema。\r\n用于前端为新配置项生成表单。",
+        "summary": "获取指定 AI 模块类型的初始默认数据。\r\n用于前端为新配置项生成表单。",
         "parameters": [
           {
             "name": "moduleType",
@@ -501,15 +500,6 @@
             "schema": {
               "type": "string"
             }
-          },
-          {
-            "name": "includeSchema",
-            "in": "query",
-            "description": "是否在响应中包含 JSON Schema。默认为 true。",
-            "schema": {
-              "type": "boolean",
-              "default": false
-            }
           }
         ],
         "responses": {
@@ -518,17 +508,17 @@
             "content": {
               "text/plain": {
                 "schema": {
-                  "$ref": "#/components/schemas/AbstractAiProcessorConfigDataWithSchemaDto"
+                  "$ref": "#/components/schemas/AbstractAiProcessorConfig"
                 }
               },
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AbstractAiProcessorConfigDataWithSchemaDto"
+                  "$ref": "#/components/schemas/AbstractAiProcessorConfig"
                 }
               },
               "text/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AbstractAiProcessorConfigDataWithSchemaDto"
+                  "$ref": "#/components/schemas/AbstractAiProcessorConfig"
                 }
               }
             }
@@ -594,23 +584,6 @@
         },
         "additionalProperties": false,
         "description": "这个是Ai服务配置的基类，仅含绝对存在的字段。"
-      },
-      "AbstractAiProcessorConfigDataWithSchemaDto": {
-        "required": [
-          "data"
-        ],
-        "type": "object",
-        "properties": {
-          "data": {
-            "$ref": "#/components/schemas/AbstractAiProcessorConfig"
-          },
-          "schema": {
-            "description": "对应 T 类型的 JSON Schema 配置信息",
-            "nullable": true
-          }
-        },
-        "additionalProperties": false,
-        "description": "具有 Schema 的数据对象"
       },
       "AiConfigurationSet": {
         "required": [

@@ -166,64 +166,20 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     }
 
     /// <summary>
-    /// 获取所有可用的 AI 配置【类型定义】列表。
-    /// 用于前端展示可以【新建】哪些类型的 AI 配置。
-    /// </summary>
-    /// <returns>一个列表，每个 SelectOptionDto 包含：
-    /// 'Value': 配置类型的编程名称 (如 "DoubaoAiProcessorConfig")，用于后续请求 Schema。
-    /// 'Label': 用户友好的类型显示名称 (如 "豆包AI模型")。
-    /// </returns>
-    [HttpGet("available-config-types")]
-    [ProducesResponseType(typeof(List<SelectOptionDto>), StatusCodes.Status200OK)] // SelectOptionDto 来自 Schema 命名空间
-    public ActionResult<List<SelectOptionDto>> GetAvailableConfigTypeDefinitions()
-    {
-        var availableTypes = ConfigSchemasHelper.GetAvailableAiConfigConcreteTypes();
-
-        var result = availableTypes.Select(type =>
-            {
-                // 尝试从 DisplayAttribute 获取用户友好的名称
-                var displayAttr = type.GetCustomAttribute<DisplayAttribute>(false); // false: 不检查继承链
-                string label = displayAttr?.GetName() ?? type.Name;
-
-                // 简化标签名称的逻辑 (与你之前提供的 AiConfigSchemasController 类似)
-                if (label.EndsWith("AiProcessorConfig", StringComparison.OrdinalIgnoreCase))
-                {
-                    label = label[..^"AiProcessorConfig".Length].Trim();
-                }
-                else if (label.EndsWith("Config", StringComparison.OrdinalIgnoreCase))
-                {
-                    label = label[..^"Config".Length].Trim();
-                }
-
-                if (string.IsNullOrEmpty(label)) label = type.Name; // Fallback
-
-                return new SelectOptionDto { Value = type.Name, Label = label };
-            })
-            .OrderBy(so => so.Label)
-            .ToList();
-
-        return this.Ok(result);
-    }
-
-    /// <summary>
-    /// 获取指定 AI 模块类型的配置模板，包含初始默认数据和可选的 JSON Schema。
+    /// 获取指定 AI 模块类型的初始默认数据。
     /// 用于前端为新配置项生成表单。
     /// </summary>
     /// <param name="moduleType">AI 模块的类型名称 (例如 "DoubaoAiProcessorConfig")。</param>
-    /// <param name="includeSchema">是否在响应中包含 JSON Schema。默认为 true。</param>
-    /// <returns>一个包含初始数据和可选 Schema 的对象。</returns>
-    [HttpGet("templates/{moduleType}")]
-    [ProducesResponseType(typeof(DataWithSchemaDto<AbstractAiProcessorConfig>), StatusCodes.Status200OK)]
+    /// <returns>初始数据。</returns>
+    [HttpGet("default-data/{moduleType}")]
+    [ProducesResponseType(typeof(AbstractAiProcessorConfig), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<DataWithSchemaDto<AbstractAiProcessorConfig>> GetConfigurationTemplate(
-        string moduleType, [FromQuery] bool includeSchema = false)
+    public ActionResult<AbstractAiProcessorConfig> GetConfigurationDefaultData(string moduleType)
     {
         if (string.IsNullOrWhiteSpace(moduleType))
-        {
             return this.BadRequest("AI 模块类型名称 (moduleType) 不能为空。");
-        }
 
         var configType = ConfigSchemasHelper.GetTypeByName(moduleType);
 
@@ -233,58 +189,11 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (!typeof(AbstractAiProcessorConfig).IsAssignableFrom(configType))
             // 理论上不会发生，ConfigSchemasHelper.GetTypeByName 可能已经处理
             return this.BadRequest($"类型 '{moduleType}' 不是一个有效的 AI 配置类型。");
-
-
-        // 1. 生成 initialData
-        // 尝试创建该类型的一个实例作为基础初始数据
-        // Activator.CreateInstance 要求类型有无参数构造函数
-
+        
         if (Activator.CreateInstance(configType) is not AbstractAiProcessorConfig initialData)
-        {
-            // 如果 Activator.CreateInstance 失败 (例如没有无参构造函数)，这是一个问题
-            // 或者你的 AbstractAiProcessorConfig 基类或子类构造函数有特殊逻辑阻止了简单实例化
             return this.StatusCode(StatusCodes.Status500InternalServerError, $"无法为类型 '{moduleType}' 创建初始数据实例。请确保它有一个公共无参数构造函数。");
-        }
 
-        // TODO: 在这里根据 moduleType 或 initialData 的具体类型，填充需要从外部引入的默认值
-        // 示例：处理 APIKEY (假设你的 AbstractAiProcessorConfig 或其子类有 ApiKey 属性)
-        // if (initialData is IRequiresApiKey apiKeyConfig) // 假设有一个接口 IRequiresApiKey { string ApiKey { get; set; } }
-        // {
-        //     // 从配置、环境变量或其他服务获取默认 API Key
-        //     // 注意：这里的 "YourExternalApiKeyProvider" 仅为示例，你需要替换为实际的获取逻辑
-        //     var defaultApiKey = Environment.GetEnvironmentVariable($"DEFAULT_API_KEY_{moduleType.ToUpperInvariant()}")
-        //                         ?? this.configurationManager.GetDefaultApiKeyForType(moduleType); // 假设 Manager 有此方法
-        //
-        //     if (!string.IsNullOrEmpty(defaultApiKey))
-        //     {
-        //         apiKeyConfig.ApiKey = defaultApiKey;
-        //     }
-        //     else
-        //     {
-        //         // 如果没有找到外部默认值，可以设置一个占位符或提示
-        //         apiKeyConfig.ApiKey = "请在此处输入您的API Key";
-        //     }
-        // }
-
-        return DataWithSchemaDto<AbstractAiProcessorConfig>.Create(initialData).ToActionResult();
-    }
-
-    /// <summary>
-    /// 代表一个选择项，用于下拉列表或单选/复选按钮组。
-    /// </summary>
-    public class SelectOptionDto
-    {
-        /// <summary>
-        /// 选项的实际值。
-        /// </summary>
-        [Required]
-        public object Value { get; init; } = string.Empty;
-
-        /// <summary>
-        /// 选项在UI上显示的文本。
-        /// </summary>
-        [Required]
-        public string Label { get; init; } = string.Empty;
+        return this.Ok(initialData);
     }
 
     /// <summary>

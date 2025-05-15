@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { SelectOptionDto } from '../models/SelectOptionDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class AiConfigSchemasService {
     /**
-     * @deprecated
      * 获取指定 AI 配置类型的表单 Schema 结构 (JSON Schema 格式，包含 ui: 指令)。
      * 用于前端动态生成该类型配置的【新建】或【编辑】表单骨架。
      * @returns any OK
@@ -32,6 +32,18 @@ export class AiConfigSchemasService {
                 404: `Not Found`,
                 500: `Internal Server Error`,
             },
+        });
+    }
+    /**
+     * 获取所有可用的 AI 配置【类型定义】列表。
+     * 用于前端展示可以【新建】哪些类型的 AI 配置。
+     * @returns SelectOptionDto OK
+     * @throws ApiError
+     */
+    public static getApiAiConfigurationManagementAvailableConfigTypes(): CancelablePromise<Array<SelectOptionDto>> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/ai-configuration-management/available-config-types',
         });
     }
 }

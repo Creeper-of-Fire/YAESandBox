@@ -230,7 +230,7 @@ async function fetchAllConfigSets() {
 }
 
 async function fetchAvailableAiTypes() {
-  const response = await callApi(() => AiConfigurationsService.getApiAiConfigurationsAvailableConfigTypes());
+  const response = await callApi(() => AiConfigSchemasService.getApiAiConfigurationManagementAvailableConfigTypes());
   if (response) {
     availableAiTypes.value = response;
   }
@@ -381,7 +381,8 @@ watch(selectedAiModuleType, async (newModuleType, oldModuleType) => {
   }
   let originalConfig = currentConfigSet.value.configurations[newModuleType];
   if (!originalConfig) {
-    const initialData: AbstractAiProcessorConfig = {};
+    const initialData: AbstractAiProcessorConfig = 
+        (await callApi(() => AiConfigurationsService.getApiAiConfigurationsDefaultData({moduleType: newModuleType}))) ?? {};
     // 让 vue-form 根据（可能已预处理过的）schema 的 default 自动填充
     originalConfig = reactive(initialData);
   }
