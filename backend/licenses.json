@@ -1,10 +1,10 @@
 [
   {
-    "PackageId": "FluentResults",
-    "PackageVersion": "3.16.0",
-    "PackageProjectUrl": "https://github.com/altmann/FluentResults",
-    "Copyright": "Copyright 2024 (c) Michael Altmann. All rights reserved.",
-    "Authors": "Michael Altmann",
+    "PackageId": "FluentResults.Strict.CreeperOfFire",
+    "PackageVersion": "3.16.0-strict.1.0.1",
+    "PackageProjectUrl": "https://github.com/Creeper-of-Fire/FluentResults-Strict",
+    "Copyright": "Copyright 2024 (c) Michael Altmann. All rights reserved. Copyright 2025 (c) Creeper of Fire.",
+    "Authors": "Creeper of Fire",
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
     "LicenseInformationOrigin": 0
@@ -211,6 +211,16 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Configuration.Abstractions",
+    "PackageVersion": "8.0.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Configuration.Abstractions",
     "PackageVersion": "10.0.0-preview.3.25171.5",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
@@ -231,7 +241,27 @@
   },
   {
     "PackageId": "Microsoft.Extensions.DependencyInjection",
+    "PackageVersion": "8.0.1",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.DependencyInjection",
     "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.DependencyInjection.Abstractions",
+    "PackageVersion": "8.0.2",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -262,6 +292,16 @@
   {
     "PackageId": "Microsoft.Extensions.Diagnostics",
     "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Diagnostics.Abstractions",
+    "PackageVersion": "8.0.1",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -331,6 +371,16 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Logging.Abstractions",
+    "PackageVersion": "8.0.2",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Logging.Abstractions",
     "PackageVersion": "10.0.0-preview.3.25171.5",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
@@ -351,6 +401,16 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Options",
+    "PackageVersion": "8.0.2",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Options",
     "PackageVersion": "10.0.0-preview.3.25171.5",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
@@ -362,6 +422,16 @@
   {
     "PackageId": "Microsoft.Extensions.Options.ConfigurationExtensions",
     "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Primitives",
+    "PackageVersion": "8.0.0",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -647,6 +717,16 @@
     "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
     "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
     "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "System.Diagnostics.DiagnosticSource",
+    "PackageVersion": "8.0.1",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
   },
   {
     "PackageId": "System.Diagnostics.DiagnosticSource",

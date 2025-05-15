@@ -108,9 +108,9 @@
         <PropertyGroup>
             <SolutionFilePath Condition="Exists('$(SolutionDir)$(SolutionFileName)')">$(SolutionDir)$(SolutionFileName)</SolutionFilePath>
             <!-- 定义输出文件的路径 -->
-            <LicenseOutputPath>$(SolutionDir)backend\licenses.json</LicenseOutputPath>
+            <LicenseOutputPath>$(SolutionDir)\licenses.json</LicenseOutputPath>
             <!-- 定义输出目录的路径 (用于检查) -->
-            <LicenseOutputDir>$(SolutionDir)backend\</LicenseOutputDir>
+            <LicenseOutputDir>$(SolutionDir)</LicenseOutputDir>
         </PropertyGroup>
 
         <!-- 检查解决方案文件是否存在 -->
