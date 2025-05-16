@@ -39,12 +39,12 @@ import {DynamicScroller, DynamicScrollerItem} from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'; // 确保样式被引入
 
 // 导入子组件
-import BlockBubble from '@/components/BlockBubble.vue';
+import BlockBubble from '@/features/block-bubble-stream-panel/BlockBubble.vue';
 
 // 导入 Stores
-import {useTopologyStore} from '@/stores/topologyStore';
-import {useBlockContentStore} from '@/stores/blockContentStore';
-import {useBlockStatusStore} from '@/stores/blockStatusStore';
+import {useTopologyStore} from '@/features/block-bubble-stream-panel/topologyStore.ts';
+import {useBlockContentStore} from '@/features/block-bubble-stream-panel/blockContentStore.ts';
+import {useBlockStatusStore} from '@/features/block-bubble-stream-panel/blockStatusStore.ts';
 
 // --- Store 实例 ---
 const topologyStore = useTopologyStore();
@@ -71,7 +71,8 @@ const currentPathBlocks = computed(() => topologyStore.getCurrentPathNodes);
  * @param blockId Block 的 ID
  * @returns 包含内容和状态的数组，或一个简单值（如 blockId 本身）以简化依赖
  */
-const getSizeDependencies = (blockId: string) => {
+const getSizeDependencies = (blockId: string) =>
+{
   // 返回一个能代表内容和状态变化的值。
   // 简单起见，可以返回一个包含两者信息的对象或数组。
   // 注意：过于复杂的依赖或频繁变化可能影响性能。
@@ -100,14 +101,17 @@ const getSizeDependencies = (blockId: string) => {
  * 滚动到指定的 Block 索引。
  * @param index 要滚动到的项目在 `props.blocks` 数组中的索引。
  */
-const scrollToBlockIndex = (index: number) => {
-  if (blockScrollerRef.value && index >= 0 && index < currentPathBlocks.value.length) {
+const scrollToBlockIndex = (index: number) =>
+{
+  if (blockScrollerRef.value && index >= 0 && index < currentPathBlocks.value.length)
+  {
     console.log(`BlockBubbleStream: 尝试滚动到索引 ${index}...`);
     // 使用 'smooth' 实现平滑滚动，'auto' 为即时滚动
     // 'block: 'end'' 尝试将项目的底部与滚动容器的底部对齐，适合查看最新消息
     // 'block: 'nearest'' 滚动最小距离使其可见
     blockScrollerRef.value.scrollToItem(index, {behavior: 'smooth', block: 'end'});
-  } else {
+  } else
+  {
     console.warn(`BlockBubbleStream: 无法滚动到索引 ${index}。滚动器引用: ${!!blockScrollerRef.value}, 索引范围: 0-${currentPathBlocks.value.length - 1}`);
   }
 };
@@ -115,19 +119,24 @@ const scrollToBlockIndex = (index: number) => {
 // --- Watchers ---
 
 // 监听当前路径叶子节点 ID 的变化
-watch(currentLeafId, (newLeafId, oldLeafId) => {
+watch(currentLeafId, (newLeafId, oldLeafId) =>
+{
   // 仅在叶子节点 ID 发生变化且不是 null 时执行
-  if (newLeafId && newLeafId !== oldLeafId) {
+  if (newLeafId && newLeafId !== oldLeafId)
+  {
     console.log(`BlockBubbleStream: 检测到叶子节点变化 -> ${newLeafId}`);
     // 找到新叶子节点在当前 blocks 数组中的索引
     const index = currentPathBlocks.value.findIndex(block => block.id === newLeafId);
 
-    if (index !== -1) {
+    if (index !== -1)
+    {
       // 等待 DOM 更新后再执行滚动操作，确保目标项已渲染
-      nextTick(() => {
+      nextTick(() =>
+      {
         scrollToBlockIndex(index);
       });
-    } else {
+    } else
+    {
       console.warn(`BlockBubbleStream: 新叶子节点 ${newLeafId} 在当前 blocks 数组中未找到，无法滚动。`);
       // 可能情况：blocks 数组尚未更新，或新节点确实不在当前路径上
       // 可以考虑在此处添加重试逻辑或等待 blocks 更新
@@ -138,15 +147,20 @@ watch(currentLeafId, (newLeafId, oldLeafId) => {
 });
 
 // 可选：监听 blocks 数组本身的变化，例如在路径切换导致数组完全替换时滚动到底部
-watch(() => currentPathBlocks.value, (newBlocks, oldBlocks) => {
+watch(() => currentPathBlocks.value, (newBlocks, oldBlocks) =>
+{
   // 判断是否是显著变化（例如，数组引用改变或长度显著变化）
-  if (newBlocks && oldBlocks && newBlocks !== oldBlocks) {
+  if (newBlocks && oldBlocks && newBlocks !== oldBlocks)
+  {
     // 路径切换或大量添加时，滚动到底部
     const lastIndex = newBlocks.length - 1;
-    if (lastIndex >= 0) {
-      nextTick(() => {
+    if (lastIndex >= 0)
+    {
+      nextTick(() =>
+      {
         // 切换路径时可能用 'auto' 更快到达底部
-        if (blockScrollerRef.value) {
+        if (blockScrollerRef.value)
+        {
           console.log(`BlockBubbleStream: blocks 数组变化，滚动到末尾索引 ${lastIndex}`);
           blockScrollerRef.value.scrollToItem(lastIndex, {behavior: 'auto', block: 'end'});
         }

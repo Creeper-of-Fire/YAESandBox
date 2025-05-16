@@ -8,6 +8,7 @@ import 'vfonts/Lato.css'
 // 等宽字体
 import 'vfonts/FiraCode.css'
 import naive from "naive-ui";
+import router from './router'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'; // Import base CSS
 // @ts-ignore
 import VueVirtualScroller from 'vue-virtual-scroller'
@@ -20,6 +21,7 @@ const app = createApp(App);
 const pinia = createPinia();
 
 app.use(pinia);
+app.use(router)
 app.use(naive)
 app.use(VueVirtualScroller)
 app.mount('#app')

@@ -8,24 +8,19 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AiConfigEditorPanel: typeof import('./src/components/ai-config/AiConfigEditorPanel.vue')['default']
-    AiConfigTester: typeof import('./src/components/ai-config/AiConfigTester.vue')['default']
-    AiModelConfigurator: typeof import('./src/components/ai-config/AiModelConfigurator.vue')['default']
+    AppModeSwitcher: typeof import('./src/components/AppModeSwitcher.vue')['default']
     AppToolbar: typeof import('./src/components/AppToolbar.vue')['default']
-    BlockBubble: typeof import('./src/components/BlockBubble.vue')['default']
-    BlockBubbleStream: typeof import('./src/components/BlockBubbleStream.vue')['default']
     ConnectionStatus: typeof import('./src/components/ConnectionStatus.vue')['default']
-    DynamicFormRenderer: typeof import('./src/components/schema/DynamicFormRenderer.vue')['default']
     EntityListPanel: typeof import('./src/components/panels/EntityListPanel.vue')['default']
     GameStatePanel: typeof import('./src/components/panels/GameStatePanel.vue')['default']
-    MainLayout: typeof import('./src/components/MainLayout.vue')['default']
-    MyCustomStringAutoComplete: typeof import('./src/components/schema/field-widget/MyCustomStringAutoComplete.vue')['default']
-    NAlert: typeof import('naive-ui')['NAlert']
+    ModeSwitcherFloatingMenu: typeof import('./src/components/ModeSwitcherFloatingMenu.vue')['default']
+    NConfigProvider: typeof import('naive-ui')['NConfigProvider']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
     NFlex: typeof import('naive-ui')['NFlex']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
-    SchemaModule: typeof import('./src/components/schema/SchemaModule.vue')['default']
+    NNotificationProvider: typeof import('naive-ui')['NNotificationProvider']
+    RouterLink: typeof import('vue-router')['RouterLink']
+    RouterView: typeof import('vue-router')['RouterView']
     SettingsPanel: typeof import('./src/components/panels/SettingsPanel.vue')['default']
-    SliderWithInputWidget: typeof import('./src/components/schema/field-widget/SliderWithInputWidget.vue')['default']
   }
 }

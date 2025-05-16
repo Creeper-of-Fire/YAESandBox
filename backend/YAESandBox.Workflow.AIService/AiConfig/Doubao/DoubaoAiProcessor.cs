@@ -28,15 +28,15 @@ file static class PromptRoleMapper
         };
     }
 }
-
+// TODO 目前是手写通讯，以后需要一个通用的通讯机制
 internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiProcessorConfig parameters) : IAiProcessor
 {
     private HttpClient HttpClient { get; } = dependencies.HttpClient;
     private DoubaoAiProcessorConfig Config { get; } = parameters;
-
+    
     public async Task<Result> StreamRequestAsync(
         IEnumerable<RoledPromptDto> prompts,
-        Action<string> onChunkReceived,
+        StreamRequestCallBack requestCallBack,
         CancellationToken cancellationToken = default)
     {
         List<DoubaoChatMessage> doubaoMessages = [.. prompts.Select(p => p.ToDoubaoMessage())];
@@ -77,22 +77,24 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
 
         try
         {
-            using var response = await this.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
+            using var response =
+                await this.HttpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
 
             if (!response.IsSuccessStatusCode)
             {
                 string errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
                 // 豆包似乎不会返回错误JSON结构，而是单纯的返回错误响应
                 return AiError.Error(
-                    $"豆包 API 请求失败: {response.StatusCode}. 响应: {errorContent.Substring(0, Math.Min(500, errorContent.Length))}");
+                    $"豆包 API 请求失败: {response.StatusCode}. 响应: {errorContent[..Math.Min(500, errorContent.Length)]}");
             }
 
-            await using var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            var stream = await response.Content.ReadAsStreamAsync(cancellationToken);
+            await using var streamDisposable = stream;
             using var reader = new StreamReader(stream);
 
             const string sseDataPrefix = "data:";
 
-            while (await reader.ReadLineAsync(cancellationToken).ConfigureAwait(false) is { } line)
+            while (await reader.ReadLineAsync(cancellationToken) is { } line)
             {
                 if (cancellationToken.IsCancellationRequested)
                     return AiError.Error("用户取消了 AI 请求。");
@@ -103,7 +105,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
                 string jsonData;
                 if (line.StartsWith(sseDataPrefix, StringComparison.Ordinal))
                 {
-                    jsonData = line.Substring(sseDataPrefix.Length).Trim(); // 移除 "data:" 前缀并去除首尾空格
+                    jsonData = line[sseDataPrefix.Length..].Trim(); // 移除 "data:" 前缀并去除首尾空格
 
                     if (string.IsNullOrWhiteSpace(jsonData)) // 如果 "data:" 后面是空的或只有空格
                         continue;
@@ -134,13 +136,13 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
                     // 组装单一Chunk接收到的内容，主要是分配reasoning_content和content
                     string combinedChunkText = "";
 
-                    if (!string.IsNullOrEmpty(choice.Delta.ReasoningContent))
+                    if (!string.IsNullOrEmpty(choice.Delta?.ReasoningContent))
                         combinedChunkText += $"<think>{choice.Delta.ReasoningContent}</think>";
-                    if (!string.IsNullOrEmpty(choice.Delta.Content))
+                    if (!string.IsNullOrEmpty(choice.Delta?.Content))
                         combinedChunkText += choice.Delta.Content;
 
                     if (!string.IsNullOrEmpty(combinedChunkText))
-                        onChunkReceived(combinedChunkText);
+                        requestCallBack.OnChunkReceived(combinedChunkText);
 
                     // 检查数据块内部是否指示了结束
                     if (string.IsNullOrEmpty(choice.FinishReason))
@@ -154,7 +156,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
                 {
                     // 对于无法解析的 JSON，记录更详细的信息
                     return AiError.Error(
-                        $"解析豆包响应流时发生错误: {jsonEx.Message}. 原始JSON内容: '{jsonData.Substring(0, Math.Min(200, jsonData.Length))}'");
+                        $"解析豆包响应流时发生错误: {jsonEx.Message}. 原始JSON内容: '{jsonData[..Math.Min(200, jsonData.Length)]}'");
                 }
             } // 结束 while 循环
 
@@ -205,6 +207,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
 
     public async Task<Result<string>> NonStreamRequestAsync(
         IEnumerable<RoledPromptDto> prompts,
+        NonStreamRequestCallBack? requestCallBack,
         CancellationToken cancellationToken = default)
     {
         List<DoubaoChatMessage> doubaoMessages = [.. prompts.Select(p => p.ToDoubaoMessage())];
@@ -256,7 +259,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             }
 
             // 读取并反序列化完整的响应体
-            var responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
+            string responseBody = await response.Content.ReadAsStringAsync(cancellationToken);
             var doubaoResponse = JsonSerializer.Deserialize<DoubaoCompletionResponse>(responseBody, new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true // 忽略大小写匹配属性名

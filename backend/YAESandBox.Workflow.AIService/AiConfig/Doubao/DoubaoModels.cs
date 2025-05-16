@@ -92,7 +92,7 @@ internal record DoubaoChatRequest(
 // --- 响应体模型 (流式和非流式共用部分) ---
 internal record DoubaoChoiceBase
 {
-    [JsonPropertyName("index")] public int Index { get; init; }
+    [JsonPropertyName("index")] public int? Index { get; init; }
 }
 
 // --- 流式响应模型 ---
@@ -108,7 +108,7 @@ internal record DoubaoStreamDelta
 
 internal record DoubaoStreamChoice : DoubaoChoiceBase
 {
-    [JsonPropertyName("delta")] public DoubaoStreamDelta Delta { get; init; } = new();
+    [JsonPropertyName("delta")] public DoubaoStreamDelta? Delta { get; init; } = new();
 
     [JsonPropertyName("finish_reason")] public string? FinishReason { get; init; }
 }
@@ -132,9 +132,9 @@ internal record DoubaoStreamCompletionChunk
 // --- 非流式响应模型 ---
 internal record DoubaoResponseMessage
 {
-    [JsonPropertyName("role")] public string Role { get; init; } = string.Empty;
+    [JsonPropertyName("role")] public string? Role { get; init; } = string.Empty;
 
-    [JsonPropertyName("content")] public string Content { get; init; } = string.Empty; // 主要内容
+    [JsonPropertyName("content")] public string? Content { get; init; } = string.Empty; // 主要内容
 
     [JsonPropertyName("reasoning_content")] // DeepSeek 等模型会在这里返回
     public string? ReasoningContent { get; init; }
@@ -142,27 +142,27 @@ internal record DoubaoResponseMessage
 
 internal record DoubaoCompletionChoice : DoubaoChoiceBase
 {
-    [JsonPropertyName("message")] public DoubaoResponseMessage Message { get; init; } = new();
+    [JsonPropertyName("message")] public DoubaoResponseMessage? Message { get; init; } = new();
 
-    [JsonPropertyName("finish_reason")] public string FinishReason { get; init; } = string.Empty;
+    [JsonPropertyName("finish_reason")] public string? FinishReason { get; init; } = string.Empty;
 
     [JsonPropertyName("logprobs")] public object? Logprobs { get; init; } // 通常为 null
 }
 
 internal record DoubaoUsageDetails
 {
-    [JsonPropertyName("cached_tokens")] public int CachedTokens { get; init; }
-    [JsonPropertyName("reasoning_tokens")] public int ReasoningTokens { get; init; }
+    [JsonPropertyName("cached_tokens")] public int? CachedTokens { get; init; }
+    [JsonPropertyName("reasoning_tokens")] public int? ReasoningTokens { get; init; }
 }
 
 internal record DoubaoUsage
 {
-    [JsonPropertyName("prompt_tokens")] public int PromptTokens { get; init; }
+    [JsonPropertyName("prompt_tokens")] public int? PromptTokens { get; init; }
 
     [JsonPropertyName("completion_tokens")]
-    public int CompletionTokens { get; init; }
+    public int? CompletionTokens { get; init; }
 
-    [JsonPropertyName("total_tokens")] public int TotalTokens { get; init; }
+    [JsonPropertyName("total_tokens")] public int? TotalTokens { get; init; }
 
     [JsonPropertyName("prompt_tokens_details")]
     public DoubaoUsageDetails? PromptTokensDetails { get; init; }
@@ -173,15 +173,15 @@ internal record DoubaoUsage
 
 internal record DoubaoCompletionResponse
 {
-    [JsonPropertyName("id")] public string Id { get; init; } = string.Empty;
+    [JsonPropertyName("id")] public string? Id { get; init; } = string.Empty;
 
-    [JsonPropertyName("object")] public string Object { get; init; } = string.Empty; // "chat.completion"
+    [JsonPropertyName("object")] public string? Object { get; init; } = string.Empty; // "chat.completion"
 
-    [JsonPropertyName("created")] public long Created { get; init; }
+    [JsonPropertyName("created")] public long? Created { get; init; }
 
-    [JsonPropertyName("model")] public string Model { get; init; } = string.Empty;
+    [JsonPropertyName("model")] public string? Model { get; init; } = string.Empty;
 
-    [JsonPropertyName("choices")] public IReadOnlyList<DoubaoCompletionChoice> Choices { get; init; } = [];
+    [JsonPropertyName("choices")] public IReadOnlyList<DoubaoCompletionChoice>? Choices { get; init; } = [];
 
-    [JsonPropertyName("usage")] public DoubaoUsage Usage { get; init; } = new();
+    [JsonPropertyName("usage")] public DoubaoUsage? Usage { get; init; } = new();
 }

@@ -14,31 +14,32 @@ internal class AiModule(Action<string> onChunkReceivedScript) : IWorkflowModule
     // TODO 这里是回调函数，应该由脚本完成
     private Action<string> OnChunkReceivedScript { get; } = onChunkReceivedScript;
 
-    public Task<Result<string>> ExecuteAsync(IAiProcessor aiProcessor, List<RoledPromptDto> prompts, bool isStream)
+    public Task<Result<string>> ExecuteAsync(IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, bool isStream)
     {
-        switch (isStream)
+        return isStream switch
         {
-            case true:
-                return this.ExecuteStreamAsync(aiProcessor, prompts);
-            case false:
-                return this.ExecuteNonStreamAsync(aiProcessor, prompts);
-        }
+            true => this.ExecuteStreamAsync(aiProcessor, prompts),
+            false => this.ExecuteNonStreamAsync(aiProcessor, prompts)
+        };
     }
 
-    private async Task<Result<string>> ExecuteStreamAsync(IAiProcessor aiProcessor, List<RoledPromptDto> prompts)
+    private async Task<Result<string>> ExecuteStreamAsync(IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts)
     {
         string fullAiReturn = "";
-        var result = await aiProcessor.StreamRequestAsync(prompts, chunk =>
+        var result = await aiProcessor.StreamRequestAsync(prompts, new StreamRequestCallBack
         {
-            fullAiReturn += chunk;
-            this.OnChunkReceivedScript(chunk);
+            OnChunkReceived = chunk =>
+            {
+                fullAiReturn += chunk;
+                this.OnChunkReceivedScript(chunk);
+            }
         });
         if (result.IsFailed)
             return result;
         return fullAiReturn;
     }
 
-    private async Task<Result<string>> ExecuteNonStreamAsync(IAiProcessor aiProcessor, List<RoledPromptDto> prompts)
+    private async Task<Result<string>> ExecuteNonStreamAsync(IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts)
     {
         var result = await aiProcessor.NonStreamRequestAsync(prompts);
         if (!result.TryGetValue(out string? value))

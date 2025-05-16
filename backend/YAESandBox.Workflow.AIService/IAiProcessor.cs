@@ -1,4 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.Runtime.CompilerServices;
 using FluentResults;
 
 namespace YAESandBox.Workflow.AIService;
@@ -12,10 +12,7 @@ public interface IAiProcessor
     /// 向 AI 服务发起流式请求
     /// </summary>
     /// <param name="prompts">完整的提示词</param>
-    /// <param name="onChunkReceived">
-    /// 当接收到新的数据块时调用的回调函数。
-    /// !! 只传递新的数据块 (string chunk) !!
-    /// </param>
+    /// <param name="requestCallBack">可用的回调函数</param>
     /// <param name="cancellationToken">用于取消操作</param>
     /// <returns>
     /// 不包含最终完整响应，因为内容的累积不是流式服务的主要职责，而且违背了唯一真相的原则。
@@ -23,7 +20,7 @@ public interface IAiProcessor
     /// </returns>
     Task<Result> StreamRequestAsync(
         IEnumerable<RoledPromptDto> prompts,
-        Action<string> onChunkReceived,
+        StreamRequestCallBack requestCallBack,
         CancellationToken cancellationToken = default
     );
 
@@ -31,70 +28,41 @@ public interface IAiProcessor
     /// 向 AI 服务发起非流式请求
     /// </summary>
     /// <param name="prompts">完整的提示词</param>
+    /// <param name="requestCallBack">可用的回调函数</param>
     /// <param name="cancellationToken">用于取消操作</param>
     /// <returns>包含最终响应</returns>
     Task<Result<string>> NonStreamRequestAsync(
         IEnumerable<RoledPromptDto> prompts,
+        NonStreamRequestCallBack? requestCallBack = null,
         CancellationToken cancellationToken = default);
 }
 
 /// <summary>
-/// 提示词消息，包含角色和内容
+/// AI Processor 可用的回调函数
 /// </summary>
-public record RoledPromptDto
+public abstract record BaseRequestCallBack
 {
     /// <summary>
-    /// 一个枚举，表示提示词的角色。
+    /// 返回Token的使用统计。
     /// </summary>
-    [Required]
-    public required PromptRoleType Type { get; init; }
-
-    /// <summary>
-    /// 部分高级AI模型可以识别角色名称，因此可以指定角色名称。
-    /// </summary>
-    public string Name { get; init; } = string.Empty;
-
-    /// <summary>
-    /// 一段提示词
-    /// </summary>
-    [DataType(DataType.MultilineText)]
-    [Required]
-    public required string Content { get; init; } = "";
-
-    /// <summary>
-    /// 生成系统提示词
-    /// </summary>
-    /// <param name="prompt">提示词</param>
-    /// <param name="name">部分高级AI模型可以识别角色名称，因此可以指定角色名称。</param>
-    /// <returns></returns>
-    public static RoledPromptDto System(string prompt, string name = "") =>
-        new() { Type = PromptRoleType.System, Content = prompt, Name = name };
-
-    /// <summary>
-    /// 生成用户提示词
-    /// </summary>
-    /// <param name="prompt">提示词</param>
-    /// <param name="name">部分高级AI模型可以识别角色名称，因此可以指定角色名称。</param>
-    /// <returns></returns>
-    public static RoledPromptDto User(string prompt, string name = "") =>
-        new() { Type = PromptRoleType.User, Content = prompt, Name = name };
-
-    /// <summary>
-    /// 生成助手提示词（即预输入的AI回复）
-    /// </summary>
-    /// <param name="prompt">提示词</param>
-    /// <param name="name">部分高级AI模型可以识别角色名称，因此可以指定角色名称。</param>
-    /// <returns></returns>
-    public static RoledPromptDto Assistant(string prompt, string name = "") =>
-        new() { Type = PromptRoleType.Assistant, Content = prompt, Name = name };
+    public Action<int> TokenUsage { get; init; } = _ => { };
 }
 
-/// <summary>
-/// 提示词的角色类型
-/// </summary>
-public enum PromptRoleType
+/// <inheritdoc />
+/// <remarks>用于流式</remarks>
+public record StreamRequestCallBack : BaseRequestCallBack
 {
-    System,
-    User,
-    Assistant
+    /// <summary>
+    /// 当接收到新的数据块时调用的回调函数。
+    /// !! 只传递新的数据块 (string chunk) !!
+    /// </summary>
+    public required Action<string> OnChunkReceived { get; init; }
+}
+
+/// <inheritdoc />
+/// <remarks>用于非流式</remarks>
+public record NonStreamRequestCallBack : BaseRequestCallBack
+{
+    // 目前这里为空，只继承了 TokenUsage
+    // 未来如果非流式有其他特定回调，可以加在这里
 }

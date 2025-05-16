@@ -91,10 +91,13 @@ internal class Program
             {
                 var result = await doubaoProcessor.StreamRequestAsync(
                     prompts,
-                    chunk =>
+                    new StreamRequestCallBack
                     {
-                        Console.Write(chunk); // 直接打印流式块
-                        accumulatedResponse.Append(chunk);
+                        OnChunkReceived = chunk =>
+                        {
+                            Console.Write(chunk); // 直接打印流式块
+                            accumulatedResponse.Append(chunk);
+                        }
                     },
                     cts.Token
                 );

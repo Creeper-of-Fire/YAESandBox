@@ -84,7 +84,7 @@
 <script setup lang="ts">
 import {ref} from 'vue';
 import {NAlert, NButton, NCard, NEmpty, NFlex, NFormItem, NH4, NInput, NModal, NSpin, NText, useMessage,} from 'naive-ui';
-import {AiConfigurationsService} from '@/types/generated/aiconfigapi/services/AiConfigurationsService';
+import {AiConfigurationsService} from '@/types/generated/aiconfigapi/services/AiConfigurationsService.ts';
 import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi";
 
 // --- 组件 Props ---
@@ -110,7 +110,8 @@ const errorMessage = ref<string | null>(null); // 存储错误信息
 /**
  * 打开测试模态框，并可能进行一些初始化
  */
-function handleOpenTestModal() {
+function handleOpenTestModal()
+{
   // 可以在这里重置一些状态，如果需要每次打开都是全新的话
   // 但由于父组件使用 :key，大部分情况下组件实例已重置
   // clearResult(); // 比如清除上一次的结果
@@ -121,12 +122,15 @@ function handleOpenTestModal() {
 /**
  * 执行测试的异步函数
  */
-async function runTest() {
-  if (!props.formDataCopy || !props.moduleType) {
+async function runTest()
+{
+  if (!props.formDataCopy || !props.moduleType)
+  {
     message.error('配置集 UUID 或模型类型无效，无法执行测试。');
     return;
   }
-  if (!testText.value.trim()) {
+  if (!testText.value.trim())
+  {
     message.warning('请输入测试文本。');
     return;
   }
@@ -136,20 +140,23 @@ async function runTest() {
   errorMessage.value = null;
   // testResult.value = null; // 可以选择在请求前清除，或请求后根据成功/失败清除
 
-  try {
+  try
+  {
     testResult.value = await AiConfigurationsService.postApiAiConfigurationsAiConfigTest({
       requestBody: {configJson: props.formDataCopy, testText: testText.value},
       moduleType: props.moduleType,
     });
     message.success('测试成功！');
 
-  } catch (error: any) {
+  } catch (error: any)
+  {
     console.error("AI 配置测试失败:", error);
     const detail = error.body?.detail || error.message || '发生未知错误';
     errorMessage.value = `请求失败: ${detail}`;
     testResult.value = null; // 如果测试失败，确保清除成功的测试结果
     message.error(`测试失败: ${detail}`);
-  } finally {
+  } finally
+  {
     isLoading.value = false;
   }
 }
@@ -157,7 +164,8 @@ async function runTest() {
 /**
  * 清除测试结果和错误信息
  */
-function clearResult() {
+function clearResult()
+{
   testResult.value = null;
   errorMessage.value = null;
 }
@@ -166,7 +174,8 @@ function clearResult() {
  * 重置模态框内部状态，在模态框关闭后调用
  * 这样下次打开时，内容是干净的 (除了 testText，可以根据需求决定是否保留)
  */
-function resetModalState() {
+function resetModalState()
+{
   isLoading.value = false;
   errorMessage.value = null;
   testResult.value = null;

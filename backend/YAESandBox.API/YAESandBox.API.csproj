@@ -7,7 +7,6 @@
         <RootNamespace>YAESandBox.API</RootNamespace>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <AnalysisModeConfigureAwait>Library</AnalysisModeConfigureAwait>
     </PropertyGroup>
 
     <ItemGroup>

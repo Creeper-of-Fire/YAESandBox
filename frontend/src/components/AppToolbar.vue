@@ -89,8 +89,8 @@ import {
   GameControllerOutline as GameControllerIcon,
   HardwareChipOutline as HardwareChipIcon // 引入 Home 图标
 } from '@vicons/ionicons5';
-import {useUiStore} from '@/stores/uiStore';
-import {usePersistenceStore} from '@/stores/persistenceStore';
+import {useUiStore} from '@/app-view/game-view/gameUiStore.ts';
+import {usePersistenceStore} from '@/features/block-bubble-stream-panel/persistenceStore.ts';
 import ConnectionStatus from './ConnectionStatus.vue';
 
 // --- Store ---
@@ -105,7 +105,7 @@ const loadInputRef = ref<HTMLInputElement | null>(null);
 const EntityListPanel = markRaw(defineAsyncComponent(() => import('@/components/panels/EntityListPanel.vue')));
 const GameStatePanel = markRaw(defineAsyncComponent(() => import('@/components/panels/GameStatePanel.vue')));
 const SettingsPanel = markRaw(defineAsyncComponent(() => import('@/components/panels/SettingsPanel.vue')));
-const AiConfigEditorPanel = markRaw(defineAsyncComponent(() => import("@/components/ai-config/AiConfigEditorPanel.vue")));
+const AiConfigEditorPanel = markRaw(defineAsyncComponent(() => import("@/features/ai-config-panel/AiConfigEditorPanel.vue")));
 // ... 其他面板
 
 // --- Toolbar 方法 ---
@@ -115,7 +115,8 @@ const AiConfigEditorPanel = markRaw(defineAsyncComponent(() => import("@/compone
  * @param target 目标区域 'left' 或 'right'
  * @param component 要切换的组件引用
  */
-const togglePanel = (target: 'left' | 'right', component: Component) => {
+const togglePanel = (target: 'left' | 'right', component: Component) =>
+{
   uiStore.setActiveComponent(target, component);
 };
 
@@ -126,10 +127,13 @@ const togglePanel = (target: 'left' | 'right', component: Component) => {
  * @param component 要检查的组件引用
  * @returns boolean
  */
-const isActive = (target: 'left' | 'right', component: Component): boolean => {
-  if (target === 'left') {
+const isActive = (target: 'left' | 'right', component: Component): boolean =>
+{
+  if (target === 'left')
+  {
     return uiStore.activeLeftComponent === component;
-  } else { // target === 'right'
+  } else
+  { // target === 'right'
     return uiStore.activeRightComponent === component;
   }
   // 注意：在移动端，即使面板是激活的（例如 activeLeftComponent 不为 null），
@@ -139,13 +143,16 @@ const isActive = (target: 'left' | 'right', component: Component): boolean => {
 
 
 // --- 持久化相关方法 ---
-const triggerLoad = () => {
+const triggerLoad = () =>
+{
   loadInputRef.value?.click();
 };
 
-const handleFileSelect = (event: Event) => {
+const handleFileSelect = (event: Event) =>
+{
   const input = event.target as HTMLInputElement;
-  if (input.files && input.files.length > 0) {
+  if (input.files && input.files.length > 0)
+  {
     const file = input.files[0];
     persistenceStore.loadSession(file);
     input.value = '';

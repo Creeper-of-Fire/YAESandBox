@@ -6,19 +6,22 @@ import {signalrService} from '@/services/signalrService'; // 用于触发
 import type {TriggerMicroWorkflowRequestDto} from '@/types/generated/api';
 import {StreamStatus, UpdateMode} from '@/types/generated/api'
 
-interface MicroWorkflowResult {
+interface MicroWorkflowResult
+{
     content: string | null;
     status: StreamStatus;// 和MainWorkflow不同，MicroWorkflow的生命周期只能通过StreamStatus展示
     // 目前没加 script之类的
 }
 
-export function useMicroWorkflow() {
+export function useMicroWorkflow()
+{
     const targetId = ref(uuidv4()); // 为每次调用此 composable 生成唯一 ID
     const result = ref<MicroWorkflowResult>({content: null, status: StreamStatus.COMPLETE});
     const isLoading = ref(false);
 
     // 事件处理器
-    const handleUpdate = (data: { content: string | null, status: StreamStatus, updateMode: string }) => {
+    const handleUpdate = (data: { content: string | null, status: StreamStatus, updateMode: string }) =>
+    {
         console.log(`useMicroWorkflow (${targetId.value}): Received update`, data);
         result.value = {content: data.content, status: data.status};
         isLoading.value = data.status === StreamStatus.STREAMING;
@@ -27,21 +30,25 @@ export function useMicroWorkflow() {
     };
 
     // 订阅/取消订阅
-    onMounted(() => {
+    onMounted(() =>
+    {
         const eventName = `microWorkflowUpdate:${targetId.value}` as const;
         eventBus.on(eventName, handleUpdate);
         console.log(`useMicroWorkflow (${targetId.value}): Subscribed to ${eventName}`);
     });
 
-    onBeforeUnmount(() => {
+    onBeforeUnmount(() =>
+    {
         const eventName = `microWorkflowUpdate:${targetId.value}` as const;
         eventBus.off(eventName, handleUpdate);
         console.log(`useMicroWorkflow (${targetId.value}): Unsubscribed from ${eventName}`);
     });
 
     // 触发函数
-    const trigger = async (contextBlockId: string, workflowName: string, params: Record<string, any>) => {
-        if (isLoading.value) {
+    const trigger = async (contextBlockId: string, workflowName: string, params: Record<string, any>) =>
+    {
+        if (isLoading.value)
+        {
             console.warn(`useMicroWorkflow (${targetId.value}): Already loading, ignoring trigger.`);
             return;
         }
@@ -56,9 +63,11 @@ export function useMicroWorkflow() {
             params,
         };
 
-        try {
+        try
+        {
             await signalrService.triggerMicroWorkflow(request);
-        } catch (error) {
+        } catch (error)
+        {
             console.error(`useMicroWorkflow (${targetId.value}): Trigger failed`, error);
             // 错误已由 signalrService 通过 eventBus 发送，这里只需处理本地加载状态
             isLoading.value = false;

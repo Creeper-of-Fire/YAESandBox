@@ -1,14 +1,15 @@
 ﻿// src/composables/useAiConfigActions.ts
 import {ref, h, type Ref, type ComputedRef, type UnwrapNestedRefs} from 'vue';
 import {NInput, useMessage, useDialog} from 'naive-ui'; // 假设这些可以直接在这里用，或者从父组件传入
-import type {AiConfigurationSet} from '@/types/generated/aiconfigapi/models/AiConfigurationSet';
-import {AiConfigurationsService} from '@/types/generated/aiconfigapi/services/AiConfigurationsService';
-import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi/models/AbstractAiProcessorConfig";
-import type {DynamicFormRendererInstance} from '@/components/schema/DynamicFormRenderer.vue';
+import type {AiConfigurationSet} from '@/types/generated/aiconfigapi/models/AiConfigurationSet.ts';
+import {AiConfigurationsService} from '@/types/generated/aiconfigapi/services/AiConfigurationsService.ts';
+import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi/models/AbstractAiProcessorConfig.ts";
+import type {DynamicFormRendererInstance} from '@/features/schema-viewer/DynamicFormRenderer.vue';
 import {cloneDeep} from "lodash-es"; // 假设你导出了这个类型
 
 // 定义传递给可组合函数的参数类型
-interface UseAiConfigActionsParams {
+interface UseAiConfigActionsParams
+{
     allConfigSets: UnwrapNestedRefs<Record<string, AiConfigurationSet>>;
     selectedConfigSetUuid: Ref<string | null>;
     currentConfigSet: ComputedRef<AiConfigurationSet | null>;
@@ -26,7 +27,8 @@ interface UseAiConfigActionsParams {
     dialog: ReturnType<typeof useDialog>;
 }
 
-export function useAiConfigActions(params: UseAiConfigActionsParams) {
+export function useAiConfigActions(params: UseAiConfigActionsParams)
+{
     const {
         allConfigSets,
         selectedConfigSetUuid,
@@ -45,28 +47,35 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
 
     // ----------- 配置集操作逻辑 -----------
     // 保存对当前配置集的所有变更 (集成了校验)
-    async function handleSaveConfigSet() {
-        if (!currentConfigSet.value || !selectedConfigSetUuid.value) {
+    async function handleSaveConfigSet()
+    {
+        if (!currentConfigSet.value || !selectedConfigSetUuid.value)
+        {
             message.error('没有选中的配置集可以保存！');
             return;
         }
 
         // 1. 手动触发表单校验 (通过 DynamicFormRenderer 实例)
-        if (dynamicFormRendererRef.value && selectedAiModuleType.value && currentSchema.value) {
-            try {
+        if (dynamicFormRendererRef.value && selectedAiModuleType.value && currentSchema.value)
+        {
+            try
+            {
                 await dynamicFormRendererRef.value.validate(); // 调用暴露的方法
-            } catch (errors: any) {
+            } catch (errors: any)
+            {
                 message.error('表单校验失败，请检查红色标记的字段。');
                 console.warn('表单校验失败:', errors);
                 return; // 校验失败，不继续保存
             }
-        } else if (selectedAiModuleType.value && currentSchema.value) {
+        } else if (selectedAiModuleType.value && currentSchema.value)
+        {
             console.warn('无法访问表单渲染器实例进行校验，将不经验证地保存。');
         }
 
         // 如果 selectedAiModuleType.value 和 formDataCopy.value 有效，更新配置集中的数据
         // 这部分逻辑保持不变
-        if (selectedAiModuleType.value && currentConfigSet.value && formDataCopy.value !== null) {
+        if (selectedAiModuleType.value && currentConfigSet.value && formDataCopy.value !== null)
+        {
             currentConfigSet.value.configurations[selectedAiModuleType.value] = cloneDeep(formDataCopy.value);
             resetFormChangeFlag(); // 假设这个函数还在
         }
@@ -84,7 +93,8 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
     }
 
     // 提示并执行新建配置集
-    function promptCreateNewSet() {
+    function promptCreateNewSet()
+    {
         const newSetNameInput = ref('');
         dialog.create({
             title: '新建 AI 配置集',
@@ -96,9 +106,11 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
             }),
             positiveText: '创建',
             negativeText: '取消',
-            onPositiveClick: async () => {
+            onPositiveClick: async () =>
+            {
                 const name = newSetNameInput.value.trim();
-                if (!name) {
+                if (!name)
+                {
                     message.error('配置集名称不能为空！');
                     return false; //阻止对话框关闭
                 }
@@ -107,7 +119,8 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
                     configurations: {},
                 };
                 const newUuid = await callApi(() => AiConfigurationsService.postApiAiConfigurations({requestBody: newSetToCreate}), `配置集 "${name}" 创建成功!`);
-                if (newUuid) {
+                if (newUuid)
+                {
                     await fetchAllConfigSets(); // 重新加载所有配置集
                     selectedConfigSetUuid.value = newUuid; // 自动选中新创建的
                 }
@@ -116,7 +129,8 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
     }
 
     // 提示并执行复制当前配置集
-    function promptCloneSet() {
+    function promptCloneSet()
+    {
         if (!currentConfigSet.value) return;
         const clonedNameInput = ref(`${currentConfigSet.value.configSetName} (副本)`);
         dialog.create({
@@ -128,9 +142,11 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
             }),
             positiveText: '复制',
             negativeText: '取消',
-            onPositiveClick: async () => {
+            onPositiveClick: async () =>
+            {
                 const name = clonedNameInput.value.trim();
-                if (!name) {
+                if (!name)
+                {
                     message.error('配置集名称不能为空！');
                     return false;
                 }
@@ -139,7 +155,8 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
                     configurations: JSON.parse(JSON.stringify(currentConfigSet.value!.configurations)) // 深拷贝
                 };
                 const newUuid = await callApi(() => AiConfigurationsService.postApiAiConfigurations({requestBody: setToClone}), `配置集 "${name}" (副本) 创建成功!`);
-                if (newUuid) {
+                if (newUuid)
+                {
                     await fetchAllConfigSets();
                     selectedConfigSetUuid.value = newUuid;
                 }
@@ -148,7 +165,8 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
     }
 
     // 提示并执行修改当前配置集名称
-    function promptRenameSet() {
+    function promptRenameSet()
+    {
         if (!currentConfigSet.value || !selectedConfigSetUuid.value) return;
         const newNameInput = ref(currentConfigSet.value.configSetName);
         const originalUuid = selectedConfigSetUuid.value; // 捕获当前uuid
@@ -162,13 +180,16 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
             }),
             positiveText: '保存名称',
             negativeText: '取消',
-            onPositiveClick: async () => {
+            onPositiveClick: async () =>
+            {
                 const name = newNameInput.value.trim();
-                if (!name) {
+                if (!name)
+                {
                     message.error('配置集名称不能为空！');
                     return false;
                 }
-                if (name === allConfigSets[originalUuid]?.configSetName) { // 名称未改变
+                if (name === allConfigSets[originalUuid]?.configSetName)
+                { // 名称未改变
                     return;
                 }
 
@@ -186,7 +207,8 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
                 }), `配置集名称已修改为 "${name}"`);
 
                 // Manually update the name in the local reactive store for immediate UI feedback
-                if (allConfigSets[originalUuid]) {
+                if (allConfigSets[originalUuid])
+                {
                     allConfigSets[originalUuid].configSetName = name;
                 }
                 // If the currentConfigSet is the one being renamed, its name will update reactively.
@@ -196,7 +218,8 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
     }
 
     // 执行删除当前配置集
-    async function executeDeleteSet() {
+    async function executeDeleteSet()
+    {
         if (!selectedConfigSetUuid.value || !currentConfigSet.value) return;
         const setName = currentConfigSet.value.configSetName; // 保存名称用于提示
         await callApi(() => AiConfigurationsService.deleteApiAiConfigurations({uuid: selectedConfigSetUuid.value!}));
@@ -210,15 +233,18 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
         currentSchema.value = null;
 
         // 从 allConfigSets 中移除已删除的项
-        if (allConfigSets[oldSelectedUuid]) {
+        if (allConfigSets[oldSelectedUuid])
+        {
             delete allConfigSets[oldSelectedUuid];
         }
         // 如果 allConfigSets 为空，或者需要选择一个默认项，可以在这里处理
         // 考虑到后端保证至少有一个，这里可能不需要特殊处理空列表的情况
         // 但如果删除了当前选中的，最好是清空选择，或者选中列表中的第一个（如果存在）
-        if (Object.keys(allConfigSets).length > 0 && !selectedConfigSetUuid.value) {
+        if (Object.keys(allConfigSets).length > 0 && !selectedConfigSetUuid.value)
+        {
             // selectedConfigSetUuid.value = Object.keys(allConfigSets)[0]; // 可选：默认选中第一个
-        } else if (Object.keys(allConfigSets).length === 0) {
+        } else if (Object.keys(allConfigSets).length === 0)
+        {
             // 如果删到空了（理论上后端不应允许），这里可以再次拉取确保同步
             await fetchAllConfigSets();
         }
@@ -226,12 +252,14 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
 
     // ----------- AI 类型与表单逻辑 -----------
     // 删除当前选中的 AI 配置
-    async function handleRemoveCurrentAiConfig() {
+    async function handleRemoveCurrentAiConfig()
+    {
         // 可用性已在模板 popconfirm 的 v-if 和 disabled 中控制，此处不再需要额外的 if 检查参数有效性
         const moduleTypeToRemove = selectedAiModuleType.value!;
         const currentConfigSetData = currentConfigSet.value!; // 已确保存在
 
-        if (currentConfigSetData.configurations && currentConfigSetData.configurations[moduleTypeToRemove]) {
+        if (currentConfigSetData.configurations && currentConfigSetData.configurations[moduleTypeToRemove])
+        {
             // **核心修改：删除对应的键值对**
             delete currentConfigSetData.configurations[moduleTypeToRemove];
 
@@ -243,12 +271,13 @@ export function useAiConfigActions(params: UseAiConfigActionsParams) {
             // selectedAiModuleType.value = null; // 可选，取决于交互流程
             // 清空后需要重新触发选择AI类型或显示空状态
             // 如果不清空，表单区域也会因为 v-if 条件不满足而消失
-            // 为了避免 watch selectedAiModuleType 再次触发加载 schema/数据，不清空可能更好
+            // 为了避免 watch selectedAiModuleType 再次触发加载 schema-viewer/数据，不清空可能更好
             // 让表单区域消失，并提示用户选择其他AI类型
 
             // 强制 vue-form 重新渲染通常不再需要，因为 v-if 条件变化会触发其销毁和重建（如果下次再选中）
             // formRenderKey.value++; // 移除或保留看实际测试效果
-        } else {
+        } else
+        {
             // 理论上不会走到这里，因为按钮已禁用
             message.warning('当前AI模型配置不存在或已被移除。');
         }

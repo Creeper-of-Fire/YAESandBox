@@ -72,7 +72,7 @@ public class AiConfigSchemasController : ControllerBase
             return this.StatusCode(StatusCodes.Status500InternalServerError, $"为类型 '{configTypeName}' 生成 Schema 时发生内部错误: {ex.Message}");
         }
     }
-    
+
     /// <summary>
     /// 获取所有可用的 AI 配置【类型定义】列表。
     /// 用于前端展示可以【新建】哪些类型的 AI 配置。
@@ -112,7 +112,7 @@ public class AiConfigSchemasController : ControllerBase
 
         return this.Ok(result);
     }
-    
+
     /// <summary>
     /// 代表一个选择项，用于下拉列表或单选/复选按钮组。
     /// </summary>

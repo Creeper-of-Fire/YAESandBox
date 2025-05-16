@@ -30,7 +30,7 @@
 import {ref, computed, defineAsyncComponent, markRaw, defineExpose, toRefs} from 'vue';
 import {NSpin, NAlert, NEmpty} from 'naive-ui';
 import VueForm from '@lljj/vue3-form-naive'; // 确认此库的准确导入名称和方式
-import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi/models/AbstractAiProcessorConfig";
+import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi/models/AbstractAiProcessorConfig.ts";
 
 // ----------- Props -----------
 const props = defineProps({
@@ -91,8 +91,8 @@ const jsonFormRef = ref<any>(null); // vue-form 实例引用
 
 // ----------- Widget Imports (硬编码) -----------
 // 这些保持和你原来组件中一致
-const MyCustomStringAutoComplete = markRaw(defineAsyncComponent(() => import('@/components/schema/field-widget/MyCustomStringAutoComplete.vue')));
-const SliderWithInputWidget = markRaw(defineAsyncComponent(() => import('@/components/schema/field-widget/SliderWithInputWidget.vue')));
+const MyCustomStringAutoComplete = markRaw(defineAsyncComponent(() => import('@/features/schema-viewer/field-widget/MyCustomStringAutoComplete.vue')));
+const SliderWithInputWidget = markRaw(defineAsyncComponent(() => import('@/features/schema-viewer/field-widget/SliderWithInputWidget.vue')));
 
 // ----------- Schema Preprocessing Logic (直接从原组件迁移) -----------
 /**
@@ -100,16 +100,20 @@ const SliderWithInputWidget = markRaw(defineAsyncComponent(() => import('@/compo
  * @param originalSchema 从后端获取的原始 JSON Schema 对象。
  * @returns 处理后、可供 vue-form 使用的 Schema 对象。
  */
-function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record<string, any> {
+function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record<string, any>
+{
   // 深拷贝原始 Schema，避免修改原始对象
   const schema = JSON.parse(JSON.stringify(originalSchema));
 
-  if (schema.properties) {
-    for (const fieldName in schema.properties) {
+  if (schema.properties)
+  {
+    for (const fieldName in schema.properties)
+    {
       const fieldProps = schema.properties[fieldName];
 
       // 确保每个 property 都有一个 ui:options 对象，方便后续写入
-      if (!fieldProps['ui:options']) {
+      if (!fieldProps['ui:options'])
+      {
         fieldProps['ui:options'] = {};
       }
       // 也可以直接在 uiSchema 层面操作（如果 vue-form 优先 uiSchema）
@@ -119,9 +123,12 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
       const fieldType = fieldProps.type;
       if ((typeof fieldType === 'string' && (fieldType === 'number' || fieldType === 'integer')) ||
           (Array.isArray(fieldType) && fieldType.some(t => t === 'number' || t === 'integer'))
-      ) {
-        if (!fieldProps['ui:widget']) {
-          if (fieldProps.hasOwnProperty('maximum') && fieldProps.hasOwnProperty('minimum')) {
+      )
+      {
+        if (!fieldProps['ui:widget'])
+        {
+          if (fieldProps.hasOwnProperty('maximum') && fieldProps.hasOwnProperty('minimum'))
+          {
             // 优先使用已有的 ui:widget (如果后端偶尔还是会传)，否则按约定赋值
 
             fieldProps['ui:options'].step = fieldProps['multipleOf'];
@@ -131,7 +138,8 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
             if (fieldProps.type != 'integer')
               delete fieldProps['multipleOf'];
             fieldProps['ui:widget'] = SliderWithInputWidget; // 你需要确保 SliderWidget 已经注册或由库提供
-          } else {
+          } else
+          {
             fieldProps['ui:widget'] = 'InputNumberWidget';
             fieldProps['ui:options'].showButton = false;
           }
@@ -139,13 +147,18 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
       }
 
       // 规则2: 有 enum 和 enumNames
-      if (fieldProps.enum && fieldProps.enumNames) {
-        if (fieldProps['ui:options']?.isEditableSelectOptions === true) {
-          if (!fieldProps['ui:widget']) { // 同样，优先用户已定义的
+      if (fieldProps.enum && fieldProps.enumNames)
+      {
+        if (fieldProps['ui:options']?.isEditableSelectOptions === true)
+        {
+          if (!fieldProps['ui:widget'])
+          { // 同样，优先用户已定义的
             fieldProps['ui:widget'] = MyCustomStringAutoComplete;
           }
-        } else {
-          if (!fieldProps['ui:widget']) {
+        } else
+        {
+          if (!fieldProps['ui:widget'])
+          {
             // 根据选项数量决定使用 Radio 还是 Select 可能是更好的实践
             // 但按你的约定，这里是 RadioWidget
             fieldProps['ui:widget'] = 'RadioWidget'; // 你需要确保 RadioWidget 已经注册或由库提供
@@ -155,7 +168,8 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
       // 你可以根据需要添加更多规则...
 
       // 清理临时的 isEditableSelectOptions，因为它只是一个标记，不应直接传递给 widget
-      if (fieldProps['ui:options']?.hasOwnProperty('isEditableSelectOptions')) {
+      if (fieldProps['ui:options']?.hasOwnProperty('isEditableSelectOptions'))
+      {
         // delete fieldProps['ui:options'].isEditableSelectOptions; // 看 vue-form 是否会把所有 ui:options 传给 widget
         fieldProps['ui:enumOptions'] = fieldProps['enum'].map((value: any, index: number) => ({
           label: fieldProps.enumNames[index] as string,
@@ -166,7 +180,8 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
         // 通常，自定义 widget 会接收整个 ui:options 对象，所以如果标记只用于选择 widget，之后可以删除
       }
       // 如果 ui:options 为空，也可以考虑删除它
-      if (Object.keys(fieldProps['ui:options']).length === 0) {
+      if (Object.keys(fieldProps['ui:options']).length === 0)
+      {
         delete fieldProps['ui:options'];
       }
     }
@@ -174,16 +189,18 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
 
   // 如果 Schema 中有 definitions (用于 $ref)，也可能需要递归处理它们
   // 但对于 ui:widget，通常只关心顶层 properties
-  if (schema.definitions) {
-    for (const defName in schema.definitions) {
-      // 注意：这里递归调用 preprocessSchemaForWidgets(schema.definitions[defName])
-      // 需要确保返回的是处理后的 definitions，并且原 schema 的 $ref 仍然有效。
-      // 或者，一种更简单的方式是假设 ui:widget 仅应用于 schema.properties 中的字段，
+  if (schema.definitions)
+  {
+    for (const defName in schema.definitions)
+    {
+      // 注意：这里递归调用 preprocessSchemaForWidgets(schema-viewer.definitions[defName])
+      // 需要确保返回的是处理后的 definitions，并且原 schema-viewer 的 $ref 仍然有效。
+      // 或者，一种更简单的方式是假设 ui:widget 仅应用于 schema-viewer.properties 中的字段，
       // 而不是 definitions 内部的字段。
       // 如果 definitions 内部的字段也需要通过 $ref 被渲染并应用这些规则，
       // 那么 vue-form 在解析 $ref 时，如果能应用外层传递的 widgets 映射，就无需递归。
       // 否则，递归处理 definitions 是必要的。
-      // 为简单起见，我们先假设主要处理 schema.properties
+      // 为简单起见，我们先假设主要处理 schema-viewer.properties
       schema.definitions[defName] = preprocessSchemaForWidgets(schema.definitions[defName]);
     }
   }
@@ -192,13 +209,17 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
 }
 
 // ----------- Computed Properties -----------
-const processedSchema = computed(() => {
-  if (props.schema) {
-    try {
+const processedSchema = computed(() =>
+{
+  if (props.schema)
+  {
+    try
+    {
       // 如你所说，此处不再添加 showTitle/showDescription 的逻辑
       return preprocessSchemaForWidgets(props.schema);
-    } catch (error) {
-      console.error('[DynamicFormRenderer] Error processing schema:', error);
+    } catch (error)
+    {
+      console.error('[DynamicFormRenderer] Error processing schema-viewer:', error);
       internalErrorMessage.value = `Schema 预处理失败: ${(error as Error).message}`;
       return null;
     }
@@ -210,11 +231,13 @@ const internalErrorMessage = ref<string | null>(null);
 const effectiveErrorMessage = computed(() => props.errorMessage || internalErrorMessage.value);
 
 // ----------- Event Handlers -----------
-function handleFormUpdate(newValue: AbstractAiProcessorConfig) {
+function handleFormUpdate(newValue: AbstractAiProcessorConfig)
+{
   emit('update:modelValue', newValue);
 }
 
-function handleFormChange(eventPayload: any) {
+function handleFormChange(eventPayload: any)
+{
   // 直接将 vue-form 的 change 事件透传出去
   // eventPayload 通常包含 { value: newFormData, errors: validationErrors }
   emit('change', eventPayload);
@@ -227,16 +250,21 @@ defineExpose({
    * @returns {Promise<void>} 如果校验成功，Promise 会 resolve。
    * @throws {Array<FormValidationError>} 如果校验失败，Promise 会 reject，并携带 Naive UI Form 的错误对象数组。
    */
-  async validate(): Promise<void> {
-    if (jsonFormRef.value && jsonFormRef.value.$$uiFormRef) {
-      try {
+  async validate(): Promise<void>
+  {
+    if (jsonFormRef.value && jsonFormRef.value.$$uiFormRef)
+    {
+      try
+      {
         await jsonFormRef.value.$$uiFormRef.validate();
         return Promise.resolve();
-      } catch (validationErrors) {
+      } catch (validationErrors)
+      {
         console.warn('[DynamicFormRenderer] Validation failed:', validationErrors);
         return Promise.reject(validationErrors);
       }
-    } else {
+    } else
+    {
       const errorMsg = '[DynamicFormRenderer] Form instance not available for validation.';
       console.warn(errorMsg);
       return Promise.reject(new Error(errorMsg));
@@ -246,17 +274,21 @@ defineExpose({
   /**
    * 清除表单的校验状态。
    */
-  resetValidation() {
+  resetValidation()
+  {
     if (jsonFormRef.value && jsonFormRef.value.$$uiFormRef &&
-        typeof jsonFormRef.value.$$uiFormRef.restoreValidation === 'function') {
+        typeof jsonFormRef.value.$$uiFormRef.restoreValidation === 'function')
+    {
       jsonFormRef.value.$$uiFormRef.restoreValidation();
-    } else {
+    } else
+    {
       console.warn('[DynamicFormRenderer] Form instance not available for resetting validation.');
     }
   }
 });
 
-export interface DynamicFormRendererInstance {
+export interface DynamicFormRendererInstance
+{
   validate: () => Promise<void>;
   resetValidation: () => void;
 }

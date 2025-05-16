@@ -24,13 +24,15 @@ import {NTooltip, useNotification} from 'naive-ui'; // 引入 useNotification
 const connectionStore = useConnectionStore();
 const notification = useNotification(); // 获取 notification API
 
-const statusClass = computed(() => {
+const statusClass = computed(() =>
+{
   if (connectionStore.isConnecting) return 'connecting';
   if (connectionStore.isConnected) return 'connected';
   return 'disconnected';
 });
 
-const statusText = computed(() => {
+const statusText = computed(() =>
+{
   if (connectionStore.isConnecting) return '连接中...';
   if (connectionStore.isConnected) return 'SignalR 已连接';
   return 'SignalR 已断开 (点击重连)'; // 修改提示文本
@@ -40,8 +42,10 @@ const statusText = computed(() => {
 const canAttemptReconnect = computed(() => !connectionStore.isConnected && !connectionStore.isConnecting);
 
 // 尝试重新连接的方法
-const attemptReconnect = async () => {
-  if (!canAttemptReconnect.value) {
+const attemptReconnect = async () =>
+{
+  if (!canAttemptReconnect.value)
+  {
     return; // 如果已连接或正在连接，则不执行任何操作
   }
 
@@ -52,18 +56,21 @@ const attemptReconnect = async () => {
   //   duration: 3000 // 通知显示时间 (ms)
   // });
 
-  try {
+  try
+  {
     // 调用 store 中的连接方法
     await connectionStore.connectSignalR();
     // 连接成功/失败的状态更新由 connectSignalR 内部处理
     // 可以在这里根据结果再显示成功/失败通知，但 connectSignalR 内部可能已有日志
-    if (connectionStore.isConnected) {
+    if (connectionStore.isConnected)
+    {
       notification.success({
         title: 'SignalR 连接',
         content: '重新连接成功！',
         duration: 2500
       });
-    } else {
+    } else
+    {
       // 如果 connectSignalR 内部处理了错误且没有抛出，这里可能不知道失败
       // 假设如果没连接成功就是失败了（需要看 connectSignalR 的具体实现）
       // notification.error({
@@ -72,7 +79,8 @@ const attemptReconnect = async () => {
       //     duration: 5000
       // });
     }
-  } catch (error) {
+  } catch (error)
+  {
     console.error("ConnectionStatus: 尝试重新连接失败:", error);
     notification.error({ // 显示错误通知
       title: 'SignalR 连接错误',

@@ -7,24 +7,28 @@ import {eventBus} from '@/services/eventBus';
 // type WorldStateChangeEvent = { changedEntityIds?: string[] };
 // type GameStateChangeEvent = { changedSettings?: string[] };
 
-export function useBlockStateListener(blockIdRef: Ref<string | null>) {
+export function useBlockStateListener(blockIdRef: Ref<string | null>)
+{
     const worldStateChangedSignal = ref(0); // 简单地用一个递增数字表示收到了信号
     const gameStateChangedSignal = ref(0);   // 或者使用 boolean ref
 
     let cleanupFunctions: (() => void)[] = [];
 
-    const clearListeners = () => {
+    const clearListeners = () =>
+    {
         cleanupFunctions.forEach(cleanup => cleanup());
         cleanupFunctions = [];
         // console.log(`useBlockStateListener: Listeners cleared for previous block.`);
     };
 
     // 使用 watchEffect 来响应 blockIdRef 的变化并管理订阅
-    watchEffect((onCleanup) => {
+    watchEffect((onCleanup) =>
+    {
         clearListeners(); // 清理旧的监听器
 
         const currentBlockId = blockIdRef.value;
-        if (!currentBlockId) {
+        if (!currentBlockId)
+        {
             console.log(`useBlockStateListener: No blockId provided, listeners inactive.`);
             return; // 如果 blockId 为空，则不设置监听器
         }
@@ -33,11 +37,13 @@ export function useBlockStateListener(blockIdRef: Ref<string | null>) {
         const gameStateEventName = `${currentBlockId}:GameStateChanged` as const;
 
         // 定义处理器
-        const handleWorldStateChange = (/* payload?: WorldStateChangeEvent */) => {
+        const handleWorldStateChange = (/* payload?: WorldStateChangeEvent */) =>
+        {
             console.log(`useBlockStateListener: Received ${worldStateEventName}`);
             worldStateChangedSignal.value++; // 触发信号
         };
-        const handleGameStateChange = (/* payload?: GameStateChangeEvent */) => {
+        const handleGameStateChange = (/* payload?: GameStateChangeEvent */) =>
+        {
             console.log(`useBlockStateListener: Received ${gameStateEventName}`);
             gameStateChangedSignal.value++; // 触发信号
         };
@@ -53,14 +59,16 @@ export function useBlockStateListener(blockIdRef: Ref<string | null>) {
         cleanupFunctions.push(cleanupWorld, cleanupGame);
 
         // watchEffect 的清理函数
-        onCleanup(() => {
+        onCleanup(() =>
+        {
             console.log(`useBlockStateListener: Cleaning up listeners for block ${currentBlockId}`);
             clearListeners();
         });
     });
 
     // 确保组件卸载时也清理
-    onBeforeUnmount(() => {
+    onBeforeUnmount(() =>
+    {
         clearListeners();
     });
 

@@ -34,6 +34,11 @@ public sealed class CustomRangeAttribute : Attribute
     /// </summary>
     public Type OperandType { get; init; }
 
+    /// <summary>
+    /// 创建一个 CustomRangeAttribute 实例，用于指定数值属性的允许范围。
+    /// </summary>
+    /// <param name="minimum"></param>
+    /// <param name="maximum"></param>
     public CustomRangeAttribute(int? minimum, int? maximum)
     {
         this.Minimum = minimum;
@@ -42,6 +47,12 @@ public sealed class CustomRangeAttribute : Attribute
         this.OperandType = typeof(int);
     }
 
+    /// <summary>
+    /// 创建一个 CustomRangeAttribute 实例，用于指定数值属性的允许范围。带有步长。
+    /// </summary>
+    /// <param name="minimum"></param>
+    /// <param name="maximum"></param>
+    /// <param name="step"></param>
     public CustomRangeAttribute(double? minimum, double? maximum, double? step = null)
     {
         this.Minimum = minimum;
@@ -50,7 +61,13 @@ public sealed class CustomRangeAttribute : Attribute
         this.OperandType = typeof(double);
     }
 
-
+    /// <summary>
+    /// 创建一个 CustomRangeAttribute 实例，用于指定数值属性的允许范围。带有步长和字符串格式。
+    /// </summary>
+    /// <param name="operandType"></param>
+    /// <param name="minimum"></param>
+    /// <param name="maximum"></param>
+    /// <param name="step"></param>
     public CustomRangeAttribute(Type operandType, string? minimum, string? maximum, string? step = null)
     {
         this.OperandType = operandType;

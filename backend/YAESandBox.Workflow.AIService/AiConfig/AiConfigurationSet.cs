@@ -14,7 +14,7 @@ public class AiConfigurationSet
     /// 默认的 AI 配置集名称。
     /// </summary>
     internal const string DefaultConfigSetName = "Default";
-    
+
     /// <summary>
     /// 创建一个默认的 AI 配置集。
     /// </summary>

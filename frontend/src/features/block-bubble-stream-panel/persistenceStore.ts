@@ -2,20 +2,22 @@
 import {defineStore} from 'pinia';
 import {ref} from 'vue';
 import {PersistenceService} from '@/types/generated/api'; // 引入 API Service
-import {useTopologyStore} from './topologyStore';
-import {useBlockContentStore} from './blockContentStore';
-import {useBlockStatusStore} from './blockStatusStore';
-import {useConnectionStore} from './connectionStore'; // 用于检查 SignalR 状态
+import {useTopologyStore} from './topologyStore.ts';
+import {useBlockContentStore} from './blockContentStore.ts';
+import {useBlockStatusStore} from './blockStatusStore.ts';
+import {useConnectionStore} from '../../stores/connectionStore.ts'; // 用于检查 SignalR 状态
 
 // 定义盲存数据的结构 (前端关心的数据)
-interface BlindData {
+interface BlindData
+{
     pathSelection?: Record<string, string>;
     currentPathLeafId?: string | null;
     // 未来可以添加其他需要前端保存的状态，如 UI 布局、面板状态等
     // uiState?: { leftOpen: boolean, rightOpen: boolean, ... };
 }
 
-export const usePersistenceStore = defineStore('persistence', () => {
+export const usePersistenceStore = defineStore('persistence', () =>
+{
     // --- State ---
     const isSaving = ref(false);
     const isLoading = ref(false);
@@ -33,7 +35,8 @@ export const usePersistenceStore = defineStore('persistence', () => {
     /**
      * 保存当前会话状态到文件。
      */
-    async function saveSession() {
+    async function saveSession()
+    {
         if (isSaving.value) return;
         isSaving.value = true;
         lastError.value = null;
@@ -46,7 +49,8 @@ export const usePersistenceStore = defineStore('persistence', () => {
             // Add other frontend state if needed
         };
 
-        try {
+        try
+        {
             // 2. 调用 API 保存
             const blob = await PersistenceService.postApiPersistenceSave({requestBody: blindData});
 
@@ -66,12 +70,14 @@ export const usePersistenceStore = defineStore('persistence', () => {
             // 可以在这里显示成功提示
             // showSuccessMessage("会话已成功保存！");
 
-        } catch (error: any) {
+        } catch (error: any)
+        {
             console.error("PersistenceStore: 保存会话失败", error);
             lastError.value = `保存失败: ${error.message || error}`;
             // 显示错误提示
             alert(`保存失败: ${error.message || error}`);
-        } finally {
+        } finally
+        {
             isSaving.value = false;
         }
     }
@@ -80,7 +86,8 @@ export const usePersistenceStore = defineStore('persistence', () => {
      * 从文件加载会话状态。
      * @param archiveFile - 用户选择的 JSON 存档文件。
      */
-    async function loadSession(archiveFile: File) {
+    async function loadSession(archiveFile: File)
+    {
         if (isLoading.value) return;
         isLoading.value = true;
         lastError.value = null;
@@ -91,7 +98,8 @@ export const usePersistenceStore = defineStore('persistence', () => {
         //    或者让 BlockStatusStore 在加载期间忽略某些更新？
         //    暂时先不停止，依赖后续的状态重置
         const wasConnected = connectionStore.isConnected;
-        if (wasConnected) {
+        if (wasConnected)
+        {
             console.warn("PersistenceStore: 正在加载存档，SignalR 仍连接，可能会收到旧消息。");
             // await connectionStore.disconnectSignalR(); // 考虑是否需要断开
         }
@@ -107,7 +115,8 @@ export const usePersistenceStore = defineStore('persistence', () => {
         // 显示全局加载状态
         blockStatusStore.setLoadingAction(true, '正在加载存档...');
 
-        try {
+        try
+        {
             // 2. 调用 API 加载
             const responseData = await PersistenceService.postApiPersistenceLoad({
                 formData: {archiveFile: archiveFile}
@@ -115,15 +124,19 @@ export const usePersistenceStore = defineStore('persistence', () => {
 
             // 3. 解析盲存数据
             let loadedBlindData: BlindData = {};
-            if (responseData) {
+            if (responseData)
+            {
                 // responseData 可能是任何类型，需要安全地解析
-                if (typeof responseData === 'object') {
+                if (typeof responseData === 'object')
+                {
                     loadedBlindData = responseData as BlindData;
                     console.log("PersistenceStore: 已加载盲存数据", loadedBlindData);
-                } else {
+                } else
+                {
                     console.warn("PersistenceStore: 存档中包含非对象格式的盲存数据，已忽略。", responseData);
                 }
-            } else {
+            } else
+            {
                 console.log("PersistenceStore: 存档中不包含盲存数据。");
             }
 
@@ -150,14 +163,16 @@ export const usePersistenceStore = defineStore('persistence', () => {
             // 显示成功提示
             // showSuccessMessage("会话已成功加载！");
 
-        } catch (error: any) {
+        } catch (error: any)
+        {
             console.error("PersistenceStore: 加载会话失败", error);
             lastError.value = `加载失败: ${error.message || error}`;
             // 显示错误提示
             alert(`加载失败: ${error.message || error}`);
             // 加载失败后，应用状态是空的，可能需要提示用户刷新或重新开始
 
-        } finally {
+        } finally
+        {
             isLoading.value = false;
             blockStatusStore.setLoadingAction(false); // 关闭全局加载状态
             // 7. (可选) 如果之前断开了 SignalR，重新连接

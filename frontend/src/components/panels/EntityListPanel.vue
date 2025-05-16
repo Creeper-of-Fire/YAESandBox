@@ -20,7 +20,7 @@
 import {computed, ref} from 'vue';
 import {NH4, NText, NDivider, NEmpty, NIcon} from 'naive-ui';
 import {PeopleOutline as PeopleIcon} from '@vicons/ionicons5';
-import {useTopologyStore} from '@/stores/topologyStore';
+import {useTopologyStore} from '@/features/block-bubble-stream-panel/topologyStore.ts';
 import {useBlockStateListener} from '@/composables/useBlockStateListener'; // 引入 listener
 
 const topologyStore = useTopologyStore();

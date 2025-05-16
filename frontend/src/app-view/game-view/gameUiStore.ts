@@ -1,4 +1,4 @@
-﻿// --- START OF FILE uiStore.ts ---
+﻿// --- START OF FILE gameUiStore.ts ---
 
 import {defineStore} from 'pinia';
 import {shallowRef, type Component} from 'vue'; // shallowRef 用于存储组件引用
@@ -9,7 +9,8 @@ import {shallowRef, type Component} from 'vue'; // shallowRef 用于存储组件
 
 type MobileFocusTarget = 'left' | 'right' | 'main';
 
-interface UiState {
+interface UiState
+{
     isMobileLayout: boolean;
     /**
      * 当前在左侧区域激活的组件引用。null 表示无激活组件。
@@ -39,10 +40,12 @@ export const useUiStore = defineStore('ui', {
          * 计算移动端当前应显示的组件引用。
          * @returns Component 引用或 null
          */
-        getMobileViewComponent: (state): Component | null => {
+        getMobileViewComponent: (state): Component | null =>
+        {
             if (!state.isMobileLayout) return null;
 
-            switch (state.mobileFocusTarget) {
+            switch (state.mobileFocusTarget)
+            {
                 case 'left':
                     // 如果焦点在左，返回左侧组件 (如果存在)
                     return state.activeLeftComponent;
@@ -61,18 +64,22 @@ export const useUiStore = defineStore('ui', {
         /**
          * 设置当前是否为移动端布局。
          */
-        setIsMobileLayout(isMobile: boolean) {
-            if (this.isMobileLayout !== isMobile) {
+        setIsMobileLayout(isMobile: boolean)
+        {
+            if (this.isMobileLayout !== isMobile)
+            {
                 console.log(`UIStore: 切换布局模式 -> ${isMobile ? '移动端' : '桌面端'}`);
                 this.isMobileLayout = isMobile;
                 // 切换到移动端时，根据当前激活的组件重置焦点
-                if (isMobile) {
+                if (isMobile)
+                {
                     // 优先级：如果右侧有，焦点在右；否则如果左侧有，焦点在左；都无则在 main
                     if (this.activeRightComponent) this.mobileFocusTarget = 'right';
                     else if (this.activeLeftComponent) this.mobileFocusTarget = 'left';
                     else this.mobileFocusTarget = 'main';
                     console.log(`UIStore: (移动端) 初始/切换后焦点 -> ${this.mobileFocusTarget}`);
-                } else {
+                } else
+                {
                     this.mobileFocusTarget = 'main'; // 切回桌面，焦点回 main
                 }
             }
@@ -83,29 +90,37 @@ export const useUiStore = defineStore('ui', {
          * @param target - 目标区域 'left' 或 'right'
          * @param component - 要设置的组件引用，或 null 来清除/关闭
          */
-        setActiveComponent(target: 'left' | 'right', component: Component | null) {
+        setActiveComponent(target: 'left' | 'right', component: Component | null)
+        {
             let panelClosed = false;
             let panelOpenedOrSwitched = false;
             let currentComponentRef: Component | null = null;
 
             // 获取当前目标区域的组件引用
-            if (target === 'left') {
+            if (target === 'left')
+            {
                 currentComponentRef = this.activeLeftComponent;
-            } else {
+            } else
+            {
                 currentComponentRef = this.activeRightComponent;
             }
 
             // 判断操作类型：打开/切换 vs 关闭
-            if (component === null) { // 请求关闭
-                if (currentComponentRef !== null) {
+            if (component === null)
+            { // 请求关闭
+                if (currentComponentRef !== null)
+                {
                     panelClosed = true;
                     console.log(`UIStore: 关闭 ${target} 面板`);
                 }
-            } else { // 请求打开或切换
-                if (currentComponentRef !== component) {
+            } else
+            { // 请求打开或切换
+                if (currentComponentRef !== component)
+                {
                     panelOpenedOrSwitched = true;
                     console.log(`UIStore: 打开/切换 ${target} 面板`);
-                } else {
+                } else
+                {
                     // 请求打开的组件已在目标位置打开 -> 变为关闭操作
                     component = null; // 将操作转为关闭
                     panelClosed = true;
@@ -114,21 +129,26 @@ export const useUiStore = defineStore('ui', {
             }
 
             // 更新目标区域的组件引用
-            if (target === 'left') {
+            if (target === 'left')
+            {
                 // 使用 markRaw 防止组件对象本身被代理，shallowRef 只跟踪引用变化
                 this.activeLeftComponent = component ? shallowRef(component) : null;
-            } else {
+            } else
+            {
                 this.activeRightComponent = component ? shallowRef(component) : null;
             }
 
             // 更新移动端焦点
-            if (this.isMobileLayout) {
-                if (panelClosed) {
+            if (this.isMobileLayout)
+            {
+                if (panelClosed)
+                {
                     // 关闭了面板，检查另一侧是否打开，决定焦点
                     const otherPanelComponent = (target === 'left') ? this.activeRightComponent : this.activeLeftComponent;
                     this.mobileFocusTarget = otherPanelComponent ? (target === 'left' ? 'right' : 'left') : 'main';
                     console.log(`UIStore: (移动端) 关闭 ${target} 面板，焦点移至 -> ${this.mobileFocusTarget}`);
-                } else if (panelOpenedOrSwitched) {
+                } else if (panelOpenedOrSwitched)
+                {
                     // 打开或切换了面板，焦点移到该面板
                     this.mobileFocusTarget = target;
                     console.log(`UIStore: (移动端) 打开/切换 ${target} 面板，焦点移至 -> ${target}`);
@@ -140,11 +160,14 @@ export const useUiStore = defineStore('ui', {
         /**
          * 显式将移动端焦点设置回中间 (Bubble Stream)。
          */
-        setMobileFocusToMain() {
-            if (this.isMobileLayout) {
+        setMobileFocusToMain()
+        {
+            if (this.isMobileLayout)
+            {
                 this.mobileFocusTarget = 'main';
                 console.log("UIStore: (移动端) 显式设置焦点到 -> main");
-            } else {
+            } else
+            {
                 // 桌面端也可选择关闭两侧面板
                 this.activeLeftComponent = null;
                 this.activeRightComponent = null;
@@ -154,4 +177,4 @@ export const useUiStore = defineStore('ui', {
     }
 });
 
-// --- END OF FILE uiStore.ts ---
+// --- END OF FILE gameUiStore.ts ---

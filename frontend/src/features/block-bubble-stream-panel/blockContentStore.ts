@@ -1,10 +1,11 @@
 ﻿import {defineStore} from 'pinia';
 import type {BlockDetailDto, UpdateBlockDetailsDto} from '@/types/generated/api';
 import {BlocksService, BlockStatusCode} from '@/types/generated/api'; // 引入用于检查状态
-import {useBlockStatusStore} from './blockStatusStore';
-import {useTopologyStore} from './topologyStore';
+import {useBlockStatusStore} from './blockStatusStore.ts';
+import {useTopologyStore} from './topologyStore.ts';
 
-interface BlockContentState {
+interface BlockContentState
+{
     blocks: Record<string, BlockDetailDto>; // ID -> Detail DTO 缓存
 }
 
@@ -17,7 +18,8 @@ export const useBlockContentStore = defineStore('blockContent', {
 
     getters: {
         /** 获取指定 ID 的 Block 详细信息 DTO */
-        getBlockById(state): (id: string) => BlockDetailDto | undefined {
+        getBlockById(state): (id: string) => BlockDetailDto | undefined
+        {
             return (id: string) => state.blocks[id];
         },
     },
@@ -28,18 +30,22 @@ export const useBlockContentStore = defineStore('blockContent', {
          * 获取指定 Block 的全部详细信息并更新缓存。
          * @param blockId 要获取的 Block ID。
          */
-        async fetchAllBlockDetails(blockId: string) {
+        async fetchAllBlockDetails(blockId: string)
+        {
             console.log(`BlockContentStore: 开始获取 Block ${blockId} 详情...`);
-            try {
+            try
+            {
                 const blockData = await BlocksService.getApiBlocks1({blockId});
                 const topologyStore = useTopologyStore();
                 console.log(`BlockContentStore: Block ${blockId} 详情获取成功，状态码: ${blockData.statusCode}`);
 
                 // 检查获取到的 Block 是否有效
-                if (blockData.statusCode === BlockStatusCode.NOT_FOUND) {
+                if (blockData.statusCode === BlockStatusCode.NOT_FOUND)
+                {
                     console.warn(`BlockContentStore: 获取到 Block ${blockId} 状态为 ${blockData.statusCode}，从内容缓存移除。`);
                     delete this.blocks[blockId];
-                } else {
+                } else
+                {
                     // 更新内容缓存
                     if (!this.blocks[blockId])
                         await topologyStore.fetchAndUpdateTopology();
@@ -49,9 +55,11 @@ export const useBlockContentStore = defineStore('blockContent', {
                     this.blocks[blockId] = blockData;
                     console.log(`BlockContentStore: Block ${blockId} 详情已更新缓存。`);
                 }
-            } catch (error: any) {
+            } catch (error: any)
+            {
                 console.error(`BlockContentStore: 获取 Block ${blockId} 详情失败`, error);
-                if ((error as any).status === 404) {
+                if ((error as any).status === 404)
+                {
                     console.warn(`BlockContentStore: 获取 Block ${blockId} 详情失败 (404)，从内容缓存移除。`);
                     delete this.blocks[blockId];
                 }
@@ -64,15 +72,20 @@ export const useBlockContentStore = defineStore('blockContent', {
          * @param newContent 新的内容片段或完整内容。
          * @param updateMode 更新模式 ('Incremental' 或 'FullSnapshot')。
          */
-        updateBlockContent(blockId: string, newContent: string | null, updateMode: string) {
-            if (this.blocks[blockId]) {
-                if (updateMode === 'Incremental') {
+        updateBlockContent(blockId: string, newContent: string | null, updateMode: string)
+        {
+            if (this.blocks[blockId])
+            {
+                if (updateMode === 'Incremental')
+                {
                     this.blocks[blockId].blockContent = (this.blocks[blockId].blockContent ?? "") + (newContent ?? "");
-                } else { // FullSnapshot or unknown (default to full)
+                } else
+                { // FullSnapshot or unknown (default to full)
                     this.blocks[blockId].blockContent = newContent ?? "";
                 }
                 // console.log(`BlockContentStore: Block ${blockId} 内容已更新 (模式: ${updateMode})`);
-            } else {
+            } else
+            {
                 // 收到内容更新，但 Block 详情不在缓存中，这可能意味着状态不同步
                 // 可能是 BlockStatusUpdate 比 fetchBlockDetails 先到
                 console.warn(`BlockContentStore: 尝试更新未知 Block ${blockId} 的内容。可能丢失更新。尝试获取其详情...`);
@@ -93,41 +106,51 @@ export const useBlockContentStore = defineStore('blockContent', {
          * @param blockId Block ID。
          * @param updates 包含 content 和/或 metadataUpdates 的对象。
          */
-        async patchBlockDetails(blockId: string, updates: UpdateBlockDetailsDto) {
+        async patchBlockDetails(blockId: string, updates: UpdateBlockDetailsDto)
+        {
             const statusStore = useBlockStatusStore();
             if (statusStore.isLoadingAction) return; // 检查全局操作状态
             // 检查 Block 状态是否允许修改 (通常是 Idle)
             const currentStatus = statusStore.getBlockStatus(blockId);
-            if (currentStatus !== BlockStatusCode.IDLE) {
+            if (currentStatus !== BlockStatusCode.IDLE)
+            {
                 console.warn(`BlockContentStore: Block ${blockId} 状态为 ${currentStatus}，不允许修改。`);
                 alert(`Block (${blockId}) 当前状态 (${currentStatus}) 不允许修改。`);
                 return;
             }
 
             statusStore.setLoadingAction(true, `patch_${blockId}`); // 标记开始操作
-            try {
+            try
+            {
                 await BlocksService.patchApiBlocks({blockId, requestBody: updates});
                 console.log(`BlockContentStore: Block ${blockId} 的 PATCH 请求已发送。`);
                 // 成功后，后端会发送 BlockUpdateSignal，前端会通过 handleBlockUpdateSignal 刷新详情
                 // 也可以选择在这里进行乐观更新
-                if (updates.content !== undefined && this.blocks[blockId]) {
+                if (updates.content !== undefined && this.blocks[blockId])
+                {
                     this.blocks[blockId].blockContent = updates.content;
                 }
-                if (updates.metadataUpdates && this.blocks[blockId]) {
+                if (updates.metadataUpdates && this.blocks[blockId])
+                {
                     if (!this.blocks[blockId].metadata) this.blocks[blockId].metadata = {};
-                    for (const key in updates.metadataUpdates) {
+                    for (const key in updates.metadataUpdates)
+                    {
                         const value = updates.metadataUpdates[key];
-                        if (value === null) {
+                        if (value === null)
+                        {
                             delete this.blocks[blockId].metadata![key];
-                        } else {
+                        } else
+                        {
                             this.blocks[blockId].metadata![key] = value;
                         }
                     }
                 }
-            } catch (error) {
+            } catch (error)
+            {
                 console.error(`BlockContentStore: 更新 Block ${blockId} 失败`, error);
                 alert(`更新 Block (${blockId}) 失败: ${error instanceof Error ? error.message : error}`);
-            } finally {
+            } finally
+            {
                 statusStore.setLoadingAction(false, `patch_${blockId}`); // 标记结束操作
             }
 
@@ -136,7 +159,8 @@ export const useBlockContentStore = defineStore('blockContent', {
         /**
          * 清除所有缓存的 Block 详情 (用于加载新存档前)。
          */
-        clearAllBlocks() {
+        clearAllBlocks()
+        {
             this.blocks = {};
             console.log("BlockContentStore: 缓存已清除。");
         },

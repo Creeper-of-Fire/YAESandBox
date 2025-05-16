@@ -94,12 +94,12 @@
 <script setup lang="ts">
 import {computed, onMounted} from 'vue';
 import {v4 as uuidv4} from 'uuid';
-import {useTopologyStore} from '@/stores/topologyStore';
-import {useBlockContentStore} from '@/stores/blockContentStore';
-import {useBlockStatusStore} from '@/stores/blockStatusStore';
+import {useTopologyStore} from '@/features/block-bubble-stream-panel/topologyStore.ts';
+import {useBlockContentStore} from '@/features/block-bubble-stream-panel/blockContentStore.ts';
+import {useBlockStatusStore} from '@/features/block-bubble-stream-panel/blockStatusStore.ts';
 import {BlockStatusCode, type ConflictDetectedDto, type RegenerateBlockRequestDto} from '@/types/generated/api'; // 引入 Enum
-import type {ProcessedBlockNode} from '@/stores/topologyStore'; // 引入处理后的节点类型
-import {signalrService} from '@/services/signalrService'; // <--- 导入 signalrService
+import type {ProcessedBlockNode} from '@/features/block-bubble-stream-panel/topologyStore.ts'; // 引入处理后的节点类型
+import {signalrService} from '@/services/signalrService.ts'; // <--- 导入 signalrService
 import {BlockManagementService} from '@/types/generated/api'; // <--- 导入用于删除的 REST API Service
 
 const props = defineProps<{
@@ -140,7 +140,8 @@ const displayContent = computed(() => blockDetail.value?.blockContent ?? ""); //
 const parentNode = computed(() => blockNode.value?.parent);
 
 /** 获取兄弟节点引用列表 (包括自身) */
-const siblings = computed<ProcessedBlockNode[]>(() => {
+const siblings = computed<ProcessedBlockNode[]>(() =>
+{
   // 如果有父节点，返回父节点的所有子节点；否则如果自身存在，返回自身数组；否则返回空
   return parentNode.value?.children ?? (blockNode.value ? [blockNode.value] : []);
 });
@@ -166,12 +167,15 @@ const isCurrentLeaf = computed(() => topologyStore.currentPathLeafId === props.b
 // 不再需要 activeConflict 的 computed，除非要在 Bubble 内显示冲突细节
 
 // --- 新增：在挂载时检查并获取内容 ---
-onMounted(() => {
+onMounted(() =>
+{
   // 检查内容缓存中是否存在此 Block 的详情
-  if (!blockContentStore.getBlockById(props.blockId)) {
+  if (!blockContentStore.getBlockById(props.blockId))
+  {
     console.log(`BlockBubble [${props.blockId}] Mounted: 内容未缓存，触发获取...`);
     blockContentStore.fetchAllBlockDetails(props.blockId);
-  } else {
+  } else
+  {
     // console.log(`BlockBubble [${props.blockId}] Mounted: 内容已缓存。`);
   }
 });
@@ -179,7 +183,8 @@ onMounted(() => {
 // --- Methods ---
 
 /** 触发生成下一个 Block */
-const generateNext = async () => {
+const generateNext = async () =>
+{
   // 状态检查已通过 :disabled 完成，这里只需检查全局加载状态
   if (globalLoadingAction.value) return;
   console.log(`BlockBubble: 请求在 ${props.blockId} 下生成下一个 Block`);
@@ -195,20 +200,24 @@ const generateNext = async () => {
 };
 
 /** 切换到左侧的兄弟节点 */
-const pageLeft = () => {
+const pageLeft = () =>
+{
   if (!canPageLeft.value || globalLoadingAction.value) return;
   const previousSiblingNode = siblings.value[currentSiblingIndex.value - 1];
-  if (previousSiblingNode) {
+  if (previousSiblingNode)
+  {
     console.log(`BlockBubble: 请求切换到兄弟节点 ${previousSiblingNode.id}`);
     topologyStore.switchToSiblingNode(previousSiblingNode.id);
   }
 };
 
 /** 切换到右侧的兄弟节点 */
-const pageRight = () => {
+const pageRight = () =>
+{
   if (!canPageRight.value || globalLoadingAction.value) return;
   const nextSiblingNode = siblings.value[currentSiblingIndex.value + 1];
-  if (nextSiblingNode) {
+  if (nextSiblingNode)
+  {
     console.log(`BlockBubble: 请求切换到兄弟节点 ${nextSiblingNode.id}`);
     topologyStore.switchToSiblingNode(nextSiblingNode.id);
   }
@@ -220,7 +229,8 @@ const pageRight = () => {
 
 /** 重新生成当前 Block */
 // TODO 目前逻辑是完全错误的，我们实际上需要获得父节点的相关内容之类的。而且父节点不可用时也需要锁死这个按钮。
-const regenerate = async () => {
+const regenerate = async () =>
+{
   if (globalLoadingAction.value) return;
   // 状态检查已在 :disabled 中完成
   console.log(`BlockBubble: 请求重新生成 Block ${props.blockId}`);
@@ -233,10 +243,12 @@ const regenerate = async () => {
 };
 
 /** 删除当前 Block */
-const deleteThisBlock = () => {
+const deleteThisBlock = () =>
+{
   if (globalLoadingAction.value || props.blockId === topologyStore.rootNode?.id) return;
   // 状态检查已在 :disabled 中完成
-  if (confirm(`确定要删除 Block "${props.blockId}" 及其所有子节点吗？此操作不可撤销。`)) {
+  if (confirm(`确定要删除 Block "${props.blockId}" 及其所有子节点吗？此操作不可撤销。`))
+  {
     console.log(`BlockBubble: 请求删除 Block ${props.blockId}`);
     BlockManagementService.deleteApiManageBlocks({blockId: props.blockId, recursive: true, force: false}); // 递归删除，非强制
   }

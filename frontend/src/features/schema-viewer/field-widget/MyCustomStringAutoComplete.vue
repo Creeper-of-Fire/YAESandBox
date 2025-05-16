@@ -24,7 +24,7 @@ const props = defineProps<{
   readonly?: boolean;
   enumOptions?: Array<{ label: string, value: any }>;
   // --- 根据文档，其他 ui:xxx 应该作为 props ---
-  // 例如，如果 schema 中有 "ui:placeholder": "...", 则这里应该有 placeholder prop
+  // 例如，如果 schema-viewer 中有 "ui:placeholder": "...", 则这里应该有 placeholder prop
   placeholder?: string;
   // options?: Record<string, any>; // 如果 ui:options 整体作为 'options' prop 传递
 }>();
@@ -34,13 +34,16 @@ const emit = defineEmits(['update:modelValue']);
 
 const internalValue = ref(props.modelValue);
 
-watch(() => props.modelValue, (newValue) => {
+watch(() => props.modelValue, (newValue) =>
+{
   internalValue.value = newValue;
 });
 
-const computedOptions = computed<Array<{ label: string, value: any }>>(() => {
+const computedOptions = computed<Array<{ label: string, value: any }>>(() =>
+{
   // **核心改动：从 attrs 中获取 enumOptions**
-  if (props.enumOptions && Array.isArray(props.enumOptions)) {
+  if (props.enumOptions && Array.isArray(props.enumOptions))
+  {
     // 或者需要简单转换，例如确保 value 是 string
     return (props.enumOptions as any[]).map(opt => ({
       label: String(opt.label || opt.value), // 确保 label 存在
@@ -51,12 +54,14 @@ const computedOptions = computed<Array<{ label: string, value: any }>>(() => {
   return [];
 });
 
-// Placeholder 的获取逻辑：优先 props.placeholder (来自 ui:placeholder)，然后是 attrs.placeholder (如果库这样传)，最后是 schema 中的 description (如果能获取到 schema)
-const computedPlaceholder = computed<string>(() => {
+// Placeholder 的获取逻辑：优先 props.placeholder (来自 ui:placeholder)，然后是 attrs.placeholder (如果库这样传)，最后是 schema-viewer 中的 description (如果能获取到 schema-viewer)
+const computedPlaceholder = computed<string>(() =>
+{
   return props.placeholder ? props.placeholder : '';
 });
 
-const handleUpdateValue = (val: string) => {
+const handleUpdateValue = (val: string) =>
+{
   internalValue.value = val;
   emit('update:modelValue', val);
 };

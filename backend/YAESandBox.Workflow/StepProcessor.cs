@@ -22,7 +22,7 @@ internal class StepProcessor
     {
         // TODO 之后应该根据需求进行拷贝
         public dynamic StepInput { get; } = stepInput.ToDictionary(kv => kv.Key, kv => kv.Value);
-        public List<RoledPromptDto> Prompts { get; } = [];
+        public IEnumerable<RoledPromptDto> Prompts { get; } = [];
         public string? FullAiReturn { get; set; }
     }
 
