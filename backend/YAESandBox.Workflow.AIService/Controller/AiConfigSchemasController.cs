@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.Schema;
@@ -50,20 +51,14 @@ public class AiConfigSchemasController : ControllerBase
         try
         {
             string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(configType);
-
-            // 为了确保返回的是一个有效的 JSON 对象而不是字符串，我们可以解析它
-            // 这也有助于捕获生成阶段可能出现的序列化问题
-            try
-            {
-                var jsonDocument = JsonDocument.Parse(schemaJson);
-                return this.Ok(jsonDocument.RootElement.Clone()); // 返回 JsonElement，ASP.NET Core 会正确序列化它
-            }
-            catch (JsonException jsonEx)
-            {
-                // Log the error: schemaJson
-                // Log the exception: jsonEx
-                return this.StatusCode(StatusCodes.Status500InternalServerError, $"生成的 Schema 不是有效的 JSON 格式。错误: {jsonEx.Message}");
-            }
+            var jsonNode = JsonNode.Parse(schemaJson);
+            return this.Ok(jsonNode ?? new object());
+        }
+        catch (JsonException jsonEx)
+        {
+            // Log the error: schemaJson
+            // Log the exception: jsonEx
+            return this.StatusCode(StatusCodes.Status500InternalServerError, $"生成的 Schema 不是有效的 JSON 格式。错误: {jsonEx.Message}");
         }
         catch (Exception ex)
         {

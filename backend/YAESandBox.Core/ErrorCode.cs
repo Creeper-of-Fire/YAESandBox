@@ -31,30 +31,30 @@ public record NormalHandledIssue(BlockResultCode Code, string Message) : LazyIni
     }
 }
 
-public record NormalError(BlockResultCode Code, string Message) : LazyInitError(Message)
+public record NormalBlockError(BlockResultCode Code, string Message) : LazyInitError(Message)
 {
-    public static NormalError NotFound(string message)
+    public static NormalBlockError NotFound(string message)
     {
-        return new NormalError(BlockResultCode.NotFound, message);
+        return new NormalBlockError(BlockResultCode.NotFound, message);
     }
 
-    public static NormalError Conflict(string message)
+    public static NormalBlockError Conflict(string message)
     {
-        return new NormalError(BlockResultCode.Conflict, message);
+        return new NormalBlockError(BlockResultCode.Conflict, message);
     }
 
-    public static NormalError InvalidInput(string message)
+    public static NormalBlockError InvalidInput(string message)
     {
-        return new NormalError(BlockResultCode.InvalidInput, message);
+        return new NormalBlockError(BlockResultCode.InvalidInput, message);
     }
 
-    public static NormalError Error(string message)
+    public static NormalBlockError Error(string message)
     {
-        return new NormalError(BlockResultCode.Error, message);
+        return new NormalBlockError(BlockResultCode.Error, message);
     }
 
-    public static NormalError InvalidState(string message)
+    public static NormalBlockError InvalidState(string message)
     {
-        return new NormalError(BlockResultCode.InvalidState, message);
+        return new NormalBlockError(BlockResultCode.InvalidState, message);
     }
 }

@@ -3,6 +3,7 @@
 using FluentResults;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.AiConfig;
+using static YAESandBox.Depend.Storage.ScopedStorageFactory;
 
 // 为了使用 AbstractAiProcessorConfig 和 AiError
 
@@ -14,7 +15,6 @@ namespace YAESandBox.Workflow.AIService.ConfigManagement;
 public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStorage) : IAiConfigurationManager
 {
     private const string ConfigFileName = "ai_configurations.json"; // 默认配置文件名
-    private const string ConfigDirectory = "Configurations"; // 默认配置存储目录名 (位于程序运行目录下)
     private IGeneralJsonStorage GeneralJsonStorage { get; } = generalJsonStorage;
 
     // 简单的内存缓存，用于存储从文件加载的配置列表
@@ -28,7 +28,7 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     /// </summary>
     private async Task<Result<Dictionary<string, AiConfigurationSet>>> LoadConfigurationsFromFileAsync()
     {
-        var result = await this.GeneralJsonStorage.LoadAllAsync<Dictionary<string, AiConfigurationSet>>(ConfigDirectory, ConfigFileName);
+        var result = await this.GeneralJsonStorage.ForConfig().LoadAllAsync<Dictionary<string, AiConfigurationSet>>(ConfigFileName);
         if (!result.TryGetValue(out var value))
             return result.ToResult();
 
@@ -43,7 +43,7 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     /// </summary>
     private async Task<Result> SaveConfigurationsToFileAsync(Dictionary<string, AiConfigurationSet> configs)
     {
-        var result = await this.GeneralJsonStorage.SaveAllAsync(ConfigDirectory, ConfigFileName, configs);
+        var result = await this.GeneralJsonStorage.ForConfig().SaveAllAsync(configs, ConfigFileName);
         if (result.IsFailed)
             return result;
 
@@ -153,8 +153,6 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     {
         var configs = await this.GetCurrentConfigurationsAsync();
         // GetCurrentConfigurationsAsync 总是返回列表的副本或新加载的列表
-        if (configs.IsFailed)
-            return configs.ToResult();
         return configs;
     }
 

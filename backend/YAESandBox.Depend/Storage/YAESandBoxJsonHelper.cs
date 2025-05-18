@@ -1,7 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 
 namespace YAESandBox.Depend.Storage;
@@ -150,7 +152,7 @@ public static class YaeSandBoxJsonHelper
                             dictionary[kv.Key] = kv.Value;
                         continue;
                     }
-                    case IDictionary<string, JsonElement> extensionData:
+                    case IDictionary<string, JsonNode> extensionData:
                     {
                         foreach (var kv in extensionData)
                             dictionary[kv.Key] = kv.Value;
@@ -223,5 +225,37 @@ public static class YaeSandBoxJsonHelper
         }
 
         return target;
+    }
+
+    /// <summary>
+    /// 尝试克隆当前的 <see cref="JsonNode"/> 实例。
+    /// </summary>
+    /// <param name="document">要克隆的原始 JSON 文档。</param>
+    /// <param name="clonedDocument">
+    /// 当此方法返回时，如果克隆成功，则包含一个新的 <see cref="JsonNode"/> 实例；
+    /// 否则为 <c>null</c>。
+    /// </param>
+    /// <returns>
+    /// 如果克隆成功，则为 <c>true</c>；否则为 <c>false</c>。
+    /// </returns>
+    /// <remarks>
+    /// 此方法通过解析原始文档的原始 JSON 文本创建一个新的 <see cref="JsonNode"/>，
+    /// 因此适用于需要独立副本以避免修改原始内容的场景。
+    /// 如果解析失败（如 JSON 格式错误），将捕获异常并返回 <c>false</c>。
+    /// </remarks>
+    public static bool CloneJsonNode(this JsonNode document, [NotNullWhen(true)] out JsonNode? clonedDocument)
+    {
+        try
+        {
+            clonedDocument = JsonNode.Parse(document.ToJsonString());
+            if (clonedDocument != null)
+                return true;
+        }
+        catch
+        {
+            clonedDocument = null;
+        }
+
+        return false;
     }
 }

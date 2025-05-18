@@ -10,7 +10,7 @@ namespace YAESandBox.Depend.AspNetCore;
 /// 提供将 FluentResults.Result 对象转换为 ASP.NET Core ActionResult 的扩展方法。
 ///这些方法旨在简化控制器中处理操作结果并将其映射到适当 HTTP 响应的模式。
 /// </summary>
-public static class ResultToActionExtensions
+public static partial class ResultToActionExtensions
 {
     internal const string DefaultErrorMessage = "发生内部未知错误。";
 
@@ -63,51 +63,6 @@ public static class ResultToActionExtensions
         });
         // 返回 500 Internal Server Error 和错误信息列表
         return new ObjectResult(errorDtos) { StatusCode = (int)HttpStatusCode.InternalServerError };
-    }
-
-    /// <summary>
-    /// 将 FluentResults.Result <typeparamref name="T"/>  转换为 ActionResult <typeparamref name="T"/> 。
-    /// 成功时，返回包含值的 OkObjectResult (HTTP 200 OK)。
-    /// 失败时，返回包含第一个错误消息（或默认消息）的 ObjectResult，状态码为 500 Internal Server Error。
-    /// 这种方法仅返回第一个错误，适用于不需要展示所有错误的简化场景。
-    /// </summary>
-    /// <typeparam name="T">结果中值的类型。</typeparam>
-    /// <param name="result">要转换的 FluentResults.Result <typeparamref name="T"/>  对象。</param>
-    /// <param name="defaultMessage">如果结果失败且没有错误消息，则使用的默认错误消息。</param>
-    /// <returns>
-    /// 如果 <paramref name="result"/> 成功，则为包含结果值的 <see cref="OkObjectResult"/>。
-    /// 如果 <paramref name="result"/> 失败，则为包含单个错误消息字符串的 <see cref="ObjectResult"/>，状态码为500。
-    /// </returns>
-    public static ActionResult<T> ToActionResult<T>(this Result<T> result, string defaultMessage = DefaultErrorMessage)
-    {
-        if (result.TryGetValue(out var value)) // 尝试获取成功的结果值
-            return new OkObjectResult(value); // 成功，返回 200 OK 和值
-
-        // 失败，返回 500 Internal Server Error 和第一个错误消息（或默认消息）
-        return new ObjectResult(result.Errors.FirstOrDefault()?.Message ?? defaultMessage)
-            { StatusCode = (int)HttpStatusCode.InternalServerError };
-    }
-
-    /// <summary>
-    /// 将 FluentResults.Result (非泛型) 转换为 ActionResult。
-    /// 成功时，返回 NoContentResult (HTTP 204 No Content)。
-    /// 失败时，返回包含第一个错误消息（或默认消息）的 ObjectResult，状态码为 500 Internal Server Error。
-    /// 这种方法仅返回第一个错误，适用于不需要展示所有错误的简化场景。
-    /// </summary>
-    /// <param name="result">要转换的 FluentResults.Result 对象。</param>
-    /// <param name="defaultMessage">如果结果失败且没有错误消息，则使用的默认错误消息。</param>
-    /// <returns>
-    /// 如果 <paramref name="result"/> 成功，则为 <see cref="NoContentResult"/>。
-    /// 如果 <paramref name="result"/> 失败，则为包含单个错误消息字符串的 <see cref="ObjectResult"/>，状态码为500。
-    /// </returns>
-    public static ActionResult ToActionResult(this Result result, string defaultMessage = DefaultErrorMessage)
-    {
-        if (result.IsSuccess) // 检查结果是否成功
-            return new NoContentResult(); // 成功，返回 204 No Content
-
-        // 失败，返回 500 Internal Server Error 和第一个错误消息（或默认消息）
-        return new ObjectResult(result.Errors.FirstOrDefault()?.Message ?? defaultMessage)
-            { StatusCode = (int)HttpStatusCode.InternalServerError };
     }
 
     /// <summary>

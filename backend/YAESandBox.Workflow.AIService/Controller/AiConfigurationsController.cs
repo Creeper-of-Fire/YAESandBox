@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.AspNetCore;
@@ -213,5 +214,5 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// </summary>
     /// <param name="ConfigJson">测试的Config，序列化后的AbstractAiProcessorConfig</param>
     /// <param name="TestText">测试文本</param>
-    public record TestAiDto([Required] JsonDocument ConfigJson, [Required] string TestText);
+    public record TestAiDto([Required] JsonNode ConfigJson, [Required] string TestText);
 }

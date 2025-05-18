@@ -16,4 +16,10 @@
         <PackageReference Include="NJsonSchema" Version="11.3.2"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Results\ServerError.ServerErrorType.cs">
+        <DependentUpon>ServerError.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>

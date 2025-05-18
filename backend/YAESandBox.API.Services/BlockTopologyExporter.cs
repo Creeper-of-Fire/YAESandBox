@@ -64,7 +64,7 @@ public static class BlockTopologyExporter
         // 验证起始节点是否存在
         if (!allBlocks.ContainsKey(startNodeId))
         {
-            return NormalError.NotFound($"GenerateFlatTopologyList: 指定的起始节点 ID '{startNodeId}' 在字典中不存在。")
+            return NormalBlockError.NotFound($"GenerateFlatTopologyList: 指定的起始节点 ID '{startNodeId}' 在字典中不存在。")
                 .ToResult<List<BlockTopologyNodeDto>>();
         }
 
@@ -119,7 +119,7 @@ public static class BlockTopologyExporter
         {
             // 捕获遍历或处理过程中发生的任何异常
             Log.Error(ex, "GenerateFlatTopologyList: 生成扁平拓扑列表时发生错误。");
-            return NormalError.Error("生成扁平拓扑列表时发生内部错误。").ToResult<List<BlockTopologyNodeDto>>();
+            return NormalBlockError.Error("生成扁平拓扑列表时发生内部错误。").ToResult<List<BlockTopologyNodeDto>>();
         }
     }
 }

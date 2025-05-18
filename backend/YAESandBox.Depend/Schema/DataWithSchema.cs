@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
+using System.Text.Json.Nodes;
 using FluentResults;
 using YAESandBox.Depend.Storage;
 
@@ -40,9 +41,8 @@ public record DataWithSchemaDto<T> where T : notnull
         string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(moduleType);
         try
         {
-            // 返回 JsonElement 以确保是有效的 JSON 对象
-            var jsonDocument = JsonDocument.Parse(schemaJson);
-            schemaObject = jsonDocument.RootElement.Clone();
+            // 返回 JsonNode 以确保是有效的 JSON 对象
+            schemaObject = JsonNode.Parse(schemaJson);
         }
         catch (JsonException jsonEx)
         {
