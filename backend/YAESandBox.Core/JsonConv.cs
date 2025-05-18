@@ -11,37 +11,42 @@ public class TypedIdConverter : JsonConverter<TypedId>
         if (reader.TokenType != JsonTokenType.StartObject) throw new JsonException("Expected StartObject token for TypedID");
 
         EntityType type = default;
-        string id = null!;
+        string id = string.Empty;
         bool typeRead = false;
         bool idRead = false;
 
         while (reader.Read())
         {
-            if (reader.TokenType == JsonTokenType.EndObject)
+            switch (reader.TokenType)
             {
-                if (!typeRead || !idRead) throw new JsonException("TypedID object missing 'type' or 'id' property.");
-                return new TypedId(type, id);
-            }
-
-            if (reader.TokenType == JsonTokenType.PropertyName)
-            {
-                string? propertyName = reader.GetString();
-                reader.Read(); // Move to property value
-
-                switch (propertyName?.ToLowerInvariant()) // Use case-insensitive matching
+                case JsonTokenType.EndObject when !typeRead || !idRead:
+                    throw new JsonException("TypedID object missing 'type' or 'id' property.");
+                case JsonTokenType.EndObject:
+                    return new TypedId(type, id);
+                case JsonTokenType.PropertyName:
                 {
-                    case "type":
-                        // Use EnumConverter to handle string enums robustly
-                        var enumConverter = (JsonConverter<EntityType>)options.GetConverter(typeof(EntityType));
-                        type = enumConverter.Read(ref reader, typeof(EntityType), options);
-                        typeRead = true;
-                        break;
-                    case "id":
-                        id = reader.GetString() ?? throw new JsonException("TypedID 'id' property cannot be null.");
-                        idRead = true;
-                        break;
-                    // You might want to handle unexpected properties, e.g., skip them or throw
+                    string? propertyName = reader.GetString();
+                    reader.Read(); // Move to property value
+
+                    switch (propertyName?.ToLowerInvariant()) // Use case-insensitive matching
+                    {
+                        case "type":
+                            // Use EnumConverter to handle string enums robustly
+                            var enumConverter = (JsonConverter<EntityType>)options.GetConverter(typeof(EntityType));
+                            type = enumConverter.Read(ref reader, typeof(EntityType), options);
+                            typeRead = true;
+                            break;
+                        case "id":
+                            id = reader.GetString() ?? throw new JsonException("TypedID 'id' property cannot be null.");
+                            idRead = true;
+                            break;
+                        // You might want to handle unexpected properties, e.g., skip them or throw
+                    }
+
+                    break;
                 }
+                default:
+                    continue;
             }
         }
 

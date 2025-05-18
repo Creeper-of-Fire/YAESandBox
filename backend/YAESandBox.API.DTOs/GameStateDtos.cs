@@ -13,7 +13,7 @@ public record GameStateDto
     /// 值的实际类型取决于具体的游戏状态设置。
     /// </summary>
     [Required]
-    public required Dictionary<string, object?> Settings { get; set; } = new();
+    public required Dictionary<string, object?> Settings { get; init; } = new();
 }
 
 /// <summary>
@@ -27,5 +27,5 @@ public record UpdateGameStateRequestDto
     /// 如果值为 null，通常表示移除该设置或将其设置为空。
     /// </summary>
     [Required(ErrorMessage = "要更新的设置不能为空")]
-    public Dictionary<string, object?> SettingsToUpdate { get; set; } = new();
+    public Dictionary<string, object?> SettingsToUpdate { get; init; } = new();
 }

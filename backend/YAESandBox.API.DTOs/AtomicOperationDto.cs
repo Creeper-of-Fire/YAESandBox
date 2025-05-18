@@ -15,20 +15,20 @@ public record AtomicOperationRequestDto
     /// 操作类型。必须是 "CreateEntity", "ModifyEntity", 或 "DeleteEntity" (不区分大小写)。
     /// </summary>
     [Required(ErrorMessage = "必须指定操作类型")]
-    public string OperationType { get; set; } = null!;
+    public required string OperationType { get; init; }
 
     /// <summary>
     /// 操作目标实体的类型 (Item, Character, Place)。
     /// </summary>
     [Required(ErrorMessage = "必须指定实体类型")]
-    public EntityType EntityType { get; set; }
+    public required EntityType EntityType { get; init; }
 
     /// <summary>
     /// 操作目标实体的唯一 ID。不能为空或仅包含空白字符。
     /// </summary>
     [Required(ErrorMessage = "必须指定实体 ID")]
     [MinLength(1, ErrorMessage = "实体 ID 不能为空")]
-    public string EntityId { get; set; } = null!;
+    public required string EntityId { get; init; }
 
     // --- CreateEntity 参数 ---
     /// <summary>
@@ -36,27 +36,27 @@ public record AtomicOperationRequestDto
     /// 要创建的实体的初始属性字典。键是属性名，值是属性值。
     /// 如果不提供，则实体以默认属性创建。
     /// </summary>
-    public Dictionary<string, object?>? InitialAttributes { get; set; }
+    public Dictionary<string, object?>? InitialAttributes { get; init; }
 
     // --- ModifyEntity 参数 ---
     /// <summary>
     /// (仅用于 ModifyEntity 操作)
     /// 要修改的属性的键（名称）。
     /// </summary>
-    public string? AttributeKey { get; set; }
+    public string? AttributeKey { get; init; }
 
     /// <summary>
     /// (仅用于 ModifyEntity 操作)
     /// 修改操作符。预期值为 "=", "+=", "-=" 等表示赋值、增加、减少等操作的字符串。
     /// 具体支持的操作符取决于后端实现 (<see cref="OperatorHelper"/>)。
     /// </summary>
-    public string? ModifyOperator { get; set; }
+    public string? ModifyOperator { get; init; }
 
     /// <summary>
     /// (仅用于 ModifyEntity 操作)
     /// 修改操作的值。类型应与目标属性和操作符兼容。
     /// </summary>
-    public object? ModifyValue { get; set; }
+    public object? ModifyValue { get; init; }
 
     // --- DeleteEntity 参数 ---
     // DeleteEntity 操作不需要额外的特定参数。

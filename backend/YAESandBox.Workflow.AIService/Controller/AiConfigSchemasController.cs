@@ -68,7 +68,6 @@ public class AiConfigSchemasController : ControllerBase
         catch (Exception ex)
         {
             // Log the exception: ex
-            throw;
             return this.StatusCode(StatusCodes.Status500InternalServerError, $"为类型 '{configTypeName}' 生成 Schema 时发生内部错误: {ex.Message}");
         }
     }

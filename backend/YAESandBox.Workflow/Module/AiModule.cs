@@ -2,7 +2,7 @@
 using FluentResults;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Step;
+using static YAESandBox.Workflow.Step.StepProcessor;
 
 namespace YAESandBox.Workflow.Module;
 
@@ -13,14 +13,14 @@ namespace YAESandBox.Workflow.Module;
 internal class AiModuleProcessor(Action<string> onChunkReceivedScript) : IModuleProcessor
 {
     /// <inheritdoc />
-    public IModuleProcessorDebugDto DebugDto { get; }
+    public IModuleProcessorDebugDto DebugDto { get; } = new AiModuleProcessorDebugDto();
 
-    public class AiModuleProcessorDebugDto
+    internal class AiModuleProcessorDebugDto : IModuleProcessorDebugDto
     {
-        
+        public IList<RoledPromptDto> Prompts { get; init; } = [];
+        public int TokenUsage { get; set; } = 0;
     }
-    
-    [ReadOnly(true)] public List<RoledPromptDto>? DebugPrompts { get; set; }
+
     // TODO 这里是回调函数，应该由脚本完成
     private Action<string> OnChunkReceivedScript { get; } = onChunkReceivedScript;
 
@@ -57,12 +57,11 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript) : IModule
         this.OnChunkReceivedScript(value);
         return value;
     }
-    
 }
 
 internal record AiModuleConfig() : AbstractModuleConfig<AiModuleProcessor>(nameof(AiModuleConfig))
 {
-    internal override AiModuleProcessor ToCurrentModule(StepProcessor.StepProcessorContent stepProcessor)
+    protected override AiModuleProcessor ToCurrentModule(StepProcessorContent stepProcessor)
     {
         throw new NotImplementedException();
     }

@@ -15,7 +15,7 @@ public record BlockDetailDto
     /// Block 的唯一标识符。
     /// </summary>
     [Required]
-    public required string BlockId { get; init; } = null!;
+    public required string BlockId { get; init; }
 
     /// <summary>
     /// Block 当前的状态码 (例如 Idle, Loading, ResolvingConflict, Error)。

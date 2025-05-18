@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace YAESandBox.API.DTOs.WebSocket;
 
@@ -16,25 +17,25 @@ public record TriggerMainWorkflowRequestDto
     /// 包括可能的流式更新和最终结果。
     /// </summary>
     [Required(ErrorMessage = "必须提供请求 ID")]
-    public string RequestId { get; set; } = null!;
+    public required string RequestId { get; init; }
 
     /// <summary>
     /// 要在其下创建新子 Block 的父 Block 的 ID。
     /// </summary>
     [Required(ErrorMessage = "必须提供父 Block ID")]
-    public string ParentBlockId { get; set; } = null!;
+    public required string ParentBlockId { get; init; }
 
     /// <summary>
     /// 要调用的工作流的名称或标识符。
     /// </summary>
     [Required(ErrorMessage = "必须提供工作流名称")]
-    public string WorkflowName { get; set; } = null!;
+    public required string WorkflowName { get; init; }
 
     /// <summary>
     /// 传递给工作流的参数字典。键值对的具体内容取决于所调用的工作流。
     /// </summary>
     [Required]
-    public Dictionary<string, string> Params { get; set; } = new();
+    public required Dictionary<string, string> Params { get; init; } = new();
 }
 
 /// <summary>
@@ -49,14 +50,14 @@ public record TriggerMicroWorkflowRequestDto
     /// 客户端生成的唯一请求 ID，用于追踪此工作流调用的整个生命周期。
     /// </summary>
     [Required(ErrorMessage = "必须提供请求 ID")]
-    public string RequestId { get; set; } = null!;
+    public required string RequestId { get; init; }
 
     /// <summary>
     /// 触发此微工作流时，用户界面所在的上下文 Block 的 ID。
     /// 工作流逻辑可能会使用此 Block 的状态作为输入。
     /// </summary>
     [Required(ErrorMessage = "必须提供上下文 Block ID")]
-    public string ContextBlockId { get; set; } = null!;
+    public required string ContextBlockId { get; init; }
 
     /// <summary>
     /// (关键) 目标 UI 元素或逻辑区域的标识符。
@@ -64,19 +65,19 @@ public record TriggerMicroWorkflowRequestDto
     /// 以便前端知道更新哪个 UI 组件。该 ID 由前端定义和解释。
     /// </summary>
     [Required(ErrorMessage = "必须提供目标元素 ID")]
-    public string TargetElementId { get; set; } = null!;
+    public required string TargetElementId { get; init; }
 
     /// <summary>
     /// 要调用的微工作流的名称或标识符。
     /// </summary>
     [Required(ErrorMessage = "必须提供工作流名称")]
-    public string WorkflowName { get; set; } = null!;
+    public required string WorkflowName { get; init; }
 
     /// <summary>
     /// 传递给微工作流的参数字典。
     /// </summary>
     [Required]
-    public Dictionary<string, object?> Params { get; set; } = new();
+    public required Dictionary<string, object?> Params { get; init; }
 }
 
 /// <summary>
@@ -90,13 +91,13 @@ public record RegenerateBlockRequestDto
     /// 唯一的请求 ID，用于追踪。
     /// </summary>
     [Required]
-    public string RequestId { get; set; } = null!;
+    public required string RequestId { get; init; }
 
     /// <summary>
     /// 要重新生成的 Block 的 ID。
     /// </summary>
     [Required]
-    public string BlockId { get; set; } = null!;
+    public required string BlockId { get; init; }
 }
 
 /// <summary>
@@ -113,13 +114,13 @@ public record ResolveConflictRequestDto
     /// 用于将此解决方案关联回正确的冲突上下文。
     /// </summary>
     [Required(ErrorMessage = "必须提供关联的请求 ID")]
-    public string RequestId { get; set; } = null!;
+    public required string RequestId { get; init; }
 
     /// <summary>
     /// 发生冲突的 Block 的 ID (应与 <see cref="ConflictDetectedDto"/> 中的 BlockId 相同)。
     /// </summary>
     [Required(ErrorMessage = "必须提供 Block ID")]
-    public string BlockId { get; set; } = null!;
+    public required string BlockId { get; init; }
 
     /// <summary>
     /// 经过用户确认或修改后的最终原子操作列表。
@@ -127,5 +128,5 @@ public record ResolveConflictRequestDto
     /// 使用 <see cref="AtomicOperationRequestDto"/> 以便通过 SignalR 传输。
     /// </summary>
     [Required(ErrorMessage = "必须提供解决冲突后的指令列表")]
-    public List<AtomicOperationRequestDto> ResolvedCommands { get; set; } = new();
+    public required List<AtomicOperationRequestDto> ResolvedCommands { get; init; }
 }

@@ -1,5 +1,6 @@
 ﻿// --- START OF FILE BlockManagementController.cs ---
 
+using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.API.DTOs;
 using YAESandBox.API.Services.InterFaceAndBasic;
@@ -157,8 +158,8 @@ public record CreateBlockManualRequestDto
     /// <summary>
     /// 新 Block 的父 Block ID。必须指定一个有效的、存在的 Block ID。
     /// </summary>
-    [System.ComponentModel.DataAnnotations.Required]
-    public string ParentBlockId { get; init; } = null!;
+    [Required]
+    public required string ParentBlockId { get; init; }
 
     /// <summary>
     /// (可选) 新 Block 的初始元数据。
@@ -174,8 +175,8 @@ public record MoveBlockRequestDto
     /// <summary>
     /// Block 要移动到的新父节点的 ID。必须指定一个有效的、存在的 Block ID。
     /// </summary>
-    [System.ComponentModel.DataAnnotations.Required]
-    public string NewParentBlockId { get; init; } = null!;
+    [Required]
+    public required string NewParentBlockId { get; init; }
 }
 
 // --- END OF FILE BlockManagementController.cs ---

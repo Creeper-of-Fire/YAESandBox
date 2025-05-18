@@ -35,11 +35,17 @@ internal class ConfigSchemasHelper
             var abstractConfigType = typeof(AbstractAiProcessorConfig);
             // 假设所有配置类都在 AbstractAiProcessorConfig 所在的程序集中。
             // 如果分布在多个程序集中，需要调整 Assembly.GetAssembly() 或提供程序集列表。
-            _availableConfigTypesCache = Assembly.GetAssembly(abstractConfigType)!
+            _availableConfigTypesCache = Assembly.GetAssembly(abstractConfigType)?
                 .GetTypes()
                 .Where(t => t is { IsClass: true, IsAbstract: false } && abstractConfigType.IsAssignableFrom(t))
                 .ToList();
-
+            
+            if (_availableConfigTypesCache == null)
+            {
+                Log.Error("未找到任何 AI 配置类型。");
+                return [];
+            }
+            
             int count = _availableConfigTypesCache.Count;
             Log.Info($"已发现 {count} 个 AI 配置类型。");
         }

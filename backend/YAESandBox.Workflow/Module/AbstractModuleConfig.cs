@@ -5,14 +5,10 @@ using YAESandBox.Workflow.Step;
 
 namespace YAESandBox.Workflow.Module;
 
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "ModuleType")]
-[JsonDerivedType(typeof(AiModuleConfig), nameof(AiModuleConfig))]
 internal abstract record AbstractModuleConfig<T>(string ModuleType) : IModuleConfig
     where T : IModuleProcessor
 {
-    /// <summary>
-    /// 模块的类型
-    /// </summary>
+    /// <inheritdoc />
     [Required]
     [HiddenInSchema(true)]
     public string ModuleType { get; init; } = ModuleType;
@@ -20,10 +16,17 @@ internal abstract record AbstractModuleConfig<T>(string ModuleType) : IModuleCon
     public IModuleProcessor ToModule(StepProcessor.StepProcessorContent stepProcessor) =>
         this.ToCurrentModule(stepProcessor);
 
-    internal abstract T ToCurrentModule(StepProcessor.StepProcessorContent stepProcessor);
+    protected abstract T ToCurrentModule(StepProcessor.StepProcessorContent stepProcessor);
 }
 
+[JsonPolymorphic(TypeDiscriminatorPropertyName = "ModuleType")]
+[JsonDerivedType(typeof(AiModuleConfig), nameof(AiModuleConfig))]
 public interface IModuleConfig
 {
+    /// <summary>
+    /// 模块的类型
+    /// </summary>
+    public string ModuleType { get; init; }
+
     internal IModuleProcessor ToModule(StepProcessor.StepProcessorContent stepProcessor);
 }

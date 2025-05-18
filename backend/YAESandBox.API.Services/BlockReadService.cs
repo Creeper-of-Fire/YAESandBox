@@ -23,7 +23,7 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
             .Select(this.GetBlockDetailDtoAsync)
             .ToList();
         var results = await tasks.WhenAll();
-        return results.Where(x => x != null).Select(x => x!).ToDictionary(x => x.BlockId, x => x);
+        return results.OfType<BlockDetailDto>().ToDictionary(x => x.BlockId);
     }
 
     ///<inheritdoc/>

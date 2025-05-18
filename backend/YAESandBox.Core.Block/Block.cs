@@ -250,15 +250,14 @@ public class Block : NodeBlock
         // --- 2. 处理 Modify/Modify 冲突 (同一实体，同一属性) ---
         // 使用 HashSet 存储 AI 修改的 (实体, 属性) 对以提高查找效率
         var aiModifications = pendingAiCommands
-            .Where(op => op.OperationType == AtomicOperationType.ModifyEntity && op.AttributeKey != null)
-            // 使用元组 (TypedID, string) 作为 Key
-            .Select(op => (TargetId: new TypedId(op.EntityType, op.EntityId), AttributeKey: op.AttributeKey!))
+            .Where(op => op is { OperationType: AtomicOperationType.ModifyEntity, AttributeKey: not null })
+            .Select(op => (TargetId: new TypedId(op.EntityType, op.EntityId), AttributeKey: op.AttributeKey))
             .ToHashSet();
 
         // 查找用户修改操作中与 AI 修改冲突的部分
         foreach (var userOp in resolvedUserCommands) // 遍历可能已重命名的用户命令
         {
-            if (userOp.OperationType != AtomicOperationType.ModifyEntity || userOp.AttributeKey == null) continue;
+            if (userOp is not { OperationType: AtomicOperationType.ModifyEntity, AttributeKey: not null }) continue;
             var userModTarget = (TargetId: new TypedId(userOp.EntityType, userOp.EntityId), userOp.AttributeKey);
 
             if (!aiModifications.Contains(userModTarget)) continue;

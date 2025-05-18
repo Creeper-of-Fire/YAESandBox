@@ -2,6 +2,7 @@
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Module;
+using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Step;
 
@@ -23,7 +24,7 @@ public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
         public required IList<IModuleProcessorDebugDto> ModuleProcessorDebugDtos { get; init; }
     }
 
-    internal StepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor,
+    internal StepProcessor(WorkflowProcessorContent workflowProcessor,
         StepProcessorConfig config,
         Dictionary<string, object> stepInput)
     {
@@ -52,7 +53,7 @@ public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
 
     private List<IModuleProcessor> Modules { get; }
     private StepAiConfig? StepAiConfig { get; }
-    private WorkflowProcessor.WorkflowProcessorContent WorkflowProcessor { get; }
+    private WorkflowProcessorContent WorkflowProcessor { get; }
 
     /// <summary>
     /// 启动步骤流程
