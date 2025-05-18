@@ -4,7 +4,6 @@ using System.Text.Json;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.Schema;
-using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.AIService.AiConfig;
 
 namespace YAESandBox.Workflow.AIService.Controller;
@@ -69,6 +68,7 @@ public class AiConfigSchemasController : ControllerBase
         catch (Exception ex)
         {
             // Log the exception: ex
+            throw;
             return this.StatusCode(StatusCodes.Status500InternalServerError, $"为类型 '{configTypeName}' 生成 Schema 时发生内部错误: {ex.Message}");
         }
     }

@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using YAESandBox.Depend.Schema;
 using YAESandBox.Depend.Schema.Attributes;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
@@ -9,7 +8,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
 /// <summary>
 /// 豆包的AI配置
 /// </summary>
-internal record DoubaoAiProcessorConfig : AbstractAiProcessorConfig
+internal record DoubaoAiProcessorConfig() : AbstractAiProcessorConfig(nameof(DoubaoAiProcessorConfig))
 {
     /// <summary>
     /// 最大输出Token数
@@ -166,8 +165,8 @@ internal record DoubaoAiProcessorConfig : AbstractAiProcessorConfig
         ResourceType = typeof(DoubaoConfigResources)
     )]
     public IReadOnlyList<LogitBiasItemDto>? LogitBias { get; init; }
-
-    public class LogitBiasItemDto
+    
+    public record LogitBiasItemDto
     {
         [JsonPropertyName("tokenId")]
         [Required]

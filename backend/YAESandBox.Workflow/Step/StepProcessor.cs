@@ -1,23 +1,45 @@
 ﻿using FluentResults;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Module;
 
-namespace YAESandBox.Workflow;
+namespace YAESandBox.Workflow.Step;
 
 //step的信息：
 // 使用的脚本模块们的UUID（注意，脚本模块本身就是绑定在步骤上的，如果需要把模块复制到更广的地方，可以考虑直接复制步骤之类的）
-internal class StepProcessor
+/// <summary>
+/// 步骤配置的运行时
+/// </summary>
+public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
 {
-    public StepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor,
+    /// <inheritdoc />
+    public IStepProcessorDebugDto DebugDto => new StepProcessorDebugDto
+        { ModuleProcessorDebugDtos = this.Modules.ConvertAll(it => it.DebugDto) };
+
+    /// <inheritdoc />
+    internal record StepProcessorDebugDto : IStepProcessorDebugDto
+    {
+        /// <inheritdoc />
+        public required IList<IModuleProcessorDebugDto> ModuleProcessorDebugDtos { get; init; }
+    }
+
+    internal StepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor,
         StepProcessorConfig config,
         Dictionary<string, object> stepInput)
     {
         this.WorkflowProcessor = workflowProcessor;
         this.Content = new StepProcessorContent(stepInput);
-        this.Modules = config.ModuleIds.ConvertAll(it => ConfigLocator.FindModuleConfig(it).ToModule(this.Content));
+        this.Modules =
+            config.ModuleIds.ConvertAll(id =>
+                (config.InnerModuleConfig.TryGetValue(id, out var value) ? value : ConfigLocator.FindModuleConfig(id))
+                .ToModule(this.Content));
         this.StepAiConfig = config.StepAiConfig;
     }
 
+    /// <summary>
+    /// 步骤运行时的上下文
+    /// </summary>
+    /// <param name="stepInput"></param>
     public class StepProcessorContent(Dictionary<string, object> stepInput)
     {
         // TODO 之后应该根据需求进行拷贝
@@ -28,10 +50,14 @@ internal class StepProcessor
 
     private StepProcessorContent Content { get; }
 
-    private IList<IWorkflowModule> Modules { get; }
-    private StepAiConfig StepAiConfig { get; }
+    private List<IModuleProcessor> Modules { get; }
+    private StepAiConfig? StepAiConfig { get; }
     private WorkflowProcessor.WorkflowProcessorContent WorkflowProcessor { get; }
 
+    /// <summary>
+    /// 启动步骤流程
+    /// </summary>
+    /// <returns></returns>
     public async Task<Result<Dictionary<string, object>>> ExecuteStepsAsync()
     {
         Dictionary<string, object> stepOutput = [];
@@ -39,9 +65,11 @@ internal class StepProcessor
         {
             switch (module)
             {
-                case AiModule aiModule:
-                    if (this.StepAiConfig.SelectedAiModuleType == null)
-                        return AiError.Error($"请先配置 {this.StepAiConfig.AiProcessorConfigUuid} 的AI类型。");
+                case AiModuleProcessor aiModule:
+                    if (this.StepAiConfig == null)
+                        return AiError.Error($"步骤 {this} 没有配置AI信息，所以无法执行AI模块。");
+                    if (this.StepAiConfig.SelectedAiModuleType == null || this.StepAiConfig.AiProcessorConfigUuid == null)
+                        return AiError.Error("请先配置AI。");
                     var aiProcessor = this.WorkflowProcessor.MasterAiService.CreateAiProcessor(
                         this.StepAiConfig.AiProcessorConfigUuid,
                         this.StepAiConfig.SelectedAiModuleType);
@@ -59,20 +87,3 @@ internal class StepProcessor
         return stepOutput;
     }
 }
-
-public record StepProcessorConfig(StepAiConfig StepAiConfig, List<string> ModuleIds)
-{
-    internal StepProcessor ToStepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor,
-        Dictionary<string, object> stepInput)
-    {
-        return new StepProcessor(workflowProcessor, this, stepInput);
-    }
-}
-
-/// <summary>
-/// 步骤本身的 AI 配置。
-/// </summary>
-/// <param name="AiProcessorConfigUuid">AI服务的配置的UUID</param>
-/// <param name="SelectedAiModuleType">当前选中的AI模型的类型名，需要通过<see cref="IMasterAiService.GetAbleAiProcessorType"/>获取</param>
-/// <param name="IsStream">是否为流式传输</param>
-public record StepAiConfig(string AiProcessorConfigUuid, string? SelectedAiModuleType, bool IsStream);

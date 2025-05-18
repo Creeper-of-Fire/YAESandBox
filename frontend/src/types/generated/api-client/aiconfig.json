@@ -574,6 +574,9 @@
   "components": {
     "schemas": {
       "AbstractAiProcessorConfig": {
+        "required": [
+          "configType"
+        ],
         "type": "object",
         "properties": {
           "maxInputTokens": {
@@ -582,6 +585,12 @@
             "format": "int32",
             "default": 2147483647,
             "nullable": true
+          },
+          "configType": {
+            "minLength": 1,
+            "type": "string",
+            "description": "AI配置的类型。",
+            "readOnly": true
           }
         },
         "additionalProperties": false,

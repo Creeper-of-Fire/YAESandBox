@@ -8,7 +8,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AppModeSwitcher: typeof import('./src/components/AppModeSwitcher.vue')['default']
     AppToolbar: typeof import('./src/components/AppToolbar.vue')['default']
     ConnectionStatus: typeof import('./src/components/ConnectionStatus.vue')['default']
     EntityListPanel: typeof import('./src/components/panels/EntityListPanel.vue')['default']

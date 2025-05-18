@@ -9,7 +9,6 @@
             </transition>
           </router-view>
 
-          <AppModeSwitcher />
         </n-notification-provider>
       </n-dialog-provider>
     </n-message-provider>
@@ -23,7 +22,6 @@
 import {onMounted, onUnmounted} from 'vue';
 import {useConnectionStore} from '@/stores/connectionStore';
 import {lightTheme} from "naive-ui";
-import AppModeSwitcher from "@/components/AppModeSwitcher.vue";
 // import GlobalErrorDisplay from '@/components/GlobalErrorDisplay.vue';
 // import AppWideNotifications from '@/components/AppWideNotifications.vue';
 

@@ -1,7 +1,6 @@
 ﻿// 文件: IAiConfigurationManager.cs
 
 using FluentResults;
-using YAESandBox.Depend;
 using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService.AiConfig;
 

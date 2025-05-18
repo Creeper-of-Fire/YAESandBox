@@ -7,6 +7,7 @@ using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
 using static YAESandBox.Core.Action.OperationHandledIssue;
+// ReSharper disable ParameterTypeCanBeEnumerable.Global
 
 namespace YAESandBox.Core.Block;
 
@@ -184,13 +185,13 @@ public class Block : NodeBlock
     /// </returns>
     internal (
         bool hasBlockingConflict,
-        List<AtomicOperation> resolvedAiCommands,
-        List<AtomicOperation> resolvedUserCommands,
-        List<AtomicOperation>? conflictingAiForResolution,
-        List<AtomicOperation>? conflictingUserForResolution
+        IReadOnlyList<AtomicOperation> resolvedAiCommands,
+        IReadOnlyList<AtomicOperation> resolvedUserCommands,
+        IReadOnlyList<AtomicOperation>? conflictingAiForResolution,
+        IReadOnlyList<AtomicOperation>? conflictingUserForResolution
         ) DetectAndHandleConflicts(
-            List<AtomicOperation> pendingUserCommands,
-            List<AtomicOperation> pendingAiCommands)
+            IReadOnlyList<AtomicOperation> pendingUserCommands,
+            IReadOnlyList<AtomicOperation> pendingAiCommands)
     {
         // 初始化返回结果结构
         bool hasBlockingConflict = false;
@@ -311,8 +312,8 @@ public class Block : NodeBlock
     /// 辅助方法：将指定的一系列操作应用到 WorldState，允许部分成功部分失败。
     /// </summary>
     /// <returns>返回操作结果</returns>
-    internal static List<Result<AtomicOperation>> ApplyOperationsTo(WorldState worldState,
-        IEnumerable<AtomicOperation> operations)
+    internal static IReadOnlyList<Result<AtomicOperation>> ApplyOperationsTo(WorldState worldState,
+        IReadOnlyList<AtomicOperation> operations)
     {
         var results = new List<Result<AtomicOperation>>();
 

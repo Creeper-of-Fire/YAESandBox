@@ -50,6 +50,18 @@ public static class VueFormSchemaGenerator
         settings.SchemaProcessors.Add(new DisplayAttributeProcessor());
         settings.SchemaProcessors.Add(new StringOptionsProcessor());
         settings.SchemaProcessors.Add(new RangeProcessor());
+        settings.SchemaProcessors.Add(new HiddenProcessor());
+        // settings.SchemaProcessors.Add(new HiddenDisplayProcessor());
+
+        // 隐藏所有Object的标题和描述，因为它们通常要么是根节点，要么是Array的元素。
+        settings.SchemaProcessors.Add(new NormalActionProcessor(context =>
+            {
+                if (context.Schema.Type != JsonObjectType.Object) return;
+                var uiOptions = context.Schema.GetOrCreateUiOptions();
+                uiOptions.ExtensionData["showTitle"] = false;
+                uiOptions.ExtensionData["showDescription"] = false;
+            }
+        ));
         settings.SchemaProcessors.Add(new NormalActionProcessor(context => { context.Schema.ProcessUiOption(); }));
 
         // 允许外部进一步配置

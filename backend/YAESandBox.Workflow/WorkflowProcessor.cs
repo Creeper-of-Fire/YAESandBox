@@ -2,16 +2,37 @@
 using YAESandBox.Core.Action;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Step;
 
 namespace YAESandBox.Workflow;
 
-public class WorkflowProcessor
+public class WorkflowProcessor : IWithDebugDto<IWorkflowProcessorDebugDto>
 {
+    /// <inheritdoc />
+    public IWorkflowProcessorDebugDto DebugDto => new WorkflowProcessorDebugDto
+    {
+        StepProcessorDebugDtos = this.Steps.ConvertAll(it => it.DebugDto)
+    };
+
+    /// <inheritdoc />
+    public record WorkflowProcessorDebugDto : IWorkflowProcessorDebugDto
+    {
+        /// <inheritdoc />
+        public required IList<IStepProcessorDebugDto> StepProcessorDebugDtos { get; init; }
+    }
+
     private Dictionary<string, object> Variables { get; }
     private List<StepProcessor> Steps { get; }
 
     private WorkflowProcessorContent Content { get; init; }
 
+    /// <summary>
+    /// 工作流的执行上下文
+    /// </summary>
+    /// <param name="masterAiService"></param>
+    /// <param name="dataAccess"></param>
+    /// <param name="requestDisplayUpdateCallback"></param>
     public class WorkflowProcessorContent(
         IMasterAiService masterAiService,
         IWorkflowDataAccess dataAccess,

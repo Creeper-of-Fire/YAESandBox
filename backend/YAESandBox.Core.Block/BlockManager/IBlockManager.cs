@@ -4,7 +4,7 @@ using OneOf;
 using YAESandBox.Core.Action;
 using YAESandBox.Depend;
 
-namespace YAESandBox.Core.Block;
+namespace YAESandBox.Core.Block.BlockManager;
 
 public interface IBlockManager
 {
@@ -19,7 +19,7 @@ public interface IBlockManager
     /// <param name="triggerParams"></param>
     /// <returns></returns>
     Task<LoadingBlockStatus?> CreateChildBlock_Async(string? parentBlockId, string workFlowName,
-        Dictionary<string, string> triggerParams);
+        IReadOnlyDictionary<string, string> triggerParams);
 
     /// <summary>
     /// 获取从根节点到指定块ID可达的最深层叶子节点（根据“最后一个子节点”规则）的完整路径。
@@ -27,7 +27,7 @@ public interface IBlockManager
     /// </summary>
     /// <param name="startBlockId">起始块的ID。假定此ID在 'blocks' 字典中有效。</param>
     /// <returns>一个包含从根节点到最深层叶子节点ID的列表。如果路径中遇到数据不一致（如引用了不存在的块），则记录错误并返回空列表。</returns>
-    List<string> GetPathToRoot(string startBlockId);
+    IReadOnlyList<string> GetPathToRoot(string startBlockId);
 
     /// <summary>
     /// 获取BlockID对应的块
@@ -44,7 +44,7 @@ public interface IBlockManager
     /// <param name="settingsToUpdate"></param>
     /// <returns></returns>
     Task<BlockResultCode> UpdateBlockGameStateAsync(
-        string blockId, Dictionary<string, object?> settingsToUpdate);
+        string blockId, IReadOnlyDictionary<string, object?> settingsToUpdate);
 
     /// <summary>
     /// 异步执行或排队原子操作。
@@ -54,8 +54,8 @@ public interface IBlockManager
     /// <param name="blockId">区块唯一标识符</param>
     /// <param name="operations">待执行的原子操作列表</param>
     /// <returns>返回一个元组，包含区块状态和操作结果列表（结果包含失败的）</returns>
-    Task<(Result<IEnumerable<AtomicOperation>> result, BlockStatusCode? blockStatusCode)>
-        EnqueueOrExecuteAtomicOperationsAsync(string blockId, IEnumerable<AtomicOperation> operations);
+    Task<(Result<IReadOnlyList<AtomicOperation>> result, BlockStatusCode? blockStatusCode)>
+        EnqueueOrExecuteAtomicOperationsAsync(string blockId, IReadOnlyList<AtomicOperation> operations);
 
     /// <summary>
     /// 将当前 BlockManager 的状态保存到流中。
@@ -75,7 +75,7 @@ public interface IBlockManager
     /// (内部实现) 手动创建新的 Idle Block。
     /// </summary>
     Task<(ManagementResult result, BlockStatus? newBlockStatus)> InternalCreateBlockManuallyAsync(
-        string parentBlockId, Dictionary<string, string>? initialMetadata);
+        string parentBlockId, IReadOnlyDictionary<string, string>? initialMetadata);
 
     /// <summary>
     /// (内部实现) 手动删除指定的 Block。
@@ -93,8 +93,7 @@ public interface IBlockManager
     /// <param name="blockId"></param>
     /// <param name="resolvedCommands"></param>
     /// <returns></returns>
-    Task<Result<IEnumerable<AtomicOperation>>> ApplyResolvedCommandsAsync(string blockId,
-        List<AtomicOperation> resolvedCommands);
+    Task<Result<IReadOnlyList<AtomicOperation>>> ApplyResolvedCommandsAsync(string blockId, IReadOnlyList<AtomicOperation> resolvedCommands);
 
     /// <summary>
     /// 
@@ -104,9 +103,9 @@ public interface IBlockManager
     /// <param name="rawText"></param>
     /// <param name="firstPartyCommands">来自第一公民工作流的指令</param>
     /// <param name="outputVariables"></param>
-    Task<OneOf<(IdleBlockStatus, Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>
-        HandleWorkflowCompletionAsync(string blockId, bool success, string rawText, List<AtomicOperation> firstPartyCommands,
-            Dictionary<string, object?> outputVariables);
+    Task<OneOf<(IdleBlockStatus, Result<IReadOnlyList<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>
+        HandleWorkflowCompletionAsync(string blockId, bool success, string rawText, IReadOnlyList<AtomicOperation> firstPartyCommands,
+            IReadOnlyDictionary<string, object?> outputVariables);
 
 
     /// <summary>
@@ -117,7 +116,8 @@ public interface IBlockManager
     /// <param name="newContent">新的 Block 内容。如果为 null 则不更新。</param>
     /// <param name="metadataUpdates">要更新或移除的元数据。Key 为元数据键，Value 为新值（null 表示移除）。如果为 null 则不更新。</param>
     /// <returns>更新操作的结果。</returns>
-    Task<BlockResultCode> UpdateBlockDetailsAsync(string blockId, string? newContent, Dictionary<string, string?>? metadataUpdates);
+    Task<BlockResultCode> UpdateBlockDetailsAsync(string blockId, string? newContent,
+        IReadOnlyDictionary<string, string?>? metadataUpdates);
 
 
     /// <summary>

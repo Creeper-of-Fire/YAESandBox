@@ -1,7 +1,4 @@
-﻿using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using NJsonSchema;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Depend.Storage;
@@ -20,6 +17,12 @@ public record SchemaUiSetting
     public bool? IsEditableSelectOptions { get; set; } = false;
 
     [JsonPropertyName("toButtonPopUp")] public bool? ToButtonPopUp { get; set; }
+
+    /// <summary>
+    /// 扩展内容
+    /// </summary>
+    [JsonExtensionData]
+    public Dictionary<string, object?> ExtensionData { get; set; } = [];
 }
 
 internal static class SchemaUiSettingHelper

@@ -9,7 +9,8 @@ using YAESandBox.Depend;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 
-namespace YAESandBox.Core.Block;
+// ReSharper disable ParameterTypeCanBeEnumerable.Global
+namespace YAESandBox.Core.Block.BlockManager;
 
 public partial class BlockManager : IBlockManager
 {
@@ -45,11 +46,6 @@ public partial class BlockManager : IBlockManager
         return this.BlockLocks.GetOrAdd(blockId, _ => new AsyncLock());
     }
 
-    // /// <summary>
-    // /// 全局锁，用于控制对单个 BlockManager 的并发访问。
-    // /// </summary>
-    // private AsyncLock globalLoadLock { get; } = new AsyncLock();
-
     public IReadOnlyDictionary<string, Block> GetBlocks()
     {
         return this.Blocks.ToDictionary(kv => kv.Key, kv => kv.Value.Block);
@@ -60,9 +56,15 @@ public partial class BlockManager : IBlockManager
         return this.Blocks.ToDictionary(kv => kv.Key, IBlockNode (kv) => kv.Value.Block);
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// 创建子Block，需要父BlockId和触发参数
+    /// </summary>
+    /// <param name="parentBlockId"></param>
+    /// <param name="workFlowName"></param>
+    /// <param name="triggerParams"></param>
+    /// <returns></returns>
     public async Task<LoadingBlockStatus?> CreateChildBlock_Async(
-        string? parentBlockId, string workFlowName, Dictionary<string, string> triggerParams)
+        string? parentBlockId, string workFlowName, IReadOnlyDictionary<string, string> triggerParams)
     {
         parentBlockId ??= WorldRootId;
         using (await this.GetLockForBlock(parentBlockId).LockAsync()) // Lock parent to add child info
@@ -81,7 +83,7 @@ public partial class BlockManager : IBlockManager
                 return null;
             }
 
-            parentBlock.Block.TriggeredChildParams = triggerParams;
+            parentBlock.Block.TriggeredChildParams = triggerParams.ToDictionary();
 
             (string newBlockId, var newChildBlock) = idleParentBlock.CreateNewChildrenBlock(workFlowName);
 
@@ -108,9 +110,16 @@ public partial class BlockManager : IBlockManager
         }
     }
 
-    /// <inheritdoc/>
+    /// <summary>
+    /// 更新指定 Block 的内容和/或元数据。
+    /// 仅在 Block 处于 Idle 状态时允许操作。
+    /// </summary>
+    /// <param name="blockId">要更新的 Block ID。</param>
+    /// <param name="newContent">新的 Block 内容。如果为 null 则不更新。</param>
+    /// <param name="metadataUpdates">要更新或移除的元数据。Key 为元数据键，Value 为新值（null 表示移除）。如果为 null 则不更新。</param>
+    /// <returns>更新操作的结果。</returns>
     public async Task<BlockResultCode> UpdateBlockDetailsAsync(string blockId, string? newContent,
-        Dictionary<string, string?>? metadataUpdates)
+        IReadOnlyDictionary<string, string?>? metadataUpdates)
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
@@ -173,7 +182,7 @@ public partial class BlockManager : IBlockManager
     /// </summary>
     /// <param name="startBlockId">起始块的ID。假定此ID在 'blocks' 字典中有效。</param>
     /// <returns>一个包含从根节点到最深层叶子节点ID的列表。如果路径中遇到数据不一致（如引用了不存在的块），则记录错误并返回空列表。</returns>
-    public List<string> GetPathToRoot(string startBlockId)
+    public IReadOnlyList<string> GetPathToRoot(string startBlockId)
     {
         // --- 阶段 1: 查找从 startBlockId 出发，遵循“最后一个子节点”规则到达的最深叶节点 ---
         string currentId = startBlockId; // 当前遍历的节点ID
@@ -256,8 +265,7 @@ public partial class BlockManager : IBlockManager
     /// <param name="blockId"></param>
     /// <param name="settingsToUpdate"></param>
     /// <returns></returns>
-    public async Task<BlockResultCode> UpdateBlockGameStateAsync(
-        string blockId, Dictionary<string, object?> settingsToUpdate)
+    public async Task<BlockResultCode> UpdateBlockGameStateAsync(string blockId, IReadOnlyDictionary<string, object?> settingsToUpdate)
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
@@ -279,9 +287,9 @@ public partial class BlockManager : IBlockManager
     /// </summary>
     /// <param name="blockId">区块唯一标识符</param>
     /// <param name="operations">待执行的原子操作列表</param>
-    /// <returns>返回一个元组，包含区块状态和操作结果列表</returns>
-    public async Task<(Result<IEnumerable<AtomicOperation>> result, BlockStatusCode? blockStatusCode)>
-        EnqueueOrExecuteAtomicOperationsAsync(string blockId, IEnumerable<AtomicOperation> operations)
+    /// <returns>返回一个元组，包含区块状态和操作结果列表（结果包含失败的）</returns>
+    public async Task<(Result<IReadOnlyList<AtomicOperation>> result, BlockStatusCode? blockStatusCode)>
+        EnqueueOrExecuteAtomicOperationsAsync(string blockId, IReadOnlyList<AtomicOperation> operations)
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
@@ -495,7 +503,7 @@ public partial class BlockManager : IBlockManager
     /// (内部实现) 手动创建新的 Idle Block。
     /// </summary>
     public async Task<(ManagementResult result, BlockStatus? newBlockStatus)> InternalCreateBlockManuallyAsync(
-        string parentBlockId, Dictionary<string, string>? initialMetadata)
+        string parentBlockId, IReadOnlyDictionary<string, string>? initialMetadata)
     {
         // 1. 验证父 Block
         if (!this.Blocks.TryGetValue(parentBlockId, out var parentBlockStatus))
@@ -606,7 +614,7 @@ public partial class BlockManager : IBlockManager
             parentIdToUpdate = blockToDeleteStatus.Block.ParentBlockId; // 记录父节点ID
 
             // 检查状态是否允许删除 (除非强制)
-            if (!force && !(blockToDeleteStatus is IdleBlockStatus || blockToDeleteStatus is ErrorBlockStatus))
+            if (!force && blockToDeleteStatus is not (IdleBlockStatus or ErrorBlockStatus))
             {
                 Log.Warning(
                     $"手动删除 Block 失败: Block '{blockId}' 状态为 {blockToDeleteStatus.StatusCode}，不允许删除（除非 force=true）。");
@@ -813,7 +821,7 @@ public partial class BlockManager : IBlockManager
     /// 辅助方法：查找指定 Block ID 的所有后代 Block ID。
     /// 返回 null 表示查找过程中出错。
     /// </summary>
-    private List<string>? FindAllDescendants(string startBlockId)
+    private IReadOnlyList<string>? FindAllDescendants(string startBlockId)
     {
         var descendants = new List<string>();
         var queue = new Queue<string>();

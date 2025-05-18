@@ -4,7 +4,8 @@ using OneOf;
 using YAESandBox.Core.Action;
 using YAESandBox.Depend;
 
-namespace YAESandBox.Core.Block;
+// ReSharper disable ParameterTypeCanBeEnumerable.Global
+namespace YAESandBox.Core.Block.BlockManager;
 
 // BlockManager中，可能导致Block状态转换的那部分代码。
 public partial class BlockManager
@@ -46,8 +47,8 @@ public partial class BlockManager
     /// <param name="resolvedCommands"></param>
     /// <returns></returns>
     [HasBlockStateTransition]
-    public async Task<Result<IEnumerable<AtomicOperation>>>
-        ApplyResolvedCommandsAsync(string blockId, List<AtomicOperation> resolvedCommands)
+    public async Task<Result<IReadOnlyList<AtomicOperation>>> ApplyResolvedCommandsAsync(string blockId,
+        IReadOnlyList<AtomicOperation> resolvedCommands)
     {
         // This logic is now mostly inside HandleWorkflowCompletionAsync after conflict resolution.
         // This method might be used if we implement manual conflict resolution flow.
@@ -77,9 +78,9 @@ public partial class BlockManager
     /// <param name="firstPartyCommands">来自第一公民工作流的指令</param>
     /// <param name="outputVariables"></param>
     [HasBlockStateTransition]
-    public async Task<OneOf<(IdleBlockStatus, Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>
+    public async Task<OneOf<(IdleBlockStatus, Result<IReadOnlyList<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>
         HandleWorkflowCompletionAsync(string blockId, bool success, string rawText,
-            List<AtomicOperation> firstPartyCommands, Dictionary<string, object?> outputVariables)
+            IReadOnlyList<AtomicOperation> firstPartyCommands, IReadOnlyDictionary<string, object?> outputVariables)
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
@@ -105,7 +106,7 @@ public partial class BlockManager
             var val = block.TryFinalizeSuccessfulWorkflow(rawText, firstPartyCommands);
             val.Switch(tuple => this.TrySetBlock(tuple.blockStatus), this.TrySetBlock);
             return val
-                .Match<OneOf<(IdleBlockStatus, Result<IEnumerable<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>(
+                .Match<OneOf<(IdleBlockStatus, Result<IReadOnlyList<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>(
                     tuple => tuple,
                     conflict => conflict);
         }

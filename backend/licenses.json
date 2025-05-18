@@ -10,6 +10,16 @@
     "LicenseInformationOrigin": 0
   },
   {
+    "PackageId": "JetBrains.Annotations",
+    "PackageVersion": "2024.3.0",
+    "PackageProjectUrl": "https://www.jetbrains.com/help/resharper/Code_Analysis__Code_Annotations.html",
+    "Copyright": "Copyright (c) 2016-2024 JetBrains s.r.o.",
+    "Authors": "JetBrains",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
     "PackageId": "Microsoft.AspNetCore.Authentication.Abstractions",
     "PackageVersion": "2.3.0",
     "PackageProjectUrl": "https://asp.net/",

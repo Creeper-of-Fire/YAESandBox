@@ -6,7 +6,7 @@
 /// 主要用于辅助生成 JSON Schema。
 /// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-public sealed class CustomRangeAttribute : Attribute
+public class CustomRangeAttribute : Attribute
 {
     /// <summary>
     /// 获取或初始化允许的最小值。

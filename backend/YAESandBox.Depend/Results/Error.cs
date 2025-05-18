@@ -90,7 +90,12 @@ public static class ErrorHelper
     /// <returns></returns>
     private static IEnumerable<T> SelectNotFailedValue<T>(this IEnumerable<Result<T>> results)
     {
-        return results.Select(op => op.TryGetValue(out var value) ? value : default).Where(op => op != null).Select(op => op!);
+        foreach (var op in results)
+        {
+            var op1 = op.TryGetValue(out var value) ? value : default;
+            if (op1 is not null)
+                yield return op1;
+        }
     }
 
     // /// <summary>

@@ -3,7 +3,6 @@ using System.Reflection;
 using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Text.Json.Serialization.Metadata;
 
 namespace YAESandBox.Depend.Storage;
 
@@ -139,6 +138,27 @@ public static class YaeSandBoxJsonHelper
             }
 
             object? value = property.GetValue(obj);
+
+            var jsonExtensionDataAttribute = property.GetCustomAttribute<JsonExtensionDataAttribute>();
+            if (jsonExtensionDataAttribute != null)
+            {
+                switch (value)
+                {
+                    case IDictionary<string, object?> extensionData:
+                    {
+                        foreach (var kv in extensionData)
+                            dictionary[kv.Key] = kv.Value;
+                        continue;
+                    }
+                    case IDictionary<string, JsonElement> extensionData:
+                    {
+                        foreach (var kv in extensionData)
+                            dictionary[kv.Key] = kv.Value;
+                        continue;
+                    }
+                }
+            }
+
             dictionary[key] = value; // 使用索引器赋值，如果key重复会覆盖（对于属性通常不会）
         }
 

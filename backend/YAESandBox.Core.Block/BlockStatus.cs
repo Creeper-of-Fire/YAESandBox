@@ -5,6 +5,9 @@ using YAESandBox.Core.State;
 using YAESandBox.Depend;
 using YAESandBox.Depend.Results;
 
+// ReSharper disable ParameterTypeCanBeEnumerable.Local
+
+// ReSharper disable ParameterTypeCanBeEnumerable.Global
 namespace YAESandBox.Core.Block;
 
 public interface IBlockStatus
@@ -84,10 +87,10 @@ public class IdleBlockStatus(Block block) : BlockStatus(block), ICanApplyOperati
     /// </summary>
     /// <param name="operations"></param>
     /// <returns></returns>
-    public Result<IEnumerable<AtomicOperation>> ApplyOperations(IEnumerable<AtomicOperation> operations)
+    public Result<IReadOnlyList<AtomicOperation>> ApplyOperations(IReadOnlyList<AtomicOperation> operations)
     {
         var results = Block.ApplyOperationsTo(this.CurrentWorldState, operations);
-        return results.CollectValue();
+        return results.CollectValue().Map<IReadOnlyList<AtomicOperation>>(it => it.ToList());
     }
 
     internal (string newBlockId, LoadingBlockStatus newChildblock) CreateNewChildrenBlock(string workFlowName)
@@ -107,7 +110,7 @@ public class IdleBlockStatus(Block block) : BlockStatus(block), ICanApplyOperati
 
 public interface ICanApplyOperations
 {
-    Result<IEnumerable<AtomicOperation>> ApplyOperations(IEnumerable<AtomicOperation> operations);
+    Result<IReadOnlyList<AtomicOperation>> ApplyOperations(IReadOnlyList<AtomicOperation> operations);
 }
 
 /// <summary>
@@ -127,12 +130,12 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
     /// </summary>
     /// <param name="operations"></param>
     /// <returns></returns>
-    public Result<IEnumerable<AtomicOperation>> ApplyOperations(IEnumerable<AtomicOperation> operations)
+    public Result<IReadOnlyList<AtomicOperation>> ApplyOperations(IReadOnlyList<AtomicOperation> operations)
     {
         var results = Block.ApplyOperationsTo(this.CurrentWorldState, operations);
         // 目前直接把成功的添加到 PendingUserCommands 之后可能会进行修改
         this.PendingUserCommands.AddRange(results.SelectSuccessValue());
-        return results.CollectValue();
+        return results.CollectValue().Map<IReadOnlyList<AtomicOperation>>(it => it.ToList());
     }
 
     /// <summary>
@@ -142,8 +145,8 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
     /// <param name="pendingAiCommands"></param>
     /// <returns></returns>
     [HasBlockStateTransition]
-    internal OneOf<(IdleBlockStatus blockStatus, Result<IEnumerable<AtomicOperation>> atomicOp), ConflictBlockStatus>
-        TryFinalizeSuccessfulWorkflow(string rawContent, List<AtomicOperation> pendingAiCommands)
+    internal OneOf<(IdleBlockStatus blockStatus, Result<IReadOnlyList<AtomicOperation>> atomicOp), ConflictBlockStatus>
+        TryFinalizeSuccessfulWorkflow(string rawContent, IReadOnlyList<AtomicOperation> pendingAiCommands)
     {
         (bool hasConflict, var simpleResolvedAiCommands, var simpleResolvedUserCommands, var conflictAi,
                 var conflictUser) =
@@ -153,21 +156,20 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
         {
             Log.Warning($"Block '{this.Block.BlockId}' 有冲突，但是冲突内容为空。");
             var tuple = this._FinalizeSuccessfulWorkflow(rawContent,
-                (List<AtomicOperation>) [..pendingAiCommands.Concat(simpleResolvedUserCommands)]);
+                [..pendingAiCommands.Concat(simpleResolvedUserCommands)]);
             return tuple;
         }
 
         if (!hasConflict)
         {
             var tuple = this._FinalizeSuccessfulWorkflow(rawContent,
-                (List<AtomicOperation>) [..pendingAiCommands.Concat(simpleResolvedUserCommands)]);
+                [..pendingAiCommands.Concat(simpleResolvedUserCommands)]);
             return tuple;
         }
 
 
         Log.Info($"Block '{this.Block.BlockId}' has conflict commands. Entering Conflict State.");
-        return this.EnterConflictState(rawContent,
-            simpleResolvedAiCommands, simpleResolvedUserCommands, conflictAi, conflictUser);
+        return this.EnterConflictState(rawContent, simpleResolvedAiCommands, simpleResolvedUserCommands, conflictAi, conflictUser);
     }
 
     /// <summary>
@@ -177,13 +179,14 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
     /// <param name="commands"></param>
     /// <returns></returns>
     [HasBlockStateTransition]
-    internal (IdleBlockStatus blockStatus, Result<IEnumerable<AtomicOperation>> atomicOp)
-        _FinalizeSuccessfulWorkflow(string rawContent, IEnumerable<AtomicOperation> commands)
+    internal (IdleBlockStatus blockStatus, Result<IReadOnlyList<AtomicOperation>> atomicOp)
+        _FinalizeSuccessfulWorkflow(string rawContent, IReadOnlyList<AtomicOperation> commands)
     {
         var newSelf = new IdleBlockStatus(this.Block);
 
         this.Block.WsPostAi = this.Block.WsInput.Clone();
-        var applyResults = Block.ApplyOperationsTo(this.Block.WsPostAi, commands).CollectValue();
+        var applyResults = Block.ApplyOperationsTo(this.Block.WsPostAi, commands)
+            .CollectValue().Map<IReadOnlyList<AtomicOperation>>(it => it.ToList());
         // if (applyResults.IfAtLeastOneFail())
         // {
         //     // 进入 Error 状态
@@ -217,13 +220,12 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
     /// <returns></returns>
     [HasBlockStateTransition]
     private ConflictBlockStatus EnterConflictState(string rawContent,
-        List<AtomicOperation> conflictAiCommands,
-        List<AtomicOperation> conflictUserCommands,
-        List<AtomicOperation> aiCommands,
-        List<AtomicOperation> userCommands)
+        IReadOnlyList<AtomicOperation> conflictAiCommands,
+        IReadOnlyList<AtomicOperation> conflictUserCommands,
+        IReadOnlyList<AtomicOperation> aiCommands,
+        IReadOnlyList<AtomicOperation> userCommands)
     {
-        var newSelf = new ConflictBlockStatus(this.Block, conflictAiCommands, conflictUserCommands, aiCommands,
-            userCommands); // 进入冲突状态
+        var newSelf = new ConflictBlockStatus(this.Block, conflictAiCommands, conflictUserCommands, aiCommands, userCommands); // 进入冲突状态
 
         //TODO 解决冲突的逻辑
         this.Block.BlockContent = rawContent;
@@ -264,18 +266,18 @@ public class LoadingBlockStatus(Block block) : BlockStatus(block), ICanApplyOper
 /// </summary>
 public class ConflictBlockStatus(
     Block block,
-    IEnumerable<AtomicOperation> conflictAiCommands,
-    IEnumerable<AtomicOperation> conflictUserCommands,
-    IEnumerable<AtomicOperation> aiCommands,
-    IEnumerable<AtomicOperation> userCommands)
+    IReadOnlyList<AtomicOperation> conflictAiCommands,
+    IReadOnlyList<AtomicOperation> conflictUserCommands,
+    IReadOnlyList<AtomicOperation> aiCommands,
+    IReadOnlyList<AtomicOperation> userCommands)
     : BlockStatus(block)
 {
     // --- 冲突信息 (仅在 ResolvingConflict 状态下有意义) ---
-    public IEnumerable<AtomicOperation> ConflictingAiCommands { get; } = conflictAiCommands;
-    public IEnumerable<AtomicOperation> ConflictingUserCommands { get; } = conflictUserCommands;
+    public IReadOnlyList<AtomicOperation> ConflictingAiCommands { get; } = conflictAiCommands;
+    public IReadOnlyList<AtomicOperation> ConflictingUserCommands { get; } = conflictUserCommands;
 
-    public IEnumerable<AtomicOperation> AiCommands { get; } = aiCommands;
-    public IEnumerable<AtomicOperation> UserCommands { get; } = userCommands;
+    public IReadOnlyList<AtomicOperation> AiCommands { get; } = aiCommands;
+    public IReadOnlyList<AtomicOperation> UserCommands { get; } = userCommands;
 
     /// <summary>
     /// 冲突已由用户解决。
@@ -285,8 +287,8 @@ public class ConflictBlockStatus(
     /// <param name="resolvedCommands">用户提交的最终指令列表。</param>
     /// <returns>如果最终化成功则为 true，否则 false。</returns>
     [HasBlockStateTransition]
-    internal (IdleBlockStatus block, Result<IEnumerable<AtomicOperation>> atomicOp)
-        FinalizeConflictResolution(string rawContent, IEnumerable<AtomicOperation> resolvedCommands)
+    internal (IdleBlockStatus block, Result<IReadOnlyList<AtomicOperation>> atomicOp)
+        FinalizeConflictResolution(string rawContent, IReadOnlyList<AtomicOperation> resolvedCommands)
     {
         var newSelf = new LoadingBlockStatus(this.Block);
         return newSelf._FinalizeSuccessfulWorkflow(rawContent, resolvedCommands);
