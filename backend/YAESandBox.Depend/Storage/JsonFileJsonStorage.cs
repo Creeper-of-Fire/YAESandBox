@@ -20,9 +20,7 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonSto
     public string WorkPath { get; } =
         dataRootPath ?? throw new ArgumentNullException($"{nameof(JsonFileJsonStorage)}的{nameof(dataRootPath)}为空");
 
-    /// <summary>
-    /// 并发控制
-    /// </summary>
+    /// <summary> 并发控制 </summary>
     private ConcurrentDictionary<string, AsyncLock> FilesLocks { get; } = new();
 
     /// <summary>

@@ -14,18 +14,8 @@ namespace YAESandBox.Workflow.Step;
 /// </summary>
 public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
 {
-    /// <inheritdoc />
-    public IStepProcessorDebugDto DebugDto => new StepProcessorDebugDto
-        { ModuleProcessorDebugDtos = this.Modules.ConvertAll(it => it.DebugDto) };
-
-    /// <inheritdoc />
-    internal record StepProcessorDebugDto : IStepProcessorDebugDto
-    {
-        /// <inheritdoc />
-        public required IList<IModuleProcessorDebugDto> ModuleProcessorDebugDtos { get; init; }
-    }
-
-    internal StepProcessor(WorkflowProcessorContent workflowProcessor,
+    internal StepProcessor(
+        WorkflowProcessorContent workflowProcessor,
         StepProcessorConfig config,
         Dictionary<string, object> stepInput)
     {
@@ -36,6 +26,17 @@ public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
                 (config.InnerModuleConfig.TryGetValue(id, out var value) ? value : ConfigLocator.FindModuleConfig(id))
                 .ToModule(this.Content));
         this.StepAiConfig = config.StepAiConfig;
+    }
+
+    /// <inheritdoc />
+    public IStepProcessorDebugDto DebugDto => new StepProcessorDebugDto
+        { ModuleProcessorDebugDtos = this.Modules.ConvertAll(it => it.DebugDto) };
+
+    /// <inheritdoc />
+    internal record StepProcessorDebugDto : IStepProcessorDebugDto
+    {
+        /// <inheritdoc />
+        public required IList<IModuleProcessorDebugDto> ModuleProcessorDebugDtos { get; init; }
     }
 
     /// <summary>

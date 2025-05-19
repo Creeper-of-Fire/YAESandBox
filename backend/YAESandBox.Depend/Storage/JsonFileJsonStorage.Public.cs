@@ -75,7 +75,8 @@ public partial class JsonFileJsonStorage
     }
 
     /// <inheritdoc />
-    public async Task<Result<IEnumerable<string>>> ListFileNamesAsync(ListFileOption? listOption = null, params string[] subDirectories)
+    public virtual async Task<Result<IEnumerable<string>>> ListFileNamesAsync(
+        ListFileOption? listOption = null, params string[] subDirectories)
     {
         try // 这个try-catch捕获Task.Run本身可能抛出的问题（例如线程池拒绝）或Task中未处理的异常
         {
@@ -113,7 +114,7 @@ public partial class JsonFileJsonStorage
     }
 
     /// <inheritdoc />
-    public async Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories)
+    public virtual async Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories)
     {
         var filePath = this.GetNewFilePath(fileName, subDirectories);
 

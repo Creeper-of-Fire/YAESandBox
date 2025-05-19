@@ -23,6 +23,9 @@
       <Compile Update="Storage\JsonFileJsonStorage.Public.cs">
         <DependentUpon>JsonFileJsonStorage.cs</DependentUpon>
       </Compile>
+      <Compile Update="Storage\JsonFileCacheJsonStorage.Help.cs">
+        <DependentUpon>JsonFileCacheJsonStorage.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
 
 </Project>
