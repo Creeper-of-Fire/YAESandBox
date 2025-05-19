@@ -1,4 +1,5 @@
 ﻿using FluentResults;
+using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Module;
@@ -67,16 +68,14 @@ public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
             switch (module)
             {
                 case AiModuleProcessor aiModule:
-                    if (this.StepAiConfig == null)
-                        return AiError.Error($"步骤 {this} 没有配置AI信息，所以无法执行AI模块。");
-                    if (this.StepAiConfig.SelectedAiModuleType == null || this.StepAiConfig.AiProcessorConfigUuid == null)
-                        return AiError.Error("请先配置AI。");
+                    if (this.StepAiConfig?.SelectedAiModuleType == null || this.StepAiConfig.AiProcessorConfigUuid == null)
+                        return NormalError.Conflict($"步骤 {this} 没有配置AI信息，所以无法执行AI模块。");
                     var aiProcessor = this.WorkflowProcessor.MasterAiService.CreateAiProcessor(
                         this.StepAiConfig.AiProcessorConfigUuid,
                         this.StepAiConfig.SelectedAiModuleType);
                     if (aiProcessor == null)
-                        return AiError
-                            .Error($"未找到 AI 配置 {this.StepAiConfig.AiProcessorConfigUuid}配置下的类型：{this.StepAiConfig.SelectedAiModuleType}");
+                        return NormalError.Conflict(
+                            $"未找到 AI 配置 {this.StepAiConfig.AiProcessorConfigUuid}配置下的类型：{this.StepAiConfig.SelectedAiModuleType}");
                     var result = await aiModule.ExecuteAsync(aiProcessor, this.Content.Prompts, this.StepAiConfig.IsStream);
                     if (!result.TryGetValue(out string? value))
                         return result.ToResult();

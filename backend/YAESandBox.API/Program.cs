@@ -150,8 +150,8 @@ builder.Services.AddSingleton<IWorkflowService, WorkflowService>();
 builder.Services.AddSingleton<IBlockManagementService, BlockManagementService>();
 builder.Services.AddSingleton<IBlockWritService, BlockWritService>();
 builder.Services.AddSingleton<IBlockReadService, BlockReadService>();
-builder.Services.AddSingleton<IGeneralJsonStorage, JsonFileJsonStorage>(_ =>
-    new JsonFileJsonStorage(builder.Configuration.GetValue<string?>("DataFiles:RootDirectory")));
+builder.Services.AddSingleton<IGeneralJsonStorage, JsonFileCacheJsonStorage>(_ =>
+    new JsonFileCacheJsonStorage(builder.Configuration.GetValue<string?>("DataFiles:RootDirectory")));
 
 // AiConfigManager
 builder.Services.AddSingleton<JsonFileAiConfigurationManager>()

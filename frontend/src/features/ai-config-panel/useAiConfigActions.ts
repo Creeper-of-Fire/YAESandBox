@@ -74,22 +74,30 @@ export function useAiConfigActions(params: UseAiConfigActionsParams)
 
         // 如果 selectedAiModuleType.value 和 formDataCopy.value 有效，更新配置集中的数据
         // 这部分逻辑保持不变
-        if (selectedAiModuleType.value && currentConfigSet.value && formDataCopy.value !== null)
+        
+        const currentConfigSetClone = cloneDeep(currentConfigSet.value);
+        if (selectedAiModuleType.value && currentConfigSetClone && formDataCopy.value !== null)
         {
-            currentConfigSet.value.configurations[selectedAiModuleType.value] = cloneDeep(formDataCopy.value);
-            resetFormChangeFlag(); // 假设这个函数还在
+            currentConfigSetClone.configurations[selectedAiModuleType.value] = cloneDeep(formDataCopy.value);
         }
 
         // 2. 调用 API 保存 (逻辑不变)
-        await callApi(() => AiConfigurationsService.putApiAiConfigurations({
+        const succuss = await callApi(() => AiConfigurationsService.putApiAiConfigurations({
             uuid: selectedConfigSetUuid.value!,
-            requestBody: currentConfigSet.value!,
+            requestBody: currentConfigSetClone!,
         }), '配置集保存成功！');
         // 保存成功后，由于 formDataCopy 已经是最新状态，originalData 也会是这个状态，
         // 下次 checkFormChange 会是 false。所以 formChanged.value 应该在API调用成功后重置。
         // 如果你是通过 resetFormChangeFlag() 做的，确保它被正确调用。
         // 通常，如果保存成功，我会将 formChanged.value = false;
-        formChanged.value = false; // 直接在这里重置
+        console.log(succuss);
+        if (succuss === undefined)
+            return;
+        if (selectedAiModuleType.value && currentConfigSet.value && formDataCopy.value !== null)
+        {
+            currentConfigSet.value.configurations[selectedAiModuleType.value] = cloneDeep(formDataCopy.value);
+        }
+        resetFormChangeFlag();
     }
 
     // 提示并执行新建配置集
@@ -201,10 +209,12 @@ export function useAiConfigActions(params: UseAiConfigActionsParams)
                     configSetName: name,
                 };
 
-                await callApi(() => AiConfigurationsService.putApiAiConfigurations({
+                const success = await callApi(() => AiConfigurationsService.putApiAiConfigurations({
                     uuid: originalUuid,
                     requestBody: setToUpdate
                 }), `配置集名称已修改为 "${name}"`);
+                if (success === undefined)
+                    return;
 
                 // Manually update the name in the local reactive store for immediate UI feedback
                 if (allConfigSets[originalUuid])
@@ -222,7 +232,9 @@ export function useAiConfigActions(params: UseAiConfigActionsParams)
     {
         if (!selectedConfigSetUuid.value || !currentConfigSet.value) return;
         const setName = currentConfigSet.value.configSetName; // 保存名称用于提示
-        await callApi(() => AiConfigurationsService.deleteApiAiConfigurations({uuid: selectedConfigSetUuid.value!}));
+        const success = await callApi(() => AiConfigurationsService.deleteApiAiConfigurations({uuid: selectedConfigSetUuid.value!}));
+        if (success === undefined)
+            return;
 
         message.success(`配置集 "${setName}" 已删除!`);
         // 后端保证至少有一个配置集，但如果删除的是最后一个，前端需要有合理行为

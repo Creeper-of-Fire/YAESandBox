@@ -4,6 +4,7 @@ using YAESandBox.Workflow.AIService.AiConfig;
 
 namespace YAESandBox.Workflow.AIService.ConfigManagement;
 
+[Obsolete("现在使用AbstractAiProcessorConfig的ConfigType属性实现反序列化")]
 internal class AiConfigurationSetDictionaryConverter : JsonConverter<Dictionary<string, AbstractAiProcessorConfig>>
 {
     /// <inheritdoc />

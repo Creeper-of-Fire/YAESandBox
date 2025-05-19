@@ -442,7 +442,7 @@ function buildInitialDataFromDefaultSet(
     defaultConfigSetNameOrUuid: string = DEFAULT_CONFIG_SET_NAME // 默认使用常量
 ): AbstractAiProcessorConfig
 {
-  const initialData: AbstractAiProcessorConfig = {};
+  const initialData: AbstractAiProcessorConfig = {configType: moduleType};
 
   if (!schema)
   {

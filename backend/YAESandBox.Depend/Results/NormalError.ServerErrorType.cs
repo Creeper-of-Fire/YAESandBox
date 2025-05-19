@@ -1,6 +1,6 @@
 ﻿namespace YAESandBox.Depend.Results;
 
-public partial record ServerError
+public partial record NormalError
 {
     /// <summary>
     /// 定义了与服务器通信时可能遇到的常见错误类型。
@@ -136,6 +136,12 @@ public partial record ServerError
         /// 表示一个长时间运行的操作被用户或系统主动取消。
         /// </summary>
         OperationCancelled,
+        
+        /// <summary>
+        /// 无法处理的实体。
+        /// 表示服务器理解请求的语法，但是请求中包含的内容无法被服务器理解、不符合业务逻辑，或者请求格式错误。
+        /// </summary>
+        UnprocessableEntity,
 
         /// <summary>
         /// 乐观并发控制失败。

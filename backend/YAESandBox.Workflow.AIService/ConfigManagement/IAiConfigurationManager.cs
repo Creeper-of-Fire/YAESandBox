@@ -49,11 +49,3 @@ public interface IAiConfigurationManager : IAiConfigurationProvider
     /// <returns>一个 Result 对象，成功时包含所有 AI 配置的列表。</returns>
     Task<Result<IReadOnlyDictionary<string, AiConfigurationSet>>> GetAllConfigurationsAsync();
 }
-
-internal record AiConfigError(string Message) : LazyInitError(Message)
-{
-    public static Result Error(string message)
-    {
-        return new AiConfigError(message);
-    }
-}

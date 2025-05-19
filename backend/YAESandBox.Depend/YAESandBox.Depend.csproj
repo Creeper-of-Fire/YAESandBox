@@ -17,8 +17,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Results\ServerError.ServerErrorType.cs">
+      <Compile Update="Results\NormalError.ServerErrorType.cs">
         <DependentUpon>ServerError.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Storage\JsonFileJsonStorage.Public.cs">
+        <DependentUpon>JsonFileJsonStorage.cs</DependentUpon>
       </Compile>
     </ItemGroup>
 

@@ -47,21 +47,23 @@ public interface IGeneralJsonStorage : IRootPathProvider
     /// <typeparam name="T">反序列化为的类型</typeparam>
     /// <returns>类型为 T? 的对象，可能为default，如果为空则表示对应的文件没有内容，需要自行处理空值；或表示失败的 Result。</returns>
     Task<Result<T?>> LoadAllAsync<T>(string fileName, params string[] subDirectories);
-}
 
-// /// <summary>
-// /// 装饰器，用于对 IGeneralJsonStorage 进行装饰
-// /// 注意，它内部应该有解除/覆盖下层 <see cref="IGeneralJsonStorageStatelessDecorator"/> 装饰器的方法，所以它应当是无状态的，最多只能有一些初始化逻辑和只读字段。
-// /// </summary>
-// internal interface IGeneralJsonStorageStatelessDecorator
-// {
-//     /// <summary>
-//     /// 原始的IGeneralJsonStorage
-//     /// </summary>
-//     public IGeneralJsonStorage GeneralJsonStorage { get; }
-//
-//     public static IGeneralJsonStorage UnNestJsonDecorator(IGeneralJsonStorage generalJsonStorage) =>
-//         generalJsonStorage is IGeneralJsonStorageStatelessDecorator scopedJsonStorage
-//             ? scopedJsonStorage.GeneralJsonStorage
-//             : generalJsonStorage;
-// }
+    Task<Result<IEnumerable<string>>> ListFileNamesAsync(ListFileOption? listOption = null, params string[] subDirectories);
+
+    Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories);
+
+    public record ListFileOption
+    {
+        internal static ListFileOption Default { get; } = new();
+
+        /// <summary>
+        /// 搜索匹配，仅限简单通配符
+        /// </summary>
+        public string SearchPattern { get; init; } = "*";
+
+        /// <summary>
+        /// 是否支持递归
+        /// </summary>
+        public bool IsRecursive { get; init; } = false;
+    }
+}

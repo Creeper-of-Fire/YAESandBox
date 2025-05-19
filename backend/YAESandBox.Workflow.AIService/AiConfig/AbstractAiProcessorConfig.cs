@@ -1,12 +1,15 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.Attributes;
+using YAESandBox.Workflow.AIService.AiConfig.Doubao;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;
 
 /// <summary>
 /// 这个是Ai服务配置的基类，仅含绝对存在的字段。
 /// </summary>
+[JsonConverter(typeof(AbstractAiProcessorConfigConverter))]
 public abstract record AbstractAiProcessorConfig(string ConfigType)
 {
     /// <summary>

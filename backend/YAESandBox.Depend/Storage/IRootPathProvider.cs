@@ -10,5 +10,5 @@ public interface IRootPathProvider
     /// 获取此存储实例操作的根文件路径。
     /// 主要的作用是用来生成键。
     /// </summary>
-    string DataRootPath { get; }
+    string WorkPath { get; }
 }

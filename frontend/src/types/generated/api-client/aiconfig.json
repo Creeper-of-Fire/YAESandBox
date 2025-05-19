@@ -619,6 +619,30 @@
         "additionalProperties": false,
         "description": "代表一个 AI 配置集，它包含了一组特定类型的 AI 配置。"
       },
+      "JsonNode": {
+        "type": "object",
+        "properties": {
+          "options": {
+            "$ref": "#/components/schemas/JsonNodeOptions"
+          },
+          "parent": {
+            "$ref": "#/components/schemas/JsonNode"
+          },
+          "root": {
+            "$ref": "#/components/schemas/JsonNode"
+          }
+        },
+        "additionalProperties": false
+      },
+      "JsonNodeOptions": {
+        "type": "object",
+        "properties": {
+          "propertyNameCaseInsensitive": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -669,8 +693,7 @@
         "type": "object",
         "properties": {
           "configJson": {
-            "description": "测试的Config，序列化后的AbstractAiProcessorConfig",
-            "nullable": true
+            "$ref": "#/components/schemas/JsonNode"
           },
           "testText": {
             "type": "string",

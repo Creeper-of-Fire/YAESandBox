@@ -91,24 +91,17 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpdateConfiguration(string uuid, [FromBody] AiConfigurationSet config)
     {
+        // return this.StatusCode(StatusCodes.Status500InternalServerError, "更新配置前检查配置集失败。"); // 测试用
         if (string.IsNullOrWhiteSpace(uuid))
-        {
             return this.BadRequest("UUID 不能为空。");
-        }
 
         // 验证：传入的 config 的 ModuleType 应该与存储中 uuid 对应的配置的 ModuleType 一致。
         // 这一步可以在 Manager 层做，或者在这里做。
         var existingConfigResult = await this.ConfigurationManager.GetConfigurationByUuidAsync(uuid);
         if (existingConfigResult.IsFailed)
         {
-            if (existingConfigResult.HasError<AiConfigError>(e => e.Message.Contains("未找到")))
-                return this.NotFound($"未找到 UUID 为 '{uuid}' 的配置集。");
-
             return this.StatusCode(StatusCodes.Status500InternalServerError, "更新配置前检查配置集失败。");
         }
-
-        if (!this.ModelState.IsValid)
-            return this.BadRequest(this.ModelState);
 
         return await this.ConfigurationManager.UpdateConfigurationAsync(uuid, config).ToActionResultAsync();
     }
@@ -133,32 +126,18 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// <summary>
     /// 测试Ai配置
     /// </summary>
-    /// <param name="moduleType">配置的类型。</param>
     /// <param name="testAiDto">配置和测试文本。</param>
     /// <returns></returns>
     [HttpPost("ai-config-test/{moduleType}")]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<string>> TestAiConfig(string moduleType, [FromBody] TestAiDto testAiDto)
+    public async Task<ActionResult<string>> TestAiConfig([FromBody] TestAiDto testAiDto)
     {
         var httpClient = this.HttpClientFactory.CreateClient();
 
         var dependencies = new AiProcessorDependencies(httpClient);
 
-        var type = ConfigSchemasHelper.GetTypeByName(moduleType);
-
-
-        if (type == null || !typeof(AbstractAiProcessorConfig).IsAssignableFrom(type))
-        {
-            return this.NotFound(
-                $"Unknown or invalid ModuleType '{moduleType}' found as dictionary key. Cannot determine concrete type for AbstractAiProcessorConfig.");
-        }
-
-        var config = (AbstractAiProcessorConfig?)testAiDto.ConfigJson.Deserialize(type, YaeSandBoxJsonHelper.JsonSerializerOptions);
-        if (config == null)
-            return this.NotFound();
-
-        return await config.ToAiProcessor(dependencies)
+        return await testAiDto.ConfigJson.ToAiProcessor(dependencies)
             .NonStreamRequestAsync((List<RoledPromptDto>) [RoledPromptDto.System(testAiDto.TestText)]).ToActionResultAsync();
     }
 
@@ -212,7 +191,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// <summary>
     /// 测试用DTO
     /// </summary>
-    /// <param name="ConfigJson">测试的Config，序列化后的AbstractAiProcessorConfig</param>
+    /// <param name="ConfigJson">AbstractAiProcessorConfig</param>
     /// <param name="TestText">测试文本</param>
-    public record TestAiDto([Required] JsonNode ConfigJson, [Required] string TestText);
+    public record TestAiDto([Required] AbstractAiProcessorConfig ConfigJson, [Required] string TestText);
 }

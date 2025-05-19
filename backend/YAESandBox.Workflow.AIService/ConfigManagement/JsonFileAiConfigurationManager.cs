@@ -1,6 +1,7 @@
 ﻿// 文件: JsonFileAiConfigurationManager.cs
 
 using FluentResults;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.AiConfig;
 using static YAESandBox.Depend.Storage.ScopedStorageFactory;
@@ -16,11 +17,6 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
 {
     private const string ConfigFileName = "ai_configurations.json"; // 默认配置文件名
     private IGeneralJsonStorage GeneralJsonStorage { get; } = generalJsonStorage;
-
-    // 简单的内存缓存，用于存储从文件加载的配置列表
-    // 注意：此缓存不会自动检测外部对JSON文件的修改。
-    private IReadOnlyDictionary<string, AiConfigurationSet>? CachedConfigurations { get; set; }
-    private Lock CacheLock { get; } = new(); // 用于保护 cachedConfigurations 的线程安全访问
 
 
     /// <summary>
@@ -43,17 +39,7 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     /// </summary>
     private async Task<Result> SaveConfigurationsToFileAsync(Dictionary<string, AiConfigurationSet> configs)
     {
-        var result = await this.GeneralJsonStorage.ForConfig().SaveAllAsync(configs, ConfigFileName);
-        if (result.IsFailed)
-            return result;
-
-        // 文件保存成功后，更新内存缓存
-        lock (this.CacheLock)
-        {
-            this.CachedConfigurations = new Dictionary<string, AiConfigurationSet>(configs); // 创建副本存入缓存
-        }
-
-        return Result.Ok();
+        return await this.GeneralJsonStorage.ForConfig().SaveAllAsync(configs, ConfigFileName);
     }
 
     /// <summary>
@@ -61,25 +47,10 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     /// </summary>
     private async Task<Result<IReadOnlyDictionary<string, AiConfigurationSet>>> GetCurrentConfigurationsAsync()
     {
-        IReadOnlyDictionary<string, AiConfigurationSet>? configsFromCache;
-        lock (this.CacheLock)
-        {
-            configsFromCache = this.CachedConfigurations;
-        }
-
-        if (configsFromCache != null)
-            return new Dictionary<string, AiConfigurationSet>(configsFromCache); // 返回缓存的副本
-
         var loadedConfigs = await this.LoadConfigurationsFromFileAsync();
         if (!loadedConfigs.TryGetValue(out var value))
             return loadedConfigs.ToResult();
-        lock (this.CacheLock)
-        {
-            // 双重检查，防止在等待 LoadAsync 时其他线程已填充缓存
-            this.CachedConfigurations ??= new Dictionary<string, AiConfigurationSet>(value);
-        }
-
-        return value; // LoadAsync 已经返回了新列表或副本
+        return value;
     }
 
     /// <inheritdoc/>
@@ -103,14 +74,14 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     /// <inheritdoc/>
     public async Task<Result> UpdateConfigurationAsync(string uuid, AiConfigurationSet config)
     {
-        if (string.IsNullOrWhiteSpace(uuid)) return Result.Fail("UUID 不能为空。");
+        if (string.IsNullOrWhiteSpace(uuid)) return NormalError.BadRequest("UUID 不能为空。");
 
         var configs = await this.LoadConfigurationsFromFileAsync();
         if (!configs.TryGetValue(out var value))
             return configs.ToResult();
 
         if (!value.ContainsKey(uuid))
-            return AiError.Error($"未找到 UUID 为 '{uuid}' 的配置，无法更新。");
+            return NormalError.NotFound($"未找到 UUID 为 '{uuid}' 的配置，无法更新。");
 
         value[uuid] = config;
 
@@ -121,7 +92,7 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     public async Task<Result> DeleteConfigurationAsync(string uuid)
     {
         if (string.IsNullOrWhiteSpace(uuid))
-            return AiError.Error("要删除的配置 UUID 不能为空。");
+            return NormalError.BadRequest("要删除的配置 UUID 不能为空。");
 
         var configs = await this.LoadConfigurationsFromFileAsync();
         if (!configs.TryGetValue(out var value))
@@ -137,7 +108,7 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     public async Task<Result<AiConfigurationSet>> GetConfigurationByUuidAsync(string uuid)
     {
         if (string.IsNullOrWhiteSpace(uuid))
-            return AiConfigError.Error("要获取的配置 UUID 不能为空。");
+            return NormalError.BadRequest("要获取的配置 UUID 不能为空。");
 
         var configs = await this.GetCurrentConfigurationsAsync();
 
@@ -145,15 +116,14 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
             return configs.ToResult();
         if (value.TryGetValue(uuid, out var config))
             return Result.Ok(config);
-        return AiConfigError.Error($"未找到 UUID 为 '{uuid}' 的配置。");
+        return NormalError.NotFound($"未找到 UUID 为 '{uuid}' 的配置。");
     }
 
     /// <inheritdoc/>
     public async Task<Result<IReadOnlyDictionary<string, AiConfigurationSet>>> GetAllConfigurationsAsync()
     {
-        var configs = await this.GetCurrentConfigurationsAsync();
         // GetCurrentConfigurationsAsync 总是返回列表的副本或新加载的列表
-        return configs;
+        return await this.GetCurrentConfigurationsAsync();
     }
 
     /// <inheritdoc />

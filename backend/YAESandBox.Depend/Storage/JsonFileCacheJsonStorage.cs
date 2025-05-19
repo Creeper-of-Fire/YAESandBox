@@ -6,29 +6,21 @@ using FluentResults;
 
 namespace YAESandBox.Depend.Storage;
 
-/// <summary>
-/// 带有缓存的 JsonStorage，用于装饰 <see cref="IGeneralJsonStorage"/> ，最好用它来装饰最顶层的 JsonStorage。
-/// 尽管它只是一个装饰器，但是由于它内部有缓存内容，所以不是无状态的。
-/// </summary>
-/// <param name="generalJsonStorage"></param>
-public class JsonFileCacheJsonStorage(IGeneralJsonStorage generalJsonStorage) : IGeneralJsonStorage
+/// <inheritdoc />
+/// <remarks>带缓存的版本</remarks>
+public class JsonFileCacheJsonStorage(string? dataRootPath) : JsonFileJsonStorage(dataRootPath)
 {
-    private IGeneralJsonStorage GeneralJsonStorage { get; } = generalJsonStorage;
-
-    private static string GetCacheKey(FilePath filePath) => filePath.TotalPath;
-
-    /// <inheritdoc />
-    public string DataRootPath { get; } = generalJsonStorage.DataRootPath;
+    private string GetCacheKey(string fileName, params string[] subDirectories) =>
+        FilePath.CombinePath(this.WorkPath, fileName, subDirectories);
 
     private ConcurrentDictionary<string, JsonNode> Cache { get; } = new();
 
     private Lock CacheLock { get; } = new();
 
     /// <inheritdoc />
-    public async Task<Result<JsonNode?>> LoadJsonNodeAsync(string fileName, params string[] subDirectories)
+    public override async Task<Result<JsonNode?>> LoadJsonNodeAsync(string fileName, params string[] subDirectories)
     {
-        FilePath filePath = new(this.DataRootPath, fileName, subDirectories);
-        string cacheKey = GetCacheKey(filePath);
+        string cacheKey = this.GetCacheKey(fileName, subDirectories);
         JsonNode? jsonNode;
         lock (this.CacheLock)
         {
@@ -55,7 +47,7 @@ public class JsonFileCacheJsonStorage(IGeneralJsonStorage generalJsonStorage) : 
 
 
         // 缓存未命中或克隆失败，从底层存储加载
-        var loadResult = await this.GeneralJsonStorage.LoadJsonNodeAsync(fileName, subDirectories);
+        var loadResult = await base.LoadJsonNodeAsync(fileName, subDirectories);
 
         // 将新加载的（或其副本）存入缓存
         // 为了缓存一致性，最好是存入一个副本，或者原始的（如果生命周期由缓存管理）
@@ -79,9 +71,9 @@ public class JsonFileCacheJsonStorage(IGeneralJsonStorage generalJsonStorage) : 
     }
 
     /// <inheritdoc />
-    public async Task<Result> SaveJsonNodeAsync(JsonNode? jsonNode, string fileName, params string[] subDirectories)
+    public override async Task<Result> SaveJsonNodeAsync(JsonNode? jsonNode, string fileName, params string[] subDirectories)
     {
-        var saveResult = await this.GeneralJsonStorage.SaveAllAsync(jsonNode, fileName, subDirectories);
+        var saveResult = await base.SaveJsonNodeAsync(jsonNode, fileName, subDirectories);
         if (saveResult.IsFailed)
             return saveResult;
 
@@ -90,46 +82,12 @@ public class JsonFileCacheJsonStorage(IGeneralJsonStorage generalJsonStorage) : 
             return saveResult;
         if (!jsonNode.CloneJsonNode(out var docToCache))
             return saveResult;
-        FilePath filePath = new(this.DataRootPath, fileName, subDirectories);
-        string cacheKey = GetCacheKey(filePath);
+        string cacheKey = this.GetCacheKey(fileName, subDirectories);
         lock (this.Cache)
         {
             this.Cache[cacheKey] = docToCache;
         }
 
         return saveResult;
-    }
-
-    /// <inheritdoc/>
-    public async Task<Result> SaveAllAsync<T>(T? needSaveObj, string fileName, params string[] subDirectories)
-    {
-        var json = JsonSerializer.SerializeToNode(needSaveObj, YaeSandBoxJsonHelper.JsonSerializerOptions);
-        return await this.SaveJsonNodeAsync(json, fileName, subDirectories);
-    }
-
-    /// <inheritdoc/>
-    public async Task<Result<T?>> LoadAllAsync<T>(string fileName, params string[] subDirectories)
-    {
-        try
-        {
-            var jsonResult = await this.LoadJsonNodeAsync(fileName, subDirectories);
-            if (!jsonResult.TryGetValue(out var value))
-                return jsonResult.ToResult();
-            if (value == null)
-                return Result.Ok<T?>(default);
-
-            var obj = value.Deserialize<T>(YaeSandBoxJsonHelper.JsonSerializerOptions);
-            if (obj is null)
-                return JsonError.Error($"反序列化数据为类型 {typeof(T).Name} 时出错: 序列化结果为 null");
-            return obj;
-        }
-        catch (JsonException ex)
-        {
-            return JsonError.Error($"反序列化数据为类型 {typeof(T).Name} 时出错: {ex.Message}");
-        }
-        catch (Exception ex) // 捕获其他文件操作等潜在错误
-        {
-            return JsonError.Error($"反序列化数据为类型 {typeof(T).Name} 时出错: {ex.Message}");
-        }
     }
 }

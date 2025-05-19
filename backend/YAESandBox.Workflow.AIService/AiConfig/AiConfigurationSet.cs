@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using FluentResults;
+using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService.ConfigManagement;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;
@@ -42,7 +43,6 @@ public class AiConfigurationSet
     /// Key 是 AI 配置的模块类型 (ModuleType, 例如 "DoubaoAiProcessorConfig")。
     /// Value 是该模块类型的具体配置数据对象 (不包含 ConfigName 和 ModuleType 字段本身)。
     /// </summary>
-    [JsonConverter(typeof(AiConfigurationSetDictionaryConverter))]
     [Required]
     public Dictionary<string, AbstractAiProcessorConfig> Configurations { get; init; } = new();
 
@@ -61,7 +61,7 @@ public class AiConfigurationSet
     {
         this.Configurations.TryGetValue(moduleType, out var config);
         if (config == null)
-            return AiConfigError.Error($"{this.ConfigSetName}中未定义 AI 配置类型: {moduleType}");
+            return NormalError.NotFound($"{this.ConfigSetName}中未定义 AI 配置类型: {moduleType}");
         return Result.Ok(config);
     }
 
