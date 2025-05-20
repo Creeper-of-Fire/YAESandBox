@@ -9,7 +9,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig;
 /// </summary>
 public class AbstractAiProcessorConfigConverter : JsonConverter<AbstractAiProcessorConfig>
 {
-    private const string ConfigTypePropertyName = "ConfigType";
+    private const string ConfigTypePropertyName = nameof(AbstractAiProcessorConfig.ConfigType);
 
     /// <summary>
     /// 确定此转换器是否可以转换指定的对象类型。
@@ -83,7 +83,7 @@ public class AbstractAiProcessorConfigConverter : JsonConverter<AbstractAiProces
         }
 
         // 使用 ConfigSchemasHelper 获取具体的 AI 配置类型
-        var actualTargetType = ConfigSchemasHelper.GetTypeByName(configTypeValue);
+        var actualTargetType = ConfigSchemasHelper.GetAiConfigTypeByName(configTypeValue);
         if (actualTargetType == null)
         {
             throw new JsonException(

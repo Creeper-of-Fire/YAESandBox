@@ -158,7 +158,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (string.IsNullOrWhiteSpace(moduleType))
             return this.BadRequest("AI 模块类型名称 (moduleType) 不能为空。");
 
-        var configType = ConfigSchemasHelper.GetTypeByName(moduleType);
+        var configType = ConfigSchemasHelper.GetAiConfigTypeByName(moduleType);
 
         if (configType == null)
             return this.NotFound($"名为 '{moduleType}' 的 AI 模块类型未找到。");

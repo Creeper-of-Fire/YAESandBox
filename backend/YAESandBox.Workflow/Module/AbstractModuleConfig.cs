@@ -19,8 +19,7 @@ internal abstract record AbstractModuleConfig<T>(string ModuleType) : IModuleCon
     protected abstract T ToCurrentModule(StepProcessor.StepProcessorContent stepProcessor);
 }
 
-[JsonPolymorphic(TypeDiscriminatorPropertyName = "ModuleType")]
-[JsonDerivedType(typeof(AiModuleConfig), nameof(AiModuleConfig))]
+[JsonConverter(typeof(ModuleConfigConverter))]
 public interface IModuleConfig
 {
     /// <summary>

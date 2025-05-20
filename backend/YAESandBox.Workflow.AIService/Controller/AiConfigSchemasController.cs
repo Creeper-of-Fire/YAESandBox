@@ -33,7 +33,7 @@ public class AiConfigSchemasController : ControllerBase
             return this.BadRequest("配置类型名称 (configTypeName) 不能为空。");
         }
 
-        var configType = ConfigSchemasHelper.GetTypeByName(configTypeName);
+        var configType = ConfigSchemasHelper.GetAiConfigTypeByName(configTypeName);
 
         if (configType == null)
         {

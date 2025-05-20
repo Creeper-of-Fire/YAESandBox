@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { JsonNode } from './JsonNode';
+import type { AbstractAiProcessorConfig } from './AbstractAiProcessorConfig';
 /**
  * 测试用DTO
  */
 export type TestAiDto = {
-    configJson?: JsonNode;
+    configJson?: AbstractAiProcessorConfig;
     /**
      * 测试文本
      */

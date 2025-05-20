@@ -431,7 +431,6 @@
           {
             "name": "moduleType",
             "in": "path",
-            "description": "配置的类型。",
             "required": true,
             "schema": {
               "type": "string"
@@ -619,30 +618,6 @@
         "additionalProperties": false,
         "description": "代表一个 AI 配置集，它包含了一组特定类型的 AI 配置。"
       },
-      "JsonNode": {
-        "type": "object",
-        "properties": {
-          "options": {
-            "$ref": "#/components/schemas/JsonNodeOptions"
-          },
-          "parent": {
-            "$ref": "#/components/schemas/JsonNode"
-          },
-          "root": {
-            "$ref": "#/components/schemas/JsonNode"
-          }
-        },
-        "additionalProperties": false
-      },
-      "JsonNodeOptions": {
-        "type": "object",
-        "properties": {
-          "propertyNameCaseInsensitive": {
-            "type": "boolean"
-          }
-        },
-        "additionalProperties": false
-      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -693,7 +668,7 @@
         "type": "object",
         "properties": {
           "configJson": {
-            "$ref": "#/components/schemas/JsonNode"
+            "$ref": "#/components/schemas/AbstractAiProcessorConfig"
           },
           "testText": {
             "type": "string",

@@ -49,8 +49,8 @@ public class AiConfigurationSet
     /// <inheritdoc cref="ConfigSchemasHelper.GetAvailableAiConfigConcreteTypes"/>
     public static IEnumerable<Type> GetAvailableAiConfigTypes() => ConfigSchemasHelper.GetAvailableAiConfigConcreteTypes();
 
-    /// <inheritdoc cref="ConfigSchemasHelper.GetTypeByName"/>
-    public static Type? GetAiConfigTypeByName(string typeName) => ConfigSchemasHelper.GetTypeByName(typeName);
+    /// <inheritdoc cref="ConfigSchemasHelper.GetAiConfigTypeByName"/>
+    public static Type? GetAiConfigTypeByName(string typeName) => ConfigSchemasHelper.GetAiConfigTypeByName(typeName);
 
     /// <summary>
     /// 尝试获取指定模块类型的AI配置

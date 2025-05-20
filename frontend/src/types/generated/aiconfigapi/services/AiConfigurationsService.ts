@@ -139,9 +139,6 @@ export class AiConfigurationsService {
         moduleType,
         requestBody,
     }: {
-        /**
-         * 配置的类型。
-         */
         moduleType: string,
         /**
          * 配置和测试文本。
