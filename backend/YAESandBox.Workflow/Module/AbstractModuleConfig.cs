@@ -1,22 +1,24 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.Attributes;
+using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Step.StepProcessor;
 
 namespace YAESandBox.Workflow.Module;
 
-internal abstract record AbstractModuleConfig<T>(string ModuleType) : IModuleConfig
-    where T : IModuleProcessor
+internal abstract record AbstractModuleConfig<T> : IModuleConfig
+    where T : IWithDebugDto<IModuleProcessorDebugDto>
 {
     /// <inheritdoc />
     [Required]
     [HiddenInSchema(true)]
-    public string ModuleType { get; init; } = ModuleType;
+    public string ModuleType { get; init; } = nameof(T);
 
-    public async Task<IModuleProcessor> ToModuleAsync(WorkflowConfigService workflowConfigService, StepProcessorContent stepProcessor) =>
-        await this.ToCurrentModuleAsync(workflowConfigService, stepProcessor);
+    public async Task<IWithDebugDto<IModuleProcessorDebugDto>> ToModuleAsync(
+        WorkflowConfigService workflowConfigService) =>
+        await this.ToCurrentModuleAsync(workflowConfigService);
 
-    protected abstract Task<T> ToCurrentModuleAsync(WorkflowConfigService workflowConfigService, StepProcessorContent stepProcessor);
+    protected abstract Task<T> ToCurrentModuleAsync(WorkflowConfigService workflowConfigService);
 }
 
 [JsonConverter(typeof(ModuleConfigConverter))]
@@ -27,5 +29,5 @@ public interface IModuleConfig
     /// </summary>
     public string ModuleType { get; init; }
 
-    internal Task<IModuleProcessor> ToModuleAsync(WorkflowConfigService workflowConfigService, StepProcessorContent stepProcessor);
+    internal Task<IWithDebugDto<IModuleProcessorDebugDto>> ToModuleAsync(WorkflowConfigService workflowConfigService);
 }

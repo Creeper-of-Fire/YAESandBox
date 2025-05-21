@@ -2,7 +2,10 @@
 
 namespace YAESandBox.Workflow.Module;
 
-/// <summary>
-/// 模块配置的运行时
-/// </summary>
-public interface IModuleProcessor : IWithDebugDto<IModuleProcessorDebugDto>;
+// /// <summary>
+// /// 模块配置的运行时
+// /// </summary>
+// public interface IModuleProcessor : IWithDebugDto<IModuleProcessorDebugDto>
+// {
+//     public IModuleProcessorDebugDto DebugDto { get; init; } => 
+// }

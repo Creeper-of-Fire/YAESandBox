@@ -1,6 +1,7 @@
 ﻿using FluentResults;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.DebugDto;
+using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
 
 namespace YAESandBox.Workflow.Module.ExactModule;
@@ -9,10 +10,10 @@ namespace YAESandBox.Workflow.Module.ExactModule;
 /// Ai调用模块，Ai的配置保存在外部的Step，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiModuleConfig"/>里面。
 /// </summary>
 /// <param name="onChunkReceivedScript"></param>
-internal class AiModuleProcessor(Action<string> onChunkReceivedScript) : IModuleProcessor
+internal class AiModuleProcessor(Action<string> onChunkReceivedScript) : IWithDebugDto<AiModuleProcessorDebugDto>
 {
     /// <inheritdoc />
-    public IModuleProcessorDebugDto DebugDto { get; } = new AiModuleProcessorDebugDto();
+    public AiModuleProcessorDebugDto DebugDto { get; } = new();
 
     internal class AiModuleProcessorDebugDto : IModuleProcessorDebugDto
     {
@@ -42,7 +43,7 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript) : IModule
     }
 
     private async Task<Result<string>> ExecuteStreamAsync
-        (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts,CancellationToken cancellationToken = default)
+        (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken = default)
     {
         string fullAiReturn = "";
         var result = await aiProcessor.StreamRequestAsync(prompts, new StreamRequestCallBack
@@ -59,7 +60,7 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript) : IModule
     }
 
     private async Task<Result<string>> ExecuteNonStreamAsync
-        (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts,CancellationToken cancellationToken = default)
+        (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken = default)
     {
         var result = await aiProcessor.NonStreamRequestAsync(prompts, cancellationToken: cancellationToken);
         if (!result.TryGetValue(out string? value))
@@ -74,10 +75,9 @@ file class TempMock_OnChunkReceivedScript
     public static void OnChunkReceivedScript(string totalChunkString) { }
 }
 
-internal record AiModuleConfig() : AbstractModuleConfig<AiModuleProcessor>(nameof(AiModuleConfig))
+internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
 {
-    protected override Task<AiModuleProcessor> ToCurrentModuleAsync
-        (WorkflowConfigService workflowConfigService, StepProcessorContent stepProcessor)
+    protected override Task<AiModuleProcessor> ToCurrentModuleAsync(WorkflowConfigService workflowConfigService)
     {
         return Task.FromResult(new AiModuleProcessor(TempMock_OnChunkReceivedScript.OnChunkReceivedScript));
     }
