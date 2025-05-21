@@ -1,8 +1,10 @@
 ﻿using FluentResults;
+using Nito.AsyncEx;
 using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Module;
+using YAESandBox.Workflow.Module.ExactModule;
 using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Step;
@@ -14,18 +16,37 @@ namespace YAESandBox.Workflow.Step;
 /// </summary>
 public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
 {
-    internal StepProcessor(
-        WorkflowProcessorContent workflowProcessor,
+    private StepProcessor(
+        WorkflowProcessorContent workflowProcessorContent,
+        StepProcessorConfig config,
+        List<IModuleProcessor> modules,
+        Dictionary<string, object> stepInput)
+    {
+        this.WorkflowProcessorContent = workflowProcessorContent;
+        this.Content = new StepProcessorContent(stepInput);
+        this.Modules = modules;
+        this.StepAiConfig = config.StepAiConfig;
+    }
+
+    internal static async Task<StepProcessor> CreateAsync(
+        WorkflowConfigService workflowConfigService,
+        WorkflowProcessorContent workflowProcessorContent,
         StepProcessorConfig config,
         Dictionary<string, object> stepInput)
     {
-        this.WorkflowProcessor = workflowProcessor;
-        this.Content = new StepProcessorContent(stepInput);
-        this.Modules =
-            config.ModuleIds.ConvertAll(id =>
-                (config.InnerModuleConfig.TryGetValue(id, out var value) ? value : ConfigLocator.FindModuleConfig(id))
-                .ToModule(this.Content));
-        this.StepAiConfig = config.StepAiConfig;
+        var stepProcessorContent = new StepProcessorContent(stepInput);
+        var modules =
+            (await config.ModuleIds.ConvertAll(async id =>
+            {
+                if (config.InnerModuleConfig.TryGetValue(id, out var value))
+                {
+                    return await value.ToModuleAsync(workflowConfigService, stepProcessorContent);
+                }
+
+                return await (await ConfigLocator.FindModuleConfig(workflowConfigService, id))
+                    .ToModuleAsync(workflowConfigService, stepProcessorContent);
+            }).WhenAll()).ToList();
+        return new StepProcessor(workflowProcessorContent, config, modules, stepInput);
     }
 
     /// <inheritdoc />
@@ -47,7 +68,7 @@ public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
     {
         // TODO 之后应该根据需求进行拷贝
         public dynamic StepInput { get; } = stepInput.ToDictionary(kv => kv.Key, kv => kv.Value);
-        public IEnumerable<RoledPromptDto> Prompts { get; } = [];
+        public List<RoledPromptDto> Prompts { get; } = [];
         public string? FullAiReturn { get; set; }
     }
 
@@ -55,13 +76,13 @@ public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
 
     private List<IModuleProcessor> Modules { get; }
     private StepAiConfig? StepAiConfig { get; }
-    private WorkflowProcessorContent WorkflowProcessor { get; }
+    private WorkflowProcessorContent WorkflowProcessorContent { get; }
 
     /// <summary>
     /// 启动步骤流程
     /// </summary>
     /// <returns></returns>
-    public async Task<Result<Dictionary<string, object>>> ExecuteStepsAsync()
+    public async Task<Result<Dictionary<string, object>>> ExecuteStepsAsync(CancellationToken cancellationToken = default)
     {
         Dictionary<string, object> stepOutput = [];
         foreach (var module in this.Modules)
@@ -71,13 +92,13 @@ public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
                 case AiModuleProcessor aiModule:
                     if (this.StepAiConfig?.SelectedAiModuleType == null || this.StepAiConfig.AiProcessorConfigUuid == null)
                         return NormalError.Conflict($"步骤 {this} 没有配置AI信息，所以无法执行AI模块。");
-                    var aiProcessor = this.WorkflowProcessor.MasterAiService.CreateAiProcessor(
+                    var aiProcessor = this.WorkflowProcessorContent.MasterAiService.CreateAiProcessor(
                         this.StepAiConfig.AiProcessorConfigUuid,
                         this.StepAiConfig.SelectedAiModuleType);
                     if (aiProcessor == null)
                         return NormalError.Conflict(
                             $"未找到 AI 配置 {this.StepAiConfig.AiProcessorConfigUuid}配置下的类型：{this.StepAiConfig.SelectedAiModuleType}");
-                    var result = await aiModule.ExecuteAsync(aiProcessor, this.Content.Prompts, this.StepAiConfig.IsStream);
+                    var result = await aiModule.ExecuteAsync(aiProcessor, this.Content.Prompts, this.StepAiConfig.IsStream, cancellationToken);
                     if (!result.TryGetValue(out string? value))
                         return result.ToResult();
                     this.Content.FullAiReturn = value;

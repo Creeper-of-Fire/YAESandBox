@@ -51,7 +51,7 @@ public class AiConfigSchemasController : ControllerBase
         try
         {
             string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(configType);
-            using var jsonNode = JsonDocument.Parse(schemaJson);
+            var jsonNode = JsonNode.Parse(schemaJson);
             return this.Ok(jsonNode);
         }
         catch (JsonException jsonEx)

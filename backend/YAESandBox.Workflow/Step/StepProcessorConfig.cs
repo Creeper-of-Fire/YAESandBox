@@ -1,14 +1,17 @@
 ﻿using YAESandBox.Depend.Interfaces;
 using YAESandBox.Workflow.Module;
+using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Step;
 
 public record StepProcessorConfig
 {
-    internal StepProcessor ToStepProcessor(WorkflowProcessor.WorkflowProcessorContent workflowProcessor,
+    internal async Task<StepProcessor> ToStepProcessorAsync(
+        WorkflowConfigService workflowConfigService,
+        WorkflowProcessorContent workflowProcessor,
         Dictionary<string, object> stepInput)
     {
-        return new StepProcessor(workflowProcessor, this, stepInput);
+        return await StepProcessor.CreateAsync(workflowConfigService, workflowProcessor, this, stepInput);
     }
 
     /// <summary>
@@ -23,8 +26,8 @@ public record StepProcessorConfig
     /// StepProcessor 在执行时会严格按照此列表的顺序和ID来查找并执行模块。
     /// </summary>
     public List<string> ModuleIds { get; init; } = [];
-    
-    
+
+
     // ==========================================================================================
     // InnerModuleConfig 机制说明
     // ==========================================================================================
@@ -69,7 +72,7 @@ public record StepProcessorConfig
     //    由于我们约定所有ID都是全局唯一的UUID，所以`StepProcessor`查找时：
     //      `config = TryGetFromInner(id) ?? ConfigLocator.FindGlobalModule(id);`
     // ==========================================================================================
-    
+
     /// <summary>
     /// 内部的私有模块的配置。
     /// key：内部UUID，不过由于UUID的生成原理，它在全局也是唯一的；value：内部模块的配置

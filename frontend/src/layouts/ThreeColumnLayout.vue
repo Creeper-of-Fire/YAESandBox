@@ -150,12 +150,12 @@ const isMobile = useMediaQuery('(max-width: 767.9px)');
 
 // --- Computed ---
 // Grid 列数：移动端 1 列，桌面端 4 列
-const gridCols = computed(() => (isMobile.value ? 1 : 10));
+const gridCols = computed(() => (isMobile.value ? 1 : 22));
 
 // 各区域的 Grid Span
 // 注意：即使在移动端为侧边栏分配 span=1，它们也会因为 v-show="false" 而不显示。
 // Naive UI 的 n-gi 在其父 n-grid 的 cols=1 时，span 大于1会被视为1。
-const leftPanelGridSpan = computed(() => (isMobile.value ? 1 : 2));
+const leftPanelGridSpan = computed(() => (isMobile.value ? 1 : 6));
 const mainContentGridSpan = computed(() => {
   if (isMobile.value) {
     return 1; // 移动端，主内容区占满整个单列
@@ -171,9 +171,9 @@ const mainContentGridSpan = computed(() => {
   // if (props.isRightPanelActive) span -= 2;
   // return span;
   // 但要注意，这可能让布局在侧边栏切换时跳动。当前保持固定 span=6。
-  return 6;
+  return 10;
 });
-const rightPanelGridSpan = computed(() => (isMobile.value ? 1 : 2));
+const rightPanelGridSpan = computed(() => (isMobile.value ? 1 : 6));
 
 // 可以选择性地将 isMobile 暴露出去，如果父组件需要的话
 // defineExpose({ isMobile });

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.Attributes;
-using YAESandBox.Workflow.Step;
+using static YAESandBox.Workflow.Step.StepProcessor;
 
 namespace YAESandBox.Workflow.Module;
 
@@ -13,10 +13,10 @@ internal abstract record AbstractModuleConfig<T>(string ModuleType) : IModuleCon
     [HiddenInSchema(true)]
     public string ModuleType { get; init; } = ModuleType;
 
-    public IModuleProcessor ToModule(StepProcessor.StepProcessorContent stepProcessor) =>
-        this.ToCurrentModule(stepProcessor);
+    public async Task<IModuleProcessor> ToModuleAsync(WorkflowConfigService workflowConfigService, StepProcessorContent stepProcessor) =>
+        await this.ToCurrentModuleAsync(workflowConfigService, stepProcessor);
 
-    protected abstract T ToCurrentModule(StepProcessor.StepProcessorContent stepProcessor);
+    protected abstract Task<T> ToCurrentModuleAsync(WorkflowConfigService workflowConfigService, StepProcessorContent stepProcessor);
 }
 
 [JsonConverter(typeof(ModuleConfigConverter))]
@@ -27,5 +27,5 @@ public interface IModuleConfig
     /// </summary>
     public string ModuleType { get; init; }
 
-    internal IModuleProcessor ToModule(StepProcessor.StepProcessorContent stepProcessor);
+    internal Task<IModuleProcessor> ToModuleAsync(WorkflowConfigService workflowConfigService, StepProcessorContent stepProcessor);
 }

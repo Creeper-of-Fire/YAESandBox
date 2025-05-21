@@ -5,18 +5,30 @@ namespace YAESandBox.Workflow;
 
 internal static class ConfigLocator
 {
-    internal static WorkflowProcessorConfig FindWorkflowProcessorConfig(string workflowId)
+    internal static async Task<WorkflowProcessorConfig> FindWorkflowProcessorConfig(WorkflowConfigService workflowConfigService, string workflowId)
     {
-        throw new NotImplementedException();
+        var result = await workflowConfigService.FindWorkflowConfig(workflowId);
+        if (result.TryGetValue(out var value))
+            return value;
+
+        throw new InvalidOperationException(result.Errors.FirstOrDefault()?.Message);
     }
 
-    internal static StepProcessorConfig FindStepProcessorConfig(string stepId)
+    internal static async Task<StepProcessorConfig> FindStepProcessorConfig(WorkflowConfigService workflowConfigService, string stepId)
     {
-        throw new NotImplementedException();
+        var result = await workflowConfigService.FindStepConfig(stepId);
+        if (result.TryGetValue(out var value))
+            return value;
+        
+        throw new InvalidOperationException(result.Errors.FirstOrDefault()?.Message);
     }
 
-    internal static AbstractModuleConfig<IModuleProcessor> FindModuleConfig(string moduleId)
+    internal static async Task<IModuleConfig> FindModuleConfig(WorkflowConfigService workflowConfigService, string moduleId)
     {
-        throw new NotImplementedException();
+        var result = await workflowConfigService.FindModuleConfig(moduleId);
+        if (result.TryGetValue(out var value))
+            return value;
+        
+        throw new InvalidOperationException(result.Errors.FirstOrDefault()?.Message);
     }
 }
