@@ -1,8 +1,4 @@
-﻿using System.ComponentModel.DataAnnotations;
-using System.Text.Json.Serialization;
-using YAESandBox.Depend.Schema.Attributes;
-using YAESandBox.Workflow.DebugDto;
-using static YAESandBox.Workflow.Step.StepProcessor;
+﻿using YAESandBox.Workflow.DebugDto;
 
 namespace YAESandBox.Workflow.Module;
 
@@ -10,24 +6,13 @@ internal abstract record AbstractModuleConfig<T> : IModuleConfig
     where T : IWithDebugDto<IModuleProcessorDebugDto>
 {
     /// <inheritdoc />
-    [Required]
-    [HiddenInSchema(true)]
+    public string InstanceId { get; init; } = string.Empty;
+
+    /// <inheritdoc />
     public string ModuleType { get; init; } = nameof(T);
 
-    public async Task<IWithDebugDto<IModuleProcessorDebugDto>> ToModuleAsync(
-        WorkflowConfigService workflowConfigService) =>
-        await this.ToCurrentModuleAsync(workflowConfigService);
+    public IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor() =>
+        this.ToCurrentModule();
 
-    protected abstract Task<T> ToCurrentModuleAsync(WorkflowConfigService workflowConfigService);
-}
-
-[JsonConverter(typeof(ModuleConfigConverter))]
-public interface IModuleConfig
-{
-    /// <summary>
-    /// 模块的类型
-    /// </summary>
-    public string ModuleType { get; init; }
-
-    internal Task<IWithDebugDto<IModuleProcessorDebugDto>> ToModuleAsync(WorkflowConfigService workflowConfigService);
+    protected abstract T ToCurrentModule();
 }

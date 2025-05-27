@@ -1,6 +1,4 @@
-﻿using YAESandBox.Workflow.Module;
-
-namespace YAESandBox.Workflow.DebugDto;
+﻿namespace YAESandBox.Workflow.DebugDto;
 
 /// <inheritdoc />
 public interface IStepProcessorDebugDto : IDebugDto

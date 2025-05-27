@@ -1,6 +1,5 @@
 ﻿using FluentResults;
 using static YAESandBox.Depend.Results.NormalError;
-using static YAESandBox.Depend.Results.NormalError.ServerErrorType;
 
 namespace YAESandBox.Depend.Results;
 

@@ -4,7 +4,6 @@ using FluentResults;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.AiConfig;
-using static YAESandBox.Depend.Storage.ScopedStorageFactory;
 
 // 为了使用 AbstractAiProcessorConfig 和 AiError
 

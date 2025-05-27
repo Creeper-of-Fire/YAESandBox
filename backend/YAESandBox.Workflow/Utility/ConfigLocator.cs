@@ -1,7 +1,7 @@
 ﻿using YAESandBox.Workflow.Module;
 using YAESandBox.Workflow.Step;
 
-namespace YAESandBox.Workflow;
+namespace YAESandBox.Workflow.Utility;
 
 internal static class ConfigLocator
 {

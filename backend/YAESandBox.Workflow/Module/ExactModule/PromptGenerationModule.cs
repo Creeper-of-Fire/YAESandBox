@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using FluentResults;
-using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Module.ExactModule.PromptGenerationModuleProcessor;
@@ -18,7 +17,7 @@ internal partial class PromptGenerationModuleProcessor(
     PromptGenerationModuleConfig config)
     : IWithDebugDto<PromptGenerationModuleProcessorDebugDto>
 {
-    private PromptGenerationModuleConfig Config { get; init; } = config with { };
+    private PromptGenerationModuleConfig Config { get; init; } = config;
 
     /// <inheritdoc />
     public PromptGenerationModuleProcessorDebugDto DebugDto { get; init; } = new()
@@ -202,10 +201,5 @@ internal record PromptGenerationModuleConfig : AbstractModuleConfig<PromptGenera
 
 
     /// <inheritdoc />
-    protected override Task<PromptGenerationModuleProcessor> ToCurrentModuleAsync(WorkflowConfigService workflowConfigService)
-    {
-        // 模块处理器通常需要配置自身和对步骤上下文的引用
-        var processor = new PromptGenerationModuleProcessor(this);
-        return Task.FromResult(processor);
-    }
+    protected override PromptGenerationModuleProcessor ToCurrentModule() => new(this);
 }

@@ -2,7 +2,6 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.Attributes;
-using YAESandBox.Workflow.AIService.AiConfig.Doubao;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;
 

@@ -2,7 +2,6 @@
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
-using static YAESandBox.Workflow.Step.StepProcessor;
 
 namespace YAESandBox.Workflow.Module.ExactModule;
 
@@ -70,15 +69,12 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript) : IWithDe
     }
 }
 
-file class TempMock_OnChunkReceivedScript
+file class TempMockOnChunkReceivedScript
 {
     public static void OnChunkReceivedScript(string totalChunkString) { }
 }
 
 internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
 {
-    protected override Task<AiModuleProcessor> ToCurrentModuleAsync(WorkflowConfigService workflowConfigService)
-    {
-        return Task.FromResult(new AiModuleProcessor(TempMock_OnChunkReceivedScript.OnChunkReceivedScript));
-    }
+    protected override AiModuleProcessor ToCurrentModule() => new(TempMockOnChunkReceivedScript.OnChunkReceivedScript);
 }

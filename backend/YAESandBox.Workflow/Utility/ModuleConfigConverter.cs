@@ -1,7 +1,8 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using YAESandBox.Workflow.Module;
 
-namespace YAESandBox.Workflow.Module;
+namespace YAESandBox.Workflow.Utility;
 
 /// <summary>
 /// 自定义的 JsonConverter 用于 <see cref="IModuleConfig"/> 接口的多态反序列化。

@@ -11,10 +11,11 @@ namespace YAESandBox.Workflow.Module.ExactModule;
 /// 直接写入到 WorkflowProcessorContent.RawText。
 /// 这个模块是临时的，未来会被更完善的变量传递和文本组装机制取代。
 /// </summary>
-internal class TemporaryAiOutputToRawTextModuleProcessor(
-    TemporaryAiOutputToRawTextModuleConfig configSnapshot) : IWithDebugDto<TemporaryAiOutputToRawTextModuleProcessorDebugDto>
+internal class TemporaryAiOutputToRawTextModuleProcessor(TemporaryAiOutputToRawTextModuleConfig config)
+    : IWithDebugDto<TemporaryAiOutputToRawTextModuleProcessorDebugDto>
 {
-    private TemporaryAiOutputToRawTextModuleConfig Config { get; } = configSnapshot;
+    private TemporaryAiOutputToRawTextModuleConfig Config { get; } = config;
+
     // 这个临时模块非常简单，可能不需要复杂的Debug DTO，
     // 但为了接口一致性，可以提供一个最小化的实现或直接返回 null。
     // 为了简单起见，这里我们先不实现具体的Debug DTO。
@@ -23,9 +24,8 @@ internal class TemporaryAiOutputToRawTextModuleProcessor(
 
     public record TemporaryAiOutputToRawTextModuleProcessorDebugDto : IModuleProcessorDebugDto;
 
-    public Task<Result> ExecuteAsync(WorkflowProcessorContent workflowProcessorContent,StepProcessorContent stepProcessorContent)
+    public Task<Result> ExecuteAsync(WorkflowProcessorContent workflowProcessorContent, StepProcessorContent stepProcessorContent)
     {
-
         // 从 StepProcessorContent.FullAiReturn 获取AI的输出
         // 这是 AiModuleProcessor 放置其结果的固定位置
         string? aiOutput = stepProcessorContent.FullAiReturn;
@@ -63,11 +63,7 @@ internal record TemporaryAiOutputToRawTextModuleConfig
 
 
     /// <inheritdoc />
-    protected override Task<TemporaryAiOutputToRawTextModuleProcessor> ToCurrentModuleAsync(WorkflowConfigService workflowConfigService)
-    {
-        var processor = new TemporaryAiOutputToRawTextModuleProcessor(this);
-        return Task.FromResult(processor);
-    }
+    protected override TemporaryAiOutputToRawTextModuleProcessor ToCurrentModule() => new(this);
 }
 
 /// <summary>

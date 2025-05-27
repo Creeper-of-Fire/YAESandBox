@@ -1,9 +1,7 @@
 ﻿using FluentResults;
-using Nito.AsyncEx;
 using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Module;
 using YAESandBox.Workflow.Module.ExactModule;
 using static YAESandBox.Workflow.WorkflowProcessor;
 
@@ -14,68 +12,18 @@ namespace YAESandBox.Workflow.Step;
 /// <summary>
 /// 步骤配置的运行时
 /// </summary>
-public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
+internal class StepProcessor(
+    WorkflowProcessorContent workflowContent,
+    StepProcessorConfig config,
+    List<IWithDebugDto<IModuleProcessorDebugDto>> modules,
+    Dictionary<string, object> stepInput)
+    : IWithDebugDto<IStepProcessorDebugDto>
 {
-    private StepProcessor(
-        WorkflowProcessorContent workflowContent,
-        StepProcessorConfig config,
-        List<IWithDebugDto<IModuleProcessorDebugDto>> modules,
-        Dictionary<string, object> stepInput)
-    {
-        this.WorkflowContent = workflowContent;
-        this.StepContent = new StepProcessorContent(stepInput);
-        this.Modules = modules;
-        this.StepAiConfig = config.StepAiConfig;
-    }
+    private StepProcessorContent StepContent { get; } = new(stepInput);
 
-    internal static async Task<StepProcessor> CreateAsync(
-        WorkflowConfigService workflowConfigService,
-        WorkflowProcessorContent workflowProcessorContent,
-        StepProcessorConfig config,
-        Dictionary<string, object> stepInput)
-    {
-        var modules =
-            (await config.ModuleIds.ConvertAll(async id =>
-            {
-                if (config.InnerModuleConfig.TryGetValue(id, out var value))
-                {
-                    return await value.ToModuleAsync(workflowConfigService);
-                }
-
-                return await (await ConfigLocator.FindModuleConfig(workflowConfigService, id))
-                    .ToModuleAsync(workflowConfigService);
-            }).WhenAll()).ToList();
-        return new StepProcessor(workflowProcessorContent, config, modules, stepInput);
-    }
-
-    /// <inheritdoc />
-    public IStepProcessorDebugDto DebugDto => new StepProcessorDebugDto
-        { ModuleProcessorDebugDtos = this.Modules.ConvertAll(it => it.DebugDto) };
-
-    /// <inheritdoc />
-    internal record StepProcessorDebugDto : IStepProcessorDebugDto
-    {
-        /// <inheritdoc />
-        public required IList<IModuleProcessorDebugDto> ModuleProcessorDebugDtos { get; init; }
-    }
-
-    /// <summary>
-    /// 步骤运行时的上下文
-    /// </summary>
-    /// <param name="stepInput"></param>
-    public class StepProcessorContent(Dictionary<string, object> stepInput)
-    {
-        // TODO 之后应该根据需求进行拷贝
-        public dynamic StepInput { get; } = stepInput.ToDictionary(kv => kv.Key, kv => kv.Value);
-        public List<RoledPromptDto> Prompts { get; } = [];
-        public string? FullAiReturn { get; set; }
-    }
-
-    private StepProcessorContent StepContent { get; }
-
-    private List<IWithDebugDto<IModuleProcessorDebugDto>> Modules { get; }
-    private StepAiConfig? StepAiConfig { get; }
-    private WorkflowProcessorContent WorkflowContent { get; }
+    private List<IWithDebugDto<IModuleProcessorDebugDto>> Modules { get; } = modules;
+    private StepAiConfig? StepAiConfig { get; } = config.StepAiConfig;
+    private WorkflowProcessorContent WorkflowContent { get; } = workflowContent;
 
     /// <summary>
     /// 启动步骤流程
@@ -115,5 +63,29 @@ public class StepProcessor : IWithDebugDto<IStepProcessorDebugDto>
         }
 
         return stepOutput;
+    }
+
+
+    /// <inheritdoc />
+    public IStepProcessorDebugDto DebugDto => new StepProcessorDebugDto
+        { ModuleProcessorDebugDtos = this.Modules.ConvertAll(it => it.DebugDto) };
+
+    /// <inheritdoc />
+    internal record StepProcessorDebugDto : IStepProcessorDebugDto
+    {
+        /// <inheritdoc />
+        public required IList<IModuleProcessorDebugDto> ModuleProcessorDebugDtos { get; init; }
+    }
+
+    /// <summary>
+    /// 步骤运行时的上下文
+    /// </summary>
+    /// <param name="stepInput"></param>
+    public class StepProcessorContent(Dictionary<string, object> stepInput)
+    {
+        // TODO 之后应该根据需求进行拷贝
+        public dynamic StepInput { get; } = stepInput.ToDictionary(kv => kv.Key, kv => kv.Value);
+        public List<RoledPromptDto> Prompts { get; } = [];
+        public string? FullAiReturn { get; set; }
     }
 }
