@@ -1,5 +1,6 @@
 ﻿using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Step;
 
 namespace YAESandBox.Workflow.Utility;
@@ -15,7 +16,7 @@ internal static class ToProcessor
         return new StepProcessor(workflowProcessorContent, stepProcessorConfig,
             stepProcessorConfig.Modules.ConvertAll(module => module.ToModuleProcessor()), stepInput);
     }
-    
+
     internal static WorkflowProcessor ToWorkflowProcessor(
         this WorkflowProcessorConfig workflowProcessorConfig,
         IReadOnlyDictionary<string, string> triggerParams,
@@ -25,7 +26,8 @@ internal static class ToProcessor
     {
         var content = new WorkflowProcessor.WorkflowProcessorContent(masterAiService, dataAccess, requestDisplayUpdateCallback);
         var variables = triggerParams.ToDictionary(kv => kv.Key, object (kv) => kv.Value);
-        
-        return new WorkflowProcessor(content, workflowProcessorConfig.Steps.ConvertAll(it => it.ToStepProcessor(content, variables)), variables);
+
+        return new WorkflowProcessor(content, workflowProcessorConfig.Steps.ConvertAll(it => it.ToStepProcessor(content, variables)),
+            variables);
     }
 }

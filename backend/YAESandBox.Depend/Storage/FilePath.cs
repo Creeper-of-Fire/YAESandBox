@@ -12,7 +12,7 @@ internal record FilePath(string RootPath, string FileName, string SubDirectory)
 
     internal string SubPath => Path.Combine(this.SubDirectory, this.FileName);
     public override string ToString() => this.TotalPath;
-    
+
     /// <summary>
     /// 组合路径
     /// </summary>

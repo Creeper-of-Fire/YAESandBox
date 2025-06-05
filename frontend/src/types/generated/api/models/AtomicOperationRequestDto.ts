@@ -2,7 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { EntityType } from './EntityType';
+import type {EntityType} from './EntityType';
+
 /**
  * 用于 API 请求的单个原子操作的表示。
  * 定义了对 WorldState 中实体的创建、修改或删除操作。

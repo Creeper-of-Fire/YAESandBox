@@ -129,11 +129,10 @@ public partial class JsonFileJsonStorage
                 {
                     try // Task.Run 内部的 try-catch
                     {
-                        if (!File.Exists(filePath.TotalPath)) 
+                        if (!File.Exists(filePath.TotalPath))
                             return Result.Ok(); // 通常，删除一个不存在的文件不应视为错误。
                         File.Delete(filePath.TotalPath);
                         return Result.Ok();
-                        
                     }
                     catch (IOException ex) // 例如，文件被占用
                     {

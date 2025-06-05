@@ -2,7 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BlockStatusCode } from './BlockStatusCode';
+import type {BlockStatusCode} from './BlockStatusCode';
+
 /**
  * (服务器 -> 客户端)
  * 通知客户端某个 Block 的状态码发生了变化。

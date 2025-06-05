@@ -25,15 +25,15 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "成功获取指定配置类型的 JSON Schema。",
             "content": {
               "application/json": {
-                "schema": { }
+                "schema": {}
               }
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "请求的配置类型名称无效。",
             "content": {
               "application/json": {
                 "schema": {
@@ -43,7 +43,7 @@
             }
           },
           "404": {
-            "description": "Not Found",
+            "description": "未找到指定名称的配置类型。",
             "content": {
               "application/json": {
                 "schema": {
@@ -53,7 +53,7 @@
             }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "生成 Schema 时发生内部服务器错误。"
           }
         }
       }
@@ -66,7 +66,7 @@
         "summary": "获取所有可用的 AI 配置【类型定义】列表。\r\n用于前端展示可以【新建】哪些类型的 AI 配置。",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "成功获取所有可用的 AI 配置类型列表。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -105,7 +105,7 @@
         "summary": "获取所有已保存的 AI 配置集的完整列表。",
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "成功获取所有 AI 配置集的列表。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -134,7 +134,7 @@
             }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "获取配置时发生内部服务器错误。"
           }
         }
       },
@@ -165,7 +165,7 @@
         },
         "responses": {
           "201": {
-            "description": "Created",
+            "description": "配置集已成功创建，并返回新创建的 UUID。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -185,7 +185,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "请求体无效或模型验证失败。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -205,7 +205,7 @@
             }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "添加配置集时发生内部服务器错误。"
           }
         }
       }
@@ -229,7 +229,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "成功获取指定的 AI 配置集。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -244,32 +244,32 @@
               "text/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AiConfigurationSet"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found",
-            "content": {
-              "text/plain": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              },
-              "text/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
                 }
               }
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "请求的 UUID 无效（例如，为空）。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到指定 UUID 的配置集。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -328,10 +328,10 @@
         },
         "responses": {
           "204": {
-            "description": "No Content"
+            "description": "配置集已成功更新。"
           },
           "404": {
-            "description": "Not Found",
+            "description": "未找到要更新的配置集。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -351,7 +351,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "请求无效，例如 UUID 为空。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -371,7 +371,7 @@
             }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "更新配置时发生内部服务器错误。"
           }
         }
       },
@@ -393,10 +393,10 @@
         ],
         "responses": {
           "204": {
-            "description": "No Content"
+            "description": "配置集已成功删除（或原先就不存在）。"
           },
           "400": {
-            "description": "Bad Request",
+            "description": "请求的 UUID 无效。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -416,7 +416,7 @@
             }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "删除配置时发生内部服务器错误。"
           }
         }
       }
@@ -459,7 +459,7 @@
         },
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "AI 配置测试成功，返回 AI 生成的完整文本。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -479,7 +479,7 @@
             }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "测试期间发生错误，例如 AI 服务调用失败。"
           }
         }
       }
@@ -503,7 +503,7 @@
         ],
         "responses": {
           "200": {
-            "description": "OK",
+            "description": "成功获取指定 AI 模块类型的默认数据。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -523,7 +523,7 @@
             }
           },
           "400": {
-            "description": "Bad Request",
+            "description": "请求的模块类型名称无效。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -543,7 +543,7 @@
             }
           },
           "404": {
-            "description": "Not Found",
+            "description": "未找到指定名称的 AI 模块类型。",
             "content": {
               "text/plain": {
                 "schema": {
@@ -563,7 +563,7 @@
             }
           },
           "500": {
-            "description": "Internal Server Error"
+            "description": "获取默认数据时发生内部服务器错误。"
           }
         },
         "deprecated": true
@@ -643,7 +643,7 @@
             "nullable": true
           }
         },
-        "additionalProperties": { }
+        "additionalProperties": {}
       },
       "SelectOptionDto": {
         "required": [

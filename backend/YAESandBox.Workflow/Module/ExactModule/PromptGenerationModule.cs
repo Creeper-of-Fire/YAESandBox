@@ -2,6 +2,7 @@
 using System.Text.RegularExpressions;
 using FluentResults;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Module.ExactModule.PromptGenerationModuleProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
@@ -34,19 +35,19 @@ internal partial class PromptGenerationModuleProcessor(
     /// <returns></returns>
     public Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent)
     {
-        string substitutedContent = SubstitutePlaceholdersAsync(Config.Template, stepProcessorContent);
-        DebugDto.FinalPromptContent = substitutedContent;
+        string substitutedContent = this.SubstitutePlaceholdersAsync(this.Config.Template, stepProcessorContent);
+        this.DebugDto.FinalPromptContent = substitutedContent;
 
         var prompt = new RoledPromptDto
         {
-            Type = Config.RoleType,
+            Type = this.Config.RoleType,
             Content = substitutedContent,
-            Name = Config.PromptNameInAiModel ?? string.Empty
+            Name = this.Config.PromptNameInAiModel ?? string.Empty
         };
 
         stepProcessorContent.Prompts.Add(prompt); // 将生成的提示词添加到步骤内容中
 
-        DebugDto.GeneratedPrompt = prompt;
+        this.DebugDto.GeneratedPrompt = prompt;
         return Task.FromResult(Result.Ok());
     }
 
@@ -85,21 +86,21 @@ internal partial class PromptGenerationModuleProcessor(
             catch (Exception ex)
             {
                 // 记录尝试从StepInput获取时的潜在错误到调试信息
-                DebugDto.AddResolutionAttemptLog($"尝试从 StepInput 获取 '{placeholderName}' 失败: {ex.Message}");
+                this.DebugDto.AddResolutionAttemptLog($"尝试从 StepInput 获取 '{placeholderName}' 失败: {ex.Message}");
             }
 
 
             if (found)
             {
                 resolvedValues[placeholderName] = value;
-                DebugDto.ResolvedPlaceholdersWithValue[placeholderName] = value ?? "[null]";
+                this.DebugDto.ResolvedPlaceholdersWithValue[placeholderName] = value ?? "[null]";
             }
             else
             {
                 // 如果未找到，则替换为空字符串 (根据用户要求隐式处理)
                 resolvedValues[placeholderName] = string.Empty;
-                DebugDto.UnresolvedPlaceholders.Add(placeholderName);
-                DebugDto.AddResolutionAttemptLog($"占位符 '{placeholderName}' 未在任何来源中找到，将替换为空字符串。");
+                this.DebugDto.UnresolvedPlaceholders.Add(placeholderName);
+                this.DebugDto.AddResolutionAttemptLog($"占位符 '{placeholderName}' 未在任何来源中找到，将替换为空字符串。");
             }
         }
 
@@ -170,7 +171,7 @@ internal partial class PromptGenerationModuleProcessor(
         /// <param name="logEntry">日志条目。</param>
         public void AddResolutionAttemptLog(string logEntry)
         {
-            ResolutionAttemptLogs.Add($"[{DateTime.UtcNow:HH:mm:ss.fff}] {logEntry}");
+            this.ResolutionAttemptLogs.Add($"[{DateTime.UtcNow:HH:mm:ss.fff}] {logEntry}");
         }
     }
 }

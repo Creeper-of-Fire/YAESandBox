@@ -93,7 +93,8 @@ public interface IBlockManager
     /// <param name="blockId"></param>
     /// <param name="resolvedCommands"></param>
     /// <returns></returns>
-    Task<Result<IReadOnlyList<AtomicOperation>>> ApplyResolvedCommandsAsync(string blockId, IReadOnlyList<AtomicOperation> resolvedCommands);
+    Task<Result<IReadOnlyList<AtomicOperation>>>
+        ApplyResolvedCommandsAsync(string blockId, IReadOnlyList<AtomicOperation> resolvedCommands);
 
     /// <summary>
     /// 

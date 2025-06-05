@@ -48,7 +48,7 @@ public partial class JsonFileCacheJsonStorage(string? dataRootPath) : JsonFileJs
     {
         if (listOption is not null)
             return await base.ListFileNamesAsync(listOption, subDirectories);
-        
+
         var directory = this.NavigateToDirectoryEntryInternal(subDirectories, false);
         if (directory is not null)
             return directory.Children.Values.ToList().OfType<FileCacheEntry>().Select(entity => entity.Name).ToList();

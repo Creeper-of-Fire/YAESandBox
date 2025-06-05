@@ -4,7 +4,7 @@ using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Utility;
 
-namespace YAESandBox.Workflow.Module;
+namespace YAESandBox.Workflow.Config;
 
 /// <summary>
 /// 模组的配置
@@ -17,7 +17,7 @@ public interface IModuleConfig
     /// </summary>
     [Required]
     [HiddenInSchema(true)]
-    public string InstanceId { get; init; }
+    public string ConfigId { get; init; }
 
     /// <summary>
     /// 模块的类型
@@ -27,4 +27,18 @@ public interface IModuleConfig
     public string ModuleType { get; init; }
 
     internal IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor();
+}
+
+internal abstract record AbstractModuleConfig<T> : IModuleConfig where T : IWithDebugDto<IModuleProcessorDebugDto>
+{
+    /// <inheritdoc />
+    public string ConfigId { get; init; } = string.Empty;
+
+    /// <inheritdoc />
+    public string ModuleType { get; init; } = nameof(T);
+
+    public IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor() =>
+        this.ToCurrentModule();
+
+    protected abstract T ToCurrentModule();
 }

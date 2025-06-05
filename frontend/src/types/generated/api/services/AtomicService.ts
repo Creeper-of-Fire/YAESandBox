@@ -2,11 +2,13 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BatchAtomicRequestDto } from '../models/BatchAtomicRequestDto';
-import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
-export class AtomicService {
+import type {BatchAtomicRequestDto} from '../models/BatchAtomicRequestDto';
+import type {CancelablePromise} from '../core/CancelablePromise';
+import {OpenAPI} from '../core/OpenAPI';
+import {request as __request} from '../core/request';
+
+export class AtomicService
+{
     /**
      * 对指定的 Block 执行一批原子化操作。
      * 根据 Block 的当前状态，操作可能被立即执行或暂存。
@@ -14,9 +16,9 @@ export class AtomicService {
      * @throws ApiError
      */
     public static postApiAtomic({
-        blockId,
-        requestBody,
-    }: {
+                                    blockId,
+                                    requestBody,
+                                }: {
         /**
          * 要执行操作的目标 Block 的 ID。
          */
@@ -25,7 +27,8 @@ export class AtomicService {
          * 包含原子操作列表的请求体。
          */
         requestBody?: BatchAtomicRequestDto,
-    }): CancelablePromise<any> {
+    }): CancelablePromise<any>
+    {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/atomic/{blockId}',

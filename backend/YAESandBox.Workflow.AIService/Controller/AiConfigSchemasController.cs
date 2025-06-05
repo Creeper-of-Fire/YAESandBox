@@ -9,6 +9,10 @@ using YAESandBox.Workflow.AIService.AiConfig;
 
 namespace YAESandBox.Workflow.AIService.Controller;
 
+/// <summary>
+/// 提供与 AI 配置相关的 Schema 和类型定义信息。
+/// 主要用于支持前端动态构建配置表单。
+/// </summary>
 [ApiExplorerSettings(GroupName = AiConfigurationsController.AiConfigGroupName)]
 [ApiController]
 [Route("api/ai-configuration-management")]
@@ -20,6 +24,10 @@ public class AiConfigSchemasController : ControllerBase
     /// </summary>
     /// <param name="configTypeName">AI 配置的类型名称 (例如 "DoubaoAiProcessorConfig")。</param>
     /// <returns>一个 JSON 字符串，代表符合 JSON Schema 标准并包含 vue-json-schema-form UI 指令的 Schema。</returns>
+    /// <response code="200">成功获取指定配置类型的 JSON Schema。</response>
+    /// <response code="400">请求的配置类型名称无效。</response>
+    /// <response code="404">未找到指定名称的配置类型。</response>
+    /// <response code="500">生成 Schema 时发生内部服务器错误。</response>
     [HttpGet("schemas/{configTypeName}")]
     [Produces("application/json")] // 明确指定返回 application/json
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)] // 返回的是 JSON Schema 对象，typeof(object) 比较通用
@@ -75,6 +83,7 @@ public class AiConfigSchemasController : ControllerBase
     /// 'Value': 配置类型的编程名称 (如 "DoubaoAiProcessorConfig")，用于后续请求 Schema。
     /// 'Label': 用户友好的类型显示名称 (如 "豆包AI模型")。
     /// </returns>
+    /// <response code="200">成功获取所有可用的 AI 配置类型列表。</response>
     [HttpGet("available-config-types")]
     [ProducesResponseType(typeof(List<SelectOptionDto>), StatusCodes.Status200OK)] // SelectOptionDto 来自 Schema 命名空间
     public ActionResult<List<SelectOptionDto>> GetAvailableConfigTypeDefinitions()

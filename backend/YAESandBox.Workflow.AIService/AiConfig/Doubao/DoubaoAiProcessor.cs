@@ -28,12 +28,13 @@ file static class PromptRoleMapper
         };
     }
 }
+
 // TODO 目前是手写通讯，以后需要一个通用的通讯机制
 internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiProcessorConfig parameters) : IAiProcessor
 {
     private HttpClient HttpClient { get; } = dependencies.HttpClient;
     private DoubaoAiProcessorConfig Config { get; } = parameters;
-    
+
     public async Task<Result> StreamRequestAsync(
         IEnumerable<RoledPromptDto> prompts,
         StreamRequestCallBack requestCallBack,

@@ -2,7 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AtomicOperationRequestDto } from './AtomicOperationRequestDto';
+import type {AtomicOperationRequestDto} from './AtomicOperationRequestDto';
+
 /**
  * 包含用于批量执行的原子操作请求列表。
  */

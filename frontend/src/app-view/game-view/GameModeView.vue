@@ -66,7 +66,8 @@ const blockStatusStore = useBlockStatusStore();
 const isMobileLayout = useMediaQuery('(max-width: 767.9px)');
 
 // 监视媒体查询结果并更新 store
-watch(isMobileLayout, (value) => {
+watch(isMobileLayout, (value) =>
+{
   uiStore.setIsMobileLayout(value);
 }, {immediate: true});
 
@@ -79,11 +80,14 @@ watch(isMobileLayout, (value) => {
  * - 桌面端：固定显示 BlockBubbleStream。
  * - 任何情况下，如果特定视图组件不存在，则回退到 BlockBubbleStream。
  */
-const currentMainComponent = computed(() => {
-  if (isMobileLayout.value) {
+const currentMainComponent = computed(() =>
+{
+  if (isMobileLayout.value)
+  {
     // uiStore.getMobileViewComponent 返回的是 store 中的 shallowRef 包装的组件或 null
     const focusedComponent = uiStore.getMobileViewComponent;
-    if (focusedComponent) { // 如果是 shallowRef(actualComponent)
+    if (focusedComponent)
+    { // 如果是 shallowRef(actualComponent)
       return focusedComponent; // 直接返回 shallowRef 实例，:is 会处理
     }
     // 如果 getMobileViewComponent 返回 null (焦点在 main)，则显示 BlockBubbleStream

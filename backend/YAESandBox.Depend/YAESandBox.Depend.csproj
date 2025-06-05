@@ -17,15 +17,15 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Results\NormalError.ServerErrorType.cs">
-        <DependentUpon>ServerError.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Storage\JsonFileJsonStorage.Public.cs">
-        <DependentUpon>JsonFileJsonStorage.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Storage\JsonFileCacheJsonStorage.Help.cs">
-        <DependentUpon>JsonFileCacheJsonStorage.cs</DependentUpon>
-      </Compile>
+        <Compile Update="Results\NormalError.ServerErrorType.cs">
+            <DependentUpon>ServerError.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Storage\JsonFileJsonStorage.Public.cs">
+            <DependentUpon>JsonFileJsonStorage.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Storage\JsonFileCacheJsonStorage.Help.cs">
+            <DependentUpon>JsonFileCacheJsonStorage.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
 </Project>

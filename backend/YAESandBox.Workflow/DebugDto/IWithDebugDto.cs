@@ -6,7 +6,7 @@ public interface IWithDebugDto<out T> where T : IDebugDto
     /// 获得Debug信息
     /// </summary>
     T DebugDto { get; }
-};
+}
 
 /// <summary>
 /// 发给前端，用来显示Debug信息的DTO。

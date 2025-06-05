@@ -2,7 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { EntityType } from './EntityType';
+import type {EntityType} from './EntityType';
+
 /**
  * 用于 API 响应，表示实体的基本摘要信息。
  */

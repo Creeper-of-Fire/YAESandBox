@@ -1,5 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reflection;
+using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Module;
 
 namespace YAESandBox.Workflow.Utility;
@@ -34,7 +35,7 @@ internal static class ModuleConfigTypeResolver
         foreach (var type in allTypesInAssembly)
         {
             // 确保类型是非抽象的类，并且实现了 IModuleConfig
-            if (type is not { IsClass: true, IsAbstract: false} || !InterfaceType.IsAssignableFrom(type))
+            if (type is not { IsClass: true, IsAbstract: false } || !InterfaceType.IsAssignableFrom(type))
                 continue;
             // 约定：ModuleType 的值等于类名。
             // 这个值应该与 AbstractModuleConfig 构造函数中传入的 nameof(ConcreteType) 一致。

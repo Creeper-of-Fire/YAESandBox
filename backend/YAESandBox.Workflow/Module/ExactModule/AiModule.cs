@@ -1,5 +1,6 @@
 ﻿using FluentResults;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
 

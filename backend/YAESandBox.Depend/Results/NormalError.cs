@@ -86,7 +86,7 @@ public partial record NormalError(string Message, ServerErrorType Code) : LazyIn
     /// <param name="message">错误描述信息，不能为空。</param>
     /// <returns>一个新的 NormalError 实例，其 Code 为 <see cref="ServerErrorType.InternalServerError"/></returns>
     public static Result Internal(string message) => new NormalError(message, ServerErrorType.InternalServerError);
-    
+
     /// <summary>
     /// 创建一个表示“服务器内部错误”的 NormalError 实例。
     /// </summary>

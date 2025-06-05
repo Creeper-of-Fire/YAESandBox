@@ -2,38 +2,43 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { BlockDetailDto } from '../models/BlockDetailDto';
-import type { BlockTopologyNodeDto } from '../models/BlockTopologyNodeDto';
-import type { UpdateBlockDetailsDto } from '../models/UpdateBlockDetailsDto';
-import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
-export class BlocksService {
+import type {BlockDetailDto} from '../models/BlockDetailDto';
+import type {BlockTopologyNodeDto} from '../models/BlockTopologyNodeDto';
+import type {UpdateBlockDetailsDto} from '../models/UpdateBlockDetailsDto';
+import type {CancelablePromise} from '../core/CancelablePromise';
+import {OpenAPI} from '../core/OpenAPI';
+import {request as __request} from '../core/request';
+
+export class BlocksService
+{
     /**
      * 获取所有 Block 的摘要信息字典。
      * 返回一个以 Block ID 为键，Block 详细信息 DTO 为值的只读字典。
      * @returns BlockDetailDto 成功返回 Block 字典。
      * @throws ApiError
      */
-    public static getApiBlocks(): CancelablePromise<Record<string, BlockDetailDto>> {
+    public static getApiBlocks(): CancelablePromise<Record<string, BlockDetailDto>>
+    {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Blocks',
         });
     }
+
     /**
      * 获取指定 ID 的单个 Block 的详细信息（不包含 WorldState）。
      * @returns BlockDetailDto 成功返回 Block 详细信息。
      * @throws ApiError
      */
     public static getApiBlocks1({
-        blockId,
-    }: {
+                                    blockId,
+                                }: {
         /**
          * 要查询的 Block 的唯一 ID。
          */
         blockId: string,
-    }): CancelablePromise<BlockDetailDto> {
+    }): CancelablePromise<BlockDetailDto>
+    {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Blocks/{blockId}',
@@ -45,6 +50,7 @@ export class BlocksService {
             },
         });
     }
+
     /**
      * 部分更新指定 Block 的内容和/或元数据。
      * 此操作仅在 Block 处于 Idle 状态时被允许。
@@ -52,9 +58,9 @@ export class BlocksService {
      * @throws ApiError
      */
     public static patchApiBlocks({
-        blockId,
-        requestBody,
-    }: {
+                                     blockId,
+                                     requestBody,
+                                 }: {
         /**
          * 要更新的 Block 的 ID。
          */
@@ -64,7 +70,8 @@ export class BlocksService {
          * 省略的字段或值为 null 的字段将不会被修改（MetadataUpdates 中值为 null 表示移除该键）。
          */
         requestBody?: UpdateBlockDetailsDto,
-    }): CancelablePromise<void> {
+    }): CancelablePromise<void>
+    {
         return __request(OpenAPI, {
             method: 'PATCH',
             url: '/api/Blocks/{blockId}',
@@ -81,6 +88,7 @@ export class BlocksService {
             },
         });
     }
+
     /**
      * 获取扁平化的 Block 拓扑结构信息。
      * 返回一个包含所有 Block (或指定子树下所有 Block) 的拓扑信息的列表，
@@ -91,15 +99,16 @@ export class BlocksService {
      * @throws ApiError
      */
     public static getApiBlocksTopology({
-        blockId,
-    }: {
+                                           blockId,
+                                       }: {
         /**
          * （可选）目标根节点的 ID。
          * 如果提供，则返回以此节点为根的子树（包含自身）的扁平拓扑信息。
          * 如果为 null 或空，则返回从最高根节点 (__WORLD__) 开始的整个应用的完整扁平拓扑结构。
          */
         blockId?: string,
-    }): CancelablePromise<Array<BlockTopologyNodeDto>> {
+    }): CancelablePromise<Array<BlockTopologyNodeDto>>
+    {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/Blocks/topology',

@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Schema.Attributes;
-using YAESandBox.Workflow.Module;
+using YAESandBox.Workflow.Step;
 
-namespace YAESandBox.Workflow.Step;
+namespace YAESandBox.Workflow.Config;
 
 public record StepProcessorConfig
 {

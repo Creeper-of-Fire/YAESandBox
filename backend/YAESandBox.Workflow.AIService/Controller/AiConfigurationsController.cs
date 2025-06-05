@@ -8,6 +8,11 @@ using YAESandBox.Workflow.AIService.ConfigManagement;
 
 namespace YAESandBox.Workflow.AIService.Controller;
 
+/// <summary>
+/// 管理 AI 配置集（AiConfigurationSet）的 CRUD 操作和相关功能（如配置测试）。
+/// </summary>
+/// <param name="configurationManager">AI 配置管理器服务，用于处理配置的持久化。</param>
+/// <param name="httpClientFactory">用于创建 HttpClient 实例，以进行 AI 配置测试。</param>
 [ApiExplorerSettings(GroupName = AiConfigGroupName)]
 [ApiController]
 [Route("api/ai-configurations")]
@@ -25,6 +30,8 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// 获取所有已保存的 AI 配置集的完整列表。
     /// </summary>
     /// <returns>包含所有 AI 配置集的字典，键为 UUID，值为配置集对象。</returns>
+    /// <response code="200">成功获取所有 AI 配置集的列表。</response>
+    /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [ProducesResponseType(typeof(IReadOnlyDictionary<string, AiConfigurationSet>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -38,10 +45,13 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// </summary>
     /// <param name="uuid">配置集的唯一标识符。</param>
     /// <returns>找到的 AI 配置集对象。</returns>
+    /// <response code="200">成功获取指定的 AI 配置集。</response>
+    /// <response code="400">请求的 UUID 无效（例如，为空）。</response>
+    /// <response code="404">未找到指定 UUID 的配置集。</response>
     [HttpGet("{uuid}")]
     [ProducesResponseType(typeof(AiConfigurationSet), StatusCodes.Status200OK)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<AiConfigurationSet>> GetConfigurationByUuid(string uuid)
     {
         if (string.IsNullOrWhiteSpace(uuid))
@@ -55,18 +65,15 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// </summary>
     /// <param name="configs">要添加的 AI 配置集对象。</param>
     /// <returns>新创建配置集的 UUID。</returns>
+    /// <response code="201">配置集已成功创建，并返回新创建的 UUID。</response>
+    /// <response code="400">请求体无效或模型验证失败。</response>
+    /// <response code="500">添加配置集时发生内部服务器错误。</response>
     [HttpPost]
     [ProducesResponseType(typeof(string), StatusCodes.Status201Created)] // 返回新资源的 UUID
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<string>> AddConfiguration([FromBody] AiConfigurationSet configs)
     {
-        // 模型绑定器和 JSON 反序列化器会根据请求体中的 "ModuleType" 字段
-        // 自动将 JSON 反序列化为正确的 AbstractAiProcessorConfig 子类型 (如 DoubaoAiProcessorConfig)。
-
-        if (!this.ModelState.IsValid) // 检查数据注解验证 (如 [Required] 在 AbstractAiProcessorConfig 或其子类上)
-            return this.BadRequest(this.ModelState);
-
         var result = await this.ConfigurationManager.AddConfigurationAsync(configs);
         if (result.TryGetValue(out string? value))
         {
@@ -82,6 +89,10 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// <param name="uuid">要更新的配置集的唯一标识符。</param>
     /// <param name="config">包含更新信息的 AI 配置集对象。</param>
     /// <returns>无内容响应表示成功。</returns>
+    /// <response code="204">配置集已成功更新。</response>
+    /// <response code="400">请求无效，例如 UUID 为空。</response>
+    /// <response code="404">未找到要更新的配置集。</response>
+    /// <response code="500">更新配置时发生内部服务器错误。</response>
     [HttpPut("{uuid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)] // 成功更新，无内容返回
     [ProducesResponseType(StatusCodes.Status404NotFound)]
@@ -109,6 +120,9 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// </summary>
     /// <param name="uuid">要删除的配置集的唯一标识符。</param>
     /// <returns>无内容响应表示成功（即使配置原先不存在，删除也是幂等的）。</returns>
+    /// <response code="204">配置集已成功删除（或原先就不存在）。</response>
+    /// <response code="400">请求的 UUID 无效。</response>
+    /// <response code="500">删除配置时发生内部服务器错误。</response>
     [HttpDelete("{uuid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -126,6 +140,8 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// </summary>
     /// <param name="testAiDto">配置和测试文本。</param>
     /// <returns></returns>
+    /// <response code="200">AI 配置测试成功，返回 AI 生成的完整文本。</response>
+    /// <response code="500">测试期间发生错误，例如 AI 服务调用失败。</response>
     [HttpPost("ai-config-test/{moduleType}")]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
@@ -145,6 +161,10 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// </summary>
     /// <param name="moduleType">AI 模块的类型名称 (例如 "DoubaoAiProcessorConfig")。</param>
     /// <returns>初始数据。</returns>
+    /// <response code="200">成功获取指定 AI 模块类型的默认数据。</response>
+    /// <response code="400">请求的模块类型名称无效。</response>
+    /// <response code="404">未找到指定名称的 AI 模块类型。</response>
+    /// <response code="500">获取默认数据时发生内部服务器错误。</response>
     [HttpGet("default-data/{moduleType}")]
     [ProducesResponseType(typeof(AbstractAiProcessorConfig), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]

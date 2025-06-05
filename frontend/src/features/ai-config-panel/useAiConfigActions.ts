@@ -74,7 +74,7 @@ export function useAiConfigActions(params: UseAiConfigActionsParams)
 
         // 如果 selectedAiModuleType.value 和 formDataCopy.value 有效，更新配置集中的数据
         // 这部分逻辑保持不变
-        
+
         const currentConfigSetClone = cloneDeep(currentConfigSet.value);
         if (selectedAiModuleType.value && currentConfigSetClone && formDataCopy.value !== null)
         {

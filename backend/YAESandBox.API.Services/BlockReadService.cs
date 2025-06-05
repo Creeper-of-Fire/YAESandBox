@@ -29,7 +29,8 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
     ///<inheritdoc/>
     public Task<List<BlockTopologyNodeDto>> GetBlockTopologyListAsync(string? blockId)
     {
-        var result = GenerateTopologyList(this.BlockManager.GetNodeOnlyBlocks(), blockId ?? Core.Block.BlockManager.BlockManager.WorldRootId);
+        var result = GenerateTopologyList(this.BlockManager.GetNodeOnlyBlocks(),
+            blockId ?? Core.Block.BlockManager.BlockManager.WorldRootId);
         foreach (var e in result.Errors)
             Log.Error(e.Message);
         if (result.TryGetValue(out var dtos))

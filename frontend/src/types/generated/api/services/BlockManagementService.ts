@@ -2,20 +2,22 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
-export class BlockManagementService {
+import type {CancelablePromise} from '../core/CancelablePromise';
+import {OpenAPI} from '../core/OpenAPI';
+import {request as __request} from '../core/request';
+
+export class BlockManagementService
+{
     /**
      * 手动删除一个指定的 Block。
      * @returns any 操作已成功执行。
      * @throws ApiError
      */
     public static deleteApiManageBlocks({
-        blockId,
-        recursive = true,
-        force = false,
-    }: {
+                                            blockId,
+                                            recursive = true,
+                                            force = false,
+                                        }: {
         /**
          * 要删除的 Block ID。
          */
@@ -28,7 +30,8 @@ export class BlockManagementService {
          * 是否强制删除，无视状态。
          */
         force?: boolean,
-    }): CancelablePromise<any> {
+    }): CancelablePromise<any>
+    {
         return __request(OpenAPI, {
             method: 'DELETE',
             url: '/api/manage/blocks/{blockId}',

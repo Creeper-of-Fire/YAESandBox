@@ -27,16 +27,19 @@ import {lightTheme} from "naive-ui";
 
 const connectionStore = useConnectionStore();
 
-onMounted(async () => {
+onMounted(async () =>
+{
   console.log("App [onMounted]: 应用启动，初始化连接...");
   await connectionStore.connectSignalR();
-  if (connectionStore.connectionError) {
+  if (connectionStore.connectionError)
+  {
     console.error("App [onMounted]: SignalR 初始连接失败。", connectionStore.connectionError);
     // 这里可以触发一个全局错误状态
   }
 });
 
-onUnmounted(() => {
+onUnmounted(() =>
+{
   console.log("App [onUnmounted]: 应用关闭。");
   // connectionStore.disconnectSignalR(); // 如果有断开方法
 });

@@ -2,10 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { CancelablePromise } from '../core/CancelablePromise';
-import { OpenAPI } from '../core/OpenAPI';
-import { request as __request } from '../core/request';
-export class PersistenceService {
+import type {CancelablePromise} from '../core/CancelablePromise';
+import {OpenAPI} from '../core/OpenAPI';
+import {request as __request} from '../core/request';
+
+export class PersistenceService
+{
     /**
      * 保存当前 YAESandBox 的完整状态（包括所有 Block、WorldState、GameState）到一个 JSON 文件。
      * 客户端可以（可选地）在请求体中提供需要一同保存的“盲存”数据。
@@ -13,13 +15,14 @@ export class PersistenceService {
      * @throws ApiError
      */
     public static postApiPersistenceSave({
-        requestBody,
-    }: {
+                                             requestBody,
+                                         }: {
         /**
          * （可选）客户端提供的任意 JSON 格式的盲存数据，将原样保存在存档文件中。
          */
         requestBody?: any,
-    }): CancelablePromise<Blob> {
+    }): CancelablePromise<Blob>
+    {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/Persistence/save',
@@ -30,6 +33,7 @@ export class PersistenceService {
             },
         });
     }
+
     /**
      * 从上传的 JSON 存档文件加载 YAESandBox 的状态。
      * 这将完全替换当前内存中的所有 Block、WorldState 和 GameState。
@@ -38,15 +42,16 @@ export class PersistenceService {
      * @throws ApiError
      */
     public static postApiPersistenceLoad({
-        formData,
-    }: {
+                                             formData,
+                                         }: {
         formData?: {
             /**
              * 包含 YAESandBox 存档的 JSON 文件。
              */
             archiveFile?: Blob;
         },
-    }): CancelablePromise<any> {
+    }): CancelablePromise<any>
+    {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/Persistence/load',

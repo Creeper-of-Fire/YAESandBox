@@ -47,8 +47,20 @@ public interface IGeneralJsonStorage : IRootPathProvider
     /// <returns>类型为 T? 的对象，可能为default，如果为空则表示对应的文件没有内容，需要自行处理空值；或表示失败的 Result。</returns>
     Task<Result<T?>> LoadAllAsync<T>(string fileName, params string[] subDirectories);
 
+    /// <summary>
+    /// 列出所有可用的文件的名字。
+    /// </summary>
+    /// <param name="listOption"><see cref="ListFileOption"/>，搜索选项</param>
+    /// <param name="subDirectories">需要搜索的子目录。</param>
+    /// <returns></returns>
     Task<Result<IEnumerable<string>>> ListFileNamesAsync(ListFileOption? listOption = null, params string[] subDirectories);
 
+    /// <summary>
+    /// 删除指定的文件。
+    /// </summary>
+    /// <param name="fileName">文件名。</param>
+    /// <param name="subDirectories">文件所在的子目录。</param>
+    /// <returns></returns>
     Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories);
 
     public record ListFileOption

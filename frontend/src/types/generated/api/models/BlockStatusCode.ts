@@ -1,11 +1,13 @@
 /* generated using openapi-typescript-codegen -- do not edit */
 /* istanbul ignore file */
 /* tslint:disable */
+
 /* eslint-disable */
 /**
  * 表示 Block 的不同状态。
  */
-export enum BlockStatusCode {
+export enum BlockStatusCode
+{
     LOADING = 'Loading',
     IDLE = 'Idle',
     RESOLVING_CONFLICT = 'ResolvingConflict',

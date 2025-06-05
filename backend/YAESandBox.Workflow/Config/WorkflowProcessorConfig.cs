@@ -1,6 +1,4 @@
-﻿using YAESandBox.Workflow.Step;
-
-namespace YAESandBox.Workflow;
+﻿namespace YAESandBox.Workflow.Config;
 
 public record WorkflowProcessorConfig
 {

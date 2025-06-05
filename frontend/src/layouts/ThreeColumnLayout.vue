@@ -114,7 +114,8 @@ import {useMediaQuery} from '@vueuse/core';
 // Vue 3.3+ defineSlots 宏
 // 这个宏是编译时宏，不需要从 'vue' 导入
 // 它提供了插槽的类型信息
-interface MainLayoutSlots {
+interface MainLayoutSlots
+{
   /**
    * 顶部工具栏 (始终存在)。
    * Toolbar 可以作为 prop 传入或固定在此。
@@ -156,8 +157,10 @@ const gridCols = computed(() => (isMobile.value ? 1 : 22));
 // 注意：即使在移动端为侧边栏分配 span=1，它们也会因为 v-show="false" 而不显示。
 // Naive UI 的 n-gi 在其父 n-grid 的 cols=1 时，span 大于1会被视为1。
 const leftPanelGridSpan = computed(() => (isMobile.value ? 1 : 6));
-const mainContentGridSpan = computed(() => {
-  if (isMobile.value) {
+const mainContentGridSpan = computed(() =>
+{
+  if (isMobile.value)
+  {
     return 1; // 移动端，主内容区占满整个单列
   }
   // 桌面端，主内容区的 span 可以根据侧边栏是否显示来动态调整，以填满空间

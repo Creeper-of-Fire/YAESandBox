@@ -27,7 +27,6 @@ public class NormalAttributeProcessor<T>(Action<SchemaProcessorContext, T> actio
 })
     where T : Attribute
 {
-
     /// <inheritdoc cref="NormalAttributeProcessor{T}"/>
     /// <param name="extensionKey">新建的键名</param>
     /// <param name="setExtensionValue">通过Attribute的参数配置<see cref="JsonSchema.ExtensionData"/>中对应<paramref name="extensionKey"/>的值</param>

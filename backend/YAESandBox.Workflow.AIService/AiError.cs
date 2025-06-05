@@ -13,6 +13,6 @@ public record AiError(string Message) : LazyInitError(Message)
     /// <param name="message"></param>
     /// <returns></returns>
     public static Result Error(string message) => new AiError(message);
-    
+
     // public int StatusCodes => 500;
 }

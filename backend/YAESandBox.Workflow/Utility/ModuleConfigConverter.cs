@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Module;
 
 namespace YAESandBox.Workflow.Utility;
@@ -53,6 +54,7 @@ internal class ModuleConfigConverter : JsonConverter<IModuleConfig>
                     // ModuleType 属性的值不是字符串类型。
                     throw new JsonException($"反序列化 IModuleConfig 失败：属性 '{property.Name}' 的值必须是字符串，但实际类型为 {property.Value.ValueKind}。");
                 }
+
                 moduleTypePropertyFound = true;
                 actualPropertyNameFound = property.Name; // 记录实际找到的属性名
                 break; // 找到后即可退出循环
@@ -78,7 +80,8 @@ internal class ModuleConfigConverter : JsonConverter<IModuleConfig>
         if (concreteType == null)
         {
             // 未找到与 ModuleType 值对应的 .NET 实现类型。
-            throw new JsonException($"反序列化 IModuleConfig 失败：未找到与模块类型 '{moduleTypeNameFromInput}' (来自属性 '{actualPropertyNameFound}') 对应的 .NET 实现类型。请确保存在一个名为 '{moduleTypeNameFromInput}' (忽略大小写) 且实现了 IModuleConfig 接口的公共非抽象类。");
+            throw new JsonException(
+                $"反序列化 IModuleConfig 失败：未找到与模块类型 '{moduleTypeNameFromInput}' (来自属性 '{actualPropertyNameFound}') 对应的 .NET 实现类型。请确保存在一个名为 '{moduleTypeNameFromInput}' (忽略大小写) 且实现了 IModuleConfig 接口的公共非抽象类。");
         }
 
         // 使用 JsonElement 的 Deserialize 方法将 JSON 对象反序列化为找到的具体类型。
@@ -87,11 +90,11 @@ internal class ModuleConfigConverter : JsonConverter<IModuleConfig>
 
         if (moduleConfig == null && jsonObject.EnumerateObject().Any()) // 如果反序列化结果为 null 但 JSON 对象非空，可能类型不匹配或构造函数问题
         {
-             // 这种情况理论上不应发生，因为 concreteType 是从 ModuleConfigTypeResolver 获取的，且 Deserialize 应该能处理。
-             // 但作为健壮性检查，如果发生，则指示更深层次的问题。
+            // 这种情况理论上不应发生，因为 concreteType 是从 ModuleConfigTypeResolver 获取的，且 Deserialize 应该能处理。
+            // 但作为健壮性检查，如果发生，则指示更深层次的问题。
             throw new JsonException($"反序列化 IModuleConfig 失败：成功将 JSON 元素反序列化为类型 '{concreteType.FullName}' 后得到 null。请检查该类型的构造函数和属性设置。");
         }
-        
+
         return moduleConfig;
     }
 

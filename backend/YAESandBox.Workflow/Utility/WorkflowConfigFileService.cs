@@ -1,6 +1,7 @@
 ﻿using FluentResults;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
+using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Module;
 using YAESandBox.Workflow.Step;
 using static YAESandBox.Depend.Storage.ScopedStorageFactory;
@@ -19,7 +20,7 @@ namespace YAESandBox.Workflow.Utility;
 /// 不论什么情况，后端都不会对ID进行任何的修改，那是前端的工作。
 /// </summary>
 /// <param name="generalJsonStorage"></param>
-public class WorkflowConfigService(IGeneralJsonStorage generalJsonStorage)
+public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
 {
     private static string MakeFileName(string id) => $"{id}.json";
     private static string GetIdFromFileName(string fileName) => Path.GetFileNameWithoutExtension(fileName);
@@ -64,7 +65,7 @@ public class WorkflowConfigService(IGeneralJsonStorage generalJsonStorage)
         await FindConfig<IModuleConfig>(this.ForModule, moduleId);
 
     /// <summary>
-    /// 只寻找所有的全局工作流配置，不查找内联的私有部分（虽然对于工作流没有这部分，但是出于整齐的考虑还是这么写了）
+    /// 只寻找所有的全局工作流配置，不查找内联的私有部分
     /// </summary>
     /// <returns></returns>
     public async Task<Result<IEnumerable<WorkflowProcessorConfig>>> FindAllWorkflowConfig() =>
@@ -110,6 +111,30 @@ public class WorkflowConfigService(IGeneralJsonStorage generalJsonStorage)
     /// <returns></returns>
     public async Task<Result> SaveModuleConfig(string moduleId, IModuleConfig moduleConfig) =>
         await this.ForModule.SaveAllAsync(moduleConfig, MakeFileName(moduleId));
+
+    /// <summary>
+    /// 删除全局的工作流配置
+    /// </summary>
+    /// <param name="workflowId"></param>
+    /// <returns></returns>
+    public async Task<Result> DeleteWorkflowConfig(string workflowId) =>
+        await this.ForWorkflow.DeleteFileAsync(MakeFileName(workflowId));
+
+    /// <summary>
+    /// 删除全局的步骤配置
+    /// </summary>
+    /// <param name="stepId"></param>
+    /// <returns></returns>
+    public async Task<Result> DeleteStepConfig(string stepId) =>
+        await this.ForStep.DeleteFileAsync(MakeFileName(stepId));
+
+    /// <summary>
+    /// 删除全局的模块配置
+    /// </summary>
+    /// <param name="moduleId"></param>
+    /// <returns></returns>
+    public async Task<Result> DeleteModuleConfig(string moduleId) =>
+        await this.ForModule.DeleteFileAsync(MakeFileName(moduleId));
 
     private static async Task<Result<T>> FindConfig<T>(ScopedJsonStorage scopedJsonStorage, string configId)
     {
