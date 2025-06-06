@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Utility;
+using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Config;
 
@@ -17,7 +18,6 @@ public abstract record AbstractModuleConfig
     /// </summary>
     [Required]
     [HiddenInSchema(true)]
-    [JsonPropertyName("configId")]
     public abstract string ConfigId { get; init; }
 
     /// <summary>
@@ -25,10 +25,23 @@ public abstract record AbstractModuleConfig
     /// </summary>
     [Required]
     [HiddenInSchema(true)]
-    [JsonPropertyName("moduleType")]
     public abstract string ModuleType { get; init; }
 
-    internal abstract IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor();
+    /// <summary>
+    /// 输入变量名
+    /// </summary>
+    [Required]
+    [HiddenInSchema(true)]
+    public abstract List<string> Consumes { get; init; }
+
+    /// <summary>
+    /// 输出变量名
+    /// </summary>
+    [Required]
+    [HiddenInSchema(true)]
+    public abstract List<string> Produces { get; init; }
+
+    internal abstract IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor(WorkflowRuntimeService workflowRuntimeService);
 }
 
 internal abstract record AbstractModuleConfig<T> : AbstractModuleConfig
@@ -40,8 +53,14 @@ internal abstract record AbstractModuleConfig<T> : AbstractModuleConfig
     /// <inheritdoc cref="AbstractModuleConfig.ConfigId"/>
     public override string ModuleType { get; init; } = nameof(T);
 
-    internal override IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor() =>
-        this.ToCurrentModule();
+    /// <inheritdoc />
+    public override List<string> Consumes { get; init; } = [];
 
-    protected abstract T ToCurrentModule();
+    /// <inheritdoc />
+    public override List<string> Produces { get; init; } = [];
+
+    internal override IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor(WorkflowRuntimeService workflowRuntimeService) =>
+        this.ToCurrentModule(workflowRuntimeService);
+
+    protected abstract T ToCurrentModule(WorkflowRuntimeService workflowRuntimeService);
 }

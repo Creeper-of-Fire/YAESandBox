@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend;
+using YAESandBox.Workflow.Abstractions;
 
 namespace YAESandBox.Core.DTOs.WebSocket;
 // --- 服务器推送到客户端的消息 DTOs ---
@@ -126,42 +127,4 @@ public record BlockUpdateSignalDto
 
     /// <summary>（可选）如果变化是由原子操作引起的，这里可以包含受影响的实体的 ID 列表，以便前端进行更精细的更新。如果为 null 或空，表示未知具体实体。</summary>
     public List<string>? ChangedEntityIds { get; init; }
-}
-
-/// <summary>
-/// 指示 <see cref="DisplayUpdateDto"/> 消息在流式传输过程中的状态。
-/// </summary>
-public enum StreamStatus
-{
-    /// <summary>
-    /// 工作流仍在处理中，后续可能还会有 <see cref="DisplayUpdateDto"/> 消息。
-    /// </summary>
-    Streaming,
-
-    /// <summary>
-    /// 工作流已成功完成，这是此 RequestId 的最后一条消息（对于该 TargetElementId，如果是微工作流）。
-    /// </summary>
-    Complete,
-
-    /// <summary>
-    /// 工作流执行过程中发生错误而中止。这通常是此 RequestId 的最后一条消息。
-    /// <see cref="DisplayUpdateDto.Content"/> 可能包含错误信息。
-    /// </summary>
-    Error
-}
-
-/// <summary>
-/// 指示 <see cref="DisplayUpdateDto.Content"/> 的更新方式。
-/// </summary>
-public enum UpdateMode
-{
-    /// <summary>
-    /// <see cref="DisplayUpdateDto.Content"/> 包含目标区域的完整内容，应替换现有内容。
-    /// </summary>
-    FullSnapshot,
-
-    /// <summary>
-    /// <see cref="DisplayUpdateDto.Content"/> 包含对现有内容的增量更改。
-    /// </summary>
-    Incremental
 }

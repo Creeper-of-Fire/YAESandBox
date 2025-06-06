@@ -75,11 +75,18 @@ public class WorkflowRunner
 
         // 2. 定义回调函数
         // 在控制台环境中，我们将显示更新请求直接打印到控制台
+        // void DisplayUpdateCallback(DisplayUpdateRequestPayload payload)
+        // {
+        //     Console.ForegroundColor = ConsoleColor.Cyan;
+        //     Console.WriteLine($"[显示更新请求] 模式: {payload.UpdateMode}");
+        //     Console.WriteLine($"[显示更新请求] 内容: {payload.Content}");
+        //     Console.ResetColor();
+        // }
+        
         void DisplayUpdateCallback(DisplayUpdateRequestPayload payload)
         {
-            Console.ForegroundColor = ConsoleColor.Cyan;
-            Console.WriteLine($"[显示更新请求] 模式: {payload.UpdateMode}");
-            Console.WriteLine($"[显示更新请求] 内容: {payload.Content}");
+            Console.ForegroundColor = ConsoleColor.DarkMagenta;
+            Console.Write(payload.Content);
             Console.ResetColor();
         }
 

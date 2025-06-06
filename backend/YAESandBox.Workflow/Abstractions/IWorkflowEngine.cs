@@ -1,7 +1,6 @@
 ﻿// --- File: YAESandBox.Workflow/Abstractions/IWorkflowEngine.cs ---
 
 using YAESandBox.Core.Action;
-using YAESandBox.Core.DTOs.WebSocket;
 
 namespace YAESandBox.Workflow.Abstractions;
 
@@ -31,3 +30,41 @@ public record DisplayUpdateRequestPayload(
     string Content,
     UpdateMode UpdateMode = UpdateMode.FullSnapshot
 );
+
+
+/// <summary>
+/// 指示消息在流式传输过程中的状态。
+/// </summary>
+public enum StreamStatus
+{
+    /// <summary>
+    /// 工作流仍在处理中，后续可能还会有消息。
+    /// </summary>
+    Streaming,
+
+    /// <summary>
+    /// 工作流已成功完成，这是此 RequestId 的最后一条消息（对于该 TargetElementId，如果是微工作流）。
+    /// </summary>
+    Complete,
+
+    /// <summary>
+    /// 工作流执行过程中发生错误而中止。这通常是此 RequestId 的最后一条消息。
+    /// </summary>
+    Error
+}
+
+/// <summary>
+/// 指示消息的更新方式。
+/// </summary>
+public enum UpdateMode
+{
+    /// <summary>
+    /// 消息包含目标区域的完整内容，应替换现有内容。
+    /// </summary>
+    FullSnapshot,
+
+    /// <summary>
+    /// 消息包含对现有内容的增量更改。
+    /// </summary>
+    Incremental
+}

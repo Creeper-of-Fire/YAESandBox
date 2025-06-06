@@ -6,6 +6,7 @@ using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Module.ExactModule.PromptGenerationModuleProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
+using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Module.ExactModule;
 
@@ -13,11 +14,13 @@ namespace YAESandBox.Workflow.Module.ExactModule;
 /// 提示词生成模块处理器。
 /// 根据配置的模板和上下文数据，生成一个RoledPromptDto。
 /// </summary>
+/// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
 /// <param name="config">模块配置。</param>
 internal partial class PromptGenerationModuleProcessor(
+    WorkflowRuntimeService workflowRuntimeService,
     PromptGenerationModuleConfig config)
-    : IWithDebugDto<PromptGenerationModuleProcessorDebugDto>
-{
+    : IWithDebugDto<PromptGenerationModuleProcessorDebugDto>, INormalModule
+{private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
     private PromptGenerationModuleConfig Config { get; init; } = config;
 
     /// <inheritdoc />
@@ -32,8 +35,9 @@ internal partial class PromptGenerationModuleProcessor(
     /// 启动步骤流程
     /// </summary>
     /// <param name="stepProcessorContent">步骤执行的上下文内容。</param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent)
+    public Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent, CancellationToken cancellationToken = default)
     {
         string substitutedContent = this.SubstitutePlaceholdersAsync(this.Config.Template, stepProcessorContent);
         this.DebugDto.FinalPromptContent = substitutedContent;
@@ -73,10 +77,10 @@ internal partial class PromptGenerationModuleProcessor(
             string? value = null;
             bool found = false;
 
-            // 尝试从 StepInput (dynamic, 假设其内部是 IDictionary<string, object>)
+            // 尝试从 StepVariable (dynamic, 假设其内部是 IDictionary<string, object>)
             try
             {
-                if (stepContent.StepInput is IDictionary<string, object> stepInputDict &&
+                if (stepContent.StepVariable is IDictionary<string, object> stepInputDict &&
                     stepInputDict.TryGetValue(placeholderName, out object? stepValObj))
                 {
                     value = stepValObj.ToString();
@@ -86,7 +90,7 @@ internal partial class PromptGenerationModuleProcessor(
             catch (Exception ex)
             {
                 // 记录尝试从StepInput获取时的潜在错误到调试信息
-                this.DebugDto.AddResolutionAttemptLog($"尝试从 StepInput 获取 '{placeholderName}' 失败: {ex.Message}");
+                this.DebugDto.AddResolutionAttemptLog($"尝试从 StepVariable 获取 '{placeholderName}' 失败: {ex.Message}");
             }
 
 
@@ -202,5 +206,6 @@ internal record PromptGenerationModuleConfig : AbstractModuleConfig<PromptGenera
 
 
     /// <inheritdoc />
-    protected override PromptGenerationModuleProcessor ToCurrentModule() => new(this);
+    protected override PromptGenerationModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
+        new(workflowRuntimeService, this);
 }

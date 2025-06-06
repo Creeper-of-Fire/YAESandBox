@@ -3,6 +3,7 @@ using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
+using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Module.ExactModule;
 
@@ -10,7 +11,8 @@ namespace YAESandBox.Workflow.Module.ExactModule;
 /// Ai调用模块，Ai的配置保存在外部的Step，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiModuleConfig"/>里面。
 /// </summary>
 /// <param name="onChunkReceivedScript"></param>
-internal class AiModuleProcessor(Action<string> onChunkReceivedScript) : IWithDebugDto<AiModuleProcessorDebugDto>
+internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
+    : IWithDebugDto<AiModuleProcessorDebugDto>
 {
     /// <inheritdoc />
     public AiModuleProcessorDebugDto DebugDto { get; } = new();
@@ -77,5 +79,6 @@ file static class TempMockOnChunkReceivedScript
 
 internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
 {
-    protected override AiModuleProcessor ToCurrentModule() => new(TempMockOnChunkReceivedScript.OnChunkReceivedScript);
+    protected override AiModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
+        new(s => workflowRuntimeService.RequestDisplayUpdateCallback(s));
 }

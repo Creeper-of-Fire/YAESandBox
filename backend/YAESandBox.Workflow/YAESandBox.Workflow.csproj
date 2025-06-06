@@ -9,9 +9,6 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.Core.DTOs\YAESandBox.Core.DTOs.csproj" />
-        <ProjectReference Include="..\YAESandBox.Core.Services\YAESandBox.Core.Services.csproj" />
-        <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj"/>
         <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

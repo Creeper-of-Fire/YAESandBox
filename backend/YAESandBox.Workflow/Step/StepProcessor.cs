@@ -1,8 +1,10 @@
 ﻿using FluentResults;
+using YAESandBox.Core.Action;
 using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Module;
 using YAESandBox.Workflow.Module.ExactModule;
 using static YAESandBox.Workflow.WorkflowProcessor;
 
@@ -14,56 +16,107 @@ namespace YAESandBox.Workflow.Step;
 /// 步骤配置的运行时
 /// </summary>
 internal class StepProcessor(
-    WorkflowProcessorContent workflowContent,
-    StepProcessorConfig config,
-    List<IWithDebugDto<IModuleProcessorDebugDto>> modules,
-    Dictionary<string, object> stepInput)
+    WorkflowRuntimeService workflowRuntimeService,
+    StepProcessorConfig config)
     : IWithDebugDto<IStepProcessorDebugDto>
 {
-    private StepProcessorContent StepContent { get; } = new(stepInput);
+    private StepProcessorContent StepContent { get; } = new();
 
-    private List<IWithDebugDto<IModuleProcessorDebugDto>> Modules { get; } = modules;
+    private IEnumerable<string> OriginConsumer { get; } = config.Modules.SelectMany(c => c.Consumes).Distinct().ToList();
+    private IReadOnlyList<string> OriginProducer { get; } = config.Modules.SelectMany(c => c.Produces).Distinct().ToList();
+
+    private List<IWithDebugDto<IModuleProcessorDebugDto>> Modules { get; } =
+        config.Modules.ConvertAll(module => module.ToModuleProcessor(workflowRuntimeService));
+
     private StepAiConfig? StepAiConfig { get; } = config.StepAiConfig;
-    private WorkflowProcessorContent WorkflowContent { get; } = workflowContent;
+    private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
 
     /// <summary>
     /// 启动步骤流程
     /// </summary>
+    /// <param name="workflowRuntimeContext"></param>
+    /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public async Task<Result<Dictionary<string, object>>> ExecuteStepsAsync(CancellationToken cancellationToken = default)
+    public async Task<Result<Dictionary<string, object>>> ExecuteStepsAsync(
+        WorkflowRuntimeContext workflowRuntimeContext, CancellationToken cancellationToken = default)
     {
-        Dictionary<string, object> stepOutput = [];
-        // TODO 之后把这里的switch改成直接调用方法，更为优雅。 AIModule由于和Step高度耦合，所以考虑特殊处理，其他的则实现统一的接口
+        foreach (string consumerName in this.OriginConsumer)
+        {
+            if (!workflowRuntimeContext.GlobalVariables.TryGetValue(consumerName, out object? value))
+            {
+                return NormalError.Conflict($"执行步骤 '{config.InstanceId}' 失败：找不到必需的输入变量 '{consumerName}'。");
+            }
+
+            this.StepContent.StepVariable[consumerName] = value;
+        }
+
+        foreach ((string key, string value) in workflowRuntimeContext.TriggerParams)
+        {
+            this.StepContent.StepVariable[key] = value;
+        }
+
+        this.StepContent.StepVariable[nameof(WorkflowRuntimeContext.FinalRawText)] = workflowRuntimeContext.FinalRawText;
+        this.StepContent.StepVariable[nameof(WorkflowRuntimeContext.GeneratedOperations)] = workflowRuntimeContext.GeneratedOperations;
+
         foreach (var module in this.Modules)
         {
             switch (module)
             {
                 case AiModuleProcessor aiModule:
-                    if (this.StepAiConfig?.SelectedAiModuleType == null || this.StepAiConfig.AiProcessorConfigUuid == null)
-                        return NormalError.Conflict($"步骤 {this} 没有配置AI信息，所以无法执行AI模块。");
-                    var aiProcessor = this.WorkflowContent.MasterAiService.CreateAiProcessor(
-                        this.StepAiConfig.AiProcessorConfigUuid,
-                        this.StepAiConfig.SelectedAiModuleType);
-                    if (aiProcessor == null)
-                        return NormalError.Conflict(
-                            $"未找到 AI 配置 {this.StepAiConfig.AiProcessorConfigUuid}配置下的类型：{this.StepAiConfig.SelectedAiModuleType}");
-                    var resultAi = await aiModule.ExecuteAsync(aiProcessor, this.StepContent.Prompts, this.StepAiConfig.IsStream,
-                        cancellationToken);
+                    var resultAi = await this.PrepareAndExecuteAiModule(aiModule, cancellationToken);
                     if (!resultAi.TryGetValue(out string? value))
                         return resultAi.ToResult();
                     this.StepContent.FullAiReturn = value;
                     break;
-                case PromptGenerationModuleProcessor promptGenerationModule:
-                    var resultPromptGeneration = await promptGenerationModule.ExecuteAsync(this.StepContent);
-                    break;
-                case TemporaryAiOutputToRawTextModuleProcessor temporaryAiOutputToRawTextModule:
-                    var resultTemporaryAiOutputToRawText =
-                        await temporaryAiOutputToRawTextModule.ExecuteAsync(this.WorkflowContent, this.StepContent);
+                case INormalModule normalModule:
+                    var result = await normalModule.ExecuteAsync(this.StepContent, cancellationToken);
+                    if (result.IsFailed)
+                        return result;
                     break;
             }
         }
 
+        var stepOutput = new Dictionary<string, object>();
+
+        if (this.StepContent.StepVariable.TryGetValue(nameof(WorkflowRuntimeContext.FinalRawText), out object? finalRawText))
+        {
+            workflowRuntimeContext.FinalRawText = (string)finalRawText;
+        }
+
+        if (this.StepContent.StepVariable.TryGetValue(nameof(WorkflowRuntimeContext.GeneratedOperations), out object? generatedOperations))
+        {
+            workflowRuntimeContext.GeneratedOperations = (List<AtomicOperation>)generatedOperations;
+        }
+
+        foreach ((string globalName, string localName) in config.OutputMappings)
+        {
+            // 从本步骤的内部变量池中查找由模块产生的局部变量
+            if (this.StepContent.StepVariable.TryGetValue(localName, out object? localValue))
+            {
+                stepOutput[globalName] = localValue;
+            }
+            // else 
+            // {
+            //   可选：在这里可以处理映射声明了，但模块实际并未产生输出的情况
+            //   例如：记录一个警告日志，或者根据严格模式抛出异常
+            //   根据“后端不验证”的原则，我们暂时忽略这种情况
+            // }
+        }
+
         return stepOutput;
+    }
+
+    private async Task<Result<string>> PrepareAndExecuteAiModule(AiModuleProcessor aiModule, CancellationToken cancellationToken = default)
+    {
+        if (this.StepAiConfig?.SelectedAiModuleType == null || this.StepAiConfig.AiProcessorConfigUuid == null)
+            return NormalError.Conflict($"步骤 {this} 没有配置AI信息，所以无法执行AI模块。");
+        var aiProcessor = this.WorkflowRuntimeService.MasterAiService.CreateAiProcessor(
+            this.StepAiConfig.AiProcessorConfigUuid,
+            this.StepAiConfig.SelectedAiModuleType);
+        if (aiProcessor == null)
+            return NormalError.Conflict(
+                $"未找到 AI 配置 {this.StepAiConfig.AiProcessorConfigUuid}配置下的类型：{this.StepAiConfig.SelectedAiModuleType}");
+        return await aiModule.ExecuteAsync(aiProcessor, this.StepContent.Prompts, this.StepAiConfig.IsStream, cancellationToken);
     }
 
 
@@ -81,11 +134,20 @@ internal class StepProcessor(
     /// <summary>
     /// 步骤运行时的上下文
     /// </summary>
-    /// <param name="stepInput"></param>
-    public class StepProcessorContent(Dictionary<string, object> stepInput)
+    public class StepProcessorContent
     {
-        // TODO 之后应该根据需求进行拷贝
-        public dynamic StepInput { get; } = stepInput.ToDictionary(kv => kv.Key, kv => kv.Value);
+        public Dictionary<string, object> StepVariable { get; } = [];
+
+        public object? InputVar(string name)
+        {
+            return this.StepVariable.GetValueOrDefault(name);
+        }
+
+        public void OutputVar(string name, object value)
+        {
+            this.StepVariable[name] = value;
+        }
+
         public List<RoledPromptDto> Prompts { get; } = [];
         public string? FullAiReturn { get; set; }
     }

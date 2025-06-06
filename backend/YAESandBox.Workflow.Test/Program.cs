@@ -54,7 +54,7 @@ while (true)
             }
 
             Console.WriteLine("\n[最终生成文本 (RawText)]:");
-            Console.ForegroundColor = ConsoleColor.Yellow;
+            Console.ForegroundColor = ConsoleColor.DarkBlue;
             Console.WriteLine(result.RawText);
             Console.ResetColor();
 

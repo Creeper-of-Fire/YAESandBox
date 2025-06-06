@@ -2,6 +2,7 @@
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Step;
+using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Utility;
 
@@ -10,11 +11,9 @@ namespace YAESandBox.Workflow.Utility;
 // 现在由前端直接把完整的Config发给后端，而不是在构建/同步前端的变动
 internal static class ToProcessor
 {
-    internal static StepProcessor ToStepProcessor(this StepProcessorConfig stepProcessorConfig,
-        WorkflowProcessor.WorkflowProcessorContent workflowProcessorContent, Dictionary<string, object> stepInput)
+    internal static StepProcessor ToStepProcessor(this StepProcessorConfig stepProcessorConfig, WorkflowRuntimeService workflowRuntimeService)
     {
-        return new StepProcessor(workflowProcessorContent, stepProcessorConfig,
-            stepProcessorConfig.Modules.ConvertAll(module => module.ToModuleProcessor()), stepInput);
+        return new StepProcessor(workflowRuntimeService, stepProcessorConfig);
     }
 
     internal static WorkflowProcessor ToWorkflowProcessor(
@@ -24,10 +23,7 @@ internal static class ToProcessor
         IWorkflowDataAccess dataAccess,
         Action<DisplayUpdateRequestPayload> requestDisplayUpdateCallback)
     {
-        var content = new WorkflowProcessor.WorkflowProcessorContent(masterAiService, dataAccess, requestDisplayUpdateCallback);
-        var variables = triggerParams.ToDictionary(kv => kv.Key, object (kv) => kv.Value);
-
-        return new WorkflowProcessor(content, workflowProcessorConfig.Steps.ConvertAll(it => it.ToStepProcessor(content, variables)),
-            variables);
+        var content = new WorkflowRuntimeService(masterAiService, dataAccess, requestDisplayUpdateCallback);
+        return new WorkflowProcessor(content, workflowProcessorConfig, triggerParams.ToDictionary());
     }
 }

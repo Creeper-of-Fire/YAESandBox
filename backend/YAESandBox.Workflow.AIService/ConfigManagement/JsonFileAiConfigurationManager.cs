@@ -15,7 +15,7 @@ namespace YAESandBox.Workflow.AIService.ConfigManagement;
 public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStorage) : IAiConfigurationManager
 {
     private const string ConfigFileName = "ai_configurations.json"; // 默认配置文件名
-    private IGeneralJsonStorage GeneralJsonStorage { get; } = generalJsonStorage;
+    private ScopedStorageFactory.ScopedJsonStorage ScopedJsonStorage { get; } = generalJsonStorage.ForConfig();
 
 
     /// <summary>
@@ -23,7 +23,7 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     /// </summary>
     private async Task<Result<Dictionary<string, AiConfigurationSet>>> LoadConfigurationsFromFileAsync()
     {
-        var result = await this.GeneralJsonStorage.ForConfig().LoadAllAsync<Dictionary<string, AiConfigurationSet>>(ConfigFileName);
+        var result = await this.ScopedJsonStorage.LoadAllAsync<Dictionary<string, AiConfigurationSet>>(ConfigFileName);
         if (!result.TryGetValue(out var value))
             return result.ToResult();
 
@@ -38,7 +38,7 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     /// </summary>
     private async Task<Result> SaveConfigurationsToFileAsync(Dictionary<string, AiConfigurationSet> configs)
     {
-        return await this.GeneralJsonStorage.ForConfig().SaveAllAsync(configs, ConfigFileName);
+        return await this.ScopedJsonStorage.SaveAllAsync(configs, ConfigFileName);
     }
 
     /// <summary>

@@ -73,10 +73,17 @@ public static class ScopedStorageFactory
         /// <inheritdoc cref="ScopedJsonStorage"/>
         internal ScopedJsonStorage(IGeneralJsonStorage generalJsonStorage, string[] scopePrefixPathParts)
         {
-            this.GeneralJsonStorage = generalJsonStorage is ScopedJsonStorage scopedJsonStorage
-                ? scopedJsonStorage.GeneralJsonStorage
-                : generalJsonStorage;
-            this.ScopePrefixPathParts = scopePrefixPathParts;
+            if (generalJsonStorage is ScopedJsonStorage scopedJsonStorage)
+            {
+                this.GeneralJsonStorage = scopedJsonStorage.GeneralJsonStorage;
+                this.ScopePrefixPathParts = scopedJsonStorage.ScopePrefixPathParts.Concat(scopePrefixPathParts).ToArray();
+            }
+            else
+            {
+                this.GeneralJsonStorage = generalJsonStorage;
+                this.ScopePrefixPathParts = scopePrefixPathParts;
+            }
+            
             this.WorkPath = Path.Combine(generalJsonStorage.WorkPath, Path.Combine(scopePrefixPathParts));
         }
 
