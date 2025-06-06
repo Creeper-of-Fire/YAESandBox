@@ -20,11 +20,19 @@ internal class StepProcessor(
     StepProcessorConfig config)
     : IWithDebugDto<IStepProcessorDebugDto>
 {
+    internal StepProcessorConfig Config { get; } = config;
     private StepProcessorContent StepContent { get; } = new();
 
-    private IEnumerable<string> OriginConsumer { get; } = config.Modules.SelectMany(c => c.Consumes).Distinct().ToList();
-    private IReadOnlyList<string> OriginProducer { get; } = config.Modules.SelectMany(c => c.Produces).Distinct().ToList();
+    /// <summary>
+    /// 消费者（Consumes）：模块需要的所有输入变量，这些必须从全局变量池中获取。
+    /// </summary>
+    internal IEnumerable<string> GlobalConsumers { get; } = config.Modules.SelectMany(c => c.Consumes).Distinct();
 
+    /// <summary>
+    /// 生产者（Produces）：此步骤通过 OutputMappings 向全局变量池声明输出的变量。
+    /// </summary>
+    internal IEnumerable<string> GlobalProducers { get; } = config.OutputMappings.Keys;
+    
     private List<IWithDebugDto<IModuleProcessorDebugDto>> Modules { get; } =
         config.Modules.ConvertAll(module => module.ToModuleProcessor(workflowRuntimeService));
 
@@ -40,11 +48,11 @@ internal class StepProcessor(
     public async Task<Result<Dictionary<string, object>>> ExecuteStepsAsync(
         WorkflowRuntimeContext workflowRuntimeContext, CancellationToken cancellationToken = default)
     {
-        foreach (string consumerName in this.OriginConsumer)
+        foreach (string consumerName in this.GlobalConsumers)
         {
             if (!workflowRuntimeContext.GlobalVariables.TryGetValue(consumerName, out object? value))
             {
-                return NormalError.Conflict($"执行步骤 '{config.InstanceId}' 失败：找不到必需的输入变量 '{consumerName}'。");
+                return NormalError.Conflict($"执行步骤 '{this.Config.ConfigId}' 失败：找不到必需的输入变量 '{consumerName}'。");
             }
 
             this.StepContent.StepVariable[consumerName] = value;
@@ -55,8 +63,8 @@ internal class StepProcessor(
             this.StepContent.StepVariable[key] = value;
         }
 
-        this.StepContent.StepVariable[nameof(WorkflowRuntimeContext.FinalRawText)] = workflowRuntimeContext.FinalRawText;
-        this.StepContent.StepVariable[nameof(WorkflowRuntimeContext.GeneratedOperations)] = workflowRuntimeContext.GeneratedOperations;
+        // this.StepContent.StepVariable[nameof(WorkflowRuntimeContext.FinalRawText)] = workflowRuntimeContext.FinalRawText;
+        // this.StepContent.StepVariable[nameof(WorkflowRuntimeContext.GeneratedOperations)] = workflowRuntimeContext.GeneratedOperations;
 
         foreach (var module in this.Modules)
         {
@@ -78,17 +86,17 @@ internal class StepProcessor(
 
         var stepOutput = new Dictionary<string, object>();
 
-        if (this.StepContent.StepVariable.TryGetValue(nameof(WorkflowRuntimeContext.FinalRawText), out object? finalRawText))
-        {
-            workflowRuntimeContext.FinalRawText = (string)finalRawText;
-        }
+        // if (this.StepContent.StepVariable.TryGetValue(nameof(WorkflowRuntimeContext.FinalRawText), out object? finalRawText))
+        // {
+        //     workflowRuntimeContext.FinalRawText = (string)finalRawText;
+        // }
+        //
+        // if (this.StepContent.StepVariable.TryGetValue(nameof(WorkflowRuntimeContext.GeneratedOperations), out object? generatedOperations))
+        // {
+        //     workflowRuntimeContext.GeneratedOperations = (List<AtomicOperation>)generatedOperations;
+        // }
 
-        if (this.StepContent.StepVariable.TryGetValue(nameof(WorkflowRuntimeContext.GeneratedOperations), out object? generatedOperations))
-        {
-            workflowRuntimeContext.GeneratedOperations = (List<AtomicOperation>)generatedOperations;
-        }
-
-        foreach ((string globalName, string localName) in config.OutputMappings)
+        foreach ((string globalName, string localName) in this.Config.OutputMappings)
         {
             // 从本步骤的内部变量池中查找由模块产生的局部变量
             if (this.StepContent.StepVariable.TryGetValue(localName, out object? localValue))

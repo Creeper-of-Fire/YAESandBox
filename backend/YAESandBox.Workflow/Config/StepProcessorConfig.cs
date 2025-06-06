@@ -11,7 +11,7 @@ public record StepProcessorConfig
     /// </summary>
     [Required]
     [HiddenInSchema(true)]
-    public required string InstanceId { get; init; }
+    public required string ConfigId { get; init; }
 
     /// <summary>
     /// 步骤的AI配置，如果不存在，则这个模块不需要AI处理
