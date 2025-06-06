@@ -17,6 +17,7 @@ public abstract record AbstractModuleConfig
     /// </summary>
     [Required]
     [HiddenInSchema(true)]
+    [JsonPropertyName("configId")]
     public abstract string ConfigId { get; init; }
 
     /// <summary>
@@ -24,6 +25,7 @@ public abstract record AbstractModuleConfig
     /// </summary>
     [Required]
     [HiddenInSchema(true)]
+    [JsonPropertyName("moduleType")]
     public abstract string ModuleType { get; init; }
 
     internal abstract IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor();

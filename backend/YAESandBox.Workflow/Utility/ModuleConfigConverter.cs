@@ -42,7 +42,7 @@ internal class ModuleConfigConverter : JsonConverter<AbstractModuleConfig>
         foreach (var property in jsonObject.EnumerateObject())
         {
             // JsonProperty.NameEquals 方法支持不区分大小写的比较。
-            if (property.NameEquals(ExpectedModuleTypePropertyName))
+            if (string.Equals(property.Name, ExpectedModuleTypePropertyName, StringComparison.OrdinalIgnoreCase))
             {
                 if (property.Value.ValueKind == JsonValueKind.String)
                 {

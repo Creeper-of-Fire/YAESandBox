@@ -28,7 +28,7 @@ public class StepConfigController(WorkflowConfigFileService workflowConfigFileSe
     [ProducesResponseType(typeof(IEnumerable<StepProcessorConfig>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IEnumerable<StepProcessorConfig>>> GetAllGlobalStepConfigs() =>
-        await this.WorkflowConfigFileService.FindAllStepConfig().ToActionResultAsync();
+        await this.WorkflowConfigFileService.FindAllStepConfig().ToActionResultDetailedAsync();
 
     /// <summary>
     /// 获取指定 ID 的全局步骤配置。
