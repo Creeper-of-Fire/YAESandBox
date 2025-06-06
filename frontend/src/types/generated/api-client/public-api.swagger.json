@@ -1,0 +1,1556 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "YAESandBox API (Public)",
+    "description": "供前端和外部使用的公开 API 文档。",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/atomic/{blockId}": {
+      "post": {
+        "tags": [
+          "Atomic"
+        ],
+        "summary": "对指定的 Block 执行一批原子化操作。\r\n根据 Block 的当前状态，操作可能被立即执行或暂存。",
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "path",
+            "description": "要执行操作的目标 Block 的 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "包含原子操作列表的请求体。",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchAtomicRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchAtomicRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/BatchAtomicRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "操作已成功执行，若为Loading状态则还额外暂存了一份。"
+          },
+          "404": {
+            "description": "未找到具有指定 ID 的 Block。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Block 当前处于冲突状态 (ResolvingConflict)，需要先解决冲突。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求中包含无效的原子操作定义。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "执行操作时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/manage/blocks/{blockId}": {
+      "delete": {
+        "tags": [
+          "BlockManagement"
+        ],
+        "summary": "手动删除一个指定的 Block。",
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "path",
+            "description": "要删除的 Block ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "recursive",
+            "in": "query",
+            "description": "是否递归删除子 Block。默认递归删除，非递归可能导致奇奇怪怪的问题？",
+            "schema": {
+              "type": "boolean",
+              "default": true
+            }
+          },
+          {
+            "name": "force",
+            "in": "query",
+            "description": "是否强制删除，无视状态。",
+            "schema": {
+              "type": "boolean",
+              "default": false
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "操作已成功执行。"
+          },
+          "400": {
+            "description": "不允许删除根节点或请求无效（例如 Block 有子节点但未指定 recursive=true）。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到具有指定 ID 的 Block。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Block的当前状态不允许删除。现在只允许删除Idle或Error，说实在的有点意义不明，也许以后设计成什么都可以删除。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "执行操作时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/Blocks": {
+      "get": {
+        "tags": [
+          "Blocks"
+        ],
+        "summary": "获取所有 Block 的摘要信息字典。\r\n返回一个以 Block ID 为键，Block 详细信息 DTO 为值的只读字典。",
+        "responses": {
+          "200": {
+            "description": "成功返回 Block 字典。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/BlockDetailDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/BlockDetailDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/BlockDetailDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/Blocks/{blockId}": {
+      "get": {
+        "tags": [
+          "Blocks"
+        ],
+        "summary": "获取指定 ID 的单个 Block 的详细信息（不包含 WorldState）。",
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "path",
+            "description": "要查询的 Block 的唯一 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功返回 Block 详细信息。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlockDetailDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到具有指定 ID 的 Block。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "Blocks"
+        ],
+        "summary": "部分更新指定 Block 的内容和/或元数据。\r\n此操作仅在 Block 处于 Idle 状态时被允许。",
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "path",
+            "description": "要更新的 Block 的 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "包含要更新的字段（Content, MetadataUpdates）的请求体。\r\n            省略的字段或值为 null 的字段将不会被修改（MetadataUpdates 中值为 null 表示移除该键）。",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBlockDetailsDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBlockDetailsDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateBlockDetailsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "更新成功。"
+          },
+          "400": {
+            "description": "请求体无效或未提供任何更新。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到具有指定 ID 的 Block。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Block 不处于 Idle 状态，无法修改。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "更新时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/Blocks/topology": {
+      "get": {
+        "tags": [
+          "Blocks"
+        ],
+        "summary": "获取扁平化的 Block 拓扑结构信息。\r\n返回一个包含所有 Block (或指定子树下所有 Block) 的拓扑信息的列表，\r\n每个对象包含其 ID 和父节点 ID，用于在客户端重建层级关系。",
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "query",
+            "description": "（可选）目标根节点的 ID。\r\n如果提供，则返回以此节点为根的子树（包含自身）的扁平拓扑信息。\r\n如果为 null 或空，则返回从最高根节点 (__WORLD__) 开始的整个应用的完整扁平拓扑结构。",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功返回扁平化的拓扑节点列表。\r\n            列表中的每个对象形如：{ \"blockId\": \"some-id\", \"parentBlockId\": \"parent-id\" } 或 { \"blockId\": \"__WORLD__\", \"parentBlockId\": null }。\r\n            例如：[ { \"blockId\": \"__WORLD__\", \"parentBlockId\": null }, { \"blockId\": \"child1\", \"parentBlockId\": \"__WORLD__\" }, ... ]",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlockTopologyNodeDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlockTopologyNodeDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BlockTopologyNodeDto"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "如果指定了 blockId，但未找到具有该 ID 的 Block。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "获取拓扑结构时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/entities": {
+      "get": {
+        "tags": [
+          "Entities"
+        ],
+        "summary": "获取指定 Block 当前可交互 WorldState 中的所有非销毁实体摘要信息。",
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "query",
+            "description": "要查询的目标 Block 的 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功返回实体摘要列表。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntitySummaryDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntitySummaryDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/EntitySummaryDto"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "缺少必需的 'blockId' 查询参数。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到具有指定 ID 的 Block 或 Block 无法访问。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/entities/{entityType}/{entityId}": {
+      "get": {
+        "tags": [
+          "Entities"
+        ],
+        "summary": "获取指定 Block 当前可交互 WorldState 中的单个非销毁实体的详细信息。",
+        "parameters": [
+          {
+            "name": "entityType",
+            "in": "path",
+            "description": "要查询的实体的类型 (Item, Character, Place)。",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/EntityType"
+            }
+          },
+          {
+            "name": "entityId",
+            "in": "path",
+            "description": "要查询的实体的 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "blockId",
+            "in": "query",
+            "description": "目标 Block 的 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功返回实体详细信息。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityDetailDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityDetailDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/EntityDetailDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "缺少必需的 'blockId' 查询参数。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未在指定 Block 中找到实体，或 Block 未找到。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/blocks/{blockId}/GameState": {
+      "get": {
+        "tags": [
+          "GameState"
+        ],
+        "summary": "获取指定 Block 的当前 GameState。",
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "path",
+            "description": "目标 Block 的 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功返回 GameState。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameStateDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameStateDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GameStateDto"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到具有指定 ID 的 Block。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "tags": [
+          "GameState"
+        ],
+        "summary": "修改指定 Block 的 GameState。使用 PATCH 方法进行部分更新。",
+        "parameters": [
+          {
+            "name": "blockId",
+            "in": "path",
+            "description": "目标 Block 的 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "包含要更新的 GameState 键值对的请求体。",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGameStateRequestDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGameStateRequestDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateGameStateRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "GameState 更新成功。"
+          },
+          "400": {
+            "description": "请求体无效。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到具有指定 ID 的 Block。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "更新时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/Persistence/save": {
+      "post": {
+        "tags": [
+          "Persistence"
+        ],
+        "summary": "保存当前 YAESandBox 的完整状态（包括所有 Block、WorldState、GameState）到一个 JSON 文件。\r\n客户端可以（可选地）在请求体中提供需要一同保存的“盲存”数据。",
+        "requestBody": {
+          "description": "（可选）客户端提供的任意 JSON 格式的盲存数据，将原样保存在存档文件中。",
+          "content": {
+            "application/json": {
+              "schema": { }
+            },
+            "text/json": {
+              "schema": { }
+            },
+            "application/*+json": {
+              "schema": { }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功生成并返回存档文件。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "保存状态时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/Persistence/load": {
+      "post": {
+        "tags": [
+          "Persistence"
+        ],
+        "summary": "从上传的 JSON 存档文件加载 YAESandBox 的状态。\r\n这将完全替换当前内存中的所有 Block、WorldState 和 GameState。\r\n成功加载后，将返回存档文件中包含的“盲存”数据（如果存在）。",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archiveFile": {
+                    "type": "string",
+                    "description": "包含 YAESandBox 存档的 JSON 文件。",
+                    "format": "binary"
+                  }
+                }
+              },
+              "encoding": {
+                "archiveFile": {
+                  "style": "form"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "成功加载状态，并返回盲存数据。",
+            "content": {
+              "text/plain": {
+                "schema": { }
+              },
+              "application/json": {
+                "schema": { }
+              },
+              "text/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "没有上传文件，或者上传的文件格式无效 (非 JSON 或内容损坏)。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "加载状态时发生内部服务器错误。"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AtomicOperationRequestDto": {
+        "required": [
+          "entityId",
+          "entityType",
+          "operationType"
+        ],
+        "type": "object",
+        "properties": {
+          "operationType": {
+            "minLength": 1,
+            "type": "string",
+            "description": "操作类型。必须是 \"CreateEntity\", \"ModifyEntity\", 或 \"DeleteEntity\" (不区分大小写)。"
+          },
+          "entityType": {
+            "$ref": "#/components/schemas/EntityType"
+          },
+          "entityId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "操作目标实体的唯一 ID。不能为空或仅包含空白字符。"
+          },
+          "initialAttributes": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "description": "(仅用于 CreateEntity 操作)\r\n要创建的实体的初始属性字典。键是属性名，值是属性值。\r\n如果不提供，则实体以默认属性创建。",
+            "nullable": true
+          },
+          "attributeKey": {
+            "type": "string",
+            "description": "(仅用于 ModifyEntity 操作)\r\n要修改的属性的键（名称）。",
+            "nullable": true
+          },
+          "modifyOperator": {
+            "type": "string",
+            "description": "(仅用于 ModifyEntity 操作)\r\n修改操作符。预期值为 \"=\", \"+=\", \"-=\" 等表示赋值、增加、减少等操作的字符串。\r\n具体支持的操作符取决于后端实现 (YAESandBox.Core.State.Entity.OperatorHelper)。",
+            "nullable": true
+          },
+          "modifyValue": {
+            "description": "(仅用于 ModifyEntity 操作)\r\n修改操作的值。类型应与目标属性和操作符兼容。",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "用于 API 请求的单个原子操作的表示。\r\n定义了对 WorldState 中实体的创建、修改或删除操作。"
+      },
+      "BatchAtomicRequestDto": {
+        "required": [
+          "operations"
+        ],
+        "type": "object",
+        "properties": {
+          "operations": {
+            "minItems": 1,
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtomicOperationRequestDto"
+            },
+            "description": "要执行的原子操作请求列表。该列表不能为空。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "包含用于批量执行的原子操作请求列表。"
+      },
+      "BlockDataFields": {
+        "enum": [
+          "ParentBlockId",
+          "BlockContent",
+          "Metadata",
+          "ChildrenInfo",
+          "WorldState",
+          "GameState"
+        ],
+        "type": "string",
+        "description": "用于标识 Block 中可能过时的字段。\r\n临时举措：看到ParentBlockId和ChildrenInfo时，进行一次拓扑更新。以后这个逻辑可能会迁移到专门的通知。"
+      },
+      "BlockDetailDto": {
+        "required": [
+          "blockId"
+        ],
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Block 的唯一标识符。"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/BlockStatusCode"
+          },
+          "blockContent": {
+            "type": "string",
+            "description": "Block 的主要文本内容 (例如 AI 生成的文本、配置等)。",
+            "nullable": true
+          },
+          "metadata": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "与 Block 相关的元数据字典 (键值对均为字符串)。",
+            "nullable": true
+          },
+          "conflictDetected": {
+            "$ref": "#/components/schemas/ConflictDetectedDto"
+          },
+          "workflowInfo": {
+            "$ref": "#/components/schemas/WorkflowDto"
+          }
+        },
+        "additionalProperties": false,
+        "description": "用于 API 响应，表示单个 Block 的详细信息（不包含 WorldState）。"
+      },
+      "BlockStatusCode": {
+        "enum": [
+          "Loading",
+          "Idle",
+          "ResolvingConflict",
+          "Error",
+          "NotFound"
+        ],
+        "type": "string",
+        "description": "表示 Block 的不同状态。"
+      },
+      "BlockStatusUpdateDto": {
+        "required": [
+          "blockId",
+          "statusCode"
+        ],
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "状态发生变化的 Block 的 ID。"
+          },
+          "statusCode": {
+            "$ref": "#/components/schemas/BlockStatusCode"
+          }
+        },
+        "additionalProperties": false,
+        "description": "(服务器 -> 客户端)\r\n通知客户端某个 Block 的状态码发生了变化。"
+      },
+      "BlockTopologyNodeDto": {
+        "required": [
+          "blockId"
+        ],
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "Block 的唯一标识符。"
+          },
+          "parentBlockId": {
+            "type": "string",
+            "description": "父 Block 的 ID。如果为根节点，则为 null。",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "表示扁平化拓扑结构中的单个节点信息。"
+      },
+      "BlockUpdateSignalDto": {
+        "required": [
+          "blockId"
+        ],
+        "type": "object",
+        "properties": {
+          "blockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "状态可能已发生变化的 Block 的 ID。"
+          },
+          "changedFields": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BlockDataFields"
+            },
+            "description": "（可选）包含受影响的 Block 数据字段的枚举值，以便前端进行更精细的更新。如果为 null 或空，表示通用状态变更。",
+            "nullable": true
+          },
+          "changedEntityIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "description": "（可选）如果变化是由原子操作引起的，这里可以包含受影响的实体的 ID 列表，以便前端进行更精细的更新。如果为 null 或空，表示未知具体实体。",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "(服务器 -> 客户端)\r\n一个轻量级信号，通知客户端指定 Block 的状态 (WorldState 或 GameState) 可能已发生变化。\r\n鼓励客户端根据需要重新获取该 Block 的详细信息或相关实体的最新状态。"
+      },
+      "ConflictDetectedDto": {
+        "required": [
+          "aiCommands",
+          "conflictingAiCommands",
+          "conflictingUserCommands",
+          "userCommands"
+        ],
+        "type": "object",
+        "properties": {
+          "aiCommands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtomicOperationRequestDto"
+            },
+            "description": "工作流（AI）生成的 **完整** 原子操作列表。"
+          },
+          "userCommands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtomicOperationRequestDto"
+            },
+            "description": "用户在 Loading 期间提交的 **完整** 原子操作列表（可能包含因 Create/Create 冲突而被自动重命名的操作）。"
+          },
+          "conflictingAiCommands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtomicOperationRequestDto"
+            },
+            "description": "导致 **阻塞性冲突** (Modify/Modify 同一属性) 的 AI 原子操作子集。"
+          },
+          "conflictingUserCommands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtomicOperationRequestDto"
+            },
+            "description": "导致 **阻塞性冲突** (Modify/Modify 同一属性) 的用户原子操作子集。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "(服务器 -> 客户端)\r\n当主工作流执行完成后，检测到 AI 生成的指令与用户在 Loading 状态下提交的指令存在冲突时发送。\r\n前端应使用此信息向用户展示冲突详情，并提供解决冲突的界面。"
+      },
+      "DisplayUpdateDto": {
+        "required": [
+          "content",
+          "contextBlockId",
+          "requestId",
+          "streamingStatus",
+          "updateMode"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "关联的原始工作流请求 ID (YAESandBox.Core.DTOs.WebSocket.TriggerMainWorkflowRequestDto.RequestId 或 YAESandBox.Core.DTOs.WebSocket.TriggerMicroWorkflowRequestDto.RequestId)。"
+          },
+          "contextBlockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "主要关联的 Block ID。对于主工作流，这是被更新或新创建的 Block。对于微工作流，这通常是触发时的上下文 Block。"
+          },
+          "content": {
+            "minLength": 1,
+            "type": "string",
+            "description": "需要显示或处理的内容字符串。可能是完整的文本、HTML 片段、JSON 数据，或增量更新指令。"
+          },
+          "streamingStatus": {
+            "$ref": "#/components/schemas/StreamStatus"
+          },
+          "updateMode": {
+            "$ref": "#/components/schemas/UpdateMode"
+          },
+          "targetElementId": {
+            "type": "string",
+            "description": "(关键区分) 目标 UI 元素或逻辑区域的 ID。\r\n- 如果为 **null** 或空字符串：表示这是一个 **主工作流** 更新，应更新与 <cref name=\"ContextBlockId\" /> 关联的主要显示区域。\r\n- 如果 **非 null**：表示这是一个 **微工作流** 更新，应更新 ID 与此值匹配的特定 UI 元素或区域。",
+            "nullable": true
+          },
+          "sequenceNumber": {
+            "type": "integer",
+            "description": "(可选) 消息的序列号，用于处理乱序或重复的消息。\r\n客户端可以根据需要实现排序和去重逻辑。",
+            "format": "int64",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "(服务器 -> 客户端)\r\n携带由工作流（主工作流或微工作流）生成或处理的内容，用于更新前端显示。"
+      },
+      "EntityDetailDto": {
+        "required": [
+          "attributes",
+          "entityId",
+          "entityType",
+          "isDestroyed"
+        ],
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "实体的唯一 ID。"
+          },
+          "entityType": {
+            "$ref": "#/components/schemas/EntityType"
+          },
+          "isDestroyed": {
+            "type": "boolean",
+            "description": "指示实体是否已被标记为销毁。\r\n注意：查询 API 通常只返回未销毁的实体。"
+          },
+          "name": {
+            "type": "string",
+            "description": "实体的名称 (通常来自 'name' 属性，如果不存在则可能回退到 EntityId)。",
+            "nullable": true
+          },
+          "attributes": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "description": "包含实体所有属性（包括核心属性如 IsDestroyed 和动态属性）的字典。\r\n值的类型可能是 string, int, bool, double, List[object?], Dictionary-[string, object?], TypedID 等。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "用于 API 响应，表示实体的详细信息，包含所有属性。\r\n继承自 YAESandBox.Core.DTOs.EntitySummaryDto。"
+      },
+      "EntitySummaryDto": {
+        "required": [
+          "entityId",
+          "entityType",
+          "isDestroyed"
+        ],
+        "type": "object",
+        "properties": {
+          "entityId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "实体的唯一 ID。"
+          },
+          "entityType": {
+            "$ref": "#/components/schemas/EntityType"
+          },
+          "isDestroyed": {
+            "type": "boolean",
+            "description": "指示实体是否已被标记为销毁。\r\n注意：查询 API 通常只返回未销毁的实体。"
+          },
+          "name": {
+            "type": "string",
+            "description": "实体的名称 (通常来自 'name' 属性，如果不存在则可能回退到 EntityId)。",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "用于 API 响应，表示实体的基本摘要信息。"
+      },
+      "EntityType": {
+        "enum": [
+          "Item",
+          "Character",
+          "Place"
+        ],
+        "type": "string"
+      },
+      "GameStateDto": {
+        "required": [
+          "settings"
+        ],
+        "type": "object",
+        "properties": {
+          "settings": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "description": "包含 GameState 所有设置的字典。\r\n键是设置的名称 (string)，值是设置的值 (object?)。\r\n值的实际类型取决于具体的游戏状态设置。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "用于 API 响应，表示一个 Block 的 GameState。"
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "RegenerateBlockRequestDto": {
+        "required": [
+          "blockId",
+          "requestId"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "唯一的请求 ID，用于追踪。"
+          },
+          "blockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "要重新生成的 Block 的 ID。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "(客户端 -> 服务器)\r\n用于通过 SignalR 请求重新生成现有 Block 的内容和状态。\r\n只有主工作流对此有用。"
+      },
+      "ResolveConflictRequestDto": {
+        "required": [
+          "blockId",
+          "requestId",
+          "resolvedCommands"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "必须与导致冲突的原始工作流请求 (YAESandBox.Core.DTOs.WebSocket.TriggerMainWorkflowRequestDto) 的 RequestId 相同，\r\n也应与收到的 YAESandBox.Core.DTOs.WebSocket.ConflictDetectedDto 中的 RequestId 相同。\r\n用于将此解决方案关联回正确的冲突上下文。"
+          },
+          "blockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "发生冲突的 Block 的 ID (应与 YAESandBox.Core.DTOs.WebSocket.ConflictDetectedDto 中的 BlockId 相同)。"
+          },
+          "resolvedCommands": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtomicOperationRequestDto"
+            },
+            "description": "经过用户确认或修改后的最终原子操作列表。\r\n这些操作将应用于 Block，以完成工作流并将其状态转换为 Idle (或 Error)。\r\n使用 YAESandBox.Core.DTOs.AtomicOperationRequestDto 以便通过 SignalR 传输。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "(客户端 -> 服务器)\r\n用于通过 SignalR 提交 **冲突解决方案** 的请求。\r\n当主工作流完成后检测到与用户修改冲突时，前端会收到 YAESandBox.Core.DTOs.WebSocket.ConflictDetectedDto。\r\n用户解决冲突后，通过此 DTO 将最终确定的原子操作列表提交回后端。"
+      },
+      "StreamStatus": {
+        "enum": [
+          "Streaming",
+          "Complete",
+          "Error"
+        ],
+        "type": "string",
+        "description": "指示 YAESandBox.Core.DTOs.WebSocket.DisplayUpdateDto 消息在流式传输过程中的状态。"
+      },
+      "TriggerMainWorkflowRequestDto": {
+        "required": [
+          "params",
+          "parentBlockId",
+          "requestId",
+          "workflowName"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "客户端生成的唯一请求 ID，用于追踪此工作流调用的整个生命周期，\r\n包括可能的流式更新和最终结果。"
+          },
+          "parentBlockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "要在其下创建新子 Block 的父 Block 的 ID。"
+          },
+          "workflowName": {
+            "minLength": 1,
+            "type": "string",
+            "description": "要调用的工作流的名称或标识符。"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "传递给工作流的参数字典。键值对的具体内容取决于所调用的工作流。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "(客户端 -> 服务器)\r\n用于通过 SignalR 触发 **主工作流** 的请求。\r\n主工作流通常会导致创建一个新的子 Block 来表示新的叙事状态。"
+      },
+      "TriggerMicroWorkflowRequestDto": {
+        "required": [
+          "contextBlockId",
+          "params",
+          "requestId",
+          "targetElementId",
+          "workflowName"
+        ],
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "客户端生成的唯一请求 ID，用于追踪此工作流调用的整个生命周期。"
+          },
+          "contextBlockId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "触发此微工作流时，用户界面所在的上下文 Block 的 ID。\r\n工作流逻辑可能会使用此 Block 的状态作为输入。"
+          },
+          "targetElementId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "(关键) 目标 UI 元素或逻辑区域的标识符。\r\n后端会将此工作流产生的 YAESandBox.Core.DTOs.WebSocket.DisplayUpdateDto 消息的 YAESandBox.Core.DTOs.WebSocket.DisplayUpdateDto.TargetElementId 设置为此值，\r\n以便前端知道更新哪个 UI 组件。该 ID 由前端定义和解释。"
+          },
+          "workflowName": {
+            "minLength": 1,
+            "type": "string",
+            "description": "要调用的微工作流的名称或标识符。"
+          },
+          "params": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "description": "传递给微工作流的参数字典。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "(客户端 -> 服务器)\r\n用于通过 SignalR 触发 **微工作流** 的请求。\r\n微工作流通常用于生成辅助信息、建议或执行不直接改变核心叙事状态（即不创建新 Block）的操作。\r\n其结果通常用于更新 UI 的特定部分。"
+      },
+      "UpdateBlockDetailsDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string",
+            "description": "(可选) 要设置的新的 Block 内容。\r\n如果为 null，则不修改 BlockContent。",
+            "nullable": true
+          },
+          "metadataUpdates": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "nullable": true
+            },
+            "description": "(可选) 要更新或移除的元数据键值对。\r\n- Key: 要操作的元数据键。\r\n- Value:\r\n  - 如果为非 null 字符串: 添加或更新该键的值。\r\n  - 如果为 null: 从元数据中移除该键。\r\n如果整个字典为 null，则不修改 Metadata。",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "用于通过 PATCH 请求部分更新 Block 的内容和元数据。\r\n任何设置为 null 的属性表示不修改该部分。"
+      },
+      "UpdateGameStateRequestDto": {
+        "required": [
+          "settingsToUpdate"
+        ],
+        "type": "object",
+        "properties": {
+          "settingsToUpdate": {
+            "type": "object",
+            "additionalProperties": {
+              "nullable": true
+            },
+            "description": "一个字典，包含要更新或添加的 GameState 设置。\r\n键是要修改的设置名称，值是新的设置值。\r\n如果值为 null，通常表示移除该设置或将其设置为空。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "用于 API 请求，表示要更新的 GameState 设置。"
+      },
+      "UpdateMode": {
+        "enum": [
+          "FullSnapshot",
+          "Incremental"
+        ],
+        "type": "string",
+        "description": "指示 YAESandBox.Core.DTOs.WebSocket.DisplayUpdateDto.Content 的更新方式。"
+      },
+      "WorkflowDto": {
+        "required": [
+          "triggeredChildParams",
+          "triggeredParams",
+          "workflowName"
+        ],
+        "type": "object",
+        "properties": {
+          "workflowName": {
+            "minLength": 1,
+            "type": "string",
+            "description": "存储触发block时所使用的工作流名称。"
+          },
+          "triggeredChildParams": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "（仅父 Block 存储）触发此 Block 的某个子 Block 时所使用的参数。\r\n注意：当前设计只保存最后一次触发子节点时的参数。"
+          },
+          "triggeredParams": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
+            "description": "被触发时使用的参数。用于重新生成之类的。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "工作流 的 DTO。"
+      }
+    }
+  }
+}

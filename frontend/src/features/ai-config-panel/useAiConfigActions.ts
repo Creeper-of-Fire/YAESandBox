@@ -1,9 +1,9 @@
 ﻿// src/composables/useAiConfigActions.ts
 import {ref, h, type Ref, type ComputedRef, type UnwrapNestedRefs} from 'vue';
 import {NInput, useMessage, useDialog} from 'naive-ui'; // 假设这些可以直接在这里用，或者从父组件传入
-import type {AiConfigurationSet} from '@/types/generated/aiconfigapi/models/AiConfigurationSet.ts';
-import {AiConfigurationsService} from '@/types/generated/aiconfigapi/services/AiConfigurationsService.ts';
-import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi/models/AbstractAiProcessorConfig.ts";
+import type {AiConfigurationSet} from '@/types/generated/ai-config-api-client';
+import {AiConfigurationsService} from '@/types/generated/ai-config-api-client';
+import type {AbstractAiProcessorConfig} from "@/types/generated/ai-config-api-client";
 import type {DynamicFormRendererInstance} from '@/features/schema-viewer/DynamicFormRenderer.vue';
 import {cloneDeep} from "lodash-es"; // 假设你导出了这个类型
 

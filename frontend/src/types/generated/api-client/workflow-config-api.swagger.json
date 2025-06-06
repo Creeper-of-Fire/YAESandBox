@@ -1,0 +1,590 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "YAESandBox API (Workflow Config)",
+    "description": "包含工作流配置相关的API。",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/v1/workflows-configs/global-modules/all-module-configs-schemas": {
+      "get": {
+        "tags": [
+          "ModuleConfig"
+        ],
+        "summary": "获取所有注册的模块配置类型的表单 Schema 结构 (JSON Schema 格式，包含 UI 指令)。\r\n用于前端动态生成这些类型配置的【新建】或【编辑】表单骨架。",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": { }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal Server Error"
+          }
+        }
+      }
+    },
+    "/api/v1/workflows-configs/global-modules": {
+      "get": {
+        "tags": [
+          "ModuleConfig"
+        ],
+        "summary": "获取所有全局模块配置的列表。",
+        "responses": {
+          "200": {
+            "description": "成功获取所有全局模块配置的列表。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AbstractModuleConfig"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "获取配置时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/v1/workflows-configs/global-modules/{moduleId}": {
+      "get": {
+        "tags": [
+          "ModuleConfig"
+        ],
+        "summary": "获取指定 ID 的全局模块配置。",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "in": "path",
+            "description": "模块配置的唯一 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取指定的模块配置。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbstractModuleConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到指定 ID 的模块配置。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "获取配置时发生内部服务器错误。"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "ModuleConfig"
+        ],
+        "summary": "创建或更新全局模块配置 (Upsert)。\r\n如果指定 ID 的模块配置已存在，则更新它；如果不存在，则创建它。\r\n前端负责生成并提供模块的唯一 ID (GUID)。",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "in": "path",
+            "description": "要创建或更新的模块配置的唯一 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "模块配置数据。",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AbstractModuleConfig"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AbstractModuleConfig"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AbstractModuleConfig"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "模块配置已成功更新/创建。"
+          },
+          "400": {
+            "description": "请求无效，例如：请求体为空或格式错误。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "保存配置时发生内部服务器错误。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "ModuleConfig"
+        ],
+        "summary": "删除指定 ID 的全局模块配置。",
+        "parameters": [
+          {
+            "name": "moduleId",
+            "in": "path",
+            "description": "要删除的模块配置的唯一 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "模块配置已成功删除。"
+          },
+          "500": {
+            "description": "删除配置时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/v1/workflows-configs/global-steps": {
+      "get": {
+        "tags": [
+          "StepConfig"
+        ],
+        "summary": "获取所有全局步骤配置的列表。",
+        "responses": {
+          "200": {
+            "description": "成功获取所有全局步骤配置的列表。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/StepProcessorConfig"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "获取配置时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/v1/workflows-configs/global-steps/{stepId}": {
+      "get": {
+        "tags": [
+          "StepConfig"
+        ],
+        "summary": "获取指定 ID 的全局步骤配置。",
+        "parameters": [
+          {
+            "name": "stepId",
+            "in": "path",
+            "description": "步骤配置的唯一 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取指定的步骤配置。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StepProcessorConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到指定 ID 的步骤配置。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "获取配置时发生内部服务器错误。"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "StepConfig"
+        ],
+        "summary": "创建或更新全局步骤配置 (Upsert)。",
+        "parameters": [
+          {
+            "name": "stepId",
+            "in": "path",
+            "description": "要创建或更新的步骤配置的唯一 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "步骤配置数据。",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepProcessorConfig"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepProcessorConfig"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/StepProcessorConfig"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "步骤配置已成功更新/创建。"
+          },
+          "500": {
+            "description": "保存配置时发生内部服务器错误。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "StepConfig"
+        ],
+        "summary": "删除指定 ID 的全局步骤配置。",
+        "parameters": [
+          {
+            "name": "stepId",
+            "in": "path",
+            "description": "要删除的步骤配置的唯一 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "步骤配置已成功删除。"
+          },
+          "500": {
+            "description": "删除配置时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/v1/workflows-configs/global-workflows": {
+      "get": {
+        "tags": [
+          "WorkflowConfig"
+        ],
+        "summary": "获取所有全局工作流配置的列表。",
+        "responses": {
+          "200": {
+            "description": "成功获取所有全局工作流配置的列表。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/WorkflowProcessorConfig"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "获取配置时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/v1/workflows-configs/global-workflows/{workflowId}": {
+      "get": {
+        "tags": [
+          "WorkflowConfig"
+        ],
+        "summary": "获取指定 ID 的全局工作流配置。",
+        "parameters": [
+          {
+            "name": "workflowId",
+            "in": "path",
+            "description": "工作流配置的唯一 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取指定的工作流配置。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/WorkflowProcessorConfig"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到指定 ID 的工作流配置。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "获取配置时发生内部服务器错误。"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "WorkflowConfig"
+        ],
+        "summary": "创建或更新全局工作流配置 (Upsert)。",
+        "parameters": [
+          {
+            "name": "workflowId",
+            "in": "path",
+            "description": "要创建或更新的工作流配置的唯一 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "工作流配置数据。",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowProcessorConfig"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowProcessorConfig"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/WorkflowProcessorConfig"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "工作流配置已成功更新/创建。"
+          },
+          "500": {
+            "description": "保存配置时发生内部服务器错误。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "WorkflowConfig"
+        ],
+        "summary": "删除指定 ID 的全局工作流配置。",
+        "parameters": [
+          {
+            "name": "workflowId",
+            "in": "path",
+            "description": "要删除的工作流配置的唯一 ID。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "工作流配置已成功删除。"
+          },
+          "500": {
+            "description": "删除配置时发生内部服务器错误。"
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AbstractModuleConfig": {
+        "required": [
+          "configId",
+          "moduleType"
+        ],
+        "type": "object",
+        "properties": {
+          "configId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "唯一的 ID，在拷贝时也需要更新"
+          },
+          "moduleType": {
+            "minLength": 1,
+            "type": "string",
+            "description": "模块的类型"
+          }
+        },
+        "additionalProperties": false,
+        "description": "模组的配置"
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "StepAiConfig": {
+        "required": [
+          "aiProcessorConfigUuid",
+          "isStream",
+          "selectedAiModuleType"
+        ],
+        "type": "object",
+        "properties": {
+          "aiProcessorConfigUuid": {
+            "minLength": 1,
+            "type": "string",
+            "description": "AI服务的配置的UUID"
+          },
+          "selectedAiModuleType": {
+            "minLength": 1,
+            "type": "string",
+            "description": "当前选中的AI模型的类型名"
+          },
+          "isStream": {
+            "type": "boolean",
+            "description": "是否为流式传输"
+          }
+        },
+        "additionalProperties": false,
+        "description": "步骤本身的 AI 配置。"
+      },
+      "StepProcessorConfig": {
+        "required": [
+          "instanceId"
+        ],
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "minLength": 1,
+            "type": "string",
+            "description": "唯一的 ID，在拷贝时也需要更新"
+          },
+          "stepAiConfig": {
+            "$ref": "#/components/schemas/StepAiConfig"
+          },
+          "modules": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AbstractModuleConfig"
+            },
+            "description": "按顺序执行的模块列表。\r\nStepProcessor 在执行时会严格按照此列表的顺序执行模块。",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      },
+      "WorkflowProcessorConfig": {
+        "type": "object",
+        "properties": {
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StepProcessorConfig"
+            },
+            "nullable": true
+          }
+        },
+        "additionalProperties": false
+      }
+    }
+  }
+}

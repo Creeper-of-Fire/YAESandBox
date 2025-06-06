@@ -4,8 +4,8 @@ import type {
     BlockStatusUpdateDto,
     DisplayUpdateDto,
     BlockUpdateSignalDto,
-} from '@/types/generated/api';
-import {BlockStatusCode, BlockDataFields, StreamStatus, UpdateMode} from '@/types/generated/api'; // 引入 Enum
+} from '@/types/generated/public-api-client';
+import {BlockStatusCode, BlockDataFields, StreamStatus, UpdateMode} from '@/types/generated/public-api-client'; // 引入 Enum
 import {useTopologyStore} from './topologyStore.ts';
 import {useBlockContentStore} from './blockContentStore.ts';
 import {eventBus} from "@/services/eventBus.ts";

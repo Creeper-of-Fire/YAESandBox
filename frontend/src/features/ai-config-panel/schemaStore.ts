@@ -1,7 +1,7 @@
 ﻿// src/stores/schemaStore.ts
 import {defineStore} from 'pinia';
 import {ref} from 'vue';
-import {AiConfigSchemasService} from '@/types/generated/aiconfigapi/services/AiConfigSchemasService.ts'; // Adjust path
+import {AiConfigSchemasService} from '@/types/generated/ai-config-api-client/services/AiConfigSchemasService.ts'; // Adjust path
 
 export const useAiConfigSchemaStore = defineStore('schemaStore', () =>
 {

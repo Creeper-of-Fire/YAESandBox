@@ -1,6 +1,6 @@
 ﻿// src/services/signalrService.ts
 import * as signalR from "@microsoft/signalr";
-import {OpenAPI} from '@/types/generated/api/core/OpenAPI'; // 用于获取 BASE URL
+import {OpenAPI} from '@/types/generated/public-api-client/core/OpenAPI'; // 用于获取 BASE URL
 import {useBlockStatusStore} from '@/features/block-bubble-stream-panel/blockStatusStore.ts';
 import {useConnectionStore} from '@/stores/connectionStore';
 // import { useTopologyStore } from '../stores/topologyStore';
@@ -16,9 +16,9 @@ import type {
     TriggerMainWorkflowRequestDto,
     TriggerMicroWorkflowRequestDto,
     // Enums for event data payload
-} from "@/types/generated/api";
+} from "@/types/generated/public-api-client";
 
-import {StreamStatus, UpdateMode} from "@/types/generated/api";
+import {StreamStatus, UpdateMode} from "@/types/generated/public-api-client";
 
 
 // SignalR Hub 的相对路径

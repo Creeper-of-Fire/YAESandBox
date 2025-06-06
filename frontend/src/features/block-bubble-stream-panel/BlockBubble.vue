@@ -97,10 +97,10 @@ import {v4 as uuidv4} from 'uuid';
 import {useTopologyStore} from '@/features/block-bubble-stream-panel/topologyStore.ts';
 import {useBlockContentStore} from '@/features/block-bubble-stream-panel/blockContentStore.ts';
 import {useBlockStatusStore} from '@/features/block-bubble-stream-panel/blockStatusStore.ts';
-import {BlockStatusCode, type ConflictDetectedDto, type RegenerateBlockRequestDto} from '@/types/generated/api'; // 引入 Enum
+import {BlockStatusCode, type ConflictDetectedDto, type RegenerateBlockRequestDto} from '@/types/generated/public-api-client'; // 引入 Enum
 import type {ProcessedBlockNode} from '@/features/block-bubble-stream-panel/topologyStore.ts'; // 引入处理后的节点类型
 import {signalrService} from '@/services/signalrService.ts'; // <--- 导入 signalrService
-import {BlockManagementService} from '@/types/generated/api'; // <--- 导入用于删除的 REST API Service
+import {BlockManagementService} from '@/types/generated/public-api-client'; // <--- 导入用于删除的 REST API Service
 
 const props = defineProps<{
   blockId: string;

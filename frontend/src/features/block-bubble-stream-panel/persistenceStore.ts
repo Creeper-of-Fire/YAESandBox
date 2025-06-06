@@ -1,7 +1,7 @@
 ﻿// src/stores/persistenceStore.ts
 import {defineStore} from 'pinia';
 import {ref} from 'vue';
-import {PersistenceService} from '@/types/generated/api'; // 引入 API Service
+import {PersistenceService} from '@/types/generated/public-api-client'; // 引入 API Service
 import {useTopologyStore} from './topologyStore.ts';
 import {useBlockContentStore} from './blockContentStore.ts';
 import {useBlockStatusStore} from './blockStatusStore.ts';

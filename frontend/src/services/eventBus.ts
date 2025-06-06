@@ -1,6 +1,6 @@
 ﻿// services/eventBus.ts
 import mitt from 'mitt';
-import {StreamStatus} from "@/types/generated/api";
+import {StreamStatus} from "@/types/generated/public-api-client";
 
 // 定义事件类型 (关键是 targetElementId)
 type Events = {

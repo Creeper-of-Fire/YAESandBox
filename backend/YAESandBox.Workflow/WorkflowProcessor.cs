@@ -1,5 +1,5 @@
-﻿using YAESandBox.API.DTOs.WebSocket;
-using YAESandBox.Core.Action;
+﻿using YAESandBox.Core.Action;
+using YAESandBox.Core.DTOs.WebSocket;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.DebugDto;

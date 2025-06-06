@@ -3,8 +3,8 @@ import {ref, onMounted, onBeforeUnmount, readonly} from 'vue';
 import {v4 as uuidv4} from 'uuid';
 import {eventBus} from '@/services/eventBus';
 import {signalrService} from '@/services/signalrService'; // 用于触发
-import type {TriggerMicroWorkflowRequestDto} from '@/types/generated/api';
-import {StreamStatus, UpdateMode} from '@/types/generated/api'
+import type {TriggerMicroWorkflowRequestDto} from '@/types/generated/public-api-client';
+import {StreamStatus, UpdateMode} from '@/types/generated/public-api-client'
 
 interface MicroWorkflowResult
 {

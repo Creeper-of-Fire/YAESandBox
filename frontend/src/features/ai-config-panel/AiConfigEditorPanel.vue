@@ -121,11 +121,11 @@ import {
 } from 'naive-ui';
 import VueForm from '@lljj/vue3-form-naive'; // 确认此库的准确导入名称和方式
 import {cloneDeep, isEqual} from 'lodash-es';
-import {AiConfigurationsService} from '@/types/generated/aiconfigapi/services/AiConfigurationsService.ts';
-import {AiConfigSchemasService} from '@/types/generated/aiconfigapi/services/AiConfigSchemasService.ts';
-import type {AiConfigurationSet} from '@/types/generated/aiconfigapi/models/AiConfigurationSet.ts';
-import type {SelectOptionDto as ApiSelectOption} from '@/types/generated/aiconfigapi/models/SelectOptionDto.ts';
-import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi/models/AbstractAiProcessorConfig.ts";
+import {AiConfigurationsService} from '@/types/generated/ai-config-api-client';
+import {AiConfigSchemasService} from '@/types/generated/ai-config-api-client';
+import type {AiConfigurationSet} from '@/types/generated/ai-config-api-client';
+import type {SelectOptionDto as ApiSelectOption} from '@/types/generated/ai-config-api-client';
+import type {AbstractAiProcessorConfig} from '@/types/generated/ai-config-api-client';
 import {useAiConfigSchemaStore} from "@/features/ai-config-panel/schemaStore.ts";
 import AiConfigTester from "@/features/ai-config-panel/AiConfigTester.vue";
 import DynamicFormRenderer, {type DynamicFormRendererInstance} from "@/features/schema-viewer/DynamicFormRenderer.vue";

@@ -9,8 +9,8 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.API.DTOs\YAESandBox.API.DTOs.csproj"/>
-        <ProjectReference Include="..\YAESandBox.API.Services\YAESandBox.API.Services.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Core.DTOs\YAESandBox.Core.DTOs.csproj" />
+        <ProjectReference Include="..\YAESandBox.Core.Services\YAESandBox.Core.Services.csproj" />
         <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj"/>
         <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>

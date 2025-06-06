@@ -2,7 +2,7 @@
 import {defineStore} from 'pinia';
 import {ref} from 'vue';
 import {signalrService} from '@/services/signalrService'; // 导入 signalrService 来调用 start/stop
-import {OpenAPI} from '@/types/generated/api'; // 用于获取 BASE URL
+import {OpenAPI} from '@/types/generated/public-api-client'; // 用于获取 BASE URL
 
 // 引入其他需要触发初始化的 Store
 import {useTopologyStore} from '@/features/block-bubble-stream-panel/topologyStore.ts';

@@ -2,8 +2,6 @@
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Config;
-using YAESandBox.Workflow.Module;
-using YAESandBox.Workflow.Step;
 using static YAESandBox.Depend.Storage.ScopedStorageFactory;
 
 namespace YAESandBox.Workflow.Utility;
@@ -61,8 +59,8 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// 只在全局的模块配置中查找，不查找内联的私有部分
     /// </summary>
     /// <returns></returns>
-    internal async Task<Result<IModuleConfig>> FindModuleConfig(string moduleId) =>
-        await FindConfig<IModuleConfig>(this.ForModule, moduleId);
+    internal async Task<Result<AbstractModuleConfig>> FindModuleConfig(string moduleId) =>
+        await FindConfig<AbstractModuleConfig>(this.ForModule, moduleId);
 
     /// <summary>
     /// 只寻找所有的全局工作流配置，不查找内联的私有部分
@@ -82,8 +80,8 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// 只寻找所有的全局模块配置，不查找内联的私有部分
     /// </summary>
     /// <returns></returns>
-    public async Task<Result<IEnumerable<IModuleConfig>>> FindAllModuleConfig() =>
-        await FindAllConfig<IModuleConfig>(this.ForModule);
+    public async Task<Result<IEnumerable<AbstractModuleConfig>>> FindAllModuleConfig() =>
+        await FindAllConfig<AbstractModuleConfig>(this.ForModule);
 
     /// <summary>
     /// 保存工作流配置到全局
@@ -107,10 +105,10 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// 保存模块配置到全局
     /// </summary>
     /// <param name="moduleId"></param>
-    /// <param name="moduleConfig"></param>
+    /// <param name="abstractModuleConfig"></param>
     /// <returns></returns>
-    public async Task<Result> SaveModuleConfig(string moduleId, IModuleConfig moduleConfig) =>
-        await this.ForModule.SaveAllAsync(moduleConfig, MakeFileName(moduleId));
+    public async Task<Result> SaveModuleConfig(string moduleId, AbstractModuleConfig abstractModuleConfig) =>
+        await this.ForModule.SaveAllAsync(abstractModuleConfig, MakeFileName(moduleId));
 
     /// <summary>
     /// 删除全局的工作流配置

@@ -84,8 +84,8 @@
 <script setup lang="ts">
 import {ref} from 'vue';
 import {NAlert, NButton, NCard, NEmpty, NFlex, NFormItem, NH4, NInput, NModal, NSpin, NText, useMessage,} from 'naive-ui';
-import {AiConfigurationsService} from '@/types/generated/aiconfigapi/services/AiConfigurationsService.ts';
-import type {AbstractAiProcessorConfig} from "@/types/generated/aiconfigapi";
+import {AiConfigurationsService} from '@/types/generated/ai-config-api-client';
+import type {AbstractAiProcessorConfig} from "@/types/generated/ai-config-api-client";
 
 // --- 组件 Props ---
 // 和之前一样，从父组件接收这些参数
