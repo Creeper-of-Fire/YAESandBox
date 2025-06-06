@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type {IModuleConfig} from '../models/IModuleConfig';
-import type {JsonNode} from '../models/JsonNode';
 import type {CancelablePromise} from '../core/CancelablePromise';
 import {OpenAPI} from '../core/OpenAPI';
 import {request as __request} from '../core/request';
@@ -11,10 +10,10 @@ import {request as __request} from '../core/request';
 export class ModuleConfigService
 {
     /**
-     * @returns JsonNode OK
+     * @returns any OK
      * @throws ApiError
      */
-    public static getApiV1WorkflowsConfigsGlobalModulesAllModuleConfigsSchemas(): CancelablePromise<Record<string, JsonNode>>
+    public static getApiV1WorkflowsConfigsGlobalModulesAllModuleConfigsSchemas(): CancelablePromise<Record<string, any>>
     {
         return __request(OpenAPI, {
             method: 'GET',

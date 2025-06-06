@@ -70,7 +70,7 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript) : IWithDe
     }
 }
 
-file class TempMockOnChunkReceivedScript
+file static class TempMockOnChunkReceivedScript
 {
     public static void OnChunkReceivedScript(string totalChunkString) { }
 }

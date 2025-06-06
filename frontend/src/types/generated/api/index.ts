@@ -22,8 +22,6 @@ export type {EntitySummaryDto} from './models/EntitySummaryDto';
 export {EntityType} from './models/EntityType';
 export type {GameStateDto} from './models/GameStateDto';
 export type {IModuleConfig} from './models/IModuleConfig';
-export type {JsonNode} from './models/JsonNode';
-export type {JsonNodeOptions} from './models/JsonNodeOptions';
 export type {ProblemDetails} from './models/ProblemDetails';
 export type {RegenerateBlockRequestDto} from './models/RegenerateBlockRequestDto';
 export type {ResolveConflictRequestDto} from './models/ResolveConflictRequestDto';

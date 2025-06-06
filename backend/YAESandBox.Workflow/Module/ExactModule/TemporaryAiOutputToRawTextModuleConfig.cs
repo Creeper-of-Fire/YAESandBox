@@ -54,8 +54,7 @@ internal class TemporaryAiOutputToRawTextModuleProcessor(TemporaryAiOutputToRawT
 /// 【临时模块】用于将AI模块的输出 (StepProcessorContent.FullAiReturn) 直接写入到 WorkflowProcessorContent.RawText 的配置。
 /// 这个模块是临时的，未来会被更完善的变量传递和文本组装机制取代。
 /// </summary>
-internal record TemporaryAiOutputToRawTextModuleConfig
-    : AbstractModuleConfig<TemporaryAiOutputToRawTextModuleProcessor>
+internal record TemporaryAiOutputToRawTextModuleConfig : AbstractModuleConfig<TemporaryAiOutputToRawTextModuleProcessor>
 {
     /// <summary>
     /// 追加模式。默认为追加到末尾。

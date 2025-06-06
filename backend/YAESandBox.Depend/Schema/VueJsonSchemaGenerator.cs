@@ -11,12 +11,24 @@ namespace YAESandBox.Depend.Schema;
 /// </summary>
 public static class VueFormSchemaGenerator
 {
+    /// <summary>
+    /// 生成Schema字符串
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="configureSettings"></param>
+    /// <returns></returns>
     public static string GenerateSchemaJson(Type type, Action<SystemTextJsonSchemaGeneratorSettings>? configureSettings = null)
     {
         var schema = GenerateSchema(type, configureSettings);
         return schema.ToJson();
     }
 
+    /// <summary>
+    /// 生成Schema
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="configureSettings"></param>
+    /// <returns></returns>
     public static JsonSchema GenerateSchema(Type type, Action<SystemTextJsonSchemaGeneratorSettings>? configureSettings = null)
     {
         // 1. 创建 System.Text.Json 的 JsonSerializerOptions，这将驱动 NJsonSchema 的行为

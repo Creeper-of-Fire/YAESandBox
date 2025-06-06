@@ -1,6 +1,4 @@
 ﻿using YAESandBox.Workflow.Config;
-using YAESandBox.Workflow.Module;
-using YAESandBox.Workflow.Step;
 
 namespace YAESandBox.Workflow.Utility;
 
@@ -26,7 +24,7 @@ internal static class ConfigLocator
         throw new InvalidOperationException(result.Errors.FirstOrDefault()?.Message);
     }
 
-    internal static async Task<IModuleConfig> FindModuleConfig(WorkflowConfigFileService workflowConfigFileService, string moduleId)
+    internal static async Task<AbstractModuleConfig> FindModuleConfig(WorkflowConfigFileService workflowConfigFileService, string moduleId)
     {
         var result = await workflowConfigFileService.FindModuleConfig(moduleId);
         if (result.TryGetValue(out var value))

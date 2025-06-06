@@ -1,7 +1,7 @@
 ﻿// --- File: YAESandBox.Workflow/Abstractions/IWorkflowEngine.cs ---
 
-using YAESandBox.API.DTOs.WebSocket;
 using YAESandBox.Core.Action;
+using YAESandBox.Core.DTOs.WebSocket;
 
 namespace YAESandBox.Workflow.Abstractions;
 

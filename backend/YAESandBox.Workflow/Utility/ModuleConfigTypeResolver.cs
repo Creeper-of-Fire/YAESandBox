@@ -1,12 +1,11 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reflection;
 using YAESandBox.Workflow.Config;
-using YAESandBox.Workflow.Module;
 
 namespace YAESandBox.Workflow.Utility;
 
 /// <summary>
-/// 辅助类，用于根据模块类型名称查找具体的 <see cref="IModuleConfig"/> 实现类型，
+/// 辅助类，用于根据模块类型名称查找具体的 <see cref="AbstractModuleConfig"/> 实现类型，
 /// 并在初始化时缓存所有可用的实现。
 /// </summary>
 internal static class ModuleConfigTypeResolver
@@ -15,9 +14,9 @@ internal static class ModuleConfigTypeResolver
     // 使用 IReadOnlyDictionary 确保初始化后的不可变性。
     private static readonly IReadOnlyDictionary<string, Type> ResolvedTypesCache;
 
-    private static readonly Type InterfaceType = typeof(IModuleConfig);
+    private static readonly Type InterfaceType = typeof(AbstractModuleConfig);
 
-    // 假设所有 IModuleConfig 的实现都在 IModuleConfig 接口所在的程序集中。
+    // 假设所有 AbstractModuleConfig 的实现都在 AbstractModuleConfig 接口所在的程序集中。
     // 如果实现可能分布在多个程序集中，需要调整 TargetAssemblies 的获取逻辑。
     private static readonly Assembly TargetAssembly = InterfaceType.Assembly; // TODO: 确认扫描范围是否足够
 
@@ -34,7 +33,7 @@ internal static class ModuleConfigTypeResolver
 
         foreach (var type in allTypesInAssembly)
         {
-            // 确保类型是非抽象的类，并且实现了 IModuleConfig
+            // 确保类型是非抽象的类，并且实现了 AbstractModuleConfig
             if (type is not { IsClass: true, IsAbstract: false } || !InterfaceType.IsAssignableFrom(type))
                 continue;
             // 约定：ModuleType 的值等于类名。
@@ -64,7 +63,7 @@ internal static class ModuleConfigTypeResolver
     }
 
     /// <summary>
-    /// 根据从JSON中读取的模块类型名称查找具体的 <see cref="IModuleConfig"/> 实现类型。
+    /// 根据从JSON中读取的模块类型名称查找具体的 <see cref="AbstractModuleConfig"/> 实现类型。
     /// </summary>
     /// <param name="moduleTypeNameFromInput">从JSON中读取的模块类型名称。</param>
     /// <returns>找到的具体实现类型；如果未找到，则返回 null。</returns>
@@ -78,7 +77,7 @@ internal static class ModuleConfigTypeResolver
     }
 
     /// <summary>
-    /// 获取所有已注册的 <see cref="IModuleConfig"/> 实现类型。
+    /// 获取所有已注册的 <see cref="AbstractModuleConfig"/> 实现类型。
     /// </summary>
     /// <returns>一个包含所有模块配置实现类型的集合。</returns>
     public static IEnumerable<Type> GetAllModuleConfigTypes()

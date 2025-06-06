@@ -22,5 +22,5 @@ public record StepProcessorConfig
     /// 按顺序执行的模块列表。
     /// StepProcessor 在执行时会严格按照此列表的顺序执行模块。
     /// </summary>
-    public List<IModuleConfig> Modules { get; init; } = [];
+    public List<AbstractModuleConfig> Modules { get; init; } = [];
 }

@@ -650,7 +650,7 @@
   },
   {
     "PackageId": "Swashbuckle.AspNetCore.Swagger",
-    "PackageVersion": "8.1.1",
+    "PackageVersion": "8.1.4",
     "PackageProjectUrl": "https://github.com/domaindrivendev/Swashbuckle.AspNetCore",
     "Copyright": "Copyright (c) 2016-2025 Richard Morris",
     "Authors": "domaindrivendev",
@@ -660,7 +660,7 @@
   },
   {
     "PackageId": "Swashbuckle.AspNetCore.SwaggerGen",
-    "PackageVersion": "8.1.1",
+    "PackageVersion": "8.1.4",
     "PackageProjectUrl": "https://github.com/domaindrivendev/Swashbuckle.AspNetCore",
     "Copyright": "Copyright (c) 2016-2025 Richard Morris",
     "Authors": "domaindrivendev",

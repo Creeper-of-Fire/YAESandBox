@@ -20,6 +20,7 @@
     <ItemGroup>
         <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0"/>
         <PackageReference Include="Microsoft.Extensions.Http" Version="10.0.0-preview.3.25171.5"/>
+        <PackageReference Include="Microsoft.OpenApi" Version="1.6.23"/>
         <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2"/>
     </ItemGroup>
 

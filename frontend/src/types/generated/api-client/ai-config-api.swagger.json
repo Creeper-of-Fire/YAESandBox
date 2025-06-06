@@ -1,0 +1,684 @@
+{
+  "openapi": "3.0.4",
+  "info": {
+    "title": "YAESandBox API (AI Config)",
+    "description": "包含AI服务配置相关的API。",
+    "version": "v1"
+  },
+  "paths": {
+    "/api/ai-configuration-management/schemas/{configTypeName}": {
+      "get": {
+        "tags": [
+          "AiConfigSchemas"
+        ],
+        "summary": "获取指定 AI 配置类型的表单 Schema 结构 (JSON Schema 格式，包含 ui: 指令)。\r\n用于前端动态生成该类型配置的【新建】或【编辑】表单骨架。",
+        "parameters": [
+          {
+            "name": "configTypeName",
+            "in": "path",
+            "description": "AI 配置的类型名称 (例如 \"DoubaoAiProcessorConfig\")。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取指定配置类型的 JSON Schema。",
+            "content": {
+              "application/json": {
+                "schema": { }
+              }
+            }
+          },
+          "400": {
+            "description": "请求的配置类型名称无效。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到指定名称的配置类型。",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "生成 Schema 时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/ai-configuration-management/available-config-types": {
+      "get": {
+        "tags": [
+          "AiConfigSchemas"
+        ],
+        "summary": "获取所有可用的 AI 配置【类型定义】列表。\r\n用于前端展示可以【新建】哪些类型的 AI 配置。",
+        "responses": {
+          "200": {
+            "description": "成功获取所有可用的 AI 配置类型列表。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOptionDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOptionDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/SelectOptionDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/ai-configurations": {
+      "get": {
+        "tags": [
+          "AiConfigurations"
+        ],
+        "summary": "获取所有已保存的 AI 配置集的完整列表。",
+        "responses": {
+          "200": {
+            "description": "成功获取所有 AI 配置集的列表。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/AiConfigurationSet"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/AiConfigurationSet"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "$ref": "#/components/schemas/AiConfigurationSet"
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "获取配置时发生内部服务器错误。"
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "AiConfigurations"
+        ],
+        "summary": "添加一个新的 AI 配置集。",
+        "requestBody": {
+          "description": "要添加的 AI 配置集对象。",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiConfigurationSet"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiConfigurationSet"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiConfigurationSet"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "配置集已成功创建，并返回新创建的 UUID。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求体无效或模型验证失败。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "添加配置集时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/ai-configurations/{uuid}": {
+      "get": {
+        "tags": [
+          "AiConfigurations"
+        ],
+        "summary": "根据 UUID 获取一个特定的 AI 配置集。",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "description": "配置集的唯一标识符。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取指定的 AI 配置集。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiConfigurationSet"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiConfigurationSet"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AiConfigurationSet"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求的 UUID 无效（例如，为空）。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到指定 UUID 的配置集。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "AiConfigurations"
+        ],
+        "summary": "更新一个已存在的 AI 配置集。",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "description": "要更新的配置集的唯一标识符。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "包含更新信息的 AI 配置集对象。",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiConfigurationSet"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiConfigurationSet"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/AiConfigurationSet"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "配置集已成功更新。"
+          },
+          "404": {
+            "description": "未找到要更新的配置集。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求无效，例如 UUID 为空。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "更新配置时发生内部服务器错误。"
+          }
+        }
+      },
+      "delete": {
+        "tags": [
+          "AiConfigurations"
+        ],
+        "summary": "根据 UUID 删除一个 AI 配置集。",
+        "parameters": [
+          {
+            "name": "uuid",
+            "in": "path",
+            "description": "要删除的配置集的唯一标识符。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "配置集已成功删除（或原先就不存在）。"
+          },
+          "400": {
+            "description": "请求的 UUID 无效。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "删除配置时发生内部服务器错误。"
+          }
+        }
+      }
+    },
+    "/api/ai-configurations/ai-config-test/{moduleType}": {
+      "post": {
+        "tags": [
+          "AiConfigurations"
+        ],
+        "summary": "测试Ai配置",
+        "parameters": [
+          {
+            "name": "moduleType",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "description": "配置和测试文本。",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestAiDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestAiDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestAiDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "AI 配置测试成功，返回 AI 生成的完整文本。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "测试期间发生错误，例如 AI 服务调用失败。"
+          }
+        }
+      }
+    },
+    "/api/ai-configurations/default-data/{moduleType}": {
+      "get": {
+        "tags": [
+          "AiConfigurations"
+        ],
+        "summary": "获取指定 AI 模块类型的初始默认数据。\r\n用于前端为新配置项生成表单。",
+        "parameters": [
+          {
+            "name": "moduleType",
+            "in": "path",
+            "description": "AI 模块的类型名称 (例如 \"DoubaoAiProcessorConfig\")。",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "成功获取指定 AI 模块类型的默认数据。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "请求的模块类型名称无效。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "未找到指定名称的 AI 模块类型。",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "获取默认数据时发生内部服务器错误。"
+          }
+        },
+        "deprecated": true
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "AbstractAiProcessorConfig": {
+        "required": [
+          "configType"
+        ],
+        "type": "object",
+        "properties": {
+          "maxInputTokens": {
+            "type": "integer",
+            "description": "最大输入Token数。不出现在请求体中，但是在其他地方（如历史记录生成）会有用。",
+            "format": "int32",
+            "default": 2147483647,
+            "nullable": true
+          },
+          "configType": {
+            "minLength": 1,
+            "type": "string",
+            "description": "AI配置的类型。",
+            "readOnly": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "这个是Ai服务配置的基类，仅含绝对存在的字段。"
+      },
+      "AiConfigurationSet": {
+        "required": [
+          "configSetName",
+          "configurations"
+        ],
+        "type": "object",
+        "properties": {
+          "configSetName": {
+            "minLength": 1,
+            "type": "string",
+            "description": "用户为配置集指定的名称，用于在 UI 上显示和识别。"
+          },
+          "configurations": {
+            "type": "object",
+            "additionalProperties": {
+              "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+            },
+            "description": "包含在此配置集中的具体 AI 配置。\r\nKey 是 AI 配置的模块类型 (ModuleType, 例如 \"DoubaoAiProcessorConfig\")。\r\nValue 是该模块类型的具体配置数据对象 (不包含 ConfigName 和 ModuleType 字段本身)。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "代表一个 AI 配置集，它包含了一组特定类型的 AI 配置。"
+      },
+      "ProblemDetails": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "nullable": true
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "integer",
+            "format": "int32",
+            "nullable": true
+          },
+          "detail": {
+            "type": "string",
+            "nullable": true
+          },
+          "instance": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "additionalProperties": { }
+      },
+      "SelectOptionDto": {
+        "required": [
+          "label",
+          "value"
+        ],
+        "type": "object",
+        "properties": {
+          "value": {
+            "description": "选项的实际值。"
+          },
+          "label": {
+            "minLength": 1,
+            "type": "string",
+            "description": "选项在UI上显示的文本。"
+          }
+        },
+        "additionalProperties": false,
+        "description": "代表一个选择项，用于下拉列表或单选/复选按钮组。"
+      },
+      "TestAiDto": {
+        "type": "object",
+        "properties": {
+          "configJson": {
+            "$ref": "#/components/schemas/AbstractAiProcessorConfig"
+          },
+          "testText": {
+            "type": "string",
+            "description": "测试文本",
+            "nullable": true
+          }
+        },
+        "additionalProperties": false,
+        "description": "测试用DTO"
+      }
+    }
+  }
+}

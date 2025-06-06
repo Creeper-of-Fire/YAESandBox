@@ -8,7 +8,6 @@ using System.Text.Json.Serialization;
 
 // 定义核心命名空间
 namespace YAESandBox.Core.State.Entity;
-
 // --- 核心类型定义 ---
 
 /// <summary>
