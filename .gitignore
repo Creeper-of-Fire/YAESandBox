@@ -54,3 +54,4 @@ TestResult.xml
 nunit-*.xml
 /backend/YAESandBox.API/Data
 backend/nuget.config
+/backend/YAESandBox.AppWeb/Data
