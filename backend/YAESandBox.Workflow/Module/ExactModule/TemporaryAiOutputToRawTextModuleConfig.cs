@@ -1,9 +1,9 @@
 ﻿using FluentResults;
+using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Module.ExactModule.TemporaryAiOutputToRawTextModuleProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
-using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Module.ExactModule;
 
@@ -29,30 +29,16 @@ internal class TemporaryAiOutputToRawTextModuleProcessor(
 
     public record TemporaryAiOutputToRawTextModuleProcessorDebugDto : IModuleProcessorDebugDto;
 
-    public Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent, CancellationToken cancellationToken = default)
+    public async Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent, CancellationToken cancellationToken = default)
     {
         // 从 StepProcessorContent.FullAiReturn 获取AI的输出
         // 这是 AiModuleProcessor 放置其结果的固定位置
         if (stepProcessorContent.FullAiReturn == null)
-            return Task.FromResult(Result.Ok()); // 只处理非null的输出
-        
-        string aiOutput = "新AI的生成："+stepProcessorContent.FullAiReturn+"\n";
+            return Result.Ok(); // 只处理非null的输出
 
-        switch (this.Config.Mode)
-        {
-            case RawTextOutputMode.Overwrite:
-                stepProcessorContent.OutputVar(nameof(WorkflowRuntimeContext.FinalRawText), aiOutput);
-                break;
-            case RawTextOutputMode.AppendToEnd:
-            default: // 默认为 AppendToEnd
-                // 确保 RawText 不是 null，如果是，则初始化为空字符串再追加
-                stepProcessorContent.OutputVar(nameof(WorkflowRuntimeContext.FinalRawText),
-                    (stepProcessorContent.InputVar(nameof(WorkflowRuntimeContext.FinalRawText)) ?? "") + aiOutput);
-                break;
-        }
-        // 如果 aiOutput 为 null，我们选择不修改 RawText，也可以根据需要记录日志或进行其他处理
+        string aiOutput = "最终得到的AI生成：" + stepProcessorContent.FullAiReturn + "\n";
 
-        return Task.FromResult(Result.Ok());
+        return await this.WorkflowRuntimeService.CallbackAsync<IWorkflowCallbackSendFinalRawText>(it => it.SendFinalRawTextAsync(aiOutput));
     }
 }
 
@@ -63,32 +49,6 @@ internal class TemporaryAiOutputToRawTextModuleProcessor(
 internal record TemporaryAiOutputToRawTextModuleConfig : AbstractModuleConfig<TemporaryAiOutputToRawTextModuleProcessor>
 {
     /// <inheritdoc />
-    public override List<string> Produces { get; init; } = [nameof(WorkflowRuntimeContext.FinalRawText)];
-
-    /// <summary>
-    /// 追加模式。默认为追加到末尾。
-    /// </summary>
-    public RawTextOutputMode Mode { get; init; } = RawTextOutputMode.AppendToEnd;
-
-
-    /// <inheritdoc />
     protected override TemporaryAiOutputToRawTextModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
         new(workflowRuntimeService, this);
-}
-
-/// <summary>
-/// RawText 输出模式。
-/// </summary>
-public enum RawTextOutputMode
-{
-    /// <summary>
-    /// 覆盖现有的 RawText 内容。
-    /// </summary>
-    Overwrite,
-
-    /// <summary>
-    /// 追加到 RawText 的末尾。
-    /// </summary>
-    AppendToEnd,
-    // AppendToBeginning 等其他模式可以按需添加
 }

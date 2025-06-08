@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using FluentResults;
-using YAESandBox.Core;
 using YAESandBox.Core.Block;
 using YAESandBox.Core.Block.BlockManager;
 using YAESandBox.Core.DTOs;

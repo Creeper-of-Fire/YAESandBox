@@ -55,3 +55,4 @@ nunit-*.xml
 /backend/YAESandBox.API/Data
 backend/nuget.config
 /backend/YAESandBox.AppWeb/Data
+/tools/vue_to_text/output

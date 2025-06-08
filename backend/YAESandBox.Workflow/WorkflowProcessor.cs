@@ -1,12 +1,9 @@
 ﻿using FluentResults;
-using YAESandBox.Core.Action;
 using YAESandBox.Workflow.Abstractions;
-using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Step;
 using YAESandBox.Workflow.Utility;
-using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow;
 
@@ -34,25 +31,7 @@ internal class WorkflowProcessor(
     private WorkflowRuntimeService RuntimeService { get; } = runtimeService;
     private WorkflowRuntimeContext Context { get; } = new(triggerParams);
 
-    /// <summary>
-    /// 封装工作流执行所需的无状态、只读的外部服务。
-    /// 这个对象在工作流启动时创建一次，并被传递给所有需要它的组件。
-    /// </summary>
-    /// <param name="masterAiService"></param>
-    /// <param name="dataAccess"></param>
-    /// <param name="requestDisplayUpdateCallback"></param>
-    public class WorkflowRuntimeService(
-        IMasterAiService masterAiService,
-        IWorkflowDataAccess dataAccess,
-        Action<DisplayUpdateRequestPayload> requestDisplayUpdateCallback)
-    {
-        public IMasterAiService MasterAiService { get; } = masterAiService;
 
-        public IWorkflowDataAccess DataAccess { get; } = dataAccess;
-
-        public void RequestDisplayUpdateCallback(string content, UpdateMode updateMode = UpdateMode.FullSnapshot) =>
-            requestDisplayUpdateCallback(new DisplayUpdateRequestPayload(content, updateMode));
-    }
 
     /// <summary>
     /// 封装工作流执行期间的有状态数据。
@@ -70,18 +49,18 @@ internal class WorkflowProcessor(
         /// 每个步骤的输出可以写回这里，供后续步骤使用。
         /// </summary>
         public Dictionary<string, object> GlobalVariables { get; } = triggerParams.ToDictionary(kv => kv.Key, object (kv) => kv.Value);
+        
+        // /// <summary>
+        // /// 最终生成的、要呈现给用户的原始文本。
+        // /// </summary>
+        // public string FinalRawText =>
+        //     this.GlobalVariables.GetValueOrDefault(nameof(this.FinalRawText)) as string ?? string.Empty;
 
-        /// <summary>
-        /// 最终生成的、要呈现给用户的原始文本。
-        /// </summary>
-        public string FinalRawText =>
-            this.GlobalVariables.GetValueOrDefault(nameof(this.FinalRawText)) as string ?? string.Empty;
-
-        /// <summary>
-        /// 整个工作流生成的所有原子操作列表。
-        /// </summary>
-        public List<AtomicOperation> GeneratedOperations =>
-            this.GlobalVariables.GetValueOrDefault(nameof(this.GeneratedOperations)) as List<AtomicOperation> ?? [];
+        // /// <summary>
+        // /// 整个工作流生成的所有原子操作列表。
+        // /// </summary>
+        // public List<IWorkflowAtomicOperation> GeneratedOperations =>
+        //     this.GlobalVariables.GetValueOrDefault(nameof(this.GeneratedOperations)) as List<IWorkflowAtomicOperation> ?? [];
     }
 
 
@@ -136,7 +115,7 @@ internal class WorkflowProcessor(
             if (readyToExecute.Count == 0)
             {
                 string remainingNodeNames = string.Join(", ", nodes.Values.Except(completedNodes).Select(n => n.Step.Config.ConfigId));
-                return new WorkflowExecutionResult(false, $"工作流存在循环依赖，无法继续执行。剩余节点: {remainingNodeNames}", "CircularDependency", [], "");
+                return new WorkflowExecutionResult(false, $"工作流存在循环依赖，无法继续执行。剩余节点: {remainingNodeNames}", "CircularDependency");
             }
 
             // 从队列中取出当前批次所有可执行的任务
@@ -157,8 +136,7 @@ internal class WorkflowProcessor(
                 if (result.IsFailed)
                 {
                     // 任何一个并行步骤失败，则整个工作流失败
-                    return new WorkflowExecutionResult(false, result.Errors.FirstOrDefault()?.Message, "StepExecutionFailed",
-                        this.Context.GeneratedOperations, this.Context.FinalRawText ?? "");
+                    return new WorkflowExecutionResult(false, result.Errors.FirstOrDefault()?.Message, "StepExecutionFailed");
                 }
             }
 
@@ -182,7 +160,7 @@ internal class WorkflowProcessor(
         }
 
         // 所有节点都成功执行完毕后，构造一个成功的最终结果
-        return new WorkflowExecutionResult(true, null, null, this.Context.GeneratedOperations, this.Context.FinalRawText ?? "");
+        return new WorkflowExecutionResult(true, null, null);
     }
 
     /// <summary>

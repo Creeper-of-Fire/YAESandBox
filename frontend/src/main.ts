@@ -2,7 +2,7 @@
 import {createApp} from 'vue';
 import {createPinia} from 'pinia';
 import App from './App.vue';
-import {OpenAPI} from './types/generated/public-api-client'; // 确认路径正确
+import {OpenAPI} from './app-game/types/generated/public-api-client'; // 确认路径正确
 // 通用字体
 import 'vfonts/Lato.css'
 // 等宽字体

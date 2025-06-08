@@ -10,6 +10,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Core.Workflow.CoreModules\YAESandBox.Core.Workflow.CoreModules.csproj" />
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
 

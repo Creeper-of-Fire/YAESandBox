@@ -14,17 +14,18 @@ public class WorkflowRunner
     private WorkflowConfigFileService WorkflowConfigFileService { get; }
     private IMasterAiService MasterAiService { get; }
     private IWorkflowDataAccess DataAccess { get; }
-    
+
     /// <summary>
     /// 构造函数，手动设置所有依赖项。
     /// </summary>
     public WorkflowRunner()
     {
         Console.WriteLine("初始化工作流运行环境...");
-        
+
         // 1. 设置存储后端
         // 使用你提供的 JsonFileCacheJsonStorage，数据将保存在程序的执行目录下的 "YAESandBoxData" 文件夹中
-        string dataRootPath = Path.Combine(AppContext.BaseDirectory, "C:\\Users\\Creeper10\\Desktop\\ProjectForFun\\YAESandBox\\backend\\YAESandBox.AppWeb\\Data");
+        string dataRootPath = Path.Combine(AppContext.BaseDirectory,
+            "C:\\Users\\Creeper10\\Desktop\\ProjectForFun\\YAESandBox\\backend\\YAESandBox.AppWeb\\Data");
         IGeneralJsonStorage storage = new JsonFileCacheJsonStorage(dataRootPath);
         Console.WriteLine($"[环境] 数据存储路径: {dataRootPath}");
 
@@ -35,11 +36,11 @@ public class WorkflowRunner
         // 3. 初始化AI配置管理器和AI主服务
         var aiConfigManager = new JsonFileAiConfigurationManager(storage);
         Console.WriteLine("[环境] AI配置管理器已初始化。");
-        
+
         // 4. 初始化手动 HttpClient 工厂
         var httpClientFactory = new ManualHttpClientFactory();
         Console.WriteLine("[环境] 手动HttpClient工厂已初始化。");
-        
+
         // 5. 初始化真正的 MasterAiService，并注入依赖
         this.MasterAiService = new MasterAiService(httpClientFactory, aiConfigManager);
         Console.WriteLine("[环境] 真正的MasterAiService已初始化。");
@@ -47,7 +48,7 @@ public class WorkflowRunner
         // 6. 初始化模拟的数据访问层
         this.DataAccess = new MockWorkflowDataAccess();
         Console.WriteLine("[环境] 模拟数据访问层已初始化。");
-        
+
         Console.WriteLine("工作流运行环境准备就绪。\n");
     }
 
@@ -56,8 +57,10 @@ public class WorkflowRunner
     /// </summary>
     /// <param name="workflowId">要执行的工作流的ID。</param>
     /// <param name="triggerParams">触发工作流的参数。</param>
+    /// <param name="rewTextCallback">生成rawText后的回调函数</param>
     /// <returns>工作流执行结果。</returns>
-    public async Task<WorkflowExecutionResult?> RunWorkflowAsync(string workflowId, IReadOnlyDictionary<string, string> triggerParams)
+    public async Task<WorkflowExecutionResult?> RunWorkflowAsync(string workflowId, IReadOnlyDictionary<string, string> triggerParams,
+        Action<string> rewTextCallback)
     {
         Console.WriteLine($"--- 开始执行工作流: {workflowId} ---");
 
@@ -71,6 +74,7 @@ public class WorkflowRunner
             Console.ResetColor();
             return null;
         }
+
         Console.WriteLine("工作流配置加载成功。");
 
         // 2. 定义回调函数
@@ -82,13 +86,18 @@ public class WorkflowRunner
         //     Console.WriteLine($"[显示更新请求] 内容: {payload.Content}");
         //     Console.ResetColor();
         // }
-        
-        void DisplayUpdateCallback(DisplayUpdateRequestPayload payload)
+
+        Task DisplayUpdateCallback(DisplayUpdateRequestPayload payload)
         {
-            Console.ForegroundColor = ConsoleColor.DarkMagenta;
-            Console.Write(payload.Content);
-            Console.ResetColor();
+            return Task.Run(() =>
+            {
+                Console.ForegroundColor = ConsoleColor.DarkMagenta;
+                Console.Write(payload.Content);
+                Console.ResetColor();
+            });
         }
+
+        var callback = new WorkflowRawTextCallbackTemp(DisplayUpdateCallback, s => Task.Run(() => rewTextCallback(s)));
 
         // 3. 使用 ToProcessor 扩展方法将配置转换为可执行的 WorkflowProcessor
         Console.WriteLine("正在构建工作流处理器...");
@@ -96,7 +105,7 @@ public class WorkflowRunner
             triggerParams: triggerParams,
             masterAiService: this.MasterAiService,
             dataAccess: this.DataAccess,
-            requestDisplayUpdateCallback: DisplayUpdateCallback
+            callback: callback
         );
         Console.WriteLine("工作流处理器构建完成。");
 

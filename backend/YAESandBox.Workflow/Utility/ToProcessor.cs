@@ -2,7 +2,6 @@
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Step;
-using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Utility;
 
@@ -21,9 +20,9 @@ internal static class ToProcessor
         IReadOnlyDictionary<string, string> triggerParams,
         IMasterAiService masterAiService,
         IWorkflowDataAccess dataAccess,
-        Action<DisplayUpdateRequestPayload> requestDisplayUpdateCallback)
+        IWorkflowCallback callback)
     {
-        var content = new WorkflowRuntimeService(masterAiService, dataAccess, requestDisplayUpdateCallback);
+        var content = new WorkflowRuntimeService(masterAiService, dataAccess, callback);
         return new WorkflowProcessor(content, workflowProcessorConfig, triggerParams.ToDictionary());
     }
 }

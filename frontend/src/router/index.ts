@@ -3,13 +3,13 @@
 import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router';
 
 // 1. 导入共享的/核心的视图组件 (如果直接在主路由中定义)
-import GameModeView from '@/app-view/game-view/GameModeView.vue'; // 假设这是游戏模式的入口视图
+import GameModeView from '@/app-game/GameModeView.vue'; // 假设这是游戏模式的入口视图
 // import NotFoundView from '@/views/NotFoundView.vue'; // 404页面示例
 
 // 2. 导入特性模块暴露的路由配置
 //    每个特性模块内部可以有一个 routes.ts 文件，导出该特性相关的子路由数组
 // import { routes as workflowEditorRoutes } from '@/app-view/';
-import {routes as gamePlayerRoutes} from '@/app-view/game-view/routes.ts';
+import {routes as gamePlayerRoutes} from '@/app-game/routes.ts';
 // import { routes as userProfileRoutes } from '@/features/user-profile/routes'; // 更多特性...
 
 // 3. 定义主路由规则 (顶层路由)

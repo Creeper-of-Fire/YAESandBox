@@ -104,8 +104,8 @@
     *   使用 `AsyncLock` 控制对单个 Block 的并发访问。
 
 *   **工作流 (通过 `WorkflowService` 协调)**:
-    *   **主工作流**: 模拟异步 AI 处理，创建子 Block，通过 `DisplayUpdateDto` (`TargetElementId = null`) 流式或一次性更新 Block 内容，并可能生成 `AtomicOperation` 来改变 `WorldState`。完成时可能进入 `Idle`, `Error` 或 `ResolvingConflict` 状态。
-    *   **微工作流**: 模拟异步 AI 处理，不创建 Block 或直接修改状态，通过 `DisplayUpdateDto` (包含 `TargetElementId`) 更新特定 UI 元素。
+    *   **主工作流**: 异步 AI 处理，创建子 Block，通过 `DisplayUpdateDto` (`TargetElementId = null`) 流式或一次性更新 Block 内容，并可能生成 `AtomicOperation` 来改变 `WorldState`。完成时可能进入 `Idle`, `Error` 或 `ResolvingConflict` 状态。
+    *   **微工作流**: 异步 AI 处理，不创建 Block 或直接修改状态，通过 `DisplayUpdateDto` (包含 `TargetElementId`) 更新特定 UI 元素。
 
 *   **工作流引擎 (Workflow Engine)**:
     *   **核心驱动力**: 系统的核心逻辑处理单元，负责生成内容和状态变更指令。

@@ -1,6 +1,6 @@
 ﻿using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
-using YAESandBox.Workflow.Abstractions;
+using YAESandBox.Core.Workflow.CoreModules;
 
 namespace YAESandBox.Workflow.Test;
 
@@ -8,7 +8,7 @@ namespace YAESandBox.Workflow.Test;
 /// IWorkflowDataAccess 的模拟实现，用于控制台环境。
 /// 由于没有连接到真实的游戏状态，它只返回默认或空值。
 /// </summary>
-public class MockWorkflowDataAccess : IWorkflowDataAccess
+public class MockWorkflowDataAccess : IWorkflowGameDataAccess
 {
     /// <inheritdoc />
     public Task<GameState?> GetGameStateAsync(string blockId)

@@ -38,7 +38,7 @@ while (true)
     try
     {
         // 调用运行器执行工作流
-        var result = await runner.RunWorkflowAsync(workflowId, triggerParameters);
+        var result = await runner.RunWorkflowAsync(workflowId, triggerParameters, Console.WriteLine);
 
         // 打印结果
         if (result != null)
@@ -55,10 +55,9 @@ while (true)
 
             Console.WriteLine("\n[最终生成文本 (RawText)]:");
             Console.ForegroundColor = ConsoleColor.DarkBlue;
-            Console.WriteLine(result.RawText);
             Console.ResetColor();
 
-            Console.WriteLine($"\n[生成的原子操作数]: {result.Operations.Count}");
+            // Console.WriteLine($"\n[生成的原子操作数]: {result.Operations.Count}");
             // 你可以在这里遍历并打印 result.Operations 的详细信息
 
             Console.WriteLine("---------------------------------\n");

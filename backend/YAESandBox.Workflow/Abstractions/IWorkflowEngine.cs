@@ -1,7 +1,4 @@
 ﻿// --- File: YAESandBox.Workflow/Abstractions/IWorkflowEngine.cs ---
-
-using YAESandBox.Core.Action;
-
 namespace YAESandBox.Workflow.Abstractions;
 
 /// <summary>
@@ -10,14 +7,12 @@ namespace YAESandBox.Workflow.Abstractions;
 /// <param name="IsSuccess">指示工作流是否成功完成。</param>
 /// <param name="ErrorMessage">如果失败，包含错误信息；成功则为 null。</param>
 /// <param name="ErrorCode">（可选）更具体的错误代码或类型。</param>
-/// <param name="Operations">生成的原子化操作列表。</param>
-/// <param name="RawText">最终生成的原始文本。</param>
+// /// <param name="Operations">生成的原子化操作列表。</param>
+// /// <param name="RawText">最终生成的原始文本。</param>
 public record WorkflowExecutionResult(
     bool IsSuccess,
     string? ErrorMessage,
-    string? ErrorCode, // 可以用枚举或其他方式定义错误类型
-    List<AtomicOperation> Operations,
-    string RawText
+    string? ErrorCode
 );
 
 /// <summary>

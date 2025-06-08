@@ -22,6 +22,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Depend.AspNetCor
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Core.API", "YAESandBox.Core.API\YAESandBox.Core.API.csproj", "{9B0A7694-7050-4236-9D50-C6768AAC06E0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Core.Workflow.CoreModules", "YAESandBox.Core.Workflow.CoreModules\YAESandBox.Core.Workflow.CoreModules.csproj", "{72C38B20-E041-470B-AE3D-D0AA83368E0F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -72,6 +74,10 @@ Global
 		{9B0A7694-7050-4236-9D50-C6768AAC06E0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{9B0A7694-7050-4236-9D50-C6768AAC06E0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{9B0A7694-7050-4236-9D50-C6768AAC06E0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{72C38B20-E041-470B-AE3D-D0AA83368E0F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{72C38B20-E041-470B-AE3D-D0AA83368E0F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{72C38B20-E041-470B-AE3D-D0AA83368E0F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{72C38B20-E041-470B-AE3D-D0AA83368E0F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5F5667AF-F238-488E-B467-3A56420023C4} = {78706A16-017A-46F9-8403-D83C2351FEEC}

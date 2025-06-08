@@ -48,18 +48,21 @@
         <!-- 1. 公共 API (来自 CoreModule) -->
         <SwaggerDocToGenerate Include="v1-public" Visible="false">
             <JsonFileName>public-api.swagger.json</JsonFileName>
+            <TsOutputModuleDir>app-game</TsOutputModuleDir>
             <TsOutputSubDir>public-api-client</TsOutputSubDir>
         </SwaggerDocToGenerate>
 
         <!-- 2. AI 服务配置 API (来自 AiServiceConfigModule) -->
         <SwaggerDocToGenerate Include="v1-ai-config" Visible="false">
             <JsonFileName>ai-config-api.swagger.json</JsonFileName>
+            <TsOutputModuleDir>app-workbench</TsOutputModuleDir>
             <TsOutputSubDir>ai-config-api-client</TsOutputSubDir>
         </SwaggerDocToGenerate>
 
         <!-- 2. AI 服务配置 API (来自 WorkflowConfigModule) -->
         <SwaggerDocToGenerate Include="v1-workflow-config" Visible="false">
             <JsonFileName>workflow-config-api.swagger.json</JsonFileName>
+            <TsOutputModuleDir>app-workbench</TsOutputModuleDir>
             <TsOutputSubDir>workflow-config-api-client</TsOutputSubDir>
         </SwaggerDocToGenerate>
         
@@ -77,7 +80,7 @@
         <PropertyGroup>
             <!-- 定义一些通用的基础路径 -->
             <FrontendBaseDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend'))</FrontendBaseDir>
-            <JsonOutputBaseDir>$(FrontendBaseDir)/src/types/generated/api-client</JsonOutputBaseDir>
+            <JsonOutputBaseDir>$(MSBuildProjectDirectory)/obj/swagger_temp</JsonOutputBaseDir>
             <ApiDllPath>$(OutputPath)$(AssemblyName).dll</ApiDllPath>
         </PropertyGroup>
 
@@ -90,7 +93,7 @@
               WorkingDirectory="$(ProjectDir)"/>
 
         <!-- %(SwaggerDocToGenerate.Identity) 会获取 Include 属性的值，即 "v1-public", "v1-ai-config" 等 -->
-        <Message Text="%(SwaggerDocToGenerate.Identity) 的 JSON 已生成到: $(JsonOutputBaseDir)/%(SwaggerDocToGenerate.JsonFileName)" Importance="high"/>
+        <Message Text="%(SwaggerDocToGenerate.Identity) 的 JSON 已临时生成到: $(JsonOutputBaseDir)/%(SwaggerDocToGenerate.JsonFileName)" Importance="high"/>
         <Message Text="------------------------------------------------------------------" Importance="high"/>
     </Target>
 
@@ -102,15 +105,14 @@
         <PropertyGroup>
             <!-- 基础路径可以从上一个 Target 继承，或者重新定义以确保独立性 -->
             <FrontendBaseDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend'))</FrontendBaseDir>
-            <JsonOutputBaseDir>$(FrontendBaseDir)/src/types/generated/api-client</JsonOutputBaseDir>
-            <TsOutputBaseDir>$(FrontendBaseDir)/src/types/generated</TsOutputBaseDir>
+            <JsonOutputBaseDir>$(MSBuildProjectDirectory)/obj/swagger_temp</JsonOutputBaseDir>
         </PropertyGroup>
 
-        <Exec Command="npx openapi-typescript-codegen --input $(JsonOutputBaseDir)/%(SwaggerDocToGenerate.JsonFileName) --output $(TsOutputBaseDir)/%(SwaggerDocToGenerate.TsOutputSubDir) --client axios --useOptions"
+        <Exec Command="npx openapi-typescript-codegen --input $(JsonOutputBaseDir)/%(SwaggerDocToGenerate.JsonFileName) --output $(FrontendBaseDir)/src/%(SwaggerDocToGenerate.TsOutputModuleDir)/types/generated/%(SwaggerDocToGenerate.TsOutputSubDir) --client axios --useOptions"
               WorkingDirectory="$(FrontendBaseDir)"
               ContinueOnError="false"/>
 
-        <Message Text="%(SwaggerDocToGenerate.Identity) 的 TypeScript 客户端已生成到: $(TsOutputBaseDir)/%(SwaggerDocToGenerate.TsOutputSubDir)" Importance="high"/>
+        <Message Text="%(SwaggerDocToGenerate.Identity) 的 TypeScript 客户端已生成到: $(FrontendBaseDir)/src/%(SwaggerDocToGenerate.TsOutputModuleDir)/types/generated/%(SwaggerDocToGenerate.TsOutputSubDir)" Importance="high"/>
         <Message Text="------------------------------------------------------------------" Importance="high"/>
     </Target>
 

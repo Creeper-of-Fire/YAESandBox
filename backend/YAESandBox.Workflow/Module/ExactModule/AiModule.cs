@@ -1,9 +1,9 @@
 ﻿using FluentResults;
+using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
-using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Module.ExactModule;
 
@@ -80,5 +80,8 @@ file static class TempMockOnChunkReceivedScript
 internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
 {
     protected override AiModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
-        new(s => workflowRuntimeService.RequestDisplayUpdateCallback(s));
+        new(s =>
+        {
+            workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s));
+        });
 }

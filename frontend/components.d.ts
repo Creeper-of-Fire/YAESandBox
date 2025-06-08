@@ -8,10 +8,6 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
-    AppToolbar: typeof import('./src/components/AppToolbar.vue')['default']
-    ConnectionStatus: typeof import('./src/components/ConnectionStatus.vue')['default']
-    EntityListPanel: typeof import('./src/components/panels/EntityListPanel.vue')['default']
-    GameStatePanel: typeof import('./src/components/panels/GameStatePanel.vue')['default']
     NConfigProvider: typeof import('naive-ui')['NConfigProvider']
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
     NFlex: typeof import('naive-ui')['NFlex']
@@ -19,6 +15,5 @@ declare module 'vue' {
     NNotificationProvider: typeof import('naive-ui')['NNotificationProvider']
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
-    SettingsPanel: typeof import('./src/components/panels/SettingsPanel.vue')['default']
   }
 }

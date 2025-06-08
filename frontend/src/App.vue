@@ -20,7 +20,7 @@
 
 <script setup lang="ts">
 import {onMounted, onUnmounted} from 'vue';
-import {useConnectionStore} from '@/stores/connectionStore';
+import {useConnectionStore} from '@/app-game/stores/connectionStore.ts';
 import {lightTheme} from "naive-ui";
 // import GlobalErrorDisplay from '@/components/GlobalErrorDisplay.vue';
 // import AppWideNotifications from '@/components/AppWideNotifications.vue';

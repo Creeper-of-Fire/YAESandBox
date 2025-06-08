@@ -20,7 +20,7 @@ public enum AtomicOperationType
 /// 封装一个原子化操作及其参数。
 /// 使用 record struct 以获得值相等性和不变性。
 /// </summary>
-public readonly record struct AtomicOperation
+public record AtomicOperation
 {
     public AtomicOperationType OperationType { get; init; }
     public EntityType EntityType { get; init; }
