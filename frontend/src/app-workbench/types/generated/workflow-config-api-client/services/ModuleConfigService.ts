@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AbstractModuleConfig } from '../models/AbstractModuleConfig.ts';
-import type { CancelablePromise } from '../core/CancelablePromise.ts';
-import { OpenAPI } from '../core/OpenAPI.ts';
-import { request as __request } from '../core/request.ts';
+import type { AbstractModuleConfig } from '../models/AbstractModuleConfig';
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class ModuleConfigService {
     /**
      * 获取所有注册的模块配置类型的表单 Schema 结构 (JSON Schema 格式，包含 UI 指令)。

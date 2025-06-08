@@ -10,8 +10,18 @@
     "LicenseInformationOrigin": 0
   },
   {
+    "PackageId": "Humanizer.Core",
+    "PackageVersion": "2.14.1",
+    "PackageProjectUrl": "https://github.com/Humanizr/Humanizer",
+    "Copyright": "Copyright (c) .NET Foundation and Contributors",
+    "Authors": "Mehdi Khalili, Claire Novotny",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
     "PackageId": "JetBrains.Annotations",
-    "PackageVersion": "2024.3.0",
+    "PackageVersion": "2025.1.0-eap1",
     "PackageProjectUrl": "https://www.jetbrains.com/help/resharper/Code_Analysis__Code_Annotations.html",
     "Copyright": "Copyright (c) 2016-2024 JetBrains s.r.o.",
     "Authors": "JetBrains",
@@ -187,6 +197,76 @@
     "Authors": "Microsoft",
     "License": "https://raw.githubusercontent.com/aspnet/AspNetCore/2.0.0/LICENSE.txt",
     "LicenseUrl": "https://raw.githubusercontent.com/aspnet/AspNetCore/2.0.0/LICENSE.txt",
+    "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "Microsoft.Bcl.AsyncInterfaces",
+    "PackageVersion": "6.0.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.CodeAnalysis.Analyzers",
+    "PackageVersion": "3.3.4",
+    "PackageProjectUrl": "https://github.com/dotnet/roslyn-analyzers",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.CodeAnalysis.Common",
+    "PackageVersion": "4.3.0",
+    "PackageProjectUrl": "https://github.com/dotnet/roslyn",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.CodeAnalysis.CSharp",
+    "PackageVersion": "4.3.0",
+    "PackageProjectUrl": "https://github.com/dotnet/roslyn",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.CodeAnalysis.CSharp.Workspaces",
+    "PackageVersion": "4.3.0",
+    "PackageProjectUrl": "https://github.com/dotnet/roslyn",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.CodeAnalysis.Workspaces.Common",
+    "PackageVersion": "4.3.0",
+    "PackageProjectUrl": "https://github.com/dotnet/roslyn",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.CSharp",
+    "PackageVersion": "4.0.1",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
     "LicenseInformationOrigin": 1
   },
   {
@@ -480,6 +560,16 @@
     "LicenseInformationOrigin": 1
   },
   {
+    "PackageId": "Microsoft.NETCore.Platforms",
+    "PackageVersion": "1.1.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseInformationOrigin": 1
+  },
+  {
     "PackageId": "Microsoft.NETCore.Targets",
     "PackageVersion": "1.0.1",
     "PackageProjectUrl": "https://dot.net/",
@@ -507,6 +597,25 @@
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
     "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "NETStandard.Library",
+    "PackageVersion": "2.0.3",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": ".NET Foundation and Contributors",
+    "Authors": "Microsoft",
+    "License": "https://github.com/dotnet/standard/blob/master/LICENSE.TXT",
+    "LicenseUrl": "https://github.com/dotnet/standard/blob/master/LICENSE.TXT",
+    "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "Newtonsoft.Json",
+    "PackageVersion": "9.0.1",
+    "PackageProjectUrl": "http://www.newtonsoft.com/json",
+    "Authors": "James Newton-King",
+    "License": "MIT",
+    "LicenseUrl": "https://raw.github.com/JamesNK/Newtonsoft.Json/master/LICENSE.md",
+    "LicenseInformationOrigin": 1
   },
   {
     "PackageId": "Newtonsoft.Json",
@@ -690,6 +799,16 @@
   },
   {
     "PackageId": "System.Buffers",
+    "PackageVersion": "4.5.1",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT",
+    "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "System.Buffers",
     "PackageVersion": "4.6.0",
     "PackageProjectUrl": "https://github.com/dotnet/maintenance-packages",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
@@ -712,6 +831,76 @@
     "PackageId": "System.Collections.Immutable",
     "PackageVersion": "1.7.1",
     "PackageProjectUrl": "https://github.com/dotnet/corefx",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Collections.Immutable",
+    "PackageVersion": "6.0.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Composition",
+    "PackageVersion": "6.0.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Composition.AttributedModel",
+    "PackageVersion": "6.0.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Composition.Convention",
+    "PackageVersion": "6.0.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Composition.Hosting",
+    "PackageVersion": "6.0.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Composition.Runtime",
+    "PackageVersion": "6.0.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Composition.TypedParts",
+    "PackageVersion": "6.0.0",
+    "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
     "License": "MIT",
@@ -747,6 +936,16 @@
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
     "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Diagnostics.Tools",
+    "PackageVersion": "4.0.1",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseInformationOrigin": 1
   },
   {
     "PackageId": "System.Dynamic.Runtime",
@@ -799,6 +998,16 @@
     "LicenseInformationOrigin": 1
   },
   {
+    "PackageId": "System.IO.Pipelines",
+    "PackageVersion": "6.0.3",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
     "PackageId": "System.Linq",
     "PackageVersion": "4.1.0",
     "PackageProjectUrl": "https://dot.net/",
@@ -816,6 +1025,26 @@
     "Authors": "Microsoft",
     "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
     "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "System.Memory",
+    "PackageVersion": "4.5.4",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT",
+    "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "System.Numerics.Vectors",
+    "PackageVersion": "4.4.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://github.com/dotnet/corefx/blob/master/LICENSE.TXT",
     "LicenseInformationOrigin": 1
   },
   {
@@ -879,6 +1108,16 @@
     "LicenseInformationOrigin": 1
   },
   {
+    "PackageId": "System.Reflection.Metadata",
+    "PackageVersion": "5.0.0",
+    "PackageProjectUrl": "https://github.com/dotnet/runtime",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
     "PackageId": "System.Reflection.Primitives",
     "PackageVersion": "4.0.1",
     "PackageProjectUrl": "https://dot.net/",
@@ -917,6 +1156,16 @@
     "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
     "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
     "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "System.Runtime.CompilerServices.Unsafe",
+    "PackageVersion": "6.0.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
   },
   {
     "PackageId": "System.Runtime.Extensions",
@@ -959,7 +1208,37 @@
     "LicenseInformationOrigin": 1
   },
   {
+    "PackageId": "System.Runtime.Serialization.Primitives",
+    "PackageVersion": "4.1.1",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseInformationOrigin": 1
+  },
+  {
     "PackageId": "System.Text.Encoding",
+    "PackageVersion": "4.0.11",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "System.Text.Encoding.CodePages",
+    "PackageVersion": "6.0.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Text.Encoding.Extensions",
     "PackageVersion": "4.0.11",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
@@ -977,6 +1256,16 @@
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
     "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Text.RegularExpressions",
+    "PackageVersion": "4.1.0",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseInformationOrigin": 1
   },
   {
     "PackageId": "System.Threading",
@@ -1017,5 +1306,25 @@
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
     "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "System.Xml.ReaderWriter",
+    "PackageVersion": "4.0.11",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "System.Xml.XDocument",
+    "PackageVersion": "4.0.11",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation.  All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
+    "LicenseInformationOrigin": 1
   }
 ]

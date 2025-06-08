@@ -1,10 +1,8 @@
-﻿using NJsonSchema.Annotations;
-
-namespace YAESandBox.Depend.Storage;
+﻿namespace YAESandBox.Depend.Storage;
 
 internal record FilePath(string RootPath, string FileName, string SubDirectory)
 {
-    internal FilePath(string rootPath, string fileName, [CanBeNull] params string[] subDirectories) :
+    internal FilePath(string rootPath, string fileName, params string[] subDirectories) :
         this(rootPath, fileName, Path.Combine(subDirectories)) { }
 
     internal string TotalPath => Path.Combine(this.RootPath, this.SubDirectory, this.FileName);

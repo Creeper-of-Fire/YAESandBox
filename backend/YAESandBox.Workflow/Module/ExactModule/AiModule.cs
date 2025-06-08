@@ -80,8 +80,5 @@ file static class TempMockOnChunkReceivedScript
 internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
 {
     protected override AiModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
-        new(s =>
-        {
-            workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s));
-        });
+        new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); });
 }

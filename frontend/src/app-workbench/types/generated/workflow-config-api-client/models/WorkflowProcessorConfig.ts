@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { StepProcessorConfig } from './StepProcessorConfig.ts';
+import type { StepProcessorConfig } from './StepProcessorConfig';
 export type WorkflowProcessorConfig = {
     steps?: Array<StepProcessorConfig> | null;
 };

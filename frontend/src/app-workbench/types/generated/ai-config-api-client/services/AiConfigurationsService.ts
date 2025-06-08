@@ -2,12 +2,12 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AbstractAiProcessorConfig } from '../models/AbstractAiProcessorConfig.ts';
-import type { AiConfigurationSet } from '../models/AiConfigurationSet.ts';
-import type { TestAiDto } from '../models/TestAiDto.ts';
-import type { CancelablePromise } from '../core/CancelablePromise.ts';
-import { OpenAPI } from '../core/OpenAPI.ts';
-import { request as __request } from '../core/request.ts';
+import type { AbstractAiProcessorConfig } from '../models/AbstractAiProcessorConfig';
+import type { AiConfigurationSet } from '../models/AiConfigurationSet';
+import type { TestAiDto } from '../models/TestAiDto';
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class AiConfigurationsService {
     /**
      * 获取所有已保存的 AI 配置集的完整列表。

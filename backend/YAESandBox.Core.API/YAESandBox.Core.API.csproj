@@ -10,12 +10,12 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj" />
-      <ProjectReference Include="..\YAESandBox.Core.DTOs\YAESandBox.Core.DTOs.csproj" />
-      <ProjectReference Include="..\YAESandBox.Core.Services\YAESandBox.Core.Services.csproj" />
-      <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj" />
-      <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj" />
-      <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
+        <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Core.DTOs\YAESandBox.Core.DTOs.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Core.Services\YAESandBox.Core.Services.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj" PrivateAssets="all"/>
+        <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" PrivateAssets="all"/>
     </ItemGroup>
 
 </Project>

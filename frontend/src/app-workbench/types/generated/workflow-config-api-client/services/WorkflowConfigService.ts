@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { WorkflowProcessorConfig } from '../models/WorkflowProcessorConfig.ts';
-import type { CancelablePromise } from '../core/CancelablePromise.ts';
-import { OpenAPI } from '../core/OpenAPI.ts';
-import { request as __request } from '../core/request.ts';
+import type { WorkflowProcessorConfig } from '../models/WorkflowProcessorConfig';
+import type { CancelablePromise } from '../core/CancelablePromise';
+import { OpenAPI } from '../core/OpenAPI';
+import { request as __request } from '../core/request';
 export class WorkflowConfigService {
     /**
      * 获取所有全局工作流配置的列表。

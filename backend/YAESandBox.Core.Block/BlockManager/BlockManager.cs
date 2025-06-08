@@ -1,5 +1,6 @@
 ﻿using System.Collections.Concurrent;
 using FluentResults;
+using JetBrains.Annotations;
 using Nito.AsyncEx;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
@@ -38,10 +39,7 @@ public partial class BlockManager : IBlockManager
     /// 用于控制对单个 Block 的并发访问。
     /// </summary>
     /// <returns></returns>
-    private AsyncLock GetLockForBlock(string blockId)
-    {
-        return this.BlockLocks.GetOrAdd(blockId, _ => new AsyncLock());
-    }
+    private AsyncLock GetLockForBlock(string blockId) => this.BlockLocks.GetOrAdd(blockId, _ => new AsyncLock());
 
     public IReadOnlyDictionary<string, Block> GetBlocks()
     {
@@ -60,6 +58,7 @@ public partial class BlockManager : IBlockManager
     /// <param name="workFlowName"></param>
     /// <param name="triggerParams"></param>
     /// <returns></returns>
+    [MustUseReturnValue]
     public async Task<LoadingBlockStatus?> CreateChildBlock_Async(
         string? parentBlockId, string workFlowName, IReadOnlyDictionary<string, string> triggerParams)
     {
@@ -115,6 +114,7 @@ public partial class BlockManager : IBlockManager
     /// <param name="newContent">新的 Block 内容。如果为 null 则不更新。</param>
     /// <param name="metadataUpdates">要更新或移除的元数据。Key 为元数据键，Value 为新值（null 表示移除）。如果为 null 则不更新。</param>
     /// <returns>更新操作的结果。</returns>
+    [MustUseReturnValue]
     public async Task<BlockResultCode> UpdateBlockDetailsAsync(string blockId, string? newContent,
         IReadOnlyDictionary<string, string?>? metadataUpdates)
     {
@@ -179,6 +179,7 @@ public partial class BlockManager : IBlockManager
     /// </summary>
     /// <param name="startBlockId">起始块的ID。假定此ID在 'blocks' 字典中有效。</param>
     /// <returns>一个包含从根节点到最深层叶子节点ID的列表。如果路径中遇到数据不一致（如引用了不存在的块），则记录错误并返回空列表。</returns>
+    [MustUseReturnValue]
     public IReadOnlyList<string> GetPathToRoot(string startBlockId)
     {
         // --- 阶段 1: 查找从 startBlockId 出发，遵循“最后一个子节点”规则到达的最深叶节点 ---
@@ -242,6 +243,7 @@ public partial class BlockManager : IBlockManager
     /// </summary>
     /// <param name="blockId"></param>
     /// <returns></returns>
+    [MustUseReturnValue]
     public Task<BlockStatus?> GetBlockAsync(string blockId)
     {
         Log.Debug($"GetBlockAsync: 尝试获取 Block ID: '{blockId}'");
@@ -262,6 +264,7 @@ public partial class BlockManager : IBlockManager
     /// <param name="blockId"></param>
     /// <param name="settingsToUpdate"></param>
     /// <returns></returns>
+    [MustUseReturnValue]
     public async Task<BlockResultCode> UpdateBlockGameStateAsync(string blockId, IReadOnlyDictionary<string, object?> settingsToUpdate)
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
@@ -285,6 +288,7 @@ public partial class BlockManager : IBlockManager
     /// <param name="blockId">区块唯一标识符</param>
     /// <param name="operations">待执行的原子操作列表</param>
     /// <returns>返回一个元组，包含区块状态和操作结果列表（结果包含失败的）</returns>
+    [MustUseReturnValue]
     public async Task<(Result<IReadOnlyList<AtomicOperation>> result, BlockStatusCode? blockStatusCode)>
         EnqueueOrExecuteAtomicOperationsAsync(string blockId, IReadOnlyList<AtomicOperation> operations)
     {
@@ -329,6 +333,7 @@ public record BlockStatusError(BlockResultCode Code, string Message, BlockStatus
         return new BlockStatusError(BlockResultCode.Error, message, block);
     }
 
+    [MustUseReturnValue]
     public static implicit operator Result(BlockStatusError initError)
     {
         return initError.ToResult();

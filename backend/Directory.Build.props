@@ -1,0 +1,16 @@
+<Project>
+    <!-- 
+      这个文件中的所有内容都会被自动应用到
+      当前目录及所有子目录下的所有 C# 项目中。
+    -->
+    <ItemGroup>
+        <!--
+          为所有项目统一添加对分析器项目的引用。
+        -->
+        <ProjectReference Include="..\YAESandBox.Analyzers\YAESandBox.Analyzers\YAESandBox.Analyzers.csproj"
+                          OutputItemType="Analyzer"
+                          ReferenceOutputAssembly="false"
+        Condition="'$(MSBuildProjectName)' != 'YAESandBox.Analyzers'" />
+    </ItemGroup>
+
+</Project>

@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
+using JetBrains.Annotations;
 using NJsonSchema;
 using NJsonSchema.Generation;
 using YAESandBox.Depend.Schema.SchemaProcessor;
@@ -15,11 +16,11 @@ public static class VueFormSchemaGenerator
     /// 生成Schema字符串
     /// </summary>
     /// <param name="type"></param>
-    /// <param name="configureSettings"></param>
     /// <returns></returns>
-    public static string GenerateSchemaJson(Type type, Action<SystemTextJsonSchemaGeneratorSettings>? configureSettings = null)
+    [Pure]
+    public static string GenerateSchemaJson(Type type)
     {
-        var schema = GenerateSchema(type, configureSettings);
+        var schema = GenerateSchema(type);
         return schema.ToJson();
     }
 
@@ -27,9 +28,9 @@ public static class VueFormSchemaGenerator
     /// 生成Schema
     /// </summary>
     /// <param name="type"></param>
-    /// <param name="configureSettings"></param>
     /// <returns></returns>
-    public static JsonSchema GenerateSchema(Type type, Action<SystemTextJsonSchemaGeneratorSettings>? configureSettings = null)
+    [Pure]
+    public static JsonSchema GenerateSchema(Type type)
     {
         // 1. 创建 System.Text.Json 的 JsonSerializerOptions，这将驱动 NJsonSchema 的行为
         var serializerOptions = new JsonSerializerOptions
@@ -77,7 +78,7 @@ public static class VueFormSchemaGenerator
         settings.SchemaProcessors.Add(new NormalActionProcessor(context => { context.Schema.ProcessUiOption(); }));
 
         // 允许外部进一步配置
-        configureSettings?.Invoke(settings);
+        // configureSettings?.Invoke(settings);
 
         // 3. 创建 JsonSchemaGenerator，现在可以传入具体的 settings 对象
         var generator = new JsonSchemaGenerator(settings);

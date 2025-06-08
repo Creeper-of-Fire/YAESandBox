@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AbstractAiProcessorConfig } from './AbstractAiProcessorConfig.ts';
+import type { AbstractAiProcessorConfig } from './AbstractAiProcessorConfig';
 /**
  * 测试用DTO
  */

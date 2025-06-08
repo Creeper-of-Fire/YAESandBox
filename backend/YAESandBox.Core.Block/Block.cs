@@ -2,6 +2,7 @@
 using System.Globalization;
 using System.Text.Json;
 using FluentResults;
+using JetBrains.Annotations;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
@@ -341,6 +342,7 @@ public class Block : NodeBlock
     /// <param name="op">要应用的操作。</param>
     /// <returns>返回操作结果</returns>
     /// <exception cref="UnreachableException">在操作到达不可达代码路径时抛出。</exception>
+    [MustUseReturnValue]
     private static Result<AtomicOperation> ApplyOperationTo(WorldState worldState, AtomicOperation op)
     {
         switch (op.OperationType)

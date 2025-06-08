@@ -16,11 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2024.3.0"/>
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Module\ModuleAttribute\" />
+      <PackageReference Include="JetBrains.Annotations" Version="2025.1.0-eap1" />
     </ItemGroup>
 
 </Project>

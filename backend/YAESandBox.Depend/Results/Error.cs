@@ -128,9 +128,7 @@ public static class ErrorHelper
 
         var finalResult = Result.Ok<IEnumerable<TValue>>(new List<TValue>())
             .WithReasons(resultList.SelectMany(result => result.Reasons));
-
-        finalResult.WithValue(resultList.SelectNotFailedValue().ToList());
-
-        return finalResult;
+        
+        return finalResult.WithValue(resultList.SelectNotFailedValue().ToList());
     }
 }
