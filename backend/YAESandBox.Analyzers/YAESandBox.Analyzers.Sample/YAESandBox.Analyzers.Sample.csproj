@@ -6,12 +6,11 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.Analyzers\YAESandBox.Analyzers.csproj"
-                          OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
+        <ProjectReference Include="..\YAESandBox.Analyzers\YAESandBox.Analyzers.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="FluentResults.Strict.CreeperOfFire" Version="3.16.0-strict.1.0.1" />
+        <PackageReference Include="FluentResults.Strict.CreeperOfFire" Version="3.16.0-strict.1.0.1"/>
     </ItemGroup>
 
 </Project>
