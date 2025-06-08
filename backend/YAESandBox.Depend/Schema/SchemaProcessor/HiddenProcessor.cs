@@ -5,7 +5,7 @@ namespace YAESandBox.Depend.Schema.SchemaProcessor;
 /// <summary>
 /// 检查有无隐藏标签
 /// </summary>
-public class HiddenProcessor() : NormalAttributeProcessor<HiddenInSchemaAttribute>("ui:hidden", attribute => attribute.IsHidden);
+internal class HiddenProcessor() : NormalAttributeProcessor<HiddenInSchemaAttribute>("ui:hidden", attribute => attribute.IsHidden);
 
 // /// <summary>
 // /// 隐藏标题和描述

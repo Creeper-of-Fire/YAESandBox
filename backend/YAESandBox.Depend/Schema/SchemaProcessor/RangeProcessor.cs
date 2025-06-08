@@ -10,7 +10,7 @@ namespace YAESandBox.Depend.Schema.SchemaProcessor;
 /// 处理带有 [Range] 的属性，
 /// 为其生成枚举和/或指向自定义自动完成 Widget 的配置。
 /// </summary>
-public class RangeProcessor : ISchemaProcessor
+internal class RangeProcessor : ISchemaProcessor
 {
     /// <summary>
     /// 如果计算得到的 MultipleOf 大于它，则设置为它

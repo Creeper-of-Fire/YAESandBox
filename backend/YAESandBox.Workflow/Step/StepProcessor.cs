@@ -31,7 +31,7 @@ internal class StepProcessor(
     /// 生产者（Produces）：此步骤通过 OutputMappings 向全局变量池声明输出的变量。
     /// </summary>
     internal IEnumerable<string> GlobalProducers { get; } = config.OutputMappings.Keys;
-    
+
     private List<IWithDebugDto<IModuleProcessorDebugDto>> Modules { get; } =
         config.Modules.ConvertAll(module => module.ToModuleProcessor(workflowRuntimeService));
 

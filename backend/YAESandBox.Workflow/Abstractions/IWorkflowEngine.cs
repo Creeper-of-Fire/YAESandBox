@@ -1,4 +1,5 @@
 ﻿// --- File: YAESandBox.Workflow/Abstractions/IWorkflowEngine.cs ---
+
 namespace YAESandBox.Workflow.Abstractions;
 
 /// <summary>
@@ -25,7 +26,6 @@ public record DisplayUpdateRequestPayload(
     string Content,
     UpdateMode UpdateMode = UpdateMode.FullSnapshot
 );
-
 
 /// <summary>
 /// 指示消息在流式传输过程中的状态。

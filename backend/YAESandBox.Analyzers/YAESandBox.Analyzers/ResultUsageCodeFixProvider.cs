@@ -49,14 +49,12 @@ public class ResultUsageCodeFixProvider : CodeFixProvider
                 equivalenceKey: "AddDiscardAssignment"),
             diagnostic);
 
-        // --- 修复选项 2: 声明为局部变量并重命名 ---
+        // --- 修复选项 2: 声明为局部变量 ---
         context.RegisterCodeFix(
             CodeAction.Create(
-                // 标题可以更明确一点
-                title: "声明为局部变量(var result)并重命名(?)...",
-                // 注意：createChangedSolution 而不是 createChangedDocument
-                createChangedSolution: c => IntroduceLocalVariableAndRenameAsync(context.Document, expressionStatement, c),
-                equivalenceKey: "IntroduceLocalVariableAndRename"),
+                title: "声明为局部变量 (var result = ...)",
+                createChangedDocument: c => IntroduceLocalVariableAsync(context.Document, expressionStatement, c),
+                equivalenceKey: "IntroduceLocalVariable"),
             diagnostic);
     }
 
@@ -85,64 +83,28 @@ public class ResultUsageCodeFixProvider : CodeFixProvider
     }
 
     // --- 已修正并简化的方法 2 ---
-    private async Task<Solution> IntroduceLocalVariableAndRenameAsync(Document document, ExpressionStatementSyntax oldStatement,
+    private async Task<Document> IntroduceLocalVariableAsync(Document document, ExpressionStatementSyntax oldStatement,
         CancellationToken cancellationToken)
     {
-        // --- 第一阶段: 创建并应用修改 ---
-
-        var editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
-
+        // *** 逻辑与上面完全对称 ***
+        // 1. 获取一个移除了前导 Trivia 的干净表达式。
         var cleanExpression = oldStatement.Expression.WithoutLeadingTrivia();
-        var tempVariableName = "newResult"; // 保持使用临时名称
 
-        var variableDeclaration = SyntaxFactory.VariableDeclaration(SyntaxFactory.IdentifierName("var"))
+        // 2. 用干净的表达式构建新的变量声明语句。
+        var variableDeclaration = SyntaxFactory.VariableDeclaration(
+                SyntaxFactory.IdentifierName("var"))
             .AddVariables(
-                SyntaxFactory.VariableDeclarator(SyntaxFactory.Identifier(tempVariableName))
+                SyntaxFactory.VariableDeclarator(SyntaxFactory.Identifier("result"))
                     .WithInitializer(SyntaxFactory.EqualsValueClause(cleanExpression))
             );
 
+        // 3. 将旧语句的所有 Trivia 应用到新语句的最外层。
         var newStatement = SyntaxFactory.LocalDeclarationStatement(variableDeclaration)
             .WithTriviaFrom(oldStatement);
 
+        // 4. 执行替换。
+        var editor = await DocumentEditor.CreateAsync(document, cancellationToken).ConfigureAwait(false);
         editor.ReplaceNode(oldStatement, newStatement);
-
-        // 从编辑器获取包含所有修改的【新文档】
-        var changedDocument = editor.GetChangedDocument();
-
-        // --- 第二阶段: 在新文档上进行语义分析和重命名 ---
-
-        // 从【新文档】获取【新的】语法树根节点
-        var newRoot = await changedDocument.GetSyntaxRootAsync(cancellationToken).ConfigureAwait(false);
-        if (newRoot is null) return document.Project.Solution;
-
-        // 从【新文档】获取【新的】语义模型
-        var newSemanticModel = await changedDocument.GetSemanticModelAsync(cancellationToken).ConfigureAwait(false);
-        if (newSemanticModel is null) return document.Project.Solution;
-
-        // 在新的根节点中，找到我们刚刚创建的那个变量声明节点
-        // oldStatement.Span 依然可以用来定位修改后新节点的位置
-        var newVariableDeclarator = newRoot.FindNode(oldStatement.Span).DescendantNodesAndSelf().OfType<VariableDeclaratorSyntax>().First();
-
-        // 使用【新的】语义模型来获取符号信息
-        var variableSymbol = newSemanticModel.GetDeclaredSymbol(newVariableDeclarator, cancellationToken);
-
-        if (variableSymbol is null)
-        {
-            // 如果符号获取失败，返回修改后的文档，至少基础功能是好的
-            return changedDocument.Project.Solution;
-        }
-
-        // --- 第三阶段: 调用重命名服务 ---
-
-        // 使用 changedDocument.Project.Solution 作为基础来应用重命名
-        var finalSolution = await Renamer.RenameSymbolAsync(
-            changedDocument.Project.Solution,
-            variableSymbol,
-            new SymbolRenameOptions(),
-            "result", // 新名字的默认值
-            cancellationToken
-        ).ConfigureAwait(false);
-
-        return finalSolution;
+        return editor.GetChangedDocument();
     }
 }

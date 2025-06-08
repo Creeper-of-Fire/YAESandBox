@@ -16,7 +16,8 @@
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="JetBrains.Annotations" Version="2025.1.0-eap1" />
+        <PackageReference Include="JetBrains.Annotations" Version="2025.1.0-eap1"/>
+        <PackageReference Include="NJsonSchema" Version="11.3.2" />
     </ItemGroup>
 
 </Project>

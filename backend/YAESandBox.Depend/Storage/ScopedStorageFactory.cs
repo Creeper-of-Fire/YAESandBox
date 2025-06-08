@@ -83,7 +83,7 @@ public static class ScopedStorageFactory
                 this.GeneralJsonStorage = generalJsonStorage;
                 this.ScopePrefixPathParts = scopePrefixPathParts;
             }
-            
+
             this.WorkPath = Path.Combine(generalJsonStorage.WorkPath, Path.Combine(scopePrefixPathParts));
         }
 

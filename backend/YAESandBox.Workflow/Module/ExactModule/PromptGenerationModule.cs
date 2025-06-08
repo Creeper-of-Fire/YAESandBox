@@ -19,7 +19,8 @@ internal partial class PromptGenerationModuleProcessor(
     WorkflowRuntimeService workflowRuntimeService,
     PromptGenerationModuleConfig config)
     : IWithDebugDto<PromptGenerationModuleProcessorDebugDto>, INormalModule
-{private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
+{
+    private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
     private PromptGenerationModuleConfig Config { get; init; } = config;
 
     /// <inheritdoc />

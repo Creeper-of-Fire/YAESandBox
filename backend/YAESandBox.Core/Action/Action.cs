@@ -22,9 +22,9 @@ public enum AtomicOperationType
 /// </summary>
 public record AtomicOperation
 {
-    public AtomicOperationType OperationType { get; init; }
-    public EntityType EntityType { get; init; }
-    public string EntityId { get; init; }
+    public required AtomicOperationType OperationType { get; init; }
+    public required EntityType EntityType { get; init; }
+    public required string EntityId { get; init; }
 
     // --- CreateEntity 参数 ---
     /// <summary>

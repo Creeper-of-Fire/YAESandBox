@@ -7,7 +7,7 @@ namespace YAESandBox.Depend.Schema.SchemaProcessor;
 /// <summary>
 /// 处理 [DisplayAttribute] 为 Schema 添加 title, description, placeholder, 和排序信息。
 /// </summary>
-public class DisplayAttributeProcessor : ISchemaProcessor
+internal class DisplayAttributeProcessor : ISchemaProcessor
 {
     /// <inheritdoc/>
     public void Process(SchemaProcessorContext context)

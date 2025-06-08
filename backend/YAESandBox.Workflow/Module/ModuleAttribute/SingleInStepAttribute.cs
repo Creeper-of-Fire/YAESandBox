@@ -32,7 +32,13 @@ public class NoConfigAttribute : Attribute;
 /// <param name="inFrontOfType">请至少有一个！</param>
 [BaseTypeRequired(typeof(AbstractModuleConfig))]
 [AttributeUsage(AttributeTargets.Class)]
-public class InFrontOfAttribute(params Type[] inFrontOfType) : Attribute;
+public class InFrontOfAttribute(params Type[] inFrontOfType) : Attribute
+{
+    /// <summary>
+    /// 前面的模块类型
+    /// </summary>
+    public Type[] InFrontOfType { get; } = inFrontOfType;
+}
 
 /// <summary>
 /// 标明这个模块必须在某些模块的后面执行
@@ -40,4 +46,10 @@ public class InFrontOfAttribute(params Type[] inFrontOfType) : Attribute;
 /// <param name="behindType">请至少有一个！</param>
 [BaseTypeRequired(typeof(AbstractModuleConfig))]
 [AttributeUsage(AttributeTargets.Class)]
-public class BehindAttribute(params Type[] behindType) : Attribute;
+public class BehindAttribute(params Type[] behindType) : Attribute
+{
+    /// <summary>
+    /// 后面的模块类型
+    /// </summary>
+    public Type[] BehindType { get; } = behindType;
+}

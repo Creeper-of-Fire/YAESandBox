@@ -10,7 +10,8 @@ namespace YAESandBox.Workflow.Utility;
 // 现在由前端直接把完整的Config发给后端，而不是在构建/同步前端的变动
 internal static class ToProcessor
 {
-    internal static StepProcessor ToStepProcessor(this StepProcessorConfig stepProcessorConfig, WorkflowRuntimeService workflowRuntimeService)
+    internal static StepProcessor ToStepProcessor(this StepProcessorConfig stepProcessorConfig,
+        WorkflowRuntimeService workflowRuntimeService)
     {
         return new StepProcessor(workflowRuntimeService, stepProcessorConfig);
     }

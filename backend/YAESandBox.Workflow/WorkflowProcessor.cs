@@ -32,7 +32,6 @@ internal class WorkflowProcessor(
     private WorkflowRuntimeContext Context { get; } = new(triggerParams);
 
 
-
     /// <summary>
     /// 封装工作流执行期间的有状态数据。
     /// 这个对象是可变的，并在整个工作流的步骤之间传递和修改。
@@ -49,7 +48,7 @@ internal class WorkflowProcessor(
         /// 每个步骤的输出可以写回这里，供后续步骤使用。
         /// </summary>
         public Dictionary<string, object> GlobalVariables { get; } = triggerParams.ToDictionary(kv => kv.Key, object (kv) => kv.Value);
-        
+
         // /// <summary>
         // /// 最终生成的、要呈现给用户的原始文本。
         // /// </summary>

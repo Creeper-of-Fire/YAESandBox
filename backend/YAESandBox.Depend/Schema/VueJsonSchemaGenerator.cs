@@ -16,11 +16,12 @@ public static class VueFormSchemaGenerator
     /// 生成Schema字符串
     /// </summary>
     /// <param name="type"></param>
+    /// <param name="configureSettings"></param>
     /// <returns></returns>
     [Pure]
-    public static string GenerateSchemaJson(Type type)
+    public static string GenerateSchemaJson(Type type, Action<JsonSchemaGeneratorSettings>? configureSettings = null)
     {
-        var schema = GenerateSchema(type);
+        var schema = GenerateSchema(type,configureSettings);
         return schema.ToJson();
     }
 
@@ -28,9 +29,10 @@ public static class VueFormSchemaGenerator
     /// 生成Schema
     /// </summary>
     /// <param name="type"></param>
+    /// <param name="configureSettings"></param>
     /// <returns></returns>
     [Pure]
-    public static JsonSchema GenerateSchema(Type type)
+    public static JsonSchema GenerateSchema(Type type, Action<JsonSchemaGeneratorSettings>? configureSettings = null)
     {
         // 1. 创建 System.Text.Json 的 JsonSerializerOptions，这将驱动 NJsonSchema 的行为
         var serializerOptions = new JsonSerializerOptions
@@ -44,7 +46,7 @@ public static class VueFormSchemaGenerator
 
         // 2. 实例化 SystemTextJsonSchemaGeneratorSettings
         // 它会使用传入的 serializerOptions 来获取反射服务
-        var settings = new SystemTextJsonSchemaGeneratorSettings()
+        var settings = new SystemTextJsonSchemaGeneratorSettings
         {
             SerializerOptions = serializerOptions,
             // SchemaType = SchemaType.JsonSchema, // 默认就是 JsonSchema
@@ -65,6 +67,9 @@ public static class VueFormSchemaGenerator
         settings.SchemaProcessors.Add(new RangeProcessor());
         settings.SchemaProcessors.Add(new HiddenProcessor());
         // settings.SchemaProcessors.Add(new HiddenDisplayProcessor());
+        
+        // 允许外部进一步配置
+        configureSettings?.Invoke(settings);
 
         // 隐藏所有Object的标题和描述，因为它们通常要么是根节点，要么是Array的元素。
         settings.SchemaProcessors.Add(new NormalActionProcessor(context =>
@@ -77,8 +82,7 @@ public static class VueFormSchemaGenerator
         ));
         settings.SchemaProcessors.Add(new NormalActionProcessor(context => { context.Schema.ProcessUiOption(); }));
 
-        // 允许外部进一步配置
-        // configureSettings?.Invoke(settings);
+        
 
         // 3. 创建 JsonSchemaGenerator，现在可以传入具体的 settings 对象
         var generator = new JsonSchemaGenerator(settings);

@@ -30,7 +30,7 @@ public class NormalAttributeProcessor<T>(Action<SchemaProcessorContext, T> actio
     /// <inheritdoc cref="NormalAttributeProcessor{T}"/>
     /// <param name="extensionKey">新建的键名</param>
     /// <param name="setExtensionValue">通过Attribute的参数配置<see cref="JsonSchema.ExtensionData"/>中对应<paramref name="extensionKey"/>的值</param>
-    internal NormalAttributeProcessor(string extensionKey, Func<T, object> setExtensionValue) : this((context, attribute) =>
+    public NormalAttributeProcessor(string extensionKey, Func<T, object> setExtensionValue) : this((context, attribute) =>
     {
         context.Schema.ExtensionData ??= new Dictionary<string, object?>();
         context.Schema.ExtensionData[extensionKey] = setExtensionValue(attribute);
@@ -38,9 +38,13 @@ public class NormalAttributeProcessor<T>(Action<SchemaProcessorContext, T> actio
 
     /// <inheritdoc cref="NormalAttributeProcessor{T}"/>
     /// <param name="action">检测Attribute并且在<see cref="SchemaProcessorContext.Schema"/> 中的 <see cref="JsonSchema.ExtensionData"/>中添加键</param>
-    internal NormalAttributeProcessor(Action<IDictionary<string, object?>, T> action) : this((context, attribute) =>
+    public NormalAttributeProcessor(Action<IDictionary<string, object?>, T> action) : this((context, attribute) =>
     {
         context.Schema.ExtensionData ??= new Dictionary<string, object?>();
         action(context.Schema.ExtensionData, attribute);
     }) { }
+
+    /// <inheritdoc cref="NormalAttributeProcessor{T}"/>
+    /// <param name="action">检测Attribute并且执行无上下文的简单动作</param>
+    public NormalAttributeProcessor(Action<T> action) : this((SchemaProcessorContext context, T attribute) => { action(attribute); }) { }
 }

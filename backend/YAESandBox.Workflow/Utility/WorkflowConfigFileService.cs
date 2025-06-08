@@ -45,7 +45,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// </summary>
     /// <param name="workflowId"></param>
     /// <returns></returns>
-    [MustUseReturnValue]
     internal async Task<Result<WorkflowProcessorConfig>> FindWorkflowConfig(string workflowId) =>
         await FindConfig<WorkflowProcessorConfig>(this.ForWorkflow, workflowId);
 
@@ -54,7 +53,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// </summary>
     /// <param name="stepId"></param>
     /// <returns></returns>
-    [MustUseReturnValue]
     internal async Task<Result<StepProcessorConfig>> FindStepConfig(string stepId) =>
         await FindConfig<StepProcessorConfig>(this.ForStep, stepId);
 
@@ -62,7 +60,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// 只在全局的模块配置中查找，不查找内联的私有部分
     /// </summary>
     /// <returns></returns>
-    [MustUseReturnValue]
     internal async Task<Result<AbstractModuleConfig>> FindModuleConfig(string moduleId) =>
         await FindConfig<AbstractModuleConfig>(this.ForModule, moduleId);
 
@@ -70,7 +67,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// 只寻找所有的全局工作流配置，不查找内联的私有部分
     /// </summary>
     /// <returns></returns>
-    [MustUseReturnValue]
     public async Task<Result<IEnumerable<WorkflowProcessorConfig>>> FindAllWorkflowConfig() =>
         await FindAllConfig<WorkflowProcessorConfig>(this.ForWorkflow);
 
@@ -78,7 +74,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// 只寻找所有的全局步骤配置，不查找内联的私有部分
     /// </summary>
     /// <returns></returns>
-    [MustUseReturnValue]
     public async Task<Result<IEnumerable<StepProcessorConfig>>> FindAllStepConfig() =>
         await FindAllConfig<StepProcessorConfig>(this.ForStep);
 
@@ -86,7 +81,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// 只寻找所有的全局模块配置，不查找内联的私有部分
     /// </summary>
     /// <returns></returns>
-    [MustUseReturnValue]
     public async Task<Result<IEnumerable<AbstractModuleConfig>>> FindAllModuleConfig() =>
         await FindAllConfig<AbstractModuleConfig>(this.ForModule);
 
@@ -96,7 +90,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="workflowId"></param>
     /// <param name="workflowProcessorConfig"></param>
     /// <returns></returns>
-    [MustUseReturnValue]
     public async Task<Result> SaveWorkflowConfig(string workflowId, WorkflowProcessorConfig workflowProcessorConfig) =>
         await this.ForWorkflow.SaveAllAsync(workflowProcessorConfig, MakeFileName(workflowId));
 
@@ -106,7 +99,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="stepId"></param>
     /// <param name="stepProcessorConfig"></param>
     /// <returns></returns>
-    [MustUseReturnValue]
     public async Task<Result> SaveStepConfig(string stepId, StepProcessorConfig stepProcessorConfig) =>
         await this.ForStep.SaveAllAsync(stepProcessorConfig, MakeFileName(stepId));
 
@@ -116,7 +108,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="moduleId"></param>
     /// <param name="abstractModuleConfig"></param>
     /// <returns></returns>
-    [MustUseReturnValue]
     public async Task<Result> SaveModuleConfig(string moduleId, AbstractModuleConfig abstractModuleConfig) =>
         await this.ForModule.SaveAllAsync(abstractModuleConfig, MakeFileName(moduleId));
 
@@ -125,7 +116,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// </summary>
     /// <param name="workflowId"></param>
     /// <returns></returns>
-    [MustUseReturnValue]
     public async Task<Result> DeleteWorkflowConfig(string workflowId) =>
         await this.ForWorkflow.DeleteFileAsync(MakeFileName(workflowId));
 
@@ -134,7 +124,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// </summary>
     /// <param name="stepId"></param>
     /// <returns></returns>
-    [MustUseReturnValue]
     public async Task<Result> DeleteStepConfig(string stepId) =>
         await this.ForStep.DeleteFileAsync(MakeFileName(stepId));
 
@@ -143,11 +132,9 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// </summary>
     /// <param name="moduleId"></param>
     /// <returns></returns>
-    [MustUseReturnValue]
     public async Task<Result> DeleteModuleConfig(string moduleId) =>
         await this.ForModule.DeleteFileAsync(MakeFileName(moduleId));
 
-    [MustUseReturnValue]
     private static async Task<Result<T>> FindConfig<T>(ScopedJsonStorage scopedJsonStorage, string configId)
     {
         var result = await scopedJsonStorage.LoadAllAsync<T>(MakeFileName(configId));
@@ -159,7 +146,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
         return Result.Ok(value);
     }
 
-    [MustUseReturnValue]
     private static async Task<Result<IEnumerable<T>>> FindAllConfig<T>(ScopedJsonStorage scopedJsonStorage)
     {
         var result = await scopedJsonStorage.ListFileNamesAsync();

@@ -51,7 +51,8 @@ internal class ModuleConfigConverter : JsonConverter<AbstractModuleConfig>
                 else
                 {
                     // ModuleType 属性的值不是字符串类型。
-                    throw new JsonException($"反序列化 AbstractModuleConfig 失败：属性 '{property.Name}' 的值必须是字符串，但实际类型为 {property.Value.ValueKind}。");
+                    throw new JsonException(
+                        $"反序列化 AbstractModuleConfig 失败：属性 '{property.Name}' 的值必须是字符串，但实际类型为 {property.Value.ValueKind}。");
                 }
 
                 moduleTypePropertyFound = true;
@@ -63,7 +64,8 @@ internal class ModuleConfigConverter : JsonConverter<AbstractModuleConfig>
         if (!moduleTypePropertyFound)
         {
             // 未能在JSON对象中找到期望的 ModuleType 属性。
-            throw new JsonException($"反序列化 AbstractModuleConfig 失败：无法在JSON对象中找到属性 '{ExpectedModuleTypePropertyName}' (忽略大小写)，该属性用于确定具体的模块配置类型。");
+            throw new JsonException(
+                $"反序列化 AbstractModuleConfig 失败：无法在JSON对象中找到属性 '{ExpectedModuleTypePropertyName}' (忽略大小写)，该属性用于确定具体的模块配置类型。");
         }
 
         if (string.IsNullOrWhiteSpace(moduleTypeNameFromInput))
@@ -91,7 +93,8 @@ internal class ModuleConfigConverter : JsonConverter<AbstractModuleConfig>
         {
             // 这种情况理论上不应发生，因为 concreteType 是从 ModuleConfigTypeResolver 获取的，且 Deserialize 应该能处理。
             // 但作为健壮性检查，如果发生，则指示更深层次的问题。
-            throw new JsonException($"反序列化 AbstractModuleConfig 失败：成功将 JSON 元素反序列化为类型 '{concreteType.FullName}' 后得到 null。请检查该类型的构造函数和属性设置。");
+            throw new JsonException(
+                $"反序列化 AbstractModuleConfig 失败：成功将 JSON 元素反序列化为类型 '{concreteType.FullName}' 后得到 null。请检查该类型的构造函数和属性设置。");
         }
 
         return moduleConfig;

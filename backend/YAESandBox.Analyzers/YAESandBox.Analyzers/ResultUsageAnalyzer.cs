@@ -7,7 +7,9 @@ using System.Collections.Immutable;
 
 namespace YAESandBox.Analyzers;
 
+#pragma warning disable RS1038
 [DiagnosticAnalyzer(LanguageNames.CSharp)]
+#pragma warning restore RS1038
 public class ResultUsageAnalyzer : DiagnosticAnalyzer
 {
     public const string DiagnosticId = "RU0001";
@@ -31,11 +33,11 @@ public class ResultUsageAnalyzer : DiagnosticAnalyzer
         {
             const string resultFullName = "FluentResults.Result";
             const string genericResultFullName = "FluentResults.Result`1";
-            
+
 
             var resultSymbol = compilationContext.Compilation.GetTypeByMetadataName(resultFullName);
             var genericResultSymbol = compilationContext.Compilation.GetTypeByMetadataName(genericResultFullName);
-         
+
             // 如果在用户的编译环境中找不到这些类型，说明用户项目根本没用 FluentResults，
             // 我们的分析器就没必要工作了。
             if (resultSymbol is null || genericResultSymbol is null)
@@ -69,7 +71,7 @@ public class ResultUsageAnalyzer : DiagnosticAnalyzer
 
         // 我们只关心那些作为语句独立存在的调用，例如 M(); 或 await MAsync();
         // 检查表达式的核心是否为一个方法调用。
-        var invocationExpr = (expression as InvocationExpressionSyntax) ?? 
+        var invocationExpr = (expression as InvocationExpressionSyntax) ??
                              ((expression as AwaitExpressionSyntax)?.Expression as InvocationExpressionSyntax);
 
         if (invocationExpr is null)
@@ -77,16 +79,17 @@ public class ResultUsageAnalyzer : DiagnosticAnalyzer
             // 如果不是我们关心的调用模式（比如 i++;），就忽略。
             return;
         }
-        
+
         // 获取最外层表达式的类型信息 (await 会解包 Task<T> 为 T)
         var typeSymbol = context.SemanticModel.GetTypeInfo(expression, context.CancellationToken).Type;
         if (typeSymbol is null) return;
 
-        if (ContainsResultTypeRecursive(typeSymbol, resultSymbol, genericResultSymbol, new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default)))
+        if (ContainsResultTypeRecursive(typeSymbol, resultSymbol, genericResultSymbol,
+                new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default)))
         {
             var methodSymbol = context.SemanticModel.GetSymbolInfo(invocationExpr).Symbol as IMethodSymbol;
             var methodName = methodSymbol?.Name ?? "未知方法";
-            
+
             // 报告的诊断位置应该是整个表达式，以便代码修复器替换。
             var diagnostic = Diagnostic.Create(Rule, expression.GetLocation(), methodName);
             context.ReportDiagnostic(diagnostic);

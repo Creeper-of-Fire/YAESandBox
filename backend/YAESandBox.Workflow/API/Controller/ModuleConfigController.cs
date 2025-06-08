@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Schema;
 using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Module.ModuleAttribute;
 using YAESandBox.Workflow.Utility;
 
 namespace YAESandBox.Workflow.API.Controller;
@@ -38,7 +39,8 @@ public class ModuleConfigController(WorkflowConfigFileService workflowConfigFile
         {
             try
             {
-                string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(kvp.Value);
+                string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(kvp.Value,
+                    settings => { settings.SchemaProcessors.Add(new ModuleRuleAttributeProcessor()); });
                 var value = JsonNode.Parse(schemaJson);
                 if (value == null) continue;
                 schemas[kvp.Key] = value;

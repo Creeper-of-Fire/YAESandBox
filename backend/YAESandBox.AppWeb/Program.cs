@@ -1,3 +1,4 @@
+using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
@@ -165,7 +166,7 @@ namespace YAESandBox.AppWeb
             schema.Enum.Clear();
             schema.Type = "string"; // Represent enum as string
             schema.Format = null;
-            foreach (string enumName in Enum.GetNames(context.Type)) schema.Enum.Add(new Microsoft.OpenApi.Any.OpenApiString(enumName));
+            foreach (string enumName in Enum.GetNames(context.Type)) schema.Enum.Add(new OpenApiString(enumName));
         }
     }
 

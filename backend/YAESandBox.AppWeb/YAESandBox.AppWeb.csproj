@@ -16,9 +16,9 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.Core.API\YAESandBox.Core.API.csproj" />
-        <ProjectReference Include="..\YAESandBox.Core.DTOs\YAESandBox.Core.DTOs.csproj" />
-        <ProjectReference Include="..\YAESandBox.Core.Services\YAESandBox.Core.Services.csproj" />
+        <ProjectReference Include="..\YAESandBox.Core.API\YAESandBox.Core.API.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Core.DTOs\YAESandBox.Core.DTOs.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Core.Services\YAESandBox.Core.Services.csproj"/>
         <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj"/>
         <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj"/>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
@@ -65,9 +65,9 @@
             <TsOutputModuleDir>app-workbench</TsOutputModuleDir>
             <TsOutputSubDir>workflow-config-api-client</TsOutputSubDir>
         </SwaggerDocToGenerate>
-        
+
     </ItemGroup>
-    
+
     <!-- ================================================================== -->
     <!-- == 自动生成 Swagger JSON 和 TypeScript 类型 == -->
     <!-- ================================================================== -->

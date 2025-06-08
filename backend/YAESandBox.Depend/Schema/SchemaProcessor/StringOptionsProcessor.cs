@@ -10,7 +10,7 @@ namespace YAESandBox.Depend.Schema.SchemaProcessor;
 /// 处理带有 [StringOptionsAttribute] 的属性，
 /// 为其生成枚举和/或指向自定义自动完成 Widget 的配置。
 /// </summary>
-public class StringOptionsProcessor : ISchemaProcessor
+internal class StringOptionsProcessor : ISchemaProcessor
 {
     /// <inheritdoc/>
     public void Process(SchemaProcessorContext context)
