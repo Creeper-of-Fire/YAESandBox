@@ -13,13 +13,6 @@ public record WorkflowProcessorConfig
     [Required]
     public string Name { get; init; } = string.Empty;
 
-
-    /// <summary>
-    /// 是否被启用，默认为True
-    /// </summary>
-    [Required]
-    public bool Enabled { get; init; } = true;
-
     /// <summary>
     /// 声明此工作流启动时需要提供的触发参数列表。
     /// 用于校验和前端提示。
