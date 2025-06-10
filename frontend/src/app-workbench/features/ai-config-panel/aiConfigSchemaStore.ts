@@ -1,4 +1,4 @@
-﻿// src/stores/schemaStore.ts
+﻿// src/stores/aiConfigSchemaStore.ts
 import {defineStore} from 'pinia';
 import {ref} from 'vue';
 import {AiConfigSchemasService} from '@/app-workbench/types/generated/ai-config-api-client'; // Adjust path

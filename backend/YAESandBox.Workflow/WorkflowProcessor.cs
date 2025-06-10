@@ -125,7 +125,7 @@ internal class WorkflowProcessor(
             }
 
             // 并行执行当前批次的所有步骤
-            var tasks = currentBatch.Select(node => ExecuteSingleStepAsync(node.Step, cancellationToken)).ToList();
+            var tasks = currentBatch.Select(node => this.ExecuteSingleStepAsync(node.Step, cancellationToken)).ToList();
             var results = await Task.WhenAll(tasks);
 
             // --- 3. 处理执行结果与更新依赖 ---

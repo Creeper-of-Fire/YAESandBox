@@ -45,7 +45,7 @@ public class ResultUsageCodeFixProvider : CodeFixProvider
             CodeAction.Create(
                 title: "使用弃元' _ '接收返回值",
                 // 将整个语句传给修复方法
-                createChangedDocument: c => AddDiscardAssignmentAsync(context.Document, expressionStatement, c),
+                createChangedDocument: c => this.AddDiscardAssignmentAsync(context.Document, expressionStatement, c),
                 equivalenceKey: "AddDiscardAssignment"),
             diagnostic);
 
@@ -53,7 +53,7 @@ public class ResultUsageCodeFixProvider : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: "声明为局部变量 (var result = ...)",
-                createChangedDocument: c => IntroduceLocalVariableAsync(context.Document, expressionStatement, c),
+                createChangedDocument: c => this.IntroduceLocalVariableAsync(context.Document, expressionStatement, c),
                 equivalenceKey: "IntroduceLocalVariable"),
             diagnostic);
     }

@@ -1,9 +1,9 @@
-﻿using System.Reflection;
-using Namotion.Reflection;
+﻿using Namotion.Reflection;
 using NJsonSchema.Generation;
 using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Module.ModuleAttribute;
 
-namespace YAESandBox.Workflow.Module.ModuleAttribute;
+namespace YAESandBox.Workflow.Utility;
 
 /// <summary>
 /// 一个独立的 SchemaProcessor，用于处理所有与工作流模块规则相关的 Attribute，

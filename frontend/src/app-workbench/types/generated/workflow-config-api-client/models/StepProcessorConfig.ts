@@ -4,7 +4,18 @@
 /* eslint-disable */
 import type { AbstractModuleConfig } from './AbstractModuleConfig';
 import type { StepAiConfig } from './StepAiConfig';
+/**
+ * 步骤的配置
+ */
 export type StepProcessorConfig = {
+    /**
+     * 名字
+     */
+    name: string;
+    /**
+     * 是否被启用，默认为True
+     */
+    enabled: boolean;
     /**
      * 唯一的 ID，在拷贝时也需要更新
      */

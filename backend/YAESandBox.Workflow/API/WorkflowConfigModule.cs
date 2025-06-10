@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Workflow.Analysis;
 using YAESandBox.Workflow.API.Controller;
 using YAESandBox.Workflow.Utility;
 
@@ -49,5 +50,6 @@ public class WorkflowConfigModule : IProgramModule, IProgramModuleSwaggerUiOptio
         });
 
         service.AddSingleton<WorkflowConfigFileService>();
+        service.AddTransient<WorkflowValidationService>();
     }
 }

@@ -33,7 +33,7 @@ internal class StepProcessor(
     internal IEnumerable<string> GlobalProducers { get; } = config.OutputMappings.Keys;
 
     private List<IWithDebugDto<IModuleProcessorDebugDto>> Modules { get; } =
-        config.Modules.ConvertAll(module => module.ToModuleProcessor(workflowRuntimeService));
+        config.Modules.Select(module => module.ToModuleProcessor(workflowRuntimeService)).ToList();
 
     private StepAiConfig? StepAiConfig { get; } = config.StepAiConfig;
     private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;

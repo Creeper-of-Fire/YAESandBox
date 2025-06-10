@@ -48,7 +48,7 @@ public class ResultUsageAnalyzer : DiagnosticAnalyzer
             // *** 已修正: 监听 ExpressionStatement 而不是 InvocationExpression ***
             // 这种方法更健壮，可以统一处理 M(); 和 await MAsync(); 等情况。
             compilationContext.RegisterSyntaxNodeAction(
-                nodeContext => AnalyzeExpressionStatement(nodeContext, resultSymbol, genericResultSymbol),
+                nodeContext => this.AnalyzeExpressionStatement(nodeContext, resultSymbol, genericResultSymbol),
                 SyntaxKind.ExpressionStatement);
         });
     }
@@ -84,7 +84,7 @@ public class ResultUsageAnalyzer : DiagnosticAnalyzer
         var typeSymbol = context.SemanticModel.GetTypeInfo(expression, context.CancellationToken).Type;
         if (typeSymbol is null) return;
 
-        if (ContainsResultTypeRecursive(typeSymbol, resultSymbol, genericResultSymbol,
+        if (this.ContainsResultTypeRecursive(typeSymbol, resultSymbol, genericResultSymbol,
                 new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default)))
         {
             var methodSymbol = context.SemanticModel.GetSymbolInfo(invocationExpr).Symbol as IMethodSymbol;
@@ -121,7 +121,7 @@ public class ResultUsageAnalyzer : DiagnosticAnalyzer
         {
             foreach (var typeArgument in namedTypeSymbol.TypeArguments)
             {
-                if (ContainsResultTypeRecursive(typeArgument, resultSymbol, genericResultSymbol, visitedSymbols))
+                if (this.ContainsResultTypeRecursive(typeArgument, resultSymbol, genericResultSymbol, visitedSymbols))
                 {
                     return true;
                 }
@@ -129,8 +129,7 @@ public class ResultUsageAnalyzer : DiagnosticAnalyzer
         }
 
         // 检查3：递归检查基类 (这是本次修正的关键！)
-        if (typeSymbol.BaseType is not null &&
-            ContainsResultTypeRecursive(typeSymbol.BaseType, resultSymbol, genericResultSymbol, visitedSymbols))
+        if (typeSymbol.BaseType is not null && this.ContainsResultTypeRecursive(typeSymbol.BaseType, resultSymbol, genericResultSymbol, visitedSymbols))
         {
             return true;
         }

@@ -105,7 +105,6 @@ const loadInputRef = ref<HTMLInputElement | null>(null);
 const EntityListPanel = markRaw(defineAsyncComponent(() => import('@/app-game/components/panels/EntityListPanel.vue')));
 const GameStatePanel = markRaw(defineAsyncComponent(() => import('@/app-game/components/panels/GameStatePanel.vue')));
 const SettingsPanel = markRaw(defineAsyncComponent(() => import('@/app-game/components/panels/SettingsPanel.vue')));
-const AiConfigEditorPanel = markRaw(defineAsyncComponent(() => import("@/app-workbench/features/ai-config-panel/AiConfigEditorPanel.vue")));
 // ... 其他面板
 
 // --- Toolbar 方法 ---

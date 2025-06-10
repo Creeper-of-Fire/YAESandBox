@@ -3,9 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * 模组的配置
+ * 模块的配置
  */
 export type AbstractModuleConfig = {
+    /**
+     * 名字
+     */
+    name: string;
+    /**
+     * 是否被启用，默认为True
+     */
+    enabled: boolean;
     /**
      * 唯一的 ID，在拷贝时也需要更新
      */

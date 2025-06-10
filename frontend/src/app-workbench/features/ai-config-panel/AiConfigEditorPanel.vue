@@ -126,7 +126,7 @@ import {AiConfigSchemasService} from '@/app-workbench/types/generated/ai-config-
 import type {AiConfigurationSet} from '@/app-workbench/types/generated/ai-config-api-client';
 import type {SelectOptionDto as ApiSelectOption} from '@/app-workbench/types/generated/ai-config-api-client';
 import type {AbstractAiProcessorConfig} from '@/app-workbench/types/generated/ai-config-api-client';
-import {useAiConfigSchemaStore} from "@/app-workbench/features/ai-config-panel/schemaStore.ts";
+import {useAiConfigSchemaStore} from "@/app-workbench/features/ai-config-panel/aiConfigSchemaStore.ts";
 import AiConfigTester from "@/app-workbench/features/ai-config-panel/AiConfigTester.vue";
 import DynamicFormRenderer, {type DynamicFormRendererInstance} from "@/app-workbench/features/schema-viewer/DynamicFormRenderer.vue";
 import {useAiConfigActions} from "@/app-workbench/features/ai-config-panel/useAiConfigActions.ts";

@@ -4,8 +4,23 @@ using YAESandBox.Workflow.Step;
 
 namespace YAESandBox.Workflow.Config;
 
+/// <summary>
+/// 步骤的配置
+/// </summary>
 public record StepProcessorConfig
 {
+    /// <summary>
+    /// 名字
+    /// </summary>
+    [Required]
+    public string Name { get; init; } = string.Empty;
+
+    /// <summary>
+    /// 是否被启用，默认为True
+    /// </summary>
+    [Required]
+    public bool Enabled { get; init; } = true;
+
     /// <summary>
     /// 唯一的 ID，在拷贝时也需要更新
     /// </summary>
