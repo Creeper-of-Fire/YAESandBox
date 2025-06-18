@@ -93,6 +93,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
 
     /**
      * @internal - 真正执行数据拉取的私有函数。
+     * 处理从后端返回的、包含成功与失败项的字典。
      */
     async function _fetchAllGlobals() {
         // 防止并发调用
@@ -101,28 +102,58 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         _isLoadingGlobals.value = true;
         _fetchError.value = null; // 重置错误状态
         try {
-            const [workflows, steps, modules] = await Promise.all([
-                WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows(),
-                StepConfigService.getApiV1WorkflowsConfigsGlobalSteps(),
-                ModuleConfigService.getApiV1WorkflowsConfigsGlobalModules(),
-            ]);
-            globalWorkflows.value = workflows.reduce((acc, wf) => {
-                acc[wf.name] = wf;
-                return acc;
-            }, {} as Record<string, WorkflowProcessorConfig>);
-            globalSteps.value = steps.reduce((acc, step) => {
-                acc[step.configId] = step;
-                return acc;
-            }, {} as Record<string, StepProcessorConfig>);
-            globalModules.value = modules.reduce((acc, mod) => {
-                acc[mod.configId] = mod;
-                return acc;
-            }, {} as Record<string, AbstractModuleConfig>);
+            // 1. 并行调用所有获取全局配置的API
+            const [workflowsResult, stepsResult, modulesResult] =
+                await Promise.all([
+                    WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows(),
+                    StepConfigService.getApiV1WorkflowsConfigsGlobalSteps(),
+                    ModuleConfigService.getApiV1WorkflowsConfigsGlobalModules(),
+                ]);
 
-            // 拉取成功后，设置标志位
+            // --- 2. 处理工作流结果 ---
+            const successfulWorkflows: Record<string, WorkflowProcessorConfig> = {};
+            for (const id in workflowsResult) {
+                const item = workflowsResult[id];
+                if (item.isSuccess && item.data) {
+                    // 只将成功加载并且数据存在的项存入
+                    successfulWorkflows[id] = item.data;
+                } else {
+                    // 对于加载失败的项，在控制台打印警告
+                    console.warn(`加载全局工作流 '${id}' 失败: ${item.errorMessage}`);
+                }
+            }
+            globalWorkflows.value = successfulWorkflows;
+
+            // --- 3. 处理步骤结果 ---
+            const successfulSteps: Record<string, StepProcessorConfig> = {};
+            for (const id in stepsResult) {
+                const item = stepsResult[id];
+                if (item.isSuccess && item.data) {
+                    successfulSteps[id] = item.data;
+                } else {
+                    console.warn(`加载全局步骤 '${id}' 失败: ${item.errorMessage}`);
+                }
+            }
+            globalSteps.value = successfulSteps;
+
+            // --- 4. 处理模块结果 ---
+            const successfulModules: Record<string, AbstractModuleConfig> = {};
+            for (const id in modulesResult) {
+                const item = modulesResult[id];
+                if (item.isSuccess && item.data) {
+                    successfulModules[id] = item.data;
+                } else {
+                    console.warn(`加载全局模块 '${id}' 失败: ${item.errorMessage}`);
+                }
+            }
+            globalModules.value = successfulModules;
+
+            // 5. 拉取过程完成后，设置标志位
             _hasFetchedGlobals.value = true;
+
         } catch (error) {
-            console.error('加载全局配置失败:', error);
+            // 这个 catch 块现在主要捕获顶层的网络错误或API服务器完全不可达的错误
+            console.error('加载全局配置时发生严重错误:', error);
             _fetchError.value = error; // 捕获错误
             useMessage().error('加载全局配置失败，请检查网络或联系管理员。');
         } finally {
