@@ -1,6 +1,6 @@
-﻿using FluentResults;
-using JetBrains.Annotations;
+﻿using JetBrains.Annotations;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Config;
 using static YAESandBox.Depend.Storage.ScopedStorageFactory;
@@ -67,21 +67,21 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// 只寻找所有的全局工作流配置，不查找内联的私有部分
     /// </summary>
     /// <returns></returns>
-    public async Task<Result<IEnumerable<WorkflowProcessorConfig>>> FindAllWorkflowConfig() =>
+    public async Task<DictionaryResult<string, WorkflowProcessorConfig>> FindAllWorkflowConfig() =>
         await FindAllConfig<WorkflowProcessorConfig>(this.ForWorkflow);
 
     /// <summary>
     /// 只寻找所有的全局步骤配置，不查找内联的私有部分
     /// </summary>
     /// <returns></returns>
-    public async Task<Result<IEnumerable<StepProcessorConfig>>> FindAllStepConfig() =>
+    public async Task<DictionaryResult<string, StepProcessorConfig>> FindAllStepConfig() =>
         await FindAllConfig<StepProcessorConfig>(this.ForStep);
 
     /// <summary>
     /// 只寻找所有的全局模块配置，不查找内联的私有部分
     /// </summary>
     /// <returns></returns>
-    public async Task<Result<IEnumerable<AbstractModuleConfig>>> FindAllModuleConfig() =>
+    public async Task<DictionaryResult<string, AbstractModuleConfig>> FindAllModuleConfig() =>
         await FindAllConfig<AbstractModuleConfig>(this.ForModule);
 
     /// <summary>
@@ -138,33 +138,26 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     private static async Task<Result<T>> FindConfig<T>(ScopedJsonStorage scopedJsonStorage, string configId)
     {
         var result = await scopedJsonStorage.LoadAllAsync<T>(MakeFileName(configId));
-        if (!result.TryGetValue(out var value))
-            return result.ToResult();
+        if (result.TryGetError(out var error, out var value))
+            return error;
         if (value is null)
             return NormalError.NotFound($"找不到指定的模块配置:{Path.Combine(scopedJsonStorage.WorkPath, configId)}。");
 
         return Result.Ok(value);
     }
 
-    private static async Task<Result<IEnumerable<T>>> FindAllConfig<T>(ScopedJsonStorage scopedJsonStorage)
+    private static async Task<DictionaryResult<string, T>> FindAllConfig<T>(ScopedJsonStorage scopedJsonStorage)
     {
         var result = await scopedJsonStorage.ListFileNamesAsync();
-        if (!result.TryGetValue(out var allFileNames))
-            return result.ToResult();
-        List<T> configs = [];
-        List<IError> allErrors = [];
+        if (result.TryGetError(out var error, out var allFileNames))
+            return DictionaryResult<string, T>.Fail(error);
+        Dictionary<string, Result<T>> configResults = [];
         foreach (string id in allFileNames.Select(GetIdFromFileName))
         {
             var configResult = await FindConfig<T>(scopedJsonStorage, id);
-            if (configResult.TryGetValue(out var config))
-                configs.Add(config);
-            else
-                allErrors.AddRange(configResult.Errors);
+            configResults.Add(id, configResult);
         }
 
-        if (allErrors.Count > 0)
-            return NormalError.Error("成功扫描了目录下全部文件，但是在下一步寻找这些文件时遇到了错误。").WithErrors(allErrors);
-
-        return configs;
+        return configResults;
     }
 }

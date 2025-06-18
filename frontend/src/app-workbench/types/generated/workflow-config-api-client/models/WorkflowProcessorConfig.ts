@@ -12,10 +12,6 @@ export type WorkflowProcessorConfig = {
      */
     name: string;
     /**
-     * 是否被启用，默认为True
-     */
-    enabled: boolean;
-    /**
      * 声明此工作流启动时需要提供的触发参数列表。
      * 用于校验和前端提示。
      */

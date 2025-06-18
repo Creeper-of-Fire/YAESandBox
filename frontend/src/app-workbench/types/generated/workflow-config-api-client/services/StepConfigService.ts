@@ -3,16 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { StepProcessorConfig } from '../models/StepProcessorConfig';
+import type { StepProcessorConfigSingleItemResultDto } from '../models/StepProcessorConfigSingleItemResultDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class StepConfigService {
     /**
      * 获取所有全局步骤配置的列表。
-     * @returns StepProcessorConfig 成功获取所有全局步骤配置的列表。
+     * @returns StepProcessorConfigSingleItemResultDto 成功获取所有全局步骤配置的列表。
      * @throws ApiError
      */
-    public static getApiV1WorkflowsConfigsGlobalSteps(): CancelablePromise<Array<StepProcessorConfig>> {
+    public static getApiV1WorkflowsConfigsGlobalSteps(): CancelablePromise<Record<string, StepProcessorConfigSingleItemResultDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/workflows-configs/global-steps',

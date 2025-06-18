@@ -1,9 +1,9 @@
-﻿using FluentResults;
-using YAESandBox.Core.Block;
+﻿using YAESandBox.Core.Block;
 using YAESandBox.Core.Block.BlockManager;
 using YAESandBox.Core.DTOs;
 using YAESandBox.Core.Services.InterFaceAndBasic;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Core.Services.WorkFlow;
 
@@ -43,12 +43,10 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
         if (blockStatus != null)
             await this.NotifierService.NotifyBlockStatusUpdateAsync(blockId, blockStatus.StatusCode);
 
-        if (atomicOp.TryGetValue(out var atomicOps))
-        {
-            var successes = atomicOps.ToList();
-            if (successes.Any())
-                await this.NotifierService.NotifyBlockUpdateAsync(blockId, successes.Select(x => x.EntityId));
-        }
+
+        var successes = atomicOp.GetSuccessData().ToList();
+        if (successes.Any())
+            await this.NotifierService.NotifyBlockUpdateAsync(blockId, successes.Select(x => x.EntityId));
     }
 
     /// <inheritdoc/>
@@ -59,7 +57,7 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
         var val = await this.BlockManager.HandleWorkflowCompletionAsync(blockId, success, rawText, firstPartyCommands.ToAtomicOperations(),
             outputVariables);
         if (val.TryPickT3(out var errorOrWarning, out var idleOrErrorOrConflictBlock))
-            return Result.Ok().WithReason(errorOrWarning);
+            return errorOrWarning;
 
         if (idleOrErrorOrConflictBlock.TryPickT0(out var tempTuple, out var conflictOrErrorBlock))
         {

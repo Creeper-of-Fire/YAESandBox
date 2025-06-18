@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Utility;
 
@@ -25,9 +26,9 @@ public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFi
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(IEnumerable<WorkflowProcessorConfig>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Dictionary<string, SingleItemResultDto<WorkflowProcessorConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<WorkflowProcessorConfig>>> GetAllGlobalWorkflowConfigs() =>
+    public async Task<ActionResult<Dictionary<string, SingleItemResultDto<WorkflowProcessorConfig>>>> GetAllGlobalWorkflowConfigs() =>
         await this.WorkflowConfigFileService.FindAllWorkflowConfig().ToActionResultAsync();
 
     /// <summary>

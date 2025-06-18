@@ -1,4 +1,4 @@
-﻿using FluentResults;
+﻿using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
@@ -132,10 +132,10 @@ internal class WorkflowProcessor(
 
             foreach (var result in results)
             {
-                if (result.IsFailed)
+                if (result.TryGetError(out var error))
                 {
                     // 任何一个并行步骤失败，则整个工作流失败
-                    return new WorkflowExecutionResult(false, result.Errors.FirstOrDefault()?.Message, "StepExecutionFailed");
+                    return new WorkflowExecutionResult(false, error.Message, "StepExecutionFailed");
                 }
             }
 
@@ -168,20 +168,17 @@ internal class WorkflowProcessor(
     private async Task<Result> ExecuteSingleStepAsync(StepProcessor step, CancellationToken cancellationToken)
     {
         var stepResult = await step.ExecuteStepsAsync(this.Context, cancellationToken);
-        if (stepResult.IsFailed)
+        if (stepResult.TryGetError(out var error, out var stepOutput))
         {
-            return stepResult.ToResult();
+            return error;
         }
 
         // 使用锁来保证并行写入全局变量池的线程安全
         lock (this.Context.GlobalVariables)
         {
-            if (stepResult.TryGetValue(out var stepOutput))
+            foreach (var outputVariable in stepOutput)
             {
-                foreach (var outputVariable in stepOutput)
-                {
-                    this.Context.GlobalVariables[outputVariable.Key] = outputVariable.Value;
-                }
+                this.Context.GlobalVariables[outputVariable.Key] = outputVariable.Value;
             }
         }
 

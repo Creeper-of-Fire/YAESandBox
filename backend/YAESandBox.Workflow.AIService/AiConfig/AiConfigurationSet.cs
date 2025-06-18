@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using FluentResults;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;
 

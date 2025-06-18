@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Nodes;
-using FluentResults;
+using YAESandBox.Depend.Results;
 using static YAESandBox.Depend.Storage.IGeneralJsonStorage;
 
 namespace YAESandBox.Depend.Storage;
@@ -35,7 +35,9 @@ public partial class JsonFileCacheJsonStorage(string? dataRootPath) : JsonFileJs
     public override async Task<Result> SaveJsonNodeAsync(JsonNode? jsonNode, string fileName, params string[] subDirectories)
     {
         var saveResult = await base.SaveJsonNodeAsync(jsonNode, fileName, subDirectories);
-        if (saveResult.IsFailed || jsonNode == null)
+        if (saveResult.TryGetError(out var error))
+            return error;
+        if (jsonNode == null)
             return saveResult;
 
         this.StoreFileContentInternal(subDirectories, fileName, jsonNode.DeepClone()); // 创建一个副本存入缓存，以避免外部修改影响缓存

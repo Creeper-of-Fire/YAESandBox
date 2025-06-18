@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Utility;
 
@@ -25,10 +26,10 @@ public class StepConfigController(WorkflowConfigFileService workflowConfigFileSe
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(IEnumerable<StepProcessorConfig>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Dictionary<string, SingleItemResultDto<StepProcessorConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<StepProcessorConfig>>> GetAllGlobalStepConfigs() =>
-        await this.WorkflowConfigFileService.FindAllStepConfig().ToActionResultDetailedAsync();
+    public async Task<ActionResult<Dictionary<string, SingleItemResultDto<StepProcessorConfig>>>> GetAllGlobalStepConfigs() =>
+        await this.WorkflowConfigFileService.FindAllStepConfig().ToActionResultAsync();
 
     /// <summary>
     /// 获取指定 ID 的全局步骤配置。

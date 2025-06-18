@@ -3,12 +3,20 @@
     <n-message-provider>
       <n-dialog-provider>
         <n-notification-provider>
-          <router-view v-slot="{ Component }">
-            <transition name="fade" mode="out-in">
-              <component :is="Component"/>
-            </transition>
-          </router-view>
-
+          <div class="app-shell">
+            <header class="app-header">
+              <!-- 简单的导航 -->
+              <router-link to="/game">游戏</router-link>
+              <router-link to="/workbench">编辑器</router-link>
+            </header>
+            <main class="app-main-content">
+              <router-view v-slot="{ Component }">
+                <transition name="fade" mode="out-in">
+                  <component :is="Component"/>
+                </transition>
+              </router-view>
+            </main>
+          </div>
         </n-notification-provider>
       </n-dialog-provider>
     </n-message-provider>
@@ -27,19 +35,16 @@ import {lightTheme} from "naive-ui";
 
 const connectionStore = useConnectionStore();
 
-onMounted(async () =>
-{
+onMounted(async () => {
   console.log("App [onMounted]: 应用启动，初始化连接...");
   await connectionStore.connectSignalR();
-  if (connectionStore.connectionError)
-  {
+  if (connectionStore.connectionError) {
     console.error("App [onMounted]: SignalR 初始连接失败。", connectionStore.connectionError);
     // 这里可以触发一个全局错误状态
   }
 });
 
-onUnmounted(() =>
-{
+onUnmounted(() => {
   console.log("App [onUnmounted]: 应用关闭。");
   // connectionStore.disconnectSignalR(); // 如果有断开方法
 });

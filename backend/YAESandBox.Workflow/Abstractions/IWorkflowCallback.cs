@@ -1,4 +1,4 @@
-﻿using FluentResults;
+﻿using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Workflow.Abstractions;
 
@@ -34,7 +34,7 @@ public static class IWorkflowCallbackExtension
         var result = GetWorkflowCallback<T>(workflowRuntimeService);
         if (result.TryGetValue(out var value))
             callbackAction(value);
-        return result.ToResult();
+        return result;
     }
 
     /// <summary>
@@ -49,6 +49,6 @@ public static class IWorkflowCallbackExtension
         var result = GetWorkflowCallback<T>(workflowRuntimeService);
         if (result.TryGetValue(out var value))
             await asyncCallbackAction(value);
-        return result.ToResult();
+        return result;
     }
 }

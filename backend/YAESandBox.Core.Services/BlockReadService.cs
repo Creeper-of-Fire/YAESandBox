@@ -5,6 +5,7 @@ using YAESandBox.Core.Services.InterFaceAndBasic;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Results;
 using static YAESandBox.Core.Services.BlockTopologyExporter;
 
 namespace YAESandBox.Core.Services;
@@ -31,8 +32,8 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
     {
         var result = GenerateTopologyList(this.BlockManager.GetNodeOnlyBlocks(),
             blockId ?? Core.Block.BlockManager.BlockManager.WorldRootId);
-        foreach (var e in result.Errors)
-            Log.Error(e.Message);
+        if (result.TryGetError(out var error))
+            Log.Error(error.Message);
         if (result.TryGetValue(out var dtos))
             return Task.FromResult(dtos);
         return Task.FromResult<List<BlockTopologyNodeDto>>([]);

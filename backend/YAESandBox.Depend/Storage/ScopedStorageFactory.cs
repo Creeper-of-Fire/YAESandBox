@@ -1,5 +1,5 @@
 ﻿using System.Text.Json.Nodes;
-using FluentResults;
+using YAESandBox.Depend.Results;
 using static YAESandBox.Depend.Storage.IGeneralJsonStorage;
 
 namespace YAESandBox.Depend.Storage;

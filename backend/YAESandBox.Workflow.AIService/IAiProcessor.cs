@@ -1,4 +1,4 @@
-﻿using FluentResults;
+﻿using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Workflow.AIService;
 

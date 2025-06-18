@@ -1,7 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
-using FluentResults;
 using Nito.Disposables.Internals;
+using YAESandBox.Depend.Results;
 using static YAESandBox.Depend.Storage.IGeneralJsonStorage;
 
 namespace YAESandBox.Depend.Storage;
@@ -54,8 +54,8 @@ public partial class JsonFileJsonStorage
         try
         {
             var jsonResult = await this.LoadJsonNodeAsync(fileName, subDirectories);
-            if (!jsonResult.TryGetValue(out var value))
-                return jsonResult.ToResult();
+            if (jsonResult.TryGetError(out var error, out var value))
+                return error;
             if (value == null)
                 return Result.Ok<T?>(default);
 

@@ -25,7 +25,7 @@ public class ModuleRuleAttributeProcessor : ISchemaProcessor
         var typeInfo = context.ContextualType;
 
         // 3. 逐个检查并处理每个规则 Attribute
-        
+
         // 处理 [NoConfig]
         if (typeInfo.GetContextAttribute<NoConfigAttribute>(true) != null)
         {
@@ -37,7 +37,7 @@ public class ModuleRuleAttributeProcessor : ISchemaProcessor
         {
             rules["singleInStep"] = true;
         }
-        
+
         // 处理 [InLastStep]
         if (typeInfo.GetContextAttribute<InLastStepAttribute>(true) != null)
         {

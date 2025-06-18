@@ -1,4 +1,4 @@
-﻿using FluentResults;
+﻿using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;

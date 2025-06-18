@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using FluentResults;
 using YAESandBox.Core.Block;
 using YAESandBox.Core.Block.BlockManager;
 using YAESandBox.Core.DTOs;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Core.Services;
 
@@ -63,8 +63,7 @@ public static class BlockTopologyExporter
         // 验证起始节点是否存在
         if (!allBlocks.ContainsKey(startNodeId))
         {
-            return NormalBlockError.NotFound($"GenerateFlatTopologyList: 指定的起始节点 ID '{startNodeId}' 在字典中不存在。")
-                .ToResult<List<BlockTopologyNodeDto>>();
+            return NormalBlockError.NotFound($"GenerateFlatTopologyList: 指定的起始节点 ID '{startNodeId}' 在字典中不存在。");
         }
 
         var flatList = new List<BlockTopologyNodeDto>();
@@ -118,7 +117,7 @@ public static class BlockTopologyExporter
         {
             // 捕获遍历或处理过程中发生的任何异常
             Log.Error(ex, "GenerateFlatTopologyList: 生成扁平拓扑列表时发生错误。");
-            return NormalBlockError.Error("生成扁平拓扑列表时发生内部错误。").ToResult<List<BlockTopologyNodeDto>>();
+            return NormalBlockError.Error("生成扁平拓扑列表时发生内部错误。");
         }
     }
 }

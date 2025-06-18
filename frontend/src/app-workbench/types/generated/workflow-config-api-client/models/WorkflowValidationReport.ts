@@ -9,7 +9,7 @@ import type { StepValidationResult } from './StepValidationResult';
 export type WorkflowValidationReport = {
     /**
      * 每个步骤的校验结果。
-     * Key是步骤的InstanceId。
+     * Key是步骤的ConfigId。
      */
     stepResults: Record<string, StepValidationResult>;
 };

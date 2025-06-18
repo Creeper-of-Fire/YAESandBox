@@ -9,7 +9,7 @@ public record WorkflowValidationReport
 {
     /// <summary>
     /// 每个步骤的校验结果。
-    /// Key是步骤的InstanceId。
+    /// Key是步骤的ConfigId。
     /// </summary>
     [Required]
     public Dictionary<string, StepValidationResult> StepResults { get; init; } = [];

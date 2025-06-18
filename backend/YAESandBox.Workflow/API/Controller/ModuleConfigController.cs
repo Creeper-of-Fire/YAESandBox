@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Module.ModuleAttribute;
@@ -69,9 +70,9 @@ public class ModuleConfigController(WorkflowConfigFileService workflowConfigFile
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(IEnumerable<AbstractModuleConfig>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Dictionary<string, SingleItemResultDto<AbstractModuleConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<IEnumerable<AbstractModuleConfig>>> GetAllGlobalModuleConfigs() =>
+    public async Task<ActionResult<Dictionary<string, SingleItemResultDto<AbstractModuleConfig>>>> GetAllGlobalModuleConfigs() =>
         await this.WorkflowConfigFileService.FindAllModuleConfig().ToActionResultAsync();
 
     /// <summary>

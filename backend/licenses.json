@@ -1,15 +1,5 @@
 [
   {
-    "PackageId": "FluentResults.Strict.CreeperOfFire",
-    "PackageVersion": "3.16.0-strict.1.0.1",
-    "PackageProjectUrl": "https://github.com/Creeper-of-Fire/FluentResults-Strict",
-    "Copyright": "Copyright 2024 (c) Michael Altmann. All rights reserved. Copyright 2025 (c) Creeper of Fire.",
-    "Authors": "Creeper of Fire",
-    "License": "MIT",
-    "LicenseUrl": "https://licenses.nuget.org/MIT",
-    "LicenseInformationOrigin": 0
-  },
-  {
     "PackageId": "Humanizer.Core",
     "PackageVersion": "2.14.1",
     "PackageProjectUrl": "https://github.com/Humanizr/Humanizer",
@@ -448,16 +438,6 @@
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
     "LicenseInformationOrigin": 0
-  },
-  {
-    "PackageId": "Microsoft.Extensions.Logging.Abstractions",
-    "PackageVersion": "2.1.1",
-    "PackageProjectUrl": "https://asp.net/",
-    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "Apache-2.0",
-    "LicenseUrl": "https://raw.githubusercontent.com/aspnet/Home/2.0.0/LICENSE.txt",
-    "LicenseInformationOrigin": 1
   },
   {
     "PackageId": "Microsoft.Extensions.Logging.Abstractions",

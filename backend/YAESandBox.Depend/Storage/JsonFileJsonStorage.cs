@@ -1,9 +1,9 @@
 ﻿using System.Collections.Concurrent;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using FluentResults;
 using Nito.AsyncEx;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 
 namespace YAESandBox.Depend.Storage;
 
@@ -62,9 +62,9 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonSto
     }
 }
 
-internal record JsonError(string Message) : LazyInitError(Message)
+internal record JsonError(string Message) : Error(Message)
 {
-    internal static Result Error(string message)
+    internal static JsonError Error(string message)
     {
         return new JsonError(message);
     }

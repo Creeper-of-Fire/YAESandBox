@@ -22,19 +22,22 @@ public class BlockWritService(IBlockManager blockManager, INotifierService notif
         if (blockStatus == null)
             return (BlockResultCode.NotFound, BlockStatusCode.NotFound);
 
-        bool hasBlockStatusError = atomicOp.HasError<BlockStatusError>();
+
+        bool hasBlockStatusError = false;
+        if (atomicOp.TryGetError(out var atomicOpError))
+        {
+            hasBlockStatusError = atomicOpError is BlockStatusError;
+        }
+
         var resultCode = hasBlockStatusError ? BlockResultCode.Success : BlockResultCode.Error;
 
-        foreach (var error in atomicOp.Errors)
-            Log.Error(error.Message);
+        foreach (var error in atomicOp.GetAllItemErrors())
+            Log.Error(error.Message); // TODO: 考虑是否要记录Warning信息
 
-        foreach (var warning in atomicOp.HandledIssue())
-            Log.Warning(warning.Message);
+        // foreach (var warning in atomicOp.HandledIssue())
+        //     Log.Warning(warning.Message);
 
         await this.NotifierService.NotifyBlockUpdateAsync(blockId, BlockDataFields.WorldState);
-
-        if (hasBlockStatusError)
-            return (resultCode, blockStatus.Value);
 
         return (resultCode, blockStatus.Value);
     }

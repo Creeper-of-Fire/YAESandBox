@@ -1,7 +1,7 @@
 ﻿// 文件: JsonFileAiConfigurationManager.cs
 
-using FluentResults;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.AiConfig;
 
@@ -24,8 +24,8 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     private async Task<Result<Dictionary<string, AiConfigurationSet>>> LoadConfigurationsFromFileAsync()
     {
         var result = await this.ScopedJsonStorage.LoadAllAsync<Dictionary<string, AiConfigurationSet>>(ConfigFileName);
-        if (!result.TryGetValue(out var value))
-            return result.ToResult();
+        if (result.TryGetError(out var error, out var value))
+            return error;
 
         if (value == null || value.Count == 0)
             return AiConfigurationSet.MakeDefaultDictionary();
@@ -47,26 +47,27 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     private async Task<Result<IReadOnlyDictionary<string, AiConfigurationSet>>> GetCurrentConfigurationsAsync()
     {
         var loadedConfigs = await this.LoadConfigurationsFromFileAsync();
-        if (!loadedConfigs.TryGetValue(out var value))
-            return loadedConfigs.ToResult();
+        if (loadedConfigs.TryGetError(out var error, out var value))
+            return error;
         return value;
     }
 
     /// <inheritdoc/>
     public async Task<Result<string>> AddConfigurationAsync(AiConfigurationSet config)
     {
-        var configs = await this.LoadConfigurationsFromFileAsync();
-        if (!configs.TryGetValue(out var value))
-            return configs.ToResult();
+        var loadResult = await this.LoadConfigurationsFromFileAsync();
+        if (loadResult.TryGetError(out var error, out var value))
+            return error;
+
         string newUuid = Guid.NewGuid().ToString();
 
         // 理论上 Guid.NewGuid() 碰撞概率极低，但严谨起见可以检查 (尽管对于 Guid 通常不这么做)
         // while (currentConfigs.ContainsKey(newUuid)) { newUuid = Guid.NewGuid().ToString(); }
 
         value[newUuid] = config;
-        var result = await this.SaveConfigurationsToFileAsync(value);
-        if (result.IsFailed)
-            return result;
+        var saveResult = await this.SaveConfigurationsToFileAsync(value);
+        if (saveResult.TryGetError(out var saveError))
+            return saveError;
         return Result.Ok(newUuid);
     }
 
@@ -76,8 +77,8 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
         if (string.IsNullOrWhiteSpace(uuid)) return NormalError.BadRequest("UUID 不能为空。");
 
         var configs = await this.LoadConfigurationsFromFileAsync();
-        if (!configs.TryGetValue(out var value))
-            return configs.ToResult();
+        if (configs.TryGetError(out var error, out var value))
+            return error;
 
         if (!value.ContainsKey(uuid))
             return NormalError.NotFound($"未找到 UUID 为 '{uuid}' 的配置，无法更新。");
@@ -94,8 +95,8 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
             return NormalError.BadRequest("要删除的配置 UUID 不能为空。");
 
         var configs = await this.LoadConfigurationsFromFileAsync();
-        if (!configs.TryGetValue(out var value))
-            return configs.ToResult();
+        if (configs.TryGetError(out var error, out var value))
+            return error;
 
         if (!value.Remove(uuid))
             return Result.Ok(); //本来就没有，无需删除
@@ -111,8 +112,8 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
 
         var configs = await this.GetCurrentConfigurationsAsync();
 
-        if (!configs.TryGetValue(out var value))
-            return configs.ToResult();
+        if (configs.TryGetError(out var error, out var value))
+            return error;
         if (value.TryGetValue(uuid, out var config))
             return Result.Ok(config);
         return NormalError.NotFound($"未找到 UUID 为 '{uuid}' 的配置。");

@@ -1,4 +1,4 @@
-﻿namespace YAESandBox.Depend.Results;
+﻿namespace YAESandBox.Depend.ResultsExtend;
 
 public partial record NormalError
 {

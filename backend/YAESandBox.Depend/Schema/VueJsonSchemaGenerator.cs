@@ -21,7 +21,7 @@ public static class VueFormSchemaGenerator
     [Pure]
     public static string GenerateSchemaJson(Type type, Action<JsonSchemaGeneratorSettings>? configureSettings = null)
     {
-        var schema = GenerateSchema(type,configureSettings);
+        var schema = GenerateSchema(type, configureSettings);
         return schema.ToJson();
     }
 
@@ -67,7 +67,7 @@ public static class VueFormSchemaGenerator
         settings.SchemaProcessors.Add(new RangeProcessor());
         settings.SchemaProcessors.Add(new HiddenProcessor());
         // settings.SchemaProcessors.Add(new HiddenDisplayProcessor());
-        
+
         // 允许外部进一步配置
         configureSettings?.Invoke(settings);
 
@@ -82,7 +82,6 @@ public static class VueFormSchemaGenerator
         ));
         settings.SchemaProcessors.Add(new NormalActionProcessor(context => { context.Schema.ProcessUiOption(); }));
 
-        
 
         // 3. 创建 JsonSchemaGenerator，现在可以传入具体的 settings 对象
         var generator = new JsonSchemaGenerator(settings);

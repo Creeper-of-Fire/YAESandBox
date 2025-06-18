@@ -10,6 +10,7 @@ import GameModeView from '@/app-game/GameModeView.vue'; // 假设这是游戏模
 //    每个特性模块内部可以有一个 routes.ts 文件，导出该特性相关的子路由数组
 // import { routes as workflowEditorRoutes } from '@/app-view/';
 import {routes as gamePlayerRoutes} from '@/app-game/routes.ts';
+import { routes as workbenchRoutes } from '@/app-workbench/routes.ts';
 // import { routes as userProfileRoutes } from '@/features/user-profile/routes'; // 更多特性...
 
 // 3. 定义主路由规则 (顶层路由)
@@ -18,9 +19,10 @@ const mainRoutes: RouteRecordRaw[] = [
         path: '/',
         name: 'Home', // 或者一个专门的欢迎/仪表盘页面
         // component: HomeView, // 如果有 HomeView
-        redirect: '/game', // 假设默认重定向到游戏模式
+        redirect: '/workbench',
     },
-    ...gamePlayerRoutes
+    ...gamePlayerRoutes,
+    ...workbenchRoutes,
     // 可以将特性模块的路由作为顶层路由，如果它们有自己的完整页面布局
     // 这种方式下，特性模块的 routes.ts 导出的就是顶层路由配置了
     // ...workflowEditorRoutes, // 假设 workflowEditorRoutes 是 [{ path: '/editor/...', ... }]

@@ -1,13 +1,12 @@
 ﻿using System.Diagnostics;
 using System.Globalization;
 using System.Text.Json;
-using FluentResults;
 using JetBrains.Annotations;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
-using static YAESandBox.Core.Action.OperationHandledIssue;
+using YAESandBox.Depend.Results;
 
 // ReSharper disable ParameterTypeCanBeEnumerable.Global
 
@@ -327,7 +326,7 @@ public class Block : NodeBlock
             {
                 // 捕获可能由 worldState 操作（如 SetAttribute, ModifyAttribute）抛出的意外异常
                 // 记录这个意外失败，然后继续处理下一个操作
-                results.Add(Error(op, $"处理操作时发生意外错误: {ex.Message}").ToResult());
+                results.Add(OperationHandledIssue.Error(op, $"处理操作时发生意外错误: {ex.Message}"));
                 // 这里可以考虑记录更详细的日志，包括堆栈跟踪 ex.ToString()
             }
 
@@ -349,7 +348,7 @@ public class Block : NodeBlock
             case AtomicOperationType.CreateEntity:
                 var existing = worldState.FindEntityById(op.EntityId, op.EntityType, false);
                 if (existing != null)
-                    return Conflict(op, $"实体 '{op.EntityType}:{op.EntityId}' 已存在。").ToResult();
+                    return OperationHandledIssue.Conflict(op, $"实体 '{op.EntityType}:{op.EntityId}' 已存在。");
 
                 var newEntity = CreateEntityInstance(op.EntityType, op.EntityId);
                 if (op.InitialAttributes != null)
@@ -364,16 +363,16 @@ public class Block : NodeBlock
                 var entityToModify =
                     worldState.FindEntityById(op.EntityId, op.EntityType, false);
                 if (entityToModify == null)
-                    return NotFound(op, $"实体 '{op.EntityType}:{op.EntityId}' 未找到或已被销毁。").ToResult();
+                    return OperationHandledIssue.NotFound(op, $"实体 '{op.EntityType}:{op.EntityId}' 未找到或已被销毁。");
                 // 注意：这里的检查需要根据你的 AtomicOperation 定义调整
                 // 如果 AttributeKey 或 ModifyOperator 设计为非空，则这些检查可能不需要或应在创建 op 时完成
 
                 if (op.AttributeKey == null || op.ModifyOperator == null)
-                    return InvalidInput(op, $"修改操作 '{op.EntityType}:{op.EntityId}' 的参数 为 null。").ToResult();
+                    return OperationHandledIssue.InvalidInput(op, $"修改操作 '{op.EntityType}:{op.EntityId}' 的参数 为 null。");
                 // 再次确认 null 是否是合法的 ModifyValue (根据你的业务逻辑)
 
                 if (op.ModifyValue == null)
-                    return InvalidInput(op, $"修改操作 '{op.EntityType}:{op.EntityId}' 的值不能为 null。").ToResult();
+                    return OperationHandledIssue.InvalidInput(op, $"修改操作 '{op.EntityType}:{op.EntityId}' 的值不能为 null。");
 
                 entityToModify.ModifyAttribute(op.AttributeKey, op.ModifyOperator.Value, op.ModifyValue);
                 return Result.Ok(op);

@@ -31,14 +31,14 @@ public class ResultUsageAnalyzer : DiagnosticAnalyzer
 
         context.RegisterCompilationStartAction(compilationContext =>
         {
-            const string resultFullName = "FluentResults.Result";
-            const string genericResultFullName = "FluentResults.Result`1";
+            const string resultFullName = "YAESandBox.Depend.Results.Result";
+            const string genericResultFullName = "YAESandBox.Depend.Results.Result`1";
 
 
             var resultSymbol = compilationContext.Compilation.GetTypeByMetadataName(resultFullName);
             var genericResultSymbol = compilationContext.Compilation.GetTypeByMetadataName(genericResultFullName);
 
-            // 如果在用户的编译环境中找不到这些类型，说明用户项目根本没用 FluentResults，
+            // 如果在用户的编译环境中找不到这些类型，说明用户项目根本没用 Results，
             // 我们的分析器就没必要工作了。
             if (resultSymbol is null || genericResultSymbol is null)
             {
@@ -129,7 +129,8 @@ public class ResultUsageAnalyzer : DiagnosticAnalyzer
         }
 
         // 检查3：递归检查基类 (这是本次修正的关键！)
-        if (typeSymbol.BaseType is not null && this.ContainsResultTypeRecursive(typeSymbol.BaseType, resultSymbol, genericResultSymbol, visitedSymbols))
+        if (typeSymbol.BaseType is not null &&
+            this.ContainsResultTypeRecursive(typeSymbol.BaseType, resultSymbol, genericResultSymbol, visitedSymbols))
         {
             return true;
         }

@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
 using System.Text.Json.Nodes;
-using FluentResults;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 
 namespace YAESandBox.Depend.Schema;

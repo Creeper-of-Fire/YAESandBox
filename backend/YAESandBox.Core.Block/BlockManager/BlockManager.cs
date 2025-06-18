@@ -1,11 +1,11 @@
 ﻿using System.Collections.Concurrent;
-using FluentResults;
 using JetBrains.Annotations;
 using Nito.AsyncEx;
 using YAESandBox.Core.Action;
 using YAESandBox.Core.State;
 using YAESandBox.Depend;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 
 // ReSharper disable ParameterTypeCanBeEnumerable.Global
 namespace YAESandBox.Core.Block.BlockManager;
@@ -283,21 +283,24 @@ public partial class BlockManager : IBlockManager
     /// <param name="blockId">区块唯一标识符</param>
     /// <param name="operations">待执行的原子操作列表</param>
     /// <returns>返回一个元组，包含区块状态和操作结果列表（结果包含失败的）</returns>
-    public async Task<(Result<IReadOnlyList<AtomicOperation>> result, BlockStatusCode? blockStatusCode)>
+    public async Task<(CollectionResult<AtomicOperation> result, BlockStatusCode? blockStatusCode)>
         EnqueueOrExecuteAtomicOperationsAsync(string blockId, IReadOnlyList<AtomicOperation> operations)
     {
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
             if (!this.Blocks.TryGetValue(blockId, out var block))
-                return (Result.Fail($"尝试执行原子操作失败: Block '{blockId}' 未找到。"), null);
+                return (BlockStatusError.NotFound(null, $"尝试执行原子操作失败: Block '{blockId}' 未找到。")
+                        .ToCollectionResult<AtomicOperation>(),
+                    null);
 
             var result = block switch
             {
-                LoadingBlockStatus loading => loading.ApplyOperations(operations),
-                IdleBlockStatus idle => idle.ApplyOperations(operations),
+                LoadingBlockStatus loading => loading.ApplyOperations(operations).ToCollectionResult(),
+                IdleBlockStatus idle => idle.ApplyOperations(operations).ToCollectionResult(),
                 // ConflictBlockStatus conflict => BlockStatusError.Conflict(conflict, $"Block '{blockId}' 状态为 Conflict。").ToResult(),
                 // ErrorBlockStatus error => BlockStatusError.Error(error, $"Block '{blockId}' 状态为 Error。").ToResult(),
-                _ => BlockStatusError.Error(block, $"尝试执行原子操作失败: Block '{blockId}' 状态为 {block.StatusCode}。").ToResult()
+                _ => BlockStatusError.Error(block,
+                    $"尝试执行原子操作失败: Block '{blockId}' 状态为 {block.StatusCode}。").ToCollectionResult<AtomicOperation>()
             };
 
             return (result, block.StatusCode);
@@ -305,7 +308,7 @@ public partial class BlockManager : IBlockManager
     }
 }
 
-public record BlockStatusError(BlockResultCode Code, string Message, BlockStatus? FailedBlockStatus) : LazyInitError(Message)
+public record BlockStatusError(BlockResultCode Code, string Message, BlockStatus? FailedBlockStatus) : Error(Message)
 {
     public static BlockStatusError NotFound(BlockStatus? block, string message)
     {
@@ -327,8 +330,19 @@ public record BlockStatusError(BlockResultCode Code, string Message, BlockStatus
         return new BlockStatusError(BlockResultCode.Error, message, block);
     }
 
-    public static implicit operator Result(BlockStatusError initError)
+    /// <summary>
+    /// 通常不需要处理
+    /// </summary>
+    /// <param name="block"></param>
+    /// <param name="message"></param>
+    /// <returns></returns>
+    public static BlockStatusError InvalidState(BlockStatus block, string message)
     {
-        return initError.ToResult();
+        return new BlockStatusError(BlockResultCode.InvalidState, message, block);
+    }
+
+    public CollectionResult<TValue> ToCollectionResult<TValue>()
+    {
+        return CollectionResult<TValue>.Fail(this);
     }
 }

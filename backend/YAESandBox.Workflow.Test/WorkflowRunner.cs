@@ -1,4 +1,5 @@
-﻿using YAESandBox.Depend.Storage;
+﻿using YAESandBox.Depend.Results;
+using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.AIService.ConfigManagement;
@@ -67,10 +68,10 @@ public class WorkflowRunner
         // 1. 加载工作流配置
         Console.WriteLine($"正在从文件加载工作流配置 '{workflowId}.json'...");
         var configResult = await this.WorkflowConfigFileService.FindWorkflowConfig(workflowId);
-        if (!configResult.TryGetValue(out var workflowConfig))
+        if (!configResult.TryGetValue(out var workflowConfig, out var error))
         {
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine($"错误：无法加载工作流配置。原因: {configResult.Errors.FirstOrDefault()?.Message}");
+            Console.WriteLine($"错误：无法加载工作流配置。原因: {error.Message}");
             Console.ResetColor();
             return null;
         }

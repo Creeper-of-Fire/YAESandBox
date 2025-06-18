@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.AiConfig;
 using YAESandBox.Workflow.AIService.ConfigManagement;
@@ -75,7 +76,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
             return this.CreatedAtAction(nameof(this.GetConfigurationByUuid), new { uuid = value }, value);
         }
 
-        return this.Get500ErrorResult(result, "添加配置集时发生内部错误。");
+        return this.Get500ErrorResult(result);
     }
 
     /// <summary>
@@ -102,10 +103,8 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         // 验证：传入的 config 的 ModuleType 应该与存储中 uuid 对应的配置的 ModuleType 一致。
         // 这一步可以在 Manager 层做，或者在这里做。
         var existingConfigResult = await this.ConfigurationManager.GetConfigurationByUuidAsync(uuid);
-        if (existingConfigResult.IsFailed)
-        {
-            return this.StatusCode(StatusCodes.Status500InternalServerError, "更新配置前检查配置集失败。");
-        }
+        if (existingConfigResult.TryGetError(out var error))
+            return this.Get500ErrorResult(error);
 
         return await this.ConfigurationManager.UpdateConfigurationAsync(uuid, config).ToActionResultAsync();
     }

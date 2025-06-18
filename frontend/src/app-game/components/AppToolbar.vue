@@ -49,19 +49,6 @@
         设置
       </n-tooltip>
 
-      <!-- AI配置按钮 -->
-      <n-tooltip trigger="hover">
-        <template #trigger>
-          <n-button text @click="togglePanel('left', AiConfigEditorPanel)"
-                    :type="isActive('left', AiConfigEditorPanel) ? 'primary' : 'default'">
-            <template #icon>
-              <n-icon :component="HardwareChipIcon"/>
-            </template>
-          </n-button>
-        </template>
-        AI配置
-      </n-tooltip>
-
       <!-- 移动端返回主界面按钮，可能没什么必要 -->
       <!--      <n-button-->
       <!--          v-if="uiStore.isMobileLayout && uiStore.mobileFocusTarget !== 'main'"-->

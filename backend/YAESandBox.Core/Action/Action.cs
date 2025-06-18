@@ -1,6 +1,7 @@
 ﻿using YAESandBox.Core.State.Entity;
 using YAESandBox.Depend;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 
 // For EntityType, Operator
 
@@ -104,13 +105,12 @@ public record AtomicOperation
 }
 
 /// <summary>
-/// 操作警告，不被当成错误，没有实现IError
+/// 操作错误，通常来说可以忽略
 /// </summary>
 /// <param name="Code"></param>
 /// <param name="Message"></param>
 /// <param name="FailedOperation"></param>
-public record OperationHandledIssue(BlockResultCode Code, string Message, AtomicOperation FailedOperation)
-    : LazyInitHandledIssue(Message)
+public record OperationHandledIssue(BlockResultCode Code, string Message, AtomicOperation FailedOperation) : Error(Message)
 {
     public static OperationHandledIssue NotFound(AtomicOperation operation, string message)
     {

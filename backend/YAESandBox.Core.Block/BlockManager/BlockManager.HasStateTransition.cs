@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
-using FluentResults;
 using OneOf;
 using YAESandBox.Core.Action;
 using YAESandBox.Depend;
+using YAESandBox.Depend.Results;
 
 // ReSharper disable ParameterTypeCanBeEnumerable.Global
 namespace YAESandBox.Core.Block.BlockManager;
@@ -47,7 +47,7 @@ public partial class BlockManager
     /// <param name="resolvedCommands"></param>
     /// <returns></returns>
     [HasBlockStateTransition]
-    public async Task<Result<IReadOnlyList<AtomicOperation>>> ApplyResolvedCommandsAsync(string blockId,
+    public async Task<CollectionResult<AtomicOperation>> ApplyResolvedCommandsAsync(string blockId,
         IReadOnlyList<AtomicOperation> resolvedCommands)
     {
         // This logic is now mostly inside HandleWorkflowCompletionAsync after conflict resolution.
@@ -55,17 +55,19 @@ public partial class BlockManager
         using (await this.GetLockForBlock(blockId).LockAsync())
         {
             if (!this.Blocks.TryGetValue(blockId, out var block))
-                return BlockStatusError.NotFound(null, $"尝试应用已解决指令失败: Block '{blockId}' 未找到。").ToResult();
+                return BlockStatusError.NotFound(null, $"尝试应用已解决指令失败: Block '{blockId}' 未找到。")
+                    .ToCollectionResult<AtomicOperation>();
 
             if (block is not ConflictBlockStatus conflictBlock)
-                return NormalHandledIssue.InvalidState(
-                    $"尝试应用已解决指令，但 Block '{blockId}' 状态为 {block.StatusCode} (非 ResolvingConflict)。已忽略。").ToResult();
+                return BlockStatusError
+                    .InvalidState(block, $"尝试应用已解决指令，但 Block '{blockId}' 状态为 {block.StatusCode} (非 ResolvingConflict)。已忽略。")
+                    .ToCollectionResult<AtomicOperation>();
 
             Log.Info($"Block '{blockId}': 正在应用手动解决的冲突指令 ({resolvedCommands.Count} 条)。");
 
             var val = conflictBlock.FinalizeConflictResolution(block.Block.BlockContent, resolvedCommands);
             this.TrySetBlock(val.block);
-            return val.atomicOp;
+            return CollectionResult<AtomicOperation>.Ok(val.atomicOp);
         }
     }
 
@@ -78,7 +80,7 @@ public partial class BlockManager
     /// <param name="firstPartyCommands">来自第一公民工作流的指令</param>
     /// <param name="outputVariables"></param>
     [HasBlockStateTransition]
-    public async Task<OneOf<(IdleBlockStatus, Result<IReadOnlyList<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>
+    public async Task<OneOf<(IdleBlockStatus, CollectionResult<AtomicOperation>), ConflictBlockStatus, ErrorBlockStatus, Error>>
         HandleWorkflowCompletionAsync(string blockId, bool success, string rawText,
             IReadOnlyList<AtomicOperation> firstPartyCommands, IReadOnlyDictionary<string, object?> outputVariables)
     {
@@ -88,7 +90,7 @@ public partial class BlockManager
                 return BlockStatusError.NotFound(null, $"处理工作流完成失败: Block '{blockId}' 未找到。");
 
             if (blockStatus is not LoadingBlockStatus block)
-                return NormalHandledIssue.InvalidState(
+                return BlockStatusError.InvalidState(blockStatus,
                     $"收到 Block '{blockId}' 的工作流完成回调，但其状态为 {blockStatus.StatusCode} (非 Loading)。可能重复或过时。");
 
             if (!success) // Workflow failed
@@ -106,8 +108,8 @@ public partial class BlockManager
             var val = block.TryFinalizeSuccessfulWorkflow(rawText, firstPartyCommands);
             val.Switch(tuple => this.TrySetBlock(tuple.blockStatus), this.TrySetBlock);
             return val
-                .Match<OneOf<(IdleBlockStatus, Result<IReadOnlyList<AtomicOperation>>), ConflictBlockStatus, ErrorBlockStatus, IReason>>(
-                    tuple => tuple,
+                .Match<OneOf<(IdleBlockStatus, CollectionResult<AtomicOperation>), ConflictBlockStatus, ErrorBlockStatus, Error>>(
+                    tuple => (tuple.blockStatus, CollectionResult<AtomicOperation>.Ok(tuple.atomicOp)),
                     conflict => conflict);
         }
     }
@@ -121,7 +123,7 @@ public partial class BlockManager
             if (!this.Blocks.TryGetValue(blockId, out var blockStatus))
             {
                 Log.Error($"BlockManager: 尝试为 Block '{blockId}' 启动重新生成失败：Block 未找到。");
-                return BlockStatusError.NotFound(null, $"尝试为 Block '{blockId}' 启动重新生成失败：Block 未找到。").ToResult();
+                return BlockStatusError.NotFound(null, $"尝试为 Block '{blockId}' 启动重新生成失败：Block 未找到。");
             }
 
             var sourceWsForRegen = blockStatus.Block.WsInput;

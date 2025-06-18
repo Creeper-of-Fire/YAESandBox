@@ -1,5 +1,5 @@
-﻿using FluentResults;
-using YAESandBox.Depend.Results;
+﻿using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
@@ -71,14 +71,15 @@ internal class StepProcessor(
             {
                 case AiModuleProcessor aiModule:
                     var resultAi = await this.PrepareAndExecuteAiModule(aiModule, cancellationToken);
-                    if (!resultAi.TryGetValue(out string? value))
-                        return resultAi.ToResult();
+                    if (resultAi.TryGetError(out var error1, out string? value))
+                        return error1;
                     this.StepContent.FullAiReturn = value;
                     break;
+
                 case INormalModule normalModule:
                     var result = await normalModule.ExecuteAsync(this.StepContent, cancellationToken);
-                    if (result.IsFailed)
-                        return result;
+                    if (result.TryGetError(out var error))
+                        return error;
                     break;
             }
         }

@@ -1,4 +1,4 @@
-﻿using FluentResults;
+﻿using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
@@ -56,8 +56,8 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
                 this.OnChunkReceivedScript(chunk);
             }
         }, cancellationToken);
-        if (result.IsFailed)
-            return result;
+        if (result.TryGetError(out var error))
+            return error;
         return fullAiReturn;
     }
 

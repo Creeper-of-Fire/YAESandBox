@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AbstractModuleConfig } from '../models/AbstractModuleConfig';
+import type { AbstractModuleConfigSingleItemResultDto } from '../models/AbstractModuleConfigSingleItemResultDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -24,10 +25,10 @@ export class ModuleConfigService {
     }
     /**
      * 获取所有全局模块配置的列表。
-     * @returns AbstractModuleConfig 成功获取所有全局模块配置的列表。
+     * @returns AbstractModuleConfigSingleItemResultDto 成功获取所有全局模块配置的列表。
      * @throws ApiError
      */
-    public static getApiV1WorkflowsConfigsGlobalModules(): CancelablePromise<Array<AbstractModuleConfig>> {
+    public static getApiV1WorkflowsConfigsGlobalModules(): CancelablePromise<Record<string, AbstractModuleConfigSingleItemResultDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/workflows-configs/global-modules',

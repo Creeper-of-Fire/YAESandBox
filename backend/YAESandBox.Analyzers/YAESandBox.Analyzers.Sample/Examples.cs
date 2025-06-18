@@ -1,7 +1,9 @@
 // ReSharper disable UnusedType.Global
 // ReSharper disable UnusedMember.Global
 
-using FluentResults;
+using YAESandBox.Depend.Results;
+
+namespace YAESandBox.Analyzers.Sample;
 
 class TestClass
 {
