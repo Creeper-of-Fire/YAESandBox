@@ -5,15 +5,55 @@
         <n-notification-provider>
           <div class="app-shell">
             <header class="app-header">
-              <!-- 简单的导航 -->
-              <router-link to="/game">游戏</router-link>
-              <router-link to="/workbench">编辑器</router-link>
+              <!--
+                美化后的导航栏：
+                - 使用 n-space 来提供合适的间距。
+                - 使用 router-link 的 custom 属性，将导航功能赋予 n-button。
+                - v-slot="{ navigate, isActive }" 获取路由状态。
+                - @click="navigate" 将按钮的点击事件绑定到路由跳转。
+                - :type="isActive ? 'primary' : 'default'" 根据路由是否激活来改变按钮样式，提供视觉反馈。
+              -->
+              <n-space class="navigation-controls">
+                <router-link to="/game" custom v-slot="{ navigate, isActive }">
+                  <n-button
+                      @click="navigate"
+                      :type="isActive ? 'primary' : 'default'"
+                      :ghost="!isActive"
+                      strong
+                      secondary
+                  >
+                    游戏
+                  </n-button>
+                </router-link>
+                <router-link to="/workbench" custom v-slot="{ navigate, isActive }">
+                  <n-button
+                      @click="navigate"
+                      :type="isActive ? 'primary' : 'default'"
+                      :ghost="!isActive"
+                      strong
+                      secondary
+                  >
+                    编辑器
+                  </n-button>
+                </router-link>
+              </n-space>
             </header>
+
             <main class="app-main-content">
-              <router-view v-slot="{ Component }">
-                <transition name="fade" mode="out-in">
-                  <component :is="Component"/>
-                </transition>
+              <!--
+                修复后的 router-view：
+                - 从 v-slot 中额外获取 route 对象。
+                - 为 <component> 绑定了唯一的 :key="route.path"。
+                - 当路由从 /game 切换到 /workbench 时, key 会发生变化，
+                  Vue 会强制销毁旧组件、创建新组件，从而避免白屏问题。
+              -->
+              <router-view v-slot="{ Component, route }">
+                <!--                transition 调了半天还是不舒服，扔了得了，美化是没完没了的-->
+                <!--                <transition name="fade" mode="in-out">-->
+                <keep-alive>
+                  <component :is="Component" :key="route.path"/>
+                </keep-alive>
+                <!--                </transition>-->
               </router-view>
             </main>
           </div>
@@ -51,12 +91,45 @@ onUnmounted(() => {
 </script>
 
 <style>
-/* 全局过渡动画等 */
-.fade-enter-active, .fade-leave-active {
-  transition: opacity 0.3s ease;
+/* 整体应用布局 */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: #f5f7f9;
 }
 
-.fade-enter-from, .fade-leave-to {
+/* 头部样式 */
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 1px 1px;
+  border-bottom: 1px solid #e8e8e8;
+  background-color: #ffffff;
+  flex-shrink: 0; /* 防止头部被压缩 */
+}
+
+.navigation-controls {
+  margin-left: 20px;
+}
+
+/* 主内容区域样式 */
+.app-main-content {
+  flex-grow: 1; /* 占据剩余所有空间 */
+  overflow-y: auto; /* 如果内容超长，则内部滚动 */
+  box-sizing: border-box;
+}
+
+/* 定义淡入淡出过渡效果 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
   opacity: 0;
+  transform: translateY(5px);
 }
 </style>

@@ -72,11 +72,11 @@ public static partial class ResultToActionExtensions
     /// - 如果整个批量操作成功，它会将内部的字典转换为DTO，并用 200 OK 返回。
     /// </summary>
     /// <typeparam name="TKey">字典的键类型。</typeparam>
-    /// <typeparam name="TValue">字典的值类型。</typeparam>
+    /// <typeparam name="TData">字典Dto内部的值类型。</typeparam>
     /// <param name="dictionaryResult">要转换的DictionaryResult对象。</param>
     /// <returns>一个封装了操作结果的ActionResult。</returns>
-    public static ActionResult<Dictionary<TKey, SingleItemResultDto<TValue>>> ToActionResult<TKey, TValue>(
-        this DictionaryResult<TKey, TValue> dictionaryResult) where TKey : notnull
+    public static ActionResult<Dictionary<TKey, ResultDto<TData>>> ToActionResult<TKey, TData>(
+        this DictionaryResult<TKey, TData> dictionaryResult) where TKey : notnull
     {
         // 1. 检查整个批量操作是否在启动前就失败了。
         if (dictionaryResult.TryGetError(out var error))
@@ -92,14 +92,35 @@ public static partial class ResultToActionExtensions
         return new OkObjectResult(responseDto);
     }
 
+    /// <inheritdoc cref="ToActionResult{TKey, TValue}"/>
+    public static ActionResult<Dictionary<TKey, TNewValue>> ToActionResult<TKey, TData, TNewKey, TNewValue>(
+        this DictionaryResult<TKey, TData> dictionaryResult,
+        Func<Dictionary<TKey, ResultDto<TData>>, Dictionary<TNewKey, TNewValue>> selector)
+        where TKey : notnull where TNewKey : notnull
+    {
+        // 1. 检查整个批量操作是否在启动前就失败了。
+        if (dictionaryResult.TryGetError(out var error))
+        {
+            return error.ToResult().ToActionResult();
+        }
+
+        // 2. 如果批量操作本身是成功的，则将内部的详细结果转换为DTO。
+        // 无论内部是否有单独的项失败，整个批量操作是成功执行的，所以返回 200 OK。
+        // 前端将通过检查DTO内部的 IsSuccess 字段来处理每个项的状态。
+        var responseDto = dictionaryResult.ToDictionaryDto();
+
+        return new OkObjectResult(selector(responseDto));
+    }
+
+
     /// <summary>
     /// 智能地将 CollectionResult`T` 转换为 ActionResult。
     /// 逻辑与 DictionaryResult 版本完全相同，只是处理的是列表。
     /// </summary>
-    /// <typeparam name="T">集合中元素的类型。</typeparam>
+    /// <typeparam name="T">集合中Dto的内部的值的类型。</typeparam>
     /// <param name="collectionResult">要转换的CollectionResult对象。</param>
     /// <returns>一个封装了操作结果的ActionResult。</returns>
-    public static ActionResult<List<SingleItemResultDto<T>>> ToActionResult<T>(
+    public static ActionResult<List<ResultDto<T>>> ToActionResult<T>(
         this CollectionResult<T> collectionResult)
     {
         // 1. 检查整个批量操作是否失败。

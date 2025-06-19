@@ -6,26 +6,35 @@ namespace YAESandBox.Depend.Results;
 /// 代表一个单个项的成功与否的DTO
 /// </summary>
 /// <typeparam name="TValue">数值的类型</typeparam>
-public class SingleItemResultDto<TValue>
+public record ResultDto<TValue>
 {
     /// <summary>
     /// 是否成功
     /// </summary>
     [Required]
-    public bool IsSuccess { get; set; }
+    public required bool IsSuccess { get; init; }
 
     /// <summary>
     /// 成功时，这里有一个值
     /// </summary>
-    public TValue? Data { get; set; }
+    public required TValue? Data { get; init; }
 
     /// <summary>
     /// 失败时，返回错误的信息
     /// </summary>
-    public string? ErrorMessage { get; set; }
+    public required string? ErrorMessage { get; init; }
+}
 
-    // // 可以根据需要添加更多来自 Error 子类的信息
-    // public string? ErrorType { get; set; }
+/// <summary>
+/// 可以转换为SingleItemResultDto或其派生类型的错误
+/// </summary>
+public interface IErrorCanBeDto
+{
+    /// <summary>
+    /// 转换错误为DTO
+    /// </summary>
+    /// <returns></returns>
+    public ResultDto<TValue> ToDto<TValue>();
 }
 
 /// <summary>
@@ -34,28 +43,24 @@ public class SingleItemResultDto<TValue>
 public static class ResultConversionExtensions
 {
     /// <summary>
-    /// 将一个表示独立操作结果的 Result`T 转换为 SingleItemResultDto`T。
+    /// 将一个表示独立操作结果的 Result`T 转换为转换为前端友好的 DTO。
     /// </summary>
     /// <typeparam name="T">数据类型。</typeparam>
-    /// <param name="result">要转换的Result对象。</param>
+    /// <param name="result">要转换的Result对象，请确保其是无错的（把错误在外部进行检测）。</param>
     /// <returns>转换后的DTO对象。</returns>
-    public static SingleItemResultDto<T> ToSingleItemResultDto<T>(this Result<T> result)
+    public static ResultDto<T> ToSingleItemResultDto<T>(this Result<T> result)
     {
-        var dto = new SingleItemResultDto<T>();
-
         if (result.TryGetValue(out var data, out var error))
         {
-            dto.IsSuccess = true;
-            dto.Data = data;
-        }
-        else
-        {
-            dto.IsSuccess = false;
-            dto.ErrorMessage = error.Message;
-            // dto.ErrorType = error.GetType().Name; // 获取具体的错误类型名
+            return new ResultDto<T> { IsSuccess = true, Data = data, ErrorMessage = null };
         }
 
-        return dto;
+        if (error is IErrorCanBeDto errorCanBeDto)
+        {
+            return errorCanBeDto.ToDto<T>();
+        }
+
+        return new ResultDto<T> { IsSuccess = false, Data = default, ErrorMessage = error.Message };
     }
 
     /// <summary>
@@ -65,7 +70,7 @@ public static class ResultConversionExtensions
     /// <typeparam name="TValue">字典的值类型。</typeparam>
     /// <param name="dictionaryResult">要转换的DictionaryResult对象，请确保其是无错的（把错误在外部进行检测）。</param>
     /// <returns>一个以TKey为键，以SingleItemResultDto`TValue`为值的字典。</returns>
-    public static Dictionary<TKey, SingleItemResultDto<TValue>> ToDictionaryDto<TKey, TValue>(
+    public static Dictionary<TKey, ResultDto<TValue>> ToDictionaryDto<TKey, TValue>(
         this DictionaryResult<TKey, TValue> dictionaryResult) where TKey : notnull
     {
         // 如果整个批量操作成功，但内部可能有个别失败项
@@ -88,7 +93,7 @@ public static class ResultConversionExtensions
     /// <typeparam name="T">列表内容的类型。</typeparam>
     /// <param name="collectionResult">要转换的CollectionResult对象，请确保其是无错的（把错误在外部进行检测）。</param>
     /// <returns>一个列表。</returns>
-    public static List<SingleItemResultDto<T>> ToListDto<T>(
+    public static List<ResultDto<T>> ToListDto<T>(
         this CollectionResult<T> collectionResult)
     {
         if (collectionResult is { IsSuccess: true, ItemResults: not null })

@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, defineAsyncComponent, markRaw, defineExpose, toRefs} from 'vue';
+import {ref, computed, defineAsyncComponent, markRaw, toRefs} from 'vue';
 import {NSpin, NAlert, NEmpty} from 'naive-ui';
 import VueForm from '@lljj/vue3-form-naive'; // 确认此库的准确导入名称和方式
 import type {AbstractAiProcessorConfig} from "@/app-workbench/types/generated/ai-config-api-client";

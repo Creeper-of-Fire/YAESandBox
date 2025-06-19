@@ -36,13 +36,13 @@ public partial record Result
     /// 成功
     /// </summary>
     [MemberNotNullWhen(false, nameof(Error))]
-    public bool IsSuccess => this.Error is null;
+    public virtual bool IsSuccess => this.Error is null;
 
     /// <summary>
     /// 失败
     /// </summary>
     [MemberNotNullWhen(true, nameof(Error))]
-    public bool IsFailed => !this.IsSuccess;
+    public virtual bool IsFailed => !this.IsSuccess;
 
     /// <summary>
     /// 尝试从失败的 Result 获取错误。
@@ -110,6 +110,35 @@ public record Result<TValue> : Result
     internal Result(Error? Error, TValue? Value) : base(Error)
     {
         this.Value = Value;
+    }
+
+    // /// <summary>
+    // /// 改变类型，如果值类型不是 <typeparamref name="TNewValue"/>，则返回错误。
+    // /// </summary>
+    // /// <typeparam name="TNewValue"></typeparam>
+    // /// <returns></returns>
+    // public Result<TNewValue> TypeOf<TNewValue>()
+    // {
+    //     if (this.IsFailed)
+    //         return new Result<TNewValue>(this.Error, default);
+    //
+    //     if (this is TNewValue newValue)
+    //         return new Result<TNewValue>(null, newValue);
+    //     return Fail($"{this}不是{typeof(TNewValue)}");
+    // }
+
+    /// <summary>
+    /// 映射，失败的部分保持不变，成功的部分改变类型
+    /// </summary>
+    /// <param name="mapper"></param>
+    /// <typeparam name="TNewValue"></typeparam>
+    /// <returns></returns>
+    public Result<TNewValue> Map<TNewValue>(Func<Result<TValue>, Result<TNewValue>> mapper)
+    {
+        if (this.IsFailed)
+            return new Result<TNewValue>(this.Error, default);
+
+        return mapper(this);
     }
 
     /// <summary>

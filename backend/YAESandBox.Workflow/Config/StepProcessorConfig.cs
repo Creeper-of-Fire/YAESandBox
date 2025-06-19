@@ -52,4 +52,6 @@ public record StepProcessorConfig
     /// </example>
     [Required]
     public Dictionary<string, string> OutputMappings { get; init; } = [];
+    
+    // TODO 我们之后应该需要一个InputMappings，用来改变输入变量的名字，目前可以不急
 }

@@ -2,6 +2,7 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;
 
 namespace YAESandBox.Depend.Schema;
@@ -46,11 +47,11 @@ public record DataWithSchemaDto<T> where T : notnull
         }
         catch (JsonException jsonEx)
         {
-            return JsonError.Error($"为类型 {moduleType}生成的 Schema 不是有效的 JSON 格式。错误: {jsonEx.Message}");
+            return JsonError.Error(schemaJson, $"为类型 {moduleType}生成的 Schema 不是有效的 JSON 格式。错误: {jsonEx.Message}");
         }
         catch (Exception ex)
         {
-            return JsonError.Error($"为类型 '{moduleType}' 生成配置模板时发生内部错误: {ex.Message}");
+            return JsonError.Error(schemaJson, $"为类型 '{moduleType}' 生成配置模板时发生内部错误: {ex.Message}");
         }
 
         // (可选，但推荐) 填充基于 Schema 'default' 关键字的默认值

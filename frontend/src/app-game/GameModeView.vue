@@ -20,7 +20,7 @@
     <!-- 主要内容插槽 -->
     <template #main-content>
       <!--      <KeepAlive>-->
-      <component :is="currentMainComponent"/>
+      <component :is="currentMainComponent" :key="isMobileLayout ? 'mobile' : 'desktop'"/>
       <!--      </KeepAlive>-->
     </template>
 
@@ -57,6 +57,10 @@ import {useConnectionStore} from '@/app-game/stores/connectionStore.ts';
 import AppToolbar from '@/app-game/components/AppToolbar.vue';
 import ThreeColumnLayout from "@/app-game/components/layouts/ThreeColumnLayout.vue";
 import BlockBubbleStream from "@/app-game/features/block-bubble-stream-panel/BlockBubbleStream.vue";
+
+defineOptions({
+  name: 'GameModeView'
+});
 
 // Store 实例
 const uiStore = useUiStore();

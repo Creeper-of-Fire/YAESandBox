@@ -61,11 +61,3 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonSto
         }
     }
 }
-
-internal record JsonError(string Message) : Error(Message)
-{
-    internal static JsonError Error(string message)
-    {
-        return new JsonError(message);
-    }
-}

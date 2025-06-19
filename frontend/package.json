@@ -14,7 +14,9 @@
   "dependencies": {
     "@lljj/vue3-form-naive": "^1.19.1",
     "@microsoft/signalr": "^8.0.7",
+    "@vicons/carbon": "^0.13.0",
     "@vicons/ionicons5": "^0.13.0",
+    "@vicons/material": "^0.13.0",
     "@vueuse/core": "^13.1.0",
     "axios": "^1.8.4",
     "form-data": "^4.0.2",

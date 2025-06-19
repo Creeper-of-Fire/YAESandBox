@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Utility;
 
@@ -26,10 +27,11 @@ public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFi
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(Dictionary<string, SingleItemResultDto<WorkflowProcessorConfig>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<WorkflowProcessorConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Dictionary<string, SingleItemResultDto<WorkflowProcessorConfig>>>> GetAllGlobalWorkflowConfigs() =>
-        await this.WorkflowConfigFileService.FindAllWorkflowConfig().ToActionResultAsync();
+    public async Task<ActionResult<Dictionary<string, JsonResultDto<WorkflowProcessorConfig>>>> GetAllGlobalWorkflowConfigs() =>
+        await this.WorkflowConfigFileService.FindAllWorkflowConfig().ToActionResultAsync(dic =>
+            dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<WorkflowProcessorConfig>.ToJsonResultDto(kv.Value)));
 
     /// <summary>
     /// 获取指定 ID 的全局工作流配置。

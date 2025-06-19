@@ -3,17 +3,17 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { WorkflowProcessorConfig } from '../models/WorkflowProcessorConfig';
-import type { WorkflowProcessorConfigSingleItemResultDto } from '../models/WorkflowProcessorConfigSingleItemResultDto';
+import type { WorkflowProcessorConfigJsonResultDto } from '../models/WorkflowProcessorConfigJsonResultDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class WorkflowConfigService {
     /**
      * 获取所有全局工作流配置的列表。
-     * @returns WorkflowProcessorConfigSingleItemResultDto 成功获取所有全局工作流配置的列表。
+     * @returns WorkflowProcessorConfigJsonResultDto 成功获取所有全局工作流配置的列表。
      * @throws ApiError
      */
-    public static getApiV1WorkflowsConfigsGlobalWorkflows(): CancelablePromise<Record<string, WorkflowProcessorConfigSingleItemResultDto>> {
+    public static getApiV1WorkflowsConfigsGlobalWorkflows(): CancelablePromise<Record<string, WorkflowProcessorConfigJsonResultDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/workflows-configs/global-workflows',

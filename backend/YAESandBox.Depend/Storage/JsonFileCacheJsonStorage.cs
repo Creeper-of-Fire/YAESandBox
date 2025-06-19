@@ -44,19 +44,19 @@ public partial class JsonFileCacheJsonStorage(string? dataRootPath) : JsonFileJs
         return saveResult;
     }
 
-    /// <inheritdoc />
-    public override async Task<Result<IEnumerable<string>>> ListFileNamesAsync(
-        ListFileOption? listOption = null, params string[] subDirectories)
-    {
-        if (listOption is not null)
-            return await base.ListFileNamesAsync(listOption, subDirectories);
-
-        var directory = this.NavigateToDirectoryEntryInternal(subDirectories, false);
-        if (directory is not null)
-            return directory.Children.Values.ToList().OfType<FileCacheEntry>().Select(entity => entity.Name).ToList();
-
-        return await base.ListFileNamesAsync(listOption, subDirectories);
-    }
+    // /// <inheritdoc />
+    // public override async Task<Result<IEnumerable<string>>> ListFileNamesAsync(
+    //     ListFileOption? listOption = null, params string[] subDirectories)
+    // {
+    //     if (listOption is not null)
+    //         return await base.ListFileNamesAsync(listOption, subDirectories);
+    //
+    //     var directory = this.NavigateToDirectoryEntryInternal(subDirectories, false);
+    //     if (directory is not null)
+    //         return directory.Children.Values.ToList().OfType<FileCacheEntry>().Select(entity => entity.Name).ToList();
+    //
+    //     return await base.ListFileNamesAsync(listOption, subDirectories);
+    // }
 
     /// <inheritdoc />
     public override async Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories)

@@ -2,6 +2,7 @@
 using System.Text.Json.Nodes;
 using Nito.Disposables.Internals;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 using static YAESandBox.Depend.Storage.IGeneralJsonStorage;
 
 namespace YAESandBox.Depend.Storage;
@@ -16,27 +17,29 @@ public partial class JsonFileJsonStorage
         {
             try
             {
-                // EnsureDirectory(filePath);
-
                 if (!File.Exists(filePath.TotalPath))
                     return Result.Ok<JsonNode?>(null);
 
                 string json = await File.ReadAllTextAsync(filePath.TotalPath);
-                if (string.IsNullOrWhiteSpace(json))
-                    return Result.Ok<JsonNode?>(null);
 
-                // 从文件内容反序列化为 JsonNode
-                var doc = JsonNode.Parse(json);
-                return doc;
+                try
+                {
+                    if (string.IsNullOrWhiteSpace(json))
+                        return Result.Ok<JsonNode?>(null);
+
+                    // 从文件内容反序列化为 JsonNode
+                    var doc = JsonNode.Parse(json);
+                    return doc;
+                }
+                catch (JsonException ex)
+                {
+                    // 捕获 JSON 解析错误
+                    return JsonError.Error(json, $"加载配置时反序列化出错 ({filePath.TotalPath}): {ex.Message}");
+                }
             }
-            catch (JsonException ex)
+            catch (Exception ex)
             {
-                // 捕获 JSON 解析错误
-                return JsonError.Error($"加载配置时反序列化出错 ({filePath.TotalPath}): {ex.Message}");
-            }
-            catch (Exception ex) // 捕获其他文件操作等潜在错误
-            {
-                return JsonError.Error($"加载配置时出错 ({filePath.TotalPath}): {ex.Message}");
+                return NormalError.Error($"加载配置时出错 ({filePath.TotalPath}): {ex.Message}");
             }
         }
     }
@@ -51,26 +54,22 @@ public partial class JsonFileJsonStorage
     /// <inheritdoc/>
     public virtual async Task<Result<T?>> LoadAllAsync<T>(string fileName, params string[] subDirectories)
     {
+        var jsonResult = await this.LoadJsonNodeAsync(fileName, subDirectories);
+        if (jsonResult.TryGetError(out var error, out var value))
+            return error;
+        if (value == null)
+            return Result.Ok<T?>(default);
+        
         try
         {
-            var jsonResult = await this.LoadJsonNodeAsync(fileName, subDirectories);
-            if (jsonResult.TryGetError(out var error, out var value))
-                return error;
-            if (value == null)
-                return Result.Ok<T?>(default);
-
             var obj = value.Deserialize<T>(YaeSandBoxJsonHelper.JsonSerializerOptions);
             if (obj is null)
-                return JsonError.Error($"反序列化数据为类型 {typeof(T).Name} 时出错: 序列化结果为 null");
+                return JsonError.Error(value, $"反序列化数据为类型 {typeof(T).Name} 时出错: 序列化结果为 null");
             return obj;
         }
         catch (JsonException ex)
         {
-            return JsonError.Error($"反序列化数据为类型 {typeof(T).Name} 时出错: {ex.Message}");
-        }
-        catch (Exception ex) // 捕获其他文件操作等潜在错误
-        {
-            return JsonError.Error($"反序列化数据为类型 {typeof(T).Name} 时出错: {ex.Message}");
+            return JsonError.Error(value, $"反序列化数据为类型 {typeof(T).Name} 时出错: {ex.Message}");
         }
     }
 
@@ -103,13 +102,13 @@ public partial class JsonFileJsonStorage
                 catch (Exception ex)
                 {
                     // 从 lambda 内部返回失败的 Result
-                    return JsonError.Error($"在后台线程列出文件名时出错 (路径: {directoryPath}): {ex.Message}");
+                    return NormalError.Error($"在后台线程列出文件名时出错 (路径: {directoryPath}): {ex.Message}");
                 }
             });
         }
         catch (Exception ex) // 捕获 await Task.Run() 可能重新抛出的异常
         {
-            return JsonError.Error($"列出文件名时发生顶层错误: {ex.Message}");
+            return NormalError.Error($"列出文件名时发生顶层错误: {ex.Message}");
         }
     }
 

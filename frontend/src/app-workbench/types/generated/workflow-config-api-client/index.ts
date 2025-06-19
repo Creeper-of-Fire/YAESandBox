@@ -8,18 +8,18 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AbstractModuleConfig } from './models/AbstractModuleConfig';
-export type { AbstractModuleConfigSingleItemResultDto } from './models/AbstractModuleConfigSingleItemResultDto';
+export type { AbstractModuleConfigJsonResultDto } from './models/AbstractModuleConfigJsonResultDto';
 export type { ModuleAnalysisResult } from './models/ModuleAnalysisResult';
 export type { ModuleValidationResult } from './models/ModuleValidationResult';
 export type { ProblemDetails } from './models/ProblemDetails';
 export { RuleSeverity } from './models/RuleSeverity';
 export type { StepAiConfig } from './models/StepAiConfig';
 export type { StepProcessorConfig } from './models/StepProcessorConfig';
-export type { StepProcessorConfigSingleItemResultDto } from './models/StepProcessorConfigSingleItemResultDto';
+export type { StepProcessorConfigJsonResultDto } from './models/StepProcessorConfigJsonResultDto';
 export type { StepValidationResult } from './models/StepValidationResult';
 export type { ValidationMessage } from './models/ValidationMessage';
 export type { WorkflowProcessorConfig } from './models/WorkflowProcessorConfig';
-export type { WorkflowProcessorConfigSingleItemResultDto } from './models/WorkflowProcessorConfigSingleItemResultDto';
+export type { WorkflowProcessorConfigJsonResultDto } from './models/WorkflowProcessorConfigJsonResultDto';
 export type { WorkflowValidationReport } from './models/WorkflowValidationReport';
 
 export { ModuleConfigService } from './services/ModuleConfigService';

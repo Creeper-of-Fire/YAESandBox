@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Module.ModuleAttribute;
@@ -70,10 +71,11 @@ public class ModuleConfigController(WorkflowConfigFileService workflowConfigFile
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(Dictionary<string, SingleItemResultDto<AbstractModuleConfig>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<AbstractModuleConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Dictionary<string, SingleItemResultDto<AbstractModuleConfig>>>> GetAllGlobalModuleConfigs() =>
-        await this.WorkflowConfigFileService.FindAllModuleConfig().ToActionResultAsync();
+    public async Task<ActionResult<Dictionary<string, JsonResultDto<AbstractModuleConfig>>>> GetAllGlobalModuleConfigs() =>
+        await this.WorkflowConfigFileService.FindAllModuleConfig().ToActionResultAsync(dic =>
+            dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<AbstractModuleConfig>.ToJsonResultDto(kv.Value)));
 
     /// <summary>
     /// 获取指定 ID 的全局模块配置。

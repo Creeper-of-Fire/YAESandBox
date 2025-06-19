@@ -1,4 +1,4 @@
-﻿<!-- START OF FILE: src/app-workbench/views/WorkbenchView.vue -->
+﻿<!-- START OF FILE: src/app-workbench/WorkbenchView.vue -->
 <template>
   <div class="workbench-view">
     <!-- 1. 顶部控制栏 (未来可以独立成组件) -->
@@ -72,6 +72,10 @@ import GlobalResourcePanel from '@/app-workbench/features/workflow-editor/compon
 import WorkbenchSidebar from '@/app-workbench/features/workflow-editor/components/WorkbenchSidebar.vue';
 import EditorTargetRenderer from '@/app-workbench/features/workflow-editor/components/EditorTargetRenderer.vue';
 import AiConfigEditorPanel from "@/app-workbench/features/ai-config-panel/AiConfigEditorPanel.vue";
+
+defineOptions({
+  name: 'WorkbenchView'
+});
 
 const workbenchStore = useWorkbenchStore();
 const message = useMessage();
