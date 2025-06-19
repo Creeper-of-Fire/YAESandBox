@@ -144,6 +144,45 @@ export class EditSession {
     public toggleStepExpansion(stepId: string): void {
         this._getStore()._toggleStepExpansionInDraft(this.draftId, stepId);
     }
+
+    /**
+     * 在工作流的指定位置添加一个新步骤。
+     * @param stepConfig - 要添加的步骤配置对象（通常来自全局资源的克隆）
+     * @param index - 要插入的目标索引
+     */
+    public addStep(stepConfig: StepProcessorConfig, index: number): void {
+        this._getStore()._addStepToDraft(this.draftId, stepConfig, index);
+    }
+
+    /**
+     * 移动工作流中的步骤。
+     * @param fromIndex - 原始索引
+     * @param toIndex - 目标索引
+     */
+    public moveStep(fromIndex: number, toIndex: number): void {
+        this._getStore()._moveStepInDraft(this.draftId, fromIndex, toIndex);
+    }
+
+    /**
+     * 向指定步骤中添加一个新模块。
+     * @param moduleConfig - 要添加的模块配置对象（来自全局资源的克隆）
+     * @param stepId - 目标步骤的 configId
+     * @param index - 在模块列表中的目标索引
+     */
+    public addModuleToStep(moduleConfig: AbstractModuleConfig, stepId: string, index: number): void {
+        this._getStore()._addModuleToDraft(this.draftId, moduleConfig, stepId, index);
+    }
+
+    /**
+     * 在步骤之间或步骤内部移动模块。
+     * @param fromStepId - 模块所在的原始步骤ID
+     * @param fromIndex - 模块在原始步骤中的索引
+     * @param toStepId - 模块要移动到的目标步骤ID
+     * @param toIndex - 模块在目标步骤中的索引
+     */
+    public moveModule(fromStepId: string, fromIndex: number, toStepId: string, toIndex: number): void {
+        this._getStore()._moveModuleInDraft(this.draftId, fromStepId, fromIndex, toStepId, toIndex);
+    }
 }
 
 // --- END OF FILE frontend/src/app-workbench/features/workflow-editor/services/EditSession.ts ---

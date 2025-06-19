@@ -220,6 +220,68 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         return true;
     };
 
+    // --- 新增的内部 action，用于处理拖拽逻辑 ---
+
+    const _addStepToDraft = (draftId: string, stepConfig: StepProcessorConfig, index: number) => {
+        const draft = drafts.value[draftId];
+        if (!draft || draft.type !== 'workflow') return;
+
+        const workflow = draft.data as WorkflowProcessorConfig;
+        if (!workflow.steps) workflow.steps = [];
+
+        // 【关键】对新添加的项，使用我们的工具函数深度克隆并刷新所有ID
+        const newStep = deepCloneWithNewIds(stepConfig);
+
+        workflow.steps.splice(index, 0, newStep);
+    };
+
+    const _moveStepInDraft = (draftId: string, fromIndex: number, toIndex: number) => {
+        const draft = drafts.value[draftId];
+        if (!draft || draft.type !== 'workflow') return;
+
+        const workflow = draft.data as WorkflowProcessorConfig;
+        const [movedStep] = workflow.steps.splice(fromIndex, 1);
+        workflow.steps.splice(toIndex, 0, movedStep);
+    };
+
+    const _addModuleToDraft = (draftId: string, moduleConfig: AbstractModuleConfig, stepId: string, index: number) => {
+        const draft = drafts.value[draftId];
+        if (!draft || draft.type !== 'workflow') return;
+
+        const workflow = draft.data as WorkflowProcessorConfig;
+        const targetStep = workflow.steps?.find(s => s.configId === stepId);
+        if (!targetStep) return;
+
+        if (!targetStep.modules) targetStep.modules = [];
+
+        // 【关键】同样，刷新ID
+        const newModule = deepCloneWithNewIds(moduleConfig);
+
+        targetStep.modules.splice(index, 0, newModule);
+    };
+
+    const _moveModuleInDraft = (draftId: string, fromStepId: string, fromIndex: number, toStepId: string, toIndex: number) => {
+        const draft = drafts.value[draftId];
+        if (!draft || draft.type !== 'workflow') return;
+
+        const workflow = draft.data as WorkflowProcessorConfig;
+        const fromStep = workflow.steps?.find(s => s.configId === fromStepId);
+        const toStep = workflow.steps?.find(s => s.configId === toStepId);
+
+        if (!fromStep || !toStep) return;
+
+        // 从源步骤移除模块
+        const [movedModule] = fromStep.modules.splice(fromIndex, 1);
+
+        // 如果目标步骤没有 modules 数组，则创建它
+        if (!toStep.modules) {
+            toStep.modules = [];
+        }
+
+        // 添加到目标步骤
+        toStep.modules.splice(toIndex, 0, movedModule);
+    };
+
     // =================================================================
     // 公共 API (暴露给外部世界的精简接口)
     // =================================================================
@@ -323,6 +385,10 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         _toggleStepExpansionInDraft,
         _saveDraft,
         _closeDraft,
+        _addStepToDraft,
+        _moveStepInDraft,
+        _addModuleToDraft,
+        _moveModuleInDraft,
     };
 
     return {

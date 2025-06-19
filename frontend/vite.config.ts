@@ -94,6 +94,40 @@ export default defineConfig({
             ]
         }),
     ],
+    build: {
+        rollupOptions: {
+            output: {
+                /**
+                 * 手动分包，把大块的依赖拆分出来
+                 * @param {string} id - 模块的路径
+                 * @returns {string | undefined} - 返回自定义的 chunk 名称
+                 */
+                manualChunks(id: string) {
+                    // 将 node_modules 中的依赖单独打包
+                    if (id.includes('node_modules')) {
+                        // 重点优化 naive-ui，它通常是体积大户
+                        if (id.includes('naive-ui')) {
+                            return 'vendor-naive-ui';
+                        }
+                        // 重点优化 vue 全家桶
+                        if (id.includes('vue') || id.includes('@vue')) {
+                            return 'vendor-vue';
+                        }
+                        // 重点优化 sortablejs (vue-draggable-plus 的依赖)
+                        if (id.includes('sortablejs')) {
+                            return 'vendor-sortable';
+                        }
+                        // 重点优化 SignalR
+                        if (id.includes('@microsoft/signalr')) {
+                            return 'vendor-signalr';
+                        }
+                        // 其他所有 node_modules 的依赖都打包到 vendor 文件
+                        return 'vendor';
+                    }
+                },
+            },
+        },
+    },
     server: {
         port: 5173, // 你前端的运行端口
         proxy: {
