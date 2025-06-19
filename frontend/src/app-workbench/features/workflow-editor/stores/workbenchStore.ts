@@ -94,10 +94,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     // =================================================================
     // 内部 State (完全封装)
     // =================================================================
-    // --- 全局数据源 ---
-    // const globalWorkflows = ref<Record<string, WorkflowProcessorConfig>>({});
-    // const globalSteps = ref<Record<string, StepProcessorConfig>>({});
-    // const globalModules = ref<Record<string, AbstractModuleConfig>>({});
 
     const globalWorkflowsAsync = useAsyncState(
         () => WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows()
@@ -120,10 +116,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         {immediate: false, shallow: true}
     );
 
-    // --- 共享的全局加载与错误状态 ---
-    const _isLoadingGlobals = ref(false);
-    const _fetchError = ref<any | null>(null);
-
     /**
      * 存储所有活跃的草稿会话。
      * Key 是临时的 draftId (UUID)。
@@ -135,91 +127,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
      * Key 是全局配置的ID，Value 是对应的 draftId。
      */
     const lockedGlobalIds = ref<Record<string, string>>({});
-
-
-    // =================================================================
-    // 内部 Action
-    // =================================================================
-
-    // /**
-    //  * @internal - 真正执行数据拉取的私有函数。
-    //  * 处理从后端返回的、包含成功与失败项的字典。
-    //  */
-    // async function _fetchAllGlobals() {
-    //     // 防止并发调用
-    //     if (_isLoadingGlobals.value) return;
-    //
-    //     _isLoadingGlobals.value = true;
-    //     _fetchError.value = null; // 重置错误状态
-    //     try {
-    //         // 1. 并行调用所有获取全局配置的API
-    //         const [workflowsResult, stepsResult, modulesResult] =
-    //             await Promise.all([
-    //                 WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows(),
-    //                 StepConfigService.getApiV1WorkflowsConfigsGlobalSteps(),
-    //                 ModuleConfigService.getApiV1WorkflowsConfigsGlobalModules(),
-    //             ]);
-    //
-    //         // --- 2. 处理工作流结果 ---
-    //         const successfulWorkflows: Record<string, WorkflowProcessorConfig> = {};
-    //         for (const id in workflowsResult) {
-    //             const item = workflowsResult[id];
-    //             if (item.isSuccess && item.data) {
-    //                 // 只将成功加载并且数据存在的项存入
-    //                 successfulWorkflows[id] = item.data;
-    //             } else {
-    //                 // 对于加载失败的项，在控制台打印警告
-    //                 console.warn(`加载全局工作流 '${id}' 失败: ${item.errorMessage}`);
-    //             }
-    //         }
-    //         globalWorkflows.value = successfulWorkflows;
-    //
-    //         // --- 3. 处理步骤结果 ---
-    //         const successfulSteps: Record<string, StepProcessorConfig> = {};
-    //         for (const id in stepsResult) {
-    //             const item = stepsResult[id];
-    //             if (item.isSuccess && item.data) {
-    //                 successfulSteps[id] = item.data;
-    //             } else {
-    //                 console.warn(`加载全局步骤 '${id}' 失败: ${item.errorMessage}`);
-    //             }
-    //         }
-    //         globalSteps.value = successfulSteps;
-    //
-    //         // --- 4. 处理模块结果 ---
-    //         const successfulModules: Record<string, AbstractModuleConfig> = {};
-    //         for (const id in modulesResult) {
-    //             const item = modulesResult[id];
-    //             if (item.isSuccess && item.data) {
-    //                 successfulModules[id] = item.data;
-    //             } else {
-    //                 console.warn(`加载全局模块 '${id}' 失败: ${item.errorMessage}`);
-    //             }
-    //         }
-    //         globalModules.value = successfulModules;
-    //
-    //         // 5. 拉取过程完成后，设置标志位
-    //         _hasFetchedGlobals.value = true;
-    //
-    //     } catch (error) {
-    //         // 这个 catch 块现在主要捕获顶层的网络错误或API服务器完全不可达的错误
-    //         console.error('加载全局配置时发生严重错误:', error);
-    //         _fetchError.value = error; // 捕获错误
-    //         useMessage().error('加载全局配置失败，请检查网络或联系管理员。');
-    //     } finally {
-    //         _isLoadingGlobals.value = false;
-    //     }
-    // }
-
-    // /**
-    //  * @internal - 一个确保全局数据已加载的“守卫”函数。
-    //  * 任何需要访问全局数据的公共API都应该先调用它。
-    //  */
-    // async function _ensureGlobalsFetched() {
-    //     if (!_hasFetchedGlobals.value) {
-    //         await _fetchAllGlobals();
-    //     }
-    // }
 
     // =================================================================
     // 内部 Getter & Action (加下划线表示，约定不对外暴露)
@@ -312,27 +219,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         delete lockedGlobalIds.value[globalId];
         return true;
     };
-
-    // =================================================================
-    // “优雅的谎言”：为每种全局数据类型创建一个 AsyncData 实例
-    // =================================================================
-
-    // /**
-    //  * 创建一个看似独立的异步数据包。
-    //  * @param dataRef - 指向全局数据源的 Ref (e.g., globalWorkflows)
-    //  * @returns {AsyncData}
-    //  */
-    // function createGlobalAsyncData<T>(dataRef: Ref<T>): AsyncData<T> {
-    //     return {
-    //         // data 是对全局数据源的只读引用，UI无法修改它
-    //         data: shallowReadonly(dataRef),
-    //         // isLoading 和 error 指向共享的全局状态
-    //         isLoading: shallowReadonly(_isLoadingGlobals),
-    //         error: shallowReadonly(_fetchError),
-    //         // execute 方法调用共享的确保函数
-    //         execute: _ensureGlobalsFetched,
-    //     };
-    // }
 
     // =================================================================
     // 公共 API (暴露给外部世界的精简接口)
