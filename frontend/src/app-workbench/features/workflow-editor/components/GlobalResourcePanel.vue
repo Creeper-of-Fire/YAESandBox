@@ -154,6 +154,9 @@ import {LinkOffOutlined as LinkOffIcon} from '@vicons/material';
 import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {GlobalResourceItem} from "@/types/ui.ts";
 
+// TODO 分割不同的组件
+// TODO 使用useStorage存储各种组件的状态
+
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
   id: string; // 原始 Record 的 key
