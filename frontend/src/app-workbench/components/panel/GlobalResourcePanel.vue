@@ -251,8 +251,13 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement) {
 
   if (type && id) {
     // 将数据打包成JSON，安全地存入 dataTransfer
-    const data = JSON.stringify({ type, id });
+    const data = JSON.stringify({type, id});
     dataTransfer.setData('text/plain', data);
+
+    // 设置一个自定义类型，用于在 dragenter 事件中进行类型检查。
+    // 这个类型本身不携带数据，它的存在就是一个“标记”。
+    const customDragType = `application/vnd.workbench.item.${type}`;
+    dataTransfer.setData(customDragType, id); // 值可以是任意非空字符串，比如 id
   }
 
   dataTransfer.effectAllowed = 'copy'

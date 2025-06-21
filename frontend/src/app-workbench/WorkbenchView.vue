@@ -44,28 +44,13 @@
 
       <!-- 2b. 当前编辑结构插槽 (侧边栏) -->
       <template #editor-panel>
-        <div v-if="activeSession" class="editor-panel-wrapper">
-          <WorkbenchSidebar
-              :key="activeSession.globalId"
-              :session="activeSession"
-              :selected-module-id="selectedModuleId"
-              @update:selected-module-id="selectedModuleId = $event"
-              @start-editing="handleStartEditing"
-          />
-        </div>
-        <!-- 彻底替换为原生 div 和原生事件监听 -->
-        <div v-else
-            class="main-drop-zone"
-            :class="{ 'is-dragging-over': isDraggingOver }"
-            @dragover.prevent="handleDragOver"
-            @dragleave.prevent="handleDragLeave"
-            @drop.prevent="handleDrop"
-        >
-          <!-- 这个 div 内部只放视觉提示，不再有任何拖拽库 -->
-          <div class="drop-zone-background">
-            <n-empty description="从左侧拖拽一个配置项到此处开始编辑" style="margin-top: 20%;"/>
-          </div>
-        </div>
+        <WorkbenchSidebar
+            :key="activeSession?.globalId ?? 'empty-session'"
+            :session="activeSession"
+            :selected-module-id="selectedModuleId"
+            @update:selected-module-id="selectedModuleId = $event"
+            @start-editing="handleStartEditing"
+        />
       </template>
 
       <!-- 2c. 主内容区插槽 -->
@@ -104,7 +89,6 @@
 <script setup lang="ts">
 import {onBeforeUnmount, onMounted, ref} from 'vue';
 import {NButton, NEmpty, NH3, NSpin, NSwitch, useMessage} from 'naive-ui';
-import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {SortableEvent} from "sortablejs";
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import {type ConfigType, type EditSession} from '@/app-workbench/services/EditSession';
@@ -135,60 +119,8 @@ const isEditorPanelVisible = ref(true);
 const selectedModuleId = ref<string | null>(null);
 const showAiConfigModal = ref(false);
 
-// 为主内容区的拖拽接收区提供一个 v-model (即使它永远是空的)
-// 新增一个 ref 来控制拖拽悬浮时的样式
-const isDraggingOver = ref(false);
-
 /**
- * 处理原生拖拽悬浮事件
- * @param event 原生的 DragEvent
- */
-function handleDragOver(event: DragEvent) {
-  // 关键：必须在这里调用 preventDefault() 来告诉浏览器这是一个有效的放置目标。
-  // console.log('handleDragOver', event)
-  event.preventDefault();
-
-  isDraggingOver.value = true;
-  if (event.dataTransfer) {
-    // 设置放置效果为“复制”，会显示一个带加号的鼠标指针
-    event.dataTransfer.dropEffect = 'copy';
-  }
-}
-
-/**
- * 处理原生拖拽离开事件
- */
-function handleDragLeave() {
-  console.log('handleDragLeave');
-  isDraggingOver.value = false;
-}
-
-/**
- * 处理原生放置事件
- * @param event 原生的 DragEvent
- */
-function handleDrop(event: DragEvent) {
-  event.preventDefault();
-  console.log('handleDrop', event);
-  isDraggingOver.value = false; // 重置悬浮样式
-  if (event.dataTransfer) {
-    try {
-      // 从 dataTransfer 中取出我们之前存入的JSON字符串
-      const dataString = event.dataTransfer.getData('text/plain');
-      if (dataString) {
-        const { type, id } = JSON.parse(dataString) as { type: ConfigType; id: string };
-        if (type && id) {
-          handleStartEditing({ type, id });
-        }
-      }
-    } catch (e) {
-      console.error("解析拖拽数据失败:", e);
-    }
-  }
-}
-
-/**
- * 处理从左侧面板点击“编辑”按钮或双击列表项的事件。
+ * 处理从左侧面板点击“编辑”按钮或双击列表项的事件。或者其他的“开始编辑”事件
  * @param {object} payload - 包含类型和ID的对象。
  */
 async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: string }) {
@@ -297,56 +229,4 @@ onBeforeUnmount(() => {
   gap: 16px;
   align-items: center;
 }
-
-/* 覆盖 N-Switch 的 CSS 变量以实现自定义颜色 */
-:deep(.n-switch.n-switch--active) {
-  --n-rail-color: #18a058 !important;
-  --n-rail-color-hover: #18a058 !important;
-}
-
-:deep(.n-switch:not(.n-switch--active)) {
-  --n-rail-color: #a3a3a3 !important;
-  --n-rail-color-hover: #a3a3a3 !important;
-}
-
-:deep(.n-switch__content) {
-  color: white;
-}
-
-.n-spin-container,
-:deep(.n-spin-content) {
-  height: 100%;
-}
-
-.editor-panel-wrapper,
-.main-content-wrapper {
-  height: 100%;
-}
-
-/* 移除对绝对定位和z-index的依赖，简化布局 */
-.main-drop-zone {
-  width: 100%;
-  height: 100%;
-  border: 2px dashed #dcdfe6;
-  border-radius: 8px;
-  box-sizing: border-box;
-  transition: border-color 0.2s, background-color 0.2s;
-  position: relative; /* 为内部的 n-empty 定位提供基准 */
-}
-
-/* 使用新的 is-dragging-over class 来控制悬浮样式 */
-.main-drop-zone.is-dragging-over {
-  border-color: #2080f0;
-  background-color: rgba(32, 128, 240, 0.05);
-}
-
-.drop-zone-background {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  pointer-events: none; /* 确保不干扰拖拽事件 */
-}
-
 </style>

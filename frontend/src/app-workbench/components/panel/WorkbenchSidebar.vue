@@ -1,19 +1,18 @@
 ﻿<!-- src/app-workbench/components/panel/WorkbenchSidebar.vue -->
 <template>
-  <!-- 1. 父容器需要 position: relative 以便覆盖层定位 -->
-  <!-- 2. 监听 dragenter 来激活覆盖层，dragover.prevent 确保 drop 事件可以触发 -->
+  <!-- 1. 根容器始终存在，并监听拖拽事件 -->
   <div
       class="workbench-sidebar"
       @dragenter="handleDragEnter"
       @dragover.prevent
   >
-    <div v-if="session && session.getData().value">
-      <!-- 通用标题区域 -->
+    <!-- 2. 根据 session 是否存在，渲染不同的内部视图 -->
+    <div v-if="session && session.getData().value" class="sidebar-content">
+      <!-- 有会话时的视图 -->
       <n-h4 style="display: flex; justify-content: space-between; align-items: center;">
         <span>编辑{{ currentConfigName }}</span>
       </n-h4>
 
-      <!-- 根据会话类型渲染不同的内容 -->
       <template v-if="session.type === 'workflow' && workflowData">
         <p class="sidebar-description">拖拽全局步骤到步骤列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
         <WorkflowItemRenderer
@@ -43,8 +42,13 @@
         </n-alert>
       </template>
     </div>
+    <div v-else class="empty-state-wrapper">
+      <!-- 无会话时的空状态视图 -->
+      <n-empty description="从左侧拖拽一个配置项到此处开始编辑"/>
+    </div>
 
-    <!-- 3. 拖拽覆盖层 -->
+
+    <!-- 3. 拖拽覆盖层，覆盖在内容或空状态之上 -->
     <div
         v-if="isDragOverContainer"
         class="drop-overlay"
@@ -53,8 +57,8 @@
         @dragover.prevent
     >
       <div class="drop-overlay-content">
-        <n-icon size="48" :component="SwapHorizIcon" />
-        <p>释放鼠标以替换当前编辑项</p>
+        <n-icon size="48" :component="SwapHorizIcon"/>
+        <p>释放鼠标以{{ session ? '替换当前编辑项' : '开始新的编辑' }}</p>
       </div>
     </div>
   </div>
@@ -62,9 +66,9 @@
 
 <script setup lang="ts">
 import {computed, ref} from 'vue';
-import {NAlert, NH4, NIcon} from 'naive-ui';
-import { SwapHorizOutlined as SwapHorizIcon } from '@vicons/material';
-import type {EditSession, ConfigType} from "@/app-workbench/services/EditSession.ts";
+import {NAlert, NEmpty, NH4, NIcon} from 'naive-ui';
+import {SwapHorizOutlined as SwapHorizIcon} from '@vicons/material';
+import type {ConfigType, EditSession} from "@/app-workbench/services/EditSession.ts";
 import type {
   AbstractModuleConfig,
   StepProcessorConfig,
@@ -74,7 +78,7 @@ import StepItemRenderer from '../editor/StepItemRenderer.vue';
 import WorkflowItemRenderer from "@/app-workbench/components/editor/WorkflowItemRenderer.vue";
 
 const props = defineProps<{
-  session: EditSession;
+  session: EditSession | null;
   selectedModuleId: string | null;
 }>();
 
@@ -82,19 +86,64 @@ const emit = defineEmits<{
   (e: 'update:selectedModuleId', value: string | null): void;
   (e: 'start-editing', payload: { type: ConfigType; id: string }): void;
 }>();
-
 // --- 覆盖层状态 ---
 const isDragOverContainer = ref(false);
 
+// --- 等级定义和比较逻辑 ---
+
+// 定义配置类型的等级
+const typeHierarchy: Record<ConfigType, number> = {
+  workflow: 3,
+  step: 2,
+  module: 1,
+};
+
 /**
- * 当拖拽项首次进入容器时，显示覆盖层。
+ * 从 DragEvent 中解析出我们自定义的拖拽类型。
+ * @param event - 拖拽事件
+ * @returns 拖拽的 ConfigType 或 null
+ */
+function getDraggedItemType(event: DragEvent): ConfigType | null {
+  for (const type of event.dataTransfer?.types ?? []) {
+    const match = type.match(/^application\/vnd\.workbench\.item\.(workflow|step|module)$/);
+    if (match) {
+      return match[1] as ConfigType;
+    }
+  }
+  return null;
+}
+
+
+/**
+ * 当拖拽项首次进入容器时，进行等级判断。
  */
 function handleDragEnter(event: DragEvent) {
-  // 确保拖拽的数据是我们需要的类型，防止不相关的拖拽（如文件）也触发覆盖层
-  if (event.dataTransfer?.types.includes('text/plain')) {
+  const draggedType = getDraggedItemType(event);
+
+  // 如果无法识别拖拽类型，则不响应该拖拽
+  if (!draggedType) {
+    return;
+  }
+
+  // 如果当前没有编辑会话，任何可识别的拖拽都应该显示覆盖层
+  if (!props.session) {
+    isDragOverContainer.value = true;
+    return;
+  }
+
+  // 获取当前会话和拖拽物的等级
+  const currentSessionType = props.session.type;
+  const draggedLevel = typeHierarchy[draggedType];
+  const currentLevel = typeHierarchy[currentSessionType];
+
+  // *** 核心判断逻辑 ***
+  // 只有当拖拽项的等级 >= 当前编辑项的等级时，才显示“替换”覆盖层。
+  // 否则，不显示覆盖层，让事件“穿透”到下面的 draggable 区域。
+  if (draggedLevel >= currentLevel) {
     isDragOverContainer.value = true;
   }
 }
+
 
 /**
  * 当拖拽项离开覆盖层时，隐藏它。
@@ -107,16 +156,14 @@ function handleDragLeave() {
  * 在覆盖层上完成放置操作。
  */
 function handleDrop(event: DragEvent) {
-  isDragOverContainer.value = false; // 无论成功与否都隐藏覆盖层
+  isDragOverContainer.value = false;
   if (event.dataTransfer) {
     try {
       const dataString = event.dataTransfer.getData('text/plain');
       if (dataString) {
-        const { type, id } = JSON.parse(dataString);
+        const {type, id} = JSON.parse(dataString);
         if (type && id) {
-          console.log("从全局资源面板拖拽:", type, id);
-          // 向上传递事件，请求替换会话
-          emit('start-editing', { type, id });
+          emit('start-editing', {type, id});
         }
       }
     } catch (e) {
@@ -127,15 +174,16 @@ function handleDrop(event: DragEvent) {
 
 // --- 为不同编辑类型创建独立的计算属性，使模板更清晰 ---
 const workflowData = computed(() =>
-    props.session.type === 'workflow' ? props.session.getData().value as WorkflowProcessorConfig : null
+    props.session?.type === 'workflow' ? props.session.getData().value as WorkflowProcessorConfig : null
 );
 const stepData = computed(() =>
-    props.session.type === 'step' ? props.session.getData().value as StepProcessorConfig : null
+    props.session?.type === 'step' ? props.session.getData().value as StepProcessorConfig : null
 );
 const moduleData = computed(() =>
-    props.session.type === 'module' ? props.session.getData().value as AbstractModuleConfig : null
+    props.session?.type === 'module' ? props.session.getData().value as AbstractModuleConfig : null
 );
 const currentConfigName = computed(() => {
+  if (!props.session) return ''; // 如果没有会话，返回空字符串
   if (props.session.type === 'workflow' && workflowData.value) return `工作流: ${workflowData.value.name}`;
   if (props.session.type === 'step' && stepData.value) return `步骤: ${stepData.value.name}`;
   if (props.session.type === 'module' && moduleData.value) return `模块: ${moduleData.value.name}`;
@@ -144,12 +192,29 @@ const currentConfigName = computed(() => {
 </script>
 
 <style scoped>
-/* 工作台侧边栏整体样式，必须有 relative 定位 */
+/* 根容器必须是 relative 并且占满高度 */
 .workbench-sidebar {
   position: relative;
   height: 100%;
   box-sizing: border-box;
-  overflow-y: auto;
+  display: flex; /* 使用 flex 布局让内部内容撑开 */
+  flex-direction: column;
+}
+
+.sidebar-content {
+  overflow-y: auto; /* 内容区域自己滚动 */
+  height: 100%;
+}
+
+.empty-state-wrapper {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 2px dashed #dcdfe6;
+  border-radius: 8px;
+  box-sizing: border-box;
 }
 
 .sidebar-description {
@@ -159,7 +224,6 @@ const currentConfigName = computed(() => {
   margin-bottom: 16px;
 }
 
-/* 拖拽覆盖层样式 */
 .drop-overlay {
   position: absolute;
   top: 0;
@@ -169,7 +233,7 @@ const currentConfigName = computed(() => {
   background-color: rgba(32, 128, 240, 0.15);
   border: 2px dashed #2080f0;
   border-radius: 6px;
-  z-index: 10; /* 确保在最上层 */
+  z-index: 10;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -180,6 +244,6 @@ const currentConfigName = computed(() => {
   text-align: center;
   color: #2080f0;
   font-weight: 500;
-  pointer-events: none; /* 让内容不干扰鼠标事件 */
+  pointer-events: none;
 }
 </style>
