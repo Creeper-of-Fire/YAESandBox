@@ -1,7 +1,16 @@
 ﻿<!-- src/app-workbench/components/.../GlobalResourceListItem.vue -->
 <template>
-  <div v-if="item.isSuccess" class="resource-item" @dblclick="$emit('start-editing', { type, id })">
-    <span class="item-name">{{ item.data.name }}</span>
+  <div v-if="item.isSuccess"
+       class="resource-item"
+       @dblclick="$emit('start-editing', { type, id })"
+  >
+
+    <span class="item-name">
+        {{ item.data.name }}
+      <!-- 如果变脏，显示一个小星号 -->
+        <span v-if="isDirty" style="color: #f0a020;">*</span>
+    </span>
+
     <!-- 将 text 按钮替换为更显眼的 secondary 图标按钮 -->
     <n-tooltip trigger="hover">
       <template #trigger>
@@ -59,8 +68,10 @@ import {
 } from '@vicons/material';
 import type { ConfigType, ConfigObject } from '@/app-workbench/services/EditSession';
 import type { GlobalResourceItem } from '@/types/ui';
+import {computed} from "vue";
+import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 
-defineProps<{
+const props= defineProps<{
   id: string; // 原始 Record 的 key (资源的唯一ID)
   item: GlobalResourceItem<ConfigObject>; // 包含成功/失败状态和数据的资源项
   type: ConfigType; // 资源的类型 ('workflow', 'step', 'module')
@@ -70,6 +81,11 @@ defineEmits<{
   (e: 'start-editing', payload: { type: ConfigType; id: string }): void; // 双击或点击“编辑”时触发
   (e: 'show-error-detail', errorMessage: string, originJsonString: string | null | undefined): void; // 点击“详情”时触发
 }>();
+
+// *** 检查当前项是否变脏 ***
+const workbenchStore = useWorkbenchStore();
+const isDirty = computed(() => workbenchStore.isDirty(props.id));
+
 </script>
 
 <style scoped>
@@ -81,6 +97,13 @@ defineEmits<{
   padding: 6px 8px; /* 增加一点垂直内边距以适应更大的按钮 */
   border-radius: 4px;
   cursor: pointer; /* 可点击编辑 */
+}
+
+.resource-item.is-dirty {
+  background-color: #f0a0201a; /* 浅橙黄色背景 */
+}
+.resource-item.is-dirty .item-name {
+  font-weight: 500; /* 加粗一点点 */
 }
 
 .resource-item:hover {
@@ -114,5 +137,6 @@ defineEmits<{
   text-overflow: ellipsis; /* 溢出时显示省略号 */
   white-space: nowrap; /* 不换行 */
 }
+
 </style>
 <!-- END OF MODIFIED FILE -->

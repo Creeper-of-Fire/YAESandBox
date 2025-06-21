@@ -96,21 +96,21 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         () => WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows()
             .then(processDtoToViewModel),
         {} as Record<string, WorkflowResourceItem>,
-        {immediate: false, shallow: true}
+        {immediate: false, shallow: false}
     );
 
     const globalStepsAsync = useAsyncState(
         () => StepConfigService.getApiV1WorkflowsConfigsGlobalSteps()
             .then(processDtoToViewModel),
         {} as Record<string, StepResourceItem>,
-        {immediate: false, shallow: true}
+        {immediate: false, shallow: false}
     );
 
     const globalModulesAsync = useAsyncState(
         () => ModuleConfigService.getApiV1WorkflowsConfigsGlobalModules()
             .then(processDtoToViewModel),
         {} as Record<string, ModuleResourceItem>,
-        {immediate: false, shallow: true}
+        {immediate: false, shallow: false}
     );
 
     /**
@@ -118,12 +118,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
      * Key 是临时的 draftId (UUID)。
      */
     const drafts = ref<Record<string, Draft>>({});
-
-    /**
-     * 跟踪已被锁定的全局配置，防止重复编辑。
-     * Key 是全局配置的ID，Value 是对应的 draftId。
-     */
-    const lockedGlobalIds = ref<Record<string, string>>({});
 
     // =================================================================
     // 内部 Getter & Action (加下划线表示，约定不对外暴露)
@@ -147,6 +141,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         }
     };
 
+    // TODO 没写好校验逻辑
     // _saveDraft 现在接收 globalId
     const _saveDraft = async (type: ConfigType, globalId: string) => {
         const draft = drafts.value[globalId];
@@ -211,6 +206,31 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     const hasDirtyDrafts = computed(() => {
         return Object.keys(drafts.value).some(globalId => _isDirty(globalId));
     });
+
+    /**
+     * *** 保存所有未保存的更改 ***
+     * 遍历所有草稿，如果发现有改动，则调用其保存方法。
+     * @returns 返回一个 Promise，当所有保存操作都完成后解决。
+     */
+    async function saveAllDirtyDrafts(): Promise<void> {
+        const dirtyDrafts = Object.keys(drafts.value).filter(id => _isDirty(id));
+
+        if (dirtyDrafts.length === 0) {
+            console.log("没有需要保存的更改。");
+            return;
+        }
+
+        console.log(`准备保存 ${dirtyDrafts.length} 个已修改的草稿...`);
+
+        const savePromises = dirtyDrafts.map(id => {
+            const draft = drafts.value[id];
+            return _saveDraft(draft.type, id);
+        });
+
+        await Promise.all(savePromises);
+        console.log("所有更改已保存。");
+    }
+
 
     /**
      * 获取（申请）一个编辑会话。这是进行任何修改操作的唯一入口。
@@ -310,8 +330,10 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         globalModulesAsync,
 
         hasDirtyDrafts,
+        isDirty: _isDirty,
 
         // --- 核心服务方法 ---
+        saveAllDirtyDrafts,
         acquireEditSession,
 
         // --- 内部方法，供 EditSession 使用 ---

@@ -21,110 +21,97 @@
       </div>
 
       <!-- 状态三：加载成功，显示数据 -->
-      <div v-else>
-        <n-tabs v-model:value="activeTab" type="line" :animated="false" justify-content="space-evenly">
+      <n-tabs v-model:value="activeTab" type="line" :animated="false" justify-content="space-evenly">
 
-          <!-- 工作流标签页 -->
-          <n-tab-pane name="workflows" tab="工作流">
-            <div class="scrollable-content">
-              <draggable
-                  v-if="workflowsList.length > 0"
-                  v-model="workflowsList"
-                  item-key="id"
-                  :group="{ name: 'workflows-group', pull: 'clone', put: false }"
-                  :sort="false"
-                  :clone="handleResourceClone"
-                  class="resource-list"
-                  :setData="handleSetData"
-              >
-                <!-- 关键: v-for 创建的这个 div 才是被拖拽的单元 (event.item) -->
-                <div v-for="element in workflowsList"
-                     :key="element.id"
-                     data-drag-type="workflow"
-                     :data-drag-id="element.id"
-                     :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
-                >
-                  <GlobalResourceListItem
-                      :id="element.id"
-                      :item="element.item"
-                      type="workflow"
-                      @start-editing="startEditing"
-                      @show-error-detail="showErrorDetail"
-                  />
-                </div>
-              </draggable>
-              <n-empty v-else small description="无全局工作流"/>
+        <!-- 工作流标签页 -->
+        <n-tab-pane name="workflows" tab="工作流">
+          <draggable
+              v-if="workflowsList.length > 0"
+              v-model="workflowsList"
+              item-key="id"
+              :group="{ name: 'workflows-group', pull: 'clone', put: false }"
+              :sort="false"
+              :clone="handleResourceClone"
+              class="resource-list"
+              :setData="handleSetData"
+          >
+            <div v-for="element in workflowsList"
+                 :key="element.id"
+                 data-drag-type="workflow"
+                 :data-drag-id="element.id"
+            >
+              <GlobalResourceListItem
+                  :id="element.id"
+                  :item="element.item"
+                  type="workflow"
+                  @start-editing="startEditing"
+                  @show-error-detail="showErrorDetail"
+              />
             </div>
-          </n-tab-pane>
+          </draggable>
+          <n-empty v-else small description="无全局工作流"/>
+        </n-tab-pane>
 
-          <!-- 步骤标签页 -->
-          <n-tab-pane name="steps" tab="步骤">
-            <div class="scrollable-content">
-              <draggable
-                  v-if="stepsList.length > 0"
-                  v-model="stepsList"
-                  item-key="id"
-                  :group="{ name: 'steps-group', pull: 'clone', put: false }"
-                  :sort="false"
-                  :clone="handleResourceClone"
-                  class="resource-list"
-                  :setData="handleSetData"
-              >
-                <!-- 关键: data-* 属性必须在 v-for 的这个根 div 上 -->
-                <div v-for="element in stepsList"
-                     :key="element.id"
-                     data-drag-type="step"
-                     :data-drag-id="element.id"
-                     :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
-                >
-                  <GlobalResourceListItem
-                      :id="element.id"
-                      :item="element.item"
-                      type="step"
-                      @start-editing="startEditing"
-                      @show-error-detail="showErrorDetail"
-                  />
-                </div>
-              </draggable>
-              <n-empty v-else small description="无全局步骤"/>
+        <!-- 步骤标签页 -->
+        <n-tab-pane name="steps" tab="步骤">
+          <draggable
+              v-if="stepsList.length > 0"
+              v-model="stepsList"
+              item-key="id"
+              :group="{ name: 'steps-group', pull: 'clone', put: false }"
+              :sort="false"
+              :clone="handleResourceClone"
+              class="resource-list"
+              :setData="handleSetData"
+          >
+            <div v-for="element in stepsList"
+                 :key="element.id"
+                 data-drag-type="step"
+                 :data-drag-id="element.id"
+            >
+              <GlobalResourceListItem
+                  :id="element.id"
+                  :item="element.item"
+                  type="step"
+                  @start-editing="startEditing"
+                  @show-error-detail="showErrorDetail"
+              />
             </div>
-          </n-tab-pane>
+          </draggable>
+          <n-empty v-else small description="无全局步骤"/>
 
-          <!-- 模块标签页 -->
-          <n-tab-pane name="modules" tab="模块">
-            <div class="scrollable-content">
-              <draggable
-                  v-if="modulesList.length > 0"
-                  v-model="modulesList"
-                  item-key="id"
-                  :group="{ name: 'modules-group', pull: 'clone', put: false }"
-                  :sort="false"
-                  :clone="handleResourceClone"
-                  class="resource-list"
-                  :setData="handleSetData"
-              >
-                <!-- 关键: data-* 属性必须在 v-for 的这个根 div 上 -->
-                <div v-for="element in modulesList"
-                     :key="element.id"
-                     data-drag-type="module"
-                     :data-drag-id="element.id"
-                     :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
-                >
-                  <GlobalResourceListItem
-                      :id="element.id"
-                      :item="element.item"
-                      type="module"
-                      @start-editing="startEditing"
-                      @show-error-detail="showErrorDetail"
-                  />
-                </div>
-              </draggable>
-              <n-empty v-else small description="无全局模块"/>
+        </n-tab-pane>
+
+        <!-- 模块标签页 -->
+        <n-tab-pane name="modules" tab="模块">
+          <draggable
+              v-if="modulesList.length > 0"
+              v-model="modulesList"
+              item-key="id"
+              :group="{ name: 'modules-group', pull: 'clone', put: false }"
+              :sort="false"
+              :clone="handleResourceClone"
+              class="resource-list"
+              :setData="handleSetData"
+          >
+            <div v-for="element in modulesList"
+                 :key="element.id"
+                 data-drag-type="module"
+                 :data-drag-id="element.id"
+            >
+              <GlobalResourceListItem
+                  :id="element.id"
+                  :item="element.item"
+                  type="module"
+                  @start-editing="startEditing"
+                  @show-error-detail="showErrorDetail"
+              />
             </div>
-          </n-tab-pane>
+          </draggable>
+          <n-empty v-else small description="无全局模块"/>
+        </n-tab-pane>
 
-        </n-tabs>
-      </div>
+      </n-tabs>
     </n-spin>
   </div>
 </template>
@@ -266,58 +253,18 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement) {
 </script>
 
 <style scoped>
-
 .global-resource-panel {
-  /* 移除内边距，让 n-tabs 的内容区来控制 */
-  padding: 0;
   height: 100%;
-  box-sizing: border-box;
   display: flex;
   flex-direction: column;
+  padding: 0 12px 12px 12px;
+  box-sizing: border-box;
 }
 
 .global-resource-panel > .n-h4 {
-  padding: 0 12px 12px 12px; /* 只给标题添加内边距 */
-  flex-shrink: 0;
-}
-
-.global-resource-panel > .n-spin {
-  flex-grow: 1;
-  /* 确保 spin 内容也能撑开 */
-  display: flex;
-  flex-direction: column;
-}
-
-.global-resource-panel .n-spin-content {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-}
-
-.global-resource-panel .n-tabs {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-:deep(.n-tabs-pane-wrapper) {
-  flex-grow: 1;
-  overflow: hidden; /* 直接隐藏，不再需要滚动 */
-}
-
-/* 让 tab-pane 成为一个能撑满的容器 */
-:deep(.n-tab-pane) {
-  height: 100%;
-  box-sizing: border-box;
-  padding: 0; /* 移除内边距，交由内部的滚动容器控制 */
-}
-
-/* 滚动容器样式 */
-.scrollable-content {
-  height: 100%;
-  overflow-y: auto;
-  padding: 4px 12px 12px 12px; /* 把内边距放在这里 */
-  box-sizing: border-box;
+  flex-shrink: 0; /* 标题高度固定 */
+  padding: 0;
+  margin-bottom: 12px;
 }
 
 .panel-state-wrapper {
@@ -325,15 +272,16 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement) {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  min-height: 150px;
-  text-align: center;
-  padding: 0 12px;
+  /* 确保在没有内容时也能撑开 */
+  min-height: 200px;
 }
 
 .resource-list {
   display: flex;
   flex-direction: column;
   gap: 2px;
+  /* 为列表内容增加一点内边距 */
+  padding: 4px;
 }
 </style>
 <!-- END OF FILE -->

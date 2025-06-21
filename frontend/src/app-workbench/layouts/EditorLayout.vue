@@ -18,16 +18,12 @@
       <div class="sider-container">
         <!-- 1a. 全局资源面板 (左侧的左栏) -->
         <div v-show="isGlobalPanelVisible" class="panel global-panel">
-          <n-scrollbar style="height: 100%;">
             <slot name="global-panel"></slot>
-          </n-scrollbar>
         </div>
 
         <!-- 1b. 当前编辑结构面板 (左侧的右栏) -->
         <div v-show="isEditorPanelVisible" class="panel editor-panel">
-          <n-scrollbar style="height: 100%;">
             <slot name="editor-panel"></slot>
-          </n-scrollbar>
         </div>
       </div>
     </n-layout-sider>
@@ -79,7 +75,7 @@ const sidersCollapsed = ref(false);
 const compositeSiderWidth = computed(() => {
   if (sidersCollapsed.value) return 24;
   let width = 0;
-  if (props.isGlobalPanelVisible) width += 300; // 全局面板宽度
+  if (props.isGlobalPanelVisible) width += 200; // 全局面板宽度
   if (props.isEditorPanelVisible) width += 300; // 编辑面板宽度
   return width;
 });
@@ -106,14 +102,15 @@ const compositeSiderWidth = computed(() => {
 
 .panel {
   height: 100%;
-  padding: 12px;
   flex-shrink: 0;
   box-sizing: border-box;
   transition: width 0.2s ease-in-out, opacity 0.2s ease-in-out;
+  display: flex;
+  flex-direction: column;
 }
 
 .global-panel {
-  width: 300px;
+  width: 200px;
   border-right: 1px solid #e8e8e8;
 }
 

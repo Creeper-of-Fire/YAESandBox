@@ -93,6 +93,15 @@ export class EditSession {
     }
 
     /**
+     * *** 重命名当前编辑项 ***
+     * 这是一个便捷方法，用于更新配置对象的 name 属性。
+     * @param newName - 新的名称
+     */
+    public rename(newName: string): void {
+        this.updateData({ name: newName } as Partial<ConfigObject>);
+    }
+
+    /**
      * 保存当前会话的更改到后端。
      */
     public async save(): Promise<void> {

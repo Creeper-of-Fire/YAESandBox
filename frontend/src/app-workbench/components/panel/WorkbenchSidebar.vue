@@ -8,39 +8,67 @@
   >
     <!-- 2. 根据 session 是否存在，渲染不同的内部视图 -->
     <div v-if="session && session.getData().value" class="sidebar-content">
-      <!-- 有会话时的视图 -->
-      <n-h4 style="display: flex; justify-content: space-between; align-items: center;">
-        <span>编辑{{ currentConfigName }}</span>
-      </n-h4>
 
-      <template v-if="session.type === 'workflow' && workflowData">
-        <p class="sidebar-description">拖拽全局步骤到步骤列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
-        <WorkflowItemRenderer
-            :workflow="workflowData"
-            :session="session"
-            :selected-module-id="selectedModuleId"
-            @update:selected-module-id="$emit('update:selectedModuleId', $event)"
-        />
-      </template>
+      <div class="sidebar-header">
+        <n-h4 class="sidebar-title-bar">
+          <span class="title-text">编辑{{ currentConfigName }}</span>
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button text style="font-size: 20px;" @click="handleClose">
+                <n-icon :component="CloseIcon"/>
+              </n-button>
+            </template>
+            关闭编辑视图
+          </n-tooltip>
+        </n-h4>
 
-      <template v-else-if="session.type === 'step' && stepData">
-        <p class="sidebar-description">拖拽全局模块到模块列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
-        <StepItemRenderer
-            :step="stepData"
-            :session="session"
-            :selected-module-id="selectedModuleId"
-            @update:selected-module-id="$emit('update:selectedModuleId', $event)"
-            :is-collapsible="false"
-            :is-draggable="false"
-            style="margin-top: 16px"
-        />
-      </template>
 
-      <template v-else-if="session.type === 'module' && moduleData">
-        <n-alert title="提示" type="info" style="margin-top: 16px;">
-          这是一个独立的模块。请在中间的主编辑区完成详细配置。
-        </n-alert>
-      </template>
+        <n-space class="action-bar" justify="space-between">
+          <n-space>
+            <n-button strong secondary type="primary" size="small" @click="handleRename">重命名</n-button>
+          </n-space>
+          <n-space>
+            <n-button strong secondary type="error" size="small" :disabled="!isDirty" @click="handleDiscard">放弃</n-button>
+            <n-button strong secondary type="success" size="small" :disabled="!isDirty" @click="handleSave">保存</n-button>
+          </n-space>
+        </n-space>
+      </div>
+
+      <!-- 分割线，让布局更清晰 -->
+      <n-divider style="margin-top: 12px; margin-bottom: 12px;"/>
+      <!-- 2b. 可滚动的内容区域 -->
+      <div class="scrollable-area">
+        <n-scrollbar style="height: 100%">
+          <template v-if="session.type === 'workflow' && workflowData">
+            <p class="sidebar-description">拖拽全局步骤到步骤列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
+            <WorkflowItemRenderer
+                :workflow="workflowData"
+                :session="session"
+                :selected-module-id="selectedModuleId"
+                @update:selected-module-id="$emit('update:selectedModuleId', $event)"
+            />
+          </template>
+
+          <template v-else-if="session.type === 'step' && stepData">
+            <p class="sidebar-description">拖拽全局模块到模块列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
+            <StepItemRenderer
+                :step="stepData"
+                :session="session"
+                :selected-module-id="selectedModuleId"
+                @update:selected-module-id="$emit('update:selectedModuleId', $event)"
+                :is-collapsible="false"
+                :is-draggable="false"
+                style="margin-top: 16px"
+            />
+          </template>
+
+          <template v-else-if="session.type === 'module' && moduleData">
+            <n-alert title="提示" type="info" style="margin-top: 16px;">
+              这是一个独立的模块。请在中间的主编辑区完成详细配置。
+            </n-alert>
+          </template>
+        </n-scrollbar>
+      </div>
     </div>
     <div v-else class="empty-state-wrapper">
       <div class="custom-empty-state">
@@ -67,8 +95,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue';
-import {NAlert, NH4, NIcon} from 'naive-ui';
+import {computed, h, ref} from 'vue';
+import {NAlert, NH4, NIcon, NInput, useDialog, useMessage} from 'naive-ui';
 import type {ConfigType, EditSession} from "@/app-workbench/services/EditSession.ts";
 import type {
   AbstractModuleConfig,
@@ -78,6 +106,7 @@ import type {
 import StepItemRenderer from '../editor/StepItemRenderer.vue';
 import WorkflowItemRenderer from "@/app-workbench/components/editor/WorkflowItemRenderer.vue";
 import {AddBoxOutlined as AddBoxIcon, SwapHorizOutlined as SwapHorizIcon} from '@vicons/material';
+import {CloseIcon} from "naive-ui/es/_internal/icons";
 
 const props = defineProps<{
   session: EditSession | null;
@@ -87,9 +116,71 @@ const props = defineProps<{
 const emit = defineEmits<{
   (e: 'update:selectedModuleId', value: string | null): void;
   (e: 'start-editing', payload: { type: ConfigType; id: string }): void;
+  (e: 'close-session'): void;
 }>();
-// --- 覆盖层状态 ---
+
+const dialog = useDialog();
+const message = useMessage();
+
+// --- 状态 ---
+// 覆盖层的显隐状态
 const isDragOverContainer = ref(false);
+
+// --- 计算属性 ---
+// 通过 session 获取 isDirty 状态
+const isDirty = computed(() => props.session?.getIsDirty().value ?? false);
+
+// --- 按钮事件处理 ---
+
+async function handleSave() {
+  if (!props.session) return;
+  await props.session.save();
+  message.success(`“${props.session.getData().value?.name}” 已保存!`);
+}
+
+function handleDiscard() {
+  if (!props.session) return;
+  dialog.warning({
+    title: '放弃更改',
+    content: '您确定要放弃所有未保存的更改吗？此操作不可撤销。',
+    positiveText: '确定放弃',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      props.session?.discard();
+      message.info("更改已放弃。");
+      // 放弃后，数据会恢复原状，但会话依然存在。
+    },
+  });
+}
+
+function handleClose() {
+  emit('close-session');
+}
+
+function handleRename() {
+  if (!props.session) return;
+  const currentName = ref(props.session.getData().value?.name ?? '');
+
+  dialog.create({
+    title: '重命名',
+    content: () => h(NInput, {
+      value: currentName.value,
+      onUpdateValue: (v) => {
+        currentName.value = v;
+      },
+      placeholder: '请输入新的名称',
+    }),
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () => {
+      if (!currentName.value.trim()) {
+        message.error("名称不能为空！");
+        return false; // 阻止对话框关闭
+      }
+      props.session?.rename(currentName.value);
+    }
+  });
+}
 
 // --- 等级定义和比较逻辑 ---
 
@@ -203,11 +294,43 @@ const currentConfigName = computed(() => {
   flex-direction: column;
 }
 
-.sidebar-content {
-  overflow-y: auto; /* 内容区域自己滚动 */
-  height: 100%;
+.title-text {
+  /* 防止长标题把关闭按钮挤走 */
+  flex-grow: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  margin-right: 8px; /* 和关闭按钮之间留点空隙 */
 }
 
+.sidebar-content {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden; /* 防止内容溢出父容器 */
+  padding: 0 12px 12px 12px; /* 统一在这里设置内边距 */
+  box-sizing: border-box;
+}
+
+.sidebar-header {
+  flex-shrink: 0; /* 固定头部，不允许收缩 */
+}
+
+.sidebar-title-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.action-bar {
+  margin-top: 8px;
+}
+
+.scrollable-area {
+  flex-grow: 1; /* 占据所有剩余空间 */
+  overflow: auto; /* 关键！让这个容器自己处理溢出 */
+  position: relative; /* 确保内部的滚动条能正确计算高度 */
+}
 
 .empty-state-wrapper {
   flex-grow: 1;
@@ -224,8 +347,7 @@ const currentConfigName = computed(() => {
 }
 
 /*
-  *** 这里是关键修改 ***
-  - 新增自定义空状态的样式
+  - 自定义空状态的样式
   - 可以自由调整图标和文字的样式
 */
 .custom-empty-state {

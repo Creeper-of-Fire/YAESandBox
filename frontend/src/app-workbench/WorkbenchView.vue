@@ -26,6 +26,22 @@
         </n-switch>
       </div>
 
+      <!-- 右侧的全局操作按钮 -->
+      <n-space class="header-right-controls">
+        <n-button
+            strong secondary type="primary"
+            :disabled="!workbenchStore.hasDirtyDrafts"
+            :loading="isSavingAll"
+            @click="handleSaveAll"
+        >
+          <template #icon>
+            <n-icon :component="SaveIcon"/>
+          </template>
+          全部保存
+        </n-button>
+        <n-button @click="showAiConfigModal = true">全局AI配置</n-button>
+      </n-space>
+
       <!-- 右侧：其他全局操作 -->
       <div class="header-right-controls">
         <n-button @click="showAiConfigModal = true">全局AI配置</n-button>
@@ -50,6 +66,7 @@
             :selected-module-id="selectedModuleId"
             @update:selected-module-id="selectedModuleId = $event"
             @start-editing="handleStartEditing"
+            @closeSession="handleCloseSession"
         />
       </template>
 
@@ -89,6 +106,7 @@
 <script setup lang="ts">
 import {onBeforeUnmount, onMounted, ref} from 'vue';
 import {NButton, NEmpty, NH3, NSpin, NSwitch, useMessage} from 'naive-ui';
+import {SaveOutlined as SaveIcon} from '@vicons/material';
 import type {SortableEvent} from "sortablejs";
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import {type ConfigType, type EditSession} from '@/app-workbench/services/EditSession';
@@ -111,13 +129,41 @@ const message = useMessage();
 
 // --- 核心状态 ---
 const activeSession = ref<EditSession | null>(null);
+
+
+// 用于“正在请求新编辑视图”的加载状态
 const isAcquiringSession = ref(false);
+// 用于“全部保存”按钮的加载状态
+const isSavingAll = ref(false);
 
 // --- UI 控制状态 ---
 const isGlobalPanelVisible = ref(true);
 const isEditorPanelVisible = ref(true);
 const selectedModuleId = ref<string | null>(null);
 const showAiConfigModal = ref(false);
+
+/**
+ * *** 处理全局保存操作 ***
+ */
+async function handleSaveAll() {
+  isSavingAll.value = true;
+  try {
+    await workbenchStore.saveAllDirtyDrafts();
+    message.success("所有更改已成功保存！");
+  } catch (error) {
+    message.error("保存时发生错误，请查看控制台。");
+    console.error("全部保存失败:", error);
+  } finally {
+    isSavingAll.value = false;
+  }
+}
+
+/**
+ * *** 处理关闭会话的请求 ***
+ */
+function handleCloseSession() {
+  activeSession.value = null;
+}
 
 /**
  * 处理从左侧面板点击“编辑”按钮或双击列表项的事件。或者其他的“开始编辑”事件
