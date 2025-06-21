@@ -13,19 +13,21 @@ public record StepProcessorConfig
     /// 名字
     /// </summary>
     [Required]
+    [HiddenInForm(true)]
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
     /// 是否被启用，默认为True
     /// </summary>
     [Required]
+    [HiddenInForm(true)]
     public bool Enabled { get; init; } = true;
 
     /// <summary>
     /// 唯一的 ID，在拷贝时也需要更新
     /// </summary>
     [Required]
-    [HiddenInSchema(true)]
+    [HiddenInForm(true)]
     public required string ConfigId { get; init; }
 
     /// <summary>
@@ -38,6 +40,7 @@ public record StepProcessorConfig
     /// StepProcessor 在执行时会严格按照此列表的顺序执行模块。
     /// </summary>
     [Required]
+    [HiddenInForm(true)]
     public List<AbstractModuleConfig> Modules { get; init; } = [];
 
     /// <summary>
@@ -53,5 +56,16 @@ public record StepProcessorConfig
     [Required]
     public Dictionary<string, string> OutputMappings { get; init; } = [];
     
-    // TODO 我们之后应该需要一个InputMappings，用来改变输入变量的名字，目前可以不急
+    /// <summary>
+    /// 定义了此步骤如何从工作流的全局变量池获取输入，并映射到步骤内部使用的变量名。
+    /// Key: 全局变量名 (在工作流中可用的名字)
+    /// Value: 步骤内部期望的变量名 (模块消费的名字)
+    /// </summary>
+    /// <example>
+    /// "initial_query": "customer_question"
+    /// 这意味着，将全局变量池中的 "initial_query" 变量，
+    /// 作为名为 "customer_question" 的输入提供给此步骤内部的模块使用。
+    /// </example>
+    [Required]
+    public Dictionary<string, string> InputMappings { get; init; } = [];
 }

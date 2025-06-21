@@ -38,10 +38,10 @@ internal class WorkflowProcessor(
     /// </summary>
     public class WorkflowRuntimeContext(IReadOnlyDictionary<string, string> triggerParams)
     {
-        /// <summary>
-        /// 工作流的输入参数被放入这里，
-        /// </summary>
-        public IReadOnlyDictionary<string, string> TriggerParams { get; } = triggerParams;
+        // /// <summary>
+        // /// 工作流的输入参数被放入这里，
+        // /// </summary>
+        // public IReadOnlyDictionary<string, string> TriggerParams { get; } = triggerParams;
 
         /// <summary>
         /// 全局变量池。

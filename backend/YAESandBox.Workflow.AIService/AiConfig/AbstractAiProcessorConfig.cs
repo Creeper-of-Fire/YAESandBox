@@ -34,7 +34,7 @@ public abstract record AbstractAiProcessorConfig(string ConfigType)
     /// </summary>
     [ReadOnly(true)]
     [Required]
-    [HiddenInSchema(true)]
+    [HiddenInForm(true)]
     public string ConfigType { get; init; } = ConfigType;
 
     // 没有流式响应的配置，因为流式应该在调用AI处配置，如工作流的AI配置。

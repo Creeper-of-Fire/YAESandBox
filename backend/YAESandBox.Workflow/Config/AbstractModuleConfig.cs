@@ -17,6 +17,7 @@ public abstract record AbstractModuleConfig
     /// 名字
     /// </summary>
     [Required]
+    [HiddenInForm(true)]
     public abstract string Name { get; init; }
 
     /// <summary>
@@ -24,34 +25,35 @@ public abstract record AbstractModuleConfig
     /// </summary>
     [Required]
     [DefaultValue(true)]
+    [HiddenInForm(true)]
     public abstract bool Enabled { get; init; }
 
     /// <summary>
     /// 唯一的 ID，在拷贝时也需要更新
     /// </summary>
     [Required]
-    [HiddenInSchema(true)]
+    [HiddenInForm(true)]
     public abstract string ConfigId { get; init; }
 
     /// <summary>
     /// 模块的类型
     /// </summary>
     [Required]
-    [HiddenInSchema(true)]
+    [HiddenInForm(true)]
     public abstract string ModuleType { get; init; }
 
     /// <summary>
     /// 输入变量名
     /// </summary>
     [Required]
-    [HiddenInSchema(true)]
+    [HiddenInForm(true)]
     public abstract List<string> Consumes { get; init; }
 
     /// <summary>
     /// 输出变量名
     /// </summary>
     [Required]
-    [HiddenInSchema(true)]
+    [HiddenInForm(true)]
     public abstract List<string> Produces { get; init; }
 
     internal abstract IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor(WorkflowRuntimeService workflowRuntimeService);

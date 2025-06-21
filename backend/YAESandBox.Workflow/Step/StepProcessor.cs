@@ -23,9 +23,10 @@ internal class StepProcessor(
     private StepProcessorContent StepContent { get; } = new();
 
     /// <summary>
-    /// 消费者（Consumes）：模块需要的所有输入变量，这些必须从全局变量池中获取。
+    /// 消费者（Consumes）：此步骤需要从全局变量池中获取的所有变量的【全局名称】。
+    /// 在严格模式下，这个集合就是 InputMappings 的所有 Key。
     /// </summary>
-    internal IEnumerable<string> GlobalConsumers { get; } = config.Modules.SelectMany(c => c.Consumes).Distinct();
+    internal IEnumerable<string> GlobalConsumers { get; } = config.InputMappings.Keys;
 
     /// <summary>
     /// 生产者（Produces）：此步骤通过 OutputMappings 向全局变量池声明输出的变量。
@@ -47,19 +48,25 @@ internal class StepProcessor(
     public async Task<Result<Dictionary<string, object>>> ExecuteStepsAsync(
         WorkflowRuntimeContext workflowRuntimeContext, CancellationToken cancellationToken = default)
     {
-        foreach (string consumerName in this.GlobalConsumers)
+        // 严格根据 InputMappings 从全局变量池填充步骤的内部变量池
+        foreach ((string globalName, string localName) in this.Config.InputMappings)
         {
-            if (!workflowRuntimeContext.GlobalVariables.TryGetValue(consumerName, out object? value))
+            if (!workflowRuntimeContext.GlobalVariables.TryGetValue(globalName, out object? value))
             {
-                return NormalError.Conflict($"执行步骤 '{this.Config.ConfigId}' 失败：找不到必需的输入变量 '{consumerName}'。");
+                // 这一层校验理论上在静态分析时已完成，但作为运行时安全保障保留
+                return NormalError.Conflict($"执行步骤 '{this.Config.ConfigId}' 失败：找不到必需的全局输入变量 '{globalName}'。");
             }
 
-            this.StepContent.StepVariable[consumerName] = value;
+            this.StepContent.StepVariable[localName] = value;
         }
 
-        foreach ((string key, string value) in workflowRuntimeContext.TriggerParams)
+        // 检查所有模块的输入是否都已满足，这是运行时的最后一道防线
+        var providedLocalVars = new HashSet<string>(this.Config.InputMappings.Values);
+        var allRequiredLocalVars = this.Config.Modules.SelectMany(m => m.Consumes).Distinct();
+
+        foreach (string requiredVar in allRequiredLocalVars.Where(requiredVar => !providedLocalVars.Contains(requiredVar)))
         {
-            this.StepContent.StepVariable[key] = value;
+            return NormalError.Conflict($"执行步骤 '{this.Config.ConfigId}' 失败：内部配置错误，模块需要的变量 '{requiredVar}' 未在 InputMappings 中提供。");
         }
 
         // this.StepContent.StepVariable[nameof(WorkflowRuntimeContext.FinalRawText)] = workflowRuntimeContext.FinalRawText;

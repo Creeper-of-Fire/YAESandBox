@@ -122,6 +122,16 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     );
 
     /**
+     * 存储所有模块类型的 Schema
+     * Key 是模块的 moduleType, Value 是对应的 JSON Schema
+     */
+    const moduleSchemasAsync = useAsyncState(
+        () => ModuleConfigService.getApiV1WorkflowsConfigsGlobalModulesAllModuleConfigsSchemas(),
+        {} as Record<string, any>,
+        { immediate: false, shallow: false } // 初始不加载
+    );
+
+    /**
      * 存储所有活跃的草稿会话。
      * Key 是临时的 draftId (UUID)。
      */
@@ -344,6 +354,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         globalWorkflowsAsync,
         globalStepsAsync,
         globalModulesAsync,
+        moduleSchemasAsync,
 
         hasDirtyDrafts,
         isDirty: _isDirty,

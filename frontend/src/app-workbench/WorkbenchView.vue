@@ -112,6 +112,7 @@ import GlobalResourcePanel from '@/app-workbench/components/panel/GlobalResource
 import WorkbenchSidebar from '@/app-workbench/components/panel/WorkbenchSidebar.vue';
 import EditorTargetRenderer from '@/app-workbench/components/module/EditorTargetRenderer.vue';
 import AiConfigEditorPanel from "@/app-workbench/features/ai-config-panel/AiConfigEditorPanel.vue";
+import type {AbstractModuleConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 
 defineOptions({
   name: 'WorkbenchView'
@@ -206,6 +207,17 @@ async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: 
     const session = await workbenchStore.acquireEditSession(type, globalId);
     if (session) {
       activeSession.value = session;
+
+      // 如果编辑的是一个独立的模块，则默认选中它自己，
+      // 以便在右侧的 EditorTargetRenderer 中立即显示其配置表单。
+      if (session.type === 'module') {
+        const moduleData = session.getData().value as AbstractModuleConfig | null;
+        if (moduleData) {
+          selectedModuleId.value = moduleData.configId;
+        }
+      }
+      // --- 修复逻辑结束 ---
+
       // 辅助性UI逻辑：如果编辑的不是模块，自动打开“当前编辑”面板
       if (type !== 'module') {
         isEditorPanelVisible.value = true;
@@ -234,6 +246,7 @@ const beforeUnloadHandler = (event: BeforeUnloadEvent) => {
 
 onMounted(() => {
   window.addEventListener('beforeunload', beforeUnloadHandler);
+  workbenchStore.moduleSchemasAsync.execute();
 });
 
 onBeforeUnmount(() => {

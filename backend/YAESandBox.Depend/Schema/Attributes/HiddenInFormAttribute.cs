@@ -4,7 +4,7 @@
 /// 在Schema中隐藏
 /// </summary>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter, AllowMultiple = false)]
-public class HiddenInSchemaAttribute(bool isHidden) : Attribute
+public class HiddenInFormAttribute(bool isHidden) : Attribute
 {
     /// <summary>
     /// 是否隐藏

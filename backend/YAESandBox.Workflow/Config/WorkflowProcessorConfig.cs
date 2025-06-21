@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using YAESandBox.Depend.Schema.Attributes;
 
 namespace YAESandBox.Workflow.Config;
 
@@ -11,6 +12,7 @@ public record WorkflowProcessorConfig
     /// 名字
     /// </summary>
     [Required]
+    [HiddenInForm(true)]
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
@@ -24,5 +26,6 @@ public record WorkflowProcessorConfig
     /// 一个工作流含有的步骤（有序）
     /// </summary>
     [Required]
+    [HiddenInForm(true)]
     public List<StepProcessorConfig> Steps { get; init; } = [];
 }

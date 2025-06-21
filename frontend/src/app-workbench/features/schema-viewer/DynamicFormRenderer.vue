@@ -46,7 +46,7 @@ const props = defineProps({
    * 表单数据对象，用于 v-model。
    */
   modelValue: {
-    type: Object as () => AbstractAiProcessorConfig | null, // 或者 Record<string, any> 如果更通用
+    type: Object as () => Record<string, any> | null, // 或者 Record<string, any> 如果更通用
     required: true,
   },
   /**
