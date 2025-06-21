@@ -1,4 +1,4 @@
-﻿<!-- 文件路径: src/app-workbench/views/WorkbenchView.vue -->
+﻿<!-- 文件路径: src/app-workbench/WorkbenchView.vue -->
 <template>
   <div class="workbench-view">
     <!-- 1. 顶部控制栏 -->
@@ -46,9 +46,11 @@
       <template #editor-panel>
         <div v-if="activeSession" class="editor-panel-wrapper">
           <WorkbenchSidebar
+              :key="activeSession.globalId"
               :session="activeSession"
               :selected-module-id="selectedModuleId"
               @update:selected-module-id="selectedModuleId = $event"
+              @start-editing="handleStartEditing"
           />
         </div>
         <!-- 彻底替换为原生 div 和原生事件监听 -->
