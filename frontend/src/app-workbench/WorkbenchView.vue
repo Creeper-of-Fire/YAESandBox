@@ -3,13 +3,31 @@
   <div class="workbench-view">
     <!-- 1. 顶部控制栏 (未来可以独立成组件) -->
     <div class="workbench-header">
-      <n-h3 style="margin: 0;">工作流编辑器</n-h3>
-      <div class="header-controls">
-        <!-- 控制侧边栏可见性的开关 -->
-        <n-checkbox v-model:checked="isGlobalPanelVisible">全局资源</n-checkbox>
-        <n-checkbox v-model:checked="isEditorPanelVisible">当前编辑</n-checkbox>
+      <div class="header-left-group">
+        <n-h3 style="margin: 0;">工作流编辑器</n-h3>
+        <!-- 将开关直接放在 h3 旁边 -->
+        <n-switch v-model:value="isGlobalPanelVisible" size="large">
+          <template #checked>
+            全局资源 (开)
+          </template>
+          <template #unchecked>
+            全局资源 (关)
+          </template>
+        </n-switch>
 
-        <!-- 临时：打开 AI 配置的按钮 -->
+        <n-switch v-model:value="isEditorPanelVisible" size="large">
+          <template #checked>
+            当前编辑 (开)
+          </template>
+          <template #unchecked>
+            当前编辑 (关)
+          </template>
+        </n-switch>
+      </div>
+      <span style="color: red; font-weight: bold;">Debug: {{ isEditorPanelVisible }}</span>
+
+      <!-- 右侧的控制项（例如全局AI配置按钮） -->
+      <div class="header-right-controls">
         <n-button @click="showAiConfigModal = true">全局AI配置</n-button>
       </div>
     </div>
@@ -21,7 +39,7 @@
     >
       <!-- 全局资源面板插槽 -->
       <template #global-panel>
-        <GlobalResourcePanel @start-editing="handleStartEditing" />
+        <GlobalResourcePanel @start-editing="handleStartEditing"/>
       </template>
 
       <!-- 当前编辑结构插槽 -->
@@ -34,7 +52,7 @@
               @update:selected-module-id="selectedModuleId = $event"
           />
         </div>
-        <n-empty v-else description="请从左侧选择或拖拽一个配置项开始编辑" />
+        <n-empty v-else description="请从左侧选择或拖拽一个配置项开始编辑"/>
       </template>
 
       <!-- 主内容区插槽 -->
@@ -47,7 +65,7 @@
                 :selected-module-id="selectedModuleId"
             />
           </div>
-          <n-empty v-else description="无激活的编辑会话" style="margin-top: 20%;" />
+          <n-empty v-else description="无激活的编辑会话" style="margin-top: 20%;"/>
         </n-spin>
       </template>
 
@@ -64,7 +82,7 @@
         :bordered="false"
     >
       <div style="height: calc(90vh - 100px); overflow-y: auto;">
-        <AiConfigEditorPanel />
+        <AiConfigEditorPanel/>
       </div>
     </n-modal>
   </div>
@@ -72,7 +90,7 @@
 
 <script setup lang="ts">
 import {onBeforeUnmount, onMounted, ref} from 'vue';
-import {NCheckbox, NEmpty, NH3, NSpin, useMessage} from 'naive-ui';
+import {NEmpty, NH3, NSpin, useMessage} from 'naive-ui';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
 import {type ConfigType, type EditSession} from '@/app-workbench/services/EditSession.ts';
 
@@ -92,6 +110,7 @@ const message = useMessage();
 // --- 状态管理 ---
 const activeSession = ref<EditSession | null>(null);
 const isAcquiringSession = ref(false);
+
 const isGlobalPanelVisible = ref(true);
 const isEditorPanelVisible = ref(true);
 
@@ -119,10 +138,14 @@ const beforeUnloadHandler = (event: BeforeUnloadEvent) => {
   }
 };
 
-async function handleStartEditing({ type, id: globalId }: { type: ConfigType; id: string }) {
+async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: string }) {
   if (isAcquiringSession.value) return;
 
   if (activeSession.value && activeSession.value.globalId === globalId) {
+    // 如果会话已激活，并且用户点击的是同一个会话，我们仍然可以根据类型调整编辑面板的可见性，以防用户手动关闭了它。
+    if (type !== 'module') {
+      isEditorPanelVisible.value = true; // 编辑工作流或步骤时，显示左侧结构面板
+    }
     return;
   }
 
@@ -132,7 +155,16 @@ async function handleStartEditing({ type, id: globalId }: { type: ConfigType; id
   activeSession.value = null;
 
   try {
-    activeSession.value = await workbenchStore.acquireEditSession(type, globalId);
+    const session = await workbenchStore.acquireEditSession(type, globalId);
+    if (session) {
+      activeSession.value = session;
+      // 根据会话类型控制 isEditorPanelVisible
+      if (type !== 'module') {
+        isEditorPanelVisible.value = true; // 编辑工作流或步骤时，显示左侧结构面板
+      }
+    } else {
+      message.error(`无法开始编辑 “${globalId}”。资源可能不存在或已损坏。`);
+    }
   } catch (error) {
     console.error('获取编辑会话时发生意外错误:', error);
     message.error('开始编辑时发生未知错误。');
@@ -149,21 +181,34 @@ async function handleStartEditing({ type, id: globalId }: { type: ConfigType; id
   flex-direction: column;
   height: 100vh;
 }
+
 .workbench-header {
   padding: 10px 24px;
   border-bottom: 1px solid #e8e8e8;
   display: flex;
+  /* 确保左右两边均匀分布 */
   justify-content: space-between;
   align-items: center;
   flex-shrink: 0;
 }
-.header-controls {
-  display: flex;
-  gap: 16px;
-}
+
 .editor-panel-wrapper,
 .main-content-wrapper {
   height: 100%;
+}
+
+/* 左侧组合，包含标题和开关 */
+.header-left-group {
+  display: flex;
+  align-items: center; /* 垂直居中对齐 */
+  gap: 16px; /* 标题和开关之间的间距 */
+}
+
+/* 右侧控制项，保持靠右 */
+.header-right-controls {
+  display: flex;
+  gap: 16px;
+  align-items: center;
 }
 </style>
 <!-- END OF FILE -->

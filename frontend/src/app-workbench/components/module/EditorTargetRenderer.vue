@@ -1,7 +1,7 @@
 ﻿<!-- START OF FILE: src/app-workbench/components/EditorTargetRenderer.vue -->
 <template>
   <div class="editor-target-renderer">
-    <!-- 【核心修正】现在直接使用 selectedModuleId prop -->
+    <!-- 现在直接使用 selectedModuleId prop -->
     <div v-if="selectedModuleId">
       <n-h4>配置模块 (待实现)</n-h4>
       <p>选中的模块ID: {{ selectedModuleId }}</p>
@@ -17,10 +17,10 @@ import type {EditSession} from "@/app-workbench/services/EditSession.ts";
 
 const props = defineProps<{
   session: EditSession; // session 仍然需要，用于将来可能的保存等操作
-  selectedModuleId: string | null; // 【核心修正】接收来自父组件的 selectedModuleId
+  selectedModuleId: string | null; // 接收来自父组件的 selectedModuleId
 }>();
 
-// 【核心修正】不再需要从 session 获取选中项
+// 不再需要从 session 获取选中项
 </script>
 
 <style scoped>

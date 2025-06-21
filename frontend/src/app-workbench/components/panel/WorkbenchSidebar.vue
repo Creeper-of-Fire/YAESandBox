@@ -24,7 +24,7 @@
           <!-- 更改类名以区分，避免与 StepItemRenderer 内部的 module-list-container 混淆 -->
           <div v-for="stepItem in workflowData.steps" :key="stepItem.configId" class="step-item">
             <!-- 使用 StepItemRenderer 渲染每个步骤 -->
-            <!-- 【核心修正】向下传递 props，向上冒泡 emits -->
+            <!-- 向下传递 props，向上冒泡 emits -->
             <StepItemRenderer
                 :step="stepItem"
                 :session="session"
@@ -55,7 +55,7 @@
           >
             <div v-for="moduleItem in stepData.modules" :key="moduleItem.configId" class="module-item">
               <!-- 使用 ModuleItemRenderer 渲染每个模块 -->
-              <!-- 【核心修正】向下传递 props，向上冒泡 emits -->
+              <!-- 向下传递 props，向上冒泡 emits -->
               <ModuleItemRenderer
                   :module="moduleItem"
                   :selected-module-id="selectedModuleId"

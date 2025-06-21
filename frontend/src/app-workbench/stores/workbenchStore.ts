@@ -128,10 +128,10 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     // 内部 Getter & Action (加下划线表示，约定不对外暴露)
     // =================================================================
 
-    // 【核心修正】方法现在接收 globalId
+    // 方法现在接收 globalId
     const _getDraftData = (globalId: string): ConfigObject | null => drafts.value[globalId]?.data ?? null;
 
-    // 【核心修正】所有 UI State 相关的方法 (_getUiState, _setSelectedItemInDraft, _toggleStepExpansionInDraft) 已被彻底移除。
+    // 所有 UI State 相关的方法 (_getUiState, _setSelectedItemInDraft, _toggleStepExpansionInDraft) 已被彻底移除。
 
     const _isDirty = (globalId: string): boolean => {
         const draft = drafts.value[globalId];
@@ -146,7 +146,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         }
     };
 
-    // 【核心修正】_saveDraft 现在接收 globalId
+    // _saveDraft 现在接收 globalId
     const _saveDraft = async (type: ConfigType, globalId: string) => {
         const draft = drafts.value[globalId];
         if (!draft) return;
@@ -191,7 +191,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     };
 
     /**
-     * 【核心修正】_closeDraft 重命名为 _discardDraft，并且不再有确认提示。
+     * _closeDraft 重命名为 _discardDraft，并且不再有确认提示。
      * 它的作用是简单地、无条件地丢弃一个草稿。
      * @param globalId - 要丢弃的草稿的全局ID。
      */
@@ -200,7 +200,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     };
 
     // --- 新增的内部 action，用于处理拖拽逻辑 ---
-    // 【核心修正】所有拖拽方法现在接收 globalId
+    // 所有拖拽方法现在接收 globalId
     const _addStepToDraft = (globalId: string, stepConfig: StepProcessorConfig, index: number) => {
         const draft = drafts.value[globalId];
         if (!draft || draft.type !== 'workflow') return;
@@ -222,7 +222,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         const draft = drafts.value[globalId];
         if (!draft) return;
 
-        // 【修正】支持为 step 类型的草稿添加模块
+        // 支持为 step 类型的草稿添加模块
         let targetStep: StepProcessorConfig | undefined;
         if (draft.type === 'workflow') {
             const workflow = draft.data as WorkflowProcessorConfig;
@@ -257,7 +257,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     // =================================================================
 
     /**
-     * 【核心修正】新增计算属性，用于判断整个工作台是否存在任何未保存的更改。
+     * 新增计算属性，用于判断整个工作台是否存在任何未保存的更改。
      * 这将用于在用户关闭浏览器标签页时发出警告。
      */
     const hasDirtyDrafts = computed(() => {
@@ -332,14 +332,14 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         const sourceConfig = sourceItem.data; // 现在我们拿到了干净的数据
         const draftData = deepCloneWithNewIds(sourceConfig); // 深度克隆，避免修改原始 store 数据
 
-        // 【核心修正】使用 globalId 作为键
+        // 使用 globalId 作为键
         drafts.value[globalId] = {
             type: type,
             data: draftData,
             originalState: JSON.stringify(draftData), // 创建快照
         };
 
-        // 【核心修正】返回只包含 type 和 globalId 的会话
+        // 返回只包含 type 和 globalId 的会话
         return new EditSession(type, globalId);
     }
 

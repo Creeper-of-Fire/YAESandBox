@@ -22,88 +22,87 @@
 
       <!-- 状态三：加载成功，显示数据 -->
       <div v-else>
-        <n-collapse arrow-placement="right" :default-expanded-names="['steps', 'modules']">
-          <!-- ====================================================== -->
-          <!--             工作流列表渲染部分 (已修正)                -->
-          <!-- ====================================================== -->
-          <n-collapse-item title="工作流" name="workflows">
-            <div v-if="workflows && Object.keys(workflows).length > 0">
-              <!-- 使用 GlobalResourceListItem 渲染工作流项 -->
-              <GlobalResourceListItem
-                  v-for="(item, id) in workflows"
-                  :key="id"
-                  :id="id"
-                  :item="item"
-                  type="workflow"
-                  @start-editing="startEditing"
-                  @show-error-detail="showErrorDetail"
-              />
+        <n-tabs v-model:value="activeTab" type="line" :animated="false"  justify-content="space-evenly">
+
+          <!-- 工作流标签页 -->
+          <n-tab-pane name="workflows" tab="工作流">
+            <div class="scrollable-content">
+              <div v-if="workflows && Object.keys(workflows).length > 0" class="resource-list">
+                <GlobalResourceListItem
+                    v-for="(item, id) in workflows"
+                    :key="id"
+                    :id="id"
+                    :item="item"
+                    type="workflow"
+                    @start-editing="startEditing"
+                    @show-error-detail="showErrorDetail"
+                />
+              </div>
+              <n-empty v-else small description="无全局工作流"/>
             </div>
-            <n-empty v-else small description="无全局工作流"/>
-          </n-collapse-item>
+          </n-tab-pane>
 
-          <!-- ====================================================== -->
-            <!--               步骤列表渲染部分 (已修正)                -->
-          <!-- ====================================================== -->
-          <n-collapse-item title="步骤" name="steps">
-            <draggable
-                v-if="stepsList.length > 0"
-                v-model="stepsList"
-                item-key="id"
-                :group="{ name: 'steps-group', pull: 'clone', put: false }"
-                :sort="false"
-                :clone="cloneResource"
-            >
-              <div v-for="element in stepsList" :key="element.id">
-                <!-- 使用 GlobalResourceListItem 渲染步骤项，并传递拖拽数据 -->
-                <GlobalResourceListItem
-                    :id="element.id"
-                    :item="element.item"
-                    type="step"
-                    :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
-                    @start-editing="startEditing"
-                    @show-error-detail="showErrorDetail"
-                />
-              </div>
-            </draggable>
-            <n-empty v-else small description="无全局步骤"/>
-          </n-collapse-item>
+          <!-- 步骤标签页 -->
+          <n-tab-pane name="steps" tab="步骤">
+            <div class="scrollable-content">
+              <draggable
+                  v-if="stepsList.length > 0"
+                  v-model="stepsList"
+                  item-key="id"
+                  :group="{ name: 'steps-group', pull: 'clone', put: false }"
+                  :sort="false"
+                  :clone="cloneResource"
+                  class="resource-list"
+              >
+                <div v-for="element in stepsList" :key="element.id">
+                  <GlobalResourceListItem
+                      :id="element.id"
+                      :item="element.item"
+                      type="step"
+                      :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
+                      @start-editing="startEditing"
+                      @show-error-detail="showErrorDetail"
+                  />
+                </div>
+              </draggable>
+              <n-empty v-else small description="无全局步骤"/>
+            </div>
+          </n-tab-pane>
 
-          <!-- ====================================================== -->
-          <!--               模块列表渲染部分 (已修正)                -->
-          <!-- ====================================================== -->
-          <n-collapse-item title="模块" name="modules">
-            <draggable
-                v-if="modulesList.length > 0"
-                v-model="modulesList"
-                item-key="id"
-                :group="{ name: 'modules-group', pull: 'clone', put: false }"
-                :sort="false"
-                :clone="cloneResource"
-            >
-              <div v-for="element in modulesList" :key="element.id">
-                <!-- 使用 GlobalResourceListItem 渲染模块项，并传递拖拽数据 -->
-                <GlobalResourceListItem
-                    :id="element.id"
-                    :item="element.item"
-                    type="module"
-                    :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
-                    @start-editing="startEditing"
-                    @show-error-detail="showErrorDetail"
-                />
-              </div>
-            </draggable>
-            <n-empty v-else small description="无全局模块"/>
-          </n-collapse-item>
-
-        </n-collapse>
+          <!-- 模块标签页 -->
+          <n-tab-pane name="modules" tab="模块">
+            <div class="scrollable-content">
+              <draggable
+                  v-if="modulesList.length > 0"
+                  v-model="modulesList"
+                  item-key="id"
+                  :group="{ name: 'modules-group', pull: 'clone', put: false }"
+                  :sort="false"
+                  :clone="cloneResource"
+                  class="resource-list"
+              >
+                <div v-for="element in modulesList" :key="element.id">
+                  <GlobalResourceListItem
+                      :id="element.id"
+                      :item="element.item"
+                      type="module"
+                      :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
+                      @start-editing="startEditing"
+                      @show-error-detail="showErrorDetail"
+                  />
+                </div>
+              </draggable>
+              <n-empty v-else small description="无全局模块"/>
+            </div>
+          </n-tab-pane>
+        </n-tabs>
       </div>
     </n-spin>
   </div>
 </template>
 
 <script setup lang="ts">
-import {computed, h, onMounted} from 'vue';
+import {computed, h, onMounted, ref} from 'vue';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
 import {NAlert, NButton, NCollapse, NCollapseItem, NEmpty, NH4, NSpin, useDialog} from 'naive-ui';
 import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSession.ts";
@@ -126,6 +125,9 @@ const emit = defineEmits<{
 const workbenchStore = useWorkbenchStore();
 const dialog = useDialog();
 
+// 用于控制当前激活的标签页，默认为“工作流”
+const activeTab = ref('workflows');
+
 // 获取异步数据访问器
 const workflowsAsync = workbenchStore.globalWorkflowsAsync;
 const stepsAsync = workbenchStore.globalStepsAsync;
@@ -136,7 +138,7 @@ const steps = computed(() => stepsAsync.state);
 const modules = computed(() => modulesAsync.state);
 
 /**
- * 【新增】创建适用于 vuedraggable 的数组格式数据。
+ * 创建适用于 vuedraggable 的数组格式数据。
  * 将 Record<string, Item> 转换为 Array<{id: string, item: Item}>
  * 这样既保留了原始ID用于点击事件，又能满足 v-model 的数组要求。
  */
@@ -238,11 +240,55 @@ function startEditing(payload: { type: ConfigType; id: string }) {
 </script>
 
 <style scoped>
+
 .global-resource-panel {
-  padding: 12px;
+  /* 移除内边距，让 n-tabs 的内容区来控制 */
+  padding: 0;
   height: 100%;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.global-resource-panel > .n-h4 {
+  padding: 0 12px 12px 12px; /* 只给标题添加内边距 */
+  flex-shrink: 0;
+}
+.global-resource-panel > .n-spin {
+  flex-grow: 1;
+  /* 确保 spin 内容也能撑开 */
+  display: flex;
+  flex-direction: column;
+}
+.global-resource-panel .n-spin-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+.global-resource-panel .n-tabs {
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+:deep(.n-tabs-pane-wrapper) {
+  flex-grow: 1;
+  overflow: hidden; /* 直接隐藏，不再需要滚动 */
+}
+
+/* 让 tab-pane 成为一个能撑满的容器 */
+:deep(.n-tab-pane) {
+  height: 100%;
+  box-sizing: border-box;
+  padding: 0; /* 移除内边距，交由内部的滚动容器控制 */
+}
+
+/* 滚动容器样式 */
+.scrollable-content {
+  height: 100%;
   overflow-y: auto;
+  padding: 4px 12px 12px 12px; /* 把内边距放在这里 */
+  box-sizing: border-box;
 }
 
 .panel-state-wrapper {
@@ -250,11 +296,14 @@ function startEditing(payload: { type: ConfigType; id: string }) {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  min-height: 150px; /* 确保加载/错误状态有足够空间显示 */
+  min-height: 150px;
   text-align: center;
+  padding: 0 12px;
 }
-
-/* GlobalResourceListItem 内部的样式在它自己的文件中定义，这里只需要调整其父容器的布局 */
-/* .resource-item 和 .resource-item-damaged 样式已移动到 GlobalResourceListItem.vue */
+.resource-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
 </style>
 <!-- END OF FILE -->

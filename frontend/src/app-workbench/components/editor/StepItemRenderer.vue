@@ -5,7 +5,7 @@
         :name="step.name"
         :is-selected="false"
         is-draggable
-        @dblclick="session.toggleStepExpansion(step.configId)"
+        @dblclick="isExpanded = !isExpanded"
     >
       <!-- 双击切换展开/折叠 -->
       <!-- 步骤本身不被“选中”进行配置，而是通过双击展开或点击其内部模块 -->
@@ -13,7 +13,7 @@
         <!-- 这里可以添加一些步骤特有的操作按钮，例如一个展开/折叠的小箭头 -->
       </template>
       <template #content-below>
-        <!-- 【核心修正】使用本地的 isExpanded 状态 -->
+        <!-- 使用本地的 isExpanded 状态 -->
         <n-collapse-transition :show="isExpanded">
           <div class="module-list-container">
             <draggable
@@ -26,7 +26,7 @@
                 @add="(event) => handleAddModule(event)"
             >
               <div v-for="moduleItem in step.modules" :key="moduleItem.configId">
-                <!-- 【核心修正】向下传递 props，向上冒泡 emits -->
+                <!-- 向下传递 props，向上冒泡 emits -->
                 <ModuleItemRenderer
                     :module="moduleItem"
                     :selected-module-id="selectedModuleId"
@@ -59,7 +59,7 @@ const props = defineProps<{
   selectedModuleId: string | null;
 }>();
 
-// 【核心修正】UI状态本地化，默认展开
+// UI状态本地化，默认展开
 const isExpanded = ref(true);
 const emit = defineEmits(['update:selectedModuleId']);
 
@@ -67,9 +67,8 @@ const emit = defineEmits(['update:selectedModuleId']);
  * 处理从全局资源或其他步骤向此步骤中【添加】新模块的事件。
  * @param {SortableEvent} event - VueDraggable 的 `add` 事件对象。
  *                                  当一个元素被拖放到目标列表中时触发。
- * @param {string} targetStepId - 目标步骤的 `configId`，即当前 `StepItemRenderer` 所属的步骤 ID。
  */
-function handleAddModule(event: SortableEvent, targetStepId: string) {
+function handleAddModule(event: SortableEvent) {
   // 从拖拽项的 `dataset.dragPayload` 中获取原始数据
   const droppedItemJson = (event.item as HTMLElement).dataset.dragPayload;
   if (!droppedItemJson) return;

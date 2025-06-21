@@ -12,7 +12,7 @@
 import ConfigItemBase from './ConfigItemBase.vue';
 import type { AbstractModuleConfig } from '@/app-workbench/types/generated/workflow-config-api-client';
 
-// 【核心修正】定义 Props 和 Emits
+// 定义 Props 和 Emits
 defineProps<{
   module: AbstractModuleConfig;
   selectedModuleId: string | null;
