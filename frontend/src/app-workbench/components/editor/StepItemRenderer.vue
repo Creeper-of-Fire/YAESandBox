@@ -7,6 +7,7 @@
         is-draggable
         @dblclick="isExpanded = !isExpanded"
     >
+      <p class="sidebar-description">您可以重新排序或从左侧拖入新的模块。</p>
       <!-- 双击切换展开/折叠 -->
       <!-- 步骤本身不被“选中”进行配置，而是通过双击展开或点击其内部模块 -->
       <template #actions>
@@ -53,11 +54,16 @@ import type {SortableEvent} from 'sortablejs';
 import {ref} from "vue"; // 导入 SortableJS 事件类型
 
 // 定义组件的 props
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   step: StepProcessorConfig;
   session: EditSession;
   selectedModuleId: string | null;
-}>();
+  isCollapsible?: boolean; // 是否可折叠
+  isDraggable?: boolean;   // 步骤自身是否可拖拽
+}>(), {
+  isCollapsible: true, // 默认为 true，保持原有行为
+  isDraggable: true,   // 默认为 true，保持原有行为
+});
 
 // UI状态本地化，默认展开
 const isExpanded = ref(true);
@@ -82,24 +88,23 @@ function handleAddModule(event: SortableEvent) {
 </script>
 
 <style scoped>
-/* 步骤项的容器样式 */
+/* 样式保持不变 */
 .step-item-wrapper {
   background-color: #f7f9fa; /* 浅灰色背景 */
   border: 1px solid #eef2f5; /* 浅边框 */
   border-radius: 6px;
-  padding: 8px;
 }
 
 /* 模块列表的容器样式 */
 .module-list-container {
   border-radius: 4px;
   margin-top: 8px;
-  padding: 4px;
+  padding: 8px;
   background-color: #fff;
   border: 1px dashed #dcdfe6; /* 虚线边框，表示可拖入 */
   display: flex;
   flex-direction: column;
-  gap: 4px; /* 模块之间的间距 */
+  gap: 6px; /* 模块之间的间距 */
 }
 
 /* 模块列表为空时的占位符样式 */
@@ -109,6 +114,9 @@ function handleAddModule(event: SortableEvent) {
 
 /* 模块拖拽区域的最小高度，确保即使没有模块时也能作为拖拽目标 */
 .module-draggable-area {
-  min-height: 20px;
+  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px; /* 确保拖拽项之间也有间距 */
 }
 </style>

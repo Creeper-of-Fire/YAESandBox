@@ -33,7 +33,7 @@
                   item-key="id"
                   :group="{ name: 'workflows-group', pull: 'clone', put: false }"
                   :sort="false"
-                  :clone="cloneResource"
+                  :clone="handleResourceClone"
                   class="resource-list"
                   :setData="handleSetData"
               >
@@ -66,7 +66,7 @@
                   item-key="id"
                   :group="{ name: 'steps-group', pull: 'clone', put: false }"
                   :sort="false"
-                  :clone="cloneResource"
+                  :clone="handleResourceClone"
                   class="resource-list"
                   :setData="handleSetData"
               >
@@ -99,7 +99,7 @@
                   item-key="id"
                   :group="{ name: 'modules-group', pull: 'clone', put: false }"
                   :sort="false"
-                  :clone="cloneResource"
+                  :clone="handleResourceClone"
                   class="resource-list"
                   :setData="handleSetData"
               >
@@ -132,7 +132,7 @@
 <script setup lang="ts">
 import {computed, h, onMounted, ref} from 'vue';
 import {NEmpty, NH4, NSpin, NTabPane, NTabs, useDialog} from 'naive-ui';
-import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
+import {deepCloneWithNewIds, useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSession";
 import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {GlobalResourceItem} from "@/types/ui.ts";
@@ -210,16 +210,17 @@ function showErrorDetail(errorMessage: string, originJsonString: string | null |
 }
 
 /**
- * vuedraggable 的克隆函数 (已修正)。
- * 它接收的是我们新构造的对象 {id, item}。
- * @param {DraggableResourceItem<ConfigObject>} original - 原始的列表项
- * @returns {ConfigObject | null} - 克隆出的纯数据对象，或 null (如果项已损坏)
+ * vue-draggable-plus 的 :clone prop 处理函数。
+ * 在此函数中，我们将原始资源项中的 'data' 部分深拷贝，并递归刷新所有 configId。
+ * 注意，从本页面拖拽到编辑中的draggable包裹的列表时，会走:clone prop调用deepCloneWithNewIds，于是configId会自动刷新。
+ * 而从本页面到acquireEditSession走的是HTML5的原生路径，不会触发
+ * @param {DraggableResourceItem<ConfigObject>} originalResourceItem - 原始的资源列表项。
+ * @returns {ConfigObject | null} - 克隆并刷新 ID 后的纯数据对象，作为拖拽的数据负载。
  */
-function cloneResource(original: DraggableResourceItem<ConfigObject>): ConfigObject | null {
-  // 我们从 original.item 中判断和获取数据
-  if (original.item.isSuccess) {
-    // 只克隆数据部分，接收方将处理ID的刷新
-    return original.item.data;
+function handleResourceClone(originalResourceItem: DraggableResourceItem<ConfigObject>): ConfigObject | null {
+  if (originalResourceItem.item.isSuccess) {
+    // 使用 deepCloneWithNewIds 处理原始数据
+    return deepCloneWithNewIds(originalResourceItem.item.data);
   }
   // 不允许拖拽损坏的项
   return null;

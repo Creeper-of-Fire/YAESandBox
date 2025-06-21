@@ -12,6 +12,7 @@ import type {
 import {ModuleConfigService, StepConfigService, WorkflowConfigService,} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {useAsyncState} from "@vueuse/core";
 import type {GlobalResourceItem} from "@/types/ui.ts";
+import {cloneDeep} from "lodash-es";
 
 // 导出类型
 export type WorkbenchStore = ReturnType<typeof useWorkbenchStore>;
@@ -56,7 +57,7 @@ function processDtoToViewModel<T>(dto: Record<string, IJsonResultDto<T>>): Recor
 }
 
 // 这是一个辅助函数，建议放在通用的工具文件中 (e.g., /utils/clone.ts)
-function deepCloneWithNewIds<T extends object>(obj: T): T {
+export function deepCloneWithNewIds<T extends object>(obj: T): T {
     const newObj = JSON.parse(JSON.stringify(obj));
 
     function refresh(current: any) {
@@ -321,7 +322,9 @@ export const useWorkbenchStore = defineStore('workbench', () => {
 
         // --- 如果一切正常，开始创建草稿 ---
         const sourceConfig = sourceItem.data; // 现在我们拿到了干净的数据
-        const draftData = deepCloneWithNewIds(sourceConfig); // 深度克隆，避免修改原始 store 数据
+
+        // 因为是请求编辑，所以不会对ConfigID进行修改。如果需要修改，请在外面先改好。
+        const draftData = cloneDeep(sourceConfig); // 深度克隆，避免修改原始 store 数据
 
         // 使用 globalId 作为键
         drafts.value[globalId] = {
