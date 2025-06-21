@@ -1,4 +1,4 @@
-﻿<!-- src/app-workbench/components/StepItemRenderer.vue -->
+﻿<!-- src/app-workbench/components/.../StepItemRenderer.vue -->
 <template>
   <div class="step-item-wrapper">
     <ConfigItemBase
@@ -20,7 +20,7 @@
                 v-if="step.modules"
                 v-model="step.modules"
                 item-key="configId"
-                group="modules-group"
+                :group="{ name: 'modules-group', put: ['modules-group'] }"
                 handle=".drag-handle"
                 class="module-draggable-area"
                 @add="(event) => handleAddModule(event)"
@@ -66,34 +66,18 @@ const emit = defineEmits(['update:selectedModuleId']);
 /**
  * 处理从全局资源或其他步骤向此步骤中【添加】新模块的事件。
  * @param {SortableEvent} event - VueDraggable 的 `add` 事件对象。
- *                                  当一个元素被拖放到目标列表中时触发。
  */
 function handleAddModule(event: SortableEvent) {
-  // 从拖拽项的 `dataset.dragPayload` 中获取原始数据
-  const droppedItemJson = (event.item as HTMLElement).dataset.dragPayload;
-  if (!droppedItemJson) return;
-  const droppedItem = JSON.parse(droppedItemJson);
   if (event.newIndex === null || event.newIndex === undefined) return;
 
-  // 使用 props.step.configId
-  props.session.addModuleToStep(droppedItem, props.step.configId, event.newIndex);
-  event.item.remove();
-}
-/**
- * 处理模块在【当前步骤内部】排序或【从当前步骤拖出】到其他步骤的事件。
- * VueDraggable 的 `end` 事件在拖拽完成后触发。
- *
- * 对于“在内部排序”：由于 `v-model="step.modules"` 已经双向绑定，VueDraggable 会自动更新 `step.modules` 数组的顺序，
- *                    所以我们不需要在此处额外调用 `session.moveModule`。
- * 对于“从当前步骤拖出到另一个步骤”：VueDraggable 会自动从当前数组中移除该模块，
- *                                  并触发目标步骤的 `add` 事件（由目标步骤的 `StepItemRenderer` 处理 `handleAddModule`）。
- * 因此，此函数主要用于日志记录或其他副作用，实际的业务逻辑已由 `v-model` 和 `handleAddModule` 覆盖。
- * @param {SortableEvent} event - VueDraggable 的 `end` 事件对象。
- */
-function handleMoveModule(event: SortableEvent) {
-  console.log('模块拖拽结束 (StepItemRenderer 的 end 事件):', event);
-  // 在此你可以添加一些日志或当需要处理更复杂的跨组件拖拽同步逻辑时进行操作。
-  // 目前的 `addModuleToStep` 和 `v-model` 组合已经满足需求。
+  // vue-draggable-plus 已经将克隆的模块添加到了 props.step.modules 数组中
+  const newModule = props.step.modules[event.newIndex];
+
+  // 调用 session 服务来初始化这个新模块（分配新ID等）
+  props.session.initializeClonedItem(newModule, props.step.configId);
+
+  // 删除 event.item.remove()
+  // event.item.remove(); // <--- 删除这一行
 }
 </script>
 

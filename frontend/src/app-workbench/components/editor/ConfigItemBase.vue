@@ -1,4 +1,4 @@
-﻿<!-- src/app-workbench/components/ConfigItemBase.vue -->
+﻿<!-- src/app-workbench/components/.../ConfigItemBase.vue -->
 <template>
   <div
       class="config-item-base"

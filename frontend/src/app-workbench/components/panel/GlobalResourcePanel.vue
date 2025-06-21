@@ -1,4 +1,4 @@
-﻿<!-- START OF FILE: src/app-workbench/components/GlobalResourcePanel.vue -->
+﻿<!-- src/app-workbench/components/.../GlobalResourcePanel.vue -->
 <template>
   <div class="global-resource-panel">
     <n-h4>全局资源</n-h4>
@@ -27,7 +27,6 @@
           <!-- 工作流标签页 -->
           <n-tab-pane name="workflows" tab="工作流">
             <div class="scrollable-content">
-              <!-- 【新增】为工作流列表添加 draggable 组件 -->
               <draggable
                   v-if="workflowsList.length > 0"
                   v-model="workflowsList"
@@ -36,14 +35,15 @@
                   :sort="false"
                   :clone="cloneResource"
                   class="resource-list"
+                  :setData="handleSetData"
               >
+                <!-- 关键: v-for 创建的这个 div 才是被拖拽的单元 (event.item) -->
                 <div v-for="element in workflowsList"
                      :key="element.id"
                      data-drag-type="workflow"
                      :data-drag-id="element.id"
                      :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
                 >
-                  <!-- 【新增】为列表项添加 data-* 属性，用于拖拽时传递信息 -->
                   <GlobalResourceListItem
                       :id="element.id"
                       :item="element.item"
@@ -68,14 +68,15 @@
                   :sort="false"
                   :clone="cloneResource"
                   class="resource-list"
+                  :setData="handleSetData"
               >
+                <!-- 关键: data-* 属性必须在 v-for 的这个根 div 上 -->
                 <div v-for="element in stepsList"
                      :key="element.id"
                      data-drag-type="step"
                      :data-drag-id="element.id"
                      :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
                 >
-                  <!-- 为列表项添加 data-* 属性 -->
                   <GlobalResourceListItem
                       :id="element.id"
                       :item="element.item"
@@ -100,14 +101,15 @@
                   :sort="false"
                   :clone="cloneResource"
                   class="resource-list"
+                  :setData="handleSetData"
               >
+                <!-- 关键: data-* 属性必须在 v-for 的这个根 div 上 -->
                 <div v-for="element in modulesList"
                      :key="element.id"
                      data-drag-type="module"
                      :data-drag-id="element.id"
                      :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
                 >
-                  <!-- 为列表项添加 data-* 属性 -->
                   <GlobalResourceListItem
                       :id="element.id"
                       :item="element.item"
@@ -120,6 +122,7 @@
               <n-empty v-else small description="无全局模块"/>
             </div>
           </n-tab-pane>
+
         </n-tabs>
       </div>
     </n-spin>
@@ -128,13 +131,11 @@
 
 <script setup lang="ts">
 import {computed, h, onMounted, ref} from 'vue';
-import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
-import {NAlert, NButton, NEmpty, NH4, NSpin, useDialog} from 'naive-ui';
-import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSession.ts";
+import {NEmpty, NH4, NSpin, NTabPane, NTabs, useDialog} from 'naive-ui';
+import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
+import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSession";
 import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {GlobalResourceItem} from "@/types/ui.ts";
-
-// 导入新的子组件
 import GlobalResourceListItem from './GlobalResourceListItem.vue';
 
 // 定义我们转换后给 draggable 用的数组项的类型
@@ -143,33 +144,24 @@ type DraggableResourceItem<T> = {
   item: GlobalResourceItem<T>; // 原始 Record 的 value
 };
 
-const emit = defineEmits<{
-  (e: 'start-editing', payload: { type: ConfigType; id: string }): void;
-}>();
+const activeTab = ref('steps'); // 默认激活“步骤”标签页
 
+const emit = defineEmits<{ (e: 'start-editing', payload: { type: ConfigType; id: string }): void; }>();
 const workbenchStore = useWorkbenchStore();
 const dialog = useDialog();
 
-// 用于控制当前激活的标签页，默认为“工作流”
-const activeTab = ref('workflows');
-
-// 获取异步数据访问器
 const workflowsAsync = workbenchStore.globalWorkflowsAsync;
 const stepsAsync = workbenchStore.globalStepsAsync;
 const modulesAsync = workbenchStore.globalModulesAsync;
-// 解构出完整的异步状态机
 const workflows = computed(() => workflowsAsync.state);
 const steps = computed(() => stepsAsync.state);
 const modules = computed(() => modulesAsync.state);
 
-// 创建适用于 vuedraggable 的数组格式数据。
-// 将 Record<string, Item> 转换为 Array<{id: string, item: Item}>
-// 这样既保留了原始ID用于点击事件，又能满足 v-model 的数组要求。
-
+// 为所有资源类型创建可用于 v-model 的列表
 const workflowsList = computed({
   get: () => workflows.value ? Object.entries(workflows.value).map(([id, item]) => ({id, item})) : [],
   set: () => {
-  } // clone 模式下，setter 为空即可
+  }
 });
 const stepsList = computed({
   get: () => steps.value ? Object.entries(steps.value).map(([id, item]) => ({id, item})) : [],
@@ -182,32 +174,10 @@ const modulesList = computed({
   }
 });
 
-/**
- * 聚合的加载状态。
- * 只要任何一个资源正在加载，整个面板就处于加载状态。
- */
-const aggregatedIsLoading = computed(() =>
-    workflowsAsync.isLoading ||
-    stepsAsync.isLoading ||
-    modulesAsync.isLoading
-);
+const aggregatedIsLoading = computed(() => workflowsAsync.isLoading || stepsAsync.isLoading || modulesAsync.isLoading);
+const aggregatedError = computed(() => workflowsAsync.error || stepsAsync.error || modulesAsync.error);
 
-/**
- * 聚合的错误状态。
- * 返回第一个遇到的错误对象。
- */
-const aggregatedError = computed(() =>
-    workflowsAsync.error ||
-    stepsAsync.error ||
-    modulesAsync.error
-);
-
-/**
- * 聚合的执行函数。
- * 调用此函数会触发所有资源的加载（或重试）。
- */
 function executeAll() {
-  // 依次调用每个 execute 方法。
   workflowsAsync.execute();
   stepsAsync.execute();
   modulesAsync.execute();
@@ -264,6 +234,28 @@ function cloneResource(original: DraggableResourceItem<ConfigObject>): ConfigObj
 function startEditing(payload: { type: ConfigType; id: string }) {
   emit('start-editing', payload);
 }
+
+/**
+ * setData 回调函数。
+ * 这是 vue-draggable-plus 官方提供的与原生 dataTransfer 交互的钩子。
+ * 当拖拽开始时，库会调用这个函数。
+ * @param dataTransfer - 原生的 DataTransfer 对象
+ * @param dragEl - 被拖拽的 DOM 元素 (即我们 v-for 的那个 div)
+ */
+function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement) {
+  // 从被拖拽的元素上读取我们之前设置好的 data-* 属性
+  const type = dragEl.dataset.dragType as ConfigType | undefined;
+  const id = dragEl.dataset.dragId;
+
+  if (type && id) {
+    // 将数据打包成JSON，安全地存入 dataTransfer
+    const data = JSON.stringify({ type, id });
+    dataTransfer.setData('text/plain', data);
+  }
+
+  dataTransfer.effectAllowed = 'copy'
+}
+
 </script>
 
 <style scoped>

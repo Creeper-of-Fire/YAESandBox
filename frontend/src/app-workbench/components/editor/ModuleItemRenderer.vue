@@ -1,4 +1,4 @@
-﻿<!-- src/app-workbench/components/ModuleItemRenderer.vue -->
+﻿<!-- src/app-workbench/components/.../ModuleItemRenderer.vue -->
 <template>
   <ConfigItemBase
       :name="module.name"

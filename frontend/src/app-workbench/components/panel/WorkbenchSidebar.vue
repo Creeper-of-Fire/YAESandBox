@@ -1,4 +1,4 @@
-﻿<!-- START OF FILE: src/app-workbench/components/WorkbenchSidebar.vue -->
+﻿<!-- src/app-workbench/components/.../WorkbenchSidebar.vue -->
 <template>
   <div class="workbench-sidebar">
     <div v-if="session && session.getData().value">
@@ -16,7 +16,7 @@
             v-if="workflowData.steps"
             v-model="workflowData.steps"
             item-key="configId"
-            group="steps-group"
+            :group="{ name: 'steps-group', put: ['steps-group'] }"
             handle=".drag-handle"
             class="workflow-step-list-container"
             @add="handleAddStep"
@@ -48,7 +48,7 @@
               v-if="stepData.modules"
               v-model="stepData.modules"
               item-key="configId"
-              group="modules-group"
+              :group="{ name: 'modules-group', put: ['modules-group'] }"
               handle=".drag-handle"
               class="module-draggable-area"
               @add="(event) => handleAddModuleToCurrentStep(event, stepData?.configId)"
@@ -123,58 +123,47 @@ const currentConfigName = computed(() => {
 
 /**
  * 处理向工作流中【添加】新步骤的事件。
- * 此事件由工作流顶层的 draggable 触发。
+ * vue-draggable-plus 已经将克隆的对象添加到了 v-model 数组中。
+ * 我们的任务是找到这个新添加的对象，并调用 session 来为它生成新的唯一ID，完成初始化。
  * @param {SortableEvent} event - VueDraggable 的 `add` 事件对象。
  */
 function handleAddStep(event: SortableEvent) {
-  const droppedItemJson = (event.item as HTMLElement).dataset.dragPayload;
-  if (!droppedItemJson) {
-    console.warn('拖拽项缺少 data-drag-payload 属性，无法添加步骤。');
-    return;
-  }
-  const droppedItem = JSON.parse(droppedItemJson);
-
+  console.log("工作流添加步骤事件（已修正逻辑）：", event);
   if (event.newIndex === null || event.newIndex === undefined) {
-    console.warn('拖拽事件缺少 newIndex，无法确定步骤插入位置。');
+    console.warn('拖拽事件缺少 newIndex，无法处理新步骤。');
     return;
   }
-  const newIndex = event.newIndex;
 
-  props.session.addStep(droppedItem as StepProcessorConfig, newIndex);
+  // 关键：现在我们不从 data-drag-payload 获取数据，而是直接在 v-model 数组中找到那个新成员。
+  // 注意：workflowData.value.steps 在此时已经被 vue-draggable-plus 修改了。
+  const newStep = workflowData.value!.steps[event.newIndex];
 
-  // 成功添加后，移除临时 DOM
-  event.item.remove();
+  // 调用 session 来完成对这个新克隆项的初始化（主要是赋予新ID）
+  // 你需要在 EditSession.ts 中实现或调整一个类似 `initializeNewStep` 的方法
+  props.session.initializeClonedItem(newStep);
+
+  // 必须删除 event.item.remove()，否则你会把刚添加的项又从DOM里删掉！
+  // event.item.remove(); // <--- 删除这一行
 }
 
 /**
  * 处理当编辑类型为 'step' 时，向当前步骤中【添加】新模块的事件。
- * @param {SortableEvent} event - VueDraggable 的 `add` 事件对象。
- * @param {string | null | undefined} targetStepId - 目标步骤的 `configId`。
- *                                                   当直接编辑步骤时，这个就是当前 `stepData.configId`。
+ * 逻辑与 handleAddStep 完全相同。
  */
 function handleAddModuleToCurrentStep(event: SortableEvent, targetStepId: string | null | undefined) {
-  if (!targetStepId) {
-    console.warn('目标步骤ID不存在，无法添加模块。');
-    return; // 防御性编程
-  }
-
-  const droppedItemJson = (event.item as HTMLElement).dataset.dragPayload;
-  if (!droppedItemJson) {
-    console.warn('拖拽项缺少 data-drag-payload 属性，无法添加模块。');
+  if (!targetStepId || event.newIndex === null || event.newIndex === undefined) {
+    console.warn('缺少必要参数，无法添加模块。');
     return;
   }
-  const droppedItem = JSON.parse(droppedItemJson);
 
-  if (event.newIndex === null || event.newIndex === undefined) {
-    console.warn('拖拽事件缺少 newIndex，无法确定模块插入位置。');
-    return;
-  }
-  const newIndex = event.newIndex;
+  // 直接从 model 中获取新添加的模块
+  const newModule = stepData.value!.modules[event.newIndex];
 
-  props.session.addModuleToStep(droppedItem as AbstractModuleConfig, targetStepId, newIndex);
+  // 调用 session 完成初始化
+  props.session.initializeClonedItem(newModule, targetStepId);
 
-  // 成功添加后，移除临时 DOM
-  event.item.remove();
+  // 同样删除 event.item.remove()
+  // event.item.remove(); // <--- 删除这一行
 }
 
 // 注意：原有的 `selectModule` 和 `handleAddItem` 方法已被分解并移动到新的组件或由 `EditSession` 直接处理。
@@ -183,7 +172,6 @@ function handleAddModuleToCurrentStep(event: SortableEvent, targetStepId: string
 <style scoped>
 /* 工作台侧边栏整体样式 */
 .workbench-sidebar {
-  padding: 12px; /* 内部填充 */
   height: 100%; /* 占满父容器高度 */
   box-sizing: border-box; /* 边框和填充包含在宽度内 */
   overflow-y: auto; /* 内容溢出时显示滚动条 */
@@ -205,7 +193,6 @@ function handleAddModuleToCurrentStep(event: SortableEvent, targetStepId: string
   min-height: 50px; /* 提供一个可拖拽的最小区域 */
   border: 1px dashed #dcdfe6; /* 虚线边框，表示可拖入 */
   border-radius: 6px;
-  padding: 8px;
   margin-top: 16px;
   background-color: #fcfcfc; /* 浅背景色 */
 }

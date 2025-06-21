@@ -200,56 +200,47 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     };
 
     // --- 新增的内部 action，用于处理拖拽逻辑 ---
-    // 所有拖拽方法现在接收 globalId
-    const _addStepToDraft = (globalId: string, stepConfig: StepProcessorConfig, index: number) => {
+    /**
+     * 初始化一个已经存在于草稿数据中的克隆项。
+     * 这个方法直接修改传入的对象引用，为其及其所有子项递归地生成新的唯一 configId。
+     * 这是解决拖拽重复问题的核心。
+     * @param globalId - 当前编辑会话的全局ID。
+     * @param itemToInitialize - 由 vue-draggable-plus 添加到数组中的那个克隆对象，这是一个对象引用。
+     */
+    const _initializeClonedItemInDraft = (globalId: string, itemToInitialize: ConfigObject) => {
         const draft = drafts.value[globalId];
-        if (!draft || draft.type !== 'workflow') return;
-        const workflow = draft.data as WorkflowProcessorConfig;
-        if (!workflow.steps) workflow.steps = [];
-        const newStep = deepCloneWithNewIds(stepConfig);
-        workflow.steps.splice(index, 0, newStep);
-    };
-
-    const _moveStepInDraft = (globalId: string, fromIndex: number, toIndex: number) => {
-        const draft = drafts.value[globalId];
-        if (!draft || draft.type !== 'workflow') return;
-        const workflow = draft.data as WorkflowProcessorConfig;
-        const [movedStep] = workflow.steps.splice(fromIndex, 1);
-        workflow.steps.splice(toIndex, 0, movedStep);
-    };
-
-    const _addModuleToDraft = (globalId: string, moduleConfig: AbstractModuleConfig, stepId: string, index: number) => {
-        const draft = drafts.value[globalId];
-        if (!draft) return;
-
-        // 支持为 step 类型的草稿添加模块
-        let targetStep: StepProcessorConfig | undefined;
-        if (draft.type === 'workflow') {
-            const workflow = draft.data as WorkflowProcessorConfig;
-            targetStep = workflow.steps?.find(s => s.configId === stepId);
-        } else if (draft.type === 'step') {
-            targetStep = draft.data as StepProcessorConfig;
-            // 确保 stepId 匹配
-            if (targetStep.configId !== stepId) return;
+        if (!draft) {
+            console.error('无法初始化克隆项：找不到对应的编辑会话草稿。');
+            return;
         }
 
-        if (!targetStep) return;
-        if (!targetStep.modules) targetStep.modules = [];
-        const newModule = deepCloneWithNewIds(moduleConfig);
-        targetStep.modules.splice(index, 0, newModule);
-    };
+        // 递归函数，用于就地更新ID
+        const refreshIdsInPlace = (current: any) => {
+            if (typeof current !== 'object' || current === null) return;
 
-    const _moveModuleInDraft = (globalId: string, fromStepId: string, fromIndex: number, toStepId: string, toIndex: number) => {
-        const draft = drafts.value[globalId];
-        if (!draft || draft.type !== 'workflow') return;
-        const workflow = draft.data as WorkflowProcessorConfig;
-        const fromStep = workflow.steps?.find(s => s.configId === fromStepId);
-        const toStep = workflow.steps?.find(s => s.configId === toStepId);
-        if (!fromStep || !toStep) return;
-        if (!fromStep.modules) fromStep.modules = [];
-        const [movedModule] = fromStep.modules.splice(fromIndex, 1);
-        if (!toStep.modules) toStep.modules = [];
-        toStep.modules.splice(toIndex, 0, movedModule);
+            // 关键：只替换名为 configId 的属性
+            if (current.configId && typeof current.configId === 'string') {
+                current.configId = uuidv4();
+            }
+
+            // 递归处理对象和数组
+            if (Array.isArray(current)) {
+                current.forEach(refreshIdsInPlace);
+            } else if (typeof current === 'object') {
+                // 遍历所有 key
+                for (const key in current) {
+                    if (Object.prototype.hasOwnProperty.call(current, key)) {
+                        refreshIdsInPlace(current[key]);
+                    }
+                }
+            }
+        };
+
+        refreshIdsInPlace(itemToInitialize);
+
+        // console.log(`已初始化克隆项: `,itemToInitialize);
+        // 因为我们直接修改了 draft.data 内部的对象，Vue 的响应式系统会自动检测到变化。
+        // isDirty 计算属性也会自动更新。
     };
 
     // =================================================================
@@ -351,10 +342,7 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         _updateDraftData,
         _saveDraft,
         _discardDraft,
-        _addStepToDraft,
-        _moveStepInDraft,
-        _addModuleToDraft,
-        _moveModuleInDraft,
+        _initializeClonedItemInDraft,
     };
 
     return {

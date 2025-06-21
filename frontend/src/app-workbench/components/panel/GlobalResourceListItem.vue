@@ -1,8 +1,8 @@
-﻿<!-- START OF MODIFIED FILE: src/app-workbench/components/panel/GlobalResourceListItem.vue -->
+﻿<!-- src/app-workbench/components/.../GlobalResourceListItem.vue -->
 <template>
   <div v-if="item.isSuccess" class="resource-item" @dblclick="$emit('start-editing', { type, id })">
     <span class="item-name">{{ item.data.name }}</span>
-    <!-- 【核心美化】将 text 按钮替换为更显眼的 secondary 图标按钮 -->
+    <!-- 将 text 按钮替换为更显眼的 secondary 图标按钮 -->
     <n-tooltip trigger="hover">
       <template #trigger>
         <n-button
@@ -29,7 +29,7 @@
       </template>
       {{ item.errorMessage }}
     </n-tooltip>
-    <!-- 【核心美化】同样美化损坏项的“详情”按钮 -->
+    <!-- 同样美化损坏项的“详情”按钮 -->
     <n-tooltip trigger="hover">
       <template #trigger>
         <n-button
@@ -87,7 +87,7 @@ defineEmits<{
   background-color: #f0f2f5; /* 悬停背景色 */
 }
 
-/* 【新增】让名称和按钮之间的空间更大，避免误触 */
+/* 让名称和按钮之间的空间更大，避免误触 */
 .item-name {
   flex-grow: 1;
   margin-right: 8px;

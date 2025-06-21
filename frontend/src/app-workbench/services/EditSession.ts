@@ -111,42 +111,14 @@ export class EditSession {
     // --- 数据操作 API (拖拽等) ---
 
     /**
-     * 在工作流的指定位置添加一个新步骤。
-     * @param stepConfig - 要添加的步骤配置对象（通常来自全局资源的克隆）
-     * @param index - 要插入的目标索引
+     * 初始化一个被拖拽到列表中的克隆项。
+     * 此方法应在 vue-draggable-plus 的 @add 事件回调中调用。
+     * 它会为传入的对象及其子项生成新的唯一ID。
+     * @param item - vue-draggable-plus 已经添加到 v-model 数组中的那个对象。
+     * @param _parentId - (可选，当前实现中未使用) 目标父容器的ID，为未来扩展保留。
      */
-    public addStep(stepConfig: StepProcessorConfig, index: number): void {
-        this._getStore()._addStepToDraft(this.globalId, stepConfig, index);
-    }
-
-    /**
-     * 移动工作流中的步骤。
-     * @param fromIndex - 原始索引
-     * @param toIndex - 目标索引
-     */
-    public moveStep(fromIndex: number, toIndex: number): void {
-        this._getStore()._moveStepInDraft(this.globalId, fromIndex, toIndex);
-    }
-
-    /**
-     * 向指定步骤中添加一个新模块。
-     * @param moduleConfig - 要添加的模块配置对象（来自全局资源的克隆）
-     * @param stepId - 目标步骤的 configId
-     * @param index - 在模块列表中的目标索引
-     */
-    public addModuleToStep(moduleConfig: AbstractModuleConfig, stepId: string, index: number): void {
-        this._getStore()._addModuleToDraft(this.globalId, moduleConfig, stepId, index);
-    }
-
-    /**
-     * 在步骤之间或步骤内部移动模块。
-     * @param fromStepId - 模块所在的原始步骤ID
-     * @param fromIndex - 模块在原始步骤中的索引
-     * @param toStepId - 模块要移动到的目标步骤ID
-     * @param toIndex - 模块在目标步骤中的索引
-     */
-    public moveModule(fromStepId: string, fromIndex: number, toStepId: string, toIndex: number): void {
-        this._getStore()._moveModuleInDraft(this.globalId, fromStepId, fromIndex, toStepId, toIndex);
+    public initializeClonedItem(item: ConfigObject, _parentId?: string): void {
+        this._getStore()._initializeClonedItemInDraft(this.globalId, item);
     }
 }
 

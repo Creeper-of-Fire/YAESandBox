@@ -1,4 +1,4 @@
-﻿<!-- START OF FILE: src/app-workbench/layouts/EditorLayout.vue -->
+﻿<!-- src/app-workbench/layouts/EditorLayout.vue -->
 <template>
   <n-layout class="editor-layout" has-sider>
 
@@ -7,7 +7,7 @@
         class="composite-sider"
         bordered
         :width="compositeSiderWidth"
-        :native-scrollbar="false"
+        native-scrollbar
         :collapsed="sidersCollapsed"
         collapse-mode="width"
         :collapsed-width="24"
@@ -18,12 +18,16 @@
       <div class="sider-container">
         <!-- 1a. 全局资源面板 (左侧的左栏) -->
         <div v-show="isGlobalPanelVisible" class="panel global-panel">
-          <slot name="global-panel"></slot>
+          <n-scrollbar style="height: 100%;">
+            <slot name="global-panel"></slot>
+          </n-scrollbar>
         </div>
 
         <!-- 1b. 当前编辑结构面板 (左侧的右栏) -->
         <div v-show="isEditorPanelVisible" class="panel editor-panel">
-          <slot name="editor-panel"></slot>
+          <n-scrollbar style="height: 100%;">
+            <slot name="editor-panel"></slot>
+          </n-scrollbar>
         </div>
       </div>
     </n-layout-sider>
@@ -50,8 +54,8 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { NLayout, NLayoutSider, NLayoutContent } from 'naive-ui';
+import {computed, ref} from 'vue';
+import {NLayout, NLayoutContent, NLayoutSider} from 'naive-ui';
 
 const props = defineProps({
   isGlobalPanelVisible: {
@@ -83,13 +87,14 @@ const compositeSiderWidth = computed(() => {
 
 <style scoped>
 .editor-layout {
-  height: 100vh;
+  height: 100%;
   overflow: hidden;
 }
 
 .composite-sider {
   transition: width 0.2s ease-in-out;
   height: 100%;
+  overflow: hidden;
 }
 
 .sider-container {
@@ -101,7 +106,6 @@ const compositeSiderWidth = computed(() => {
 
 .panel {
   height: 100%;
-  overflow-y: auto;
   padding: 12px;
   flex-shrink: 0;
   box-sizing: border-box;
@@ -122,7 +126,6 @@ const compositeSiderWidth = computed(() => {
 }
 
 .main-content-inner {
-  padding: 24px;
   height: 100%;
   box-sizing: border-box;
 }

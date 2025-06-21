@@ -1,4 +1,4 @@
-﻿<!-- START OF FILE: src/app-workbench/components/EditorTargetRenderer.vue -->
+﻿<!-- src/app-workbench/components/.../EditorTargetRenderer.vue -->
 <template>
   <div class="editor-target-renderer">
     <!-- 现在直接使用 selectedModuleId prop -->
