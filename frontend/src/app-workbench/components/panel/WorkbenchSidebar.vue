@@ -1,4 +1,4 @@
-﻿<!-- src/app-workbench/components/panel/WorkbenchSidebar.vue -->
+﻿<!-- src/app-workbench/components/.../WorkbenchSidebar.vue -->
 <template>
   <!-- 1. 根容器始终存在，并监听拖拽事件 -->
   <div
@@ -43,8 +43,10 @@
       </template>
     </div>
     <div v-else class="empty-state-wrapper">
-      <!-- 无会话时的空状态视图 -->
-      <n-empty description="从左侧拖拽一个配置项到此处开始编辑"/>
+      <div class="custom-empty-state">
+        <n-icon :component="AddBoxIcon" :size="80"/>
+        <p class="description">从左侧拖拽一项到此处开始编辑</p>
+      </div>
     </div>
 
 
@@ -66,8 +68,7 @@
 
 <script setup lang="ts">
 import {computed, ref} from 'vue';
-import {NAlert, NEmpty, NH4, NIcon} from 'naive-ui';
-import {SwapHorizOutlined as SwapHorizIcon} from '@vicons/material';
+import {NAlert, NH4, NIcon} from 'naive-ui';
 import type {ConfigType, EditSession} from "@/app-workbench/services/EditSession.ts";
 import type {
   AbstractModuleConfig,
@@ -76,6 +77,7 @@ import type {
 } from "@/app-workbench/types/generated/workflow-config-api-client";
 import StepItemRenderer from '../editor/StepItemRenderer.vue';
 import WorkflowItemRenderer from "@/app-workbench/components/editor/WorkflowItemRenderer.vue";
+import {AddBoxOutlined as AddBoxIcon, SwapHorizOutlined as SwapHorizIcon} from '@vicons/material';
 
 const props = defineProps<{
   session: EditSession | null;
@@ -206,7 +208,9 @@ const currentConfigName = computed(() => {
   height: 100%;
 }
 
+
 .empty-state-wrapper {
+  flex-grow: 1;
   width: 100%;
   height: 100%;
   display: flex;
@@ -215,6 +219,31 @@ const currentConfigName = computed(() => {
   border: 2px dashed #dcdfe6;
   border-radius: 8px;
   box-sizing: border-box;
+  background-color: #fafafc;
+  padding: 20px;
+}
+
+/*
+  *** 这里是关键修改 ***
+  - 新增自定义空状态的样式
+  - 可以自由调整图标和文字的样式
+*/
+.custom-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px; /* 图标和文字的间距 */
+  color: #c0c4cc; /* 图标的颜色，比较柔和 */
+  text-align: center;
+  pointer-events: none; /* 防止它干扰拖拽事件 */
+}
+
+.custom-empty-state .description {
+  font-size: 16px; /* 加大字体 */
+  font-weight: 500;
+  color: #a8abb2; /* 文字的颜色 */
+  max-width: 220px; /* 控制文字宽度，使其在必要时换行 */
+  line-height: 1.5;
 }
 
 .sidebar-description {
