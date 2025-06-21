@@ -22,22 +22,37 @@
 
       <!-- 状态三：加载成功，显示数据 -->
       <div v-else>
-        <n-tabs v-model:value="activeTab" type="line" :animated="false"  justify-content="space-evenly">
+        <n-tabs v-model:value="activeTab" type="line" :animated="false" justify-content="space-evenly">
 
           <!-- 工作流标签页 -->
           <n-tab-pane name="workflows" tab="工作流">
             <div class="scrollable-content">
-              <div v-if="workflows && Object.keys(workflows).length > 0" class="resource-list">
-                <GlobalResourceListItem
-                    v-for="(item, id) in workflows"
-                    :key="id"
-                    :id="id"
-                    :item="item"
-                    type="workflow"
-                    @start-editing="startEditing"
-                    @show-error-detail="showErrorDetail"
-                />
-              </div>
+              <!-- 【新增】为工作流列表添加 draggable 组件 -->
+              <draggable
+                  v-if="workflowsList.length > 0"
+                  v-model="workflowsList"
+                  item-key="id"
+                  :group="{ name: 'workflows-group', pull: 'clone', put: false }"
+                  :sort="false"
+                  :clone="cloneResource"
+                  class="resource-list"
+              >
+                <div v-for="element in workflowsList"
+                     :key="element.id"
+                     data-drag-type="workflow"
+                     :data-drag-id="element.id"
+                     :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
+                >
+                  <!-- 【新增】为列表项添加 data-* 属性，用于拖拽时传递信息 -->
+                  <GlobalResourceListItem
+                      :id="element.id"
+                      :item="element.item"
+                      type="workflow"
+                      @start-editing="startEditing"
+                      @show-error-detail="showErrorDetail"
+                  />
+                </div>
+              </draggable>
               <n-empty v-else small description="无全局工作流"/>
             </div>
           </n-tab-pane>
@@ -54,12 +69,17 @@
                   :clone="cloneResource"
                   class="resource-list"
               >
-                <div v-for="element in stepsList" :key="element.id">
+                <div v-for="element in stepsList"
+                     :key="element.id"
+                     data-drag-type="step"
+                     :data-drag-id="element.id"
+                     :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
+                >
+                  <!-- 为列表项添加 data-* 属性 -->
                   <GlobalResourceListItem
                       :id="element.id"
                       :item="element.item"
                       type="step"
-                      :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
                       @start-editing="startEditing"
                       @show-error-detail="showErrorDetail"
                   />
@@ -81,12 +101,17 @@
                   :clone="cloneResource"
                   class="resource-list"
               >
-                <div v-for="element in modulesList" :key="element.id">
+                <div v-for="element in modulesList"
+                     :key="element.id"
+                     data-drag-type="module"
+                     :data-drag-id="element.id"
+                     :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
+                >
+                  <!-- 为列表项添加 data-* 属性 -->
                   <GlobalResourceListItem
                       :id="element.id"
                       :item="element.item"
                       type="module"
-                      :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
                       @start-editing="startEditing"
                       @show-error-detail="showErrorDetail"
                   />
@@ -104,7 +129,7 @@
 <script setup lang="ts">
 import {computed, h, onMounted, ref} from 'vue';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
-import {NAlert, NButton, NCollapse, NCollapseItem, NEmpty, NH4, NSpin, useDialog} from 'naive-ui';
+import {NAlert, NButton, NEmpty, NH4, NSpin, useDialog} from 'naive-ui';
 import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSession.ts";
 import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {GlobalResourceItem} from "@/types/ui.ts";
@@ -137,21 +162,23 @@ const workflows = computed(() => workflowsAsync.state);
 const steps = computed(() => stepsAsync.state);
 const modules = computed(() => modulesAsync.state);
 
-/**
- * 创建适用于 vuedraggable 的数组格式数据。
- * 将 Record<string, Item> 转换为 Array<{id: string, item: Item}>
- * 这样既保留了原始ID用于点击事件，又能满足 v-model 的数组要求。
- */
+// 创建适用于 vuedraggable 的数组格式数据。
+// 将 Record<string, Item> 转换为 Array<{id: string, item: Item}>
+// 这样既保留了原始ID用于点击事件，又能满足 v-model 的数组要求。
+
+const workflowsList = computed({
+  get: () => workflows.value ? Object.entries(workflows.value).map(([id, item]) => ({id, item})) : [],
+  set: () => {
+  } // clone 模式下，setter 为空即可
+});
 const stepsList = computed({
   get: () => steps.value ? Object.entries(steps.value).map(([id, item]) => ({id, item})) : [],
-  set: (newValue) => {
-    // 因为是 clone，列表本身不会被修改，但 v-model 要求有 setter
-    // 所以这里提供一个空 setter 或者根据需要更新原始数据
+  set: () => {
   }
 });
 const modulesList = computed({
   get: () => modules.value ? Object.entries(modules.value).map(([id, item]) => ({id, item})) : [],
-  set: (newValue) => {
+  set: () => {
   }
 });
 
@@ -254,17 +281,20 @@ function startEditing(payload: { type: ConfigType; id: string }) {
   padding: 0 12px 12px 12px; /* 只给标题添加内边距 */
   flex-shrink: 0;
 }
+
 .global-resource-panel > .n-spin {
   flex-grow: 1;
   /* 确保 spin 内容也能撑开 */
   display: flex;
   flex-direction: column;
 }
+
 .global-resource-panel .n-spin-content {
   height: 100%;
   display: flex;
   flex-direction: column;
 }
+
 .global-resource-panel .n-tabs {
   flex-grow: 1;
   display: flex;
@@ -300,6 +330,7 @@ function startEditing(payload: { type: ConfigType; id: string }) {
   text-align: center;
   padding: 0 12px;
 }
+
 .resource-list {
   display: flex;
   flex-direction: column;

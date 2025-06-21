@@ -1,8 +1,25 @@
-﻿<!-- src/app-workbench/components/GlobalResourceListItem.vue -->
+﻿<!-- START OF MODIFIED FILE: src/app-workbench/components/panel/GlobalResourceListItem.vue -->
 <template>
   <div v-if="item.isSuccess" class="resource-item" @dblclick="$emit('start-editing', { type, id })">
-    <span>{{ item.data.name }}</span>
-    <n-button text @click="$emit('start-editing', { type, id })">编辑</n-button>
+    <span class="item-name">{{ item.data.name }}</span>
+    <!-- 【核心美化】将 text 按钮替换为更显眼的 secondary 图标按钮 -->
+    <n-tooltip trigger="hover">
+      <template #trigger>
+        <n-button
+            strong
+            secondary
+            circle
+            type="primary"
+            size="small"
+            @click.stop="$emit('start-editing', { type, id })"
+        >
+          <template #icon>
+            <n-icon :component="EditIcon"/>
+          </template>
+        </n-button>
+      </template>
+      编辑 “{{ item.data.name }}”
+    </n-tooltip>
   </div>
   <div v-else class="resource-item-damaged">
     <n-icon :component="LinkOffIcon" color="#d03050"/>
@@ -12,26 +29,43 @@
       </template>
       {{ item.errorMessage }}
     </n-tooltip>
-    <n-button text @click="$emit('show-error-detail', item.errorMessage, item.originJsonString)">
-      详情
-    </n-button>
+    <!-- 【核心美化】同样美化损坏项的“详情”按钮 -->
+    <n-tooltip trigger="hover">
+      <template #trigger>
+        <n-button
+            strong
+            secondary
+            circle
+            type="error"
+            size="small"
+            @click.stop="$emit('show-error-detail', item.errorMessage, item.originJsonString)"
+        >
+          <template #icon>
+            <n-icon :component="FindInPageIcon"/>
+          </template>
+        </n-button>
+      </template>
+      查看错误详情
+    </n-tooltip>
   </div>
 </template>
 
 <script setup lang="ts">
 import { NButton, NIcon, NTooltip } from 'naive-ui';
-import { LinkOffOutlined as LinkOffIcon } from '@vicons/material'; // 导入断开链接图标
-import type { ConfigType, ConfigObject } from '@/app-workbench/services/EditSession.ts';
-import type { GlobalResourceItem } from '@/types/ui.ts'; // 导入全局资源项类型
+import {
+  LinkOffOutlined as LinkOffIcon,
+  EditOutlined as EditIcon,
+  FindInPageOutlined as FindInPageIcon
+} from '@vicons/material';
+import type { ConfigType, ConfigObject } from '@/app-workbench/services/EditSession';
+import type { GlobalResourceItem } from '@/types/ui';
 
-// 定义组件的 props
 defineProps<{
   id: string; // 原始 Record 的 key (资源的唯一ID)
   item: GlobalResourceItem<ConfigObject>; // 包含成功/失败状态和数据的资源项
   type: ConfigType; // 资源的类型 ('workflow', 'step', 'module')
 }>();
 
-// 定义组件触发的事件
 defineEmits<{
   (e: 'start-editing', payload: { type: ConfigType; id: string }): void; // 双击或点击“编辑”时触发
   (e: 'show-error-detail', errorMessage: string, originJsonString: string | null | undefined): void; // 点击“详情”时触发
@@ -44,7 +78,7 @@ defineEmits<{
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 8px;
+  padding: 6px 8px; /* 增加一点垂直内边距以适应更大的按钮 */
   border-radius: 4px;
   cursor: pointer; /* 可点击编辑 */
 }
@@ -53,23 +87,32 @@ defineEmits<{
   background-color: #f0f2f5; /* 悬停背景色 */
 }
 
-/* 损坏资源项的样式 */
+/* 【新增】让名称和按钮之间的空间更大，避免误触 */
+.item-name {
+  flex-grow: 1;
+  margin-right: 8px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .resource-item-damaged {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 4px 8px;
+  padding: 6px 8px; /* 同样增加垂直内边距 */
   border-radius: 4px;
   cursor: default; /* 损坏项不可直接编辑，光标为默认 */
   color: #d03050; /* 错误红色 */
 }
 
-/* 损坏项名称旁边的文本样式 */
 .damaged-text {
   margin-left: 8px;
+  margin-right: 8px;
   flex-grow: 1; /* 占据剩余空间 */
   overflow: hidden; /* 隐藏溢出内容 */
   text-overflow: ellipsis; /* 溢出时显示省略号 */
   white-space: nowrap; /* 不换行 */
 }
 </style>
+<!-- END OF MODIFIED FILE -->

@@ -44,15 +44,21 @@
 
       <!-- 当前编辑结构插槽 -->
       <template #editor-panel>
-        <div v-if="activeSession" class="editor-panel-wrapper">
-          <!-- 传递 selectedModuleId 并监听更新事件 TODO 改为更智能的方式-->
-          <WorkbenchSidebar
+        <!-- 【核心修正】重新添加 wrapper div，并赋予它 100% 的高度 -->
+        <div class="editor-panel-wrapper">
+          <SessionDropZone
               :session="activeSession"
-              :selected-module-id="selectedModuleId"
-              @update:selected-module-id="selectedModuleId = $event"
-          />
+              @start-session="handleStartEditing"
+          >
+            <!-- 插槽内容保持不变 -->
+            <WorkbenchSidebar
+                v-if="activeSession"
+                :session="activeSession"
+                :selected-module-id="selectedModuleId"
+                @update:selected-module-id="selectedModuleId = $event"
+            />
+          </SessionDropZone>
         </div>
-        <n-empty v-else description="请从左侧选择或拖拽一个配置项开始编辑"/>
       </template>
 
       <!-- 主内容区插槽 -->
@@ -93,16 +99,19 @@ import {onBeforeUnmount, onMounted, ref} from 'vue';
 import {NEmpty, NH3, NSpin, useMessage} from 'naive-ui';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
 import {type ConfigType, type EditSession} from '@/app-workbench/services/EditSession.ts';
-
+import {VueDraggable as draggable} from "vue-draggable-plus";
+import type {SortableEvent} from "sortablejs";
 import EditorLayout from '@/app-workbench/layouts/EditorLayout.vue';
 import GlobalResourcePanel from '@/app-workbench/components/panel/GlobalResourcePanel.vue';
 import WorkbenchSidebar from '@/app-workbench/components/panel/WorkbenchSidebar.vue';
 import EditorTargetRenderer from '@/app-workbench/components/module/EditorTargetRenderer.vue';
 import AiConfigEditorPanel from "@/app-workbench/features/ai-config-panel/AiConfigEditorPanel.vue";
+import SessionDropZone from "@/app-workbench/components/share/SessionDropZone.vue";
 
 defineOptions({
   name: 'WorkbenchView'
 });
+
 
 const workbenchStore = useWorkbenchStore();
 const message = useMessage();
