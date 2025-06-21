@@ -1,8 +1,8 @@
 ﻿<!-- src/app-workbench/components/.../GlobalResourcePanel.vue -->
 <template>
   <div class="global-resource-panel">
-    <n-h4>全局资源</n-h4>
-    <n-spin :show="aggregatedIsLoading">
+    <div class="global-resource-header">
+      <n-h4>全局资源</n-h4>
       <!-- 状态一：正在加载 -->
       <div v-if="aggregatedIsLoading" class="panel-state-wrapper">
         <n-spin size="small"/>
@@ -21,104 +21,113 @@
       </div>
 
       <!-- 状态三：加载成功，显示数据 -->
-      <n-tabs v-model:value="activeTab" type="line" :animated="false" justify-content="space-evenly">
-
+      <n-tabs
+          v-model:value="activeTab"
+          type="segment"
+          :animated="false"
+          justify-content="space-evenly"
+          class="global-resource-tabs"
+      >
         <!-- 工作流标签页 -->
-        <n-tab-pane name="workflows" tab="工作流">
-          <draggable
-              v-if="workflowsList.length > 0"
-              v-model="workflowsList"
-              item-key="id"
-              :group="{ name: 'workflows-group', pull: 'clone', put: false }"
-              :sort="false"
-              :clone="handleResourceClone"
-              class="resource-list"
-              :setData="handleSetData"
-          >
-            <div v-for="element in workflowsList"
-                 :key="element.id"
-                 data-drag-type="workflow"
-                 :data-drag-id="element.id"
-            >
-              <GlobalResourceListItem
-                  :id="element.id"
-                  :item="element.item"
-                  type="workflow"
-                  @start-editing="startEditing"
-                  @show-error-detail="showErrorDetail"
-              />
-            </div>
-          </draggable>
-          <n-empty v-else small description="无全局工作流"/>
-        </n-tab-pane>
-
+        <n-tab name="workflows" tab="工作流"/>
         <!-- 步骤标签页 -->
-        <n-tab-pane name="steps" tab="步骤">
-          <draggable
-              v-if="stepsList.length > 0"
-              v-model="stepsList"
-              item-key="id"
-              :group="{ name: 'steps-group', pull: 'clone', put: false }"
-              :sort="false"
-              :clone="handleResourceClone"
-              class="resource-list"
-              :setData="handleSetData"
-          >
-            <div v-for="element in stepsList"
-                 :key="element.id"
-                 data-drag-type="step"
-                 :data-drag-id="element.id"
-            >
-              <GlobalResourceListItem
-                  :id="element.id"
-                  :item="element.item"
-                  type="step"
-                  @start-editing="startEditing"
-                  @show-error-detail="showErrorDetail"
-              />
-            </div>
-          </draggable>
-          <n-empty v-else small description="无全局步骤"/>
-
-        </n-tab-pane>
-
+        <n-tab name="steps" tab="步骤"/>
         <!-- 模块标签页 -->
-        <n-tab-pane name="modules" tab="模块">
-          <draggable
-              v-if="modulesList.length > 0"
-              v-model="modulesList"
-              item-key="id"
-              :group="{ name: 'modules-group', pull: 'clone', put: false }"
-              :sort="false"
-              :clone="handleResourceClone"
-              class="resource-list"
-              :setData="handleSetData"
-          >
-            <div v-for="element in modulesList"
-                 :key="element.id"
-                 data-drag-type="module"
-                 :data-drag-id="element.id"
-            >
-              <GlobalResourceListItem
-                  :id="element.id"
-                  :item="element.item"
-                  type="module"
-                  @start-editing="startEditing"
-                  @show-error-detail="showErrorDetail"
-              />
-            </div>
-          </draggable>
-          <n-empty v-else small description="无全局模块"/>
-        </n-tab-pane>
-
+        <n-tab name="modules" tab="模块"/>
       </n-tabs>
-    </n-spin>
+    </div>
+
+    <n-scrollbar style="height: 100%" class="scroll-container">
+      <div v-if="activeTab===`workflows`">
+        <draggable
+            v-if="workflowsList.length > 0"
+            v-model="workflowsList"
+            item-key="id"
+            :group="{ name: 'workflows-group', pull: 'clone', put: false }"
+            :sort="false"
+            :clone="handleResourceClone"
+            class="resource-list"
+            :setData="handleSetData"
+        >
+          <div v-for="element in workflowsList"
+               :key="element.id"
+               data-drag-type="workflow"
+               :data-drag-id="element.id"
+          >
+            <GlobalResourceListItem
+                :id="element.id"
+                :item="element.item"
+                type="workflow"
+                @start-editing="startEditing"
+                @show-error-detail="showErrorDetail"
+            />
+          </div>
+        </draggable>
+        <n-empty v-else small description="无全局工作流" class="empty-container"/>
+      </div>
+      <div v-if="activeTab===`steps`">
+        <draggable
+            v-if="stepsList.length > 0"
+            v-model="stepsList"
+            item-key="id"
+            :group="{ name: 'steps-group', pull: 'clone', put: false }"
+            :sort="false"
+            :clone="handleResourceClone"
+            class="resource-list"
+            :setData="handleSetData"
+        >
+          <div v-for="element in stepsList"
+               :key="element.id"
+               data-drag-type="step"
+               :data-drag-id="element.id"
+          >
+            <GlobalResourceListItem
+                :id="element.id"
+                :item="element.item"
+                type="step"
+                @start-editing="startEditing"
+                @show-error-detail="showErrorDetail"
+            />
+          </div>
+        </draggable>
+        <n-empty v-else small description="无全局步骤" class="empty-container"/>
+      </div>
+      <div v-if="activeTab===`modules`">
+        <draggable
+            v-if="modulesList.length > 0"
+            v-model="modulesList"
+            item-key="id"
+            :group="{ name: 'modules-group', pull: 'clone', put: false }"
+            :sort="false"
+            :clone="handleResourceClone"
+            class="resource-list"
+            :setData="handleSetData"
+        >
+          <div v-for="element in modulesList"
+               :key="element.id"
+               data-drag-type="module"
+               :data-drag-id="element.id"
+          >
+            <GlobalResourceListItem
+                :id="element.id"
+                :item="element.item"
+                type="module"
+                @start-editing="startEditing"
+                @show-error-detail="showErrorDetail"
+            />
+          </div>
+        </draggable>
+        <n-empty v-else small description="无全局模块" class="empty-container"/>
+      </div>
+    </n-scrollbar>
+
   </div>
 </template>
 
+
 <script setup lang="ts">
 import {computed, h, onMounted, ref} from 'vue';
-import {NEmpty, NH4, NSpin, NTabPane, NTabs, useDialog} from 'naive-ui';
+import {NEmpty, NH4, NSpin, NTabs, useDialog} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSession";
 import {VueDraggable as draggable} from "vue-draggable-plus";
@@ -254,17 +263,14 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement) {
 
 <style scoped>
 .global-resource-panel {
-  height: 100%;
+  height: 100%; /* 确保占据父容器全部高度 */
   display: flex;
   flex-direction: column;
   padding: 0 12px 12px 12px;
   box-sizing: border-box;
-}
-
-.global-resource-panel > .n-h4 {
-  flex-shrink: 0; /* 标题高度固定 */
-  padding: 0;
-  margin-bottom: 12px;
+  /* 添加弹性布局 */
+  flex: 1;
+  overflow: hidden;
 }
 
 .panel-state-wrapper {
@@ -272,16 +278,26 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement) {
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  /* 确保在没有内容时也能撑开 */
   min-height: 200px;
+  /* 确保状态容器也能滚动 */
+  overflow: auto;
 }
 
-.resource-list {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  /* 为列表内容增加一点内边距 */
-  padding: 4px;
+.scroll-container {
+  flex-grow: 1; /* 占据所有剩余空间 */
+  overflow: auto; /* 关键！让这个容器自己处理溢出 */
+  position: relative; /* 确保内部的滚动条能正确计算高度 */
 }
+
+/* 确保空状态也能正确显示 */
+.empty-container {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 1;
+}
+
+
 </style>
 <!-- END OF FILE -->

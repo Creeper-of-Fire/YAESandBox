@@ -7,7 +7,6 @@
         class="composite-sider"
         bordered
         :width="compositeSiderWidth"
-        native-scrollbar
         :collapsed="sidersCollapsed"
         collapse-mode="width"
         :collapsed-width="24"
@@ -18,12 +17,12 @@
       <div class="sider-container">
         <!-- 1a. 全局资源面板 (左侧的左栏) -->
         <div v-show="isGlobalPanelVisible" class="panel global-panel">
-            <slot name="global-panel"></slot>
+          <slot name="global-panel"></slot>
         </div>
 
         <!-- 1b. 当前编辑结构面板 (左侧的右栏) -->
         <div v-show="isEditorPanelVisible" class="panel editor-panel">
-            <slot name="editor-panel"></slot>
+          <slot name="editor-panel"></slot>
         </div>
       </div>
     </n-layout-sider>
@@ -75,8 +74,8 @@ const sidersCollapsed = ref(false);
 const compositeSiderWidth = computed(() => {
   if (sidersCollapsed.value) return 24;
   let width = 0;
-  if (props.isGlobalPanelVisible) width += 200; // 全局面板宽度
-  if (props.isEditorPanelVisible) width += 300; // 编辑面板宽度
+  if (props.isGlobalPanelVisible) width += 250; // 全局面板宽度
+  if (props.isEditorPanelVisible) width += 350; // 编辑面板宽度
   return width;
 });
 </script>
@@ -91,10 +90,14 @@ const compositeSiderWidth = computed(() => {
   transition: width 0.2s ease-in-out;
   height: 100%;
   overflow: hidden;
+  /* 添加弹性布局 */
+  display: flex;
+  flex-direction: column;
 }
 
 .sider-container {
   display: flex;
+  flex: 1; /* 关键：占据全部可用空间 */
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -107,24 +110,25 @@ const compositeSiderWidth = computed(() => {
   transition: width 0.2s ease-in-out, opacity 0.2s ease-in-out;
   display: flex;
   flex-direction: column;
+  /* 确保面板内部可以滚动 */
+  overflow: hidden;
 }
 
+/* 确保全局面板高度正确 */
 .global-panel {
-  width: 200px;
+  width: 250px;
   border-right: 1px solid #e8e8e8;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
+/* 确保编辑面板高度正确 */
 .editor-panel {
-  width: 300px;
-}
-
-.main-content {
-  background-color: #f7f7f7;
-}
-
-.main-content-inner {
-  height: 100%;
-  box-sizing: border-box;
+  width: 350px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 </style>
 <!-- END OF FILE -->

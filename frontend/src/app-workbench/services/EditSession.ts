@@ -2,11 +2,11 @@
 
 import {computed, type Ref} from 'vue';
 import type {
-    WorkflowProcessorConfig,
-    StepProcessorConfig,
     AbstractModuleConfig,
+    StepProcessorConfig,
+    WorkflowProcessorConfig,
 } from '@/app-workbench/types/generated/workflow-config-api-client';
-import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
+import {type SaveResult, useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
 
 // 定义了可编辑配置的类型别名，方便在整个应用中重用。
 export type ConfigType = 'workflow' | 'step' | 'module';
@@ -98,14 +98,14 @@ export class EditSession {
      * @param newName - 新的名称
      */
     public rename(newName: string): void {
-        this.updateData({ name: newName } as Partial<ConfigObject>);
+        this.updateData({name: newName} as Partial<ConfigObject>);
     }
 
     /**
      * 保存当前会话的更改到后端。
      */
-    public async save(): Promise<void> {
-        await this._getStore()._saveDraft(this.type, this.globalId);
+    public async save(): Promise<SaveResult> {
+        return await this._getStore()._saveDraft(this.type, this.globalId);
     }
 
     /**

@@ -35,6 +35,14 @@ interface IJsonResultDto<T> {
     originJsonString: string | null;
 }
 
+export interface SaveResult {
+    success: boolean;
+    id: string;
+    name?: string;
+    type: ConfigType;
+    error?: any; // 保存具体的错误信息
+}
+
 /**
  * 辅助函数：将后端返回的 DTO 转换为我们前端的统一视图模型数组
  */
@@ -143,9 +151,11 @@ export const useWorkbenchStore = defineStore('workbench', () => {
 
     // TODO 没写好校验逻辑
     // _saveDraft 现在接收 globalId
-    const _saveDraft = async (type: ConfigType, globalId: string) => {
+    const _saveDraft = async (type: ConfigType, globalId: string):Promise<SaveResult> => {
         const draft = drafts.value[globalId];
-        if (!draft) return;
+        if (!draft)
+            // @ts-ignore
+            return { success: false,name:draft.data.name, id: globalId, type, error: '草稿未找到' };
 
         let savePromise: Promise<any>;
         let refreshPromise: Promise<any>;
@@ -174,15 +184,17 @@ export const useWorkbenchStore = defineStore('workbench', () => {
                 break;
             default:
                 console.error('保存失败：未知的草稿类型。');
-                return;
+                return { success: false,name:draft.data.name, id: globalId, type, error: '未知的草稿类型' };
         }
 
         try {
             await savePromise;
             draft.originalState = JSON.stringify(draft.data);
             await refreshPromise;
+            return { success: true, id: globalId, type };
         } catch (error) {
             console.error(`保存 ${type} 草稿到后端时发生错误:`, error);
+            return { success: false,name:draft.data.name, id: globalId, type, error };
         }
     };
 
@@ -208,16 +220,15 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     });
 
     /**
-     * *** 保存所有未保存的更改 ***
-     * 遍历所有草稿，如果发现有改动，则调用其保存方法。
-     * @returns 返回一个 Promise，当所有保存操作都完成后解决。
+     * 保存所有未保存的更改，并返回详细结果。
+     * @returns 返回一个 Promise，该 Promise 解析为一个包含成功和失败列表的对象。
      */
-    async function saveAllDirtyDrafts(): Promise<void> {
+    async function saveAllDirtyDrafts(): Promise<{ saved: SaveResult[], failed: SaveResult[] }>  {
         const dirtyDrafts = Object.keys(drafts.value).filter(id => _isDirty(id));
 
         if (dirtyDrafts.length === 0) {
             console.log("没有需要保存的更改。");
-            return;
+            return { saved: [], failed: [] };
         }
 
         console.log(`准备保存 ${dirtyDrafts.length} 个已修改的草稿...`);
@@ -227,8 +238,13 @@ export const useWorkbenchStore = defineStore('workbench', () => {
             return _saveDraft(draft.type, id);
         });
 
-        await Promise.all(savePromises);
-        console.log("所有更改已保存。");
+        const results = await Promise.all(savePromises);
+
+        const saved = results.filter(r => r.success);
+        const failed = results.filter(r => !r.success);
+
+        console.log("所有更改已成功保存。");
+        return { saved, failed };
     }
 
 

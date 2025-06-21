@@ -37,38 +37,36 @@
       <!-- 分割线，让布局更清晰 -->
       <n-divider style="margin-top: 12px; margin-bottom: 12px;"/>
       <!-- 2b. 可滚动的内容区域 -->
-      <div class="scrollable-area">
-        <n-scrollbar style="height: 100%">
-          <template v-if="session.type === 'workflow' && workflowData">
-            <p class="sidebar-description">拖拽全局步骤到步骤列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
-            <WorkflowItemRenderer
-                :workflow="workflowData"
-                :session="session"
-                :selected-module-id="selectedModuleId"
-                @update:selected-module-id="$emit('update:selectedModuleId', $event)"
-            />
-          </template>
+      <n-scrollbar style="height: 100%" class="scrollable-area">
+        <template v-if="session.type === 'workflow' && workflowData">
+          <p class="sidebar-description">拖拽全局步骤到步骤列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
+          <WorkflowItemRenderer
+              :workflow="workflowData"
+              :session="session"
+              :selected-module-id="selectedModuleId"
+              @update:selected-module-id="$emit('update:selectedModuleId', $event)"
+          />
+        </template>
 
-          <template v-else-if="session.type === 'step' && stepData">
-            <p class="sidebar-description">拖拽全局模块到模块列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
-            <StepItemRenderer
-                :step="stepData"
-                :session="session"
-                :selected-module-id="selectedModuleId"
-                @update:selected-module-id="$emit('update:selectedModuleId', $event)"
-                :is-collapsible="false"
-                :is-draggable="false"
-                style="margin-top: 16px"
-            />
-          </template>
+        <template v-else-if="session.type === 'step' && stepData">
+          <p class="sidebar-description">拖拽全局模块到模块列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
+          <StepItemRenderer
+              :step="stepData"
+              :session="session"
+              :selected-module-id="selectedModuleId"
+              @update:selected-module-id="$emit('update:selectedModuleId', $event)"
+              :is-collapsible="false"
+              :is-draggable="false"
+              style="margin-top: 16px"
+          />
+        </template>
 
-          <template v-else-if="session.type === 'module' && moduleData">
-            <n-alert title="提示" type="info" style="margin-top: 16px;">
-              这是一个独立的模块。请在中间的主编辑区完成详细配置。
-            </n-alert>
-          </template>
-        </n-scrollbar>
-      </div>
+        <template v-else-if="session.type === 'module' && moduleData">
+          <n-alert title="提示" type="info" style="margin-top: 16px;">
+            这是一个独立的模块。请在中间的主编辑区完成详细配置。
+          </n-alert>
+        </template>
+      </n-scrollbar>
     </div>
     <div v-else class="empty-state-wrapper">
       <div class="custom-empty-state">
@@ -134,8 +132,17 @@ const isDirty = computed(() => props.session?.getIsDirty().value ?? false);
 
 async function handleSave() {
   if (!props.session) return;
-  await props.session.save();
-  message.success(`“${props.session.getData().value?.name}” 已保存!`);
+
+  const result = await props.session.save();
+  if (result.success) {
+    message.success(`“${result.name}” 已保存!`);
+  } else {
+    const error = result.error;
+    // 捕获 EditSession.save 抛出的错误
+    message.error(`保存失败：${result.name}，请检查内容或查看控制台。`);
+    console.error(`${result.name} 保存失败，详情:`, error);
+  }
+
 }
 
 function handleDiscard() {
