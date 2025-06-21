@@ -9,7 +9,6 @@
         :group="{ name: 'steps-group', put: ['steps-group'] }"
         handle=".drag-handle"
         class="workflow-step-list-container"
-        @add="handleAddStep"
     >
       <div v-for="stepItem in workflow.steps" :key="stepItem.configId" class="step-item">
         <!-- 在工作流列表里，使用默认行为的 StepItemRenderer -->
@@ -31,7 +30,6 @@
 <script setup lang="ts">
 import {NEmpty} from 'naive-ui';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
-import type {SortableEvent} from 'sortablejs';
 import type {EditSession} from "@/app-workbench/services/EditSession.ts";
 import type {WorkflowProcessorConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import StepItemRenderer from './StepItemRenderer.vue';
@@ -45,22 +43,6 @@ const props = defineProps<{
 
 // 定义组件的 Emits
 defineEmits(['update:selectedModuleId']);
-
-/**
- * 处理向工作流中【添加】新步骤的事件。
- * 这个函数从 WorkbenchSidebar 完美地移动到了这里。
- * @param {SortableEvent} event - VueDraggable 的 `add` 事件对象。
- */
-function handleAddStep(event: SortableEvent) {
-  if (event.newIndex === null || event.newIndex === undefined) {
-    console.warn('拖拽事件缺少 newIndex，无法处理新步骤。');
-    return;
-  }
-  // 注意：v-model 已经更新了 props.workflow.steps
-  const newStep = props.workflow.steps[event.newIndex];
-  // 调用 session 来完成对这个新克隆项的初始化
-  props.session.initializeClonedItem(newStep);
-}
 </script>
 
 <style scoped>

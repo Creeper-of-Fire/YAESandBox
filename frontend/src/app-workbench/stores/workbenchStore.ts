@@ -200,50 +200,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         delete drafts.value[globalId];
     };
 
-    // --- 新增的内部 action，用于处理拖拽逻辑 ---
-    /**
-     * 初始化一个已经存在于草稿数据中的克隆项。
-     * 这个方法直接修改传入的对象引用，为其及其所有子项递归地生成新的唯一 configId。
-     * 这是解决拖拽重复问题的核心。
-     * @param globalId - 当前编辑会话的全局ID。
-     * @param itemToInitialize - 由 vue-draggable-plus 添加到数组中的那个克隆对象，这是一个对象引用。
-     */
-    const _initializeClonedItemInDraft = (globalId: string, itemToInitialize: ConfigObject) => {
-        const draft = drafts.value[globalId];
-        if (!draft) {
-            console.error('无法初始化克隆项：找不到对应的编辑会话草稿。');
-            return;
-        }
-
-        // 递归函数，用于就地更新ID
-        const refreshIdsInPlace = (current: any) => {
-            if (typeof current !== 'object' || current === null) return;
-
-            // 关键：只替换名为 configId 的属性
-            if (current.configId && typeof current.configId === 'string') {
-                current.configId = uuidv4();
-            }
-
-            // 递归处理对象和数组
-            if (Array.isArray(current)) {
-                current.forEach(refreshIdsInPlace);
-            } else if (typeof current === 'object') {
-                // 遍历所有 key
-                for (const key in current) {
-                    if (Object.prototype.hasOwnProperty.call(current, key)) {
-                        refreshIdsInPlace(current[key]);
-                    }
-                }
-            }
-        };
-
-        refreshIdsInPlace(itemToInitialize);
-
-        // console.log(`已初始化克隆项: `,itemToInitialize);
-        // 因为我们直接修改了 draft.data 内部的对象，Vue 的响应式系统会自动检测到变化。
-        // isDirty 计算属性也会自动更新。
-    };
-
     // =================================================================
     // 公共 API (暴露给外部世界的精简接口)
     // =================================================================
@@ -345,7 +301,6 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         _updateDraftData,
         _saveDraft,
         _discardDraft,
-        _initializeClonedItemInDraft,
     };
 
     return {

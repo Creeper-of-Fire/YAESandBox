@@ -24,7 +24,6 @@
                 :group="{ name: 'modules-group', put: ['modules-group'] }"
                 handle=".drag-handle"
                 class="module-draggable-area"
-                @add="(event) => handleAddModule(event)"
             >
               <div v-for="moduleItem in step.modules" :key="moduleItem.configId">
                 <!-- 向下传递 props，向上冒泡 emits -->
@@ -68,23 +67,6 @@ const props = withDefaults(defineProps<{
 // UI状态本地化，默认展开
 const isExpanded = ref(true);
 const emit = defineEmits(['update:selectedModuleId']);
-
-/**
- * 处理从全局资源或其他步骤向此步骤中【添加】新模块的事件。
- * @param {SortableEvent} event - VueDraggable 的 `add` 事件对象。
- */
-function handleAddModule(event: SortableEvent) {
-  if (event.newIndex === null || event.newIndex === undefined) return;
-
-  // vue-draggable-plus 已经将克隆的模块添加到了 props.step.modules 数组中
-  const newModule = props.step.modules[event.newIndex];
-
-  // 调用 session 服务来初始化这个新模块（分配新ID等）
-  props.session.initializeClonedItem(newModule, props.step.configId);
-
-  // 删除 event.item.remove()
-  // event.item.remove(); // <--- 删除这一行
-}
 </script>
 
 <style scoped>

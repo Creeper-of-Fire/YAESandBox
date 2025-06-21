@@ -107,19 +107,6 @@ export class EditSession {
     public discard(): void {
         this._getStore()._discardDraft(this.globalId);
     }
-
-    // --- 数据操作 API (拖拽等) ---
-
-    /**
-     * 初始化一个被拖拽到列表中的克隆项。
-     * 此方法应在 vue-draggable-plus 的 @add 事件回调中调用。
-     * 它会为传入的对象及其子项生成新的唯一ID。
-     * @param item - vue-draggable-plus 已经添加到 v-model 数组中的那个对象。
-     * @param _parentId - (可选，当前实现中未使用) 目标父容器的ID，为未来扩展保留。
-     */
-    public initializeClonedItem(item: ConfigObject, _parentId?: string): void {
-        this._getStore()._initializeClonedItemInDraft(this.globalId, item);
-    }
 }
 
 // --- END OF FILE frontend/src/app-workbench/services/EditSession.ts ---

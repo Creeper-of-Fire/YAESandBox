@@ -213,7 +213,8 @@ function showErrorDetail(errorMessage: string, originJsonString: string | null |
  * vue-draggable-plus 的 :clone prop 处理函数。
  * 在此函数中，我们将原始资源项中的 'data' 部分深拷贝，并递归刷新所有 configId。
  * 注意，从本页面拖拽到编辑中的draggable包裹的列表时，会走:clone prop调用deepCloneWithNewIds，于是configId会自动刷新。
- * 而从本页面到acquireEditSession走的是HTML5的原生路径，不会触发
+ * 而从本页面到acquireEditSession走的是HTML5的原生路径，不会触发configId的刷新。
+ * （如果这引入了什么问题，也可以重新在acquireEditSession中进行修改，目前来看这样最好。）
  * @param {DraggableResourceItem<ConfigObject>} originalResourceItem - 原始的资源列表项。
  * @returns {ConfigObject | null} - 克隆并刷新 ID 后的纯数据对象，作为拖拽的数据负载。
  */
