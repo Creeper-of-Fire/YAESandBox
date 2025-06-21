@@ -1,9 +1,9 @@
-﻿// --- START OF FILE frontend/src/app-workbench/features/workflow-editor/stores/workbenchStore.ts ---
+﻿// --- START OF FILE frontend/src/app-workbench/stores/workbenchStore.ts ---
 
 import {defineStore} from 'pinia';
-import {ref} from 'vue';
+import {computed, ref} from 'vue';
 import {v4 as uuidv4} from 'uuid';
-import {type ConfigObject, type ConfigType, EditSession,} from '@/app-workbench/features/workflow-editor/services/EditSession.ts';
+import {type ConfigObject, type ConfigType, EditSession,} from '@/app-workbench/services/EditSession.ts';
 import type {
     AbstractModuleConfig,
     StepProcessorConfig,
@@ -84,10 +84,6 @@ interface Draft {
     type: ConfigType;
     data: ConfigObject;
     originalState: string;
-    uiState: {
-        selectedItemId: string | null;
-        expandedStepIds: string[];
-    };
 }
 
 export const useWorkbenchStore = defineStore('workbench', () => {
@@ -132,40 +128,27 @@ export const useWorkbenchStore = defineStore('workbench', () => {
     // 内部 Getter & Action (加下划线表示，约定不对外暴露)
     // =================================================================
 
-    const _getDraftData = (draftId: string): ConfigObject | null => drafts.value[draftId]?.data ?? null;
-    const _getUiState = (draftId: string) => drafts.value[draftId]?.uiState ?? null;
+    // 【核心修正】方法现在接收 globalId
+    const _getDraftData = (globalId: string): ConfigObject | null => drafts.value[globalId]?.data ?? null;
 
-    const _isDirty = (type: ConfigType, draftId: string): boolean => {
-        const draft = drafts.value[draftId];
+    // 【核心修正】所有 UI State 相关的方法 (_getUiState, _setSelectedItemInDraft, _toggleStepExpansionInDraft) 已被彻底移除。
+
+    const _isDirty = (globalId: string): boolean => {
+        const draft = drafts.value[globalId];
         if (!draft) return false;
         return JSON.stringify(draft.data) !== draft.originalState;
     };
 
-    const _updateDraftData = (draftId: string, updatedData: Partial<ConfigObject>) => {
-        const draft = drafts.value[draftId];
+    const _updateDraftData = (globalId: string, updatedData: Partial<ConfigObject>) => {
+        const draft = drafts.value[globalId];
         if (draft) {
             draft.data = {...draft.data, ...updatedData};
         }
     };
 
-    const _setSelectedItemInDraft = (draftId: string, itemId: string | null) => {
-        const uiState = _getUiState(draftId);
-        if (uiState) uiState.selectedItemId = itemId;
-    };
-
-    const _toggleStepExpansionInDraft = (draftId: string, stepId: string) => {
-        const uiState = _getUiState(draftId);
-        if (!uiState) return;
-        const index = uiState.expandedStepIds.indexOf(stepId);
-        if (index > -1) {
-            uiState.expandedStepIds.splice(index, 1);
-        } else {
-            uiState.expandedStepIds.push(stepId);
-        }
-    };
-
-    const _saveDraft = async (type: ConfigType, draftId: string, globalId: string) => {
-        const draft = drafts.value[draftId];
+    // 【核心修正】_saveDraft 现在接收 globalId
+    const _saveDraft = async (type: ConfigType, globalId: string) => {
+        const draft = drafts.value[globalId];
         if (!draft) return;
 
         let savePromise: Promise<any>;
@@ -200,91 +183,86 @@ export const useWorkbenchStore = defineStore('workbench', () => {
 
         try {
             await savePromise;
-            draft.originalState = JSON.stringify(draft.data); // 更新快照，重置isDirty
+            draft.originalState = JSON.stringify(draft.data);
             await refreshPromise;
-            // message.success(`“${(draft.data as any).name}” 保存成功！`);
         } catch (error) {
             console.error(`保存 ${type} 草稿到后端时发生错误:`, error);
-            // message.error(`保存失败：与服务器通信时发生错误。`);
         }
     };
 
-    const _closeDraft = (type: ConfigType, draftId: string, globalId: string): boolean => {
-        if (_isDirty(type, draftId)) {
-            if (!confirm('您有未保存的更改，确定要关闭吗？')) {
-                return false;
-            }
-        }
-        delete drafts.value[draftId];
-        delete lockedGlobalIds.value[globalId];
-        return true;
+    /**
+     * 【核心修正】_closeDraft 重命名为 _discardDraft，并且不再有确认提示。
+     * 它的作用是简单地、无条件地丢弃一个草稿。
+     * @param globalId - 要丢弃的草稿的全局ID。
+     */
+    const _discardDraft = (globalId: string) => {
+        delete drafts.value[globalId];
     };
 
     // --- 新增的内部 action，用于处理拖拽逻辑 ---
-
-    const _addStepToDraft = (draftId: string, stepConfig: StepProcessorConfig, index: number) => {
-        const draft = drafts.value[draftId];
+    // 【核心修正】所有拖拽方法现在接收 globalId
+    const _addStepToDraft = (globalId: string, stepConfig: StepProcessorConfig, index: number) => {
+        const draft = drafts.value[globalId];
         if (!draft || draft.type !== 'workflow') return;
-
         const workflow = draft.data as WorkflowProcessorConfig;
         if (!workflow.steps) workflow.steps = [];
-
-        // 【关键】对新添加的项，使用我们的工具函数深度克隆并刷新所有ID
         const newStep = deepCloneWithNewIds(stepConfig);
-
         workflow.steps.splice(index, 0, newStep);
     };
 
-    const _moveStepInDraft = (draftId: string, fromIndex: number, toIndex: number) => {
-        const draft = drafts.value[draftId];
+    const _moveStepInDraft = (globalId: string, fromIndex: number, toIndex: number) => {
+        const draft = drafts.value[globalId];
         if (!draft || draft.type !== 'workflow') return;
-
         const workflow = draft.data as WorkflowProcessorConfig;
         const [movedStep] = workflow.steps.splice(fromIndex, 1);
         workflow.steps.splice(toIndex, 0, movedStep);
     };
 
-    const _addModuleToDraft = (draftId: string, moduleConfig: AbstractModuleConfig, stepId: string, index: number) => {
-        const draft = drafts.value[draftId];
-        if (!draft || draft.type !== 'workflow') return;
+    const _addModuleToDraft = (globalId: string, moduleConfig: AbstractModuleConfig, stepId: string, index: number) => {
+        const draft = drafts.value[globalId];
+        if (!draft) return;
 
-        const workflow = draft.data as WorkflowProcessorConfig;
-        const targetStep = workflow.steps?.find(s => s.configId === stepId);
+        // 【修正】支持为 step 类型的草稿添加模块
+        let targetStep: StepProcessorConfig | undefined;
+        if (draft.type === 'workflow') {
+            const workflow = draft.data as WorkflowProcessorConfig;
+            targetStep = workflow.steps?.find(s => s.configId === stepId);
+        } else if (draft.type === 'step') {
+            targetStep = draft.data as StepProcessorConfig;
+            // 确保 stepId 匹配
+            if (targetStep.configId !== stepId) return;
+        }
+
         if (!targetStep) return;
-
         if (!targetStep.modules) targetStep.modules = [];
-
-        // 【关键】同样，刷新ID
         const newModule = deepCloneWithNewIds(moduleConfig);
-
         targetStep.modules.splice(index, 0, newModule);
     };
 
-    const _moveModuleInDraft = (draftId: string, fromStepId: string, fromIndex: number, toStepId: string, toIndex: number) => {
-        const draft = drafts.value[draftId];
+    const _moveModuleInDraft = (globalId: string, fromStepId: string, fromIndex: number, toStepId: string, toIndex: number) => {
+        const draft = drafts.value[globalId];
         if (!draft || draft.type !== 'workflow') return;
-
         const workflow = draft.data as WorkflowProcessorConfig;
         const fromStep = workflow.steps?.find(s => s.configId === fromStepId);
         const toStep = workflow.steps?.find(s => s.configId === toStepId);
-
         if (!fromStep || !toStep) return;
-
-        // 从源步骤移除模块
+        if (!fromStep.modules) fromStep.modules = [];
         const [movedModule] = fromStep.modules.splice(fromIndex, 1);
-
-        // 如果目标步骤没有 modules 数组，则创建它
-        if (!toStep.modules) {
-            toStep.modules = [];
-        }
-
-        // 添加到目标步骤
+        if (!toStep.modules) toStep.modules = [];
         toStep.modules.splice(toIndex, 0, movedModule);
     };
 
     // =================================================================
     // 公共 API (暴露给外部世界的精简接口)
     // =================================================================
+
+    /**
+     * 【核心修正】新增计算属性，用于判断整个工作台是否存在任何未保存的更改。
+     * 这将用于在用户关闭浏览器标签页时发出警告。
+     */
+    const hasDirtyDrafts = computed(() => {
+        return Object.keys(drafts.value).some(globalId => _isDirty(globalId));
+    });
 
     /**
      * 获取（申请）一个编辑会话。这是进行任何修改操作的唯一入口。
@@ -294,13 +272,11 @@ export const useWorkbenchStore = defineStore('workbench', () => {
      */
     async function acquireEditSession(type: ConfigType, globalId: string): Promise<EditSession | null> {
 
-        // 1. 检查这个 ID 是否已经被锁定
-        if (lockedGlobalIds.value[globalId]) {
-            // 找到已存在的 draft，可以给出更具体的提示（可选）
-            // const existingDraftId = lockedGlobalIds.value[globalId];
-            // const existingDraftName = drafts.value[existingDraftId]?.data?.name;
-            console.warn(`“${globalId}” 正在被另一个会话编辑。`);
-            return null;
+        // 检查是否已存在同名草稿
+        if (drafts.value[globalId]) {
+            console.warn(`“${globalId}” 正在被编辑。`);
+            // 如果需要，可以返回已存在的会话实例
+            return new EditSession(type, globalId);
         }
 
         // 2. 根据类型，选择对应的异步状态对象
@@ -354,37 +330,27 @@ export const useWorkbenchStore = defineStore('workbench', () => {
 
         // --- 如果一切正常，开始创建草稿 ---
         const sourceConfig = sourceItem.data; // 现在我们拿到了干净的数据
-        const draftId = uuidv4();
         const draftData = deepCloneWithNewIds(sourceConfig); // 深度克隆，避免修改原始 store 数据
 
-        drafts.value[draftId] = {
+        // 【核心修正】使用 globalId 作为键
+        drafts.value[globalId] = {
             type: type,
             data: draftData,
-            originalState: JSON.stringify(draftData), // 创建快照用于比对 isDirty
-            uiState: {
-                selectedItemId: null,
-                expandedStepIds: [],
-            },
+            originalState: JSON.stringify(draftData), // 创建快照
         };
 
-        // 7. 标记此 globalId 已被锁定
-        lockedGlobalIds.value[globalId] = draftId;
-
-        // message.success(`开始编辑 “${draftData.name}”`);
-        return new EditSession(type, draftId, globalId);
+        // 【核心修正】返回只包含 type 和 globalId 的会话
+        return new EditSession(type, globalId);
     }
 
     // 我们需要把所有 EditSession 需要的“私有”方法也 return 出去，
     // 这样注入的 storeInstance 才拥有这些方法。
     const internalApi = {
         _getDraftData,
-        _getUiState,
         _isDirty,
         _updateDraftData,
-        _setSelectedItemInDraft,
-        _toggleStepExpansionInDraft,
         _saveDraft,
-        _closeDraft,
+        _discardDraft,
         _addStepToDraft,
         _moveStepInDraft,
         _addModuleToDraft,
@@ -397,6 +363,8 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         globalStepsAsync,
         globalModulesAsync,
 
+        hasDirtyDrafts,
+
         // --- 核心服务方法 ---
         acquireEditSession,
 
@@ -406,4 +374,4 @@ export const useWorkbenchStore = defineStore('workbench', () => {
         ...internalApi
     };
 });
-// --- END OF FILE frontend/src/app-workbench/features/workflow-editor/stores/workbenchStore.ts ---
+// --- END OF FILE frontend/src/app-workbench/stores/workbenchStore.ts ---

@@ -27,7 +27,12 @@
       <!-- 当前编辑结构插槽 -->
       <template #editor-panel>
         <div v-if="activeSession" class="editor-panel-wrapper">
-          <WorkbenchSidebar :session="activeSession" />
+          <!-- 传递 selectedModuleId 并监听更新事件 TODO 改为更智能的方式-->
+          <WorkbenchSidebar
+              :session="activeSession"
+              :selected-module-id="selectedModuleId"
+              @update:selected-module-id="selectedModuleId = $event"
+          />
         </div>
         <n-empty v-else description="请从左侧选择或拖拽一个配置项开始编辑" />
       </template>
@@ -36,7 +41,11 @@
       <template #main-content>
         <n-spin :show="isAcquiringSession" description="正在加载编辑器...">
           <div v-if="activeSession" class="main-content-wrapper">
-            <EditorTargetRenderer :session="activeSession" />
+            <!-- 传递 session 和 selectedModuleId TODO 改为更智能的方式-->
+            <EditorTargetRenderer
+                :session="activeSession"
+                :selected-module-id="selectedModuleId"
+            />
           </div>
           <n-empty v-else description="无激活的编辑会话" style="margin-top: 20%;" />
         </n-spin>
@@ -62,15 +71,15 @@
 </template>
 
 <script setup lang="ts">
-import {ref} from 'vue';
+import {onBeforeUnmount, onMounted, ref} from 'vue';
 import {NCheckbox, NEmpty, NH3, NSpin, useMessage} from 'naive-ui';
-import {useWorkbenchStore} from '@/app-workbench/features/workflow-editor/stores/workbenchStore.ts';
-import {type ConfigType, type EditSession} from '@/app-workbench/features/workflow-editor/services/EditSession.ts';
+import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
+import {type ConfigType, type EditSession} from '@/app-workbench/services/EditSession.ts';
 
-import EditorLayout from '@/app-workbench/features/workflow-editor/layouts/EditorLayout.vue';
-import GlobalResourcePanel from '@/app-workbench/features/workflow-editor/components/GlobalResourcePanel.vue';
-import WorkbenchSidebar from '@/app-workbench/features/workflow-editor/components/WorkbenchSidebar.vue';
-import EditorTargetRenderer from '@/app-workbench/features/workflow-editor/components/EditorTargetRenderer.vue';
+import EditorLayout from '@/app-workbench/layouts/EditorLayout.vue';
+import GlobalResourcePanel from '@/app-workbench/components/panel/GlobalResourcePanel.vue';
+import WorkbenchSidebar from '@/app-workbench/components/panel/WorkbenchSidebar.vue';
+import EditorTargetRenderer from '@/app-workbench/components/module/EditorTargetRenderer.vue';
 import AiConfigEditorPanel from "@/app-workbench/features/ai-config-panel/AiConfigEditorPanel.vue";
 
 defineOptions({
@@ -88,15 +97,36 @@ const isEditorPanelVisible = ref(true);
 
 // --- 临时：控制模态框显示的状态 ---
 const showAiConfigModal = ref(false);
+// --- 临时：选择的模块ID ---
+const selectedModuleId = ref<string | null>(null);
 
 // --- 事件处理 ---
+
+onMounted(() => {
+  window.addEventListener('beforeunload', beforeUnloadHandler);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener('beforeunload', beforeUnloadHandler);
+});
+
+// 浏览器关闭前的警告
+const beforeUnloadHandler = (event: BeforeUnloadEvent) => {
+  // 检查 store 中是否有任何未提交的更改
+  if (workbenchStore.hasDirtyDrafts) {
+    // 标准做法是阻止默认行为，浏览器会显示一个通用的确认对话框。
+    event.preventDefault();
+  }
+};
+
 async function handleStartEditing({ type, id: globalId }: { type: ConfigType; id: string }) {
   if (isAcquiringSession.value) return;
 
-  if (activeSession.value) {
-    if (activeSession.value.globalId === globalId && activeSession.value.type === type) return;
-    if (!activeSession.value.close()) return;
+  if (activeSession.value && activeSession.value.globalId === globalId) {
+    return;
   }
+
+  selectedModuleId.value = null;
 
   isAcquiringSession.value = true;
   activeSession.value = null;

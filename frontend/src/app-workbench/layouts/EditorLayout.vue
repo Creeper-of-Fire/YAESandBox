@@ -1,4 +1,4 @@
-﻿<!-- START OF FILE: src/app-workbench/features/workflow-editor/layouts/EditorLayout.vue -->
+﻿<!-- START OF FILE: src/app-workbench/layouts/EditorLayout.vue -->
 <template>
   <n-layout class="editor-layout" has-sider>
 

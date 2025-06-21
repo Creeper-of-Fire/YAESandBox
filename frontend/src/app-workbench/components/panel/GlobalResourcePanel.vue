@@ -1,4 +1,4 @@
-﻿<!-- START OF FILE: src/app-workbench/features/workflow-editor/components/GlobalResourcePanel.vue -->
+﻿<!-- START OF FILE: src/app-workbench/components/GlobalResourcePanel.vue -->
 <template>
   <div class="global-resource-panel">
     <n-h4>全局资源</n-h4>
@@ -28,38 +28,22 @@
           <!-- ====================================================== -->
           <n-collapse-item title="工作流" name="workflows">
             <div v-if="workflows && Object.keys(workflows).length > 0">
-              <!-- 工作流列表只读，不可拖拽，所以直接 v-for 遍历原始 Record -->
-              <div v-for="(item, id) in workflows" :key="id">
-                <div
-                    v-if="item.isSuccess"
-                    class="resource-item"
-                    @dblclick="startEditing('workflow', id)"
-                >
-                  <span>{{ item.data.name }}</span>
-                  <n-button text @click="startEditing('workflow', id)">编辑</n-button>
-                </div>
-                <div v-else class="resource-item-damaged">
-                  <n-icon :component="LinkOffIcon" color="#d03050"/>
-                  <n-tooltip trigger="hover">
-                    <template #trigger>
-                      <span class="damaged-text">{{ id }} (已损坏)</span>
-                    </template>
-                    {{ item.errorMessage }}
-                  </n-tooltip>
-                  <n-button
-                      text
-                      @click="showErrorDetail(item.errorMessage,item.originJsonString)"
-                  >
-                    详情
-                  </n-button>
-                </div>
-              </div>
+              <!-- 使用 GlobalResourceListItem 渲染工作流项 -->
+              <GlobalResourceListItem
+                  v-for="(item, id) in workflows"
+                  :key="id"
+                  :id="id"
+                  :item="item"
+                  type="workflow"
+                  @start-editing="startEditing"
+                  @show-error-detail="showErrorDetail"
+              />
             </div>
             <n-empty v-else small description="无全局工作流"/>
           </n-collapse-item>
 
           <!-- ====================================================== -->
-          <!--               步骤列表渲染部分 (已修正)                -->
+            <!--               步骤列表渲染部分 (已修正)                -->
           <!-- ====================================================== -->
           <n-collapse-item title="步骤" name="steps">
             <draggable
@@ -70,30 +54,16 @@
                 :sort="false"
                 :clone="cloneResource"
             >
-              <!-- 直接对 v-model 绑定的数组进行 v-for 循环 -->
               <div v-for="element in stepsList" :key="element.id">
-                <!-- element 的类型现在可以被正确推断为 DraggableResourceItem<StepResourceItem> -->
-                <div
-                    v-if="element.item.isSuccess"
-                    class="resource-item"
-                    :data-drag-payload="JSON.stringify(element.item.data)"
-                    @dblclick="startEditing('step', element.id)"
-                >
-                  <span>{{ element.item.data.name }}</span>
-                  <n-button text @click="startEditing('step', element.id)">编辑</n-button>
-                </div>
-                <div v-else class="resource-item-damaged">
-                  <n-icon :component="LinkOffIcon" color="#d03050"/>
-                  <n-tooltip trigger="hover">
-                    <template #trigger>
-                      <span class="damaged-text">{{ element.id }} (已损坏)</span>
-                    </template>
-                    {{ element.item.errorMessage }}
-                  </n-tooltip>
-                  <n-button text @click="showErrorDetail(element.item.errorMessage, element.item.originJsonString)">
-                    详情
-                  </n-button>
-                </div>
+                <!-- 使用 GlobalResourceListItem 渲染步骤项，并传递拖拽数据 -->
+                <GlobalResourceListItem
+                    :id="element.id"
+                    :item="element.item"
+                    type="step"
+                    :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
+                    @start-editing="startEditing"
+                    @show-error-detail="showErrorDetail"
+                />
               </div>
             </draggable>
             <n-empty v-else small description="无全局步骤"/>
@@ -111,29 +81,16 @@
                 :sort="false"
                 :clone="cloneResource"
             >
-              <!-- 同样，直接在内部使用 v-for -->
               <div v-for="element in modulesList" :key="element.id">
-                <div
-                    v-if="element.item.isSuccess"
-                    class="resource-item"
-                    :data-drag-payload="JSON.stringify(element.item.data)"
-                    @dblclick="startEditing('module', element.id)"
-                >
-                  <span>{{ element.item.data.name }}</span>
-                  <n-button text @click="startEditing('module', element.id)">编辑</n-button>
-                </div>
-                <div v-else class="resource-item-damaged">
-                  <n-icon :component="LinkOffIcon" color="#d03050"/>
-                  <n-tooltip trigger="hover">
-                    <template #trigger>
-                      <span class="damaged-text">{{ element.id }} (已损坏)</span>
-                    </template>
-                    {{ element.item.errorMessage }}
-                  </n-tooltip>
-                  <n-button text @click="showErrorDetail(element.item.errorMessage, element.item.originJsonString)">
-                    详情
-                  </n-button>
-                </div>
+                <!-- 使用 GlobalResourceListItem 渲染模块项，并传递拖拽数据 -->
+                <GlobalResourceListItem
+                    :id="element.id"
+                    :item="element.item"
+                    type="module"
+                    :data-drag-payload="element.item.isSuccess ? JSON.stringify(element.item.data) : undefined"
+                    @start-editing="startEditing"
+                    @show-error-detail="showErrorDetail"
+                />
               </div>
             </draggable>
             <n-empty v-else small description="无全局模块"/>
@@ -147,15 +104,14 @@
 
 <script setup lang="ts">
 import {computed, h, onMounted} from 'vue';
-import {useWorkbenchStore} from '@/app-workbench/features/workflow-editor/stores/workbenchStore.ts';
-import {NAlert, NButton, NCollapse, NCollapseItem, NEmpty, NH4, NIcon, NSpin, useDialog} from 'naive-ui';
-import type {ConfigObject, ConfigType} from "@/app-workbench/features/workflow-editor/services/EditSession.ts";
-import {LinkOffOutlined as LinkOffIcon} from '@vicons/material';
+import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
+import {NAlert, NButton, NCollapse, NCollapseItem, NEmpty, NH4, NSpin, useDialog} from 'naive-ui';
+import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSession.ts";
 import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {GlobalResourceItem} from "@/types/ui.ts";
 
-// TODO 分割不同的组件
-// TODO 使用useStorage存储各种组件的状态
+// 导入新的子组件
+import GlobalResourceListItem from './GlobalResourceListItem.vue';
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -234,6 +190,11 @@ onMounted(() => {
   executeAll()
 });
 
+/**
+ * 显示资源加载错误的详细信息。
+ * @param {string} errorMessage - 错误信息。
+ * @param {string | null | undefined} originJsonString - 原始的 JSON 字符串（如果可用）。
+ */
 function showErrorDetail(errorMessage: string, originJsonString: string | null | undefined) {
   const totalMessage = `错误信息: ${errorMessage}\n\n原始JSON: ${originJsonString || '无'}`;
   const messageLines = totalMessage.split('\n');
@@ -243,7 +204,7 @@ function showErrorDetail(errorMessage: string, originJsonString: string | null |
     content: () => h(
         'div', // 外层容器，可以是一个 div 或者 Fragment
         null,
-        messageLines.map(line => h('div', null, line))
+        messageLines.map(line => h('div', null, line)) // 为每行创建独立的 div
     ),
     positiveText: '确定'
   });
@@ -265,32 +226,35 @@ function cloneResource(original: DraggableResourceItem<ConfigObject>): ConfigObj
   return null;
 }
 
-function startEditing(type: ConfigType, id: string) {
-  emit('start-editing', {type, id});
+/**
+ * 触发“开始编辑”事件，向上通知父组件打开新的编辑会话。
+ * @param {object} payload - 包含类型和ID的对象。
+ * @param {ConfigType} payload.type - 配置类型。
+ * @param {string} payload.id - 配置ID。
+ */
+function startEditing(payload: { type: ConfigType; id: string }) {
+  emit('start-editing', payload);
 }
 </script>
 
 <style scoped>
-.resource-item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
+.global-resource-panel {
+  padding: 12px;
+  height: 100%;
+  box-sizing: border-box;
+  overflow-y: auto;
 }
 
-.resource-item-damaged {
+.panel-state-wrapper {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  padding: 4px 8px;
-  border-radius: 4px;
-  cursor: pointer;
+  justify-content: center;
+  flex-direction: column;
+  min-height: 150px; /* 确保加载/错误状态有足够空间显示 */
+  text-align: center;
 }
 
-.resource-item:hover {
-  background-color: #f0f2f5;
-}
+/* GlobalResourceListItem 内部的样式在它自己的文件中定义，这里只需要调整其父容器的布局 */
+/* .resource-item 和 .resource-item-damaged 样式已移动到 GlobalResourceListItem.vue */
 </style>
 <!-- END OF FILE -->
