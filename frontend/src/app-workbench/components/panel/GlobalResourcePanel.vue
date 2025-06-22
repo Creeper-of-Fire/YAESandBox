@@ -1,7 +1,7 @@
 ﻿<!-- src/app-workbench/components/.../GlobalResourcePanel.vue -->
 <template>
-  <div class="global-resource-panel">
-    <div class="global-resource-header">
+  <HeaderAndBodyLayout>
+    <template #header>
       <n-h4>全局资源</n-h4>
       <!-- 状态一：正在加载 -->
       <div v-if="aggregatedIsLoading" class="panel-state-wrapper">
@@ -35,9 +35,9 @@
         <!-- 模块标签页 -->
         <n-tab name="modules" tab="模块"/>
       </n-tabs>
-    </div>
+    </template>
 
-    <n-scrollbar class="scroll-container" style="height: 100%">
+    <template #body>
       <div v-if="activeTab===`workflows`">
         <draggable
             v-if="workflowsList.length > 0"
@@ -48,7 +48,6 @@
             :setData="handleSetData"
             :sort="false"
             class="resource-list"
-            ghost-class="workbench-ghost-item"
             item-key="id"
         >
           <div v-for="element in workflowsList"
@@ -77,7 +76,6 @@
             :setData="handleSetData"
             :sort="false"
             class="resource-list"
-            ghost-class="workbench-ghost-item"
             item-key="id"
         >
           <div v-for="element in stepsList"
@@ -106,7 +104,6 @@
             :setData="handleSetData"
             :sort="false"
             class="resource-list"
-            ghost-class="workbench-ghost-item"
             item-key="id"
         >
           <div v-for="element in modulesList"
@@ -125,9 +122,8 @@
         </draggable>
         <n-empty v-else class="empty-container" description="无全局模块" small/>
       </div>
-    </n-scrollbar>
-
-  </div>
+    </template>
+  </HeaderAndBodyLayout>
 </template>
 
 
@@ -139,6 +135,7 @@ import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSessio
 import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {GlobalResourceItem} from "@/types/ui.ts";
 import GlobalResourceListItem from './GlobalResourceListItem.vue';
+import HeaderAndBodyLayout from "@/app-workbench/layouts/HeaderAndBodyLayout.vue";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -279,16 +276,6 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement)
 </script>
 
 <style scoped>
-.global-resource-panel {
-  height: 100%; /* 确保占据父容器全部高度 */
-  display: flex;
-  flex-direction: column;
-  box-sizing: border-box;
-  /* 添加弹性布局 */
-  flex: 1;
-  overflow: hidden;
-}
-
 .panel-state-wrapper {
   display: flex;
   align-items: center;
@@ -297,12 +284,6 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement)
   min-height: 200px;
   /* 确保状态容器也能滚动 */
   overflow: auto;
-}
-
-.scroll-container {
-  flex-grow: 1; /* 占据所有剩余空间 */
-  overflow: auto; /* 关键！让这个容器自己处理溢出 */
-  position: relative; /* 确保内部的滚动条能正确计算高度 */
 }
 
 /* 确保空状态也能正确显示 */

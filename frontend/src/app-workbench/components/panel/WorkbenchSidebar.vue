@@ -7,9 +7,8 @@
       @dragover.prevent
   >
     <!-- 2. 根据 session 是否存在，渲染不同的内部视图 -->
-    <div v-if="session && session.getData().value" class="sidebar-content">
-
-      <div class="sidebar-header">
+    <HeaderAndBodyLayout v-if="session && session.getData().value">
+      <template #header>
         <n-h4 class="sidebar-title-bar">
           <span class="title-text">编辑{{ currentConfigName }}</span>
           <n-tooltip trigger="hover">
@@ -32,12 +31,13 @@
             <n-button :disabled="!isDirty" secondary size="small" strong type="success" @click="handleSave">保存</n-button>
           </n-space>
         </n-space>
-      </div>
+        <!-- 分割线，让布局更清晰 -->
+        <n-divider style="margin-top: 12px; margin-bottom: 12px;"/>
+      </template>
 
-      <!-- 分割线，让布局更清晰 -->
-      <n-divider style="margin-top: 12px; margin-bottom: 12px;"/>
+
       <!-- 2b. 可滚动的内容区域 -->
-      <n-scrollbar class="scrollable-area" style="height: 100%">
+      <template #body>
         <template v-if="session.type === 'workflow' && workflowData">
           <p class="sidebar-description">拖拽全局步骤到步骤列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
           <WorkflowItemRenderer
@@ -66,8 +66,8 @@
             这是一个独立的模块。请在中间的主编辑区完成详细配置。
           </n-alert>
         </template>
-      </n-scrollbar>
-    </div>
+      </template>
+    </HeaderAndBodyLayout>
     <div v-else class="empty-state-wrapper">
       <div class="custom-empty-state">
         <n-icon :component="AddBoxIcon" :size="80"/>
@@ -92,6 +92,7 @@
   </div>
 </template>
 
+
 <script lang="ts" setup>
 import {computed, h, ref} from 'vue';
 import {NAlert, NH4, NIcon, NInput, useDialog, useMessage} from 'naive-ui';
@@ -105,6 +106,7 @@ import StepItemRenderer from '../editor/StepItemRenderer.vue';
 import WorkflowItemRenderer from "@/app-workbench/components/editor/WorkflowItemRenderer.vue";
 import {AddBoxOutlined as AddBoxIcon, SwapHorizOutlined as SwapHorizIcon} from '@vicons/material';
 import {CloseIcon} from "naive-ui/es/_internal/icons";
+import HeaderAndBodyLayout from "@/app-workbench/layouts/HeaderAndBodyLayout.vue";
 
 const props = defineProps<{
   session: EditSession | null;
@@ -336,18 +338,6 @@ const currentConfigName = computed(() =>
   margin-right: 8px; /* 和关闭按钮之间留点空隙 */
 }
 
-.sidebar-content {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  overflow: hidden; /* 防止内容溢出父容器 */
-  box-sizing: border-box;
-}
-
-.sidebar-header {
-  flex-shrink: 0; /* 固定头部，不允许收缩 */
-}
-
 .sidebar-title-bar {
   display: flex;
   justify-content: space-between;
@@ -356,12 +346,6 @@ const currentConfigName = computed(() =>
 
 .action-bar {
   margin-top: 8px;
-}
-
-.scrollable-area {
-  flex-grow: 1; /* 占据所有剩余空间 */
-  overflow: auto; /* 关键！让这个容器自己处理溢出 */
-  position: relative; /* 确保内部的滚动条能正确计算高度 */
 }
 
 .empty-state-wrapper {
