@@ -165,7 +165,7 @@ internal record DoubaoAiProcessorConfig() : AbstractAiProcessorConfig(nameof(Dou
         ResourceType = typeof(DoubaoConfigResources)
     )]
     public IReadOnlyList<LogitBiasItemDto>? LogitBias { get; init; }
-
+    
     public record LogitBiasItemDto
     {
         [JsonPropertyName("tokenId")]

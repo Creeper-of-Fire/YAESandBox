@@ -1,13 +1,24 @@
 ﻿import {cloneDeep} from "lodash-es";
-import {defineAsyncComponent, markRaw} from "vue";
+import {type Component, defineAsyncComponent, markRaw} from "vue";
+
+// =================================================================
+// 1. 动态组件定义
+// 使用 markRaw 和 defineAsyncComponent 是处理动态组件的最佳实践，
+// 它可以防止 Vue 对组件对象进行不必要的响应式代理，从而提高性能。
+// =================================================================
 const MyCustomStringAutoComplete = markRaw(defineAsyncComponent(() => import('@/app-workbench/features/schema-viewer/field-widget/MyCustomStringAutoComplete.vue')));
 const SliderWithInputWidget = markRaw(defineAsyncComponent(() => import('@/app-workbench/features/schema-viewer/field-widget/SliderWithInputWidget.vue')));
 
-// 为 JSON Schema 属性定义一个更具体的类型
+
+// =================================================================
+// 2. 类型定义
+// 为 JSON Schema 及其 UI 扩展属性定义严谨的类型接口
+// =================================================================
 interface FieldProps
 {
     // 标准 JSON Schema 字段
     type?: 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | string[];
+    title?: string;
     description?: string;
     default?: unknown;
 
@@ -23,12 +34,15 @@ interface FieldProps
 
     // 结构相关
     oneOf?: (FieldProps | { $ref: string })[];
+    properties?: Record<string, FieldProps>;
+    definitions?: Record<string, FieldProps>;
+    items?: FieldProps | FieldProps[];
 
-    // 非标准的 UI 提示字段 (vue-form 或类似库常用)
-    'ui:widget'?: string | object; // 允许字符串名称或组件对象
+    // UI 扩展字段 (非标准)
+    'ui:widget'?: string | Component;
     'ui:options'?: {
         isEditableSelectOptions?: boolean;
-        [key: string]: unknown; // 允许其他任何选项
+        [key: string]: unknown;
     };
     'ui:enumOptions'?: { label: string; value: unknown }[];
 
@@ -36,190 +50,215 @@ interface FieldProps
     [key: string]: unknown;
 }
 
-
 /**
- * 预处理从后端获取的 JSON Schema，根据约定动态注入 ui:widget。
- * @param originalSchema 从后端获取的原始 JSON Schema 对象。
- * @returns 处理后、可供 vue-form 使用的 Schema 对象。
+ * 检查一个字段是否为指定的目标类型，正确处理 type 为字符串或数组的情况。
+ * @param field - 要检查的字段 Schema。
+ * @param targetType - 目标类型，如 'array', 'object', 'number' 等。
+ * @returns - 如果字段是目标类型，则返回 true，否则返回 false。
  */
-export function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record<string, any>
+function isFieldType(field: FieldProps, targetType: 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array'): boolean
 {
-    const schema = cloneDeep(originalSchema);
-
-    // 1. 预处理 definitions
-    // 必须先处理 definitions，因为 properties 可能会引用它们
-    if (schema.definitions)
+    const fieldType = field.type;
+    if (typeof fieldType === 'string')
     {
-        for (const defName in schema.definitions)
-        {
-            // 递归调用自身，处理 definitions 内部可能存在的嵌套 oneOf 等
-            schema.definitions[defName] = preprocessSchemaForWidgets(schema.definitions[defName]);
-        }
+        return fieldType === targetType;
     }
-
-    // 2. 预处理 properties
-    if (schema.properties)
+    if (Array.isArray(fieldType))
     {
-        for (const fieldName in schema.properties)
-        {
-            // 使用辅助函数处理每个字段
-            schema.properties[fieldName] = preprocessSchemaOfFieldProps(schema.properties[fieldName], schema.definitions);
-        }
+        // 只要数组中包含目标类型即可，忽略 'null' 等其他类型
+        return fieldType.includes(targetType);
     }
+    return false;
+}
 
+// =================================================================
+// 3. 导出主函数 (入口)
+// =================================================================
+/**
+ * 预处理整个 JSON Schema，递归地为其属性注入 UI Widget 并修复结构问题。
+ * @param originalSchema - 从后端获取的原始 JSON Schema 对象。
+ * @returns - 处理后、可供 UI 框架使用的 Schema 对象。
+ */
+export function preprocessSchemaForWidgets(originalSchema: Record<string, any>): FieldProps
+{
+    if (typeof originalSchema !== 'object' || originalSchema === null || Array.isArray(originalSchema))
+    {
+        return {};
+    }
+    const schema = cloneDeep(originalSchema as FieldProps);
+    // 启动递归，传入顶层的 definitions 供全局引用
+    recursivePreprocess(schema, schema.definitions || {});
     return schema;
 }
 
+// =================================================================
+// 4. 真正一视同仁的递归处理函数
+// =================================================================
 /**
- * 预处理单个字段的 Schema 属性
- * @param oldFieldProps - 原始字段属性对象
- * @param definitions - 顶层的 definitions 对象，用于解析 $ref
- * @returns - 处理后的字段属性对象
+ * 内部递归函数，对任何 Schema 节点执行相同的处理流程。
+ * @param schemaNode - 当前正在处理的任何 Schema 节点。
+ * @param definitions - 顶层的 definitions 集合，用于在整个递归过程中解析 $ref。
  */
-function preprocessSchemaOfFieldProps(oldFieldProps: unknown, definitions?: Record<string, FieldProps>): FieldProps
+function recursivePreprocess(schemaNode: FieldProps, definitions: Record<string, FieldProps>): void
 {
-    // 1. 在执行任何操作前，先验证输入是否为有效的对象
-    if (typeof oldFieldProps !== 'object' || oldFieldProps === null || Array.isArray(oldFieldProps))
+    // 步骤 1: 首先处理当前节点自身的元数据转换（oneOf, widget 等）。
+    // 这确保了在检查子节点之前，父节点的信息是最终的。
+    Object.assign(schemaNode, preprocessSingleField(schemaNode, definitions));
+
+    // 步骤 2: 处理 definitions (如果当前节点有的话)
+    // 确保在处理 properties/items 之前，所有 definitions 已被处理。
+    if (schemaNode.definitions)
     {
-        // 如果输入不是一个有效的普通对象，则直接返回空对象
-        // 返回 {} 是有效的，因为它符合 FieldProps 接口（所有属性都是可选的）
-        return {};
+        for (const defName in schemaNode.definitions)
+        {
+            recursivePreprocess(schemaNode.definitions[defName], definitions);
+        }
     }
 
-    // 2. 对验证过的有效对象进行深拷贝，并进行类型断言
-    // 因为我们已经检查过它是一个对象，所以这里的断言是安全的。
-    let fieldProps: FieldProps = cloneDeep(oldFieldProps as FieldProps);
-
-    // ==================== oneOf 扁平化逻辑 开始 ====================
-    // 如果 oneOf 中只有一个选项，则将其属性合并到顶层
-    if (Array.isArray(fieldProps.oneOf) && fieldProps.oneOf.length === 1)
+    // 步骤 3: 处理 properties (如果当前节点是对象)
+    if (schemaNode.properties)
     {
-        let singleOption = fieldProps.oneOf[0];
+        for (const fieldName in schemaNode.properties)
+        {
+            recursivePreprocess(schemaNode.properties[fieldName], definitions);
+        }
+    }
 
-        // 如果这个选项是 $ref，需要去 definitions 里解析它
-        // 使用类型守卫 'in' 来安全地检查属性
+    // 步骤 4: 处理 items (如果当前节点是数组)
+    // 这是修复问题的核心所在，它对任何数组类型的节点都生效。
+    if (isFieldType(schemaNode, 'array') && schemaNode.items && !Array.isArray(schemaNode.items) && typeof schemaNode.items === 'object')
+    {
+        const itemSchema = schemaNode.items;
+
+        // --- 关键修复逻辑：一视同仁地处理所有数组和其 items ---
+        // 比较当前节点（父数组）和其 items 的描述，如果重复则删除 items 的。
+        if (itemSchema.title && itemSchema.title === schemaNode.title)
+        {
+            delete itemSchema.title;
+        }
+        if (itemSchema.description && itemSchema.description === schemaNode.description)
+        {
+            delete itemSchema.description;
+        }
+
+        // 清理完毕后，对 items 节点本身进行递归处理。
+        recursivePreprocess(itemSchema, definitions);
+    }
+}
+
+
+// =================================================================
+// 5. 单个字段处理函数 (无递归)
+// =================================================================
+/**
+ * 预处理【单个字段】的 Schema 属性，主要负责 oneOf 扁平化和 widget 注入。
+ * 这个函数不进行递归，只处理当前层级的字段，实现关注点分离。
+ * @param fieldProps - 原始字段属性对象。
+ * @param definitions - 顶层的 definitions 对象，用于解析 $ref。
+ * @returns - 处理后的字段属性对象。
+ */
+function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<string, FieldProps>): FieldProps
+{
+    // 对传入的对象进行操作，因为上层函数会用 Object.assign 合并
+    let processedProps = fieldProps;
+
+    // === oneOf 扁平化逻辑 ===
+    if (Array.isArray(processedProps.oneOf) && processedProps.oneOf.length === 1)
+    {
+        let singleOption = processedProps.oneOf[0];
+
         if (singleOption && typeof singleOption === 'object' && '$ref' in singleOption && typeof singleOption.$ref === 'string' && definitions)
         {
-            const refPath = singleOption.$ref.split('/'); // 例如 "#/definitions/PromptRoleType"
+            const refPath = singleOption.$ref.split('/');
             const defName = refPath[refPath.length - 1];
             if (defName && definitions[defName])
             {
+                // 注意：definitions 里的项可能已经被预处理过了
                 singleOption = definitions[defName];
             }
         }
 
-        // 确保 singleOption 是一个可以合并的对象
         if (singleOption && typeof singleOption === 'object' && !Array.isArray(singleOption))
         {
-            const originalDescription = fieldProps.description; // 保存原始的 description
-
-            // 将 oneOf 中的属性合并到主对象，主对象的同名属性优先级更高（覆盖 oneOf 的）
-            fieldProps = {...singleOption, ...fieldProps};
-
-            // 如果主对象没有 description，但原始的有，则恢复它
-            if (originalDescription && !fieldProps.description)
+            const originalDescription = processedProps.description;
+            // 合并时，processedProps 的属性优先级更高，会覆盖 singleOption 的同名属性
+            processedProps = {...singleOption, ...processedProps};
+            // 如果合并后 description 丢失了，则恢复原始的
+            if (originalDescription && !processedProps.description)
             {
-                fieldProps.description = originalDescription;
+                processedProps.description = originalDescription;
             }
         }
-
-        // 清理掉 oneOf
-        delete fieldProps.oneOf;
-    }
-    // ==================== oneOf 扁平化逻辑 结束 ====================
-
-    // 确保每个 property 都有一个 ui:options 对象，方便后续写入
-    if (!fieldProps['ui:options'])
-    {
-        fieldProps['ui:options'] = {};
-    }
-    // 也可以直接在 uiSchema 层面操作（如果 vue-form 优先 uiSchema）
-    // 但既然你提议对 ui:widget 赋值，直接修改 fieldProps 里的 ui:widget 更直接
-
-    // 确保 ui:options 存在，以便安全地向其添加属性
-    if (!fieldProps['ui:options'])
-    {
-        fieldProps['ui:options'] = {};
+        delete processedProps.oneOf;
     }
 
-    // 规则 1: 处理数字输入类型 (滑块或普通数字输入)
-    const fieldType = fieldProps.type;
-    const isNumeric = (typeof fieldType === 'string' && ['number', 'integer'].includes(fieldType)) ||
-        (Array.isArray(fieldType) && fieldType.some(t => ['number', 'integer'].includes(t)));
-
-    if (isNumeric && !fieldProps['ui:widget'])
+    // === Widget 注入逻辑 ===
+    // 确保 ui:options 存在
+    if (!processedProps['ui:options'])
     {
-        // 检查是否应该使用滑块
-        if (typeof fieldProps.maximum === 'number' && typeof fieldProps.minimum === 'number')
+        processedProps['ui:options'] = {};
+    }
+
+    // 规则 1: 数字类型
+    // 使用 isFieldType 辅助函数进行健壮的数字类型检查。
+    const isNumeric = isFieldType(processedProps, 'number') || isFieldType(processedProps, 'integer');
+    if (isNumeric && !processedProps['ui:widget'])
+    {
+        if (typeof processedProps.maximum === 'number' && typeof processedProps.minimum === 'number')
         {
-            fieldProps['ui:widget'] = SliderWithInputWidget;
-            // 安全地向 ui:options 添加属性
-            const options = fieldProps['ui:options'];
-            options.step = fieldProps.multipleOf;
-            options.default = fieldProps.default;
-            options.max = fieldProps.maximum;
-            options.min = fieldProps.minimum;
-
-            // 如果类型不是'integer'，multipleOf 会被 step 替代，可以删除
-            if (fieldProps.type !== 'integer')
+            processedProps['ui:widget'] = SliderWithInputWidget;
+            const options = processedProps['ui:options'];
+            options.step = processedProps.multipleOf;
+            options.default = processedProps.default;
+            options.max = processedProps.maximum;
+            options.min = processedProps.minimum;
+            if (processedProps.type !== 'integer')
             {
-                delete fieldProps.multipleOf;
+                delete processedProps.multipleOf;
             }
         }
         else
         {
-            // 否则使用普通的数字输入框
-            fieldProps['ui:widget'] = 'InputNumberWidget';
-            fieldProps['ui:options'].showButton = false;
+            processedProps['ui:widget'] = 'InputNumberWidget';
+            processedProps['ui:options'].showButton = false;
         }
     }
 
-    // 规则 2: 处理枚举类型 (单选、下拉或自动完成)
-    const enumValues = fieldProps.enum;
-    const enumNames = fieldProps.enumNames || fieldProps['x-enumNames'];
+    // 规则 2: 枚举类型
+    const enumValues = processedProps.enum;
+    const enumNames = processedProps.enumNames || processedProps['x-enumNames'];
 
     if (Array.isArray(enumValues) && Array.isArray(enumNames))
     {
-        // 根据 isEditableSelectOptions 决定 widget 类型
-        if (fieldProps['ui:options']?.isEditableSelectOptions === true)
+        if (processedProps['ui:options']?.isEditableSelectOptions === true)
         {
-            if (!fieldProps['ui:widget'])
+            if (!processedProps['ui:widget'])
             {
-                fieldProps['ui:widget'] = MyCustomStringAutoComplete;
+                processedProps['ui:widget'] = MyCustomStringAutoComplete;
             }
-            delete fieldProps['ui:options'].isEditableSelectOptions;
+            // 使用后删除该标记
+            delete processedProps['ui:options'].isEditableSelectOptions;
         }
-        else
+        else if (!processedProps['ui:widget'])
         {
-            if (!fieldProps['ui:widget'])
-            {
-                // 这里可以根据选项数量决定用 Radio 还是 Select，但按约定先用 Radio
-                fieldProps['ui:widget'] = 'RadioWidget';
-            }
+            processedProps['ui:widget'] = 'RadioWidget';
         }
 
-        // 统一将 enum 和 enumNames 转换为 UI 库需要的格式
-        fieldProps['ui:enumOptions'] = enumValues.map((value, index) => ({
-            // 确保 enumNames[index] 存在，如果不存在则使用 value 作为备用标签
+        processedProps['ui:enumOptions'] = enumValues.map((value, index) => ({
             label: (enumNames[index] as string) ?? String(value),
             value
         }));
 
-        // 清理掉原始的 enum 字段，避免混淆
-        delete fieldProps.enum;
-        delete fieldProps.enumNames;
-        delete fieldProps['x-enumNames'];
-
+        delete processedProps.enum;
+        delete processedProps.enumNames;
+        delete processedProps['x-enumNames'];
     }
 
-    // 你可以根据需要添加更多规则...
-
-    // 最后清理：如果 ui:options 最终为空，则删除它
-    if (fieldProps['ui:options'] && Object.keys(fieldProps['ui:options']).length === 0)
+    // 清理空的 ui:options
+    if (processedProps['ui:options'] && Object.keys(processedProps['ui:options']).length === 0)
     {
-        delete fieldProps['ui:options'];
+        delete processedProps['ui:options'];
     }
 
-    return fieldProps;
+    return processedProps;
 }
-
