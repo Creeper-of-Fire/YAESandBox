@@ -25,33 +25,34 @@ public class ModuleRuleAttributeProcessor : ISchemaProcessor
         var typeInfo = context.ContextualType;
 
         // 3. 逐个检查并处理每个规则 Attribute
+        object[] attrs = typeInfo.GetCustomAttributes(true);
 
         // 处理 [NoConfig]
-        if (typeInfo.GetContextAttribute<NoConfigAttribute>(true) != null)
+        if (attrs.OfType<NoConfigAttribute>().Any())
         {
             rules["noConfig"] = true;
         }
 
         // 处理 [SingleInStep]
-        if (typeInfo.GetContextAttribute<SingleInStepAttribute>(true) != null)
+        if (attrs.OfType<SingleInStepAttribute>().Any())
         {
             rules["singleInStep"] = true;
         }
 
         // 处理 [InLastStep]
-        if (typeInfo.GetContextAttribute<InLastStepAttribute>(true) != null)
+        if (attrs.OfType<InLastStepAttribute>().Any())
         {
             rules["inLastStep"] = true;
         }
 
         // 处理 [InFrontOf]
-        if (typeInfo.GetContextAttribute<InFrontOfAttribute>(true) is { } inFrontOfAttr)
+        if (attrs.OfType<InFrontOfAttribute>().FirstOrDefault() is { } inFrontOfAttr)
         {
             rules["inFrontOf"] = inFrontOfAttr.InFrontOfType.Select(t => t.Name).ToArray();
         }
 
         // 处理 [Behind]
-        if (typeInfo.GetContextAttribute<BehindAttribute>(true) is { } behindAttr)
+        if (attrs.OfType<BehindAttribute>().FirstOrDefault() is { } behindAttr)
         {
             rules["behind"] = behindAttr.BehindType.Select(t => t.Name).ToArray();
         }

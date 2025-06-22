@@ -27,6 +27,7 @@ import {
     NSwitch,
     NDatePicker,
     NTimePicker,
+    NPopover,
     // ... 可能还有其他，可以根据后续警告补充
 } from 'naive-ui'
 // 创建一个专门给 vue-form 用的 naive-ui 实例
@@ -44,6 +45,7 @@ const naiveForVueForm = create({
         NSwitch,
         NDatePicker,
         NTimePicker,
+        NPopover,
     ]
 })
 

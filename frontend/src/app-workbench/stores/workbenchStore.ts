@@ -45,6 +45,14 @@ export interface SaveResult
     error?: any; // 保存具体的错误信息
 }
 
+export interface WorkflowModuleRules {
+    noConfig?: boolean;
+    singleInStep?: boolean;
+    inLastStep?: boolean;
+    inFrontOf?: string[]; // 存储的是模块的类型名 (e.g., "PromptGenerationModuleConfig")
+    behind?: string[]; // 存储的是模块的类型名 (e.g., "PromptGenerationModuleConfig")
+}
+
 /**
  * 辅助函数：将后端返回的 DTO 转换为我们前端的统一视图模型数组
  */
@@ -147,6 +155,22 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         {} as Record<string, any>,
         {immediate: false, shallow: false} // 初始不加载
     );
+
+    // 新增一个计算属性，用于存储解析后的规则
+    const moduleRules = computed(() => {
+        const rulesMap: Record<string, WorkflowModuleRules> = {};
+        const schemas = moduleSchemasAsync.state.value;
+
+        if (schemas) {
+            for (const moduleType in schemas) {
+                const schema = schemas[moduleType];
+                if (schema && schema['x-workflow-module-rules']) {
+                    rulesMap[moduleType] = schema['x-workflow-module-rules'] as WorkflowModuleRules;
+                }
+            }
+        }
+        return rulesMap;
+    });
 
     /**
      * 存储所有活跃的草稿会话。
@@ -390,6 +414,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         globalStepsAsync,
         globalModulesAsync,
         moduleSchemasAsync,
+        moduleRules,
 
         hasDirtyDrafts,
         isDirty: _isDirty,

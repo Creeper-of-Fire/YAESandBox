@@ -22,13 +22,5 @@ export type AbstractModuleConfig = {
      * 模块的类型
      */
     moduleType: string;
-    /**
-     * 输入变量名
-     */
-    consumes: Array<string>;
-    /**
-     * 输出变量名
-     */
-    produces: Array<string>;
 };
 

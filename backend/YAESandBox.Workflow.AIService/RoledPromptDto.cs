@@ -21,8 +21,8 @@ public record RoledPromptDto
     /// <summary>
     /// 一段提示词
     /// </summary>
-    [DataType(DataType.MultilineText)]
     [Required]
+    [DataType(DataType.Password)]
     public required string Content { get; init; } = "";
 
     /// <summary>
@@ -58,7 +58,40 @@ public record RoledPromptDto
 /// </summary>
 public enum PromptRoleType
 {
+    /// <summary>
+    /// 系统
+    /// </summary>
     System,
+    /// <summary>
+    /// 用户
+    /// </summary>
     User,
+    /// <summary>
+    /// 助手
+    /// </summary>
     Assistant
+}
+
+/// <summary>
+/// 
+/// </summary>
+public static class PromptRoleTypeExtension
+{
+    /// <summary>
+    /// 把字符串转为角色类型
+    /// </summary>
+    /// <param name="roleString">
+    /// 可用字符串：system, user, assistant
+    /// </param>
+    /// <returns></returns>
+    public static PromptRoleType ToPromptRoleType(this string roleString)
+    {
+        return roleString switch
+        {
+            "system" => PromptRoleType.System,
+            "user" => PromptRoleType.User,
+            "assistant" => PromptRoleType.Assistant,
+            _ => PromptRoleType.User
+        };
+    }
 }

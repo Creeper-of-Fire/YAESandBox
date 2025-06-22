@@ -53,20 +53,11 @@ internal class StepProcessor(
         {
             if (!workflowRuntimeContext.GlobalVariables.TryGetValue(globalName, out object? value))
             {
-                // 这一层校验理论上在静态分析时已完成，但作为运行时安全保障保留
+                // 这一层校验理论上在静态分析时已完成，但在这里，“直接获取然后失败时抛错误”和“失败时返回Result”是一样的。
                 return NormalError.Conflict($"执行步骤 '{this.Config.ConfigId}' 失败：找不到必需的全局输入变量 '{globalName}'。");
             }
 
             this.StepContent.StepVariable[localName] = value;
-        }
-
-        // 检查所有模块的输入是否都已满足，这是运行时的最后一道防线
-        var providedLocalVars = new HashSet<string>(this.Config.InputMappings.Values);
-        var allRequiredLocalVars = this.Config.Modules.SelectMany(m => m.Consumes).Distinct();
-
-        foreach (string requiredVar in allRequiredLocalVars.Where(requiredVar => !providedLocalVars.Contains(requiredVar)))
-        {
-            return NormalError.Conflict($"执行步骤 '{this.Config.ConfigId}' 失败：内部配置错误，模块需要的变量 '{requiredVar}' 未在 InputMappings 中提供。");
         }
 
         // this.StepContent.StepVariable[nameof(WorkflowRuntimeContext.FinalRawText)] = workflowRuntimeContext.FinalRawText;

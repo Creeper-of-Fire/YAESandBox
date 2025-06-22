@@ -254,6 +254,30 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
         delete processedProps['x-enumNames'];
     }
 
+    // 规则 3: DataType 类型
+    if (processedProps.dataType === 'multilineText')
+    {
+        // 只有在没有被手动指定 widget 时，我们才注入配置
+        if (!processedProps['ui:widget'])
+        {
+            // 不再是: processedProps['ui:widget'] = 'textarea';
+            // 而是，为默认的 InputWidget 注入配置参数
+            processedProps['ui:options'].type = 'textarea';
+
+            // 我们可以提供一些更友好的默认值，比如自动调整高度
+            if (processedProps['ui:options'].autosize === undefined)
+            {
+                processedProps['ui:options'].autosize = {
+                    minRows: 3
+                };
+            }
+            // TODO 之后可能采用 NInput的count-graphemes来实现token自动计算/估算？
+        }
+
+        // 处理完毕后，删除这个自定义的、非标准的属性，保持最终 schema 的干净
+        delete processedProps.dataType;
+    }
+
     // 清理空的 ui:options
     if (processedProps['ui:options'] && Object.keys(processedProps['ui:options']).length === 0)
     {

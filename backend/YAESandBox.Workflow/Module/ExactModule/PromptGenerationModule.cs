@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Module.ModuleAttribute;
 using static YAESandBox.Workflow.Module.ExactModule.PromptGenerationModuleProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
 
@@ -27,7 +29,7 @@ internal partial class PromptGenerationModuleProcessor(
     public PromptGenerationModuleProcessorDebugDto DebugDto { get; init; } = new()
     {
         OriginalTemplate = config.Template,
-        ConfiguredRole = config.RoleType,
+        ConfiguredRole = PromptRoleTypeExtension.ToPromptRoleType(config.RoleType),
         ConfiguredPromptName = config.PromptNameInAiModel,
     };
 
@@ -44,7 +46,7 @@ internal partial class PromptGenerationModuleProcessor(
 
         var prompt = new RoledPromptDto
         {
-            Type = this.Config.RoleType,
+            Type = PromptRoleTypeExtension.ToPromptRoleType(this.Config.RoleType),
             Content = substitutedContent,
             Name = this.Config.PromptNameInAiModel ?? string.Empty
         };
@@ -55,11 +57,6 @@ internal partial class PromptGenerationModuleProcessor(
         return Task.FromResult(Result.Ok());
     }
 
-    // 使用 Regex.Matches 获取所有唯一的占位符名称
-    // 使用 lookahead 和 lookbehind 来确保我们只匹配 {} 包裹的内容，并且处理嵌套 {} 的情况（如果需要，但目前正则不支持简单嵌套）
-    // 简单正则：\{([^\{\}]+?)\} 匹配非贪婪的、不包含花括号的内容
-    [GeneratedRegex(@"\{([^\{\}]+?)\}")]
-    private static partial Regex PlaceholderRegex();
 
     private string SubstitutePlaceholdersAsync(
         string template,
@@ -67,7 +64,7 @@ internal partial class PromptGenerationModuleProcessor(
     {
         var resolvedValues = new Dictionary<string, string?>();
 
-        var uniquePlaceholderNames = PlaceholderRegex().Matches(template)
+        var uniquePlaceholderNames = PromptGenerationModuleConfig.PlaceholderRegex().Matches(template)
             .Select(m => m.Groups[1].Value)
             .Distinct(StringComparer.OrdinalIgnoreCase) // 占位符名称不区分大小写
             .ToList();
@@ -180,28 +177,59 @@ internal partial class PromptGenerationModuleProcessor(
     }
 }
 
+internal partial record PromptGenerationModuleConfig
+{
+    // 使用 Regex.Matches 获取所有唯一的占位符名称
+    // 使用 lookahead 和 lookbehind 来确保我们只匹配 {{}} 包裹的内容，并且不能处理嵌套 {{}} 的情况
+    // 简单正则：\{\{([^\{\}]+?)\}\} 匹配非贪婪的、不包含花括号的内容
+    [GeneratedRegex(@"\{\{([^\{\}]+?)\}\}")]
+    internal static partial Regex PlaceholderRegex();
+
+    /// <inheritdoc />
+    internal override List<string> GetConsumedVariables() => PlaceholderRegex().Matches(this.Template)
+        .Select(m => m.Groups[1].Value)
+        .Distinct(StringComparer.OrdinalIgnoreCase)
+        .ToList();
+}
+
 /// <summary>
 /// 提示词生成模块的配置。
 /// </summary>
-internal record PromptGenerationModuleConfig : AbstractModuleConfig<PromptGenerationModuleProcessor>
+[InFrontOf(typeof(AiModuleConfig))]
+internal partial record PromptGenerationModuleConfig : AbstractModuleConfig<PromptGenerationModuleProcessor>
 {
     /// <summary>
     /// 在某些AI模型中，可以为提示词角色指定一个名称 (例如，Claude中的User/Assistant名称)。
     /// </summary>
+    [Display(
+        Name = "提示词角色名",
+        Description = "为提示词角色指定一个具体名称，可以让某些模型更好的区分不同的用户或助手，对于部分高级模型有用。",
+        Prompt = "例如：'DeepSeek' 或 'はちみ'"
+    )]
     public string? PromptNameInAiModel { get; init; }
 
     /// <summary>
     /// 生成的提示词的角色类型 (System, User, Assistant)。
     /// </summary>
     [Required]
-    public required PromptRoleType RoleType { get; init; }
+    [Display(
+        Name = "提示词角色类型",
+        Description = "选择此提示词在对话历史中扮演的角色。"
+    )]
+    [StringOptions(["system", "user", "assistant"],["系统", "用户", "AI助手"])]
+    public required string RoleType { get; init; }
 
     /// <summary>
-    /// 提示词模板，支持 {占位符} 替换。
-    /// 例如："你好，{playerName}！今天是{worldInfo}。"
+    /// 提示词模板，支持 `{{占位符}}` 替换。
+    /// 例如："你好，`{{{playerName}}}`！今天是`{{worldInfo}}`。"
     /// </summary>
     [Required]
     [DataType(DataType.MultilineText)]
+    [Display(
+        Name = "提示词模板",
+        Description = "编写包含动态占位符（例如 `{ {variable} }`）的文本模板。这个现在有点不方便，之后可能会改为其他的模板格式。",
+        Prompt = "例如：'你好，`{ {{playerName}} }`！今天是`{ {worldInfo} }`。'"
+    )]
     public required string Template { get; init; } = "";
 
 

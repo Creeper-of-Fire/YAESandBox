@@ -1,8 +1,10 @@
-﻿using YAESandBox.Depend.Results;
+﻿using System.ComponentModel;
+using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Module.ModuleAttribute;
 using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
 
 namespace YAESandBox.Workflow.Module.ExactModule;
@@ -72,13 +74,16 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
     }
 }
 
-file static class TempMockOnChunkReceivedScript
-{
-    public static void OnChunkReceivedScript(string totalChunkString) { }
-}
-
+[NoConfig]
+[SingleInStep]
+[Behind(typeof(PromptGenerationModuleConfig))]
 internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
 {
+    /// <inheritdoc />
+    [DefaultValue("AI模块")]
+    [ReadOnly(true)]
+    public override string Name { get; init; } = string.Empty;
+
     protected override AiModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
         new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); });
 }

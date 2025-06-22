@@ -42,32 +42,23 @@ public abstract record AbstractModuleConfig
     public abstract string ModuleType { get; init; }
 
     /// <summary>
-    /// 输入变量名
+    /// 转为实例化的运行时状态
     /// </summary>
-    [Required]
-    [HiddenInForm(true)]
-    public abstract List<string> Consumes { get; init; }
-
-    /// <summary>
-    /// 输出变量名
-    /// </summary>
-    [Required]
-    [HiddenInForm(true)]
-    public abstract List<string> Produces { get; init; }
-
+    /// <param name="workflowRuntimeService"></param>
+    /// <returns></returns>
     internal abstract IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor(WorkflowRuntimeService workflowRuntimeService);
 
     /// <summary>
     /// 获得模块的输入变量
     /// </summary>
     /// <returns></returns>
-    internal List<string> GetConsumedVariables() => this.Consumes;
+    internal virtual List<string> GetConsumedVariables() => [];
 
     /// <summary>
     /// 获得模块的输出变量
     /// </summary>
     /// <returns></returns>
-    internal List<string> GetProducedVariables() => this.Produces;
+    internal virtual List<string> GetProducedVariables() => [];
 }
 
 internal abstract record AbstractModuleConfig<T> : AbstractModuleConfig
@@ -84,12 +75,6 @@ internal abstract record AbstractModuleConfig<T> : AbstractModuleConfig
 
     /// <inheritdoc/>
     public override string ModuleType { get; init; } = nameof(T);
-
-    /// <inheritdoc />
-    public override List<string> Consumes { get; init; } = [];
-
-    /// <inheritdoc />
-    public override List<string> Produces { get; init; } = [];
 
     internal override IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor(WorkflowRuntimeService workflowRuntimeService) =>
         this.ToCurrentModule(workflowRuntimeService);

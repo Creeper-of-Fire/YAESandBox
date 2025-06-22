@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using NJsonSchema;
@@ -66,7 +67,7 @@ public static class VueFormSchemaGenerator
         settings.SchemaProcessors.Add(new StringOptionsProcessor());
         settings.SchemaProcessors.Add(new RangeProcessor());
         settings.SchemaProcessors.Add(new HiddenProcessor());
-        // settings.SchemaProcessors.Add(new HiddenDisplayProcessor());
+        settings.SchemaProcessors.Add(new DataTypeProcessor());
 
         // 允许外部进一步配置
         configureSettings?.Invoke(settings);

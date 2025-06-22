@@ -90,12 +90,6 @@ const emit = defineEmits(['update:modelValue', 'change']);
 // ----------- Refs -----------
 const jsonFormRef = ref<any>(null); // vue-form 实例引用
 
-// ----------- Widget Imports (硬编码) -----------
-// 这些保持和你原来组件中一致
-
-// ----------- Schema Preprocessing Logic (直接从原组件迁移) -----------
-
-
 // ----------- Computed Properties -----------
 const processedSchema = computed(() =>
 {
@@ -104,7 +98,8 @@ const processedSchema = computed(() =>
     try
     {
       // 如你所说，此处不再添加 showTitle/showDescription 的逻辑
-      return preprocessSchemaForWidgets(props.schema);
+      const result = preprocessSchemaForWidgets(props.schema);
+      return result;
     } catch (error)
     {
       console.error('[DynamicFormRenderer] Error processing schema-viewer:', error);

@@ -54,40 +54,67 @@ public class WorkflowValidationService
     }
 
     /// <summary>
-    /// 校验数据流：检查所有模块消费的变量是否都已在之前的步骤或触发参数中定义。
+    /// 校验数据流：检查所有模块消费的变量是否都已在之前的步骤、触发参数或本步骤的前置模块中定义。
     /// </summary>
-    private void ValidateDataFlow(StepProcessorConfig step, ISet<string> availableVariables, StepValidationResult stepResult)
+    private void ValidateDataFlow(StepProcessorConfig step, ISet<string> initialAvailableVariables, StepValidationResult stepResult)
     {
-        // 1. 检查 InputMappings 的源（Key，即全局变量）是否存在于上游的可用池中
-        foreach (string globalName in step.InputMappings.Select(mapping => mapping.Key)
-                     .Where(globalName => !availableVariables.Contains(globalName)))
+        // 1. (保持不变) 检查 InputMappings 的源（Key，即全局变量）是否存在于上游的可用池中
+        foreach (var globalName in step.InputMappings.Keys)
         {
-            // 这是一个步骤级别的错误，因为映射的源头就不存在
-            stepResult.StepMessages.Add(new ValidationMessage
+            if (!initialAvailableVariables.Contains(globalName))
             {
-                Severity = RuleSeverity.Error,
-                Message = $"输入映射错误：上游未提供可用的全局变量 '{globalName}'。",
-                RuleSource = "DataFlow"
-            });
+                stepResult.StepMessages.Add(new ValidationMessage
+                {
+                    Severity = RuleSeverity.Error,
+                    Message = $"输入映射错误：上游未提供可用的全局变量 '{globalName}'。",
+                    RuleSource = "DataFlow"
+                });
+            }
         }
 
-        // 2. 严格检查此步骤的所有模块所需要的输入，是否都已被 InputMappings 的目标（Value，即局部变量）所满足
-        var providedLocalVars = new HashSet<string>(step.InputMappings.Values);
-        var allRequiredLocalVars = new HashSet<string>(step.Modules.SelectMany(m => m.GetConsumedVariables()));
+        // 2. 模拟步骤内部的执行流程，动态计算每个模块执行前的可用变量池
+        //    这个变量池包含了“外部注入的”和“内部生产的”所有变量。
+        var inStepAvailableVars = new HashSet<string>(step.InputMappings.Values);
 
-        // 找出那些需要但未被提供的变量
-        var missingVars = allRequiredLocalVars.Except(providedLocalVars);
-
-        foreach (string missingVar in missingVars)
+        foreach (var module in step.Modules)
         {
-            // 找到所有需要这个缺失变量的模块，并为它们各自添加错误信息
-            var consumerModules = step.Modules.Where(m => m.GetConsumedVariables().Contains(missingVar));
-            foreach (var module in consumerModules)
+            // 2a. 对当前模块进行校验：检查其消费的变量是否都存在于【当前】的可用变量池中
+            var requiredVars = module.GetConsumedVariables();
+            var missingVars = requiredVars.Except(inStepAvailableVars);
+
+            foreach (var missingVar in missingVars)
             {
                 this.AddMessageToModule(stepResult, module.ConfigId, new ValidationMessage
                 {
                     Severity = RuleSeverity.Error,
-                    Message = $"模块必需的输入变量 '{missingVar}' 未在步骤的 InputMappings 中进行映射。",
+                    Message = $"模块必需的输入变量 '{missingVar}' 未被提供。它既没有在步骤的 InputMappings 中映射，也不是由本步骤中任何前置模块产生的。",
+                    RuleSource = "DataFlow"
+                });
+            }
+
+            // 2b. 更新可用变量池：将当前模块【生产】的变量添加到池中，供后续模块使用
+            var producedVars = module.GetProducedVariables();
+            foreach (var producedVar in producedVars)
+            {
+                inStepAvailableVars.Add(producedVar);
+            }
+        }
+
+        // 3. (新增) 检查 OutputMappings 的源（Value，即步骤内部变量）是否真的被生产出来了
+        var allProducedInStepVars = new HashSet<string>(step.Modules.SelectMany(m => m.GetProducedVariables()));
+        var allAvailableInStepVars = new HashSet<string>(step.InputMappings.Values).Union(allProducedInStepVars);
+
+        foreach (var mapping in step.OutputMappings)
+        {
+            var localSourceVar = mapping.Value; // 局部变量名
+            var globalTargetVar = mapping.Key; // 全局变量名
+
+            if (!allAvailableInStepVars.Contains(localSourceVar))
+            {
+                stepResult.StepMessages.Add(new ValidationMessage
+                {
+                    Severity = RuleSeverity.Error,
+                    Message = $"输出映射错误：尝试将不存在的内部变量 '{localSourceVar}' 映射到全局变量 '{globalTargetVar}'。",
                     RuleSource = "DataFlow"
                 });
             }

@@ -66,4 +66,10 @@ public class StringOptionsAttribute() : Attribute
     {
         this.Options = options;
     }
+
+    /// <inheritdoc />
+    public StringOptionsAttribute(string[] values, string[] Labels) : this()
+    {
+        this.Options = values.Zip(Labels).ToArray();
+    }
 }
