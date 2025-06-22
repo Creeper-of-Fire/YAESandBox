@@ -1,22 +1,32 @@
 ﻿<!-- src/app-workbench/layouts/EditorLayout.vue -->
 <template>
-  <n-layout class="editor-layout" has-sider>
+  <div class="editor-layout" >
+    <!--  <n-split :default-size="0.12" :max="0.9" :min="0.1" direction="horizontal">-->
 
-
+    <!--    <template #1>-->
     <!-- 1. 全局资源区 -->
-    <div v-show="isGlobalPanelVisible" class="panel global-panel">
+    <div v-if="isGlobalPanelVisible" class="panel global-panel">
       <slot name="global-panel"></slot>
     </div>
+    <!--    </template>-->
 
+    <!--    <template #2>-->
+    <!--      <n-split :default-size="0.21" :max="0.9" :min="0.1" direction="horizontal">-->
+    <!--        <template #1>-->
     <!-- 2. 结构编辑区 -->
-    <div v-show="isEditorPanelVisible" class="panel editor-panel">
+    <div v-if="isEditorPanelVisible" class="panel editor-panel">
       <slot name="editor-panel"></slot>
     </div>
 
+    <!--        </template>-->
+
+    <!--        <template #2>-->
     <!-- 3. 模块编辑区 -->
-    <div v-show="isModulePanelVisible" class="panel module-panel">
+    <div v-if="isModulePanelVisible" class="panel module-panel">
       <slot name="module-panel"></slot>
     </div>
+    <!--        </template>-->
+
 
     <!-- 4. 右侧监视器 (暂未实现) -->
     <!--
@@ -28,13 +38,14 @@
       <slot name="monitor-panel"></slot>
     </n-layout-sider>
     -->
+    <!--      </n-split>-->
+    <!--    </template>-->
+    <!--  </n-split>-->
 
-  </n-layout>
+  </div>
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from 'vue';
-import {NLayout} from 'naive-ui';
 
 const props = defineProps({
   isGlobalPanelVisible: {
@@ -61,6 +72,7 @@ const props = defineProps({
 .editor-layout {
   height: 100%;
   overflow: hidden;
+  display: flex;
 }
 
 .panel {
