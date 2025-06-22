@@ -36,7 +36,7 @@ import {computed} from "vue";
 
 // 定义组件的 props
 const props = defineProps<{
-  isCollapsible: boolean; // 是否可以展开下面的内容
+  isCollapsible?: boolean; // 是否可以展开下面的内容
   isSelected: boolean; // 是否处于选中状态
   isDraggable?: boolean; // 是否可拖拽（显示拖拽把手）
   highlightColor?: string;

@@ -45,6 +45,11 @@
             此步骤正在独立编辑。输入/输出映射的配置和校验仅在工作流编辑器中可用。
           </n-alert>
 
+          <StepAiConfigEditor
+              v-model="props.step.stepAiConfig"
+              style="margin-top: 12px; margin-bottom: 12px;"
+          />
+
           <div class="module-list-container">
             <draggable
                 v-if="step.modules"
@@ -84,6 +89,7 @@ import type {EditSession} from '@/app-workbench/services/EditSession.ts';
 import {computed, ref, watch} from "vue";
 import StepMappingsEditor from "@/app-workbench/components/editor/StepMappingsEditor.vue"; // 导入 SortableJS 事件类型
 import ColorHash from "color-hash";
+import StepAiConfigEditor from "@/app-workbench/components/editor/StepAiConfigEditor.vue";
 
 // 定义组件的 props
 const props = withDefaults(defineProps<{

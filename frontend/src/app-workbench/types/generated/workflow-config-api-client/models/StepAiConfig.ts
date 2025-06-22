@@ -9,11 +9,11 @@ export type StepAiConfig = {
     /**
      * AI服务的配置的UUID
      */
-    aiProcessorConfigUuid: string;
+    aiProcessorConfigUuid?: string | null;
     /**
      * 当前选中的AI模型的类型名
      */
-    selectedAiModuleType: string;
+    selectedAiModuleType?: string | null;
     /**
      * 是否为流式传输
      */
