@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 :start_loop
 echo ===========================================
-echo   Vue文件转TXT工具 (By ChatGPT)
+echo   Vue文件转TXT工具 (By Gemini2.5Pro)
 echo ===========================================
 echo.
 
