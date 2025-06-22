@@ -13,9 +13,8 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch, useAttrs} from 'vue';
+import {computed, ref, watch} from 'vue';
 import {NAutoComplete} from 'naive-ui';
-import type {AutoCompleteOption} from 'naive-ui';
 
 // 核心 props (基于 v-model 和通用状态)
 const props = defineProps<{

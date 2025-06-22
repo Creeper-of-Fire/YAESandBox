@@ -5,29 +5,30 @@
     <draggable
         v-if="workflow.steps && workflow.steps.length > 0"
         v-model="workflow.steps"
-        item-key="configId"
         :group="{ name: 'steps-group', put: ['steps-group'] }"
-        handle=".drag-handle"
         class="workflow-step-list-container"
+        handle=".drag-handle"
+        item-key="configId"
     >
-      <div v-for="stepItem in workflow.steps" :key="stepItem.configId" class="step-item">
+      <div v-for="(stepItem, index) in workflow.steps" :key="stepItem.configId" class="step-item">
         <!-- 在工作流列表里，使用默认行为的 StepItemRenderer -->
         <div :key="stepItem.configId" class="step-item-container">
           <StepItemRenderer
-              :step="stepItem"
-              :session="session"
+              :available-global-vars-for-step="getAvailableVarsForStep(index)"
               :selected-module-id="selectedModuleId"
+              :session="session"
+              :step="stepItem"
               @update:selected-module-id="$emit('update:selectedModuleId', $event)"
           />
         </div>
       </div>
     </draggable>
     <!-- 工作流步骤列表为空时的提示 -->
-    <n-empty v-else small description="拖拽步骤到此处" class="workflow-step-empty-placeholder"/>
+    <n-empty v-else class="workflow-step-empty-placeholder" description="拖拽步骤到此处" small/>
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import {NEmpty} from 'naive-ui';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
 import type {EditSession} from "@/app-workbench/services/EditSession.ts";
@@ -43,6 +44,31 @@ const props = defineProps<{
 
 // 定义组件的 Emits
 defineEmits(['update:selectedModuleId']);
+
+/**
+ * 计算在指定索引的步骤开始执行前，所有可用的全局变量。
+ * @param stepIndex - 步骤在工作流中的索引。
+ */
+function getAvailableVarsForStep(stepIndex: number): string[]
+{
+  const availableVars = new Set<string>(props.workflow.triggerParams || []);
+
+  for (let i = 0; i < stepIndex; i++)
+  {
+    const precedingStep = props.workflow.steps[i];
+    if (precedingStep.outputMappings)
+    {
+      // outputMappings 的 key 是全局变量名
+      Object.keys(precedingStep.outputMappings).forEach(globalVar =>
+      {
+        availableVars.add(globalVar);
+      });
+    }
+  }
+
+  return Array.from(availableVars);
+}
+
 </script>
 
 <style scoped>

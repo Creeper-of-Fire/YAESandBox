@@ -11,11 +11,11 @@
 
       <!-- 状态二：加载出错 -->
       <div v-else-if="aggregatedError" class="panel-state-wrapper">
-        <n-alert title="加载错误" type="error" :show-icon="true">
+        <n-alert :show-icon="true" title="加载错误" type="error">
           无法加载全局资源。
         </n-alert>
         <!-- 将重试按钮放在 alert 下方，作为独立的错误恢复操作 -->
-        <n-button @click="executeAll" block secondary strong style="margin-top: 12px;">
+        <n-button block secondary strong style="margin-top: 12px;" @click="executeAll">
           重试
         </n-button>
       </div>
@@ -23,10 +23,10 @@
       <!-- 状态三：加载成功，显示数据 -->
       <n-tabs
           v-model:value="activeTab"
-          type="segment"
           :animated="false"
-          justify-content="space-evenly"
           class="global-resource-tabs"
+          justify-content="space-evenly"
+          type="segment"
       >
         <!-- 工作流标签页 -->
         <n-tab name="workflows" tab="工作流"/>
@@ -37,22 +37,22 @@
       </n-tabs>
     </div>
 
-    <n-scrollbar style="height: 100%" class="scroll-container">
+    <n-scrollbar class="scroll-container" style="height: 100%">
       <div v-if="activeTab===`workflows`">
         <draggable
             v-if="workflowsList.length > 0"
             v-model="workflowsList"
-            item-key="id"
-            :group="{ name: 'workflows-group', pull: 'clone', put: false }"
-            :sort="false"
             :clone="handleResourceClone"
-            class="resource-list"
+            :group="{ name: 'workflows-group', pull: 'clone', put: false }"
             :setData="handleSetData"
+            :sort="false"
+            class="resource-list"
+            item-key="id"
         >
           <div v-for="element in workflowsList"
                :key="element.id"
-               data-drag-type="workflow"
                :data-drag-id="element.id"
+               data-drag-type="workflow"
           >
             <GlobalResourceListItem
                 :id="element.id"
@@ -63,23 +63,23 @@
             />
           </div>
         </draggable>
-        <n-empty v-else small description="无全局工作流" class="empty-container"/>
+        <n-empty v-else class="empty-container" description="无全局工作流" small/>
       </div>
       <div v-if="activeTab===`steps`">
         <draggable
             v-if="stepsList.length > 0"
             v-model="stepsList"
-            item-key="id"
-            :group="{ name: 'steps-group', pull: 'clone', put: false }"
-            :sort="false"
             :clone="handleResourceClone"
-            class="resource-list"
+            :group="{ name: 'steps-group', pull: 'clone', put: false }"
             :setData="handleSetData"
+            :sort="false"
+            class="resource-list"
+            item-key="id"
         >
           <div v-for="element in stepsList"
                :key="element.id"
-               data-drag-type="step"
                :data-drag-id="element.id"
+               data-drag-type="step"
           >
             <GlobalResourceListItem
                 :id="element.id"
@@ -90,23 +90,23 @@
             />
           </div>
         </draggable>
-        <n-empty v-else small description="无全局步骤" class="empty-container"/>
+        <n-empty v-else class="empty-container" description="无全局步骤" small/>
       </div>
       <div v-if="activeTab===`modules`">
         <draggable
             v-if="modulesList.length > 0"
             v-model="modulesList"
-            item-key="id"
-            :group="{ name: 'modules-group', pull: 'clone', put: false }"
-            :sort="false"
             :clone="handleResourceClone"
-            class="resource-list"
+            :group="{ name: 'modules-group', pull: 'clone', put: false }"
             :setData="handleSetData"
+            :sort="false"
+            class="resource-list"
+            item-key="id"
         >
           <div v-for="element in modulesList"
                :key="element.id"
-               data-drag-type="module"
                :data-drag-id="element.id"
+               data-drag-type="module"
           >
             <GlobalResourceListItem
                 :id="element.id"
@@ -117,7 +117,7 @@
             />
           </div>
         </draggable>
-        <n-empty v-else small description="无全局模块" class="empty-container"/>
+        <n-empty v-else class="empty-container" description="无全局模块" small/>
       </div>
     </n-scrollbar>
 
@@ -125,7 +125,7 @@
 </template>
 
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import {computed, h, onMounted, ref} from 'vue';
 import {NEmpty, NH4, NSpin, NTabs, useDialog} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
@@ -156,24 +156,28 @@ const modules = computed(() => modulesAsync.state);
 // 为所有资源类型创建可用于 v-model 的列表
 const workflowsList = computed({
   get: () => workflows.value ? Object.entries(workflows.value).map(([id, item]) => ({id, item})) : [],
-  set: () => {
+  set: () =>
+  {
   }
 });
 const stepsList = computed({
   get: () => steps.value ? Object.entries(steps.value).map(([id, item]) => ({id, item})) : [],
-  set: () => {
+  set: () =>
+  {
   }
 });
 const modulesList = computed({
   get: () => modules.value ? Object.entries(modules.value).map(([id, item]) => ({id, item})) : [],
-  set: () => {
+  set: () =>
+  {
   }
 });
 
 const aggregatedIsLoading = computed(() => workflowsAsync.isLoading || stepsAsync.isLoading || modulesAsync.isLoading);
 const aggregatedError = computed(() => workflowsAsync.error || stepsAsync.error || modulesAsync.error);
 
-function executeAll() {
+function executeAll()
+{
   workflowsAsync.execute();
   stepsAsync.execute();
   modulesAsync.execute();
@@ -181,7 +185,8 @@ function executeAll() {
 
 
 // 组件挂载时触发数据加载
-onMounted(() => {
+onMounted(() =>
+{
   executeAll()
 });
 
@@ -190,7 +195,8 @@ onMounted(() => {
  * @param {string} errorMessage - 错误信息。
  * @param {string | null | undefined} originJsonString - 原始的 JSON 字符串（如果可用）。
  */
-function showErrorDetail(errorMessage: string, originJsonString: string | null | undefined) {
+function showErrorDetail(errorMessage: string, originJsonString: string | null | undefined)
+{
   const totalMessage = `错误信息: ${errorMessage}\n\n原始JSON: ${originJsonString || '无'}`;
   const messageLines = totalMessage.split('\n');
 
@@ -214,8 +220,10 @@ function showErrorDetail(errorMessage: string, originJsonString: string | null |
  * @param {DraggableResourceItem<ConfigObject>} originalResourceItem - 原始的资源列表项。
  * @returns {ConfigObject | null} - 克隆并刷新 ID 后的纯数据对象，作为拖拽的数据负载。
  */
-function handleResourceClone(originalResourceItem: DraggableResourceItem<ConfigObject>): ConfigObject | null {
-  if (originalResourceItem.item.isSuccess) {
+function handleResourceClone(originalResourceItem: DraggableResourceItem<ConfigObject>): ConfigObject | null
+{
+  if (originalResourceItem.item.isSuccess)
+  {
     // 使用 deepCloneWithNewIds 处理原始数据
     return deepCloneWithNewIds(originalResourceItem.item.data);
   }
@@ -229,7 +237,8 @@ function handleResourceClone(originalResourceItem: DraggableResourceItem<ConfigO
  * @param {ConfigType} payload.type - 配置类型。
  * @param {string} payload.id - 配置ID。
  */
-function startEditing(payload: { type: ConfigType; id: string }) {
+function startEditing(payload: { type: ConfigType; id: string })
+{
   emit('start-editing', payload);
 }
 
@@ -240,12 +249,14 @@ function startEditing(payload: { type: ConfigType; id: string }) {
  * @param dataTransfer - 原生的 DataTransfer 对象
  * @param dragEl - 被拖拽的 DOM 元素 (即我们 v-for 的那个 div)
  */
-function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement) {
+function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement)
+{
   // 从被拖拽的元素上读取我们之前设置好的 data-* 属性
   const type = dragEl.dataset.dragType as ConfigType | undefined;
   const id = dragEl.dataset.dragId;
 
-  if (type && id) {
+  if (type && id)
+  {
     // 将数据打包成JSON，安全地存入 dataTransfer
     const data = JSON.stringify({type, id});
     dataTransfer.setData('text/plain', data);

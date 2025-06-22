@@ -15,11 +15,11 @@
     <n-tooltip trigger="hover">
       <template #trigger>
         <n-button
-            strong
-            secondary
             circle
-            type="primary"
+            secondary
             size="small"
+            strong
+            type="primary"
             @click.stop="$emit('start-editing', { type, id })"
         >
           <template #icon>
@@ -42,11 +42,11 @@
     <n-tooltip trigger="hover">
       <template #trigger>
         <n-button
-            strong
-            secondary
             circle
-            type="error"
+            secondary
             size="small"
+            strong
+            type="error"
             @click.stop="$emit('show-error-detail', item.errorMessage, item.originJsonString)"
         >
           <template #icon>
@@ -59,19 +59,15 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import { NButton, NIcon, NTooltip } from 'naive-ui';
-import {
-  LinkOffOutlined as LinkOffIcon,
-  EditOutlined as EditIcon,
-  FindInPageOutlined as FindInPageIcon
-} from '@vicons/material';
-import type { ConfigType, ConfigObject } from '@/app-workbench/services/EditSession';
-import type { GlobalResourceItem } from '@/types/ui';
+<script lang="ts" setup>
+import {NButton, NIcon, NTooltip} from 'naive-ui';
+import {EditOutlined as EditIcon, FindInPageOutlined as FindInPageIcon, LinkOffOutlined as LinkOffIcon} from '@vicons/material';
+import type {ConfigObject, ConfigType} from '@/app-workbench/services/EditSession';
+import type {GlobalResourceItem} from '@/types/ui';
 import {computed} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 
-const props= defineProps<{
+const props = defineProps<{
   id: string; // 原始 Record 的 key (资源的唯一ID)
   item: GlobalResourceItem<ConfigObject>; // 包含成功/失败状态和数据的资源项
   type: ConfigType; // 资源的类型 ('workflow', 'step', 'module')
@@ -102,6 +98,7 @@ const isDirty = computed(() => workbenchStore.isDirty(props.id));
 .resource-item.is-dirty {
   background-color: #f0a0201a; /* 浅橙黄色背景 */
 }
+
 .resource-item.is-dirty .item-name {
   font-weight: 500; /* 加粗一点点 */
 }

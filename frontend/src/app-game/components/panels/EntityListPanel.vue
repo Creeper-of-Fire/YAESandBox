@@ -17,7 +17,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref} from 'vue';
+import {computed} from 'vue';
 import {NH4, NText, NDivider, NEmpty, NIcon} from 'naive-ui';
 import {PeopleOutline as PeopleIcon} from '@vicons/ionicons5';
 import {useTopologyStore} from '@/app-game/features/block-bubble-stream-panel/topologyStore.ts';

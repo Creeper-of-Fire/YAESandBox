@@ -1,16 +1,16 @@
 ﻿<!-- src/app-workbench/components/.../ModuleItemRenderer.vue -->
 <template>
   <ConfigItemBase
-      :name="module.name"
       :is-selected="selectedModuleId === module.configId"
+      :name="module.name"
       is-draggable
       @click="$emit('update:selectedModuleId', module.configId)"
   />
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import ConfigItemBase from './ConfigItemBase.vue';
-import type { AbstractModuleConfig } from '@/app-workbench/types/generated/workflow-config-api-client';
+import type {AbstractModuleConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 
 // 定义 Props 和 Emits
 defineProps<{

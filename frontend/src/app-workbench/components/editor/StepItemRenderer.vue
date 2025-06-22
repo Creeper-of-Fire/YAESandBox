@@ -2,8 +2,8 @@
 <template>
   <div class="step-item-wrapper">
     <ConfigItemBase
-        :name="step.name"
         :is-selected="false"
+        :name="step.name"
         is-draggable
         @dblclick="isExpanded = !isExpanded"
     >
@@ -16,14 +16,30 @@
       <template #content-below>
         <!-- 使用本地的 isExpanded 状态 -->
         <n-collapse-transition :show="isExpanded">
+
+          <!-- 只有在有上下文的情况下才渲染映射编辑器 -->
+          <StepMappingsEditor
+              v-if="isInWorkflowContext"
+              :available-global-vars="availableGlobalVarsForStep!"
+              :input-mappings="step.inputMappings"
+              :output-mappings="step.outputMappings"
+              :required-inputs="requiredStepInputs"
+              @update:input-mappings="newMappings => step.inputMappings = newMappings"
+              @update:output-mappings="newMappings => step.outputMappings = newMappings"
+          />
+          <!-- 如果没有上下文，可以显示一个提示信息 -->
+          <n-alert v-else :show-icon="true" style="margin-bottom: 12px;" title="无上下文模式" type="info">
+            此步骤正在独立编辑。输入/输出映射的配置和校验仅在工作流编辑器中可用。
+          </n-alert>
+
           <div class="module-list-container">
             <draggable
                 v-if="step.modules"
                 v-model="step.modules"
-                item-key="configId"
                 :group="{ name: 'modules-group', put: ['modules-group'] }"
-                handle=".drag-handle"
                 class="module-draggable-area"
+                handle=".drag-handle"
+                item-key="configId"
             >
               <div v-for="moduleItem in step.modules" :key="moduleItem.configId">
                 <!-- 向下传递 props，向上冒泡 emits -->
@@ -34,7 +50,7 @@
                 />
               </div>
             </draggable>
-            <n-empty v-else small description="拖拽模块到此处"/>
+            <n-empty v-else description="拖拽模块到此处" small/>
           </div>
         </n-collapse-transition>
       </template>
@@ -42,15 +58,15 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import {NCollapseTransition, NEmpty} from 'naive-ui';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
 import ConfigItemBase from './ConfigItemBase.vue'; // 导入基础组件
 import ModuleItemRenderer from './ModuleItemRenderer.vue'; // 导入模块渲染器
-import type {AbstractModuleConfig, StepProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
+import type {StepProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import type {EditSession} from '@/app-workbench/services/EditSession.ts';
-import type {SortableEvent} from 'sortablejs';
-import {ref} from "vue"; // 导入 SortableJS 事件类型
+import {computed, ref, watch} from "vue";
+import StepMappingsEditor from "@/app-workbench/components/editor/StepMappingsEditor.vue"; // 导入 SortableJS 事件类型
 
 // 定义组件的 props
 const props = withDefaults(defineProps<{
@@ -59,6 +75,8 @@ const props = withDefaults(defineProps<{
   selectedModuleId: string | null;
   isCollapsible?: boolean; // 是否可折叠
   isDraggable?: boolean;   // 步骤自身是否可拖拽
+  // 从父级(Workflow)传入此步骤可用的全局变量，为空代表不进行检测
+  availableGlobalVarsForStep?: string[];
 }>(), {
   isCollapsible: true, // 默认为 true，保持原有行为
   isDraggable: true,   // 默认为 true，保持原有行为
@@ -67,6 +85,36 @@ const props = withDefaults(defineProps<{
 // UI状态本地化，默认展开
 const isExpanded = ref(true);
 const emit = defineEmits(['update:selectedModuleId']);
+
+
+// 计算属性，判断当前是否处于有上下文的环境中
+const isInWorkflowContext = computed(() => props.availableGlobalVarsForStep !== undefined);
+
+// 计算属性：计算当前步骤所有模块需要的总输入
+const requiredStepInputs = computed(() =>
+{
+  const inputs = new Set<string>();
+  if (props.step.modules)
+  {
+    for (const mod of props.step.modules)
+    {
+      mod.consumes.forEach(input => inputs.add(input));
+    }
+  }
+  return Array.from(inputs);
+});
+
+
+// 监听器也需要判断上下文
+watch(() => props.step.modules, (newModules, oldModules) =>
+{
+  // 只有在有上下文的情况下，才执行智能协调
+  if (isInWorkflowContext.value)
+  {
+    console.log('在工作流上下文中，模块列表已变化，需要同步输入/输出映射！');
+    // TODO: 实现智能协调算法
+  }
+}, {deep: true});
 </script>
 
 <style scoped>

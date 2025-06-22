@@ -22,7 +22,7 @@
 </template>
 
 <script setup lang="ts">
-import {computed, ref, watch} from 'vue';
+import {computed} from 'vue';
 import {NEmpty, NH4, NP} from 'naive-ui';
 import type {EditSession} from "@/app-workbench/services/EditSession.ts";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";

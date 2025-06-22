@@ -104,22 +104,20 @@
 </template>
 
 <script setup lang="ts">
-import {computed, defineAsyncComponent, h, markRaw, nextTick, onMounted, reactive, ref, watch} from 'vue';
+import {computed, nextTick, onMounted, reactive, ref, watch} from 'vue';
 import {
   NButton,
   NCard,
   NEmpty,
   NFormItem,
-  NInput,
   NPopconfirm,
   NSelect,
-  NSpace,
   NSpin,
   type SelectOption as NaiveSelectOption,
   useDialog,
   useMessage
 } from 'naive-ui';
-import VueForm from '@lljj/vue3-form-naive'; // 确认此库的准确导入名称和方式
+// 确认此库的准确导入名称和方式
 import {cloneDeep, isEqual} from 'lodash-es';
 import {AiConfigurationsService} from '@/app-workbench/types/generated/ai-config-api-client';
 import {AiConfigSchemasService} from '@/app-workbench/types/generated/ai-config-api-client';

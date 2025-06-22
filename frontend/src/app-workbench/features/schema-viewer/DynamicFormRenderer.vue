@@ -27,8 +27,8 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, defineAsyncComponent, markRaw, toRefs} from 'vue';
-import {NSpin, NAlert, NEmpty} from 'naive-ui';
+import {computed, defineAsyncComponent, markRaw, ref} from 'vue';
+import {NAlert, NEmpty, NSpin} from 'naive-ui';
 import VueForm from '@lljj/vue3-form-naive'; // 确认此库的准确导入名称和方式
 import type {AbstractAiProcessorConfig} from "@/app-workbench/types/generated/ai-config-api-client";
 
@@ -138,7 +138,8 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
             if (fieldProps.type != 'integer')
               delete fieldProps['multipleOf'];
             fieldProps['ui:widget'] = SliderWithInputWidget; // 你需要确保 SliderWidget 已经注册或由库提供
-          } else
+          }
+          else
           {
             fieldProps['ui:widget'] = 'InputNumberWidget';
             fieldProps['ui:options'].showButton = false;
@@ -155,7 +156,8 @@ function preprocessSchemaForWidgets(originalSchema: Record<string, any>): Record
           { // 同样，优先用户已定义的
             fieldProps['ui:widget'] = MyCustomStringAutoComplete;
           }
-        } else
+        }
+        else
         {
           if (!fieldProps['ui:widget'])
           {
@@ -263,7 +265,8 @@ defineExpose({
         console.warn('[DynamicFormRenderer] Validation failed:', validationErrors);
         return Promise.reject(validationErrors);
       }
-    } else
+    }
+    else
     {
       const errorMsg = '[DynamicFormRenderer] Form instance not available for validation.';
       console.warn(errorMsg);
@@ -280,7 +283,8 @@ defineExpose({
         typeof jsonFormRef.value.$$uiFormRef.restoreValidation === 'function')
     {
       jsonFormRef.value.$$uiFormRef.restoreValidation();
-    } else
+    }
+    else
     {
       console.warn('[DynamicFormRenderer] Form instance not available for resetting validation.');
     }

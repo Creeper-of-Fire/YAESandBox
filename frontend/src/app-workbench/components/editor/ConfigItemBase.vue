@@ -1,8 +1,8 @@
 ﻿<!-- src/app-workbench/components/.../ConfigItemBase.vue -->
 <template>
   <div
-      class="config-item-base"
       :class="{ 'is-selected': isSelected }"
+      class="config-item-base"
       @click="$emit('click')"
       @dblclick="$emit('dblclick')"
   >
@@ -21,9 +21,9 @@
   <slot name="content-below"></slot>
 </template>
 
-<script setup lang="ts">
-import { NIcon } from 'naive-ui';
-import { DragHandleOutlined } from '@vicons/material';
+<script lang="ts" setup>
+import {NIcon} from 'naive-ui';
+import {DragHandleOutlined} from '@vicons/material';
 
 // 定义组件的 props
 defineProps<{

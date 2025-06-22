@@ -103,7 +103,6 @@
 import {onBeforeUnmount, onMounted, ref} from 'vue';
 import {NButton, NEmpty, NH3, NSpin, NSwitch, useMessage,useDialog} from 'naive-ui';
 import {SaveOutlined as SaveIcon} from '@vicons/material';
-import type {SortableEvent} from "sortablejs";
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import {type ConfigType, type EditSession} from '@/app-workbench/services/EditSession';
 

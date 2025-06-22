@@ -1,6 +1,6 @@
 ﻿// src/services/signalrService.ts
 import * as signalR from "@microsoft/signalr";
-import {OpenAPI} from '@/app-game/types/generated/public-api-client/core/OpenAPI.ts'; // 用于获取 BASE URL
+// 用于获取 BASE URL
 import {useBlockStatusStore} from '@/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
 import {useConnectionStore} from '@/app-game/stores/connectionStore.ts';
 // import { useTopologyStore } from '../stores/topologyStore';
@@ -9,7 +9,6 @@ import {eventBus} from './eventBus.ts'; // 导入事件总线
 import type {
     BlockStatusUpdateDto,
     BlockUpdateSignalDto,
-    ConflictDetectedDto,
     DisplayUpdateDto,
     RegenerateBlockRequestDto,
     ResolveConflictRequestDto,

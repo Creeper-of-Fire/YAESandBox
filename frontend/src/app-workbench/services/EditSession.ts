@@ -43,11 +43,13 @@ export type ConfigObject = WorkflowProcessorConfig | StepProcessorConfig | Abstr
  * 它由 `useWorkbenchStore` 创建和管理，并作为与UI层交互的唯一“契约”。
  * UI组件通过这个对象与底层Store安全地交互，而无需知道Store的内部实现。
  */
-export class EditSession {
+export class EditSession
+{
     /**
      * @internal - 对 workbenchStore 的引用
      */
-    _getStore() {
+    _getStore()
+    {
         return useWorkbenchStore();
     }
 
@@ -61,7 +63,8 @@ export class EditSession {
      * @param type - 配置项类型
      * @param globalId - 此会话对应的原始全局配置ID
      */
-    constructor(type: ConfigType, globalId: string) {
+    constructor(type: ConfigType, globalId: string)
+    {
         this.type = type;
         this.globalId = globalId;
     }
@@ -72,7 +75,8 @@ export class EditSession {
      * 获取当前正在编辑的数据对象。
      * 返回一个响应式的计算属性，当底层Store中的数据变化时，UI会自动更新。
      */
-    public getData(): Ref<ConfigObject | null> {
+    public getData(): Ref<ConfigObject | null>
+    {
         return computed(() => this._getStore()._getDraftData(this.globalId));
     }
 
@@ -80,7 +84,8 @@ export class EditSession {
      * 检查会话是否有未保存的更改。
      * 返回一个响应式的计算属性。
      */
-    public getIsDirty(): Ref<boolean> {
+    public getIsDirty(): Ref<boolean>
+    {
         return computed(() => this._getStore()._isDirty(this.globalId));
     }
 
@@ -88,7 +93,8 @@ export class EditSession {
      * 更新草稿数据。UI组件中的表单修改会调用此方法。
      * @param updatedData - 包含部分或全部更新字段的对象。
      */
-    public updateData(updatedData: Partial<ConfigObject>): void {
+    public updateData(updatedData: Partial<ConfigObject>): void
+    {
         this._getStore()._updateDraftData(this.globalId, updatedData);
     }
 
@@ -97,14 +103,16 @@ export class EditSession {
      * 这是一个便捷方法，用于更新配置对象的 name 属性。
      * @param newName - 新的名称
      */
-    public rename(newName: string): void {
+    public rename(newName: string): void
+    {
         this.updateData({name: newName} as Partial<ConfigObject>);
     }
 
     /**
      * 保存当前会话的更改到后端。
      */
-    public async save(): Promise<SaveResult> {
+    public async save(): Promise<SaveResult>
+    {
         return await this._getStore()._saveDraft(this.type, this.globalId);
     }
 
@@ -113,7 +121,8 @@ export class EditSession {
      * 调用此方法会无条件地丢弃当前会话的草稿。
      * 这应该只在用户明确想要“撤销所有更改”时使用。
      */
-    public discard(): void {
+    public discard(): void
+    {
         this._getStore()._discardDraft(this.globalId);
     }
 }

@@ -73,8 +73,7 @@ import {NSpace, NButton, NDivider, NIcon, NTooltip} from 'naive-ui';
 import {
   ListOutline as ListIcon,
   SettingsOutline as SettingsIcon,
-  GameControllerOutline as GameControllerIcon,
-  HardwareChipOutline as HardwareChipIcon // 引入 Home 图标
+  GameControllerOutline as GameControllerIcon// 引入 Home 图标
 } from '@vicons/ionicons5';
 import {useUiStore} from '@/app-game/stores/gameUiStore.ts';
 import {usePersistenceStore} from '@/app-game/features/block-bubble-stream-panel/persistenceStore.ts';

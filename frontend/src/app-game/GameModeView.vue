@@ -51,7 +51,6 @@ import {useMediaQuery} from '@vueuse/core'; // 推荐使用 @vueuse/core
 // 导入 Stores
 import {useBlockStatusStore} from '@/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
 import {useUiStore} from '@/app-game/stores/gameUiStore.ts';
-import {useConnectionStore} from '@/app-game/stores/connectionStore.ts';
 
 // 导入子组件
 import AppToolbar from '@/app-game/components/AppToolbar.vue';

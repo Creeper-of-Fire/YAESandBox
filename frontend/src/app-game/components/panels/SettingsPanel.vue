@@ -33,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-import {NH4, NDivider, NEmpty, NIcon, NH5, NForm, NFormItem, NInput, NInputNumber} from 'naive-ui';
+import {NH4, NDivider, NEmpty, NIcon, NH5, NForm, NFormItem, NInput} from 'naive-ui';
 import {SettingsOutline as SettingsIcon} from '@vicons/ionicons5';
 import {useUiStore} from '@/app-game/stores/gameUiStore.ts'; // 引入 UI Store 修改面板宽度
 

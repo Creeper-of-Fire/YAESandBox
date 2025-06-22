@@ -4,12 +4,12 @@
 
     <!-- 1. “双子侧边栏”容器 -->
     <n-layout-sider
-        class="composite-sider"
-        bordered
-        :width="compositeSiderWidth"
         :collapsed="sidersCollapsed"
-        collapse-mode="width"
         :collapsed-width="24"
+        :width="compositeSiderWidth"
+        bordered
+        class="composite-sider"
+        collapse-mode="width"
         show-trigger="arrow-circle"
         @collapse="sidersCollapsed = true"
         @expand="sidersCollapsed = false"
@@ -28,7 +28,7 @@
     </n-layout-sider>
 
     <!-- 2. 中间主工作区 -->
-    <n-layout-content class="main-content" :native-scrollbar="false">
+    <n-layout-content :native-scrollbar="false" class="main-content">
       <div class="main-content-inner">
         <slot name="main-content"></slot>
       </div>
@@ -48,7 +48,7 @@
   </n-layout>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NLayout, NLayoutContent, NLayoutSider} from 'naive-ui';
 
@@ -71,7 +71,8 @@ const props = defineProps({
 const sidersCollapsed = ref(false);
 
 // 动态计算“双子侧边栏”的总宽度
-const compositeSiderWidth = computed(() => {
+const compositeSiderWidth = computed(() =>
+{
   if (sidersCollapsed.value) return 24;
   let width = 0;
   if (props.isGlobalPanelVisible) width += 250; // 全局面板宽度

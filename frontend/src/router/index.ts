@@ -3,7 +3,7 @@
 import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router';
 
 // 1. 导入共享的/核心的视图组件 (如果直接在主路由中定义)
-import GameModeView from '@/app-game/GameModeView.vue'; // 假设这是游戏模式的入口视图
+// 假设这是游戏模式的入口视图
 // import NotFoundView from '@/views/NotFoundView.vue'; // 404页面示例
 
 // 2. 导入特性模块暴露的路由配置

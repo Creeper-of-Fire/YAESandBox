@@ -32,5 +32,11 @@ export type StepProcessorConfig = {
      * Value: 步骤内部的变量名 (由模块产生的名字)
      */
     outputMappings: Record<string, string>;
+    /**
+     * 定义了此步骤如何从工作流的全局变量池获取输入，并映射到步骤内部使用的变量名。
+     * Key: 全局变量名 (在工作流中可用的名字)
+     * Value: 步骤内部期望的变量名 (模块消费的名字)
+     */
+    inputMappings: Record<string, string>;
 };
 

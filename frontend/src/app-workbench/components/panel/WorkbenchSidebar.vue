@@ -14,7 +14,7 @@
           <span class="title-text">编辑{{ currentConfigName }}</span>
           <n-tooltip trigger="hover">
             <template #trigger>
-              <n-button text style="font-size: 20px;" @click="handleClose">
+              <n-button style="font-size: 20px;" text @click="handleClose">
                 <n-icon :component="CloseIcon"/>
               </n-button>
             </template>
@@ -25,11 +25,11 @@
 
         <n-space class="action-bar" justify="space-between">
           <n-space>
-            <n-button strong secondary type="primary" size="small" @click="handleRename">重命名</n-button>
+            <n-button secondary size="small" strong type="primary" @click="handleRename">重命名</n-button>
           </n-space>
           <n-space>
-            <n-button strong secondary type="error" size="small" :disabled="!isDirty" @click="handleDiscard">放弃</n-button>
-            <n-button strong secondary type="success" size="small" :disabled="!isDirty" @click="handleSave">保存</n-button>
+            <n-button :disabled="!isDirty" secondary size="small" strong type="error" @click="handleDiscard">放弃</n-button>
+            <n-button :disabled="!isDirty" secondary size="small" strong type="success" @click="handleSave">保存</n-button>
           </n-space>
         </n-space>
       </div>
@@ -37,13 +37,13 @@
       <!-- 分割线，让布局更清晰 -->
       <n-divider style="margin-top: 12px; margin-bottom: 12px;"/>
       <!-- 2b. 可滚动的内容区域 -->
-      <n-scrollbar style="height: 100%" class="scrollable-area">
+      <n-scrollbar class="scrollable-area" style="height: 100%">
         <template v-if="session.type === 'workflow' && workflowData">
           <p class="sidebar-description">拖拽全局步骤到步骤列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
           <WorkflowItemRenderer
-              :workflow="workflowData"
-              :session="session"
               :selected-module-id="selectedModuleId"
+              :session="session"
+              :workflow="workflowData"
               @update:selected-module-id="$emit('update:selectedModuleId', $event)"
           />
         </template>
@@ -51,18 +51,18 @@
         <template v-else-if="session.type === 'step' && stepData">
           <p class="sidebar-description">拖拽全局模块到模块列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
           <StepItemRenderer
-              :step="stepData"
-              :session="session"
-              :selected-module-id="selectedModuleId"
-              @update:selected-module-id="$emit('update:selectedModuleId', $event)"
               :is-collapsible="false"
               :is-draggable="false"
+              :selected-module-id="selectedModuleId"
+              :session="session"
+              :step="stepData"
               style="margin-top: 16px"
+              @update:selected-module-id="$emit('update:selectedModuleId', $event)"
           />
         </template>
 
         <template v-else-if="session.type === 'module' && moduleData">
-          <n-alert title="提示" type="info" style="margin-top: 16px;">
+          <n-alert style="margin-top: 16px;" title="提示" type="info">
             这是一个独立的模块。请在中间的主编辑区完成详细配置。
           </n-alert>
         </template>
@@ -85,14 +85,14 @@
         @dragover.prevent
     >
       <div class="drop-overlay-content">
-        <n-icon size="48" :component="SwapHorizIcon"/>
+        <n-icon :component="SwapHorizIcon" size="48"/>
         <p>释放鼠标以{{ session ? '替换当前编辑项' : '开始新的编辑' }}</p>
       </div>
     </div>
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import {computed, h, ref} from 'vue';
 import {NAlert, NH4, NIcon, NInput, useDialog, useMessage} from 'naive-ui';
 import type {ConfigType, EditSession} from "@/app-workbench/services/EditSession.ts";
@@ -130,13 +130,17 @@ const isDirty = computed(() => props.session?.getIsDirty().value ?? false);
 
 // --- 按钮事件处理 ---
 
-async function handleSave() {
+async function handleSave()
+{
   if (!props.session) return;
 
   const result = await props.session.save();
-  if (result.success) {
+  if (result.success)
+  {
     message.success(`“${result.name}” 已保存!`);
-  } else {
+  }
+  else
+  {
     const error = result.error;
     // 捕获 EditSession.save 抛出的错误
     message.error(`保存失败：${result.name}，请检查内容或查看控制台。`);
@@ -145,14 +149,16 @@ async function handleSave() {
 
 }
 
-function handleDiscard() {
+function handleDiscard()
+{
   if (!props.session) return;
   dialog.warning({
     title: '放弃更改',
     content: '您确定要放弃所有未保存的更改吗？此操作不可撤销。',
     positiveText: '确定放弃',
     negativeText: '取消',
-    onPositiveClick: () => {
+    onPositiveClick: () =>
+    {
       props.session?.discard();
       message.info("更改已放弃。");
       // 放弃后，数据会恢复原状，但会话依然存在。
@@ -160,11 +166,13 @@ function handleDiscard() {
   });
 }
 
-function handleClose() {
+function handleClose()
+{
   emit('close-session');
 }
 
-function handleRename() {
+function handleRename()
+{
   if (!props.session) return;
   const currentName = ref(props.session.getData().value?.name ?? '');
 
@@ -172,15 +180,18 @@ function handleRename() {
     title: '重命名',
     content: () => h(NInput, {
       value: currentName.value,
-      onUpdateValue: (v) => {
+      onUpdateValue: (v) =>
+      {
         currentName.value = v;
       },
       placeholder: '请输入新的名称',
     }),
     positiveText: '确定',
     negativeText: '取消',
-    onPositiveClick: () => {
-      if (!currentName.value.trim()) {
+    onPositiveClick: () =>
+    {
+      if (!currentName.value.trim())
+      {
         message.error("名称不能为空！");
         return false; // 阻止对话框关闭
       }
@@ -203,10 +214,13 @@ const typeHierarchy: Record<ConfigType, number> = {
  * @param event - 拖拽事件
  * @returns 拖拽的 ConfigType 或 null
  */
-function getDraggedItemType(event: DragEvent): ConfigType | null {
-  for (const type of event.dataTransfer?.types ?? []) {
+function getDraggedItemType(event: DragEvent): ConfigType | null
+{
+  for (const type of event.dataTransfer?.types ?? [])
+  {
     const match = type.match(/^application\/vnd\.workbench\.item\.(workflow|step|module)$/);
-    if (match) {
+    if (match)
+    {
       return match[1] as ConfigType;
     }
   }
@@ -217,16 +231,19 @@ function getDraggedItemType(event: DragEvent): ConfigType | null {
 /**
  * 当拖拽项首次进入容器时，进行等级判断。
  */
-function handleDragEnter(event: DragEvent) {
+function handleDragEnter(event: DragEvent)
+{
   const draggedType = getDraggedItemType(event);
 
   // 如果无法识别拖拽类型，则不响应该拖拽
-  if (!draggedType) {
+  if (!draggedType)
+  {
     return;
   }
 
   // 如果当前没有编辑会话，任何可识别的拖拽都应该显示覆盖层
-  if (!props.session) {
+  if (!props.session)
+  {
     isDragOverContainer.value = true;
     return;
   }
@@ -239,7 +256,8 @@ function handleDragEnter(event: DragEvent) {
   // *** 核心判断逻辑 ***
   // 只有当拖拽项的等级 >= 当前编辑项的等级时，才显示“替换”覆盖层。
   // 否则，不显示覆盖层，让事件“穿透”到下面的 draggable 区域。
-  if (draggedLevel >= currentLevel) {
+  if (draggedLevel >= currentLevel)
+  {
     isDragOverContainer.value = true;
   }
 }
@@ -248,25 +266,32 @@ function handleDragEnter(event: DragEvent) {
 /**
  * 当拖拽项离开覆盖层时，隐藏它。
  */
-function handleDragLeave() {
+function handleDragLeave()
+{
   isDragOverContainer.value = false;
 }
 
 /**
  * 在覆盖层上完成放置操作。
  */
-function handleDrop(event: DragEvent) {
+function handleDrop(event: DragEvent)
+{
   isDragOverContainer.value = false;
-  if (event.dataTransfer) {
-    try {
+  if (event.dataTransfer)
+  {
+    try
+    {
       const dataString = event.dataTransfer.getData('text/plain');
-      if (dataString) {
+      if (dataString)
+      {
         const {type, id} = JSON.parse(dataString);
-        if (type && id) {
+        if (type && id)
+        {
           emit('start-editing', {type, id});
         }
       }
-    } catch (e) {
+    } catch (e)
+    {
       console.error("解析拖拽数据失败:", e);
     }
   }
@@ -282,7 +307,8 @@ const stepData = computed(() =>
 const moduleData = computed(() =>
     props.session?.type === 'module' ? props.session.getData().value as AbstractModuleConfig : null
 );
-const currentConfigName = computed(() => {
+const currentConfigName = computed(() =>
+{
   if (!props.session) return ''; // 如果没有会话，返回空字符串
   if (props.session.type === 'workflow' && workflowData.value) return `工作流: ${workflowData.value.name}`;
   if (props.session.type === 'step' && stepData.value) return `步骤: ${stepData.value.name}`;

@@ -31,8 +31,8 @@
 </template>
 
 <script setup lang="ts">
-import {ref, computed, watch, useAttrs} from 'vue';
-import {NInputNumber, NSlider, NCheckbox, NSpace, NEmpty} from 'naive-ui';
+import {ref, watch} from 'vue';
+import {NInputNumber, NSlider} from 'naive-ui';
 
 // 接收 vue-json-schema-viewer-form 传递的标准 props
 const props = defineProps<{
@@ -71,7 +71,7 @@ const handleInputNumberChange = (value: number | null) =>
 {
   // NInputNumber 返回 null 如果清空输入框
   // 我们需要根据 schema-viewer 的 type 来决定是否允许 null
-  let finalValue: number | null | undefined = value === null ? undefined : value; // NInputNumber 清空是 null
+  let finalValue: number | null | undefined; // NInputNumber 清空是 null
 
   // 如果 schema-viewer 允许 null，并且 NInputNumber 给了 null，则 emit null
   finalValue = value ?? null;

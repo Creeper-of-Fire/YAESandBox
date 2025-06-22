@@ -1,7 +1,5 @@
 ﻿import {defineStore} from 'pinia';
 import type {
-    ConflictDetectedDto,
-    BlockStatusUpdateDto,
     DisplayUpdateDto,
     BlockUpdateSignalDto,
 } from '@/app-game/types/generated/public-api-client';
