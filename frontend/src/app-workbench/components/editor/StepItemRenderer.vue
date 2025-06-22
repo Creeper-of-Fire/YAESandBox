@@ -106,6 +106,7 @@ const requiredStepInputs = computed(() =>
 
 
 // 监听器也需要判断上下文
+// TODO 因为循环观测的问题，先删掉
 watch(() => props.step.modules, (newModules, oldModules) =>
 {
   // 只有在有上下文的情况下，才执行智能协调

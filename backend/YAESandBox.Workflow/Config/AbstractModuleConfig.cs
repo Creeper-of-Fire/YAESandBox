@@ -17,7 +17,6 @@ public abstract record AbstractModuleConfig
     /// 名字
     /// </summary>
     [Required]
-    [HiddenInForm(true)]
     public abstract string Name { get; init; }
 
     /// <summary>

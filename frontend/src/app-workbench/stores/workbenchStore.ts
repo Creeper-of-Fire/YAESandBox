@@ -185,8 +185,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     {
         const draft = drafts.value[globalId];
         if (!draft)
-            // @ts-ignore
-            return {success: false, name: draft.data.name, id: globalId, type, error: '草稿未找到'};
+            return {success: false, name: "【未找到草稿】", id: globalId, type, error: '草稿未找到'};
 
         let savePromise: Promise<any>;
         let refreshPromise: Promise<any>;
@@ -224,7 +223,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             await savePromise;
             draft.originalState = JSON.stringify(draft.data);
             await refreshPromise;
-            return {success: true, id: globalId, type};
+            return {success: true, name: draft.data.name, id: globalId, type};
         } catch (error)
         {
             console.error(`保存 ${type} 草稿到后端时发生错误:`, error);

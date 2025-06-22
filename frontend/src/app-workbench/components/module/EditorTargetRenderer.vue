@@ -28,6 +28,7 @@ import type {EditSession} from "@/app-workbench/services/EditSession.ts";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import type {AbstractModuleConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import DynamicFormRenderer from "@/app-workbench/features/schema-viewer/DynamicFormRenderer.vue";
+import {useDebounceFn} from "@vueuse/core";
 
 const props = defineProps<{
   session: EditSession;
@@ -92,18 +93,17 @@ const selectedModuleSchema = computed(() => {
  * 当表单数据变化时，直接更新找到的模块对象。
  * @param updatedModuleData - 从 DynamicFormRenderer 返回的完整、更新后的模块对象。
  */
-function handleFormUpdate(updatedModuleData: AbstractModuleConfig) {
-  // 我们不再调用 session.updateData()
-  // 而是直接修改我们通过 computed 找到的那个响应式对象
+function handleFormUpdateRaw(updatedModuleData: AbstractModuleConfig) {
   if (selectedModule.value) {
-    // Object.assign 会将新数据的所有属性合并到 store 中的那个模块对象上
-    // 这会触发响应式更新，并且 isDirty 会被正确计算
     Object.assign(selectedModule.value, updatedModuleData);
   } else {
     console.error("更新失败：无法在当前会话中找到选中的模块。");
   }
 }
 
+// 创建一个防抖版本的更新函数，延迟 300 毫秒执行
+// 这意味着只有在用户停止输入 300ms 后，才会真正去更新 Store
+const handleFormUpdate = useDebounceFn(handleFormUpdateRaw, 300);
 </script>
 
 <style scoped>

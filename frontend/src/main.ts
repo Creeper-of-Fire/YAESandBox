@@ -12,6 +12,41 @@ import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'; // Import base CSS
 // @ts-ignore
 import VueVirtualScroller from 'vue-virtual-scroller'
 
+
+import {
+    create,
+    NForm,
+    NFormItem,
+    NInput,
+    NInputNumber,
+    NSelect,
+    NCheckbox,
+    NRadio,
+    NRadioGroup,
+    NSlider,
+    NSwitch,
+    NDatePicker,
+    NTimePicker,
+    // ... 可能还有其他，可以根据后续警告补充
+} from 'naive-ui'
+// 创建一个专门给 vue-form 用的 naive-ui 实例
+const naiveForVueForm = create({
+    components: [
+        NForm,
+        NFormItem,
+        NInput,
+        NInputNumber,
+        NSelect,
+        NCheckbox,
+        NRadio,
+        NRadioGroup,
+        NSlider,
+        NSwitch,
+        NDatePicker,
+        NTimePicker,
+    ]
+})
+
 // 配置后端 API 的基础 URL
 // 通常从环境变量读取，例如 Vite 的 import.meta.env
 OpenAPI.BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7018'; // 替换为你的实际后端地址
@@ -19,8 +54,9 @@ OpenAPI.BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7018'; // 
 const app = createApp(App);
 const pinia = createPinia();
 
-app.use(pinia);
+app.use(pinia)
 app.use(router)
+app.use(naiveForVueForm)
 app.use(VueVirtualScroller)
 app.mount('#app')
 

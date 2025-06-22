@@ -186,6 +186,11 @@ internal partial class PromptGenerationModuleProcessor(
 internal record PromptGenerationModuleConfig : AbstractModuleConfig<PromptGenerationModuleProcessor>
 {
     /// <summary>
+    /// 在某些AI模型中，可以为提示词角色指定一个名称 (例如，Claude中的User/Assistant名称)。
+    /// </summary>
+    public string? PromptNameInAiModel { get; init; }
+
+    /// <summary>
     /// 生成的提示词的角色类型 (System, User, Assistant)。
     /// </summary>
     [Required]
@@ -198,11 +203,6 @@ internal record PromptGenerationModuleConfig : AbstractModuleConfig<PromptGenera
     [Required]
     [DataType(DataType.MultilineText)]
     public required string Template { get; init; } = "";
-
-    /// <summary>
-    /// 在某些AI模型中，可以为提示词角色指定一个名称 (例如，Claude中的User/Assistant名称)。
-    /// </summary>
-    public string? PromptNameInAiModel { get; init; }
 
 
     /// <inheritdoc />

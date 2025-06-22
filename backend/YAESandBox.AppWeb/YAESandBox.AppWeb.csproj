@@ -117,7 +117,7 @@
     </Target>
 
     <!-- Target to generate NuGet license report after build -->
-    <Target Name="GenerateLicenseReportForSolution" AfterTargets="Build">
+    <Target Name="GenerateLicenseReportForSolution" AfterTargets="Build" Condition="'$(BuildingSolutionFile)' == 'true'">
         <!--
           这个 Target 会在每次成功构建 API 项目后运行 nuget-license，
           扫描位于解决方案根目录的 .sln 文件，并将报告生成在 backend 目录下。
