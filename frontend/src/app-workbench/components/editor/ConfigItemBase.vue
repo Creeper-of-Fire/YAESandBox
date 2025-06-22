@@ -7,11 +7,16 @@
       @dblclick="$emit('dblclick')"
   >
     <!-- 拖拽把手 -->
-    <n-icon v-if="isDraggable" class="drag-handle" size="16">
-      <DragHandleOutlined/>
-    </n-icon>
-    <!-- 条目名称 -->
-    <span class="item-name">{{ name }}</span>
+    <div v-if="isDraggable" class="drag-handle">
+      <n-icon :size="18">
+        <DragHandleOutlined/>
+      </n-icon>
+    </div>
+    <!-- 主内容区插槽 -->
+    <div class="item-content-wrapper">
+      <slot name="content"></slot>
+    </div>
+
     <div class="item-actions">
       <!-- 动作插槽：可用于放置编辑按钮、删除按钮、更多操作菜单等 -->
       <slot name="actions"></slot>
@@ -24,65 +29,108 @@
 <script lang="ts" setup>
 import {NIcon} from 'naive-ui';
 import {DragHandleOutlined} from '@vicons/material';
+import {computed} from "vue";
 
 // 定义组件的 props
-defineProps<{
-  name: string; // 显示的名称
+const props = defineProps<{
   isSelected: boolean; // 是否处于选中状态
   isDraggable?: boolean; // 是否可拖拽（显示拖拽把手）
+  highlightColor?: string;
 }>();
 
 // 定义组件触发的事件
 defineEmits(['click', 'dblclick']);
+
+/**
+ * 计算属性，用于处理选中状态下的边框颜色。
+ * 这样做可以保持 <style> 块的简洁，并将逻辑保留在 <script> 中。
+ * 如果 props.highlightColor 存在，则使用它，否则回退到默认的蓝色主题色。
+ */
+const finalHighlightColor = computed(() => props.highlightColor || '#2080f0');
+
+/**
+ * 计算属性，用于拖拽区域的背景色
+ * 如果没有提供 highlightColor，则使用一个柔和的灰色作为默认值
+ */
+const handleBgColor = computed(() => props.highlightColor ? `${props.highlightColor}33` : '#f7f9fa');
 </script>
 
 <style scoped>
 /* 基础样式，所有可配置项的通用外观 */
 .config-item-base {
   display: flex;
-  align-items: center;
-  padding: 6px 8px;
+  align-items: stretch;
+  padding: 0;
   background-color: #fff;
   border-radius: 4px;
   border: 1px solid #e0e0e6;
   cursor: pointer;
   position: relative; /* 用于内部元素定位 */
+  /* 增加左边框过渡效果 */
+  transition: border-color 0.2s, box-shadow 0.2s;
+
+  border-left: 4px solid v-bind('props.highlightColor');
+  overflow: hidden; /* 确保内部圆角正确裁剪 */
+}
+
+/* 当有高亮颜色时，应用颜色到左边框 */
+.config-item-base.has-highlight {
+  /* 使用 CSS 变量来设置颜色 */
+  border-left-color: v-bind('highlightColor');
 }
 
 /* 选中状态的样式 */
 .config-item-base.is-selected {
-  border-color: #2080f0; /* Naive UI 主题色 */
-  box-shadow: 0 0 0 1px #2080f0; /* 选中时的蓝色边框效果 */
+  border-color: v-bind(finalHighlightColor);
+  box-shadow: 0 0 0 1px v-bind(finalHighlightColor);
 }
 
 /* 鼠标悬停样式 */
+/*
 .config-item-base:hover {
-  background-color: #f7f9fa; /* 浅灰色背景 */
+  background-color: #f7f9fa;
 }
+ */
 
-/* 拖拽把手样式 */
+/* 拖拽区域样式 */
 .drag-handle {
-  cursor: grab; /* 抓取光标 */
-  color: #aaa; /* 灰色 */
-  margin-right: 8px;
-  flex-shrink: 0; /* 防止把手被挤压 */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 24px; /* 给予一个明确的宽度 */
+  cursor: grab;
+  transition: background-color 0.2s;
+  /* 使用 v-bind 设置背景色，并提供默认值 */
+  background-color: v-bind(handleBgColor);
+  color: rgba(0, 0, 0, 0.4); /* 图标颜色，在浅色背景下通用 */
 }
 
 .drag-handle:active {
-  cursor: grabbing; /* 拖拽时光标变化 */
+  cursor: grabbing;
 }
 
-/* 名称文本样式 */
-.item-name {
-  flex-grow: 1; /* 占据剩余空间 */
-  overflow: hidden; /* 隐藏溢出内容 */
-  text-overflow: ellipsis; /* 溢出时显示省略号 */
-  white-space: nowrap; /* 不换行 */
+/* 内容包装器样式 */
+.item-content-wrapper {
+
+  flex-grow: 1; /* 占据所有可用空间 */
+  min-width: 0; /* 配合 flex-grow:1 避免内容溢出 */
+  display: flex;
+  gap: 6px; /* 为内部元素提供间距 */
+  /* 在左侧增加内边距，与拖拽柄隔开 */
+  padding: 6px 8px;
 }
 
 /* 动作区域样式 */
 .item-actions {
-  margin-left: 8px;
-  flex-shrink: 0; /* 防止动作按钮被挤压 */
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+  flex-shrink: 0;
+  padding: 6px 8px; /* 给予和内容区对称的内边距 */
+}
+.config-item-base:hover {
+  /* 悬停时，不再改变整个背景色，而是由子元素控制 */
+  border-color: #ccc;
 }
 </style>

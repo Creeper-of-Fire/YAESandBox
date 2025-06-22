@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
@@ -77,6 +78,7 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
 [NoConfig]
 [SingleInStep]
 [Behind(typeof(PromptGenerationModuleConfig))]
+[ClassLabel("🤖AI调用")]
 internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
 {
     /// <inheritdoc />

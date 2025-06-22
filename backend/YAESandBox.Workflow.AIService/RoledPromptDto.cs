@@ -62,10 +62,12 @@ public enum PromptRoleType
     /// 系统
     /// </summary>
     System,
+
     /// <summary>
     /// 用户
     /// </summary>
     User,
+
     /// <summary>
     /// 助手
     /// </summary>
@@ -84,7 +86,7 @@ public static class PromptRoleTypeExtension
     /// 可用字符串：system, user, assistant
     /// </param>
     /// <returns></returns>
-    public static PromptRoleType ToPromptRoleType(this string roleString)
+    public static PromptRoleType ToPromptRoleType(string roleString)
     {
         return roleString switch
         {

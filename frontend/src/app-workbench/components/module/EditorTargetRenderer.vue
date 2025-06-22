@@ -3,7 +3,7 @@
     <div v-if="selectedModule && selectedModuleSchema">
       <n-h4>配置模块: {{ selectedModule.name }}</n-h4>
       <n-p depth="3" style="margin-top: -8px; margin-bottom: 24px;">
-        模块类型: {{ selectedModule.moduleType }}
+        模块类型: {{ moduleTypeLabel }}
       </n-p>
 
       <!-- 这里放置 DynamicFormRenderer 组件 -->
@@ -39,6 +39,19 @@ const workbenchStore = useWorkbenchStore();
 
 const moduleSchemas = computed(() =>  workbenchStore.moduleSchemasAsync.state)
 const isLoadingSchema = computed(() => workbenchStore.moduleSchemasAsync.isLoading);
+
+
+/**
+ * 计算属性，用于获取模块类型的显示标签。
+ * 它会优先从元数据中查找 classLabel，如果不存在，则回退到显示原始的 moduleType。
+ */
+const moduleTypeLabel = computed(() =>
+{
+  if (!selectedModule.value) return '';
+  const moduleType = selectedModule.value.moduleType;
+  const metadata = workbenchStore.moduleMetadata[moduleType];
+  return metadata?.classLabel || moduleType;
+});
 
 // 计算属性：根据 selectedModuleId 获取当前选中的模块对象
 const selectedModule = computed<AbstractModuleConfig | null>(() => {

@@ -112,7 +112,7 @@ internal partial class PromptGenerationModuleProcessor(
             // 使用 Regex.Escape 对占位符名称进行转义，以防包含正则表达式特殊字符
             // 但由于我们是从 {} 中提取的，通常不需要，除非占位符名称本身很奇怪
             // 为了简单起见，这里直接替换，假设占位符名称是常规文本
-            resultText = resultText.Replace($"{{{kvp.Key}}}", kvp.Value ?? string.Empty, StringComparison.OrdinalIgnoreCase);
+            resultText = resultText.Replace($"[[{kvp.Key}]]", kvp.Value ?? string.Empty, StringComparison.OrdinalIgnoreCase);
         }
 
         return resultText;
@@ -180,9 +180,9 @@ internal partial class PromptGenerationModuleProcessor(
 internal partial record PromptGenerationModuleConfig
 {
     // 使用 Regex.Matches 获取所有唯一的占位符名称
-    // 使用 lookahead 和 lookbehind 来确保我们只匹配 {{}} 包裹的内容，并且不能处理嵌套 {{}} 的情况
+    // 使用 lookahead 和 lookbehind 来确保我们只匹配 [[}} 包裹的内容，并且不能处理嵌套 [[}} 的情况
     // 简单正则：\{\{([^\{\}]+?)\}\} 匹配非贪婪的、不包含花括号的内容
-    [GeneratedRegex(@"\{\{([^\{\}]+?)\}\}")]
+    [GeneratedRegex(@"\[\[([^\[\]]+?)\]\]")]
     internal static partial Regex PlaceholderRegex();
 
     /// <inheritdoc />
@@ -196,6 +196,7 @@ internal partial record PromptGenerationModuleConfig
 /// 提示词生成模块的配置。
 /// </summary>
 [InFrontOf(typeof(AiModuleConfig))]
+[ClassLabel("✍️提示词")]
 internal partial record PromptGenerationModuleConfig : AbstractModuleConfig<PromptGenerationModuleProcessor>
 {
     /// <summary>
@@ -216,19 +217,19 @@ internal partial record PromptGenerationModuleConfig : AbstractModuleConfig<Prom
         Name = "提示词角色类型",
         Description = "选择此提示词在对话历史中扮演的角色。"
     )]
-    [StringOptions(["system", "user", "assistant"],["系统", "用户", "AI助手"])]
+    [StringOptions(["System", "User", "Assistant"], ["系统", "用户", "AI助手"])]
     public required string RoleType { get; init; }
 
     /// <summary>
-    /// 提示词模板，支持 `{{占位符}}` 替换。
-    /// 例如："你好，`{{{playerName}}}`！今天是`{{worldInfo}}`。"
+    /// 提示词模板，支持 `[[占位符]]` 替换。
+    /// 例如："你好，`[[playerName]]`！今天是`[[worldInfo]]`。"
     /// </summary>
     [Required]
     [DataType(DataType.MultilineText)]
     [Display(
         Name = "提示词模板",
-        Description = "编写包含动态占位符（例如 `{ {variable} }`）的文本模板。这个现在有点不方便，之后可能会改为其他的模板格式。",
-        Prompt = "例如：'你好，`{ {{playerName}} }`！今天是`{ {worldInfo} }`。'"
+        Description = "编写包含动态占位符（例如 `[[variable]]`）的文本模板。这个现在有点不方便，之后可能会改为其他的模板格式。",
+        Prompt = "例如：'你好，`[[playerName]]`！今天是`[[worldInfo]]`。'"
     )]
     public required string Template { get; init; } = "";
 

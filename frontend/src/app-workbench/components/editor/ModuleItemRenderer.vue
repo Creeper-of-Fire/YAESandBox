@@ -2,10 +2,15 @@
 <template>
   <ConfigItemBase
       :is-selected="selectedModuleId === module.configId"
-      :name="module.name"
+      :highlight-color="moduleTypeColor"
       is-draggable
       @click="$emit('update:selectedModuleId', module.configId)"
   >
+    <template #content>
+      <span v-if="moduleClassLabel" class="module-alias">{{ moduleClassLabel }}</span>
+      <span class="module-name">{{ module.name }}</span>
+    </template>
+
     <template #actions>
       <!-- 新增一个信息图标，用于显示规则提示 -->
       <n-tooltip v-if="rulesForThisModule" trigger="hover">
@@ -27,6 +32,7 @@ import type {AbstractModuleConfig} from '@/app-workbench/types/generated/workflo
 import {computed} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
+import ColorHash from "color-hash";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
@@ -38,10 +44,24 @@ defineEmits(['update:selectedModuleId']);
 
 const workbenchStore = useWorkbenchStore();
 
-// 获取当前模块的规则
-const rulesForThisModule = computed(() =>
-    workbenchStore.moduleRules[props.module.moduleType]
+// 获取当前模块的元数据
+const metadataForThisModule = computed(() =>
+    workbenchStore.moduleMetadata[props.module.moduleType]
 );
+
+const rulesForThisModule = computed(() => metadataForThisModule.value?.rules);
+
+const moduleClassLabel = computed(() => metadataForThisModule.value?.classLabel);
+
+const colorHash = new ColorHash({
+  lightness: [0.7, 0.75, 0.8],
+  saturation: [0.7, 0.8, 0.9],
+  hash: 'bkdr'
+});
+const moduleTypeColor = computed(() =>
+{
+  return colorHash.hex(props.module.moduleType);
+});
 
 // 将规则对象转换为用户可读的文本描述
 const ruleDescriptions = computed(() =>

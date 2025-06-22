@@ -3,11 +3,14 @@
   <div class="step-item-wrapper">
     <ConfigItemBase
         :is-selected="false"
-        :name="step.name"
         is-draggable
         @dblclick="isExpanded = !isExpanded"
     >
       <p class="sidebar-description">您可以重新排序或从左侧拖入新的模块。</p>
+      <template #content>
+        <span class="step-name">{{ step.name }}</span>
+      </template>
+
       <!-- 双击切换展开/折叠 -->
       <!-- 步骤本身不被“选中”进行配置，而是通过双击展开或点击其内部模块 -->
       <template #actions>

@@ -26,7 +26,7 @@ internal class ModuleConfigConverter : JsonConverter<AbstractModuleConfig>
         if (reader.TokenType != JsonTokenType.StartObject)
         {
             // 预期的 JSON 对象起始符号 '{' 未找到。
-            throw new JsonException($"反序列化 AbstractModuleConfig 失败：预期的 JSON 对象起始符号 '{{' 未找到，当前 Token 类型为 {reader.TokenType}。");
+            throw new JsonException($"反序列化 AbstractModuleConfig 失败：预期的 JSON 对象起始符号 '[[' 未找到，当前 Token 类型为 {reader.TokenType}。");
         }
 
         // 为了预读 ModuleType 属性，我们先将 JSON 对象解析为 JsonElement。

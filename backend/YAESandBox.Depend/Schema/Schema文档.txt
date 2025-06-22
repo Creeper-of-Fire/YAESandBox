@@ -21,7 +21,7 @@ rootFormData 根节点的 FormData值
 
 比如：（参考这里：uiSchema 使用表达式 (opens new window)）
 
-'ui:title': `{{ parentFormData.age > 18 ? '呵呵呵' : '嘿嘿嘿' }}`
+'ui:title': `[[ parentFormData.age > 18 ? '呵呵呵' : '嘿嘿嘿' ]]`
 提示
 
 配置数据结构和 schema 保持一致，所有的ui配置属性 ui: 开头

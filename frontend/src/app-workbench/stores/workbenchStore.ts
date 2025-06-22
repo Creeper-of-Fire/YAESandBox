@@ -54,6 +54,15 @@ export interface WorkflowModuleRules {
 }
 
 /**
+ * 元数据接口，整合了规则和类别标签。
+ * 这提供了一个统一的元数据访问点。
+ */
+export interface ModuleMetadata {
+    rules?: WorkflowModuleRules;
+    classLabel?: string;
+}
+
+/**
  * 辅助函数：将后端返回的 DTO 转换为我们前端的统一视图模型数组
  */
 function processDtoToViewModel<T>(dto: Record<string, IJsonResultDto<T>>): Record<string, GlobalResourceItem<T>>
@@ -156,20 +165,38 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         {immediate: false, shallow: false} // 初始不加载
     );
 
-    // 新增一个计算属性，用于存储解析后的规则
-    const moduleRules = computed(() => {
-        const rulesMap: Record<string, WorkflowModuleRules> = {};
+    /**
+     * 元数据服务。
+     * 该计算属性提供了一个单一的、聚合的元数据来源。
+     * 它会从每个模块的 Schema 中提取 `x-workflow-module-rules` 和 `classLabel` 等元数据信息。
+     */
+    const moduleMetadata = computed(() => {
+        const metadataMap: Record<string, ModuleMetadata> = {};
         const schemas = moduleSchemasAsync.state.value;
 
         if (schemas) {
             for (const moduleType in schemas) {
                 const schema = schemas[moduleType];
-                if (schema && schema['x-workflow-module-rules']) {
-                    rulesMap[moduleType] = schema['x-workflow-module-rules'] as WorkflowModuleRules;
+                if (schema) {
+                    const rules = schema['x-workflow-module-rules'] as WorkflowModuleRules | undefined;
+                    // 从 Schema 中提取新的类别标签属性
+                    const classLabel = schema['classLabel'] as string | undefined;
+
+                    // 只要 Schema 中包含任何一个元数据，就为其创建一个条目
+                    if (rules || classLabel) {
+                        const metadata: ModuleMetadata = {};
+                        if (rules) {
+                            metadata.rules = rules;
+                        }
+                        if (classLabel) {
+                            metadata.classLabel = classLabel;
+                        }
+                        metadataMap[moduleType] = metadata;
+                    }
                 }
             }
         }
-        return rulesMap;
+        return metadataMap;
     });
 
     /**
@@ -414,7 +441,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         globalStepsAsync,
         globalModulesAsync,
         moduleSchemasAsync,
-        moduleRules,
+        moduleMetadata,
 
         hasDirtyDrafts,
         isDirty: _isDirty,

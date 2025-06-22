@@ -42,11 +42,13 @@
         <draggable
             v-if="workflowsList.length > 0"
             v-model="workflowsList"
+            :animation="150"
             :clone="handleResourceClone"
             :group="{ name: 'workflows-group', pull: 'clone', put: false }"
             :setData="handleSetData"
             :sort="false"
             class="resource-list"
+            ghost-class="workbench-ghost-item"
             item-key="id"
         >
           <div v-for="element in workflowsList"
@@ -69,11 +71,13 @@
         <draggable
             v-if="stepsList.length > 0"
             v-model="stepsList"
+            :animation="150"
             :clone="handleResourceClone"
             :group="{ name: 'steps-group', pull: 'clone', put: false }"
             :setData="handleSetData"
             :sort="false"
             class="resource-list"
+            ghost-class="workbench-ghost-item"
             item-key="id"
         >
           <div v-for="element in stepsList"
@@ -96,11 +100,13 @@
         <draggable
             v-if="modulesList.length > 0"
             v-model="modulesList"
+            :animation="150"
             :clone="handleResourceClone"
             :group="{ name: 'modules-group', pull: 'clone', put: false }"
             :setData="handleSetData"
             :sort="false"
             class="resource-list"
+            ghost-class="workbench-ghost-item"
             item-key="id"
         >
           <div v-for="element in modulesList"
@@ -127,7 +133,7 @@
 
 <script lang="ts" setup>
 import {computed, h, onMounted, ref} from 'vue';
-import {NEmpty, NH4, NSpin, NTabs, useDialog} from 'naive-ui';
+import {NAlert, NButton, NEmpty, NH4, NSpin, NTab, NTabs, useDialog} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSession";
 import {VueDraggable as draggable} from "vue-draggable-plus";
@@ -309,6 +315,12 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement)
   flex: 1;
 }
 
+.resource-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px; /* 列表项之间的间距 */
+  padding-top: 8px; /* 列表顶部留出一些空间 */
+}
 
 </style>
 <!-- END OF FILE -->

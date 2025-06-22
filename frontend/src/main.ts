@@ -9,6 +9,7 @@ import 'vfonts/Lato.css'
 import 'vfonts/FiraCode.css'
 import router from './router'
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'; // Import base CSS
+import './styles/draggable.css';
 // @ts-ignore
 import VueVirtualScroller from 'vue-virtual-scroller'
 

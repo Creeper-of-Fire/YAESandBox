@@ -17,6 +17,7 @@ public abstract record AbstractModuleConfig
     /// 名字
     /// </summary>
     [Required]
+    [Display(Name = "配置名称", Description = "模块的配置名称，用于在界面上显示。")]
     public abstract string Name { get; init; }
 
     /// <summary>

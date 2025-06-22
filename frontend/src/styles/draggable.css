@@ -1,0 +1,19 @@
+﻿/* 幽灵元素的样式：这是拖拽时的占位符 */
+.workbench-ghost-item {
+    opacity: 0.6 !important; /* 确保透明度生效 */
+    background: #e6f7ff !important; /* 一个清晰的浅蓝色背景，类似 Naive UI 的提示色 */
+    border: 2px dashed #91d5ff !important; /* Naive UI 主色调的虚线边框 */
+    border-radius: 4px; /* 与条目保持一致的圆角 */
+    box-sizing: border-box;
+}
+
+/*
+  当一个条目被选中并开始拖拽时，`vue-draggable-plus` (SortableJS)
+  会给原始条目添加 `sortable-chosen` 类。
+  我们利用这个类来覆盖或调整原始条目的样式，例如取消其 hover 效果。
+*/
+.config-item-base.sortable-chosen {
+    /* 你可以在这里添加一些样式，比如轻微的阴影，表示“被提起” */
+    /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); */
+    /* 更重要的是，它将用于配合 :not(.sortable-chosen) 来禁用 hover */
+}
