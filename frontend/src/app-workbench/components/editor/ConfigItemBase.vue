@@ -7,7 +7,10 @@
       @dblclick="$emit('dblclick')"
   >
     <!-- 拖拽把手 -->
-    <div v-if="isDraggable" class="drag-handle">
+    <div v-if="isDraggable"
+         class="drag-handle"
+         @click.stop
+    >
       <n-icon :size="18">
         <DragHandleOutlined/>
       </n-icon>
@@ -85,12 +88,6 @@ const handleBgColor = computed(() => props.highlightColor ? `${props.highlightCo
   box-shadow: 0 0 0 1px v-bind(finalHighlightColor);
 }
 
-/* 鼠标悬停样式 */
-/*
-.config-item-base:hover {
-  background-color: #f7f9fa;
-}
- */
 
 /* 拖拽区域样式 */
 .drag-handle {
@@ -98,16 +95,16 @@ const handleBgColor = computed(() => props.highlightColor ? `${props.highlightCo
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: 24px; /* 给予一个明确的宽度 */
+  width: 32px; /* 稍宽一点 */
   cursor: grab;
   transition: background-color 0.2s;
-  /* 使用 v-bind 设置背景色，并提供默认值 */
   background-color: v-bind(handleBgColor);
-  color: rgba(0, 0, 0, 0.4); /* 图标颜色，在浅色背景下通用 */
+  color: v-bind('props.highlightColor ? props.highlightColor : "rgba(0,0,0,0.5)"'); /* 图标颜色与高亮色一致或默认深灰 */
 }
 
 .drag-handle:active {
   cursor: grabbing;
+  /* active 状态下背景色加深，提供操作反馈 */
 }
 
 /* 内容包装器样式 */
@@ -128,9 +125,5 @@ const handleBgColor = computed(() => props.highlightColor ? `${props.highlightCo
   margin-left: auto;
   flex-shrink: 0;
   padding: 6px 8px; /* 给予和内容区对称的内边距 */
-}
-.config-item-base:hover {
-  /* 悬停时，不再改变整个背景色，而是由子元素控制 */
-  border-color: #ccc;
 }
 </style>

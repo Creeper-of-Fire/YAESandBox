@@ -5,8 +5,10 @@
     <draggable
         v-if="workflow.steps && workflow.steps.length > 0"
         v-model="workflow.steps"
+        :animation="150"
         :group="{ name: 'steps-group', put: ['steps-group'] }"
         class="workflow-step-list-container"
+        ghost-class="workbench-ghost-item"
         handle=".drag-handle"
         item-key="configId"
     >

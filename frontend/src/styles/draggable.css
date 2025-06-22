@@ -2,7 +2,7 @@
 .workbench-ghost-item {
     opacity: 0.6 !important; /* 确保透明度生效 */
     background: #e6f7ff !important; /* 一个清晰的浅蓝色背景，类似 Naive UI 的提示色 */
-    border: 2px dashed #91d5ff !important; /* Naive UI 主色调的虚线边框 */
+    border: 3px dashed #91d5ff !important; /* Naive UI 主色调的虚线边框 */
     border-radius: 4px; /* 与条目保持一致的圆角 */
     box-sizing: border-box;
 }

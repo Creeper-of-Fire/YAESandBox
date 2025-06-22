@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.Abstractions;
@@ -82,8 +83,11 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
 internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
 {
     /// <inheritdoc />
-    [DefaultValue("AI模块")]
+    [Required]
     [ReadOnly(true)]
+    [HiddenInForm(true)]
+    [Display(Name = "配置名称", Description = "模块的配置名称，用于在界面上显示。")]
+    [DefaultValue("AI模块")]
     public override string Name { get; init; } = string.Empty;
 
     protected override AiModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
