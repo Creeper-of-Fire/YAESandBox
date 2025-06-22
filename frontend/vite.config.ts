@@ -35,7 +35,7 @@ export default defineConfig({
                 allow: '(MIT OR Apache-2.0 OR BSD-2-Clause OR BSD-3-Clause)', // 可选但推荐：只允许特定的宽松许可证，如果有不符合的会发出警告。你可以根据需要调整这个 SPDX 表达式。
                 // 配置输出文件
                 output: {
-                    file: path.join(__dirname, 'dist', 'THIRD_PARTY_LICENSES.txt'), // 输出到构建目录 (dist) 下的文件名
+                    file: path.join(__dirname, './', 'THIRD_PARTY_LICENSES.txt'), // 输出到构建目录 (dist) 下的文件名
                     encoding: 'utf-8', // 文件编码
 
                     // --- 自定义输出格式 (可选) ---
