@@ -283,7 +283,6 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement)
   height: 100%; /* 确保占据父容器全部高度 */
   display: flex;
   flex-direction: column;
-  padding: 0 12px 12px 12px;
   box-sizing: border-box;
   /* 添加弹性布局 */
   flex: 1;

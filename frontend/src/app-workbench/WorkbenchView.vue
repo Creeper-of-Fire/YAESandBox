@@ -67,7 +67,7 @@
       </template>
 
       <!-- 2c. 主内容区插槽 -->
-      <template #main-content>
+      <template #module-panel>
         <n-spin :show="isAcquiringSession" description="正在加载编辑器...">
           <!-- 如果有激活的会话，显示模块编辑器 -->
           <div v-if="activeSession" class="main-content-wrapper">

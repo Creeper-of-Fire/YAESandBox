@@ -341,7 +341,6 @@ const currentConfigName = computed(() =>
   flex-direction: column;
   height: 100%;
   overflow: hidden; /* 防止内容溢出父容器 */
-  padding: 0 12px 12px 12px; /* 统一在这里设置内边距 */
   box-sizing: border-box;
 }
 
