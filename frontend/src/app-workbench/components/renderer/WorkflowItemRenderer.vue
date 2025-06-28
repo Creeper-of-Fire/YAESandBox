@@ -26,10 +26,7 @@
         <div :key="stepItem.configId" class="step-item-container">
           <StepItemRenderer
               :available-global-vars-for-step="getAvailableVarsForStep(index)"
-              :selected-module-id="selectedModuleId"
-              :session="session"
               :step="stepItem"
-              @update:selected-module-id="$emit('update:selectedModuleId', $event)"
           />
         </div>
       </div>
@@ -42,7 +39,6 @@
 <script lang="ts" setup>
 import {NEmpty} from 'naive-ui';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
-import type {EditSession} from "@/app-workbench/services/EditSession.ts";
 import type {WorkflowProcessorConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import StepItemRenderer from './StepItemRenderer.vue';
 import { computed } from 'vue';
@@ -50,12 +46,7 @@ import { computed } from 'vue';
 // 定义组件的 Props
 const props = defineProps<{
   workflow: WorkflowProcessorConfig;
-  session: EditSession;
-  selectedModuleId: string | null;
 }>();
-
-// 定义组件的 Emits
-defineEmits(['update:selectedModuleId']);
 
 const triggerParamsRef = computed({
   get: () => props.workflow?.triggerParams || [],
@@ -71,7 +62,7 @@ function getAvailableVarsForStep(stepIndex: number): string[]
   const triggerParamsArray = triggerParamsRef.value; // 使用计算属性
   const availableVars = new Set<string>(triggerParamsArray);
 
-  if (props.workflow?.steps) 
+  if (props.workflow?.steps)
   {
     for (let i = 0; i < stepIndex; i++)
     {

@@ -40,12 +40,7 @@
       <template #body>
         <template v-if="session.type === 'workflow' && workflowData">
           <p class="sidebar-description">拖拽全局步骤到步骤列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
-          <WorkflowItemRenderer
-              :selected-module-id="selectedModuleId"
-              :session="session"
-              :workflow="workflowData"
-              @update:selected-module-id="$emit('update:selectedModuleId', $event)"
-          />
+          <WorkflowItemRenderer :workflow="workflowData"/>
         </template>
 
         <template v-else-if="session.type === 'step' && stepData">
@@ -53,11 +48,8 @@
           <StepItemRenderer
               :is-collapsible="false"
               :is-draggable="false"
-              :selected-module-id="selectedModuleId"
-              :session="session"
               :step="stepData"
               style="margin-top: 16px"
-              @update:selected-module-id="$emit('update:selectedModuleId', $event)"
           />
         </template>
 
@@ -95,26 +87,25 @@
 
 <script lang="ts" setup>
 import {computed, h, ref} from 'vue';
-import {NAlert, NH4, NIcon, NInput, useDialog, useMessage} from 'naive-ui';
+import {NH4, NIcon, NInput, useDialog, useMessage} from 'naive-ui';
 import type {ConfigType, EditSession} from "@/app-workbench/services/EditSession.ts";
 import type {
   AbstractModuleConfig,
   StepProcessorConfig,
   WorkflowProcessorConfig
 } from "@/app-workbench/types/generated/workflow-config-api-client";
-import StepItemRenderer from '../editor/StepItemRenderer.vue';
-import WorkflowItemRenderer from "@/app-workbench/components/editor/WorkflowItemRenderer.vue";
+import StepItemRenderer from '../renderer/StepItemRenderer.vue';
+import WorkflowItemRenderer from "@/app-workbench/components/renderer/WorkflowItemRenderer.vue";
 import {AddBoxIcon, SwapHorizIcon} from '@/utils/icons';
 import {CloseIcon} from "naive-ui/es/_internal/icons";
 import HeaderAndBodyLayout from "@/app-workbench/layouts/HeaderAndBodyLayout.vue";
+import ModuleItemRenderer from "@/app-workbench/components/renderer/ModuleItemRenderer.vue";
 
 const props = defineProps<{
   session: EditSession | null;
-  selectedModuleId: string | null;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:selectedModuleId', value: string | null): void;
   (e: 'start-editing', payload: { type: ConfigType; id: string }): void;
   (e: 'close-session'): void;
 }>();

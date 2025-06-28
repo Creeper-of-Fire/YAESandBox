@@ -29,9 +29,9 @@
       <!-- 右侧的全局操作按钮 -->
       <n-space class="header-right-controls">
         <n-button
-            strong secondary type="primary"
-            :disabled="!workbenchStore.hasDirtyDrafts"
-            :loading="isSavingAll"
+            :disabled="!workbenchStore.hasDirtyDrafts" :loading="isSavingAll" secondary
+            strong
+            type="primary"
             @click="handleSaveAll"
         >
           <template #icon>
@@ -45,8 +45,8 @@
 
     <!-- 2. 编辑器核心布局 -->
     <EditorLayout
-        :is-global-panel-visible="isGlobalPanelVisible"
         :is-editor-panel-visible="isEditorPanelVisible"
+        :is-global-panel-visible="isGlobalPanelVisible"
         class="editor-layout"
     >
       <!-- 2a. 全局资源面板插槽 -->
@@ -54,43 +54,31 @@
         <GlobalResourcePanel @start-editing="handleStartEditing"/>
       </template>
 
-      <!-- 2b. 当前编辑结构插槽 (侧边栏) -->
+      <!-- 2b. 当前编辑结构插槽 -->
       <template #editor-panel>
         <WorkbenchSidebar
             :key="activeSession?.globalId ?? 'empty-session'"
             :session="activeSession"
-            :selected-module-id="selectedModuleId"
-            @update:selected-module-id="selectedModuleId = $event"
-            @start-editing="handleStartEditing"
             @closeSession="handleCloseSession"
+            @start-editing="handleStartEditing"
         />
       </template>
 
       <!-- 2c. 主内容区插槽 -->
       <template #module-panel>
-        <n-spin :show="isAcquiringSession" description="正在加载编辑器...">
-          <!-- 如果有激活的会话，显示模块编辑器 -->
-          <div v-if="activeSession" class="main-content-wrapper">
-            <EditorTargetRenderer
-                :session="activeSession"
-                :selected-module-id="selectedModuleId"
-            />
-          </div>
-          <n-empty v-else description="无激活的编辑会话" style="margin-top: 20%;"/>
-        </n-spin>
+        <MainEditPanel/>
       </template>
-
     </EditorLayout>
 
     <!-- 3. 临时：承载 AI 配置面板的模态框 -->
     <n-modal
         v-model:show="showAiConfigModal"
-        title="全局 AI 配置中心"
+        :bordered="false"
+        :closable="true"
+        :mask-closable="false"
         preset="card"
         style="width: 90%; max-width: 1400px; height: 90vh;"
-        :mask-closable="false"
-        :closable="true"
-        :bordered="false"
+        title="全局 AI 配置中心"
     >
       <div style="height: calc(90vh - 100px); overflow-y: auto;">
         <AiConfigEditorPanel/>
@@ -99,9 +87,9 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import {onBeforeUnmount, onMounted, ref} from 'vue';
-import {NButton, NEmpty, NH3, NSpin, NSwitch, useMessage,useDialog} from 'naive-ui';
+<script lang="ts" setup>
+import {onBeforeUnmount, onMounted, provide, ref} from 'vue';
+import {NButton, NH3, NSwitch, useDialog, useMessage} from 'naive-ui';
 import {SaveIcon} from '@/utils/icons';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import {type ConfigType, type EditSession} from '@/app-workbench/services/EditSession';
@@ -109,16 +97,29 @@ import {type ConfigType, type EditSession} from '@/app-workbench/services/EditSe
 import EditorLayout from '@/app-workbench/layouts/EditorLayout.vue';
 import GlobalResourcePanel from '@/app-workbench/components/panel/GlobalResourcePanel.vue';
 import WorkbenchSidebar from '@/app-workbench/components/panel/WorkbenchSidebar.vue';
-import EditorTargetRenderer from '@/app-workbench/components/module/EditorTargetRenderer.vue';
 import AiConfigEditorPanel from "@/app-workbench/features/ai-config-panel/AiConfigEditorPanel.vue";
+import MainEditPanel from "@/app-workbench/components/panel/MainEditPanel.vue";
+import {type SelectedConfigItem, SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 import type {AbstractModuleConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
+import type {StepEditorContext} from "@/app-workbench/components/editor/StepEditorContext.ts";
+import type {ModuleEditorContext} from "@/app-workbench/components/editor/ModuleEditorContext.ts";
 
 defineOptions({
   name: 'WorkbenchView'
 });
 
+const selectedConfig = ref<StepEditorContext | ModuleEditorContext | null>(null);
+
+provide<SelectedConfigItem>(SelectedConfigItemKey, {
+  data: selectedConfig,
+  update: (config) =>
+  {
+    selectedConfig.value = config;
+  }
+});
+
+
 // TODO 使用vueuse的useStore来存储单例的UI状态
-// TODO vue的Inject
 
 const workbenchStore = useWorkbenchStore();
 const message = useMessage();
@@ -136,21 +137,23 @@ const isSavingAll = ref(false);
 // --- UI 控制状态 ---
 const isGlobalPanelVisible = ref(true);
 const isEditorPanelVisible = ref(true);
-const selectedModuleId = ref<string | null>(null);
 const showAiConfigModal = ref(false);
 
 /**
  * *** 处理全局保存操作 ***
  */
-async function handleSaveAll() {
+async function handleSaveAll()
+{
   isSavingAll.value = true;
-  const { saved, failed } = await workbenchStore.saveAllDirtyDrafts();
+  const {saved, failed} = await workbenchStore.saveAllDirtyDrafts();
   isSavingAll.value = false;
 
-  if (failed.length > 0) {
+  if (failed.length > 0)
+  {
     // 如果有失败项，显示错误对话框
     // 从 failed 结果中直接获取名字
-    const failedNames = failed.map(item => {
+    const failedNames = failed.map(item =>
+    {
       // 从 store 中安全地获取最新的名字，因为保存失败，草稿还在
       return item.name || item.id;
     }).join('、');
@@ -164,12 +167,14 @@ async function handleSaveAll() {
     console.error("保存失败详情:", failed);
   }
 
-  if (saved.length > 0) {
+  if (saved.length > 0)
+  {
     // 即使部分失败，也要提示成功的部分
     message.success(`成功保存 ${saved.length} 项更改！`);
   }
 
-  if (saved.length === 0 && failed.length === 0) {
+  if (saved.length === 0 && failed.length === 0)
+  {
     // 处理没有脏数据可保存的情况
     message.info("没有需要保存的更改。");
   }
@@ -178,7 +183,8 @@ async function handleSaveAll() {
 /**
  * *** 处理关闭会话的请求 ***
  */
-function handleCloseSession() {
+function handleCloseSession()
+{
   activeSession.value = null;
 }
 
@@ -186,49 +192,61 @@ function handleCloseSession() {
  * 处理从左侧面板点击“编辑”按钮或双击列表项的事件。或者其他的“开始编辑”事件
  * @param {object} payload - 包含类型和ID的对象。
  */
-async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: string }) {
+async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: string })
+{
   if (isAcquiringSession.value) return;
 
   // 如果点击的是当前已激活的会话，则根据类型辅助性地打开面板，然后直接返回
-  if (activeSession.value && activeSession.value.globalId === globalId) {
-    if (type !== 'module') {
+  if (activeSession.value && activeSession.value.globalId === globalId)
+  {
+    if (type !== 'module')
+    {
       isEditorPanelVisible.value = true;
     }
     return;
   }
 
   // 切换新会话前，重置UI状态
-  selectedModuleId.value = null;
+  selectedConfig.value = null;
   isAcquiringSession.value = true;
   activeSession.value = null; // 先清空，让UI显示加载状态
 
-  try {
+  try
+  {
     const session = await workbenchStore.acquireEditSession(type, globalId);
-    if (session) {
+    if (session)
+    {
       activeSession.value = session;
 
       // 如果编辑的是一个独立的模块，则默认选中它自己，
       // 以便在右侧的 EditorTargetRenderer 中立即显示其配置表单。
-      if (session.type === 'module') {
+      if (session.type === 'module')
+      {
         const moduleData = session.getData().value as AbstractModuleConfig | null;
-        if (moduleData) {
-          selectedModuleId.value = moduleData.configId;
+        if (moduleData)
+        {
+          selectedConfig.value = {data: moduleData};
         }
       }
       // --- 修复逻辑结束 ---
 
       // 辅助性UI逻辑：如果编辑的不是模块，自动打开“当前编辑”面板
-      if (type !== 'module') {
+      if (type !== 'module')
+      {
         isEditorPanelVisible.value = true;
       }
-    } else {
+    }
+    else
+    {
       message.error(`无法开始编辑 “${globalId}”。资源可能不存在或已损坏。`);
     }
-  } catch (error) {
+  } catch (error)
+  {
     console.error('获取编辑会话时发生意外错误:', error);
     message.error('开始编辑时发生未知错误。');
     activeSession.value = null;
-  } finally {
+  } finally
+  {
     isAcquiringSession.value = false;
   }
 }
@@ -237,18 +255,22 @@ async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: 
  * 浏览器关闭前的警告，防止用户意外丢失未保存的草稿。
  * @param {BeforeUnloadEvent} event
  */
-const beforeUnloadHandler = (event: BeforeUnloadEvent) => {
-  if (workbenchStore.hasDirtyDrafts) {
+const beforeUnloadHandler = (event: BeforeUnloadEvent) =>
+{
+  if (workbenchStore.hasDirtyDrafts)
+  {
     event.preventDefault();
   }
 };
 
-onMounted(() => {
+onMounted(() =>
+{
   window.addEventListener('beforeunload', beforeUnloadHandler);
   workbenchStore.moduleSchemasAsync.execute();
 });
 
-onBeforeUnmount(() => {
+onBeforeUnmount(() =>
+{
   window.removeEventListener('beforeunload', beforeUnloadHandler);
 });
 </script>

@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    NAlert: typeof import('naive-ui')['NAlert']
     NButton: typeof import('naive-ui')['NButton']
     NCard: typeof import('naive-ui')['NCard']
     NCollapseTransition: typeof import('naive-ui')['NCollapseTransition']
@@ -15,6 +16,7 @@ declare module 'vue' {
     NDialogProvider: typeof import('naive-ui')['NDialogProvider']
     NDivider: typeof import('naive-ui')['NDivider']
     NDynamicTags: typeof import('naive-ui')['NDynamicTags']
+    NEmpty: typeof import('naive-ui')['NEmpty']
     NFlex: typeof import('naive-ui')['NFlex']
     NIcon: typeof import('naive-ui')['NIcon']
     NMessageProvider: typeof import('naive-ui')['NMessageProvider']
@@ -24,6 +26,7 @@ declare module 'vue' {
     NScrollbar: typeof import('naive-ui')['NScrollbar']
     NSpace: typeof import('naive-ui')['NSpace']
     NSpin: typeof import('naive-ui')['NSpin']
+    NSplit: typeof import('naive-ui')['NSplit']
     NText: typeof import('naive-ui')['NText']
     NTooltip: typeof import('naive-ui')['NTooltip']
     RouterLink: typeof import('vue-router')['RouterLink']

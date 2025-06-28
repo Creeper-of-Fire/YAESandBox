@@ -31,7 +31,7 @@
 
 <script lang="ts" setup>
 import {NIcon} from 'naive-ui';
-import {DragHandleOutlined} from '@/utils/icons';
+import {DragHandleOutlined} from '@/utils/icons.ts';
 import {computed} from "vue";
 
 // 定义组件的 props

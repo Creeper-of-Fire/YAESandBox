@@ -1,10 +1,10 @@
 <!-- src/app-workbench/components/.../ModuleItemRenderer.vue -->
 <template>
   <ConfigItemBase
-      :is-selected="selectedModuleId === module.configId"
       :highlight-color="moduleTypeColor"
+      :is-selected="isSelected"
       is-draggable
-      @click="$emit('update:selectedModuleId', module.configId)"
+      @click="updateSelectedConfig"
   >
     <template #content>
       <span v-if="moduleClassLabel" class="module-alias">{{ moduleClassLabel }}</span>
@@ -29,18 +29,30 @@
 <script lang="ts" setup>
 import ConfigItemBase from './ConfigItemBase.vue';
 import type {AbstractModuleConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
-import {computed} from "vue";
+import {computed, inject} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
 import ColorHash from "color-hash";
+import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
   module: AbstractModuleConfig;
-  selectedModuleId: string | null;
 }>();
 
-defineEmits(['update:selectedModuleId']);
+const selectedConfigItem = inject(SelectedConfigItemKey);
+
+function updateSelectedConfig()
+{
+  selectedConfigItem?.update({data: props.module});
+}
+
+const selectedConfig = selectedConfigItem?.data;
+
+const isSelected = computed(() =>
+{
+  return selectedConfig?.value?.data.configId === props.module.configId;
+});
 
 const workbenchStore = useWorkbenchStore();
 

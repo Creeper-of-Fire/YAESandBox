@@ -283,13 +283,16 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     };
 
     /**
-     * _closeDraft 重命名为 _discardDraft，并且不再有确认提示。
-     * 它的作用是简单地、无条件地丢弃一个草稿。
-     * @param globalId - 要丢弃的草稿的全局ID。
+     * _discardDraft 将草稿数据恢复为原始状态，而不是删除草稿。
+     * 它的作用是撤销所有未保存的更改，使草稿回到初始状态。
+     * @param globalId - 要放弃更改的草稿的全局ID。
      */
-    const _discardDraft = (globalId: string) =>
-    {
-        delete drafts.value[globalId];
+    const _discardDraft = (globalId: string) => {
+        const draft = drafts.value[globalId];
+        if (draft) {
+            // 将数据恢复为创建草稿时的原始状态
+            draft.data = JSON.parse(draft.originalState);
+        }
     };
 
     // =================================================================
