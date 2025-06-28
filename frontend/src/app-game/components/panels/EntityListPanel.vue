@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="panel-container entity-list-panel">
     <n-h4 prefix="bar">实体列表</n-h4>
     <n-text depth="3">当前 Block: {{ currentBlockId || '未选择' }}</n-text>
@@ -19,7 +19,7 @@
 <script setup lang="ts">
 import {computed} from 'vue';
 import {NH4, NText, NDivider, NEmpty, NIcon} from 'naive-ui';
-import {PeopleOutline as PeopleIcon} from '@vicons/ionicons5';
+import {PeopleIcon} from '@/utils/icons';
 import {useTopologyStore} from '@/app-game/features/block-bubble-stream-panel/topologyStore.ts';
 import {useBlockStateListener} from '@/app-game/composables/useBlockStateListener.ts'; // 引入 listener
 

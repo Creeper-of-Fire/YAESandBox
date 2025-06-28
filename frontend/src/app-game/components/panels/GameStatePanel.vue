@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="panel-container game-state-panel">
     <n-h4 prefix="bar">游戏状态 (GameState)</n-h4>
     <n-text depth="3">当前 Block: {{ currentBlockId || '未选择' }}</n-text>
@@ -19,9 +19,9 @@
 <script setup lang="ts">
 import {computed} from 'vue';
 import {NH4, NText, NDivider, NEmpty, NIcon} from 'naive-ui';
-import {GameControllerOutline as GameControllerIcon} from '@vicons/ionicons5';
 import {useTopologyStore} from '@/app-game/features/block-bubble-stream-panel/topologyStore.ts';
-import {useBlockStateListener} from '@/app-game/composables/useBlockStateListener.ts'; // 引入 listener
+import {useBlockStateListener} from '@/app-game/composables/useBlockStateListener.ts';
+import {GameControllerIcon} from "@/utils/icons.ts";
 
 const topologyStore = useTopologyStore();
 

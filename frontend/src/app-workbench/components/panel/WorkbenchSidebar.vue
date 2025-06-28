@@ -1,4 +1,4 @@
-﻿<!-- src/app-workbench/components/.../WorkbenchSidebar.vue -->
+<!-- src/app-workbench/components/.../WorkbenchSidebar.vue -->
 <template>
   <!-- 1. 根容器始终存在，并监听拖拽事件 -->
   <div
@@ -104,7 +104,7 @@ import type {
 } from "@/app-workbench/types/generated/workflow-config-api-client";
 import StepItemRenderer from '../editor/StepItemRenderer.vue';
 import WorkflowItemRenderer from "@/app-workbench/components/editor/WorkflowItemRenderer.vue";
-import {AddBoxOutlined as AddBoxIcon, SwapHorizOutlined as SwapHorizIcon} from '@vicons/material';
+import {AddBoxIcon, SwapHorizIcon} from '@/utils/icons';
 import {CloseIcon} from "naive-ui/es/_internal/icons";
 import HeaderAndBodyLayout from "@/app-workbench/layouts/HeaderAndBodyLayout.vue";
 

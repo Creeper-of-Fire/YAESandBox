@@ -1,4 +1,4 @@
-﻿<!-- src/app-workbench/components/.../ConfigItemBase.vue -->
+<!-- src/app-workbench/components/.../ConfigItemBase.vue -->
 <template>
   <div
       :class="{ 'is-selected': isSelected }"
@@ -31,7 +31,7 @@
 
 <script lang="ts" setup>
 import {NIcon} from 'naive-ui';
-import {DragHandleOutlined} from '@vicons/material';
+import {DragHandleOutlined} from '@/utils/icons';
 import {computed} from "vue";
 
 // 定义组件的 props

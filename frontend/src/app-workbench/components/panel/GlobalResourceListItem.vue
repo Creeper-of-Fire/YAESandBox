@@ -1,4 +1,4 @@
-﻿<!-- src/app-workbench/components/.../GlobalResourceListItem.vue -->
+<!-- src/app-workbench/components/.../GlobalResourceListItem.vue -->
 <template>
   <div v-if="item.isSuccess"
        class="resource-item"
@@ -61,7 +61,7 @@
 
 <script lang="ts" setup>
 import {NButton, NIcon, NTooltip} from 'naive-ui';
-import {EditOutlined as EditIcon, FindInPageOutlined as FindInPageIcon, LinkOffOutlined as LinkOffIcon} from '@vicons/material';
+import {EditIcon, FindInPageIcon,LinkOffIcon} from '@/utils/icons';
 import type {ConfigObject, ConfigType} from '@/app-workbench/services/EditSession';
 import type {GlobalResourceItem} from '@/types/ui';
 import {computed} from "vue";

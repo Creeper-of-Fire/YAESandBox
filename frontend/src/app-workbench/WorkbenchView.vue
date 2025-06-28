@@ -1,4 +1,4 @@
-﻿<!-- 文件路径: src/app-workbench/WorkbenchView.vue -->
+<!-- 文件路径: src/app-workbench/WorkbenchView.vue -->
 <template>
   <div class="workbench-view">
     <!-- 1. 顶部控制栏 -->
@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import {onBeforeUnmount, onMounted, ref} from 'vue';
 import {NButton, NEmpty, NH3, NSpin, NSwitch, useMessage,useDialog} from 'naive-ui';
-import {SaveOutlined as SaveIcon} from '@vicons/material';
+import {SaveIcon} from '@/utils/icons';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import {type ConfigType, type EditSession} from '@/app-workbench/services/EditSession';
 
@@ -118,7 +118,7 @@ defineOptions({
 });
 
 // TODO 使用vueuse的useStore来存储单例的UI状态
-// TODO 实现拖拽的自动升级/降级（比如把工作流拖入工作流就意味着替换当前编辑对象，把工作流/步骤拖入步骤同理）
+// TODO vue的Inject
 
 const workbenchStore = useWorkbenchStore();
 const message = useMessage();

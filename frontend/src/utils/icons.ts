@@ -1,0 +1,17 @@
+// 统一图标库
+export {default as GameControllerIcon} from '@vicons/ionicons5/es/GameControllerOutline';
+export {default as AddBoxIcon} from '@vicons/material/es/AddBoxOutlined';
+export {default as SwapHorizIcon} from '@vicons/material/es/SwapHorizOutlined';
+export {default as PeopleIcon} from '@vicons/ionicons5/es/PeopleOutline';
+export {default as EditIcon} from '@vicons/material/es/EditOutlined';
+export {default as LinkOffIcon} from '@vicons/material/es/LinkOffOutlined';
+export {default as FindInPageIcon} from '@vicons/material/es/FindInPageOutlined';
+export {default as SaveIcon} from '@vicons/material/es/SaveOutlined';
+export {default as KeyboardArrowDownIcon} from '@vicons/material/es/KeyboardArrowDownFilled';
+export {default as KeyboardArrowUpIcon} from '@vicons/material/es/KeyboardArrowUpFilled';
+export {default as ArrowForwardIcon} from '@vicons/material/es/ArrowForwardOutlined';
+export {default as DeleteIcon} from '@vicons/material/es/DeleteOutlineRound';
+export {default as SettingsIcon} from '@vicons/ionicons5/es/SettingsOutline';
+export {default as DragHandleOutlined} from '@vicons/material/es/DragHandleOutlined';
+export {default as AddIcon} from '@vicons/material/es/AddCircleOutlineRound';
+export {default as ListIcon} from '@vicons/ionicons5/es/ListOutline';

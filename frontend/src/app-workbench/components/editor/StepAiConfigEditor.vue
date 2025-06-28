@@ -1,4 +1,4 @@
-﻿<!-- src/app-workbench/components/.../StepAiConfigEditor.vue -->
+<!-- src/app-workbench/components/.../StepAiConfigEditor.vue -->
 <template>
   <n-card
       :content-style="{padding:0}"
@@ -109,12 +109,7 @@
 <script lang="ts" setup>
 import {computed, onMounted, ref} from 'vue';
 import {NAlert, NButton, NCard, NFormItemRow, NIcon, NSelect, NSpin, NSwitch, NText} from 'naive-ui';
-import {
-  AddCircleOutlineRound as AddIcon,
-  DeleteOutlineRound as DeleteIcon,
-  KeyboardArrowDownFilled as KeyboardArrowDownIcon,
-  KeyboardArrowUpFilled as KeyboardArrowUpIcon,
-} from '@vicons/material';
+import {AddIcon, DeleteIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon } from '@/utils/icons';
 import type {StepAiConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {type AiConfigurationSet, AiConfigurationsService} from '@/app-workbench/types/generated/ai-config-api-client';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';

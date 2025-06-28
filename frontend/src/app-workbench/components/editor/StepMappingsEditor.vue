@@ -48,7 +48,7 @@
 <script lang="ts" setup>
 import {computed} from 'vue';
 import {NAlert, NButton, NButtonGroup, NCard, NEmpty, NIcon, NTag} from 'naive-ui';
-import {ArrowForwardOutlined as ArrowForwardIcon, DeleteOutlineRound as DeleteIcon, EditOutlined as EditIcon,} from '@vicons/material';
+import {ArrowForwardIcon, DeleteIcon, EditIcon} from '@/utils/icons';
 
 const props = defineProps<{
   // 使用 v-model 来双向绑定映射数据

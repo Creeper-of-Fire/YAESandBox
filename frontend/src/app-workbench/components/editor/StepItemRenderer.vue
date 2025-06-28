@@ -80,7 +80,7 @@
 
 <script lang="ts" setup>
 import {NAlert, NButton, NCollapseTransition, NEmpty, NIcon} from 'naive-ui';
-import {KeyboardArrowDownFilled as KeyboardArrowDownIcon, KeyboardArrowUpFilled as KeyboardArrowUpIcon} from '@vicons/material';
+import {KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@/utils/icons';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
 import ConfigItemBase from './ConfigItemBase.vue'; // 导入基础组件
 import ModuleItemRenderer from './ModuleItemRenderer.vue'; // 导入模块渲染器

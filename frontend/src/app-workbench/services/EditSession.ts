@@ -1,4 +1,4 @@
-﻿// --- START OF FILE frontend/src/app-workbench/services/EditSession.ts ---
+// --- START OF FILE frontend/src/app-workbench/services/EditSession.ts ---
 
 import {computed, type Ref} from 'vue';
 import type {

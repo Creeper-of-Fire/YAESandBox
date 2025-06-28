@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <div class="toolbar-content">
     <n-space align="center">
       <!-- 持久化按钮 -->
@@ -70,14 +70,11 @@
 <script setup lang="ts">
 import {ref, defineAsyncComponent, markRaw, type Component} from 'vue'; // 引入 Component 类型
 import {NSpace, NButton, NDivider, NIcon, NTooltip} from 'naive-ui';
-import {
-  ListOutline as ListIcon,
-  SettingsOutline as SettingsIcon,
-  GameControllerOutline as GameControllerIcon// 引入 Home 图标
-} from '@vicons/ionicons5';
+import { ListIcon, SettingsIcon } from '@/utils/icons';
 import {useUiStore} from '@/app-game/stores/gameUiStore.ts';
 import {usePersistenceStore} from '@/app-game/features/block-bubble-stream-panel/persistenceStore.ts';
 import ConnectionStatus from './ConnectionStatus.vue';
+import {GameControllerIcon} from "@/utils/icons.ts";
 
 // --- Store ---
 const uiStore = useUiStore();
