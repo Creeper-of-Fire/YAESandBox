@@ -109,7 +109,7 @@
 <script lang="ts" setup>
 import {computed, onMounted, ref} from 'vue';
 import {NAlert, NButton, NCard, NFormItemRow, NIcon, NSelect, NSpin, NSwitch, NText} from 'naive-ui';
-import {AddIcon, DeleteIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon } from '@/utils/icons';
+import {AddIcon, DeleteIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon } from '@/utils/icons.ts';
 import type {StepAiConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {type AiConfigurationSet, AiConfigurationsService} from '@/app-workbench/types/generated/ai-config-api-client';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';

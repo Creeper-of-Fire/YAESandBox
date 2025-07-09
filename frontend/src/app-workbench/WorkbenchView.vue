@@ -101,8 +101,8 @@ import AiConfigEditorPanel from "@/app-workbench/features/ai-config-panel/AiConf
 import MainEditPanel from "@/app-workbench/components/panel/MainEditPanel.vue";
 import {type SelectedConfigItem, SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 import type {AbstractModuleConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
-import type {StepEditorContext} from "@/app-workbench/components/editor/StepEditorContext.ts";
-import type {ModuleEditorContext} from "@/app-workbench/components/editor/ModuleEditorContext.ts";
+import type {StepEditorContext} from "@/app-workbench/components/step/editor/StepEditorContext.ts";
+import type {ModuleEditorContext} from "@/app-workbench/components/module/editor/ModuleEditorContext.ts";
 
 defineOptions({
   name: 'WorkbenchView'

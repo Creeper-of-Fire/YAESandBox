@@ -40,7 +40,7 @@
 import {NEmpty} from 'naive-ui';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
 import type {WorkflowProcessorConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
-import StepItemRenderer from './StepItemRenderer.vue';
+import StepItemRenderer from '../step/StepItemRenderer.vue';
 import { computed } from 'vue';
 
 // 定义组件的 Props

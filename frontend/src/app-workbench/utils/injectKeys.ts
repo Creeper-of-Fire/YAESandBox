@@ -2,8 +2,8 @@
 
 // 定义选中项的类型
 import type {InjectionKey, Ref} from "vue";
-import type {StepEditorContext} from "@/app-workbench/components/editor/StepEditorContext.ts";
-import type {ModuleEditorContext} from "@/app-workbench/components/editor/ModuleEditorContext.ts";
+import type {StepEditorContext} from "@/app-workbench/components/step/editor/StepEditorContext.ts";
+import type {ModuleEditorContext} from "@/app-workbench/components/module/editor/ModuleEditorContext.ts";
 
 export interface SelectedConfigItem
 {

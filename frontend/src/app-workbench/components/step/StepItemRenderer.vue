@@ -57,8 +57,8 @@
 import {NButton, NCollapseTransition, NEmpty, NIcon} from 'naive-ui';
 import {KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@/utils/icons.ts';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
-import ConfigItemBase from './ConfigItemBase.vue'; // 导入基础组件
-import ModuleItemRenderer from './ModuleItemRenderer.vue'; // 导入模块渲染器
+import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue'; // 导入基础组件
+import ModuleItemRenderer from '../module/ModuleItemRenderer.vue'; // 导入模块渲染器
 import type {StepProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {computed, inject, ref} from "vue";
 import ColorHash from "color-hash";

@@ -45,7 +45,7 @@
 </template>
 
 <script lang="ts" setup>
-import ConfigItemBase from './ConfigItemBase.vue';
+import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue';
 import type {AbstractModuleConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {computed, inject} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
@@ -53,7 +53,7 @@ import {InfoIcon} from "naive-ui/lib/_internal/icons";
 import ColorHash from "color-hash";
 import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 import {FindInPageIcon} from "@/utils/icons.ts";
-import {useModuleAnalysis} from "@/app-workbench/components/renderer/useModuleAnalysis.ts";
+import {useModuleAnalysis} from "@/app-workbench/composables/useModuleAnalysis.ts";
 
 // 定义 Props 和 Emits
 const props = defineProps<{

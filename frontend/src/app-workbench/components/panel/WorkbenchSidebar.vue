@@ -94,12 +94,12 @@ import type {
   StepProcessorConfig,
   WorkflowProcessorConfig
 } from "@/app-workbench/types/generated/workflow-config-api-client";
-import StepItemRenderer from '../renderer/StepItemRenderer.vue';
-import WorkflowItemRenderer from "@/app-workbench/components/renderer/WorkflowItemRenderer.vue";
+import StepItemRenderer from '../step/StepItemRenderer.vue';
+import WorkflowItemRenderer from "@/app-workbench/components/workflow/WorkflowItemRenderer.vue";
 import {AddBoxIcon, SwapHorizIcon} from '@/utils/icons';
 import {CloseIcon} from "naive-ui/es/_internal/icons";
 import HeaderAndBodyLayout from "@/app-workbench/layouts/HeaderAndBodyLayout.vue";
-import ModuleItemRenderer from "@/app-workbench/components/renderer/ModuleItemRenderer.vue";
+import ModuleItemRenderer from "@/app-workbench/components/module/ModuleItemRenderer.vue";
 
 const props = defineProps<{
   session: EditSession | null;

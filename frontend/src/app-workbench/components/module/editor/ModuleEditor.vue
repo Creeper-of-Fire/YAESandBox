@@ -57,8 +57,8 @@ import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import type {AbstractModuleConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import DynamicFormRenderer from "@/app-workbench/features/schema-viewer/DynamicFormRenderer.vue";
 import {useDebounceFn} from "@vueuse/core";
-import type {ModuleEditorContext} from "@/app-workbench/components/editor/ModuleEditorContext.ts";
-import {useModuleAnalysis} from "@/app-workbench/components/renderer/useModuleAnalysis.ts";
+import type {ModuleEditorContext} from "@/app-workbench/components/module/editor/ModuleEditorContext.ts";
+import {useModuleAnalysis} from "@/app-workbench/composables/useModuleAnalysis.ts";
 
 // --- Props ---
 const props = defineProps<{

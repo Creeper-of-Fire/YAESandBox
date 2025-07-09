@@ -14,12 +14,12 @@
 </template>
 
 <script lang="ts" setup>
-import ModuleEditor from "@/app-workbench/components/editor/ModuleEditor.vue";
+import ModuleEditor from "@/app-workbench/components/module/editor/ModuleEditor.vue";
 import {computed, inject} from "vue";
 import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
-import StepEditor from "@/app-workbench/components/editor/StepEditor.vue";
-import type {StepEditorContext} from "@/app-workbench/components/editor/StepEditorContext.ts";
-import type {ModuleEditorContext} from "@/app-workbench/components/editor/ModuleEditorContext.ts";
+import StepEditor from "@/app-workbench/components/step/editor/StepEditor.vue";
+import type {StepEditorContext} from "@/app-workbench/components/step/editor/StepEditorContext.ts";
+import type {ModuleEditorContext} from "@/app-workbench/components/module/editor/ModuleEditorContext.ts";
 
 const selectedConfigItem = inject(SelectedConfigItemKey);
 const selectedConfig = computed(() => selectedConfigItem?.data.value || null);

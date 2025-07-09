@@ -27,12 +27,12 @@
 </template>
 
 <script lang="ts" setup>
-import StepAiConfigEditor from "@/app-workbench/components/editor/StepAiConfigEditor.vue";
+import StepAiConfigEditor from "@/app-workbench/components/step/editor/StepAiConfigEditor.vue";
 import {NAlert} from "naive-ui";
-import StepMappingsEditor from "@/app-workbench/components/editor/StepMappingsEditor.vue";
+import StepMappingsEditor from "@/app-workbench/components/step/editor/StepMappingsEditor.vue";
 import {computed, watch, ref} from "vue";
-import type {StepEditorContext} from "@/app-workbench/components/editor/StepEditorContext.ts";
-import { useModuleAnalysisStore } from '@/app-workbench/stores/useModuleAnalysisStore';
+import type {StepEditorContext} from "@/app-workbench/components/step/editor/StepEditorContext.ts";
+import { useModuleAnalysisStore } from '@/app-workbench/stores/useModuleAnalysisStore.ts';
 
 const props = defineProps<{
   stepContext: StepEditorContext;
