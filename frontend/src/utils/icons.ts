@@ -15,3 +15,5 @@ export {default as SettingsIcon} from '@vicons/ionicons5/es/SettingsOutline';
 export {default as DragHandleOutlined} from '@vicons/material/es/DragHandleOutlined';
 export {default as AddIcon} from '@vicons/material/es/AddCircleOutlineRound';
 export {default as ListIcon} from '@vicons/ionicons5/es/ListOutline';
+export {default as HelpCircleIcon} from '@vicons/ionicons5/es/HelpCircleOutline';
+export {default as AlertCircleIcon} from '@vicons/ionicons5/es/AlertCircleOutline';

@@ -58,8 +58,8 @@ public record StepProcessorConfig
     
     /// <summary>
     /// 定义了此步骤如何从工作流的全局变量池获取输入，并映射到步骤内部使用的变量名。
-    /// Key: 全局变量名 (在工作流中可用的名字)
-    /// Value: 步骤内部期望的变量名 (模块消费的名字)
+    /// Key: 步骤内部期望的变量名 (模块消费的名字)
+    /// Value: 全局变量名 (在工作流中可用的名字)
     /// </summary>
     /// <example>
     /// "initial_query": "customer_question"

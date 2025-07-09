@@ -58,8 +58,8 @@ public class WorkflowValidationService
     /// </summary>
     private void ValidateDataFlow(StepProcessorConfig step, ISet<string> initialAvailableVariables, StepValidationResult stepResult)
     {
-        // 1. (保持不变) 检查 InputMappings 的源（Key，即全局变量）是否存在于上游的可用池中
-        foreach (var globalName in step.InputMappings.Keys)
+        // 1. (保持不变) 检查 InputMappings 的源（Value，即全局变量）是否存在于上游的可用池中
+        foreach (var globalName in step.InputMappings.Values.ToHashSet())
         {
             if (!initialAvailableVariables.Contains(globalName))
             {
@@ -74,7 +74,7 @@ public class WorkflowValidationService
 
         // 2. 模拟步骤内部的执行流程，动态计算每个模块执行前的可用变量池
         //    这个变量池包含了“外部注入的”和“内部生产的”所有变量。
-        var inStepAvailableVars = new HashSet<string>(step.InputMappings.Values);
+        var inStepAvailableVars = new HashSet<string>(step.InputMappings.Keys);
 
         foreach (var module in step.Modules)
         {
@@ -102,7 +102,7 @@ public class WorkflowValidationService
 
         // 3. (新增) 检查 OutputMappings 的源（Value，即步骤内部变量）是否真的被生产出来了
         var allProducedInStepVars = new HashSet<string>(step.Modules.SelectMany(m => m.GetProducedVariables()));
-        var allAvailableInStepVars = new HashSet<string>(step.InputMappings.Values).Union(allProducedInStepVars);
+        var allAvailableInStepVars = new HashSet<string>(step.InputMappings.Keys).Union(allProducedInStepVars);
 
         foreach (var mapping in step.OutputMappings)
         {

@@ -24,9 +24,9 @@ internal class StepProcessor(
 
     /// <summary>
     /// 消费者（Consumes）：此步骤需要从全局变量池中获取的所有变量的【全局名称】。
-    /// 在严格模式下，这个集合就是 InputMappings 的所有 Key。
+    /// 在严格模式下，这个集合就是 InputMappings 的所有 Value。
     /// </summary>
-    internal IEnumerable<string> GlobalConsumers { get; } = config.InputMappings.Keys;
+    internal IEnumerable<string> GlobalConsumers { get; } = config.InputMappings.Values;
 
     /// <summary>
     /// 生产者（Produces）：此步骤通过 OutputMappings 向全局变量池声明输出的变量。
@@ -49,7 +49,7 @@ internal class StepProcessor(
         WorkflowRuntimeContext workflowRuntimeContext, CancellationToken cancellationToken = default)
     {
         // 严格根据 InputMappings 从全局变量池填充步骤的内部变量池
-        foreach ((string globalName, string localName) in this.Config.InputMappings)
+        foreach ((string localName, string globalName) in this.Config.InputMappings)
         {
             if (!workflowRuntimeContext.GlobalVariables.TryGetValue(globalName, out object? value))
             {
