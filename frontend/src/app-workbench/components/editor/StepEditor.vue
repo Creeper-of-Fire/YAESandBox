@@ -2,17 +2,22 @@
 <template>
   <!-- 只有在有上下文的情况下才渲染映射编辑器 -->
   <StepMappingsEditor
-      v-if="isInWorkflowContext"
-      :available-global-vars="stepContext.availableGlobalVarsForStep!"
+      :available-global-vars="stepContext.availableGlobalVarsForStep"
       :input-mappings="stepContext.data.inputMappings"
       :output-mappings="stepContext.data.outputMappings"
       :required-inputs="requiredStepInputs"
       @update:input-mappings="newMappings => stepContext.data.inputMappings = newMappings"
       @update:output-mappings="newMappings => stepContext.data.outputMappings = newMappings"
   />
-  <!-- 如果没有上下文，可以显示一个提示信息 -->
-  <n-alert v-else :show-icon="true" style="margin-bottom: 12px;" title="无上下文模式" type="info">
-    此步骤正在独立编辑。输入/输出映射的配置和校验仅在工作流编辑器中可用。
+  <n-alert
+      v-if="!isInWorkflowContext"
+      :show-icon="true"
+      style="margin: 12px 0;"
+      title="独立编辑模式"
+      type="warning"
+  >
+    当前可自由配置输入/输出映射，但完整映射验证和上下文变量建议仅在关联工作流中可用。
+    保存前请仔细检查映射配置的正确性。
   </n-alert>
 
   <StepAiConfigEditor
@@ -25,31 +30,54 @@
 import StepAiConfigEditor from "@/app-workbench/components/editor/StepAiConfigEditor.vue";
 import {NAlert} from "naive-ui";
 import StepMappingsEditor from "@/app-workbench/components/editor/StepMappingsEditor.vue";
-import {computed} from "vue";
+import {computed, watch, ref} from "vue";
 import type {StepEditorContext} from "@/app-workbench/components/editor/StepEditorContext.ts";
+import { useModuleAnalysisStore } from '@/app-workbench/stores/useModuleAnalysisStore';
 
 const props = defineProps<{
   stepContext: StepEditorContext;
 }>();
+
+const moduleAnalysisStore = useModuleAnalysisStore();
+const moduleAnalysisResults = ref<Record<string, { consumedVariables: string[], producedVariables: string[] }>>({});
+
+watch(() => props.stepContext.data.modules, async (newModules) => {
+  if (newModules) {
+    const analysisPromises = newModules.map(async (mod) => {
+      // Assuming mod has a unique identifier like configId
+      const result = await moduleAnalysisStore.analyzeModule(mod, mod.configId);
+      if (result) {
+        moduleAnalysisResults.value[mod.configId] = result;
+      }
+    });
+    await Promise.all(analysisPromises);
+  }
+}, { immediate: true, deep: true });
 
 
 // 计算属性，判断当前是否处于有上下文的环境中
 const isInWorkflowContext = computed(() => props.stepContext.availableGlobalVarsForStep !== undefined);
 
 // 计算属性：计算当前步骤所有模块需要的总输入
-const requiredStepInputs = computed(() =>
-{
-  const inputs = new Set<string>();
-  if (props.stepContext.data.modules)
-  {
-    for (const mod of props.stepContext.data.modules)
-    {
-      // 假设模块的 consumes 存储了其输入变量名
-      // @ts-ignore // 如果 consumes 不在标准类型中，可能需要类型断言或更新类型定义
-      (mod.consumes || []).forEach(input => inputs.add(input as string));
+const requiredStepInputs = computed(() => {
+  const requiredInputs = new Set<string>();
+  const producedOutputs = new Set<string>();
+
+  if (props.stepContext.data.modules) {
+    for (const mod of props.stepContext.data.modules) {
+      const analysisResult = moduleAnalysisResults.value[mod.configId];
+      if (analysisResult) {
+      (analysisResult.consumedVariables || []).forEach(input => {
+        if (!producedOutputs.has(input)) {
+          requiredInputs.add(input);
+        }
+      });
+      (analysisResult.producedVariables || []).forEach(output => producedOutputs.add(output));
+      }
     }
   }
-  return Array.from(inputs);
+
+  return Array.from(requiredInputs);
 });
 
 </script>

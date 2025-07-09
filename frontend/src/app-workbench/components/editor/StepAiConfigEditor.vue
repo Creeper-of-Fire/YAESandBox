@@ -10,7 +10,7 @@
         <span>步骤 AI 服务配置</span>
         <n-space align="center">
           <!-- 启用/禁用按钮 -->
-          <n-tooltip v-if="!config" trigger="hover">
+          <n-popover v-if="!config" trigger="hover">
             <template #trigger>
               <n-button circle size="small" type="primary" @click="handleEnableAiConfig">
                 <template #icon>
@@ -19,7 +19,7 @@
               </n-button>
             </template>
             启用并配置步骤 AI 服务
-          </n-tooltip>
+          </n-popover>
           <n-popconfirm
               v-if="config"
               negative-text="取消"
@@ -27,7 +27,7 @@
               @positive-click="handleDisableAiConfig"
           >
             <template #trigger>
-              <n-tooltip trigger="hover">
+              <n-popover trigger="hover">
                 <template #trigger>
                   <n-button circle size="small" type="error">
                     <template #icon>
@@ -36,13 +36,13 @@
                   </n-button>
                 </template>
                 删除步骤 AI 服务
-              </n-tooltip>
+              </n-popover>
             </template>
             确定要禁用并删除此步骤的 AI 服务配置吗？
           </n-popconfirm>
 
           <!-- 折叠按钮 (仅当配置存在时显示) -->
-          <n-tooltip v-if="config" trigger="hover">
+          <n-popover v-if="config" trigger="hover">
             <template #trigger>
               <n-button circle size="small" @click="isExpanded = !isExpanded">
                 <template #icon>
@@ -51,7 +51,7 @@
               </n-button>
             </template>
             {{ isExpanded ? '收起配置' : '展开配置' }}
-          </n-tooltip>
+          </n-popover>
         </n-space>
       </div>
     </template>

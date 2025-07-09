@@ -9,7 +9,7 @@
       <n-divider vertical/>
 
       <!-- 实体列表按钮 -->
-      <n-tooltip trigger="hover">
+      <n-popover trigger="hover">
         <template #trigger>
           <!-- 调用 togglePanel 辅助函数 -->
           <n-button text @click="togglePanel('left', EntityListPanel)" :type="isActive('left', EntityListPanel) ? 'primary' : 'default'">
@@ -19,10 +19,10 @@
           </n-button>
         </template>
         实体列表
-      </n-tooltip>
+      </n-popover>
 
       <!-- 游戏状态按钮 -->
-      <n-tooltip trigger="hover">
+      <n-popover trigger="hover">
         <template #trigger>
           <!-- 假设游戏状态放右边 -->
           <n-button text @click="togglePanel('right', GameStatePanel)" :type="isActive('right', GameStatePanel) ? 'primary' : 'default'">
@@ -32,12 +32,12 @@
           </n-button>
         </template>
         游戏状态
-      </n-tooltip>
+      </n-popover>
 
       <n-divider vertical/>
 
       <!-- 设置按钮 -->
-      <n-tooltip trigger="hover">
+      <n-popover trigger="hover">
         <template #trigger>
           <!-- 假设设置放右边 -->
           <n-button text @click="togglePanel('right', SettingsPanel)" :type="isActive('right', SettingsPanel) ? 'primary' : 'default'">
@@ -47,7 +47,7 @@
           </n-button>
         </template>
         设置
-      </n-tooltip>
+      </n-popover>
 
       <!-- 移动端返回主界面按钮，可能没什么必要 -->
       <!--      <n-button-->

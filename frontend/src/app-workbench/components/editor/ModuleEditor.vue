@@ -7,10 +7,38 @@
         模块类型: {{ moduleTypeLabel }}
       </n-p>
 
+
+      <n-card
+          v-if="moduleAnalysisResult && hasConsumedVariables"
+          :content-style="{padding:0.3}"
+          :header-style="{padding:0.5}"
+          embedded
+          size="small"
+          title="输入:"
+      >
+        <n-flex>
+          <n-tag v-for="variable in moduleAnalysisResult.consumedVariables" :key="variable">{{ variable }}</n-tag>
+        </n-flex>
+      </n-card>
+
+      <n-card
+          v-if="moduleAnalysisResult && hasProducedVariables"
+          :content-style="{padding:0.3}"
+          :header-style="{padding:0.5}"
+          embedded
+          size="small"
+          title="输出:"
+      >
+        <n-flex>
+          <n-tag v-for="variable in moduleAnalysisResult.producedVariables" :key="variable">{{ variable }}</n-tag>
+        </n-flex>
+      </n-card>
+      <n-divider/>
+
       <DynamicFormRenderer
           :key="module.configId"
-          :schema="selectedModuleSchema"
           :model-value="module"
+          :schema="selectedModuleSchema"
           @update:model-value="handleFormUpdate"
       />
 
@@ -22,7 +50,7 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import {computed} from 'vue';
 import {NEmpty, NH4, NP, NSpin} from 'naive-ui';
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
@@ -30,11 +58,22 @@ import type {AbstractModuleConfig} from "@/app-workbench/types/generated/workflo
 import DynamicFormRenderer from "@/app-workbench/features/schema-viewer/DynamicFormRenderer.vue";
 import {useDebounceFn} from "@vueuse/core";
 import type {ModuleEditorContext} from "@/app-workbench/components/editor/ModuleEditorContext.ts";
+import {useModuleAnalysis} from "@/app-workbench/components/renderer/useModuleAnalysis.ts";
 
 // --- Props ---
 const props = defineProps<{
   moduleContext: ModuleEditorContext;
 }>();
+
+const {
+  analysisResult: moduleAnalysisResult,
+  hasConsumedVariables,
+  hasProducedVariables
+} = useModuleAnalysis(
+    computed(() => props.moduleContext.data),
+    computed(() => props.moduleContext.data.configId)
+);
+
 
 const workbenchStore = useWorkbenchStore();
 

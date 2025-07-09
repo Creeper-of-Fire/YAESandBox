@@ -11,14 +11,14 @@
       <template #header>
         <n-h4 class="sidebar-title-bar">
           <span class="title-text">编辑{{ currentConfigName }}</span>
-          <n-tooltip trigger="hover">
+          <n-popover trigger="hover">
             <template #trigger>
               <n-button style="font-size: 20px;" text @click="handleClose">
                 <n-icon :component="CloseIcon"/>
               </n-button>
             </template>
             关闭编辑视图
-          </n-tooltip>
+          </n-popover>
         </n-h4>
 
 

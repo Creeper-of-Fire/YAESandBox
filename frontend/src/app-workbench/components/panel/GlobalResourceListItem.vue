@@ -12,7 +12,7 @@
     </span>
 
     <!-- 将 text 按钮替换为更显眼的 secondary 图标按钮 -->
-    <n-tooltip trigger="hover">
+    <n-popover trigger="hover">
       <template #trigger>
         <n-button
             circle
@@ -28,18 +28,18 @@
         </n-button>
       </template>
       编辑 “{{ item.data.name }}”
-    </n-tooltip>
+    </n-popover>
   </div>
   <div v-else class="resource-item-damaged">
     <n-icon :component="LinkOffIcon" color="#d03050"/>
-    <n-tooltip trigger="hover">
+    <n-popover trigger="hover">
       <template #trigger>
         <span class="damaged-text">{{ id }} (已损坏)</span>
       </template>
       {{ item.errorMessage }}
-    </n-tooltip>
+    </n-popover>
     <!-- 同样美化损坏项的“详情”按钮 -->
-    <n-tooltip trigger="hover">
+    <n-popover trigger="hover">
       <template #trigger>
         <n-button
             circle
@@ -55,7 +55,7 @@
         </n-button>
       </template>
       查看错误详情
-    </n-tooltip>
+    </n-popover>
   </div>
 </template>
 

@@ -12,16 +12,34 @@
     </template>
 
     <template #actions>
-      <!-- 新增一个信息图标，用于显示规则提示 -->
-      <n-tooltip v-if="rulesForThisModule" trigger="hover">
+      <n-popover
+          v-if="moduleAnalysisResult && (hasConsumedVariables || hasProducedVariables)"
+          trigger="hover">
+        <template #trigger>
+          <n-icon :component="FindInPageIcon" style="color: #999; margin-left: 8px;"/>
+        </template>
+        <div v-if="hasConsumedVariables">
+          <n-h4>输入:</n-h4>
+          <n-ul>
+            <n-li v-for="variable in moduleAnalysisResult.consumedVariables" :key="variable">{{ variable }}</n-li>
+          </n-ul>
+        </div>
+        <div v-if="hasProducedVariables">
+          <n-h4>输出:</n-h4>
+          <n-ul>
+            <n-li v-for="variable in moduleAnalysisResult.producedVariables" :key="variable">{{ variable }}</n-li>
+          </n-ul>
+        </div>
+      </n-popover>
+      <n-popover v-if="rulesForThisModule" trigger="hover">
         <template #trigger>
           <n-icon :component="InfoIcon" style="color: #999; margin-left: 8px;"/>
         </template>
         <!-- 动态生成提示内容 -->
-        <div v-for="ruleText in ruleDescriptions" :key="ruleText">
-          • {{ ruleText }}
-        </div>
-      </n-tooltip>
+        <n-ul>
+          <n-li v-for="ruleText in ruleDescriptions" :key="ruleText">{{ ruleText }}</n-li>
+        </n-ul>
+      </n-popover>
     </template>
   </ConfigItemBase>
 </template>
@@ -34,11 +52,23 @@ import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
 import ColorHash from "color-hash";
 import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
+import {FindInPageIcon} from "@/utils/icons.ts";
+import {useModuleAnalysis} from "@/app-workbench/components/renderer/useModuleAnalysis.ts";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
   module: AbstractModuleConfig;
 }>();
+
+
+const {
+  analysisResult: moduleAnalysisResult,
+  hasConsumedVariables,
+  hasProducedVariables
+} = useModuleAnalysis(
+    computed(() => props.module),
+    computed(() => props.module.configId)
+);
 
 const selectedConfigItem = inject(SelectedConfigItemKey);
 

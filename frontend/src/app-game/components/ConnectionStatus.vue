@@ -1,6 +1,6 @@
 ﻿<template>
   <!-- 将点击事件绑定到 Tooltip 的触发器上 -->
-  <n-tooltip trigger="hover">
+  <n-popover trigger="hover">
     <template #trigger>
       <div
           class="status-indicator-wrapper"
@@ -13,7 +13,7 @@
       </div>
     </template>
     {{ statusText }}
-  </n-tooltip>
+  </n-popover>
 </template>
 
 <script setup lang="ts">

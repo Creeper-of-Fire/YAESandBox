@@ -1,5 +1,6 @@
 ﻿<!-- src/app-workbench/components/editor/StepMappingsEditor.vue -->
 <template>
+  <!-- TODO StepMappingsEditor的逻辑存在问题，availableGlobalVarsForStep应当最多是用于舒适提示的，而不是仅能使用availableGlobalVarsForStep作为映射，这违背了我们的“弱检测/后端检测”原则 -->
   <div class="step-mappings-editor">
     <n-card :bordered="true" size="small" title="输入映射">
       <!-- 1. 未满足的输入 (错误警告) -->
@@ -57,7 +58,7 @@ const props = defineProps<{
 
   // 从父组件计算好的上下文信息
   requiredInputs: string[]; // 所有模块需要的输入变量集合
-  availableGlobalVars: string[]; // 此步骤可用的全局变量集合
+  availableGlobalVars?: string[]; // 此步骤可用的全局变量集合，如果为undefined代表此时不存在上下文
 }>();
 
 const emit = defineEmits(['update:inputMappings', 'update:outputMappings']);

@@ -14,24 +14,24 @@
                 - :type="isActive ? 'primary' : 'default'" 根据路由是否激活来改变按钮样式，提供视觉反馈。
               -->
               <n-space class="navigation-controls">
-                <router-link to="/game" custom v-slot="{ navigate, isActive }">
+                <router-link v-slot="{ navigate, isActive }" custom to="/game">
                   <n-button
-                      @click="navigate"
-                      :type="isActive ? 'primary' : 'default'"
                       :ghost="!isActive"
-                      strong
+                      :type="isActive ? 'primary' : 'default'"
                       secondary
+                      strong
+                      @click="navigate"
                   >
                     游戏
                   </n-button>
                 </router-link>
-                <router-link to="/workbench" custom v-slot="{ navigate, isActive }">
+                <router-link v-slot="{ navigate, isActive }" custom to="/workbench">
                   <n-button
-                      @click="navigate"
-                      :type="isActive ? 'primary' : 'default'"
                       :ghost="!isActive"
-                      strong
+                      :type="isActive ? 'primary' : 'default'"
                       secondary
+                      strong
+                      @click="navigate"
                   >
                     编辑器
                   </n-button>
@@ -66,7 +66,7 @@
   <!--  <AppWideNotifications />-->
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import {onMounted, onUnmounted} from 'vue';
 import {useConnectionStore} from '@/app-game/stores/connectionStore.ts';
 import {lightTheme} from "naive-ui";
@@ -75,16 +75,19 @@ import {lightTheme} from "naive-ui";
 
 const connectionStore = useConnectionStore();
 
-onMounted(async () => {
+onMounted(async () =>
+{
   console.log("App [onMounted]: 应用启动，初始化连接...");
   await connectionStore.connectSignalR();
-  if (connectionStore.connectionError) {
+  if (connectionStore.connectionError)
+  {
     console.error("App [onMounted]: SignalR 初始连接失败。", connectionStore.connectionError);
     // 这里可以触发一个全局错误状态
   }
 });
 
-onUnmounted(() => {
+onUnmounted(() =>
+{
   console.log("App [onUnmounted]: 应用关闭。");
   // connectionStore.disconnectSignalR(); // 如果有断开方法
 });
