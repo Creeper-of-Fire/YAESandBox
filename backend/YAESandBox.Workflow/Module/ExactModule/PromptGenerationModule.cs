@@ -200,16 +200,6 @@ internal partial record PromptGenerationModuleConfig
 internal partial record PromptGenerationModuleConfig : AbstractModuleConfig<PromptGenerationModuleProcessor>
 {
     /// <summary>
-    /// 在某些AI模型中，可以为提示词角色指定一个名称 (例如，Claude中的User/Assistant名称)。
-    /// </summary>
-    [Display(
-        Name = "提示词角色名",
-        Description = "为提示词角色指定一个具体名称，可以让某些模型更好的区分不同的用户或助手，对于部分高级模型有用。",
-        Prompt = "例如：'DeepSeek' 或 'はちみ'"
-    )]
-    public string? PromptNameInAiModel { get; init; }
-
-    /// <summary>
     /// 生成的提示词的角色类型 (System, User, Assistant)。
     /// </summary>
     [Required]
@@ -220,6 +210,16 @@ internal partial record PromptGenerationModuleConfig : AbstractModuleConfig<Prom
     [StringOptions(["System", "User", "Assistant"], ["系统", "用户", "AI助手"])]
     public required string RoleType { get; init; }
 
+    /// <summary>
+    /// 在某些AI模型中，可以为提示词角色指定一个名称 (例如，Claude中的User/Assistant名称)。
+    /// </summary>
+    [Display(
+        Name = "提示词角色名",
+        Description = "为提示词角色指定一个具体名称，可以让某些模型更好的区分不同的用户或助手，对于部分高级模型有用。",
+        Prompt = "例如：'DeepSeek' 或 'はちみ'"
+    )]
+    public string? PromptNameInAiModel { get; init; }
+    
     /// <summary>
     /// 提示词模板，支持 `[[占位符]]` 替换。
     /// 例如："你好，`[[playerName]]`！今天是`[[worldInfo]]`。"

@@ -30,10 +30,7 @@
               <InlineInputPopover
                   v-if="action.renderType === 'popover'"
                   :title="action.popoverTitle || '请输入'"
-                  :content-type="action.popoverContentType"
-                  :select-options="action.popoverSelectOptions"
-                  :select-placeholder="action.popoverSelectPlaceholder"
-                  :initial-value="action.popoverInitialValue"
+                  :action = "action"
                   :default-name-generator="action.popoverDefaultNameGenerator"
                   @confirm="payload => action.handler?.(payload)"
               >

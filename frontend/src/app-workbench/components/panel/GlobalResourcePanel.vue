@@ -267,7 +267,7 @@ const currentTabLabel = computed(() =>
 
 const moduleTypeOptions = computed(() =>
 {
-  const schemas = workbenchStore.moduleSchemasAsync.state.value;
+  const schemas = workbenchStore.moduleSchemasAsync.state;
   if (!schemas) return [];
   return Object.keys(schemas).map(key =>
   {
@@ -283,7 +283,7 @@ const moduleDefaultNameGenerator = (newType: string, options: any[]) =>
 {
   if (newType)
   {
-    const schema = workbenchStore.moduleSchemasAsync.state.value?.[newType];
+    const schema = workbenchStore.moduleSchemasAsync.state[newType];
     const defaultName = schema?.properties?.name?.default;
     if (typeof defaultName === 'string')
     {
@@ -297,9 +297,14 @@ const moduleDefaultNameGenerator = (newType: string, options: any[]) =>
 /**
  * 处理 InlineInputPopover 确认事件
  */
-async function handleCreateNew(payload: { name: string, type?: string })
+async function handleCreateNew(payload: { name?: string, type?: string })
 {
   const name = payload.name;
+  if (!name)
+  {
+    message.error('请输入有效的名称');
+    return;
+  }
   const resourceType = activeTab.value;
   const moduleType = payload.type;
 

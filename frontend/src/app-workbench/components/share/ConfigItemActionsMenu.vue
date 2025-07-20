@@ -17,12 +17,7 @@
     <!-- 保留 InlineInputPopover，但它将由 Dropdown 的事件来触发显示 -->
     <InlineInputPopover
         ref="popoverRef"
-        :content-type="activePopoverAction?.popoverContentType"
-        :default-name-generator="activePopoverAction?.popoverDefaultNameGenerator"
-        :initial-value="activePopoverAction?.popoverInitialValue"
-        :select-options="activePopoverAction?.popoverSelectOptions"
-        :select-placeholder="activePopoverAction?.popoverSelectPlaceholder"
-        :title="activePopoverAction?.popoverTitle || ''"
+        :action="activePopoverAction || undefined"
         @confirm="handlePopoverConfirm"
     >
       <!-- 这个插槽内容不会被实际渲染，只是为了让 Popover 有个挂载点 -->
@@ -33,28 +28,13 @@
 
 <script lang="ts" setup>
 import {type Component, computed, h, ref} from 'vue';
-import {type DropdownOption, NButton, NDropdown, NIcon, type SelectOption, useDialog, useMessage} from 'naive-ui';
+import {type DropdownOption, NButton, NDropdown, NIcon, type SelectOption, useDialog} from 'naive-ui';
 import InlineInputPopover from './InlineInputPopover.vue';
 import {EllipsisHorizontalIcon} from '@/utils/icons';
+import type {EnhancedAction} from "@/app-workbench/composables/useConfigItemActions.ts";
 
 // 接口定义（保持不变，它依然是我们强大的数据模型）
-export interface EnhancedAction
-{
-  key: string;
-  label: string;
-  icon?: Component;
-  disabled?: boolean;
-  type?: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'error';
-  renderType: 'popover' | 'confirm' | 'button';
-  popoverTitle?: string;
-  popoverContentType?: 'input' | 'select-and-input';
-  popoverSelectOptions?: SelectOption[];
-  popoverSelectPlaceholder?: string;
-  popoverInitialValue?: string;
-  popoverDefaultNameGenerator?: (selectedValue: any, selectOptions: SelectOption[]) => string;
-  confirmText?: string;
-  handler?: (payload: { name?: string; type?: string }) => void;
-}
+
 
 const props = defineProps<{
   actions: EnhancedAction[];
@@ -114,7 +94,7 @@ function handleSelect(key: string)
 }
 
 // 处理 Popover 确认事件
-function handlePopoverConfirm(payload: { name: string; type?: string })
+function handlePopoverConfirm(payload: { name?: string; type?: string })
 {
   if (activePopoverAction.value?.handler)
   {

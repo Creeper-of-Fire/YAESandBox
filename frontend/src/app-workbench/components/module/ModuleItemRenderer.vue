@@ -119,7 +119,7 @@ const {actions: itemActions} = useConfigItemActions({
 function getModuleAlias(moduleType: string): string
 {
   const metadata = workbenchStore.moduleMetadata[moduleType];
-  const schema = workbenchStore.moduleSchemasAsync.state.value?.[moduleType];
+  const schema = workbenchStore.moduleSchemasAsync.state[moduleType];
   return metadata?.classLabel || schema?.title || moduleType;
 }
 
