@@ -36,6 +36,17 @@
                     编辑器
                   </n-button>
                 </router-link>
+                <router-link v-slot="{ navigate, isActive }" custom to="/test">
+                  <n-button
+                      :ghost="!isActive"
+                      :type="isActive ? 'primary' : 'default'"
+                      secondary
+                      strong
+                      @click="navigate"
+                  >
+                    测试台
+                  </n-button>
+                </router-link>
               </n-space>
             </header>
 

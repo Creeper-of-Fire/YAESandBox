@@ -8,6 +8,7 @@ using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.API;
 using YAESandBox.Workflow.API;
+using YAESandBox.Workflow.Test.API;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -177,6 +178,7 @@ namespace YAESandBox.AppWeb
             new CoreModule(),
             new AiServiceConfigModule(),
             new WorkflowConfigModule(),
+            new WorkflowTestModule(),
         ];
 
         /// <summary>

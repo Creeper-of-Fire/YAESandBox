@@ -23,6 +23,7 @@
         <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj"/>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Workflow.Test\YAESandBox.Workflow.Test.csproj" />
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
 
@@ -64,6 +65,12 @@
             <JsonFileName>workflow-config-api.swagger.json</JsonFileName>
             <TsOutputModuleDir>app-workbench</TsOutputModuleDir>
             <TsOutputSubDir>workflow-config-api-client</TsOutputSubDir>
+        </SwaggerDocToGenerate>
+
+        <SwaggerDocToGenerate Include="v1-workflow-test" Visible="false">
+            <JsonFileName>workflow-test-api.swagger.json</JsonFileName>
+            <TsOutputModuleDir>app-test-harness</TsOutputModuleDir>
+            <TsOutputSubDir>workflow-test-api-client</TsOutputSubDir>
         </SwaggerDocToGenerate>
 
     </ItemGroup>

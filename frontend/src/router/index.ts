@@ -11,6 +11,7 @@ import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router';
 // import { routes as workflowEditorRoutes } from '@/app-view/';
 import {routes as gamePlayerRoutes} from '@/app-game/routes.ts';
 import { routes as workbenchRoutes } from '@/app-workbench/routes.ts';
+import { routes as testHarnessRoutes } from '@/app-test-harness/routes.ts';
 // import { routes as userProfileRoutes } from '@/features/user-profile/routes'; // 更多特性...
 
 // 3. 定义主路由规则 (顶层路由)
@@ -23,6 +24,7 @@ const mainRoutes: RouteRecordRaw[] = [
     },
     ...gamePlayerRoutes,
     ...workbenchRoutes,
+    ...testHarnessRoutes,
     // 可以将特性模块的路由作为顶层路由，如果它们有自己的完整页面布局
     // 这种方式下，特性模块的 routes.ts 导出的就是顶层路由配置了
     // ...workflowEditorRoutes, // 假设 workflowEditorRoutes 是 [{ path: '/editor/...', ... }]

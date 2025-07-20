@@ -17,3 +17,5 @@ export {default as AddIcon} from '@vicons/material/es/AddCircleOutlineRound';
 export {default as ListIcon} from '@vicons/ionicons5/es/ListOutline';
 export {default as HelpCircleIcon} from '@vicons/ionicons5/es/HelpCircleOutline';
 export {default as AlertCircleIcon} from '@vicons/ionicons5/es/AlertCircleOutline';
+export {default as WorkflowIcon} from '@vicons/material/es/AccountTreeOutlined';
+export {default as StepIcon} from '@vicons/material/es/AccountTreeOutlined';

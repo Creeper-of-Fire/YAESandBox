@@ -51,5 +51,9 @@ public class AiServiceConfigModule : IProgramModule, IProgramModuleSwaggerUiOpti
         service.AddSingleton<JsonFileAiConfigurationManager>()
             .AddSingleton<IAiConfigurationManager>(sp => sp.GetRequiredService<JsonFileAiConfigurationManager>())
             .AddSingleton<IAiConfigurationProvider>(sp => sp.GetRequiredService<JsonFileAiConfigurationManager>());
+
+        // 注册 MasterAiService。现在 DI 容器知道如何创建它了。
+        // 它会自动获取上面注册的 IHttpClientFactory 和 IAiConfigurationManager。
+        service.AddSingleton<IMasterAiService, MasterAiService>();
     }
 }
