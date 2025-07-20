@@ -2,10 +2,17 @@
 <template>
   <div class="editor-target-renderer">
     <div v-if="module && selectedModuleSchema">
-      <n-h4>配置模块: {{ module.name }}</n-h4>
-      <n-p depth="3" style="margin-top: -8px; margin-bottom: 24px;">
-        模块类型: {{ moduleTypeLabel }}
-      </n-p>
+      <n-flex justify="space-between" align="center" style="margin-bottom: 16px;">
+        <div>
+          <n-h4>配置模块: {{ module.name }}</n-h4>
+          <n-p depth="3" style="margin-top: -8px;">
+            模块类型: {{ moduleTypeLabel }}
+          </n-p>
+        </div>
+        <n-form-item label="启用此模块" label-placement="left" style="margin-bottom: 0;">
+          <n-switch v-model:value="module.enabled" />
+        </n-form-item>
+      </n-flex>
 
 
       <n-card

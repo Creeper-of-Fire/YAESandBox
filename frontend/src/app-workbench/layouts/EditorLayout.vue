@@ -2,18 +2,21 @@
 <template>
   <div class="editor-layout">
     <!-- 左侧上下结构面板（带分割线） -->
-    <n-split class="left-panels" direction="vertical">
-      <!-- 1. 全局资源区 -->
+    <n-split  class="left-panels"
+              default-size="80%"
+              direction="vertical"
+    >
+      <!-- 1. 结构编辑区 -->
       <template #1>
-        <div v-show="isGlobalPanelVisible" class="panel global-panel">
-          <slot name="global-panel"></slot>
+        <div v-show="isEditorPanelVisible" class="panel editor-panel">
+          <slot name="editor-panel"></slot>
         </div>
       </template>
 
-      <!-- 2. 结构编辑区 -->
+      <!-- 1. 全局资源区 -->
       <template #2>
-        <div v-show="isEditorPanelVisible" class="panel editor-panel">
-          <slot name="editor-panel"></slot>
+        <div v-show="isGlobalPanelVisible" class="panel global-panel">
+          <slot name="global-panel"></slot>
         </div>
       </template>
     </n-split>

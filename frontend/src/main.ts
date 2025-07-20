@@ -55,12 +55,11 @@ const naiveForVueForm = create({
 OpenAPI.BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7018'; // 替换为你的实际后端地址
 
 const app = createApp(App);
-const pinia = createPinia();
 
-app.use(pinia)
 app.use(router)
 app.use(naiveForVueForm)
 app.use(VueVirtualScroller)
+app.use(createPinia())
 app.mount('#app')
 
 // 可以在这里或 App.vue 的 onMounted 中初始化 SignalR 连接

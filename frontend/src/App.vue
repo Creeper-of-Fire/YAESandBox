@@ -18,7 +18,6 @@
                   <n-button
                       :ghost="!isActive"
                       :type="isActive ? 'primary' : 'default'"
-                      secondary
                       strong
                       @click="navigate"
                   >
@@ -29,7 +28,6 @@
                   <n-button
                       :ghost="!isActive"
                       :type="isActive ? 'primary' : 'default'"
-                      secondary
                       strong
                       @click="navigate"
                   >
@@ -40,7 +38,6 @@
                   <n-button
                       :ghost="!isActive"
                       :type="isActive ? 'primary' : 'default'"
-                      secondary
                       strong
                       @click="navigate"
                   >

@@ -2,7 +2,8 @@
 <template>
   <div class="step-item-wrapper">
     <ConfigItemBase
-        :highlight-color="stepHighlightColor"
+        v-model:enabled="step.enabled"
+        :highlight-color-calculator="props.step.configId || props.step.name || 'default-step-color'"
         :is-collapsible="isCollapsible"
         :is-draggable="isDraggable"
         :is-selected="isSelected"
@@ -17,15 +18,16 @@
         </div>
       </template>
 
-      <!-- 双击切换展开/折叠 -->
-      <!-- 步骤本身不被“选中”进行配置，而是通过双击展开或点击其内部模块 -->
       <template #actions>
-        <!-- 这里可以添加一些步骤特有的操作按钮，例如一个展开/折叠的小箭头 -->
+        <!-- 一个展开/折叠的小箭头 -->
         <n-button v-if="isCollapsible" :focusable="false" text @click.stop="toggleExpansion">
           <template #icon>
             <n-icon :component="isExpanded ? KeyboardArrowUpIcon : KeyboardArrowDownIcon"/>
           </template>
         </n-button>
+
+        <!-- 步骤的操作按钮 -->
+        <ConfigItemActionsMenu :actions="itemActions" />
       </template>
       <template #content-below>
         <!-- 使用本地的 isExpanded 状态 -->
@@ -42,7 +44,10 @@
                 item-key="configId"
             >
               <div v-for="moduleItem in step.modules" :key="moduleItem.configId" class="module-item-wrapper">
-                <ModuleItemRenderer :module="moduleItem"/>
+                <ModuleItemRenderer
+                    :module="moduleItem"
+                    :parent-step="step"
+                />
               </div>
             </draggable>
             <n-empty v-else description="拖拽模块到此处" small/>
@@ -55,18 +60,21 @@
 
 <script lang="ts" setup>
 import {NButton, NCollapseTransition, NEmpty, NIcon} from 'naive-ui';
-import {KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@/utils/icons.ts';
+import {EllipsisHorizontalIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@/utils/icons.ts';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue'; // 导入基础组件
 import ModuleItemRenderer from '../module/ModuleItemRenderer.vue'; // 导入模块渲染器
-import type {StepProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
-import {computed, inject, ref} from "vue";
+import type {StepProcessorConfig, WorkflowProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
+import {computed, inject, ref, toRef} from "vue";
 import ColorHash from "color-hash";
 import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
+import {useConfigItemActions} from "@/app-workbench/composables/useConfigItemActions.ts";
+import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemActionsMenu.vue";
 
 // 定义组件的 props
 const props = withDefaults(defineProps<{
   step: StepProcessorConfig;
+  parentWorkflow: WorkflowProcessorConfig | null;
   isCollapsible?: boolean; // 是否可折叠
   isDraggable?: boolean;   // 步骤自身是否可拖拽
   // 从父级(Workflow)传入此步骤可用的全局变量，为空代表不进行检测
@@ -74,6 +82,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   isCollapsible: true, // 默认为 true，保持原有行为
   isDraggable: true,   // 默认为 true，保持原有行为
+  parentWorkflow: null, // 默认为 null，保持原有行为
 });
 
 // UI状态本地化，默认展开
@@ -94,17 +103,14 @@ const isSelected = computed(() =>
   return selectedConfig?.value?.data.configId === props.step.configId;
 });
 
-const colorHash = new ColorHash({
-  lightness: [0.7, 0.75, 0.8],
-  saturation: [0.7, 0.8, 0.9],
-  hash: 'bkdr'
-});
-
-const stepHighlightColor = computed(() =>
-{
-  // 为步骤也生成一个基于其名称或ID的颜色，使其在工作流列表中也具备视觉区分度
-  // 这里使用 configId 确保唯一性，如果希望基于名称，则用 props.step.name
-  return colorHash.hex(props.step.configId || props.step.name || 'default-step-color');
+// 使用可组合函数获取动作
+const {actions: itemActions} = useConfigItemActions({
+  itemRef: toRef(props, 'step'),
+  parentContextRef: computed(() =>
+      props.parentWorkflow
+          ? {parent: props.parentWorkflow, list: props.parentWorkflow.steps}
+          : null
+  ),
 });
 
 /**

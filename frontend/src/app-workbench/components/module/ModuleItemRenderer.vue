@@ -1,7 +1,8 @@
 <!-- src/app-workbench/components/.../ModuleItemRenderer.vue -->
 <template>
   <ConfigItemBase
-      :highlight-color="moduleTypeColor"
+      v-model:enabled="module.enabled"
+      :highlight-color-calculator="props.module.moduleType"
       :is-selected="isSelected"
       is-draggable
       @click="updateSelectedConfig"
@@ -40,24 +41,30 @@
           <n-li v-for="ruleText in ruleDescriptions" :key="ruleText">{{ ruleText }}</n-li>
         </n-ul>
       </n-popover>
+
+      <!-- "更多" 操作的下拉菜单 -->
+      <ConfigItemActionsMenu :actions="itemActions"/>
     </template>
   </ConfigItemBase>
 </template>
 
 <script lang="ts" setup>
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue';
-import type {AbstractModuleConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
-import {computed, inject} from "vue";
+import type {AbstractModuleConfig, StepProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
+import {computed, inject, toRef} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
 import ColorHash from "color-hash";
 import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 import {FindInPageIcon} from "@/utils/icons.ts";
 import {useModuleAnalysis} from "@/app-workbench/composables/useModuleAnalysis.ts";
+import {useConfigItemActions} from "@/app-workbench/composables/useConfigItemActions.ts";
+import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemActionsMenu.vue";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
   module: AbstractModuleConfig;
+  parentStep: StepProcessorConfig | null;
 }>();
 
 
@@ -95,15 +102,26 @@ const rulesForThisModule = computed(() => metadataForThisModule.value?.rules);
 
 const moduleClassLabel = computed(() => metadataForThisModule.value?.classLabel);
 
-const colorHash = new ColorHash({
-  lightness: [0.7, 0.75, 0.8],
-  saturation: [0.7, 0.8, 0.9],
-  hash: 'bkdr'
+const {actions: itemActions} = useConfigItemActions({
+  itemRef: toRef(props, 'module'),
+  parentContextRef: computed(() =>
+      props.parentStep
+          ? {parent: props.parentStep, list: props.parentStep.modules}
+          : null
+  ),
 });
-const moduleTypeColor = computed(() =>
+
+/**
+ * 辅助函数：根据模块类型名获取其别名
+ * @param moduleType - 模块的原始类型名，例如 "PromptGenerationModuleConfig"
+ * @returns 模块的别名，如果不存在则返回原始类型名
+ */
+function getModuleAlias(moduleType: string): string
 {
-  return colorHash.hex(props.module.moduleType);
-});
+  const metadata = workbenchStore.moduleMetadata[moduleType];
+  const schema = workbenchStore.moduleSchemasAsync.state.value?.[moduleType];
+  return metadata?.classLabel || schema?.title || moduleType;
+}
 
 // 将规则对象转换为用户可读的文本描述
 const ruleDescriptions = computed(() =>
@@ -115,8 +133,16 @@ const ruleDescriptions = computed(() =>
   if (rules.noConfig) descriptions.push('此模块不能有配置。')
   if (rules.singleInStep) descriptions.push('此模块在每个步骤中只能使用一次。');
   if (rules.inLastStep) descriptions.push('此模块必须位于工作流的最后一个步骤中。');
-  if (rules.inFrontOf) descriptions.push(`必须位于 ${rules.inFrontOf.join(', ')} 模块之前。`);
-  if (rules.behind) descriptions.push(`必须位于 ${rules.behind.join(', ')} 模块之后。`);
+  if (rules.inFrontOf && rules.inFrontOf.length > 0)
+  {
+    const aliases = rules.inFrontOf.map(getModuleAlias).join('、');
+    descriptions.push(`必须位于「${aliases}」模块之前。`);
+  }
+  if (rules.behind && rules.behind.length > 0)
+  {
+    const aliases = rules.behind.map(getModuleAlias).join('、');
+    descriptions.push(`必须位于「${aliases}」模块之后。`);
+  }
 
   return descriptions;
 });

@@ -1,7 +1,7 @@
 ﻿// --- START OF FILE frontend/src/app-workbench/stores/workbenchStore.ts ---
 
 import {defineStore} from 'pinia';
-import {computed, ref} from 'vue';
+import {computed, reactive, ref} from 'vue';
 import {v4 as uuidv4} from 'uuid';
 import {type ConfigObject, type ConfigType, EditSession,} from '@/app-workbench/services/EditSession.ts';
 import type {
@@ -134,26 +134,26 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     // 内部 State (完全封装)
     // =================================================================
 
-    const globalWorkflowsAsync = useAsyncState(
+    const globalWorkflowsAsync = reactive(useAsyncState(
         () => WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows()
             .then(processDtoToViewModel),
         {} as Record<string, WorkflowResourceItem>,
         {immediate: false, shallow: false}
-    );
+    ));
 
-    const globalStepsAsync = useAsyncState(
+    const globalStepsAsync = reactive(useAsyncState(
         () => StepConfigService.getApiV1WorkflowsConfigsGlobalSteps()
             .then(processDtoToViewModel),
         {} as Record<string, StepResourceItem>,
         {immediate: false, shallow: false}
-    );
+    ));
 
-    const globalModulesAsync = useAsyncState(
+    const globalModulesAsync = reactive(useAsyncState(
         () => ModuleConfigService.getApiV1WorkflowsConfigsGlobalModules()
             .then(processDtoToViewModel),
         {} as Record<string, ModuleResourceItem>,
         {immediate: false, shallow: false}
-    );
+    ));
 
     /**
      * 存储所有模块类型的 Schema
@@ -300,6 +300,55 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     // =================================================================
 
     /**
+     * 将一个已有的配置对象保存为新的全局配置。
+     * @param configToSave - 要保存为全局的配置对象。
+     */
+    async function createGlobalConfig(configToSave: ConfigObject) {
+        // 1. 深克隆并确保ID是全新的（即使是克隆来的）
+        const newGlobalConfig = deepCloneWithNewIds(configToSave);
+        const newGlobalId = uuidv4(); // 为这个新的全局资源创建一个全新的顶级ID
+
+        let type: ConfigType;
+        let savePromise: Promise<any>;
+        let refreshPromise: () => Promise<any>;
+
+        // 2. 判断类型并准备API调用
+        if ('steps' in newGlobalConfig) {
+            type = 'workflow';
+            savePromise = WorkflowConfigService.putApiV1WorkflowsConfigsGlobalWorkflows({
+                workflowId: newGlobalId,
+                requestBody: newGlobalConfig,
+            });
+            refreshPromise = () => globalWorkflowsAsync.execute();
+        } else if ('modules' in newGlobalConfig) {
+            type = 'step';
+            savePromise = StepConfigService.putApiV1WorkflowsConfigsGlobalSteps({
+                stepId: newGlobalId,
+                requestBody: newGlobalConfig,
+            });
+            refreshPromise = () => globalStepsAsync.execute();
+        } else {
+            type = 'module';
+            savePromise = ModuleConfigService.putApiV1WorkflowsConfigsGlobalModules({
+                moduleId: newGlobalId,
+                requestBody: newGlobalConfig,
+            });
+            refreshPromise = () => globalModulesAsync.execute();
+        }
+
+        // 3. 执行保存和刷新
+        try {
+            await savePromise;
+            await refreshPromise();
+        } catch (error) {
+            console.error(`将配置“${newGlobalConfig.name}”保存为全局 ${type} 时失败:`, error);
+            throw error;
+        }
+    }
+
+
+
+    /**
      * 新增计算属性，用于判断整个工作台是否存在任何未保存的更改。
      * 这将用于在用户关闭浏览器标签页时发出警告。
      */
@@ -358,7 +407,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         }
 
         // 2. 根据类型，选择对应的异步状态对象
-        let stateObject: ReturnType<typeof useAsyncState<Record<string, WorkflowResourceItem | StepResourceItem | ModuleResourceItem>, any>>;
+        let stateObject;
         switch (type)
         {
             case 'workflow':
@@ -379,7 +428,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         // 3. 确保相关数据已加载
         // 如果 isReady 是 false，说明数据还没加载过或正在加载中
         // 我们需要等待它完成。execute() 在已加载或加载中时是安全的，它会返回当前的 promise。
-        if (!stateObject.isReady.value)
+        if (!stateObject.isReady)
         {
             console.log(`'${type}' 数据未就绪，开始加载...`);
             // execute() 自身会处理正在加载中的情况，所以直接 await 即可
@@ -387,15 +436,15 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         }
 
         // 4. 检查加载是否出错
-        if (stateObject.error.value)
+        if (stateObject.error)
         {
             // message.error(`获取 '${type}' 列表时发生错误，无法开始编辑。`);
-            console.error(`获取 '${type}' 列表时发生错误：`, stateObject.error.value);
+            console.error(`获取 '${type}' 列表时发生错误：`, stateObject.error);
             return null;
         }
 
         // 5. 从新的数据结构 (GlobalResourceItem[]) 中查找源数据
-        const sourceData = stateObject.state.value;
+        const sourceData = stateObject.state;
         const sourceItem = sourceData[globalId];
 
         if (!sourceItem)
@@ -452,6 +501,9 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         // --- 核心服务方法 ---
         saveAllDirtyDrafts,
         acquireEditSession,
+
+        // 其他
+        createGlobalConfig,
 
         // --- 内部方法，供 EditSession 使用 ---
         // Vue 3 的 defineStore setup 语法不允许真正意义上的私有化，

@@ -1,6 +1,15 @@
 ﻿<!-- src/app-workbench/components/.../StepEditor.vue -->
 <template>
   <!-- 只有在有上下文的情况下才渲染映射编辑器 -->
+  <n-card>
+    <template #header>
+      <n-flex justify="space-between" align="center">
+        <span>编辑步骤：{{ props.stepContext.data.name }}</span>
+        <n-form-item label="启用此步骤" label-placement="left" style="margin-bottom: 0;">
+          <n-switch v-model:value="props.stepContext.data.enabled" />
+        </n-form-item>
+      </n-flex>
+    </template>
   <StepMappingsEditor
       :available-global-vars="stepContext.availableGlobalVarsForStep"
       :input-mappings="stepContext.data.inputMappings"
@@ -24,6 +33,7 @@
       v-model="props.stepContext.data.stepAiConfig"
       style="margin-top: 12px; margin-bottom: 12px;"
   />
+  </n-card>
 </template>
 
 <script lang="ts" setup>

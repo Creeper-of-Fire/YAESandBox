@@ -1,7 +1,7 @@
 <!-- src/app-workbench/components/.../ConfigItemBase.vue -->
 <template>
   <div
-      :class="{ 'is-selected': isSelected }"
+      :class="{ 'is-selected': isSelected , 'is-disabled': !enabled }"
       class="config-item-base"
       @click="$emit('click')"
       @dblclick="$emit('dblclick')"
@@ -15,6 +15,17 @@
         <DragHandleOutlined/>
       </n-icon>
     </div>
+
+    <div class="enable-switch-wrapper" @click.stop>
+      <n-switch
+          :round="false"
+          :value="enabled"
+          size="small"
+          @update:value="(newValue:boolean) => $emit('update:enabled', newValue)"
+      >
+      </n-switch>
+    </div>
+
     <!-- 主内容区插槽 -->
     <div class="item-content-wrapper">
       <slot name="content"></slot>
@@ -33,30 +44,41 @@
 import {NIcon} from 'naive-ui';
 import {DragHandleOutlined} from '@/utils/icons.ts';
 import {computed} from "vue";
+import ColorHash from "color-hash";
 
 // 定义组件的 props
 const props = defineProps<{
   isCollapsible?: boolean; // 是否可以展开下面的内容
   isSelected: boolean; // 是否处于选中状态
   isDraggable?: boolean; // 是否可拖拽（显示拖拽把手）
-  highlightColor?: string;
+  highlightColorCalculator: string;
+  enabled: boolean;
 }>();
 
+const colorHash = new ColorHash({
+  lightness: [0.7, 0.75, 0.8],
+  saturation: [0.7, 0.8, 0.9],
+  hash: 'bkdr'
+});
+const highlightColor = computed(() =>
+{
+  return colorHash.hex(props.highlightColorCalculator);
+});
+
 // 定义组件触发的事件
-defineEmits(['click', 'dblclick']);
+defineEmits(['click', 'dblclick', 'update:enabled']);
 
 /**
  * 计算属性，用于处理选中状态下的边框颜色。
- * 这样做可以保持 <style> 块的简洁，并将逻辑保留在 <script> 中。
- * 如果 props.highlightColor 存在，则使用它，否则回退到默认的蓝色主题色。
+ * 如果 highlightColor 存在，则使用它，否则回退到默认的蓝色主题色。
  */
-const finalHighlightColor = computed(() => props.highlightColor || '#2080f0');
+const finalHighlightColor = computed(() => highlightColor.value || '#2080f0');
 
 /**
  * 计算属性，用于拖拽区域的背景色
  * 如果没有提供 highlightColor，则使用一个柔和的灰色作为默认值
  */
-const handleBgColor = computed(() => props.highlightColor ? `${props.highlightColor}33` : '#f7f9fa');
+const handleBgColor = computed(() => highlightColor.value ? `${highlightColor.value}33` : '#f7f9fa');
 </script>
 
 <style scoped>
@@ -73,14 +95,27 @@ const handleBgColor = computed(() => props.highlightColor ? `${props.highlightCo
   /* 增加左边框过渡效果 */
   transition: border-color 0.2s, box-shadow 0.2s;
 
-  border-left: 4px solid v-bind('props.highlightColor');
-  overflow: hidden; /* 确保内部圆角正确裁剪 */
+  border-left: 4px solid v-bind(highlightColor);
 }
 
 /* 当有高亮颜色时，应用颜色到左边框 */
 .config-item-base.has-highlight {
   /* 使用 CSS 变量来设置颜色 */
-  border-left-color: v-bind('highlightColor');
+  border-left-color: v-bind(highlightColor);
+}
+
+/* 禁用状态的样式 */
+.config-item-base.is-disabled {
+  opacity: 0.6;
+  background-color: #f9f9f9;
+}
+
+/* 开关的包裹容器样式 */
+.enable-switch-wrapper {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  background-color: #fdfdfd;
 }
 
 /* 选中状态的样式 */
@@ -100,8 +135,9 @@ const handleBgColor = computed(() => props.highlightColor ? `${props.highlightCo
   cursor: grab;
   transition: background-color 0.2s;
   background-color: v-bind(handleBgColor);
-  color: v-bind('props.highlightColor ? props.highlightColor : "rgba(0,0,0,0.5)"'); /* 图标颜色与高亮色一致或默认深灰 */
+  color: v-bind(finalHighlightColor); /* 图标颜色与高亮色一致或默认深灰 */
 }
+
 
 .drag-handle:active {
   cursor: grabbing;

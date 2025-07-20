@@ -26,6 +26,7 @@
         <div :key="stepItem.configId" class="step-item-container">
           <StepItemRenderer
               :available-global-vars-for-step="getAvailableVarsForStep(index)"
+              :parent-workflow="workflow"
               :step="stepItem"
           />
         </div>

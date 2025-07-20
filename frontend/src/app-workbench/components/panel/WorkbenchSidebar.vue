@@ -23,8 +23,41 @@
 
 
         <n-space class="action-bar" justify="space-between">
+          <!-- 左侧：动态生成的上下文操作 -->
           <n-space>
-            <n-button secondary size="small" strong type="primary" @click="handleRename">重命名</n-button>
+            <template v-for="action in actions" :key="action.key">
+              <!-- 渲染需要 Popover 的动作 (如重命名、添加) -->
+              <InlineInputPopover
+                  v-if="action.renderType === 'popover'"
+                  :title="action.popoverTitle || '请输入'"
+                  :content-type="action.popoverContentType"
+                  :select-options="action.popoverSelectOptions"
+                  :select-placeholder="action.popoverSelectPlaceholder"
+                  :initial-value="action.popoverInitialValue"
+                  :default-name-generator="action.popoverDefaultNameGenerator"
+                  @confirm="payload => action.handler?.(payload)"
+              >
+                <n-button
+                    :disabled="action.disabled"
+                    :type="action.type || 'default'"
+                    size="small"
+                    strong
+                >
+                  {{ action.label }}
+                </n-button>
+              </InlineInputPopover>
+              <!-- 渲染简单按钮 (未来可能用到) -->
+              <n-button
+                  v-else
+                  :disabled="action.disabled"
+                  :type="action.type || 'default'"
+                  size="small"
+                  strong
+                  @click="action.handler?.({})"
+              >
+                {{ action.label }}
+              </n-button>
+            </template>
           </n-space>
           <n-space>
             <n-button :disabled="!isDirty" secondary size="small" strong type="error" @click="handleDiscard">放弃</n-button>
@@ -48,6 +81,7 @@
           <StepItemRenderer
               :is-collapsible="false"
               :is-draggable="false"
+              :parent-workflow="null"
               :step="stepData"
               style="margin-top: 16px"
           />
@@ -86,8 +120,8 @@
 
 
 <script lang="ts" setup>
-import {computed, h, ref} from 'vue';
-import {NH4, NIcon, NInput, useDialog, useMessage} from 'naive-ui';
+import {computed, ref} from 'vue';
+import {NH4, NIcon, useDialog, useMessage} from 'naive-ui';
 import type {ConfigType, EditSession} from "@/app-workbench/services/EditSession.ts";
 import type {
   AbstractModuleConfig,
@@ -99,7 +133,8 @@ import WorkflowItemRenderer from "@/app-workbench/components/workflow/WorkflowIt
 import {AddBoxIcon, SwapHorizIcon} from '@/utils/icons';
 import {CloseIcon} from "naive-ui/es/_internal/icons";
 import HeaderAndBodyLayout from "@/app-workbench/layouts/HeaderAndBodyLayout.vue";
-import ModuleItemRenderer from "@/app-workbench/components/module/ModuleItemRenderer.vue";
+import {useConfigItemActions} from "@/app-workbench/composables/useConfigItemActions.ts";
+import InlineInputPopover from "@/app-workbench/components/share/InlineInputPopover.vue";
 
 const props = defineProps<{
   session: EditSession | null;
@@ -164,35 +199,11 @@ function handleClose()
   emit('close-session');
 }
 
-function handleRename()
-{
-  if (!props.session) return;
-  const currentName = ref(props.session.getData().value?.name ?? '');
-
-  dialog.create({
-    title: '重命名',
-    content: () => h(NInput, {
-      value: currentName.value,
-      onUpdateValue: (v) =>
-      {
-        currentName.value = v;
-      },
-      placeholder: '请输入新的名称',
-    }),
-    positiveText: '确定',
-    negativeText: '取消',
-    onPositiveClick: () =>
-    {
-      if (!currentName.value.trim())
-      {
-        message.error("名称不能为空！");
-        return false; // 阻止对话框关闭
-      }
-      props.session?.rename(currentName.value);
-    }
-  });
-}
-
+// --- 从 composable 获取动作 ---
+const {actions} = useConfigItemActions({
+  itemRef: computed(() => props.session?.getData().value ?? null),
+  parentContextRef: ref(null), // 侧边栏是顶级编辑，没有父级
+});
 // --- 等级定义和比较逻辑 ---
 
 // 定义配置类型的等级

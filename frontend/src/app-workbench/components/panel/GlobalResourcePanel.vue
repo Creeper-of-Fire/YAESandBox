@@ -2,7 +2,35 @@
 <template>
   <HeaderAndBodyLayout>
     <template #header>
-      <n-h4>全局资源</n-h4>
+      <n-flex justify="space-between">
+        <n-h4>
+          全局资源
+        </n-h4>
+        <InlineInputPopover
+            :content-type="activeTab === 'module' ? 'select-and-input' : 'input'"
+            :default-name-generator="moduleDefaultNameGenerator"
+            :initial-value="`新建${currentTabLabel}`"
+            :input-placeholder="`请输入新的${currentTabLabel}名称`"
+            :select-options="moduleTypeOptions"
+            :select-placeholder="'请选择模块类型'"
+            :title="`新建全局${currentTabLabel}`"
+            @confirm="handleCreateNew"
+        >
+          <n-tooltip trigger="hover">
+            <template #trigger>
+              <n-button
+                  tag="h4"
+                  text
+                  type="primary"
+              >
+                新建{{ currentTabLabel }}
+              </n-button>
+            </template>
+            新建全局{{ currentTabLabel }}
+          </n-tooltip>
+        </InlineInputPopover>
+      </n-flex>
+
       <!-- 状态一：正在加载 -->
       <div v-if="aggregatedIsLoading" class="panel-state-wrapper">
         <n-spin size="small"/>
@@ -29,16 +57,18 @@
           type="segment"
       >
         <!-- 工作流标签页 -->
-        <n-tab name="workflows" tab="工作流"/>
+        <n-tab name="workflow" tab="工作流"/>
         <!-- 步骤标签页 -->
-        <n-tab name="steps" tab="步骤"/>
+        <n-tab name="step" tab="步骤"/>
         <!-- 模块标签页 -->
-        <n-tab name="modules" tab="模块"/>
+        <n-tab name="module" tab="模块"/>
       </n-tabs>
+
+
     </template>
 
     <template #body>
-      <div v-if="activeTab===`workflows`">
+      <div v-if="activeTab===`workflow`">
         <draggable
             v-if="workflowsList.length > 0"
             v-model="workflowsList"
@@ -66,7 +96,7 @@
         </draggable>
         <n-empty v-else class="empty-container" description="无全局工作流" small/>
       </div>
-      <div v-if="activeTab===`steps`">
+      <div v-if="activeTab===`step`">
         <draggable
             v-if="stepsList.length > 0"
             v-model="stepsList"
@@ -94,7 +124,7 @@
         </draggable>
         <n-empty v-else class="empty-container" description="无全局步骤" small/>
       </div>
-      <div v-if="activeTab===`modules`">
+      <div v-if="activeTab===`module`">
         <draggable
             v-if="modulesList.length > 0"
             v-model="modulesList"
@@ -129,13 +159,15 @@
 
 <script lang="ts" setup>
 import {computed, h, onMounted, ref} from 'vue';
-import {NAlert, NButton, NEmpty, NH4, NSpin, NTab, NTabs, useDialog} from 'naive-ui';
+import {NAlert, NButton, NEmpty, NFlex, NH4, NSpin, NTab, NTabs, useDialog, useMessage} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSession";
 import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {GlobalResourceItem} from "@/types/ui.ts";
 import GlobalResourceListItem from './GlobalResourceListItem.vue';
 import HeaderAndBodyLayout from "@/app-workbench/layouts/HeaderAndBodyLayout.vue";
+import {createBlankConfig} from "@/app-workbench/utils/createBlankConfig.ts";
+import InlineInputPopover from "@/app-workbench/components/share/InlineInputPopover.vue";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -143,11 +175,12 @@ type DraggableResourceItem<T> = {
   item: GlobalResourceItem<T>; // 原始 Record 的 value
 };
 
-const activeTab = ref('steps'); // 默认激活“步骤”标签页
+const activeTab = ref<'workflow' | 'step' | 'module'>('step'); // 默认激活“步骤”标签页
 
 const emit = defineEmits<{ (e: 'start-editing', payload: { type: ConfigType; id: string }): void; }>();
 const workbenchStore = useWorkbenchStore();
 const dialog = useDialog();
+const message = useMessage();
 
 const workflowsAsync = workbenchStore.globalWorkflowsAsync;
 const stepsAsync = workbenchStore.globalStepsAsync;
@@ -213,6 +246,86 @@ function showErrorDetail(errorMessage: string, originJsonString: string | null |
     positiveText: '确定'
   });
 }
+
+/**
+ * 计算属性，用于在 Tooltip 中显示当前激活的标签页名称
+ */
+const currentTabLabel = computed(() =>
+{
+  switch (activeTab.value)
+  {
+    case 'workflow':
+      return '工作流';
+    case 'step':
+      return '步骤';
+    case 'module':
+      return '模块';
+    default:
+      return '资源';
+  }
+});
+
+const moduleTypeOptions = computed(() =>
+{
+  const schemas = workbenchStore.moduleSchemasAsync.state.value;
+  if (!schemas) return [];
+  return Object.keys(schemas).map(key =>
+  {
+    const metadata = workbenchStore.moduleMetadata[key];
+    return {
+      label: metadata?.classLabel || schemas[key].title || key,
+      value: key,
+    };
+  });
+});
+
+const moduleDefaultNameGenerator = (newType: string, options: any[]) =>
+{
+  if (newType)
+  {
+    const schema = workbenchStore.moduleSchemasAsync.state.value?.[newType];
+    const defaultName = schema?.properties?.name?.default;
+    if (typeof defaultName === 'string')
+    {
+      return defaultName;
+    }
+    return options.find(opt => opt.value === newType)?.label || '新模块';
+  }
+  return '';
+};
+
+/**
+ * 处理 InlineInputPopover 确认事件
+ */
+async function handleCreateNew(payload: { name: string, type?: string })
+{
+  const name = payload.name;
+  const resourceType = activeTab.value;
+  const moduleType = payload.type;
+
+  if (resourceType === 'module' && !moduleType)
+  {
+    message.error('创建模块时必须选择模块类型');
+    return;
+  }
+
+  try
+  {
+    const blankConfig =
+        resourceType === 'module'
+            ? createBlankConfig('module', name, {moduleType: moduleType!})
+            : resourceType === 'workflow'
+                ? createBlankConfig('workflow', name)
+                : createBlankConfig('step', name);
+
+    await workbenchStore.createGlobalConfig(blankConfig);
+    message.success(`成功创建全局${currentTabLabel.value}“${name}”！`);
+  } catch (e)
+  {
+    message.error(`创建失败: ${(e as Error).message}`);
+  }
+}
+
 
 /**
  * vue-draggable-plus 的 :clone prop 处理函数。
