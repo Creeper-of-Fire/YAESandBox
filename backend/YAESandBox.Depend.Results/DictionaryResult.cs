@@ -71,9 +71,9 @@ public record DictionaryResult<TKey, TValue> : Result where TKey : notnull
     /// <returns></returns>
     public DictionaryResult<TKey, TNewValue> Select<TNewValue>(Func<Result<TValue>, Result<TNewValue>> selector)
     {
-        if (IsFailed)
+        if (this.IsFailed)
             return DictionaryResult<TKey, TNewValue>.Fail(this.Error);
-        return ItemResults.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Map(selector)).ToDictionaryResult();
+        return this.ItemResults.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.Map(selector)).ToDictionaryResult();
     }
 
     /// <summary>
@@ -81,9 +81,9 @@ public record DictionaryResult<TKey, TValue> : Result where TKey : notnull
     /// </summary>
     public IEnumerable<KeyValuePair<TKey, TValue>> GetSuccessData()
     {
-        if (ItemResults == null) yield break;
+        if (this.ItemResults == null) yield break;
 
-        foreach (var kvp in ItemResults)
+        foreach (var kvp in this.ItemResults)
         {
             if (kvp.Value.TryGetValue(out var value))
             {
@@ -97,7 +97,7 @@ public record DictionaryResult<TKey, TValue> : Result where TKey : notnull
     /// </summary>
     public Dictionary<TKey, TValue> ToSuccessDictionary()
     {
-        return GetSuccessData().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+        return this.GetSuccessData().ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
     }
 
     /// <summary>
@@ -105,7 +105,7 @@ public record DictionaryResult<TKey, TValue> : Result where TKey : notnull
     /// </summary>
     public bool HasAnyItemFailure()
     {
-        return ItemResults?.Values.Any(r => r.IsFailed) ?? false;
+        return this.ItemResults?.Values.Any(r => r.IsFailed) ?? false;
     }
 }
 

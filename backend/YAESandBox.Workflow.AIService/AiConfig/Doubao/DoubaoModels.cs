@@ -1,6 +1,7 @@
 ﻿// DoubaoModels.cs (或者作为 DoubaoAiProcessor 的内部类)
 
 using System.Text.Json.Serialization;
+using YAESandBox.Workflow.AIService.Shared;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
 
@@ -11,7 +12,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
 /// <param name="Role"></param>
 /// <param name="Content"></param>
 /// <param name="Name"></param>
-public record DoubaoChatMessage(
+internal record DoubaoChatMessage(
     [property: JsonPropertyName("role")] string Role,
     [property: JsonPropertyName("content")]
     string Content,
@@ -22,7 +23,7 @@ public record DoubaoChatMessage(
 /// 流式配置选项
 /// </summary>
 /// <param name="IncludeUsage"></param>
-public record DoubaoStreamOptions(
+internal record DoubaoStreamOptions(
     [property: JsonPropertyName("include_usage")]
     bool? IncludeUsage = null
 );
@@ -30,7 +31,7 @@ public record DoubaoStreamOptions(
 /// <summary>
 /// 工具定义 (请求时可能用到)
 /// </summary>
-public record DoubaoTool(
+internal record DoubaoTool(
     [property: JsonPropertyName("type")] string Type, // "function"
     [property: JsonPropertyName("function")]
     DoubaoFunctionDefinition Function
@@ -39,7 +40,7 @@ public record DoubaoTool(
 /// <summary>
 /// 工具的函数定义 (请求时可能用到)
 /// </summary>
-public record DoubaoFunctionDefinition(
+internal record DoubaoFunctionDefinition(
     [property: JsonPropertyName("name")] string Name,
     [property: JsonPropertyName("description")]
     string Description,
@@ -50,7 +51,7 @@ public record DoubaoFunctionDefinition(
 /// <summary>
 /// 回应体的回应格式
 /// </summary>
-public record DoubaoResponseFormat(string? Type = null)
+internal record DoubaoResponseFormat(string? Type = null)
 {
     /// <summary>
     /// 返回类型，默认为text
@@ -60,16 +61,18 @@ public record DoubaoResponseFormat(string? Type = null)
 }
 
 internal record DoubaoChatRequest(
+    [property: JsonPropertyName("model")] string? Model,
     [property: JsonPropertyName("messages")]
     IReadOnlyList<DoubaoChatMessage> Messages,
-    [property: JsonPropertyName("model")] string? Model = null,
     [property: JsonPropertyName("stream")] bool? Stream = null,
     [property: JsonPropertyName("stream_options")]
     DoubaoStreamOptions? StreamOptions = null,
+    
+    [property: JsonPropertyName("temperature")]
+    double? Temperature = null,
     [property: JsonPropertyName("max_tokens")]
     int? MaxTokens = null,
-    [property: JsonPropertyName("service_tier")]
-    string? ServiceTier = null,
+    [property: JsonPropertyName("top_p")] float? TopP = null,
     [property: JsonPropertyName("stop")] IReadOnlyList<string>? Stop = null,
     [property: JsonPropertyName("response_format")]
     DoubaoResponseFormat? ResponseFormat = null,
@@ -77,9 +80,8 @@ internal record DoubaoChatRequest(
     float? FrequencyPenalty = null,
     [property: JsonPropertyName("presence_penalty")]
     float? PresencePenalty = null,
-    [property: JsonPropertyName("temperature")]
-    double? Temperature = null,
-    [property: JsonPropertyName("top_p")] float? TopP = null,
+    [property: JsonPropertyName("service_tier")]
+    string? ServiceTier = null,
     [property: JsonPropertyName("logprobs")]
     bool? Logprobs = null,
     [property: JsonPropertyName("top_logprobs")]
@@ -93,66 +95,19 @@ internal record DoubaoChatRequest(
 internal record DoubaoChoiceBase
 {
     [JsonPropertyName("index")] public int? Index { get; init; }
-}
-
-// --- 流式响应模型 ---
-internal record DoubaoStreamDelta
-{
-    [JsonPropertyName("role")] public string? Role { get; init; }
-
-    [JsonPropertyName("content")] public string? Content { get; init; } // 主要内容
-
-    [JsonPropertyName("reasoning_content")] // 豆包流式也可能有这个
-    public string? ReasoningContent { get; init; }
-}
-
-internal record DoubaoStreamChoice : DoubaoChoiceBase
-{
-    [JsonPropertyName("delta")] public DoubaoStreamDelta? Delta { get; init; } = new();
-
     [JsonPropertyName("finish_reason")] public string? FinishReason { get; init; }
 }
 
-internal record DoubaoStreamCompletionChunk
-{
-    [JsonPropertyName("id")] public string Id { get; init; } = string.Empty;
-
-    [JsonPropertyName("object")] public string Object { get; init; } = string.Empty; // "chat.completion.chunk"
-
-    [JsonPropertyName("created")] public long Created { get; init; }
-
-    [JsonPropertyName("model")] public string Model { get; init; } = string.Empty;
-
-    [JsonPropertyName("choices")] public IReadOnlyList<DoubaoStreamChoice> Choices { get; init; } = [];
-
-    [JsonPropertyName("usage")] // 流式时通常为 null
-    public DoubaoUsage? Usage { get; init; }
-}
-
-// --- 非流式响应模型 ---
-internal record DoubaoResponseMessage
+internal record DoubaoResponseMessage : IAiResponseMessagePart
 {
     [JsonPropertyName("role")] public string? Role { get; init; } = string.Empty;
+    public string? GetContent() => this.Content;
+    public string? GetReasoningContent() => this.ReasoningContent;
 
-    [JsonPropertyName("content")] public string? Content { get; init; } = string.Empty; // 主要内容
+    [JsonPropertyName("content")] public string? Content { get; init; } = string.Empty;
 
-    [JsonPropertyName("reasoning_content")] // DeepSeek 等模型会在这里返回
+    [JsonPropertyName("reasoning_content")]
     public string? ReasoningContent { get; init; }
-}
-
-internal record DoubaoCompletionChoice : DoubaoChoiceBase
-{
-    [JsonPropertyName("message")] public DoubaoResponseMessage? Message { get; init; } = new();
-
-    [JsonPropertyName("finish_reason")] public string? FinishReason { get; init; } = string.Empty;
-
-    [JsonPropertyName("logprobs")] public object? Logprobs { get; init; } // 通常为 null
-}
-
-internal record DoubaoUsageDetails
-{
-    [JsonPropertyName("cached_tokens")] public int? CachedTokens { get; init; }
-    [JsonPropertyName("reasoning_tokens")] public int? ReasoningTokens { get; init; }
 }
 
 internal record DoubaoUsage
@@ -171,6 +126,46 @@ internal record DoubaoUsage
     public DoubaoUsageDetails? CompletionTokensDetails { get; init; }
 }
 
+internal record DoubaoUsageDetails
+{
+    [JsonPropertyName("cached_tokens")] public int? CachedTokens { get; init; }
+    [JsonPropertyName("reasoning_tokens")] public int? ReasoningTokens { get; init; }
+}
+
+
+// --- 流式响应模型 ---
+internal record DoubaoStreamChoice : DoubaoChoiceBase
+{
+    [JsonPropertyName("delta")] public DoubaoResponseMessage? Delta { get; init; } = new();
+}
+
+internal record DoubaoStreamChunk
+{
+    [JsonPropertyName("id")] public string Id { get; init; } = string.Empty;
+
+    [JsonPropertyName("object")] public string Object { get; init; } = string.Empty; // "chat.completion.chunk"
+
+    [JsonPropertyName("created")] public long Created { get; init; }
+
+    [JsonPropertyName("model")] public string Model { get; init; } = string.Empty;
+
+    [JsonPropertyName("choices")] public IReadOnlyList<DoubaoStreamChoice> Choices { get; init; } = [];
+
+    [JsonPropertyName("usage")] // 流式时通常为 null
+    public DoubaoUsage? Usage { get; init; }
+}
+
+
+// --- 非流式响应模型 ---
+
+internal record DoubaoCompletionChoice : DoubaoChoiceBase
+{
+    [JsonPropertyName("message")] public DoubaoResponseMessage? Message { get; init; } = new();
+    
+    [JsonPropertyName("logprobs")] public object? Logprobs { get; init; } // 通常为 null
+}
+
+
 internal record DoubaoCompletionResponse
 {
     [JsonPropertyName("id")] public string? Id { get; init; } = string.Empty;
@@ -183,5 +178,5 @@ internal record DoubaoCompletionResponse
 
     [JsonPropertyName("choices")] public IReadOnlyList<DoubaoCompletionChoice>? Choices { get; init; } = [];
 
-    [JsonPropertyName("usage")] public DoubaoUsage? Usage { get; init; } = new();
+    [JsonPropertyName("usage")] public DoubaoUsage? Usage { get; init; }
 }
