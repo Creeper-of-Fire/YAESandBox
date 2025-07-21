@@ -1,5 +1,8 @@
 ﻿import {cloneDeep} from "lodash-es";
 import {type Component, defineAsyncComponent, markRaw} from "vue";
+import {getVuePluginComponent} from "@/app-workbench/features/schema-viewer/plugin-loader.ts";
+import WebComponentWrapper from "@/app-workbench/features/schema-viewer/WebComponentWrapper.vue";
+import MonacoEditorWidget from "@/app-workbench/features/schema-viewer/field-widget/MonacoEditorWidget.vue";
 
 // =================================================================
 // 1. 动态组件定义
@@ -276,6 +279,59 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
 
         // 处理完毕后，删除这个自定义的、非标准的属性，保持最终 schema 的干净
         delete processedProps.dataType;
+    }
+
+    // === 动态组件注入逻辑 ===
+    const vueComponentName = processedProps['x-vue-component'] as string;
+    const wcTagName = processedProps['x-web-component'] as string;
+
+    // 优先使用 Vue 组件
+    if (vueComponentName)
+    {
+        const component = getVuePluginComponent(vueComponentName);
+        if (component)
+        {
+            processedProps['ui:widget'] = component;
+        }
+        else
+        {
+            console.warn(`未找到名为 "${vueComponentName}" 的Vue插件组件。`);
+        }
+    }
+    // 其次使用 Web Component
+    else if (wcTagName)
+    {
+        processedProps['ui:widget'] = WebComponentWrapper;
+        processedProps['ui:options'] ??= {};
+        processedProps['ui:options'].tagName = wcTagName;
+    }
+
+    // monaco-editor 处理
+    const monacoConfig = fieldProps['x-monaco-editor'] as {
+        language: string;
+        simpleConfigUrl: string;
+        languageServerWorkerUrl: string
+    } | undefined;
+
+    if (monacoConfig && monacoConfig.language)
+    {
+        // 1. 设置 ui:widget 为我们的 MonacoEditorWidget 组件
+        fieldProps['ui:widget'] = MonacoEditorWidget;
+
+        // 2. 确保 ui:options 存在
+        if (!fieldProps['ui:options'])
+        {
+            fieldProps['ui:options'] = {};
+        }
+
+        // 3. 将 monacoConfig 的内容作为 props 传递给 ui:options
+        // vue3-form-naive 会将 ui:options 的所有键值对作为 props 传递给自定义 widget
+        fieldProps['ui:options'].language = monacoConfig.language;
+        fieldProps['ui:options'].simpleConfigUrl = monacoConfig.simpleConfigUrl;
+        fieldProps['ui:options'].languageServerWorkerUrl = monacoConfig.languageServerWorkerUrl;
+
+        // 4. (可选) 删除自定义指令，保持最终 schema 干净
+        delete fieldProps['x-monaco-editor'];
     }
 
     // 清理空的 ui:options

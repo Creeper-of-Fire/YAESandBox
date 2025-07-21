@@ -7,13 +7,7 @@
           全局资源
         </n-h4>
         <InlineInputPopover
-            :content-type="activeTab === 'module' ? 'select-and-input' : 'input'"
-            :default-name-generator="moduleDefaultNameGenerator"
-            :initial-value="`新建${currentTabLabel}`"
-            :input-placeholder="`请输入新的${currentTabLabel}名称`"
-            :select-options="moduleTypeOptions"
-            :select-placeholder="'请选择模块类型'"
-            :title="`新建全局${currentTabLabel}`"
+            :action="createNewAction"
             @confirm="handleCreateNew"
         >
           <n-tooltip trigger="hover">
@@ -168,6 +162,8 @@ import GlobalResourceListItem from './GlobalResourceListItem.vue';
 import HeaderAndBodyLayout from "@/app-workbench/layouts/HeaderAndBodyLayout.vue";
 import {createBlankConfig} from "@/app-workbench/utils/createBlankConfig.ts";
 import InlineInputPopover from "@/app-workbench/components/share/InlineInputPopover.vue";
+import type {EnhancedAction} from "@/app-workbench/composables/useConfigItemActions.ts";
+import {AddIcon} from "@/utils/icons.ts";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -293,6 +289,32 @@ const moduleDefaultNameGenerator = (newType: string, options: any[]) =>
   }
   return '';
 };
+/**
+ * :content-type="activeTab === 'module' ? 'select-and-input' : 'input'"
+ *             :default-name-generator="moduleDefaultNameGenerator"
+ *             :initial-value="`新建${currentTabLabel}`"
+ *             :input-placeholder="`请输入新的${currentTabLabel}名称`"
+ *             :select-options="moduleTypeOptions"
+ *             :select-placeholder="'请选择模块类型'"
+ *             :title="`新建全局${currentTabLabel}`"
+ */
+const createNewAction = computed<EnhancedAction>(()=>
+    ({
+      key: 'create-new-global',
+      icon: AddIcon,
+      label: '新建全局配置',
+      renderType: 'button',
+      disabled: false,
+      popoverContentType: activeTab.value === 'module' ? 'select-and-input' : 'input',
+      popoverDefaultNameGenerator: moduleDefaultNameGenerator,
+      popoverInitialValue: `新建${currentTabLabel.value}`,
+      popoverInputPlaceholder: `请输入新的${currentTabLabel.value}名称`,
+      popoverSelectOptions: moduleTypeOptions.value,
+      popoverSelectPlaceholder: '请选择模块类型',
+      popoverTitle: `新建全局${currentTabLabel.value}`,
+      onConfirm: handleCreateNew
+    })
+)
 
 /**
  * 处理 InlineInputPopover 确认事件

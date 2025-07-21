@@ -57,8 +57,8 @@ internal static class ConfigSchemasHelper // 改为静态类，因为所有成�
             // 处理类型名称冲突 (忽略大小写)
             if (temporaryDictionary.TryGetValue(typeName, out var existingType))
             {
-                var errorMessage = $"AI 配置类型名称冲突：类型 '{type.FullName}' 和 '{existingType.FullName}' " +
-                                   $"都具有相同的类名 '{typeName}' (忽略大小写)。类名必须在该上下文中唯一。";
+                string errorMessage = $"AI 配置类型名称冲突：类型 '{type.FullName}' 和 '{existingType.FullName}' " +
+                                      $"都具有相同的类名 '{typeName}' (忽略大小写)。类名必须在该上下文中唯一。";
                 // Log.Error(errorMessage);
                 Console.Error.WriteLine($"[ERROR] {errorMessage}"); // 临时使用 Console
                 // 可以选择抛出异常或跳过冲突的类型，这里选择记录错误并跳过后来者（或先来者，取决于字典行为）

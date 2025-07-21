@@ -1,6 +1,6 @@
 ﻿using System.Reflection;
+using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
-using YAESandBox.Workflow.Module.ModuleAttribute;
 
 namespace YAESandBox.Workflow.Analysis;
 
@@ -44,7 +44,7 @@ public class WorkflowValidationService
             }
 
             // 3. 在处理完一个步骤后，将其产生的全局变量加入可用池，供后续步骤使用
-            foreach (var producedVar in step.OutputMappings.Keys)
+            foreach (string producedVar in step.OutputMappings.Keys)
             {
                 availableVariables.Add(producedVar);
             }
@@ -59,7 +59,7 @@ public class WorkflowValidationService
     private void ValidateDataFlow(StepProcessorConfig step, ISet<string> initialAvailableVariables, StepValidationResult stepResult)
     {
         // 1. (保持不变) 检查 InputMappings 的源（Value，即全局变量）是否存在于上游的可用池中
-        foreach (var globalName in step.InputMappings.Values.ToHashSet())
+        foreach (string globalName in step.InputMappings.Values.ToHashSet())
         {
             if (!initialAvailableVariables.Contains(globalName))
             {
@@ -82,7 +82,7 @@ public class WorkflowValidationService
             var requiredVars = module.GetConsumedVariables();
             var missingVars = requiredVars.Except(inStepAvailableVars);
 
-            foreach (var missingVar in missingVars)
+            foreach (string missingVar in missingVars)
             {
                 this.AddMessageToModule(stepResult, module.ConfigId, new ValidationMessage
                 {
@@ -94,7 +94,7 @@ public class WorkflowValidationService
 
             // 2b. 更新可用变量池：将当前模块【生产】的变量添加到池中，供后续模块使用
             var producedVars = module.GetProducedVariables();
-            foreach (var producedVar in producedVars)
+            foreach (string producedVar in producedVars)
             {
                 inStepAvailableVars.Add(producedVar);
             }
@@ -106,8 +106,8 @@ public class WorkflowValidationService
 
         foreach (var mapping in step.OutputMappings)
         {
-            var localSourceVar = mapping.Value; // 局部变量名
-            var globalTargetVar = mapping.Key; // 全局变量名
+            string localSourceVar = mapping.Value; // 局部变量名
+            string globalTargetVar = mapping.Key; // 全局变量名
 
             if (!allAvailableInStepVars.Contains(localSourceVar))
             {

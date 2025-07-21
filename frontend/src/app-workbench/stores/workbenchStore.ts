@@ -6,6 +6,7 @@ import {v4 as uuidv4} from 'uuid';
 import {type ConfigObject, type ConfigType, EditSession,} from '@/app-workbench/services/EditSession.ts';
 import type {
     AbstractModuleConfig,
+    ModuleSchemasResponse,
     StepProcessorConfig,
     WorkflowProcessorConfig,
 } from '@/app-workbench/types/generated/workflow-config-api-client';
@@ -13,6 +14,8 @@ import {ModuleConfigService, StepConfigService, WorkflowConfigService,} from '@/
 import {useAsyncState} from "@vueuse/core";
 import type {GlobalResourceItem} from "@/types/ui.ts";
 import {cloneDeep} from "lodash-es";
+import {type DynamicAsset, loadAndRegisterPlugins} from "@/app-workbench/features/schema-viewer/plugin-loader.ts";
+import {preprocessSchemaForWidgets} from "@/app-workbench/features/schema-viewer/preprocessSchema.ts";
 
 // 导出类型
 export type WorkbenchStore = ReturnType<typeof useWorkbenchStore>;
@@ -45,7 +48,8 @@ export interface SaveResult
     error?: any; // 保存具体的错误信息
 }
 
-export interface WorkflowModuleRules {
+export interface WorkflowModuleRules
+{
     noConfig?: boolean;
     singleInStep?: boolean;
     inLastStep?: boolean;
@@ -57,7 +61,8 @@ export interface WorkflowModuleRules {
  * 元数据接口，整合了规则和类别标签。
  * 这提供了一个统一的元数据访问点。
  */
-export interface ModuleMetadata {
+export interface ModuleMetadata
+{
     rules?: WorkflowModuleRules;
     classLabel?: string;
 }
@@ -159,36 +164,60 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * 存储所有模块类型的 Schema
      * Key 是模块的 moduleType, Value 是对应的 JSON Schema
      */
-    const moduleSchemasAsync = useAsyncState(
-        () => ModuleConfigService.getApiV1WorkflowsConfigsGlobalModulesAllModuleConfigsSchemas(),
-        {} as Record<string, any>,
-        {immediate: false, shallow: false} // 初始不加载
-    );
+    const moduleSchemasAsync =  reactive(useAsyncState(
+        async () =>
+        { // <--- 重点修改：将 handler 函数改为 async
+            console.log("正在获取模块Schema和动态资源...");
+            const response: ModuleSchemasResponse = await ModuleConfigService.getApiV1WorkflowsConfigsGlobalModulesAllModuleConfigsSchemas();
+
+            console.log("已获取后端响应，准备加载插件资源...");
+            // 1. 加载并注册所有动态组件
+            // loadAndRegisterPlugins 内部有去重和缓存，所以多次调用是安全的
+            const dynamicAssetsFromBackend = response.dynamicAssets as DynamicAsset[];
+            await loadAndRegisterPlugins(dynamicAssetsFromBackend);
+
+            // console.log("插件资源加载完成，开始预处理Schema...");
+            // // 2. 预处理 Schema，注入组件引用
+            // const processedSchemas = preprocessSchemaForWidgets(response.schemas);
+            //
+            console.log("插件资源加载完成，返回给Store状态。");
+            return response.schemas;
+        },
+        {} as Record<string, any>, // 初始值
+        {immediate: false, shallow: false} // 初始不加载，由组件手动触发
+    ));
 
     /**
      * 元数据服务。
      * 该计算属性提供了一个单一的、聚合的元数据来源。
      * 它会从每个模块的 Schema 中提取 `x-workflow-module-rules` 和 `classLabel` 等元数据信息。
      */
-    const moduleMetadata = computed(() => {
+    const moduleMetadata = computed(() =>
+    {
         const metadataMap: Record<string, ModuleMetadata> = {};
-        const schemas = moduleSchemasAsync.state.value;
+        const schemas = moduleSchemasAsync.state;
 
-        if (schemas) {
-            for (const moduleType in schemas) {
+        if (schemas)
+        {
+            for (const moduleType in schemas)
+            {
                 const schema = schemas[moduleType];
-                if (schema) {
+                if (schema)
+                {
                     const rules = schema['x-workflow-module-rules'] as WorkflowModuleRules | undefined;
                     // 从 Schema 中提取新的类别标签属性
                     const classLabel = schema['classLabel'] as string | undefined;
 
                     // 只要 Schema 中包含任何一个元数据，就为其创建一个条目
-                    if (rules || classLabel) {
+                    if (rules || classLabel)
+                    {
                         const metadata: ModuleMetadata = {};
-                        if (rules) {
+                        if (rules)
+                        {
                             metadata.rules = rules;
                         }
-                        if (classLabel) {
+                        if (classLabel)
+                        {
                             metadata.classLabel = classLabel;
                         }
                         metadataMap[moduleType] = metadata;
@@ -287,9 +316,11 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * 它的作用是撤销所有未保存的更改，使草稿回到初始状态。
      * @param globalId - 要放弃更改的草稿的全局ID。
      */
-    const _discardDraft = (globalId: string) => {
+    const _discardDraft = (globalId: string) =>
+    {
         const draft = drafts.value[globalId];
-        if (draft) {
+        if (draft)
+        {
             // 将数据恢复为创建草稿时的原始状态
             draft.data = JSON.parse(draft.originalState);
         }
@@ -303,7 +334,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * 将一个已有的配置对象保存为新的全局配置。
      * @param configToSave - 要保存为全局的配置对象。
      */
-    async function createGlobalConfig(configToSave: ConfigObject) {
+    async function createGlobalConfig(configToSave: ConfigObject)
+    {
         // 1. 深克隆并确保ID是全新的（即使是克隆来的）
         const newGlobalConfig = deepCloneWithNewIds(configToSave);
         const newGlobalId = uuidv4(); // 为这个新的全局资源创建一个全新的顶级ID
@@ -313,21 +345,26 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         let refreshPromise: () => Promise<any>;
 
         // 2. 判断类型并准备API调用
-        if ('steps' in newGlobalConfig) {
+        if ('steps' in newGlobalConfig)
+        {
             type = 'workflow';
             savePromise = WorkflowConfigService.putApiV1WorkflowsConfigsGlobalWorkflows({
                 workflowId: newGlobalId,
                 requestBody: newGlobalConfig,
             });
             refreshPromise = () => globalWorkflowsAsync.execute();
-        } else if ('modules' in newGlobalConfig) {
+        }
+        else if ('modules' in newGlobalConfig)
+        {
             type = 'step';
             savePromise = StepConfigService.putApiV1WorkflowsConfigsGlobalSteps({
                 stepId: newGlobalId,
                 requestBody: newGlobalConfig,
             });
             refreshPromise = () => globalStepsAsync.execute();
-        } else {
+        }
+        else
+        {
             type = 'module';
             savePromise = ModuleConfigService.putApiV1WorkflowsConfigsGlobalModules({
                 moduleId: newGlobalId,
@@ -337,15 +374,16 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         }
 
         // 3. 执行保存和刷新
-        try {
+        try
+        {
             await savePromise;
             await refreshPromise();
-        } catch (error) {
+        } catch (error)
+        {
             console.error(`将配置“${newGlobalConfig.name}”保存为全局 ${type} 时失败:`, error);
             throw error;
         }
     }
-
 
 
     /**

@@ -88,7 +88,7 @@ public class ResultUsageAnalyzer : DiagnosticAnalyzer
                 new HashSet<ITypeSymbol>(SymbolEqualityComparer.Default)))
         {
             var methodSymbol = context.SemanticModel.GetSymbolInfo(invocationExpr).Symbol as IMethodSymbol;
-            var methodName = methodSymbol?.Name ?? "未知方法";
+            string methodName = methodSymbol?.Name ?? "未知方法";
 
             // 报告的诊断位置应该是整个表达式，以便代码修复器替换。
             var diagnostic = Diagnostic.Create(Rule, expression.GetLocation(), methodName);

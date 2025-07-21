@@ -112,6 +112,9 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
+// 配置中间件
+ApplicationModules.ForEachModules<IProgramModuleAppConfigurator>(it => it.ConfigureApp(app));
+
 app.UseDefaultFiles(); // 使其查找 wwwroot 中的 index.html 或 default.html (可选，但良好实践)
 app.UseStaticFiles(); // 启用从 wwwroot 提供静态文件的功能
 

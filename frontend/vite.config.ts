@@ -152,7 +152,15 @@ export default defineConfig({
                 changeOrigin: true, // 必须，对于虚拟主机站点是必需的
                 // secure: false, // 如果后端是 https 且证书无效，可能需要
                 // rewrite: (path) => path.replace(/^\/api/, '/api') // 通常不需要，除非后端路径也需要调整
-            }
+            },
+            '/plugins': {
+                target: 'http://localhost:7018', // <--- 替换成你的后端实际运行地址和端口
+                changeOrigin: true, // 改变源，使其看起来像是从目标服务器发出的请求
+                // 如果你的后端是 HTTPS，并且使用了自签名证书，你可能还需要添加 secure: false
+                // target: 'https://localhost:5001',
+                // secure: false,
+                // rewrite: (path) => path.replace(/^\/plugins/, '/plugins'), // 如果路径需要重写，但这里通常不需要
+            },
         }
     },
     resolve: {

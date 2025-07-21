@@ -3,9 +3,9 @@ using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Module.ModuleAttribute;
 using static YAESandBox.Workflow.Module.ExactModule.PromptGenerationModuleProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
 

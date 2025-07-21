@@ -15,8 +15,7 @@
     </n-dropdown>
 
     <!-- 保留 InlineInputPopover，但它将由 Dropdown 的事件来触发显示 -->
-    <InlineInputPopover
-        ref="popoverRef"
+    <InlineInputPopover ref="popoverRef"
         :action="activePopoverAction || undefined"
         @confirm="handlePopoverConfirm"
     >

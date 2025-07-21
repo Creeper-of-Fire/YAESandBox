@@ -1,7 +1,7 @@
 ﻿using JetBrains.Annotations;
 using YAESandBox.Workflow.Config;
 
-namespace YAESandBox.Workflow.Module.ModuleAttribute;
+namespace YAESandBox.Workflow.API.Schema;
 
 /// <summary>
 /// 标明这个模块在单一步骤中只能出现一次

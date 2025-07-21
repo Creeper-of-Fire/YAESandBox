@@ -40,7 +40,7 @@ export function useModuleAnalysis(module: Ref<AbstractModuleConfig | null>, conf
                     console.error(`[useModuleAnalysis] 分析结果为null`);
                 }
             }
-            console.log(`[useModuleAnalysis] 分析结果: `, analysisResult.value);
+            // console.log(`[useModuleAnalysis] 分析结果: `, analysisResult.value);
         } catch (error: any)
         {
             console.error(`[useModuleAnalysis] 在分析模块 ${configId.value} 时失败: `, error);

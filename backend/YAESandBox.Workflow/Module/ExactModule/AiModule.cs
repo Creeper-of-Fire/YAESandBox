@@ -4,9 +4,9 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Module.ModuleAttribute;
 using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
 
 namespace YAESandBox.Workflow.Module.ExactModule;

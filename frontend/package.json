@@ -13,6 +13,7 @@
     "devtools": "npx vue-devtools"
   },
   "dependencies": {
+    "@guolao/vue-monaco-editor": "^1.5.5",
     "@lljj/vue3-form-naive": "^1.19.1",
     "@microsoft/signalr": "^8.0.7",
     "@vicons/ionicons5": "^0.13.0",
@@ -21,10 +22,12 @@
     "axios": "^1.8.4",
     "color-hash": "^2.0.2",
     "form-data": "^4.0.2",
+    "monaco-languageclient": "^9.8.0",
     "naive-ui": "^2.41.0",
     "pinia": "^3.0.2",
     "uuid": "^11.1.0",
     "vfonts": "^0.0.3",
+    "vscode-ws-jsonrpc": "^3.4.0",
     "vue": "^3.5.13",
     "vue-draggable-plus": "^0.6.0",
     "vue-router": "^4.5.1",

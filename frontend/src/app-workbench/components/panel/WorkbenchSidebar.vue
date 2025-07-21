@@ -27,11 +27,8 @@
           <n-space>
             <template v-for="action in actions" :key="action.key">
               <!-- 渲染需要 Popover 的动作 (如重命名、添加) -->
-              <InlineInputPopover
-                  v-if="action.renderType === 'popover'"
-                  :title="action.popoverTitle || '请输入'"
+              <InlineInputPopover v-if="action.renderType === 'popover'"
                   :action = "action"
-                  :default-name-generator="action.popoverDefaultNameGenerator"
                   @confirm="payload => action.handler?.(payload)"
               >
                 <n-button

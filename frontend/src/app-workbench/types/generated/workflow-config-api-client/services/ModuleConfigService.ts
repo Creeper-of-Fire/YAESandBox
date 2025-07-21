@@ -4,17 +4,18 @@
 /* eslint-disable */
 import type { AbstractModuleConfig } from '../models/AbstractModuleConfig';
 import type { AbstractModuleConfigJsonResultDto } from '../models/AbstractModuleConfigJsonResultDto';
+import type { ModuleSchemasResponse } from '../models/ModuleSchemasResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class ModuleConfigService {
     /**
-     * 获取所有注册的模块配置类型的表单 Schema 结构 (JSON Schema 格式，包含 UI 指令)。
+     * 获取所有注册的模块配置类型的表单 Schema 结构 (JSON Schema 格式，包含 UI 指令)，并附带它们依赖的动态前端组件资源。
      * 用于前端动态生成这些类型配置的【新建】或【编辑】表单骨架。
-     * @returns any OK
+     * @returns ModuleSchemasResponse OK
      * @throws ApiError
      */
-    public static getApiV1WorkflowsConfigsGlobalModulesAllModuleConfigsSchemas(): CancelablePromise<Record<string, any>> {
+    public static getApiV1WorkflowsConfigsGlobalModulesAllModuleConfigsSchemas(): CancelablePromise<ModuleSchemasResponse> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/workflows-configs/global-modules/all-module-configs-schemas',

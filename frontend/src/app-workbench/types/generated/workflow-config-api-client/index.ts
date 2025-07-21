@@ -9,7 +9,9 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AbstractModuleConfig } from './models/AbstractModuleConfig';
 export type { AbstractModuleConfigJsonResultDto } from './models/AbstractModuleConfigJsonResultDto';
+export type { DynamicComponentAsset } from './models/DynamicComponentAsset';
 export type { ModuleAnalysisResult } from './models/ModuleAnalysisResult';
+export type { ModuleSchemasResponse } from './models/ModuleSchemasResponse';
 export type { ModuleValidationResult } from './models/ModuleValidationResult';
 export type { ProblemDetails } from './models/ProblemDetails';
 export { RuleSeverity } from './models/RuleSeverity';
