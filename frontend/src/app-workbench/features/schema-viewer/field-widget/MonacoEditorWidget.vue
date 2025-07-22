@@ -1,5 +1,21 @@
 ﻿<template>
   <div :style="{ height: editorHeight }" class="monaco-editor-container">
+    <!--
+      核心改动：移除 v-show，让编辑器组件的 DOM 结构保持稳定。
+      Vue 将不再因为 isLoading 状态的改变而去尝试修改编辑器的显示属性。
+    -->
+    <vue-monaco-editor
+        v-model:value="internalValue"
+        :language="language"
+        :options="editorOptions"
+        :theme="editorTheme"
+        @mount="handleEditorMount"
+    />
+
+    <!--
+      将遮罩层放在编辑器之后，利用 CSS 的 position: absolute
+      将它们叠加在编辑器之上。Vue 只需要管理这两个遮罩层的有无即可。
+    -->
     <div v-if="isLoading" class="loading-overlay">
       <n-spin size="large"/>
       <span class="loading-text">{{ loadingText }}</span>
@@ -9,20 +25,9 @@
         {{ error }}
       </n-alert>
     </div>
-
-    <!-- 使用 @guolao/vue-monaco-editor 组件 -->
-    <!-- 使用 v-show 可以在加载时保持 DOM 结构，避免布局跳动 -->
-    <vue-monaco-editor
-        v-show="!isLoading && !error"
-        v-model:value="internalValue"
-        :language="language"
-        :options="editorOptions"
-        :theme="editorTheme"
-        @mount="handleEditorMount"
-    />
   </div>
 </template>
-
+<!--TODO 对于脚本来说，工作流的变量解析或其他字段不断变化的提示会带来非常糟糕的编辑体验。让我们想想办法-->
 <script lang="ts" setup>
 import {computed, onUnmounted, ref, watch} from 'vue';
 import {type MonacoEditor, VueMonacoEditor} from '@guolao/vue-monaco-editor';
@@ -128,59 +133,10 @@ let worker: Worker | null = null;
 async function startLanguageServer(monaco: MonacoEditor, model: any)
 {
   // TODO 暂时不支持
-
-  // return new Promise<void>((resolve, reject) =>
-  // {
-  //   // 创建一个 Web Worker 来运行语言服务器
-  //   // URL() 构造函数确保相对路径被正确解析
-  //    worker = new Worker(new URL(props.languageServerWorkerUrl!, import.meta.url).href, {type: 'module'});
-  //   worker.onerror = (e) =>
-  //   {
-  //     reject(new Error(`Worker 错误: ${e.message}`));
-  //   };
-  //
-  //   // !!! 关键改动：使用 createWebWorkerConnection !!!
-  //   // 它会返回一个 MessageConnection 对象，其中包含了 reader 和 writer
-  //   const connection = createWebWorkerConne(worker);
-  //   const transports: MessageTransports = {reader: connection.reader, writer: connection.writer};
-  //
-  //   // 确保 Monaco 也知道这个语言
-  //   monaco.languages.register({id: props.language});
-  //
-  //   // 创建语言客户端
-  //    languageClient = new MonacoLanguageClient({
-  //     name: `${props.language.toUpperCase()} Language Client`,
-  //     clientOptions: {
-  //       documentSelector: [props.language], // 告诉客户端这个服务只对 'lua' 文件生效
-  //       errorHandler: {
-  //         error: () => ({action: ErrorAction.Continue}),
-  //         closed: () => ({action: CloseAction.DoNotRestart}),
-  //       },
-  //       // !!! 关键：在这里可以传递初始化选项给语言服务器 !!!
-  //       // 例如，我们可以告诉 Lua LS 我们的 `ctx` 是一个已知的全局变量
-  //       initializationOptions: {
-  //         globals: ['ctx']
-  //       }
-  //     },
-  //     connectionProvider: {
-  //       get: () => Promise.resolve(transports),
-  //     },
-  //   });
-  //
-  //   // 启动客户端
-  //   languageClient.start().then(() =>
-  //   {
-  //     console.log(`语言服务器 [${props.language}] 已成功启动并连接。`);
-  //     // 当连接成功后，还需要设置 Monaco Editor 的语言模型，这通常在 connect 内部完成
-  //     // 或者在 MonacoLanguageClient 的构造函数中通过 options.diagnosticCollectionName 等方式关联
-  //     // 对于 sumneko/lua-language-server，它通常会自动与 Monaco 的模型关联
-  //     resolve();
-  //   }).catch(e => reject(new Error(`语言客户端启动失败: ${e}`)));
-  // });
 }
 
 /**
- * 加载并应用简单的配置 (我们之前的方案)
+ * 加载并应用简单的配置
  */
 async function applySimpleConfig(monaco: MonacoEditor)
 {

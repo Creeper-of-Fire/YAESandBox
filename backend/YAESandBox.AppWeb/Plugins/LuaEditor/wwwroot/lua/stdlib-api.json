@@ -1,0 +1,790 @@
+{
+  "global": {
+    "documentation": "Lua 全局函数，可直接调用。",
+    "methods": [
+      {
+        "name": "assert",
+        "signature": "assert(v: any, message?: string): any",
+        "documentation": "检查第一个参数 `v` 是否为真（非 `false` 且非 `nil`）。\n\n- 如果为假，则抛出一个错误。错误信息为 `message`，如果未提供，则默认为 \"assertion failed!\"。\n- 如果为真，则返回所有参数。\n\n**示例:**\n```lua\nassert(type(x) == \"number\", \"x 必须是一个数字\")\n```",
+        "insertText": "assert(${1:condition}, ${2:message})"
+      },
+      {
+        "name": "collectgarbage",
+        "signature": "collectgarbage(opt?: string, arg?: any): any",
+        "documentation": "垃圾回收器接口。根据 `opt` 选项执行不同的功能，如启动、停止、重启或获取内存使用情况。\n\n**示例:**\n```lua\n-- 打印当前使用的内存（KB）\nprint(collectgarbage(\"count\"))\n```",
+        "insertText": "collectgarbage(\"${1:opt}\")"
+      },
+      {
+        "name": "dofile",
+        "signature": "dofile(filename?: string): any",
+        "documentation": "打开指定文件名的 Lua 文件，并执行其中的代码块。若无文件名，则从标准输入执行。\n\n**示例:**\n```lua\n-- 执行 config.lua 文件\ndofile(\"config.lua\")\n```",
+        "insertText": "dofile(\"${1:filename}\")"
+      },
+      {
+        "name": "error",
+        "signature": "error(message: any, level?: integer): never",
+        "documentation": "终止当前函数的执行，并抛出一个错误。`message` 是错误信息。\n`level` 指明了报告错误的调用栈层级。\n\n**示例:**\n```lua\nerror(\"发生了严重错误\", 2)\n```",
+        "insertText": "error(${1:message}, ${2:level})"
+      },
+      {
+        "name": "getmetatable",
+        "signature": "getmetatable(object: any): table | nil",
+        "documentation": "返回给定 `object` 的元表（metatable）。如果对象没有元表，或其元表有 `__metatable` 字段，则返回 `nil`。\n\n**示例:**\n```lua\nlocal mt = getmetatable(\"a string\")\n```",
+        "insertText": "getmetatable(${1:object})"
+      },
+      {
+        "name": "ipairs",
+        "signature": "ipairs(t: table): (function, table, integer)",
+        "documentation": "返回一个迭代器函数，用于在 `for` 循环中遍历表 `t` 的整数键（1, 2, 3, ...）。\n\n**示例:**\n```lua\nlocal t = {\"a\", \"b\", \"c\"}\nfor index, value in ipairs(t) do\n  print(index, value)\nend\n```",
+        "insertText": "ipairs(${1:table})"
+      },
+      {
+        "name": "load",
+        "signature": "load(chunk: string | function, chunkname?: string, mode?: string, env?: table): function | (nil, string)",
+        "documentation": "加载一个代码块（`chunk`），但不执行它。返回编译后的函数，或在失败时返回 `nil` 和错误信息。\n\n**示例:**\n```lua\nlocal func, err = load(\"return 1 + 2\")\nif func then print(func()) end\n```",
+        "insertText": "load(${1:chunk})"
+      },
+      {
+        "name": "loadfile",
+        "signature": "loadfile(filename?: string, mode?: string, env?: table): function | (nil, string)",
+        "documentation": "从文件加载一个代码块，但不执行它。功能类似于 `load`，但数据源是文件。\n\n**示例:**\n```lua\nlocal func, err = loadfile(\"myscript.lua\")\n```",
+        "insertText": "loadfile(\"${1:filename}\")"
+      },
+      {
+        "name": "next",
+        "signature": "next(t: table, index?: any): (any, any) | nil",
+        "documentation": "允许程序遍历一个表的所有字段。给定一个键 `index`，返回表中的下一个键值对。初始调用时 `index` 为 `nil`。\n\n**示例:**\n```lua\nlocal t = {a = 1, b = 2}\nlocal k, v = next(t, nil)\nwhile k do\n  print(k, v)\n  k, v = next(t, k)\nend\n```",
+        "insertText": "next(${1:table}, ${2:index})"
+      },
+      {
+        "name": "pairs",
+        "signature": "pairs(t: table): (function, table, nil)",
+        "documentation": "返回一个迭代器函数（通常是 `next`），用于在 `for` 循环中遍历表 `t` 的所有键值对。\n\n**示例:**\n```lua\nlocal t = {name = \"Lua\", version = 5.4}\nfor key, value in pairs(t) do\n  print(key, value)\nend\n```",
+        "insertText": "pairs(${1:table})"
+      },
+      {
+        "name": "pcall",
+        "signature": "pcall(f: function, ...args): (boolean, ...results)",
+        "documentation": "以“保护模式”（Protected Call）调用函数 `f`。如果 `f` 执行无误，返回 `true` 和 `f` 的所有返回值。如果发生错误，返回 `false` 和错误信息。\n\n**示例:**\n```lua\nlocal ok, result = pcall(function() return 10 / 0 end)\nif not ok then print(\"错误:\", result) end\n```",
+        "insertText": "pcall(${1:func}, ${2:...args})"
+      },
+      {
+        "name": "print",
+        "signature": "print(...: any): void",
+        "documentation": "接收任意数量的参数，并将它们的值输出到标准输出。它会用制表符分隔每个参数，并在最后输出一个换行符。\n\n**示例:**\n```lua\nprint(\"Hello\", \"World\", 123)\n```",
+        "insertText": "print(${1:...args})"
+      },
+      {
+        "name": "rawequal",
+        "signature": "rawequal(v1: any, v2: any): boolean",
+        "documentation": "在不触发任何元方法（`__eq`）的情况下，比较 `v1` 和 `v2` 是否相等。\n\n**示例:**\n```lua\nif rawequal(a, b) then ... end\n```",
+        "insertText": "rawequal(${1:v1}, ${2:v2})"
+      },
+      {
+        "name": "rawget",
+        "signature": "rawget(t: table, index: any): any",
+        "documentation": "在不触发任何元方法（`__index`）的情况下，获取 `t[index]` 的值。\n\n**示例:**\n```lua\nlocal val = rawget(my_table, \"key\")\n```",
+        "insertText": "rawget(${1:table}, ${2:index})"
+      },
+      {
+        "name": "rawlen",
+        "signature": "rawlen(v: table | string): integer",
+        "documentation": "在不触发任何元方法（`__len`）的情况下，返回对象 `v` 的长度。\n\n**示例:**\n```lua\nlocal len = rawlen(\"hello\") -- 5\n```",
+        "insertText": "rawlen(${1:object})"
+      },
+      {
+        "name": "rawset",
+        "signature": "rawset(t: table, index: any, value: any): table",
+        "documentation": "在不触发任何元方法（`__newindex`）的情况下，将 `t[index]` 的值设置为 `value`。\n\n**示例:**\n```lua\nrawset(my_table, \"key\", 100)\n```",
+        "insertText": "rawset(${1:table}, ${2:index}, ${3:value})"
+      },
+      {
+        "name": "require",
+        "signature": "require(modname: string): any",
+        "documentation": "加载指定的模块。它会搜索加载器路径，确保模块只被加载一次，并返回模块返回的值。\n\n**示例:**\n```lua\nlocal my_module = require(\"my_module\")\n```",
+        "insertText": "require(\"${1:module_name}\")"
+      },
+      {
+        "name": "select",
+        "signature": "select(index: integer | '#', ...args): any",
+        "documentation": "如果 `index` 是数字，则返回从该索引开始的所有参数。\n如果 `index` 是字符串 `'#'`，则返回可变参数的总数。\n\n**示例:**\n```lua\nlocal count = select('#', 1, 2, 3) -- 3\nlocal second_val = select(2, 'a', 'b', 'c') -- 'b'\n```",
+        "insertText": "select(${1:index}, ${2:...args})"
+      },
+      {
+        "name": "setmetatable",
+        "signature": "setmetatable(t: table, mt: table | nil): table",
+        "documentation": "为一个表 `t` 设置元表 `mt`。返回表 `t`。\n\n**示例:**\n```lua\nlocal t = {}\nlocal mt = { __index = function() return 0 end }\nsetmetatable(t, mt)\n```",
+        "insertText": "setmetatable(${1:table}, ${2:metatable})"
+      },
+      {
+        "name": "tonumber",
+        "signature": "tonumber(e: any, base?: integer): number | nil",
+        "documentation": "尝试将参数 `e` 转换为数字。可以指定一个 `base` (2-36) 来解析字符串。\n如果无法转换，返回 `nil`。\n\n**示例:**\n```lua\nlocal num1 = tonumber(\"123\")\nlocal num2 = tonumber(\"FF\", 16) -- 255\n```",
+        "insertText": "tonumber(${1:value}, ${2:base})"
+      },
+      {
+        "name": "tostring",
+        "signature": "tostring(v: any): string",
+        "documentation": "将任意类型的值 `v` 转换为字符串。如果 `v` 的元表有 `__tostring` 字段，则会调用它来自定义转换逻辑。\n\n**示例:**\n```lua\nlocal s = tostring(123) -- \"123\"\n```",
+        "insertText": "tostring(${1:value})"
+      },
+      {
+        "name": "type",
+        "signature": "type(v: any): string",
+        "documentation": "返回一个描述值 `v` 类型的字符串，如 \"string\", \"number\", \"table\", \"function\" 等。\n\n**示例:**\n```lua\nprint(type({})) -- \"table\"\n```",
+        "insertText": "type(${1:value})"
+      },
+      {
+        "name": "warn",
+        "signature": "warn(...: string): void",
+        "documentation": "发出一个警告信息。警告信息会被发送到标准错误流，但不会中断程序执行。\n\n**示例:**\n```lua\nwarn(\"警告：这个函数即将被废弃。\")\n```",
+        "insertText": "warn(${1:message})"
+      },
+      {
+        "name": "xpcall",
+        "signature": "xpcall(f: function, msgh: function, ...args): (boolean, ...results)",
+        "documentation": "与 `pcall` 类似，但在发生错误时，会调用一个指定的错误处理函数 `msgh`。\n\n**示例:**\n```lua\nlocal function err_handler(err)\n  return \"错误: \" .. tostring(err)\nend\nlocal ok, result = xpcall(my_func, err_handler)\n```",
+        "insertText": "xpcall(${1:func}, ${2:err_handler}, ${3:...args})"
+      }
+    ]
+  },
+  "package": {
+    "documentation": "用于加载和管理模块的库。",
+    "methods": [
+      {
+        "name": "loadlib",
+        "signature": "package.loadlib(libname: string, funcname: string): function | (nil, string, string)",
+        "documentation": "动态链接 C 库 `libname`，并从中获取名为 `funcname` 的函数作为 Lua 函数返回。\n这是一个非常底层的函数。\n\n**示例:**\n```lua\nlocal f, err = package.loadlib(\"./mylib.so\", \"luaopen_mylib\")\n```",
+        "insertText": "loadlib(\"${1:libname}\", \"${2:funcname}\")"
+      },
+      {
+        "name": "searchpath",
+        "signature": "package.searchpath(name: string, path: string, sep?: string, rep?: string): string | (nil, string)",
+        "documentation": "在给定的 `path` 字符串中搜索 `name`。`path` 字符串由分号分隔的模板组成。\n\n**示例:**\n```lua\nlocal path_found = package.searchpath(\"mylib\", \"./?.lua;./lib/?.lua\")\n```",
+        "insertText": "searchpath(\"${1:name}\", \"${2:path}\")"
+      }
+    ]
+  },
+  "os": {
+    "documentation": "提供与操作系统交互的功能。",
+    "methods": [
+      {
+        "name": "clock",
+        "signature": "os.clock(): number",
+        "documentation": "返回程序使用的 CPU 时间的近似值（以秒为单位）。\n\n**示例:**\n```lua\nlocal start = os.clock()\n-- do some heavy work\nprint(string.format(\"耗时: %.2f秒\", os.clock() - start))\n```",
+        "insertText": "clock()"
+      },
+      {
+        "name": "date",
+        "signature": "os.date(format?: string, time?: integer): string | table",
+        "documentation": "返回格式化的日期和时间字符串，或包含日期和时间信息的表。\n\n- `format` 以 `*t` 开头返回表，否则返回格式化字符串。\n- `time` 是可选的时间戳，默认为当前时间。\n\n**示例:**\n```lua\nprint(os.date(\"%Y-%m-%d %H:%M:%S\")) -- 2023-10-27 10:30:00\nlocal t = os.date(\"*t\")\nprint(t.year)\n```",
+        "insertText": "date(${1:format}, ${2:time})"
+      },
+      {
+        "name": "difftime",
+        "signature": "os.difftime(t2: integer, t1: integer): number",
+        "documentation": "返回时间戳 `t2` 和 `t1` 之间的秒数差。\n\n**示例:**\n```lua\nlocal t1 = os.time()\n-- wait\nlocal t2 = os.time()\nprint(os.difftime(t2, t1))\n```",
+        "insertText": "difftime(${1:t2}, ${2:t1})"
+      },
+      {
+        "name": "execute",
+        "signature": "os.execute(command?: string): (boolean, string, integer)",
+        "documentation": "执行一个系统命令。类似于 C 的 `system` 函数。\n\n**示例:**\n```lua\nlocal ok, reason, code = os.execute(\"ls -l\")\n```",
+        "insertText": "execute(\"${1:command}\")"
+      },
+      {
+        "name": "exit",
+        "signature": "os.exit(code?: boolean | integer, close?: boolean): never",
+        "documentation": "终止宿主程序的执行。`code` 是返回给操作系统的退出码。\n\n**示例:**\n```lua\nos.exit(1) -- 以错误码 1 退出\n```",
+        "insertText": "exit(${1:code})"
+      },
+      {
+        "name": "getenv",
+        "signature": "os.getenv(varname: string): string | nil",
+        "documentation": "获取一个环境变量的值。如果变量未定义，则返回 `nil`。\n\n**示例:**\n```lua\nlocal path = os.getenv(\"PATH\")\n```",
+        "insertText": "getenv(\"${1:varname}\")"
+      },
+      {
+        "name": "remove",
+        "signature": "os.remove(filename: string): (boolean, string, integer)",
+        "documentation": "删除指定的文件（或空目录）。\n\n**示例:**\n```lua\nlocal ok, err = os.remove(\"temp.txt\")\n```",
+        "insertText": "remove(\"${1:filename}\")"
+      },
+      {
+        "name": "rename",
+        "signature": "os.rename(oldname: string, newname: string): (boolean, string, integer)",
+        "documentation": "重命名文件或目录。\n\n**示例:**\n```lua\nos.rename(\"old.txt\", \"new.txt\")\n```",
+        "insertText": "rename(\"${1:oldname}\", \"${2:newname}\")"
+      },
+      {
+        "name": "setlocale",
+        "signature": "os.setlocale(locale: string, category?: string): string | nil",
+        "documentation": "设置或查询程序的区域设置（locale）。\n\n**示例:**\n```lua\n-- 设置所有类别为系统的原生 locale\nos.setlocale(\"\")\n```",
+        "insertText": "setlocale(\"${1:locale}\", \"${2:category}\")"
+      },
+      {
+        "name": "time",
+        "signature": "os.time(t?: table): integer",
+        "documentation": "返回一个时间戳（通常是从某个纪元开始的秒数）。\n- 不带参数调用时，返回当前时间戳。\n- 带一个表参数时，将表中的日期时间信息转换为时间戳。\n\n**示例:**\n```lua\nlocal current_ts = os.time()\nlocal specific_ts = os.time({year=1970, month=1, day=1, hour=8})\n```",
+        "insertText": "time(${1:table})"
+      },
+      {
+        "name": "tmpname",
+        "signature": "os.tmpname(): string",
+        "documentation": "返回一个可用于临时文件的字符串路径。注意：这可能存在安全风险。\n\n**示例:**\n```lua\nlocal temp_filename = os.tmpname()\n```",
+        "insertText": "tmpname()"
+      }
+    ]
+  },
+  "table": {
+    "documentation": "用于操作表的库。",
+    "methods": [
+      {
+        "name": "concat",
+        "signature": "table.concat(list: table, sep?: string, i?: integer, j?: integer): string",
+        "documentation": "将 `list`（一个序列）中的所有字符串元素连接起来，返回一个单一的字符串。\n\n- `sep` 是可选的分隔符。\n- `i` 和 `j` 是可选的起止索引。\n\n**示例:**\n```lua\nlocal t = {\"a\", \"b\", \"c\"}\nprint(table.concat(t, \",\")) -- \"a,b,c\"\n```",
+        "insertText": "concat(${1:list}, ${2:sep})"
+      },
+      {
+        "name": "insert",
+        "signature": "table.insert(list: table, [pos: integer,] value: any): void",
+        "documentation": "向 `list`（一个序列）中插入元素 `value`。\n\n- 如果指定了 `pos`，则在 `pos` 位置插入 `value`，并将之后的元素后移。\n- 如果未指定 `pos`，则在列表末尾插入 `value`。\n\n**示例:**\n```lua\nlocal t = {\"a\", \"b\", \"c\"}\ntable.insert(t, \"d\") -- t is now {\"a\", \"b\", \"c\", \"d\"}\ntable.insert(t, 1, \"z\") -- t is now {\"z\", \"a\", \"b\", \"c\", \"d\"}\n```",
+        "insertText": "insert(${1:list}, ${2:pos_or_value}, ${3:value_if_pos})"
+      },
+      {
+        "name": "move",
+        "signature": "table.move(a1: table, f: integer, e: integer, t: integer, a2?: table): table",
+        "documentation": "将表 `a1` 中从索引 `f` 到 `e` 的元素移动到表 `a2`（默认为 `a1`）的索引 `t` 开始的位置。\n\n**示例:**\n```lua\nlocal t1 = {1, 2, 3, 4}\nlocal t2 = {}\ntable.move(t1, 1, 2, 3, t2) -- t2 is now {nil, nil, 1, 2}\n```",
+        "insertText": "move(${1:source}, ${2:f}, ${3:e}, ${4:t}, ${5:target})"
+      },
+      {
+        "name": "pack",
+        "signature": "table.pack(...: any): table",
+        "documentation": "将所有参数打包到一个新表中。新表还会有一个字段 `n`，表示参数的总数。\n\n**示例:**\n```lua\nlocal t = table.pack(1, 'a', nil, 'b')\n-- t is {1, \"a\", nil, \"b\", n = 4}\n```",
+        "insertText": "pack(${1:...args})"
+      },
+      {
+        "name": "remove",
+        "signature": "table.remove(list: table, pos?: integer): any",
+        "documentation": "从 `list`（一个序列）中移除一个元素，并返回被移除的元素。\n\n- 如果指定了 `pos`，则移除该位置的元素。\n- 如果未指定 `pos`，则移除最后一个元素。\n\n**示例:**\n```lua\nlocal t = {\"a\", \"b\", \"c\"}\nlocal removed = table.remove(t) -- removed is \"c\", t is {\"a\", \"b\"}\n```",
+        "insertText": "remove(${1:list}, ${2:pos})"
+      },
+      {
+        "name": "sort",
+        "signature": "table.sort(list: table, comp?: function): void",
+        "documentation": "对 `list`（一个序列）进行原地排序。\n- `comp` 是一个可选的比较函数，它接收两个参数，当第一个参数应排在第二个之前时返回 `true`。\n\n**示例:**\n```lua\nlocal t = {3, 1, 2}\ntable.sort(t) -- t is now {1, 2, 3}\ntable.sort(t, function(a, b) return a > b end) -- t is now {3, 2, 1}\n```",
+        "insertText": "sort(${1:list}, ${2:compare_func})"
+      },
+      {
+        "name": "unpack",
+        "signature": "table.unpack(list: table, i?: integer, j?: integer): ...any",
+        "documentation": "返回表 `list` 中的元素。通常用于将表中的元素作为函数的参数传递。\n\n**示例:**\n```lua\nlocal t = {\"hello\", \"world\"}\nprint(table.unpack(t)) -- prints \"hello\"  \"world\"\n```",
+        "insertText": "unpack(${1:list}, ${2:i}, ${3:j})"
+      }
+    ]
+  },
+  "coroutine": {
+    "documentation": "用于协程操作的库。",
+    "methods": [
+      {
+        "name": "close",
+        "signature": "coroutine.close(co: thread): (boolean, any)",
+        "documentation": "关闭一个协程。关闭一个已死的或已关闭的协程会返回 `true`。否则，返回 `false` 和一个错误信息。\n\n**示例:**\n```lua\ncoroutine.close(my_coroutine)\n```",
+        "insertText": "close(${1:co})"
+      },
+      {
+        "name": "create",
+        "signature": "coroutine.create(f: function): thread",
+        "documentation": "创建一个新的协程，其主体函数为 `f`。返回一个 `thread` 类型的对象。\n\n**示例:**\n```lua\nlocal co = coroutine.create(function()\n  print(\"in coroutine\")\nend)\n```",
+        "insertText": "create(${1:func})"
+      },
+      {
+        "name": "isyieldable",
+        "signature": "coroutine.isyieldable(): boolean",
+        "documentation": "如果当前运行的协程可以被挂起（yield），则返回 `true`。\n\n**示例:**\n```lua\nif coroutine.isyieldable() then ... end\n```",
+        "insertText": "isyieldable()"
+      },
+      {
+        "name": "resume",
+        "signature": "coroutine.resume(co: thread, ...args): (boolean, ...results)",
+        "documentation": "启动或继续执行协程 `co`。返回 `true` 和协程的返回值（或 `yield` 的参数），或在出错时返回 `false` 和错误信息。\n\n**示例:**\n```lua\ncoroutine.resume(co)\n```",
+        "insertText": "resume(${1:co}, ${2:...args})"
+      },
+      {
+        "name": "running",
+        "signature": "coroutine.running(): (thread, boolean)",
+        "documentation": "返回当前正在运行的协程和一个布尔值（如果当前是主线程，则为 `true`）。\n\n**示例:**\n```lua\nlocal current_co, is_main = coroutine.running()\n```",
+        "insertText": "running()"
+      },
+      {
+        "name": "status",
+        "signature": "coroutine.status(co: thread): string",
+        "documentation": "返回协程 `co` 的状态，可能的值为 \"running\", \"suspended\", \"normal\", \"dead\"。\n\n**示例:**\n```lua\nprint(coroutine.status(co)) -- \"suspended\"\n```",
+        "insertText": "status(${1:co})"
+      },
+      {
+        "name": "wrap",
+        "signature": "coroutine.wrap(f: function): function",
+        "documentation": "创建一个新的协程，并返回一个函数。每次调用该函数时，都会恢复协程的执行。类似于 `coroutine.resume`，但会直接抛出错误。\n\n**示例:**\n```lua\nlocal f = coroutine.wrap(function()\n  coroutine.yield(1)\n  coroutine.yield(2)\nend)\nprint(f()) -- 1\nprint(f()) -- 2\n```",
+        "insertText": "wrap(${1:func})"
+      },
+      {
+        "name": "yield",
+        "signature": "coroutine.yield(...: any): ...any",
+        "documentation": "挂起当前协程的执行。传递给 `yield` 的参数会作为 `coroutine.resume` 的额外返回值。\n\n**示例:**\n```lua\ncoroutine.yield(\"paused\")\n```",
+        "insertText": "yield(${1:...results})"
+      }
+    ]
+  },
+  "io": {
+    "documentation": "提供 I/O 操作的功能。在沙箱环境中可能受限。",
+    "methods": [
+      {
+        "name": "close",
+        "signature": "io.close(file?: filehandle): (boolean, string, integer)",
+        "documentation": "关闭一个文件句柄。如果未提供参数，则关闭默认输出文件。\n\n**示例:**\n```lua\nlocal f = io.open(\"test.txt\", \"w\")\nio.close(f)\n```",
+        "insertText": "close(${1:filehandle})"
+      },
+      {
+        "name": "flush",
+        "signature": "io.flush(): (boolean, string)",
+        "documentation": "将任何缓冲的写入数据保存到默认输出文件。\n\n**示例:**\n```lua\nio.write(\"hello\")\nio.flush()\n```",
+        "insertText": "flush()"
+      },
+      {
+        "name": "input",
+        "signature": "io.input(file?: filehandle | string): filehandle",
+        "documentation": "设置或获取默认输入文件。可以传入文件名或已打开的文件句柄。\n\n**示例:**\n```lua\nio.input(\"data.txt\")\nlocal line = io.read()\n```",
+        "insertText": "input(${1:file})"
+      },
+      {
+        "name": "lines",
+        "signature": "io.lines(filename?: string, ...formats): function",
+        "documentation": "返回一个迭代器函数，用于逐行读取文件。如果未提供文件名，则从默认输入文件读取。\n\n**示例:**\n```lua\nfor line in io.lines(\"my.txt\") do\n  print(line)\nend\n```",
+        "insertText": "lines(\"${1:filename}\")"
+      },
+      {
+        "name": "open",
+        "signature": "io.open(filename: string, mode?: string): filehandle | (nil, string, integer)",
+        "documentation": "打开一个文件，返回一个新的文件句柄。`mode` 可以是 \"r\", \"w\", \"a\", \"r+\", \"w+\", \"a+\" 等。\n\n**示例:**\n```lua\nlocal f, err = io.open(\"config.json\", \"r\")\nif f then\n  local content = f:read(\"*a\")\n  f:close()\nend\n```",
+        "insertText": "open(\"${1:filename}\", \"${2:mode}\")"
+      },
+      {
+        "name": "output",
+        "signature": "io.output(file?: filehandle | string): filehandle",
+        "documentation": "设置或获取默认输出文件。\n\n**示例:**\n```lua\nio.output(\"log.txt\")\nio.write(\"log message\")\n```",
+        "insertText": "output(${1:file})"
+      },
+      {
+        "name": "popen",
+        "signature": "io.popen(prog: string, mode?: string): filehandle",
+        "documentation": "启动一个新进程 `prog` 并返回一个文件句柄，你可以用它来从该进程读取（`mode`=\"r\"）或向其写入（`mode`=\"w\"）。\n\n**示例:**\n```lua\nlocal f = io.popen(\"ls -l\")\nlocal output = f:read(\"*a\")\nf:close()\n```",
+        "insertText": "popen(\"${1:command}\", \"${2:mode}\")"
+      },
+      {
+        "name": "read",
+        "signature": "io.read(...formats): ...string",
+        "documentation": "从默认输入文件读取。`formats` 指定读取方式，如 \"*a\"（全部）、\"*n\"（数字）、\"*l\"（下一行）等。\n\n**示例:**\n```lua\nlocal line = io.read(\"*l\")\nlocal num = io.read(\"*n\")\n```",
+        "insertText": "read(${1:format})"
+      },
+      {
+        "name": "tmpfile",
+        "signature": "io.tmpfile(): filehandle",
+        "documentation": "返回一个临时文件的句柄，该文件以读写模式打开，并在程序结束时自动删除。\n\n**示例:**\n```lua\nlocal f = io.tmpfile()\nf:write(\"temp data\")\n```",
+        "insertText": "tmpfile()"
+      },
+      {
+        "name": "type",
+        "signature": "io.type(obj: any): string | nil",
+        "documentation": "检查 `obj` 是否为一个可用的文件句柄。如果是，返回 \"file\" 或 \"closed file\"，否则返回 `nil`。\n\n**示例:**\n```lua\nlocal f = io.open(\"a.txt\")\nprint(io.type(f)) -- \"file\"\n```",
+        "insertText": "type(${1:object})"
+      },
+      {
+        "name": "write",
+        "signature": "io.write(...: any): (filehandle, string)",
+        "documentation": "向默认输出文件写入任意数量的字符串或数字参数。\n\n**示例:**\n```lua\nio.write(\"Log: \", msg, \"\\n\")\n```",
+        "insertText": "write(${1:...args})"
+      }
+    ]
+  },
+  "utf8": {
+    "documentation": "用于处理 UTF-8 编码字符串的库。",
+    "methods": [
+      {
+        "name": "char",
+        "signature": "utf8.char(...: integer): string",
+        "documentation": "接收零个或多个整数，将它们转换为对应的 UTF-8 字符，并返回连接成的字符串。\n\n**示例:**\n```lua\nprint(utf8.char(22, 189, 160)) -- \"Lua\"\n```",
+        "insertText": "char(${1:...codepoints})"
+      },
+      {
+        "name": "codepoint",
+        "signature": "utf8.codepoint(s: string, i?: integer, j?: integer): ...integer",
+        "documentation": "返回字符串 `s` 中从位置 `i`到 `j`的所有字符的 code point。\n\n**示例:**\n```lua\nlocal cp1, cp2 = utf8.codepoint(\"你好\", 1, 2)\n```",
+        "insertText": "codepoint(${1:s}, ${2:i}, ${3:j})"
+      },
+      {
+        "name": "codes",
+        "signature": "utf8.codes(s: string): function",
+        "documentation": "返回一个迭代器函数，用于遍历字符串 `s` 中所有字符的 code point。\n\n**示例:**\n```lua\nfor p, c in utf8.codes(\"你好\") do\n  print(p, c)\nend\n```",
+        "insertText": "codes(${1:s})"
+      },
+      {
+        "name": "len",
+        "signature": "utf8.len(s: string, i?: integer, j?: integer): integer | nil",
+        "documentation": "返回字符串 `s` 中从字节位置 `i` 到 `j` 的 UTF-8 字符数量。如果遇到无效字节序列，返回 `nil`。\n\n**示例:**\n```lua\nprint(utf8.len(\"你好\")) -- 2\n```",
+        "insertText": "len(${1:s}, ${2:i}, ${3:j})"
+      },
+      {
+        "name": "offset",
+        "signature": "utf8.offset(s: string, n: integer, i?: integer): integer",
+        "documentation": "返回字符串中第 `n` 个字符的字节偏移量（位置）。\n\n**示例:**\n```lua\n-- 获取第2个字符开始的字节位置\nlocal byte_pos = utf8.offset(\"你好世界\", 2)\n```",
+        "insertText": "offset(${1:s}, ${2:n}, ${3:i})"
+      }
+    ]
+  },
+  "string": {
+    "documentation": "用于字符串操作的库。",
+    "methods": [
+      {
+        "name": "byte",
+        "signature": "string.byte(s: string, i?: integer, j?: integer): ...integer",
+        "documentation": "返回字符 `s[i]`, `s[i+1]`, ..., `s[j]` 的内部数字编码（字节值）。\n\n**示例:**\n```lua\nlocal b1, b2 = string.byte(\"abc\", 1, 2) -- 97, 98\n```",
+        "insertText": "byte(${1:s}, ${2:i}, ${3:j})"
+      },
+      {
+        "name": "char",
+        "signature": "string.char(...: integer): string",
+        "documentation": "接收零个或多个整数，并将它们转换为字符，然后连接成一个字符串。\n\n**示例:**\n```lua\nprint(string.char(97, 98, 99)) -- \"abc\"\n```",
+        "insertText": "char(${1:...bytes})"
+      },
+      {
+        "name": "dump",
+        "signature": "string.dump(function: function, strip?: boolean): string",
+        "documentation": "将一个函数序列化为二进制代码块的字符串。`strip` 为真时会移除调试信息。\n\n**示例:**\n```lua\nlocal f = function() return 1 end\nlocal dumped = string.dump(f)\n```",
+        "insertText": "dump(${1:func}, ${2:strip})"
+      },
+      {
+        "name": "find",
+        "signature": "string.find(s: string, pattern: string, init?: integer, plain?: boolean): (integer, integer, ...captures)",
+        "documentation": "在字符串 `s` 中查找 `pattern` 的第一次匹配。如果找到，返回匹配的起始和结束索引，否则返回 `nil`。\n\n**示例:**\n```lua\nlocal i, j = string.find(\"hello world\", \"world\")\n```",
+        "insertText": "find(${1:s}, \"${2:pattern}\", ${3:init})"
+      },
+      {
+        "name": "format",
+        "signature": "string.format(formatstring: string, ...: any): string",
+        "documentation": "根据格式化字符串 `formatstring`，返回其余参数的格式化版本。\n\n**示例:**\n```lua\nlocal s = string.format(\"Name: %s, Age: %d\", \"John\", 30)\n```",
+        "insertText": "format(\"${1:format}\", ${2:...args})"
+      },
+      {
+        "name": "gmatch",
+        "signature": "string.gmatch(s: string, pattern: string): function",
+        "documentation": "返回一个迭代器函数，用于遍历字符串 `s` 中所有 `pattern` 的匹配项。\n\n**示例:**\n```lua\nfor word in string.gmatch(\"hello world from lua\", \"%a+\") do\n  print(word)\nend\n```",
+        "insertText": "gmatch(${1:s}, \"${2:pattern}\")"
+      },
+      {
+        "name": "gsub",
+        "signature": "string.gsub(s: string, pattern: string, repl: string | table | function, n?: integer): (string, integer)",
+        "documentation": "返回字符串 `s` 的一个副本，其中所有（或前 `n` 个）`pattern` 的匹配项都被 `repl` 替换。\n\n- `repl` 可以是字符串、table 或函数。\n- 返回替换后的字符串和总共发生的替换次数。\n\n**示例:**\n```lua\nlocal new_s, count = string.gsub(\"hello world\", \"l\", \"L\")\n```",
+        "insertText": "gsub(${1:s}, \"${2:pattern}\", ${3:replacement})"
+      },
+      {
+        "name": "len",
+        "signature": "string.len(s: string): integer",
+        "documentation": "返回字符串的长度（字节数）。等价于 `#s`。\n\n**示例:**\n```lua\nprint(string.len(\"hello\")) -- 5\n```",
+        "insertText": "len(${1:s})"
+      },
+      {
+        "name": "lower",
+        "signature": "string.lower(s: string): string",
+        "documentation": "返回字符串 `s` 的一个副本，其中所有大写字母都转换为小写。\n\n**示例:**\n```lua\nprint(string.lower(\"Hello World\")) -- \"hello world\"\n```",
+        "insertText": "lower(${1:s})"
+      },
+      {
+        "name": "match",
+        "signature": "string.match(s: string, pattern: string, init?: integer): ...string",
+        "documentation": "在字符串 `s` 中查找 `pattern` 的第一次匹配。如果找到，返回模式中的捕获（captures），否则返回 `nil`。\n\n**示例:**\n```lua\nlocal name, domain = string.match(\"user@example.com\", \"(%S+)@(%S+)\")\n```",
+        "insertText": "match(${1:s}, \"${2:pattern}\")"
+      },
+      {
+        "name": "pack",
+        "signature": "string.pack(fmt: string, ...: any): string",
+        "documentation": "将给定的值打包成一个二进制字符串，格式由 `fmt` 控制。\n\n**示例:**\n```lua\nlocal binary_data = string.pack(\">I2\", 1234)\n```",
+        "insertText": "pack(\"${1:format}\", ${2:...values})"
+      },
+      {
+        "name": "packsize",
+        "signature": "string.packsize(fmt: string): integer",
+        "documentation": "返回给定格式字符串 `fmt` 打包后产生的二进制字符串的长度。\n\n**示例:**\n```lua\nlocal size = string.packsize(\">I2\")\n```",
+        "insertText": "packsize(\"${1:format}\")"
+      },
+      {
+        "name": "rep",
+        "signature": "string.rep(s: string, n: integer, sep?: string): string",
+        "documentation": "返回字符串 `s` 重复 `n` 次并用 `sep` 分隔的字符串。\n\n**示例:**\n```lua\nprint(string.rep(\"a\", 5, \",\")) -- \"a,a,a,a,a\"\n```",
+        "insertText": "rep(${1:s}, ${2:n}, \"${3:sep}\")"
+      },
+      {
+        "name": "reverse",
+        "signature": "string.reverse(s: string): string",
+        "documentation": "返回字符串 `s` 的反转版本。\n\n**示例:**\n```lua\nprint(string.reverse(\"hello\")) -- \"olleh\"\n```",
+        "insertText": "reverse(${1:s})"
+      },
+      {
+        "name": "sub",
+        "signature": "string.sub(s: string, i: integer, j?: integer): string",
+        "documentation": "返回字符串 `s` 从索引 `i`到 `j` 的子串。\n\n- `i` 和 `j` 可以是负数。\n- 如果 `j` 未指定，则默认为 -1 (到字符串末尾)。\n\n**示例:**\n```lua\nlocal s = \"hello world\"\nprint(string.sub(s, 7))      --> world\nprint(string.sub(s, 1, 5))    --> hello\nprint(string.sub(s, -5))     --> world\n```",
+        "insertText": "sub(${1:s}, ${2:i}, ${3:j})"
+      },
+      {
+        "name": "unpack",
+        "signature": "string.unpack(fmt: string, s: string, pos?: integer): (...any, integer)",
+        "documentation": "从二进制字符串 `s` 中解包数据，格式由 `fmt` 控制。返回解包后的值和下一个要读取的位置。\n\n**示例:**\n```lua\nlocal data = string.pack(\">I2\", 1234)\nlocal num = string.unpack(\">I2\", data)\n```",
+        "insertText": "unpack(\"${1:format}\", ${2:s}, ${3:pos})"
+      },
+      {
+        "name": "upper",
+        "signature": "string.upper(s: string): string",
+        "documentation": "返回字符串 `s` 的一个副本，其中所有小写字母都转换为大写。\n\n**示例:**\n```lua\nprint(string.upper(\"Hello World\")) -- \"HELLO WORLD\"\n```",
+        "insertText": "upper(${1:s})"
+      }
+    ]
+  },
+  "math": {
+    "documentation": "数学函数库。",
+    "methods": [
+      {
+        "name": "abs",
+        "signature": "math.abs(x: number): number",
+        "documentation": "返回 `x` 的绝对值。\n\n**示例:**\n```lua\nprint(math.abs(-10)) -- 10\n```",
+        "insertText": "abs(${1:x})"
+      },
+      {
+        "name": "acos",
+        "signature": "math.acos(x: number): number",
+        "documentation": "返回 `x` 的反余弦值（弧度）。\n\n**示例:**\n```lua\nprint(math.acos(0)) -- 1.57079...\n```",
+        "insertText": "acos(${1:x})"
+      },
+      {
+        "name": "asin",
+        "signature": "math.asin(x: number): number",
+        "documentation": "返回 `x` 的反正弦值（弧度）。\n\n**示例:**\n```lua\nprint(math.asin(1)) -- 1.57079...\n```",
+        "insertText": "asin(${1:x})"
+      },
+      {
+        "name": "atan",
+        "signature": "math.atan(y: number, x?: number): number",
+        "documentation": "返回 `y/x` 的反正切值（弧度）。\n\n- `math.atan(y)`: 返回 `y` 的反正切。\n- `math.atan(y, x)`: 使用两个参数的符号来找到象限。\n\n**示例:**\n```lua\nprint(math.atan(1, 1)) -- 0.78539...\n```",
+        "insertText": "atan(${1:y}, ${2:x})"
+      },
+      {
+        "name": "ceil",
+        "signature": "math.ceil(x: number): number",
+        "documentation": "返回不小于 `x` 的最小整数值（向上取整）。\n\n**示例:**\n```lua\nprint(math.ceil(3.14)) -- 4\n```",
+        "insertText": "ceil(${1:x})"
+      },
+      {
+        "name": "cos",
+        "signature": "math.cos(x: number): number",
+        "documentation": "返回 `x`（弧度）的余弦值。\n\n**示例:**\n```lua\nprint(math.cos(math.pi)) -- -1\n```",
+        "insertText": "cos(${1:x})"
+      },
+      {
+        "name": "deg",
+        "signature": "math.deg(x: number): number",
+        "documentation": "将 `x` 从弧度转换为角度。\n\n**示例:**\n```lua\nprint(math.deg(math.pi)) -- 180\n```",
+        "insertText": "deg(${1:x})"
+      },
+      {
+        "name": "exp",
+        "signature": "math.exp(x: number): number",
+        "documentation": "返回 e 的 `x` 次幂。\n\n**示例:**\n```lua\nprint(math.exp(1)) -- 2.71828...\n```",
+        "insertText": "exp(${1:x})"
+      },
+      {
+        "name": "floor",
+        "signature": "math.floor(x: number): number",
+        "documentation": "返回不大于 `x` 的最大整数值（向下取整）。\n\n**示例:**\n```lua\nprint(math.floor(3.14)) -- 3\n```",
+        "insertText": "floor(${1:x})"
+      },
+      {
+        "name": "fmod",
+        "signature": "math.fmod(x: number, y: number): number",
+        "documentation": "返回 `x` 除以 `y` 的余数，该余数的商被截断为零。\n\n**示例:**\n```lua\nprint(math.fmod(5, 2)) -- 1\n```",
+        "insertText": "fmod(${1:x}, ${2:y})"
+      },
+      {
+        "name": "log",
+        "signature": "math.log(x: number, base?: number): number",
+        "documentation": "返回 `x` 的对数。`base` 默认为 e（自然对数）。\n\n**示例:**\n```lua\nprint(math.log(100, 10)) -- 2\n```",
+        "insertText": "log(${1:x}, ${2:base})"
+      },
+      {
+        "name": "max",
+        "signature": "math.max(...: number): number",
+        "documentation": "返回其参数中的最大值。\n\n**示例:**\n```lua\nprint(math.max(1, 10, -5, 100)) -- 100\n```",
+        "insertText": "max(${1:...numbers})"
+      },
+      {
+        "name": "min",
+        "signature": "math.min(...: number): number",
+        "documentation": "返回其参数中的最小值。\n\n**示例:**\n```lua\nprint(math.min(1, 10, -5, 100)) -- -5\n```",
+        "insertText": "min(${1:...numbers})"
+      },
+      {
+        "name": "modf",
+        "signature": "math.modf(x: number): (number, number)",
+        "documentation": "返回 `x` 的整数部分和小数部分。\n\n**示例:**\n```lua\nlocal int, frac = math.modf(3.14)\n-- int is 3, frac is 0.14\n```",
+        "insertText": "modf(${1:x})"
+      },
+      {
+        "name": "rad",
+        "signature": "math.rad(x: number): number",
+        "documentation": "将 `x` 从角度转换为弧度。\n\n**示例:**\n```lua\nprint(math.rad(180)) -- 3.14159...\n```",
+        "insertText": "rad(${1:x})"
+      },
+      {
+        "name": "random",
+        "signature": "math.random(m?: integer, n?: integer): number",
+        "documentation": "生成伪随机数。\n- `random()`: [0,1) 内的浮点数。\n- `random(n)`: [1,n] 内的整数。\n- `random(m,n)`: [m,n] 内的整数。\n\n**示例:**\n```lua\nprint(math.random(1, 100))\n```",
+        "insertText": "random(${1:m}, ${2:n})"
+      },
+      {
+        "name": "randomseed",
+        "signature": "math.randomseed(x: number): void",
+        "documentation": "为伪随机数生成器设置种子 `x`。\n\n**示例:**\n```lua\nmath.randomseed(os.time())\n```",
+        "insertText": "randomseed(${1:seed})"
+      },
+      {
+        "name": "sqrt",
+        "signature": "math.sqrt(x: number): number",
+        "documentation": "返回 `x` 的平方根。\n\n**示例:**\n```lua\nprint(math.sqrt(16)) -- 4\n```",
+        "insertText": "sqrt(${1:x})"
+      },
+      {
+        "name": "tointeger",
+        "signature": "math.tointeger(x: any): integer | nil",
+        "documentation": "如果 `x` 的值可以转换为整数，则返回该整数；否则返回 `nil`。\n\n**示例:**\n```lua\nlocal i = math.tointeger(123.0)\n```",
+        "insertText": "tointeger(${1:x})"
+      },
+      {
+        "name": "type",
+        "signature": "math.type(x: any): 'integer' | 'float' | nil",
+        "documentation": "如果 `x` 是整数，返回 \"integer\"；如果是浮点数，返回 \"float\"；否则返回 `nil`。\n\n**示例:**\n```lua\nprint(math.type(10)) -- \"integer\"\nprint(math.type(10.5)) -- \"float\"\n```",
+        "insertText": "type(${1:x})"
+      },
+      {
+        "name": "ult",
+        "signature": "math.ult(m: integer, n: integer): boolean",
+        "documentation": "如果整数 `m` 小于整数 `n`（无符号比较），则返回 `true`。\n\n**示例:**\n```lua\nprint(math.ult(-1, 0)) -- true,因为 -1 的无符号表示是一个非常大的数\n```",
+        "insertText": "ult(${1:m}, ${2:n})"
+      }
+    ]
+  },
+  "debug": {
+    "documentation": "调试库，提供调试接口。生产环境慎用。",
+    "methods": [
+      {
+        "name": "debug",
+        "signature": "debug.debug(): void",
+        "documentation": "进入一个交互式调试模式，用户可以输入命令来检查程序状态。\n\n**示例:**\n```lua\n-- 当执行到这里时，会进入 REPL 模式\ndebug.debug()\n```",
+        "insertText": "debug()"
+      },
+      {
+        "name": "gethook",
+        "signature": "debug.gethook(thread?: thread): (function, string, integer)",
+        "documentation": "返回当前线程的钩子函数、钩子掩码和钩子计数。\n\n**示例:**\n```lua\nlocal hook, mask, count = debug.gethook()\n```",
+        "insertText": "gethook(${1:thread})"
+      },
+      {
+        "name": "getinfo",
+        "signature": "debug.getinfo(f: function | integer, what?: string): table",
+        "documentation": "返回一个包含函数信息的表。`f` 可以是函数或调用栈层级。\n\n**示例:**\n```lua\nlocal info = debug.getinfo(1, \"Sln\")\nprint(info.source, info.currentline)\n```",
+        "insertText": "getinfo(${1:func_or_level}, \"${2:what}\")"
+      },
+      {
+        "name": "getlocal",
+        "signature": "debug.getlocal(thread: thread | integer, level_or_f: integer | function, local: integer): (string, any)",
+        "documentation": "返回在给定调用栈层级或函数中的第 `local` 个局部变量的名称和值。\n\n**示例:**\n```lua\nlocal name, value = debug.getlocal(1, 1)\n```",
+        "insertText": "getlocal(${1:level}, ${2:local_index})"
+      },
+      {
+        "name": "getmetatable",
+        "signature": "debug.getmetatable(value: any): table",
+        "documentation": "返回给定值的元表，即使该元表设置了 `__metatable` 字段。\n\n**示例:**\n```lua\nlocal mt = debug.getmetatable(my_obj)\n```",
+        "insertText": "getmetatable(${1:value})"
+      },
+      {
+        "name": "getregistry",
+        "signature": "debug.getregistry(): table",
+        "documentation": "返回 C 注册表，这是一个预定义的表，可供所有 C 代码共享状态。\n\n**示例:**\n```lua\nlocal registry = debug.getregistry()\n```",
+        "insertText": "getregistry()"
+      },
+      {
+        "name": "getupvalue",
+        "signature": "debug.getupvalue(f: function, up: integer): (string, any)",
+        "documentation": "返回函数 `f` 的第 `up` 个 upvalue 的名称和值。\n\n**示例:**\n```lua\nlocal name, value = debug.getupvalue(my_closure, 1)\n```",
+        "insertText": "getupvalue(${1:func}, ${2:up_index})"
+      },
+      {
+        "name": "getuservalue",
+        "signature": "debug.getuservalue(u: userdata): any",
+        "documentation": "返回与 `u`（必须是 full userdata）关联的 Lua 值。\n\n**示例:**\n```lua\nlocal val = debug.getuservalue(my_userdata)\n```",
+        "insertText": "getuservalue(${1:userdata})"
+      },
+      {
+        "name": "setcstacklimit",
+        "signature": "debug.setcstacklimit(limit: integer): integer",
+        "documentation": "将新的 C 栈限制设置为 `limit`。\n\n**示例:**\n```lua\ndebug.setcstacklimit(2000)\n```",
+        "insertText": "setcstacklimit(${1:limit})"
+      },
+      {
+        "name": "sethook",
+        "signature": "debug.sethook(thread?: thread, hook: function, mask: string, count?: integer): void",
+        "documentation": "设置一个调试钩子函数。\n\n**示例:**\n```lua\nlocal function my_hook(event, line)\n  print(event, line)\nend\ndebug.sethook(my_hook, \"l\")\n```",
+        "insertText": "sethook(${1:hook}, \"${2:mask}\", ${3:count})"
+      },
+      {
+        "name": "setlocal",
+        "signature": "debug.setlocal(thread: thread | integer, level_or_f: integer | function, local: integer, value: any): string",
+        "documentation": "为给定调用栈层级或函数的第 `local` 个局部变量赋一个新值 `value`。\n\n**示例:**\n```lua\ndebug.setlocal(1, 1, \"new value\")\n```",
+        "insertText": "setlocal(${1:level}, ${2:local_index}, ${3:value})"
+      },
+      {
+        "name": "setmetatable",
+        "signature": "debug.setmetatable(value: any, table: table | nil): any",
+        "documentation": "为一个值设置元表。即使原始元表有 `__metatable` 字段也可以设置。\n\n**示例:**\n```lua\ndebug.setmetatable(my_obj, new_mt)\n```",
+        "insertText": "setmetatable(${1:value}, ${2:metatable})"
+      },
+      {
+        "name": "setupvalue",
+        "signature": "debug.setupvalue(f: function, up: integer, value: any): string",
+        "documentation": "为函数 `f` 的第 `up` 个 upvalue 赋一个新值 `value`。\n\n**示例:**\n```lua\ndebug.setupvalue(my_closure, 1, \"new value\")\n```",
+        "insertText": "setupvalue(${1:func}, ${2:up_index}, ${3:value})"
+      },
+      {
+        "name": "setuservalue",
+        "signature": "debug.setuservalue(u: userdata, value: any): userdata",
+        "documentation": "为 `u`（必须是 full userdata）设置关联的 Lua 值。\n\n**示例:**\n```lua\ndebug.setuservalue(my_userdata, { data = 123 })\n```",
+        "insertText": "setuservalue(${1:userdata}, ${2:value})"
+      },
+      {
+        "name": "traceback",
+        "signature": "debug.traceback(thread?: thread | string, message?: string, level?: integer): string",
+        "documentation": "返回一个包含调用栈回溯信息的字符串。\n\n**示例:**\n```lua\nlocal tb = debug.traceback(\"An error occurred\", 2)\nprint(tb)\n```",
+        "insertText": "traceback(\"${1:message}\", ${2:level})"
+      },
+      {
+        "name": "upvalueid",
+        "signature": "debug.upvalueid(f: function, n: integer): lightuserdata",
+        "documentation": "返回函数 `f` 的第 `n` 个 upvalue 的唯一标识符（一个 light userdata）。\n\n**示例:**\n```lua\nlocal id = debug.upvalueid(my_closure, 1)\n```",
+        "insertText": "upvalueid(${1:func}, ${2:n})"
+      },
+      {
+        "name": "upvaluejoin",
+        "signature": "debug.upvaluejoin(f1: function, n1: integer, f2: function, n2: integer): void",
+        "documentation": "使 Lua 闭包 `f1` 的第 `n1` 个 upvalue 引用 Lua 闭包 `f2` 的第 `n2` 个 upvalue。\n\n**示例:**\n```lua\ndebug.upvaluejoin(f1, 1, f2, 1)\n```",
+        "insertText": "upvaluejoin(${1:f1}, ${2:n1}, ${3:f2}, ${4:n2})"
+      }
+    ]
+  }
+}
