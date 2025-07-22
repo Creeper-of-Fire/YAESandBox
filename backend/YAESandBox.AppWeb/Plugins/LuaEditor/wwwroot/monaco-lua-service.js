@@ -3,9 +3,11 @@
 // 这是一个为 Monaco Editor 提供 Lua 语言高级功能的模块化服务。
 // 它的核心职责包括：
 // 1. 动态加载 API 定义：通过一个清单文件 (api-manifest.json) 发现并加载所有的 Lua API 定义 (例如标准库、自定义库)。
-// 2. 提供智能感知：根据加载的 API 数据，提供精确的自动补全和悬停提示。
-// 3. 代码格式化：集成 Prettier 和 Lua 插件，提供一键代码美化功能。
-// 4. 实时语法检查：使用 luaparse 对代码进行快速的语法有效性验证。
+// 2. 提供智能补全 (Completion Provider): 提供关键字、全局函数、库和方法的补全。
+// 3. 悬停提示 (Hover Provider): 为已知的 API 提供文档。
+// 4. 代码检查 (Linter/Validation): 检查语法错误、未定义变量和作用域问题。
+// 5. 代码格式化 (Document Formatting Provider): 集成 Prettier 和 Lua 插件，提供一键代码美化功能。
+// 6. **兼容 Vite HMR (热模块替换)：确保在开发模式下重复加载时不会重复注册语言特性。**
 //
 // 此文件通过动态 import() 被 MonacoEditorWidget.vue 加载。
 
@@ -107,6 +109,21 @@ async function loadAndMergeApis(manifestUrl) {
     }
 }
 
+// =======================================================================================
+// 全局配置标志位
+// IMPORTANT / 重要事项:
+//
+// This is a globally unique ID to prevent the configuration from running more than once.
+// If you are copying this code for your own plugin, PLEASE generate a NEW UUID.
+// Do not reuse this one, to avoid conflicts with other plugins.
+//
+// 这是一个全局唯一的ID，用于防止配置逻辑重复运行。
+// 如果您正在为自己的插件复制此代码，请务必生成一个新的UUID。
+// 不要重复使用此ID，以避免与其他插件发生冲突。
+//
+const CONFIGURED_FLAG_UUID = '__LUA_SERVICE_CONFIGURED_FLAG_644ad8e2-011f-4553-9d21-1e1a5e54b6cb';
+// =======================================================================================
+
 // 导出的主对象，Monaco 会调用它的 `configure` 方法。
 export default {
     /**
@@ -114,6 +131,12 @@ export default {
      * @param {import('monaco-editor').editor.IStandaloneCodeEditor} monaco - Monaco Editor 的全局对象。
      */
     configure: async (monaco) => {
+        // --- 核心：使用全局唯一的标志位来防止重复执行 ---
+        if (monaco[CONFIGURED_FLAG_UUID]) {
+            console.log(`[Lua Service] 已配置 (ID: ${CONFIGURED_FLAG_UUID})，跳过重复初始化。如需查看最新更改，请刷新页面。`);
+            return; // 直接返回，什么都不做
+        }
+        
         // --- 1. 加载所有 API 定义 ---
         // 使用 import.meta.url 获取当前 JS 文件的 URL，并基于它定位清单文件。
         const manifestUrl = new URL('api-manifest.json', import.meta.url).href;
@@ -392,7 +415,7 @@ export default {
                     },
                     LocalStatement: (node) => {
                         node.init.forEach(traverse);
-// For `local a, b = 1` luaparse creates more `init` than `variables`
+                    // For `local a, b = 1` luaparse creates more `init` than `variables`
                         node.variables.forEach(v => scopeManager.define(v.name));
                     },
                     AssignmentStatement: (node) => {
@@ -507,5 +530,8 @@ export default {
                 model.onDidChangeContent(() => debouncedValidate(model));
             }
         });
+
+        // --- 在所有逻辑执行完毕后，设置标志位 ---
+        monaco[CONFIGURED_FLAG_UUID] = true;
     }
 };
