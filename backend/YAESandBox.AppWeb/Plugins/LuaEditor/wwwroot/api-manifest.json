@@ -1,6 +1,6 @@
 ﻿{
   "apiFiles": [
-    "./lua/stdlib-api.json",
+    "./lua/stdlib-api-safe.json",
     "./lua/custom-api.json"
   ]
 }

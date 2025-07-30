@@ -1,10 +1,8 @@
 ﻿using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
-using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Module;
-using YAESandBox.Workflow.Module.ExactModule;
 using static YAESandBox.Workflow.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Step;
@@ -20,7 +18,29 @@ internal class StepProcessor(
     : IWithDebugDto<IStepProcessorDebugDto>
 {
     internal StepProcessorConfig Config { get; } = config;
-    private StepProcessorContent StepContent { get; } = new();
+    internal StepProcessorContent StepContent { get; } = new(config, workflowRuntimeService);
+
+    /// <summary>
+    /// 步骤运行时的上下文
+    /// </summary>
+    public class StepProcessorContent(StepProcessorConfig stepProcessorConfig, WorkflowRuntimeService workflowRuntimeService)
+    {
+        public Dictionary<string, object> StepVariable { get; } = [];
+
+        public object? InputVar(string name)
+        {
+            return this.StepVariable.GetValueOrDefault(name);
+        }
+
+        public void OutputVar(string name, object value)
+        {
+            this.StepVariable[name] = value;
+        }
+
+        public StepProcessorConfig StepProcessorConfig { get; } = stepProcessorConfig;
+
+        public WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
+    }
 
     /// <summary>
     /// 消费者（Consumes）：此步骤需要从全局变量池中获取的所有变量的【全局名称】。
@@ -36,8 +56,8 @@ internal class StepProcessor(
     private List<IWithDebugDto<IModuleProcessorDebugDto>> Modules { get; } =
         config.Modules.Select(module => module.ToModuleProcessor(workflowRuntimeService)).ToList();
 
-    private StepAiConfig? StepAiConfig { get; } = config.StepAiConfig;
-    private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
+    internal StepAiConfig? StepAiConfig { get; } = config.StepAiConfig;
+    internal WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
 
     /// <summary>
     /// 启动步骤流程
@@ -67,13 +87,6 @@ internal class StepProcessor(
         {
             switch (module)
             {
-                case AiModuleProcessor aiModule:
-                    var resultAi = await this.PrepareAndExecuteAiModule(aiModule, cancellationToken);
-                    if (resultAi.TryGetError(out var error1, out string? value))
-                        return error1;
-                    this.StepContent.FullAiReturn = value;
-                    break;
-
                 case INormalModule normalModule:
                     var result = await normalModule.ExecuteAsync(this.StepContent, cancellationToken);
                     if (result.TryGetError(out var error))
@@ -112,19 +125,6 @@ internal class StepProcessor(
         return stepOutput;
     }
 
-    private async Task<Result<string>> PrepareAndExecuteAiModule(AiModuleProcessor aiModule, CancellationToken cancellationToken = default)
-    {
-        if (this.StepAiConfig?.SelectedAiModuleType == null || this.StepAiConfig.AiProcessorConfigUuid == null)
-            return NormalError.Conflict($"步骤 {this} 没有配置AI信息，所以无法执行AI模块。");
-        var aiProcessor = this.WorkflowRuntimeService.MasterAiService.CreateAiProcessor(
-            this.StepAiConfig.AiProcessorConfigUuid,
-            this.StepAiConfig.SelectedAiModuleType);
-        if (aiProcessor == null)
-            return NormalError.Conflict(
-                $"未找到 AI 配置 {this.StepAiConfig.AiProcessorConfigUuid}配置下的类型：{this.StepAiConfig.SelectedAiModuleType}");
-        return await aiModule.ExecuteAsync(aiProcessor, this.StepContent.Prompts, this.StepAiConfig.IsStream, cancellationToken);
-    }
-
 
     /// <inheritdoc />
     public IStepProcessorDebugDto DebugDto => new StepProcessorDebugDto
@@ -135,26 +135,5 @@ internal class StepProcessor(
     {
         /// <inheritdoc />
         public required IList<IModuleProcessorDebugDto> ModuleProcessorDebugDtos { get; init; }
-    }
-
-    /// <summary>
-    /// 步骤运行时的上下文
-    /// </summary>
-    public class StepProcessorContent
-    {
-        public Dictionary<string, object> StepVariable { get; } = [];
-
-        public object? InputVar(string name)
-        {
-            return this.StepVariable.GetValueOrDefault(name);
-        }
-
-        public void OutputVar(string name, object value)
-        {
-            this.StepVariable[name] = value;
-        }
-
-        public List<RoledPromptDto> Prompts { get; } = [];
-        public string? FullAiReturn { get; set; }
     }
 }

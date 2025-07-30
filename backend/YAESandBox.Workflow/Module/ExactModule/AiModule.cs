@@ -1,12 +1,15 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Namotion.Reflection;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Step;
 using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
 
 namespace YAESandBox.Workflow.Module.ExactModule;
@@ -16,7 +19,7 @@ namespace YAESandBox.Workflow.Module.ExactModule;
 /// </summary>
 /// <param name="onChunkReceivedScript"></param>
 internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
-    : IWithDebugDto<AiModuleProcessorDebugDto>
+    : IWithDebugDto<AiModuleProcessorDebugDto>, INormalModule
 {
     /// <inheritdoc />
     public AiModuleProcessorDebugDto DebugDto { get; } = new();
@@ -48,6 +51,32 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
         };
     }
 
+
+    private static async Task<Result> PrepareAndExecuteAiModule(
+        StepProcessor.StepProcessorContent stepProcessorContent,
+        AiModuleProcessor aiModule,
+        CancellationToken cancellationToken = default)
+    {
+        var stepAiConfig = stepProcessorContent.StepProcessorConfig.StepAiConfig;
+        var workflowRuntimeService = stepProcessorContent.WorkflowRuntimeService;
+        if (stepAiConfig?.SelectedAiModuleType == null || stepAiConfig.AiProcessorConfigUuid == null)
+            return NormalError.Conflict($"步骤 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI模块。");
+        var aiProcessor = workflowRuntimeService.MasterAiService.CreateAiProcessor(
+            stepAiConfig.AiProcessorConfigUuid,
+            stepAiConfig.SelectedAiModuleType);
+        if (aiProcessor == null)
+            return NormalError.Conflict(
+                $"未找到 AI 配置 {stepAiConfig.AiProcessorConfigUuid}配置下的类型：{stepAiConfig.SelectedAiModuleType}");
+        var result = await aiModule.ExecuteAsync(aiProcessor,
+            stepProcessorContent.TryGetPropertyValue<IEnumerable<RoledPromptDto>>(AiModuleConfig.PromptsName) ?? [],
+            stepAiConfig.IsStream,
+            cancellationToken);
+        if (result.TryGetError(out var error, out string? value))
+            return error;
+        stepProcessorContent.OutputVar(AiModuleConfig.AiOutputName, value);
+        return Result.Ok();
+    }
+
     private async Task<Result<string>> ExecuteStreamAsync
         (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken = default)
     {
@@ -69,11 +98,16 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
         (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken = default)
     {
         var result = await aiProcessor.NonStreamRequestAsync(prompts, cancellationToken: cancellationToken);
-        if (!result.TryGetValue(out string? value))
-            return result;
+        if (result.TryGetError(out var error,out string? value))
+            return error;
         this.OnChunkReceivedScript(value);
         return value;
     }
+
+    /// <inheritdoc />
+    public Task<Result> ExecuteAsync(StepProcessor.StepProcessorContent stepProcessorContent,
+        CancellationToken cancellationToken = default) =>
+        PrepareAndExecuteAiModule(stepProcessorContent, this, cancellationToken);
 }
 
 [NoConfig]
@@ -87,8 +121,17 @@ internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
     [ReadOnly(true)]
     [HiddenInForm(true)]
     [Display(Name = "配置名称", Description = "模块的配置名称，用于在界面上显示。")]
-    [DefaultValue("AI模块")]
     public override string Name { get; init; } = string.Empty;
+
+    internal const string PromptsName = "Prompts";
+    internal const string AiOutputName = "AiOutput";
+
+
+    /// <inheritdoc />
+    internal override List<string> GetConsumedVariables() => [PromptsName];
+
+    /// <inheritdoc />
+    internal override List<string> GetProducedVariables() => [AiOutputName];
 
     protected override AiModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
         new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); });

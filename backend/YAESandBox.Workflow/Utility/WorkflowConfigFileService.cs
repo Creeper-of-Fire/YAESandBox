@@ -1,5 +1,4 @@
-﻿using JetBrains.Annotations;
-using YAESandBox.Depend.Results;
+﻿using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Config;
@@ -159,7 +158,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
 
     private static async Task<DictionaryResult<string, T>> FindAllConfig<T>(ScopedJsonStorage scopedJsonStorage, string userId)
     {
-        var result = await scopedJsonStorage.ListFileNamesAsync();
+        var result = await scopedJsonStorage.ListFileNamesAsync(null,userId);
         if (result.TryGetError(out var error, out var allFileNames))
             return DictionaryResult<string, T>.Fail(error);
         Dictionary<string, Result<T>> configResults = [];

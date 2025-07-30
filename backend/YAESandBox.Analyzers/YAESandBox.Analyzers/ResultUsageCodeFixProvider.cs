@@ -1,6 +1,5 @@
 // 文件: YAESandBox.Analyzers/ResultUsageCodeFixProvider.cs
 
-using System.Collections.Generic;
 using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CodeActions;
 using Microsoft.CodeAnalysis.CodeFixes;
@@ -12,7 +11,6 @@ using System.Composition;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
-using Microsoft.CodeAnalysis.Rename;
 
 namespace YAESandBox.Analyzers;
 // <-- 注意这里的命名空间

@@ -5,7 +5,8 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using YAESandBox.Depend.AspNetCore;
-using YAESandBox.Authentication; // 使用你新的命名空间
+
+// 使用你新的命名空间
 
 namespace YAESandBox.Authentication;
 

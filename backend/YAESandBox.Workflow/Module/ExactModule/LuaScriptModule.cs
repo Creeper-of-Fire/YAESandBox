@@ -3,12 +3,13 @@ using System.Text.RegularExpressions;
 using NLua;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
-using YAESandBox.Workflow.API;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Module.ExactModule.LuaScriptModuleProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
+
+// ReSharper disable InconsistentNaming
 
 namespace YAESandBox.Workflow.Module.ExactModule;
 
@@ -36,14 +37,34 @@ internal partial class LuaScriptModuleProcessor(LuaScriptModuleConfig config)
         {
             // 使用 using 确保 Lua 状态机被正确释放
             using var lua = new Lua();
-            
-            // 设置一个超时，防止脚本无限循环。NLua 内部会启动一个监控线程。
-            // 注意：这可能不是一个硬性的实时中止，但能有效防止大部分死循环问题。
-            // lua.State.SetExecutionLimit(5000000); // 限制执行指令数量，需要根据实际情况调整
 
-            // 创建一个安全的上下文桥接器，并将其注册为 Lua 的全局变量 'ctx'
-            var contextBridge = new LuaContextBridge(stepProcessorContent);
-            lua["ctx"] = contextBridge;
+            // --- 沙箱化：移除危险的内建模块 ---
+            // 通过将这些库的全局变量设为 nil，来阻止脚本访问文件系统、执行系统命令等不安全操作
+            lua.DoString(@"
+                os = nil
+                io = nil
+                debug = nil
+                package = nil
+                dofile = nil
+                loadfile = nil
+                require = nil
+            ");
+
+            // --- 注入安全 API 模块 ---
+
+            // 1. 上下文模块 (ctx)
+            lua["ctx"] = new LuaContextBridge(stepProcessorContent);
+
+            // 2. 日志模块 (log)
+            lua["log"] = new LuaLogBridge(this.DebugDto);
+
+            // 3. JSON 模块 (json)
+            lua["json"] = new LuaJsonBridge();
+
+            // 4. 正则表达式模块 (regex)
+            lua["regex"] = new LuaRegexBridge();
+
+            lua["datetime"] = new LuaDateTimeBridge();
 
             // 执行脚本
             lua.DoString(this.Config.Script);
@@ -58,55 +79,7 @@ internal partial class LuaScriptModuleProcessor(LuaScriptModuleConfig config)
             return Task.FromResult(Result.Fail(errorMessage).ToResult());
         }
     }
-
-    /// <summary>
-    /// 作为 C# 与 Lua 脚本之间交互的安全桥梁。
-    /// 仅暴露 Get 和 Set 方法，防止 Lua 脚本访问不应访问的内部状态。
-    /// </summary>
-    private class LuaContextBridge(StepProcessorContent stepContent)
-    {
-        private StepProcessorContent StepContent { get; } = stepContent;
-
-        /// <summary>
-        /// 从步骤变量池中获取一个变量。暴露给 Lua 使用。
-        /// </summary>
-        /// <param name="name">变量名。</param>
-        /// <returns>变量的值，如果不存在则为 null。</returns>
-        // ReSharper disable once InconsistentNaming
-        public object? get(string name)
-        {
-            return this.StepContent.InputVar(name);
-        }
-
-        /// <summary>
-        ///向步骤变量池中设置一个变量。暴露给 Lua 使用。
-        /// </summary>
-        /// <param name="name">变量名。</param>
-        /// <param name="value">要设置的值。</param>
-        // ReSharper disable once InconsistentNaming
-        public void set(string name, object value)
-        {
-            this.StepContent.OutputVar(name, value);
-        }
-    }
-
-    /// <summary>
-    /// Lua 脚本模块处理器的调试数据传输对象。
-    /// </summary>
-    internal class LuaScriptModuleProcessorDebugDto : IModuleProcessorDebugDto
-    {
-        /// <summary>
-        /// 实际执行的 Lua 脚本内容。
-        /// </summary>
-        public string? ExecutedScript { get; set; }
-
-        /// <summary>
-        /// 脚本执行期间发生的运行时错误（如果有）。
-        /// </summary>
-        public string? RuntimeError { get; set; }
-    }
 }
-
 
 /// <summary>
 /// Lua 脚本模块的配置。
@@ -126,7 +99,14 @@ internal partial record LuaScriptModuleConfig : AbstractModuleConfig<LuaScriptMo
     [Display(
         Name = "Lua 脚本",
         Description = "在此处编写 Lua 脚本。使用 ctx.get('变量名') 获取输入，使用 ctx.set('变量名', 值) 设置输出。",
-        Prompt = "-- 示例:\nlocal name = ctx.get('playerName')\nlocal greeting = '你好, ' .. name .. '!'\nctx.set('greetingMessage', greeting)"
+        Prompt =
+            "-- 示例:\nlog.info('脚本开始执行')\n\n" +
+            "-- 获取当前 UTC 时间并格式化\nlocal now_utc = datetime.utcnow()\nctx.set('currentTime', now_utc:format('yyyy-MM-dd HH:mm:ss'))\n\n" +
+            "-- 时间计算\nlocal tomorrow = now_utc:add_days(1)\nlog.info('明天的日期是: ' .. tomorrow:format('yyyy-MM-dd'))\n\n" +
+            "-- 解析字符串\nlocal my_birthday_str = '1990-05-20'\n" +
+            "local birthday_obj = datetime.parse(my_birthday_str, 'yyyy-MM-dd')\nif birthday_obj then\n" +
+            "  log.info('生日的年份是: ' .. birthday_obj.year)\n" +
+            "end\n"
     )]
     public required string Script { get; init; } = "";
 

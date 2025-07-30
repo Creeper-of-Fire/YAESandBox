@@ -1,6 +1,5 @@
 ﻿using YAESandBox.Depend;
 using YAESandBox.Depend.Results;
-using YAESandBox.Depend.ResultsExtend;
 
 namespace YAESandBox.Core;
 

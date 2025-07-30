@@ -51,7 +51,9 @@ internal partial class PromptGenerationModuleProcessor(
             Name = this.Config.PromptNameInAiModel ?? string.Empty
         };
 
-        stepProcessorContent.Prompts.Add(prompt); // 将生成的提示词添加到步骤内容中
+        var prompts = stepProcessorContent.InputVar(AiModuleConfig.PromptsName) as IEnumerable<RoledPromptDto> ?? []; // 将生成的提示词添加到步骤内容中
+        prompts = prompts.Append(prompt);
+        stepProcessorContent.OutputVar(AiModuleConfig.PromptsName, prompts);
 
         this.DebugDto.GeneratedPrompt = prompt;
         return Task.FromResult(Result.Ok());
@@ -190,6 +192,8 @@ internal partial record PromptGenerationModuleConfig
         .Select(m => m.Groups[1].Value)
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToList();
+    
+    internal override List<string> GetProducedVariables() => [AiModuleConfig.PromptsName];
 }
 
 /// <summary>
@@ -219,7 +223,7 @@ internal partial record PromptGenerationModuleConfig : AbstractModuleConfig<Prom
         Prompt = "例如：'DeepSeek' 或 'はちみ'"
     )]
     public string? PromptNameInAiModel { get; init; }
-    
+
     /// <summary>
     /// 提示词模板，支持 `[[占位符]]` 替换。
     /// 例如："你好，`[[playerName]]`！今天是`[[worldInfo]]`。"

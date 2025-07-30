@@ -1,5 +1,4 @@
-﻿using System.Diagnostics.CodeAnalysis;
-using YAESandBox.Depend.Results;
+﻿using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Depend.ResultsExtend;
 

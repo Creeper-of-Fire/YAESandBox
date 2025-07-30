@@ -1,6 +1,5 @@
 ﻿using System.Text.Json.Nodes;
 using JetBrains.Annotations;
-using Newtonsoft.Json;
 using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Depend.ResultsExtend;

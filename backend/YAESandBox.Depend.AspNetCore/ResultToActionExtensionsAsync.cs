@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.Results;
-using static YAESandBox.Depend.AspNetCore.ResultToActionExtensions;
 
 namespace YAESandBox.Depend.AspNetCore;
 

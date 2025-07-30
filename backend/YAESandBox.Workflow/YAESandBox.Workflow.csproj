@@ -22,4 +22,13 @@
         <PackageReference Include="NLua" Version="1.7.5" />
     </ItemGroup>
 
+    <ItemGroup>
+      <Compile Update="Module\ExactModule\LuaScriptModuleProcessor.LuaBridge.cs">
+        <DependentUpon>LuaScriptModule.cs</DependentUpon>
+      </Compile>
+      <Compile Update="Module\ExactModule\LuaScriptModuleProcessor.LuaDateTimeBridge.cs">
+        <DependentUpon>LuaScriptModule.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
 </Project>
