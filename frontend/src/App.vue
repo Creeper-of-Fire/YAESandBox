@@ -14,16 +14,16 @@
                 - :type="isActive ? 'primary' : 'default'" 根据路由是否激活来改变按钮样式，提供视觉反馈。
               -->
               <n-space class="navigation-controls">
-                <router-link v-slot="{ navigate, isActive }" custom to="/game">
-                  <n-button
-                      :ghost="!isActive"
-                      :type="isActive ? 'primary' : 'default'"
-                      strong
-                      @click="navigate"
-                  >
-                    游戏
-                  </n-button>
-                </router-link>
+<!--                <router-link v-slot="{ navigate, isActive }" custom to="/game">-->
+<!--                  <n-button-->
+<!--                      :ghost="!isActive"-->
+<!--                      :type="isActive ? 'primary' : 'default'"-->
+<!--                      strong-->
+<!--                      @click="navigate"-->
+<!--                  >-->
+<!--                    游戏-->
+<!--                  </n-button>-->
+<!--                </router-link>-->
                 <router-link v-slot="{ navigate, isActive }" custom to="/workbench">
                   <n-button
                       :ghost="!isActive"
@@ -44,6 +44,16 @@
                     测试台
                   </n-button>
                 </router-link>
+              </n-space>
+
+              <!-- 新增：用户状态和登出按钮 -->
+              <n-space align="center" class="user-controls">
+                <span v-if="authStore.isAuthenticated">
+                  欢迎, {{ authStore.user?.username }}
+                </span>
+                <n-button v-if="authStore.isAuthenticated" ghost type="error" @click="handleLogout">
+                  登出
+                </n-button>
               </n-space>
             </header>
 
@@ -78,27 +88,32 @@
 import {onMounted, onUnmounted} from 'vue';
 import {useConnectionStore} from '@/app-game/stores/connectionStore.ts';
 import {lightTheme} from "naive-ui";
+import {useAuthStore} from "@/app-authentication/stores/authStore.ts";
 // import GlobalErrorDisplay from '@/components/GlobalErrorDisplay.vue';
 // import AppWideNotifications from '@/components/AppWideNotifications.vue';
+const authStore = useAuthStore();
+// const connectionStore = useConnectionStore();
 
-const connectionStore = useConnectionStore();
+// onMounted(async () =>
+// {
+//   console.log("App [onMounted]: 应用启动，初始化连接...");
+//   await connectionStore.connectSignalR();
+//   if (connectionStore.connectionError)
+//   {
+//     console.error("App [onMounted]: SignalR 初始连接失败。", connectionStore.connectionError);
+//     // 这里可以触发一个全局错误状态
+//   }
+// });
+//
+// onUnmounted(() =>
+// {
+//   console.log("App [onUnmounted]: 应用关闭。");
+//   // connectionStore.disconnectSignalR(); // 如果有断开方法
+// });
 
-onMounted(async () =>
-{
-  console.log("App [onMounted]: 应用启动，初始化连接...");
-  await connectionStore.connectSignalR();
-  if (connectionStore.connectionError)
-  {
-    console.error("App [onMounted]: SignalR 初始连接失败。", connectionStore.connectionError);
-    // 这里可以触发一个全局错误状态
-  }
-});
-
-onUnmounted(() =>
-{
-  console.log("App [onUnmounted]: 应用关闭。");
-  // connectionStore.disconnectSignalR(); // 如果有断开方法
-});
+const handleLogout = () => {
+  authStore.logout();
+};
 </script>
 
 <style>
@@ -116,6 +131,7 @@ onUnmounted(() =>
   display: flex;
   align-items: center;
   padding: 1px 1px;
+  justify-content: space-between;
   border-bottom: 1px solid #e8e8e8;
   background-color: #ffffff;
   flex-shrink: 0; /* 防止头部被压缩 */
@@ -130,6 +146,10 @@ onUnmounted(() =>
   flex-grow: 1; /* 占据剩余所有空间 */
   overflow-y: auto; /* 如果内容超长，则内部滚动 */
   box-sizing: border-box;
+}
+
+.user-controls {
+  margin-right: 20px;
 }
 
 /* 定义淡入淡出过渡效果 */

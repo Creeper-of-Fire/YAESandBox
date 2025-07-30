@@ -7,7 +7,8 @@ export const routes: RouteRecordRaw[] = [
         name: 'TestHarness',
         component: TestHarnessView,
         meta: {
-            title: '工作流测试台'
+            title: '工作流测试台',
+            requiresAuth: true // 显式声明
         }
     },
 ];

@@ -91,7 +91,7 @@
     <div v-else class="empty-state-wrapper">
       <div class="custom-empty-state">
         <n-icon :component="AddBoxIcon" :size="80"/>
-        <p class="description">从左侧拖拽一项到此处开始编辑</p>
+        <p class="description">从全局资源区拖拽一项到此处开始编辑</p>
       </div>
     </div>
 

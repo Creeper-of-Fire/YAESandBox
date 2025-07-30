@@ -1,0 +1,99 @@
+﻿// src/app-authentication/authStore.ts
+import {defineStore} from 'pinia';
+import {computed, ref} from 'vue';
+import {
+    type AuthResponse,
+    AuthService,
+    type LoginRequest,
+    type RegisterRequest
+} from '@/app-authentication/types/generated/authentication-api-client';
+
+import router from '@/router';
+
+export const useAuthStore = defineStore('authentication', () =>
+{
+    // --- State ---
+    // 从 localStorage 初始化 token，这样刷新页面就不会丢失登录状态
+    const token = ref<string | null>(localStorage.getItem('authToken'));
+    const user = ref<Pick<AuthResponse, 'userId' | 'username'> | null>(JSON.parse(localStorage.getItem('authUser') || 'null'));
+    const authError = ref<string | null>(null);
+
+    // --- Getters ---
+    const isAuthenticated = computed(() => !!token.value);
+
+    // --- Actions ---
+
+    /**
+     * 登录
+     * @param credentials - 用户名和密码
+     */
+    async function login(credentials: LoginRequest): Promise<boolean> {
+        authError.value = null;
+        try {
+            const response = await AuthService.postApiV1AuthLogin({ requestBody: credentials });
+
+            // 登录成功
+            token.value = response.token!;
+            user.value = { userId: response.userId, username: response.username };
+            localStorage.setItem('authToken', token.value);
+            localStorage.setItem('authUser', JSON.stringify(user.value));
+            await router.push({ name: 'Workbench' });
+            return true; // 返回成功
+        } catch (error: any) {
+            console.error("Login failed:", error);
+            authError.value = error.body?.message || error.message || '登录失败，请检查用户名或密码。';
+            logout(false);
+            return false; // 返回失败
+        }
+    }
+
+    /**
+     * 处理用户注册逻辑
+     * @param credentials - 注册所需的用户信息（包含用户名、密码等，具体字段由 RegisterRequest 类型定义）
+     * @returns Promise<boolean> - 注册成功返回 true，失败返回 false
+     */
+    async function register(credentials: RegisterRequest): Promise<boolean>
+    {
+        authError.value = null;
+        try
+        {
+            const successMessage = await AuthService.postApiV1AuthRegister({requestBody: credentials});
+            console.log('Registration successful:', successMessage);
+            // 可以在这里用全局 message 提示用户注册成功
+            // message.success(successMessage || '注册成功！现在可以登录了。');
+            return true; // 表示成功
+        } catch (error: any)
+        {
+            console.error("Registration failed:", error);
+            authError.value = error.body || error.message || '注册失败，用户名可能已被占用。';
+            return false; // 表示失败
+        }
+    }
+
+    /**
+     * 登出
+     * @param redirect - 是否重定向到登录页
+     */
+    function logout(redirect = true)
+    {
+        token.value = null;
+        user.value = null;
+        localStorage.removeItem('authToken');
+        localStorage.removeItem('authUser');
+
+        if (redirect)
+        {
+            router.push({name: 'Login'}); // 假设登录页路由的 name 是 'Login'
+        }
+    }
+
+    return {
+        token,
+        user,
+        isAuthenticated,
+        authError,
+        login,
+        register,
+        logout,
+    };
+});

@@ -7,5 +7,8 @@ export const routes: RouteRecordRaw[] = [
         name: 'game',
         component: GameModeView,
         children: [],
+        meta: {
+            requiresAuth: true // 显式声明
+        }
     },
 ];

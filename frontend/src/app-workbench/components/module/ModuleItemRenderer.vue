@@ -8,7 +8,7 @@
       @click="updateSelectedConfig"
   >
     <template #content>
-      <span v-if="moduleClassLabel" class="module-alias">{{ moduleClassLabel }}</span>
+<!--      <span v-if="moduleClassLabel" class="module-alias">{{ moduleClassLabel }}</span>-->
       <span class="module-name">{{ module.name }}</span>
     </template>
 
