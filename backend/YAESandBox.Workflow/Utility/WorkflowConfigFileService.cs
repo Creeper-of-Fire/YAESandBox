@@ -28,8 +28,6 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     private const string StepDirectory = "GlobalSteps";
     private const string ModuleDirectory = "GlobalModules";
 
-    // private IGeneralJsonStorage GeneralJsonStorage { get; } = generalJsonStorage;
-
     private ScopedJsonStorage ForWorkflow { get; } =
         generalJsonStorage.ForConfig().CreateScope(MainDirectory).CreateScope(WorkflowDirectory);
 
@@ -43,101 +41,114 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <summary>
     /// 只在全局的工作流配置中查找，不查找内联的私有部分（虽然对于工作流没有这部分，但是出于整齐的考虑还是这么写了）
     /// </summary>
+    /// <param name="userId"></param>
     /// <param name="workflowId"></param>
     /// <returns></returns>
-    internal async Task<Result<WorkflowProcessorConfig>> FindWorkflowConfig(string workflowId) =>
-        await FindConfig<WorkflowProcessorConfig>(this.ForWorkflow, workflowId);
+    internal async Task<Result<WorkflowProcessorConfig>> FindWorkflowConfig(string userId, string workflowId) =>
+        await FindConfig<WorkflowProcessorConfig>(this.ForWorkflow, userId, workflowId);
 
     /// <summary>
     /// 只在全局的步骤配置中查找，不查找内联的私有部分
     /// </summary>
+    /// <param name="userId"></param>
     /// <param name="stepId"></param>
     /// <returns></returns>
-    internal async Task<Result<StepProcessorConfig>> FindStepConfig(string stepId) =>
-        await FindConfig<StepProcessorConfig>(this.ForStep, stepId);
+    internal async Task<Result<StepProcessorConfig>> FindStepConfig(string userId, string stepId) =>
+        await FindConfig<StepProcessorConfig>(this.ForStep, userId, stepId);
 
     /// <summary>
     /// 只在全局的模块配置中查找，不查找内联的私有部分
     /// </summary>
+    /// <param name="userId"></param>
+    /// <param name="moduleId"></param>
     /// <returns></returns>
-    internal async Task<Result<AbstractModuleConfig>> FindModuleConfig(string moduleId) =>
-        await FindConfig<AbstractModuleConfig>(this.ForModule, moduleId);
+    internal async Task<Result<AbstractModuleConfig>> FindModuleConfig(string userId, string moduleId) =>
+        await FindConfig<AbstractModuleConfig>(this.ForModule, userId, moduleId);
 
     /// <summary>
     /// 只寻找所有的全局工作流配置，不查找内联的私有部分
     /// </summary>
+    /// <param name="userId"></param>
     /// <returns></returns>
-    public async Task<DictionaryResult<string, WorkflowProcessorConfig>> FindAllWorkflowConfig() =>
-        await FindAllConfig<WorkflowProcessorConfig>(this.ForWorkflow);
+    public async Task<DictionaryResult<string, WorkflowProcessorConfig>> FindAllWorkflowConfig(string userId) =>
+        await FindAllConfig<WorkflowProcessorConfig>(this.ForWorkflow, userId);
 
     /// <summary>
     /// 只寻找所有的全局步骤配置，不查找内联的私有部分
     /// </summary>
+    /// <param name="userId"></param>
     /// <returns></returns>
-    public async Task<DictionaryResult<string, StepProcessorConfig>> FindAllStepConfig() =>
-        await FindAllConfig<StepProcessorConfig>(this.ForStep);
+    public async Task<DictionaryResult<string, StepProcessorConfig>> FindAllStepConfig(string userId) =>
+        await FindAllConfig<StepProcessorConfig>(this.ForStep, userId);
 
     /// <summary>
     /// 只寻找所有的全局模块配置，不查找内联的私有部分
     /// </summary>
+    /// <param name="userId"></param>
     /// <returns></returns>
-    public async Task<DictionaryResult<string, AbstractModuleConfig>> FindAllModuleConfig() =>
-        await FindAllConfig<AbstractModuleConfig>(this.ForModule);
+    public async Task<DictionaryResult<string, AbstractModuleConfig>> FindAllModuleConfig(string userId) =>
+        await FindAllConfig<AbstractModuleConfig>(this.ForModule, userId);
 
     /// <summary>
     /// 保存工作流配置到全局
     /// </summary>
+    /// <param name="userId"></param>
     /// <param name="workflowId"></param>
     /// <param name="workflowProcessorConfig"></param>
     /// <returns></returns>
-    public async Task<Result> SaveWorkflowConfig(string workflowId, WorkflowProcessorConfig workflowProcessorConfig) =>
-        await this.ForWorkflow.SaveAllAsync(workflowProcessorConfig, MakeFileName(workflowId));
+    public async Task<Result> SaveWorkflowConfig(string userId, string workflowId, WorkflowProcessorConfig workflowProcessorConfig) =>
+        await SaveConfig(this.ForWorkflow, userId, workflowId, workflowProcessorConfig);
 
     /// <summary>
     /// 保存步骤配置到全局
     /// </summary>
+    /// <param name="userId"></param>
     /// <param name="stepId"></param>
     /// <param name="stepProcessorConfig"></param>
     /// <returns></returns>
-    public async Task<Result> SaveStepConfig(string stepId, StepProcessorConfig stepProcessorConfig) =>
-        await this.ForStep.SaveAllAsync(stepProcessorConfig, MakeFileName(stepId));
+    public async Task<Result> SaveStepConfig(string userId, string stepId, StepProcessorConfig stepProcessorConfig) =>
+        await SaveConfig(this.ForStep, userId, stepId, stepProcessorConfig);
 
     /// <summary>
     /// 保存模块配置到全局
     /// </summary>
+    /// <param name="userId"></param>
     /// <param name="moduleId"></param>
     /// <param name="abstractModuleConfig"></param>
     /// <returns></returns>
-    public async Task<Result> SaveModuleConfig(string moduleId, AbstractModuleConfig abstractModuleConfig) =>
-        await this.ForModule.SaveAllAsync(abstractModuleConfig, MakeFileName(moduleId));
+    public async Task<Result> SaveModuleConfig(string userId, string moduleId, AbstractModuleConfig abstractModuleConfig) =>
+        await SaveConfig(this.ForModule, userId, moduleId, abstractModuleConfig);
 
     /// <summary>
     /// 删除全局的工作流配置
     /// </summary>
+    /// <param name="userId"></param>
     /// <param name="workflowId"></param>
     /// <returns></returns>
-    public async Task<Result> DeleteWorkflowConfig(string workflowId) =>
-        await this.ForWorkflow.DeleteFileAsync(MakeFileName(workflowId));
+    public async Task<Result> DeleteWorkflowConfig(string userId, string workflowId) =>
+        await DeleteConfig(this.ForWorkflow, userId, workflowId);
 
     /// <summary>
     /// 删除全局的步骤配置
     /// </summary>
+    /// <param name="userId"></param>
     /// <param name="stepId"></param>
     /// <returns></returns>
-    public async Task<Result> DeleteStepConfig(string stepId) =>
-        await this.ForStep.DeleteFileAsync(MakeFileName(stepId));
+    public async Task<Result> DeleteStepConfig(string userId, string stepId) =>
+        await DeleteConfig(this.ForStep, userId, stepId);
 
     /// <summary>
     /// 删除全局的模块配置
     /// </summary>
+    /// <param name="userId"></param>
     /// <param name="moduleId"></param>
     /// <returns></returns>
-    public async Task<Result> DeleteModuleConfig(string moduleId) =>
-        await this.ForModule.DeleteFileAsync(MakeFileName(moduleId));
+    public async Task<Result> DeleteModuleConfig(string userId, string moduleId) =>
+        await DeleteConfig(this.ForModule, userId, moduleId);
 
-    private static async Task<Result<T>> FindConfig<T>(ScopedJsonStorage scopedJsonStorage, string configId)
+    private static async Task<Result<T>> FindConfig<T>(ScopedJsonStorage scopedJsonStorage, string userId, string configId)
     {
-        var result = await scopedJsonStorage.LoadAllAsync<T>(MakeFileName(configId));
+        var result = await scopedJsonStorage.LoadAllAsync<T>(MakeFileName(configId), userId);
         if (result.TryGetError(out var error, out var value))
             return error;
         if (value is null)
@@ -146,7 +157,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
         return Result.Ok(value);
     }
 
-    private static async Task<DictionaryResult<string, T>> FindAllConfig<T>(ScopedJsonStorage scopedJsonStorage)
+    private static async Task<DictionaryResult<string, T>> FindAllConfig<T>(ScopedJsonStorage scopedJsonStorage, string userId)
     {
         var result = await scopedJsonStorage.ListFileNamesAsync();
         if (result.TryGetError(out var error, out var allFileNames))
@@ -154,10 +165,16 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
         Dictionary<string, Result<T>> configResults = [];
         foreach (string id in allFileNames.Select(GetIdFromFileName))
         {
-            var configResult = await FindConfig<T>(scopedJsonStorage, id);
+            var configResult = await FindConfig<T>(scopedJsonStorage, userId, id);
             configResults.Add(id, configResult);
         }
 
         return configResults;
     }
+
+    private static async Task<Result> DeleteConfig(ScopedJsonStorage scopedJsonStorage, string userId, string configId) =>
+        await scopedJsonStorage.DeleteFileAsync(MakeFileName(configId), userId);
+
+    private static async Task<Result> SaveConfig<T>(ScopedJsonStorage scopedJsonStorage, string userId, string configId, T config) =>
+        await scopedJsonStorage.SaveAllAsync(config, MakeFileName(configId), userId);
 }

@@ -4,6 +4,7 @@ using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using YAESandBox.Authentication;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
@@ -71,7 +72,7 @@ public record ModuleSchemasResponse
 [Route("api/v1/workflows-configs/global-modules")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
 public class ModuleConfigController(WorkflowConfigFileService workflowConfigFileService, IWebHostEnvironment webHostEnvironment)
-    : ControllerBase
+    : AuthenticatedApiControllerBase
 {
     private WorkflowConfigFileService WorkflowConfigFileService { get; } = workflowConfigFileService;
     private IWebHostEnvironment WebHostEnvironment { get; } = webHostEnvironment;
@@ -188,7 +189,7 @@ public class ModuleConfigController(WorkflowConfigFileService workflowConfigFile
     [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<AbstractModuleConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<Dictionary<string, JsonResultDto<AbstractModuleConfig>>>> GetAllGlobalModuleConfigs() =>
-        await this.WorkflowConfigFileService.FindAllModuleConfig().ToActionResultAsync(dic =>
+        await this.WorkflowConfigFileService.FindAllModuleConfig(this.UserId).ToActionResultAsync(dic =>
             dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<AbstractModuleConfig>.ToJsonResultDto(kv.Value)));
 
     /// <summary>
@@ -205,7 +206,7 @@ public class ModuleConfigController(WorkflowConfigFileService workflowConfigFile
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<AbstractModuleConfig>> GetGlobalModuleConfigById(string moduleId) =>
-        await this.WorkflowConfigFileService.FindModuleConfig(moduleId).ToActionResultAsync();
+        await this.WorkflowConfigFileService.FindModuleConfig(this.UserId, moduleId).ToActionResultAsync();
 
     /// <summary>
     /// 创建或更新全局模块配置 (Upsert)。
@@ -223,7 +224,7 @@ public class ModuleConfigController(WorkflowConfigFileService workflowConfigFile
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpsertGlobalModuleConfig(string moduleId, [FromBody] AbstractModuleConfig abstractModuleConfig) =>
-        await this.WorkflowConfigFileService.SaveModuleConfig(moduleId, abstractModuleConfig).ToActionResultAsync();
+        await this.WorkflowConfigFileService.SaveModuleConfig(this.UserId, moduleId, abstractModuleConfig).ToActionResultAsync();
 
     /// <summary>
     /// 删除指定 ID 的全局模块配置。
@@ -236,5 +237,5 @@ public class ModuleConfigController(WorkflowConfigFileService workflowConfigFile
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteGlobalModuleConfig(string moduleId) =>
-        await this.WorkflowConfigFileService.DeleteModuleConfig(moduleId).ToActionResultAsync();
+        await this.WorkflowConfigFileService.DeleteModuleConfig(this.UserId, moduleId).ToActionResultAsync();
 }

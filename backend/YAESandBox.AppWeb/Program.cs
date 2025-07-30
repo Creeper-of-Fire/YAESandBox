@@ -1,8 +1,10 @@
+using DotNetEnv;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.AppWeb;
+using YAESandBox.Authentication;
 using YAESandBox.Core.API;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Storage;
@@ -10,6 +12,7 @@ using YAESandBox.Workflow.AIService.API;
 using YAESandBox.Workflow.API;
 using YAESandBox.Workflow.Test.API;
 
+Env.Load();
 var builder = WebApplication.CreateBuilder(args);
 
 
@@ -145,7 +148,8 @@ app.UseRouting(); // Add routing middleware
 
 app.UseCors(myAllowSpecificOrigins); // Apply CORS policy - place before UseAuthorization/UseEndpoints
 
-app.UseAuthorization(); // Add authorization middleware if needed
+app.UseAuthentication(); // <-- 先认证
+app.UseAuthorization();  // <-- 后授权
 
 app.MapControllers(); // Map attribute-routed controllers
 
@@ -182,6 +186,7 @@ namespace YAESandBox.AppWeb
             new AiServiceConfigModule(),
             new WorkflowConfigModule(),
             new WorkflowTestModule(),
+            new AuthenticationModule()
         ];
 
         /// <summary>

@@ -56,3 +56,4 @@ nunit-*.xml
 backend/nuget.config
 /backend/YAESandBox.AppWeb/Data
 /tools/vue_to_text/output
+backend/YAESandBox.AppWeb/.env

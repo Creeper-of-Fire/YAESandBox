@@ -32,6 +32,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Analyzers", "Analyzers", "{
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Depend.Results", "YAESandBox.Depend.Results\YAESandBox.Depend.Results.csproj", "{AE5E10A0-5AD9-431C-A0C8-3FF79403CC68}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Authentication", "YAESandBox.Authentication\YAESandBox.Authentication.csproj", "{93CA16F1-ACEC-4928-9D9B-F037C3CE7D45}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -98,6 +100,10 @@ Global
 		{AE5E10A0-5AD9-431C-A0C8-3FF79403CC68}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AE5E10A0-5AD9-431C-A0C8-3FF79403CC68}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AE5E10A0-5AD9-431C-A0C8-3FF79403CC68}.Release|Any CPU.Build.0 = Release|Any CPU
+		{93CA16F1-ACEC-4928-9D9B-F037C3CE7D45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{93CA16F1-ACEC-4928-9D9B-F037C3CE7D45}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{93CA16F1-ACEC-4928-9D9B-F037C3CE7D45}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{93CA16F1-ACEC-4928-9D9B-F037C3CE7D45}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{5F5667AF-F238-488E-B467-3A56420023C4} = {78706A16-017A-46F9-8403-D83C2351FEEC}

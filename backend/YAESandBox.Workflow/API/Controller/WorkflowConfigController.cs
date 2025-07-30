@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using YAESandBox.Authentication;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
@@ -15,7 +16,7 @@ namespace YAESandBox.Workflow.API.Controller;
 [ApiController]
 [Route("api/v1/workflows-configs/global-workflows")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
-public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFileService) : ControllerBase
+public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFileService) : AuthenticatedApiControllerBase
 {
     private WorkflowConfigFileService WorkflowConfigFileService { get; } = workflowConfigFileService;
 
@@ -30,7 +31,7 @@ public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFi
     [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<WorkflowProcessorConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<Dictionary<string, JsonResultDto<WorkflowProcessorConfig>>>> GetAllGlobalWorkflowConfigs() =>
-        await this.WorkflowConfigFileService.FindAllWorkflowConfig().ToActionResultAsync(dic =>
+        await this.WorkflowConfigFileService.FindAllWorkflowConfig(this.UserId).ToActionResultAsync(dic =>
             dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<WorkflowProcessorConfig>.ToJsonResultDto(kv.Value)));
 
     /// <summary>
@@ -47,7 +48,7 @@ public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFi
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<WorkflowProcessorConfig>> GetGlobalWorkflowConfigById(string workflowId) =>
-        await this.WorkflowConfigFileService.FindWorkflowConfig(workflowId).ToActionResultAsync();
+        await this.WorkflowConfigFileService.FindWorkflowConfig(this.UserId, workflowId).ToActionResultAsync();
 
     /// <summary>
     /// 创建或更新全局工作流配置 (Upsert)。
@@ -61,7 +62,7 @@ public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFi
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpsertGlobalWorkflowConfig(string workflowId, [FromBody] WorkflowProcessorConfig workflowConfig) =>
-        await this.WorkflowConfigFileService.SaveWorkflowConfig(workflowId, workflowConfig).ToActionResultAsync();
+        await this.WorkflowConfigFileService.SaveWorkflowConfig(this.UserId, workflowId, workflowConfig).ToActionResultAsync();
 
     /// <summary>
     /// 删除指定 ID 的全局工作流配置。
@@ -74,5 +75,5 @@ public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFi
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteGlobalWorkflowConfig(string workflowId) =>
-        await this.WorkflowConfigFileService.DeleteWorkflowConfig(workflowId).ToActionResultAsync();
+        await this.WorkflowConfigFileService.DeleteWorkflowConfig(this.UserId, workflowId).ToActionResultAsync();
 }

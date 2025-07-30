@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using YAESandBox.Authentication;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
@@ -15,7 +16,7 @@ namespace YAESandBox.Workflow.API.Controller;
 [ApiController]
 [Route("api/v1/workflows-configs/global-steps")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
-public class StepConfigController(WorkflowConfigFileService workflowConfigFileService) : ControllerBase
+public class StepConfigController(WorkflowConfigFileService workflowConfigFileService) : AuthenticatedApiControllerBase
 {
     private WorkflowConfigFileService WorkflowConfigFileService { get; } = workflowConfigFileService;
 
@@ -30,7 +31,7 @@ public class StepConfigController(WorkflowConfigFileService workflowConfigFileSe
     [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<StepProcessorConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<Dictionary<string, JsonResultDto<StepProcessorConfig>>>> GetAllGlobalStepConfigs() =>
-        await this.WorkflowConfigFileService.FindAllStepConfig().ToActionResultAsync(dic =>
+        await this.WorkflowConfigFileService.FindAllStepConfig(this.UserId).ToActionResultAsync(dic =>
             dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<StepProcessorConfig>.ToJsonResultDto(kv.Value)));
 
     /// <summary>
@@ -47,7 +48,7 @@ public class StepConfigController(WorkflowConfigFileService workflowConfigFileSe
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<StepProcessorConfig>> GetGlobalStepConfigById(string stepId) =>
-        await this.WorkflowConfigFileService.FindStepConfig(stepId).ToActionResultAsync();
+        await this.WorkflowConfigFileService.FindStepConfig(this.UserId, stepId).ToActionResultAsync();
 
     /// <summary>
     /// 创建或更新全局步骤配置 (Upsert)。
@@ -61,7 +62,7 @@ public class StepConfigController(WorkflowConfigFileService workflowConfigFileSe
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> UpsertGlobalStepConfig(string stepId, [FromBody] StepProcessorConfig stepConfig) =>
-        await this.WorkflowConfigFileService.SaveStepConfig(stepId, stepConfig).ToActionResultAsync();
+        await this.WorkflowConfigFileService.SaveStepConfig(this.UserId, stepId, stepConfig).ToActionResultAsync();
 
     /// <summary>
     /// 删除指定 ID 的全局步骤配置。
@@ -74,5 +75,5 @@ public class StepConfigController(WorkflowConfigFileService workflowConfigFileSe
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteGlobalStepConfig(string stepId) =>
-        await this.WorkflowConfigFileService.DeleteStepConfig(stepId).ToActionResultAsync();
+        await this.WorkflowConfigFileService.DeleteStepConfig(this.UserId, stepId).ToActionResultAsync();
 }
