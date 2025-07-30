@@ -4,6 +4,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using YAESandBox.Authentication;
 using YAESandBox.Depend.Schema;
 using YAESandBox.Workflow.AIService.AiConfig;
 
@@ -16,7 +17,7 @@ namespace YAESandBox.Workflow.AIService.API.Controller;
 [ApiExplorerSettings(GroupName = AiServiceConfigModule.AiConfigGroupName)]
 [ApiController]
 [Route("api/ai-configuration-management")]
-public class AiConfigSchemasController : ControllerBase
+public class AiConfigSchemasController : AuthenticatedApiControllerBase
 {
     /// <summary>
     /// 获取指定 AI 配置类型的表单 Schema 结构 (JSON Schema 格式，包含 ui: 指令)。

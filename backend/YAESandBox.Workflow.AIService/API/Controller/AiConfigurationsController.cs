@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using YAESandBox.Authentication;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.AiConfig;
@@ -16,7 +17,8 @@ namespace YAESandBox.Workflow.AIService.API.Controller;
 [ApiExplorerSettings(GroupName = AiServiceConfigModule.AiConfigGroupName)]
 [ApiController]
 [Route("api/ai-configurations")]
-public class AiConfigurationsController(IAiConfigurationManager configurationManager, IHttpClientFactory httpClientFactory) : ControllerBase
+public class AiConfigurationsController(IAiConfigurationManager configurationManager, IHttpClientFactory httpClientFactory)
+    : AuthenticatedApiControllerBase
 {
     private IAiConfigurationManager ConfigurationManager { get; } = configurationManager;
     private IHttpClientFactory HttpClientFactory { get; } = httpClientFactory;

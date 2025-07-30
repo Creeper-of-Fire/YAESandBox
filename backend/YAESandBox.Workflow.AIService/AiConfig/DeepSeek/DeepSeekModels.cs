@@ -17,13 +17,27 @@ internal record DeepSeekChatMessage(
     [property: JsonPropertyName("name")] string? Name = null
 );
 
+/// <summary>
+/// 对应 DeepSeek API 请求中的 response_format 字段
+/// </summary>
+internal record DeepSeekResponseFormat(
+    [property: JsonPropertyName("type")] string Type
+);
+
+/// <summary>
+/// 对应 DeepSeek API 请求中的 stream_options 字段
+/// </summary>
+internal record DeepSeekStreamOptions(
+    [property: JsonPropertyName("include_usage")] bool IncludeUsage
+);
+
 internal record DeepSeekChatRequest(
     [property: JsonPropertyName("model")] string? Model,
     [property: JsonPropertyName("messages")]
     IReadOnlyList<DeepSeekChatMessage> Messages,
     [property: JsonPropertyName("stream")] bool? Stream = null,
     [property: JsonPropertyName("stream_options")]
-    object? StreamOptions = null, // 使用 object 以匹配 { "include_usage": ... } 结构
+    DeepSeekStreamOptions? StreamOptions = null,
     [property: JsonPropertyName("temperature")]
     double? Temperature = null,
     [property: JsonPropertyName("max_tokens")]
@@ -31,7 +45,7 @@ internal record DeepSeekChatRequest(
     [property: JsonPropertyName("top_p")] float? TopP = null,
     [property: JsonPropertyName("stop")] IReadOnlyList<string>? Stop = null,
     [property: JsonPropertyName("response_format")]
-    object? ResponseFormat = null, // 使用 object 以匹配 { "type": "..." } 结构
+    DeepSeekResponseFormat? ResponseFormat = null,
     [property: JsonPropertyName("frequency_penalty")]
     float? FrequencyPenalty = null,
     [property: JsonPropertyName("presence_penalty")]

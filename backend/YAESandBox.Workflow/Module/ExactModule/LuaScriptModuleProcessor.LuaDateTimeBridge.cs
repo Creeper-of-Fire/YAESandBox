@@ -9,39 +9,31 @@ internal partial class LuaScriptModuleProcessor
     /// <summary>
     /// 日期时间模块的工厂类，暴露给 Lua 作为 'datetime'。
     /// </summary>
-    private class LuaDateTimeBridge
+    private class LuaDateTimeBridge(LuaLogBridge logger)
     {
-        /// <summary>
-        /// 获取当前 UTC 时间。
-        /// </summary>
-        // ReSharper disable once InconsistentNaming
-        public LuaDateTimeObject utcnow() => new(DateTimeOffset.UtcNow);
+        private LuaLogBridge Logger { get; } = logger;
 
-        /// <summary>
-        /// 获取当前本地时间（有时区偏移）。
-        /// </summary>
-        // ReSharper disable once InconsistentNaming
-        public LuaDateTimeObject now() => new(DateTimeOffset.Now);
-
-        /// <summary>
-        /// 从字符串解析日期时间。支持 ISO 8601 和自定义格式。
-        /// </summary>
-        /// <returns>如果解析成功，返回 LuaDateTimeObject；否则返回 null (nil in Lua)。</returns>
-        // ReSharper disable once InconsistentNaming
+        public LuaDateTimeObject utcnow() => new(DateTimeOffset.UtcNow, Logger);
+        public LuaDateTimeObject now() => new(DateTimeOffset.Now, Logger);
         public LuaDateTimeObject? parse(string dateString, string? format = null)
         {
-            if (string.IsNullOrEmpty(format))
+            try
             {
-                // 尝试标准解析（非常灵活，能处理多种 ISO 格式）
-                return DateTimeOffset.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result)
-                    ? new LuaDateTimeObject(result)
+                if (string.IsNullOrEmpty(format))
+                {
+                    return DateTimeOffset.TryParse(dateString, CultureInfo.InvariantCulture, DateTimeStyles.None, out var result) 
+                        ? new LuaDateTimeObject(result, Logger) 
+                        : null;
+                }
+                return DateTimeOffset.TryParseExact(dateString, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var resultExact) 
+                    ? new LuaDateTimeObject(resultExact, Logger) 
                     : null;
             }
-
-            // 使用指定的格式进行精确解析
-            return DateTimeOffset.TryParseExact(dateString, format, CultureInfo.InvariantCulture, DateTimeStyles.None, out var resultExact)
-                ? new LuaDateTimeObject(resultExact)
-                : null;
+            catch (Exception ex)
+            {
+                Logger.error($"datetime.parse 失败: {ex.Message}");
+                return null;
+            }
         }
     }
 
@@ -49,9 +41,10 @@ internal partial class LuaScriptModuleProcessor
     /// 一个安全的 DateTimeOffset 包装器，暴露给 Lua。
     /// 这个对象是不可变的；所有 'add' 方法都返回一个新对象。
     /// </summary>
-    private class LuaDateTimeObject(DateTimeOffset dateTimeOffset)
+    private class LuaDateTimeObject(DateTimeOffset dateTimeOffset, LuaLogBridge logger)
     {
         private DateTimeOffset Dto { get; } = dateTimeOffset;
+        private LuaLogBridge Logger { get; } = logger;
 
         // --- 属性 ---
         public int year => this.Dto.Year;
@@ -65,18 +58,29 @@ internal partial class LuaScriptModuleProcessor
         public int day_of_year => this.Dto.DayOfYear;
 
         // --- 操作方法 (返回新对象) ---
-        public LuaDateTimeObject add_years(int years) => new(this.Dto.AddYears(years));
-        public LuaDateTimeObject add_months(int months) => new(this.Dto.AddMonths(months));
-        public LuaDateTimeObject add_days(double days) => new(this.Dto.AddDays(days));
-        public LuaDateTimeObject add_hours(double hours) => new(this.Dto.AddHours(hours));
-        public LuaDateTimeObject add_minutes(double minutes) => new(this.Dto.AddMinutes(minutes));
-        public LuaDateTimeObject add_seconds(double seconds) => new(this.Dto.AddSeconds(seconds));
+        public LuaDateTimeObject add_years(int years) => new(this.Dto.AddYears(years), Logger);
+        public LuaDateTimeObject add_months(int months) => new(this.Dto.AddMonths(months), Logger);
+        public LuaDateTimeObject add_days(double days) => new(this.Dto.AddDays(days), Logger);
+        public LuaDateTimeObject add_hours(double hours) => new(this.Dto.AddHours(hours), Logger);
+        public LuaDateTimeObject add_minutes(double minutes) => new(this.Dto.AddMinutes(minutes), Logger);
+        public LuaDateTimeObject add_seconds(double seconds) => new(this.Dto.AddSeconds(seconds), Logger);
 
         // --- 格式化 ---
         /// <summary>
         /// 根据 .NET 格式化字符串来格式化日期。
         /// </summary>
-        public string format(string formatString) => this.Dto.ToString(formatString, CultureInfo.InvariantCulture);
+        public string format(string formatString)
+        {
+            try
+            {
+                return Dto.ToString(formatString, CultureInfo.InvariantCulture);
+            }
+            catch(Exception ex)
+            {
+                Logger.error($"datetime:format 失败: {ex.Message}");
+                return Dto.ToString("o"); // 返回一个默认的安全格式
+            }
+        }
 
         /// <summary>
         /// 默认输出为 ISO 8601 格式，方便调试。

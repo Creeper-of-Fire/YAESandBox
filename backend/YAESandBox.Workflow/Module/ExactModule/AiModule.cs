@@ -67,8 +67,9 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
         if (aiProcessor == null)
             return NormalError.Conflict(
                 $"未找到 AI 配置 {stepAiConfig.AiProcessorConfigUuid}配置下的类型：{stepAiConfig.SelectedAiModuleType}");
+        var prompt = stepProcessorContent.InputVar(AiModuleConfig.PromptsName) as IEnumerable<RoledPromptDto> ?? [];
         var result = await aiModule.ExecuteAsync(aiProcessor,
-            stepProcessorContent.TryGetPropertyValue<IEnumerable<RoledPromptDto>>(AiModuleConfig.PromptsName) ?? [],
+            prompt,
             stepAiConfig.IsStream,
             cancellationToken);
         if (result.TryGetError(out var error, out string? value))

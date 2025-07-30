@@ -19,7 +19,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, h, onMounted, ref} from 'vue';
+import {computed, h, onMounted, ref, watch} from 'vue';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import type {MenuOption} from 'naive-ui';
 import {NAlert, NButton, NH4, NIcon, NMenu, NSpin} from 'naive-ui';

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using YAESandBox.Authentication;
 using YAESandBox.Workflow.Analysis;
 using YAESandBox.Workflow.Config;
 
@@ -9,7 +10,7 @@ namespace YAESandBox.Workflow.API.Controller;
 [ApiController]
 [Route("api/v1/workflows-configs/analysis")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
-public class WorkflowAnalysisController(WorkflowValidationService validationService) : ControllerBase
+public class WorkflowAnalysisController(WorkflowValidationService validationService) : AuthenticatedApiControllerBase
 {
     private WorkflowValidationService ValidationService { get; } = validationService;
 

@@ -29,7 +29,7 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
     private DeepSeekAiProcessorConfig Config { get; } = config;
 
     private FlexibleOpenAiClient Client { get; } = new(dependencies.HttpClient, new ApiClientConfig(
-        BaseUrl: "https://api.deepseek.com",
+        BaseUrl: "https://api.deepseek.com/",
         ApiKey: config.ApiKey
     ));
 
@@ -109,15 +109,15 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
     {
         // 构造 response_format 对象
         var responseFormat = !string.IsNullOrEmpty(this.Config.ResponseFormatType) && this.Config.ResponseFormatType != "text"
-            ? new { type = this.Config.ResponseFormatType }
+            ? new DeepSeekResponseFormat(Type: this.Config.ResponseFormatType)
             : null;
 
         // 构造 stream_options 对象
         var streamOptions = stream && this.Config.StreamOptionsIncludeUsage.HasValue
-            ? new { include_usage = this.Config.StreamOptionsIncludeUsage.Value }
+            ? new DeepSeekStreamOptions(IncludeUsage: this.Config.StreamOptionsIncludeUsage.Value)
             : null;
 
-        return new DeepSeekChatRequest(
+        var request =  new DeepSeekChatRequest(
             Model: this.Config.ModelName,
             Messages: prompts.Select(p => p.ToDeepSeekMessage()).ToList(),
             Stream: stream,
@@ -132,5 +132,7 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
             Logprobs: this.Config.Logprobs,
             TopLogprobs: this.Config.TopLogprobs
         );
+
+        return request;
     }
 }

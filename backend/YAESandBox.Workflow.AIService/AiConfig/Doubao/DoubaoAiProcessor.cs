@@ -24,7 +24,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
     private HttpClient HttpClient { get; } = dependencies.HttpClient;
 
     private FlexibleOpenAiClient Client { get; } = new(dependencies.HttpClient,
-        new ApiClientConfig("https://ark.cn-beijing.volces.com/api/v3", parameters.ApiKey));
+        new ApiClientConfig("https://ark.cn-beijing.volces.com/api/v3/", parameters.ApiKey));
 
     private DoubaoAiProcessorConfig Config { get; } = parameters;
 

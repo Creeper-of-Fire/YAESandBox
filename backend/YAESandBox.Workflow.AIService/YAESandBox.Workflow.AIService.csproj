@@ -10,6 +10,7 @@
     </PropertyGroup>
 
     <ItemGroup>
+        <ProjectReference Include="..\YAESandBox.Authentication\YAESandBox.Authentication.csproj" />
         <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj"/>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">

@@ -68,9 +68,7 @@
               <router-view v-slot="{ Component, route }">
                 <!--                transition 调了半天还是不舒服，扔了得了，美化是没完没了的-->
                 <!--                <transition name="fade" mode="in-out">-->
-                <keep-alive>
                   <component :is="Component" :key="route.path"/>
-                </keep-alive>
                 <!--                </transition>-->
               </router-view>
             </main>

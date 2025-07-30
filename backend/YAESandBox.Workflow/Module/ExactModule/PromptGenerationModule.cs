@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
@@ -235,6 +236,7 @@ internal partial record PromptGenerationModuleConfig : AbstractModuleConfig<Prom
         Description = "编写包含动态占位符（例如 `[[variable]]`）的文本模板。这个现在有点不方便，之后可能会改为其他的模板格式。",
         Prompt = "例如：'你好，`[[playerName]]`！今天是`[[worldInfo]]`。'"
     )]
+    [DefaultValue("")]
     public required string Template { get; init; } = "";
 
 
