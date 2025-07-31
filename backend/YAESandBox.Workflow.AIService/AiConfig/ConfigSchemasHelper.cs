@@ -16,7 +16,7 @@ internal static class ConfigSchemasHelper // 改为静态类，因为所有成�
     private static Type AbstractAiProcessorConfigType { get; } = typeof(AbstractAiProcessorConfig);
 
     // 缓存所有继承自 AbstractAiProcessorConfig 的具体配置类型。
-    // 键为类型名称（不区分大小写），值为对应的 Type。
+    // 键为类型名称（不区分大小写），值为对应的 Role。
     private static IReadOnlyDictionary<string, Type> AvailableAiConfigTypesCache { get; }
 
     /// <summary>

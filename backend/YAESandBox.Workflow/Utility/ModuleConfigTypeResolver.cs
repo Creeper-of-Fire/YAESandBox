@@ -10,7 +10,7 @@ namespace YAESandBox.Workflow.Utility;
 /// </summary>
 internal static class ModuleConfigTypeResolver
 {
-    // 缓存所有已解析的类型。键为模块类型名称（不区分大小写），值为对应的 Type。
+    // 缓存所有已解析的类型。键为模块类型名称（不区分大小写），值为对应的 Role。
     // 使用 IReadOnlyDictionary 确保初始化后的不可变性。
     private static readonly IReadOnlyDictionary<string, Type> ResolvedTypesCache;
 

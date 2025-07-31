@@ -63,11 +63,12 @@ public static class VueFormSchemaGenerator
 
         // 添加自定义 Schema Processors
         settings.SchemaProcessors.Add(new DisplayAttributeProcessor());
-        settings.SchemaProcessors.Add(new StringOptionsProcessor());
+        
         settings.SchemaProcessors.Add(new RangeProcessor());
         settings.SchemaProcessors.Add(new HiddenProcessor());
         settings.SchemaProcessors.Add(new DataTypeProcessor());
         settings.SchemaProcessors.Add(new ClassLabelProcessor());
+        settings.SchemaProcessors.Add(new StringOptionsProcessor());
 
         // 允许外部进一步配置
         configureSettings?.Invoke(settings);

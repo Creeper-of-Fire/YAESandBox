@@ -23,12 +23,16 @@
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Module\ExactModule\LuaScriptModuleProcessor.LuaBridge.cs">
-        <DependentUpon>LuaScriptModule.cs</DependentUpon>
+      <Compile Update="Module\ExactModule\LuaRunner\LuaScriptRunner.LuaBridge.cs">
+        <DependentUpon>LuaScriptRunner.cs</DependentUpon>
       </Compile>
-      <Compile Update="Module\ExactModule\LuaScriptModuleProcessor.LuaDateTimeBridge.cs">
-        <DependentUpon>LuaScriptModule.cs</DependentUpon>
+      <Compile Update="Module\ExactModule\LuaRunner\LuaScriptRunner.LuaDateTimeBridge.cs">
+        <DependentUpon>LuaScriptRunner.cs</DependentUpon>
       </Compile>
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="Module\ExactModule\LuaRunner\json.lua" />
     </ItemGroup>
 
 </Project>

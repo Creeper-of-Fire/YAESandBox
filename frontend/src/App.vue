@@ -44,6 +44,16 @@
                     测试台
                   </n-button>
                 </router-link>
+                <router-link v-slot="{ navigate, isActive }" custom to="/dialog">
+                  <n-button
+                      :ghost="!isActive"
+                      :type="isActive ? 'primary' : 'default'"
+                      strong
+                      @click="navigate"
+                  >
+                    聊天
+                  </n-button>
+                </router-link>
               </n-space>
 
               <!-- 新增：用户状态和登出按钮 -->

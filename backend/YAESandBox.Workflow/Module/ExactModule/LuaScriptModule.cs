@@ -7,6 +7,7 @@ using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Module.ExactModule.LuaRunner;
 using static YAESandBox.Workflow.Module.ExactModule.LuaScriptModuleProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
 
@@ -34,107 +35,33 @@ internal partial class LuaScriptModuleProcessor(LuaScriptModuleConfig config)
     {
         string script = this.Config.Script ?? "";
         this.DebugDto.ExecutedScript = script;
+        
+        // 创建并使用通用的 Lua 脚本执行器
+        var runner = new LuaScriptRunner(stepProcessorContent, this.DebugDto);
+        
+        // 直接执行脚本，无需其他设置
+        return runner.ExecuteAsync(script, cancellationToken: cancellationToken);
+    }
+    
+    /// <summary>
+    /// Lua 脚本模块处理器的调试数据传输对象。
+    /// </summary>
+    internal class LuaScriptModuleProcessorDebugDto : IModuleProcessorDebugDto,ILogsDebugDto
+    {
+        /// <summary>
+        /// 实际执行的 Lua 脚本内容。
+        /// </summary>
+        public string? ExecutedScript { get; set; }
 
-        try
-        {
-            // 使用 using 确保 Lua 状态机被正确释放
-            using var lua = new Lua();
-            
-            lua.State.Encoding = System.Text.Encoding.UTF8;
+        /// <summary>
+        /// 脚本执行期间发生的运行时错误（如果有）。
+        /// </summary>
+        public string? RuntimeError { get; set; }
 
-            // --- 沙箱化：移除危险的内建模块 ---
-            // 通过将这些库的全局变量设为 nil，来阻止脚本访问文件系统、执行系统命令等不安全操作
-            lua.DoString(@"
-                os = nil
-                io = nil
-                debug = nil
-                package = nil
-                dofile = nil
-                loadfile = nil
-                require = nil
-            ");
-
-            // --- 注入安全 API 模块 ---
-
-
-            
-            // 1. 创建所有桥接类的实例
-            var logger = new LuaLogBridge(this.DebugDto);
-            var contextBridge = new LuaContextBridge(stepProcessorContent, logger);
-            var jsonBridge = new LuaJsonBridge(logger);
-            var regexBridge = new LuaRegexBridge(logger);
-            var dateTimeBridge = new LuaDateTimeBridge(logger);
-
-            // 2. 手动创建 Lua Table 并注册函数委托
-            
-            // 注册 log.*
-            lua.NewTable("log");
-            var logTable = lua["log"] as LuaTable;
-            logTable["info"] = logger.info;
-            logTable["warn"] = logger.warn;
-            logTable["error"] = logger.error;
-
-            // 注册 ctx.*
-            lua.NewTable("ctx");
-            var ctxTable = lua["ctx"] as LuaTable;
-            ctxTable["get"] = contextBridge.get;
-            ctxTable["set"] = contextBridge.set;
-
-            // 注册 json.*
-            lua.NewTable("json");
-            var jsonTable = lua["json"] as LuaTable;
-            jsonTable["encode"] = jsonBridge.encode;
-            jsonTable["decode"] = jsonBridge.decode;
-
-            // 注册 regex.*
-            lua.NewTable("regex");
-            var regexTable = lua["regex"] as LuaTable;
-            regexTable["is_match"] = regexBridge.is_match;
-            regexTable["match"] = regexBridge.match;
-            regexTable["match_all"] = regexBridge.match_all;
-
-            // 注册 datetime.*
-            lua.NewTable("datetime");
-            var datetimeTable = lua["datetime"] as LuaTable;
-            datetimeTable["utcnow"] = dateTimeBridge.utcnow;
-            datetimeTable["now"] = dateTimeBridge.now;
-            datetimeTable["parse"] = dateTimeBridge.parse;
-
-            // --- 执行脚本 ---
-            lua.DoString(script);
-
-            return Task.FromResult(Result.Ok());
-        }
-        catch (Exception ex)
-        {
-            // --- 全新的、更详细的错误处理 ---
-
-            // 1. 构建一个简洁但信息更丰富的错误消息，包含异常类型和主消息。
-            //    我们还会检查内部异常，因为真正的错误根源常常在那里。
-            var primaryException = ex.InnerException ?? ex;
-            string conciseErrorMessage = $"执行 Lua 脚本时发生错误: [{primaryException.GetType().Name}] {primaryException.Message}";
-
-            // 2. 获取完整的异常详情，包括所有内部异常和完整的堆栈跟踪。
-            //    ex.ToString() 是获取此信息的最佳方式。
-            string fullErrorDetails = ex.ToString();
-
-            // 3. 将信息记录到调试对象中。
-            this.DebugDto.RuntimeError = conciseErrorMessage; // 在 UI 上显示一个清晰的错误摘要。
-
-            // 将完整的、多行的堆栈跟踪信息添加到日志中，供开发者深入分析。
-            this.DebugDto.Logs.Add($"[FATAL] 脚本执行异常. 详细信息如下:");
-            // 使用 StringReader 逐行添加，以保持格式清晰
-            using (var reader = new StringReader(fullErrorDetails))
-            {
-                for (string? line = reader.ReadLine(); line != null; line = reader.ReadLine())
-                {
-                    this.DebugDto.Logs.Add(line);
-                }
-            }
-
-            // 4. 返回失败结果，将简洁的错误消息传递给工作流引擎。
-            return Task.FromResult(Result.Fail(fullErrorDetails).ToResult());
-        }
+        /// <summary>
+        /// 脚本通过 log 模块输出的日志。
+        /// </summary>
+        public List<string> Logs { get; } = new();
     }
 }
 

@@ -27,4 +27,20 @@ export class WorkflowExecutionService {
             },
         });
     }
+    /**
+     * @returns any OK
+     * @throws ApiError
+     */
+    public static postApiV1WorkflowExecutionExecuteStream({
+        requestBody,
+    }: {
+        requestBody?: WorkflowExecutionRequest,
+    }): CancelablePromise<any> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/workflow-execution/execute-stream',
+            body: requestBody,
+            mediaType: 'application/json',
+        });
+    }
 }

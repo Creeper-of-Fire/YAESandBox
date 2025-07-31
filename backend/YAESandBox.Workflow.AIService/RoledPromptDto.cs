@@ -11,7 +11,7 @@ public record RoledPromptDto
     /// 一个枚举，表示提示词的角色。
     /// </summary>
     [Required]
-    public required PromptRoleType Type { get; init; }
+    public required PromptRoleType Role { get; init; }
 
     /// <summary>
     /// 部分高级AI模型可以识别角色名称，因此可以指定角色名称。
@@ -32,7 +32,7 @@ public record RoledPromptDto
     /// <param name="name">部分高级AI模型可以识别角色名称，因此可以指定角色名称。</param>
     /// <returns></returns>
     public static RoledPromptDto System(string prompt, string name = "") =>
-        new() { Type = PromptRoleType.System, Content = prompt, Name = name };
+        new() { Role = PromptRoleType.System, Content = prompt, Name = name };
 
     /// <summary>
     /// 生成用户提示词
@@ -41,7 +41,7 @@ public record RoledPromptDto
     /// <param name="name">部分高级AI模型可以识别角色名称，因此可以指定角色名称。</param>
     /// <returns></returns>
     public static RoledPromptDto User(string prompt, string name = "") =>
-        new() { Type = PromptRoleType.User, Content = prompt, Name = name };
+        new() { Role = PromptRoleType.User, Content = prompt, Name = name };
 
     /// <summary>
     /// 生成助手提示词（即预输入的AI回复）
@@ -50,7 +50,7 @@ public record RoledPromptDto
     /// <param name="name">部分高级AI模型可以识别角色名称，因此可以指定角色名称。</param>
     /// <returns></returns>
     public static RoledPromptDto Assistant(string prompt, string name = "") =>
-        new() { Type = PromptRoleType.Assistant, Content = prompt, Name = name };
+        new() { Role = PromptRoleType.Assistant, Content = prompt, Name = name };
 }
 
 /// <summary>

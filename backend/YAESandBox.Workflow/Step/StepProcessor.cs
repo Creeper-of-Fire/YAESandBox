@@ -1,5 +1,8 @@
-﻿using YAESandBox.Depend.Results;
+﻿using System.Text.Json;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
+using YAESandBox.Depend.Storage;
+using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Module;
@@ -40,6 +43,43 @@ internal class StepProcessor(
         public StepProcessorConfig StepProcessorConfig { get; } = stepProcessorConfig;
 
         public WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
+
+        public IList<RoledPromptDto> Prompts
+        {
+            get
+            {
+                if (!this.StepVariable.TryGetValue(nameof(this.Prompts), out object? value))
+                    return new List<RoledPromptDto>();
+                if (value is IList<RoledPromptDto> prompts)
+                    return prompts;
+
+                try
+                {
+                    // 将从 Lua 返回的 C# 对象（如 List<object>）序列化成 JSON 字符串
+                    var json = JsonSerializer.Serialize(value);
+
+                    var result = JsonSerializer.Deserialize<List<RoledPromptDto>>(json, YaeSandBoxJsonHelper.JsonSerializerOptions);
+
+                    if (result == null)
+                    {
+                        // 如果反序列化结果是 null (例如，输入是 "null" 字符串)，返回空列表
+                        return new List<RoledPromptDto>();
+                    }
+
+                    // 为了后续访问效率，可以将转换后的结果写回 StepVariable
+                    this.StepVariable[nameof(this.Prompts)] = result;
+
+                    return result;
+                }
+                catch (Exception ex)
+                {
+                    // 提供详细的错误信息
+                    throw new InvalidCastException(
+                        $"无法将 StepVariable中的'Prompts'值(类型: {value.GetType().FullName})转换为 IList<RoledPromptDto>。JSON 转换失败: {ex.Message}",
+                        ex);
+                }
+            }
+        }
     }
 
     /// <summary>

@@ -13,12 +13,12 @@ file static class DeepSeekPromptMapper
 {
     public static DeepSeekChatMessage ToDeepSeekMessage(this RoledPromptDto prompt)
     {
-        string role = prompt.Type switch
+        string role = prompt.Role switch
         {
             PromptRoleType.System => "system",
             PromptRoleType.User => "user",
             PromptRoleType.Assistant => "assistant",
-            _ => throw new ArgumentOutOfRangeException(nameof(prompt.Type), $"不支持的角色类型: {prompt.Type}")
+            _ => throw new ArgumentOutOfRangeException(nameof(prompt.Role), $"不支持的角色类型: {prompt.Role}")
         };
         return new DeepSeekChatMessage(role, prompt.Content, prompt.Name);
     }

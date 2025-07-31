@@ -9,8 +9,8 @@ using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Step;
 using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
+using static YAESandBox.Workflow.Step.StepProcessor;
 
 namespace YAESandBox.Workflow.Module.ExactModule;
 
@@ -53,7 +53,7 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
 
 
     private static async Task<Result> PrepareAndExecuteAiModule(
-        StepProcessor.StepProcessorContent stepProcessorContent,
+        StepProcessorContent stepProcessorContent,
         AiModuleProcessor aiModule,
         CancellationToken cancellationToken = default)
     {
@@ -67,7 +67,7 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
         if (aiProcessor == null)
             return NormalError.Conflict(
                 $"未找到 AI 配置 {stepAiConfig.AiProcessorConfigUuid}配置下的类型：{stepAiConfig.SelectedAiModuleType}");
-        var prompt = stepProcessorContent.InputVar(AiModuleConfig.PromptsName) as IEnumerable<RoledPromptDto> ?? [];
+        var prompt = stepProcessorContent.Prompts;
         var result = await aiModule.ExecuteAsync(aiProcessor,
             prompt,
             stepAiConfig.IsStream,
@@ -99,14 +99,14 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
         (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken = default)
     {
         var result = await aiProcessor.NonStreamRequestAsync(prompts, cancellationToken: cancellationToken);
-        if (result.TryGetError(out var error,out string? value))
+        if (result.TryGetError(out var error, out string? value))
             return error;
         this.OnChunkReceivedScript(value);
         return value;
     }
 
     /// <inheritdoc />
-    public Task<Result> ExecuteAsync(StepProcessor.StepProcessorContent stepProcessorContent,
+    public Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent,
         CancellationToken cancellationToken = default) =>
         PrepareAndExecuteAiModule(stepProcessorContent, this, cancellationToken);
 }
@@ -124,7 +124,7 @@ internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
     [Display(Name = "配置名称", Description = "模块的配置名称，用于在界面上显示。")]
     public override string Name { get; init; } = string.Empty;
 
-    internal const string PromptsName = "Prompts";
+    internal const string PromptsName = nameof(StepProcessorContent.Prompts);
     internal const string AiOutputName = "AiOutput";
 
 

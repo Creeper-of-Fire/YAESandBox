@@ -12,6 +12,7 @@ import {routes as gamePlayerRoutes} from '@/app-game/routes.ts';
 import {routes as workbenchRoutes} from '@/app-workbench/routes.ts';
 import {routes as testHarnessRoutes} from '@/app-test-harness/routes.ts';
 import {routes as authRoutes} from '@/app-authentication/routes.ts';
+import {routes as dialogRoutes} from '@/app-dialog/routes';
 import {useAuthStore} from "@/app-authentication/stores/authStore.ts";
 // import { routes as userProfileRoutes } from '@/features/user-profile/routes'; // 更多特性...
 
@@ -27,6 +28,7 @@ const mainRoutes: RouteRecordRaw[] = [
     ...gamePlayerRoutes,
     ...workbenchRoutes,
     ...testHarnessRoutes,
+    ...dialogRoutes,
     // 可以将特性模块的路由作为顶层路由，如果它们有自己的完整页面布局
     // 这种方式下，特性模块的 routes.ts 导出的就是顶层路由配置了
     // ...workflowEditorRoutes, // 假设 workflowEditorRoutes 是 [{ path: '/editor/...', ... }]

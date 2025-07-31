@@ -9,7 +9,7 @@ namespace YAESandBox.Depend.Results;
 /// </summary>
 /// <typeparam name="TKey">字典的键类型。</typeparam>
 /// <typeparam name="TValue">字典的值类型。</typeparam>
-public record DictionaryResult<TKey, TValue> : Result where TKey : notnull
+public record  DictionaryResult<TKey, TValue> : Result where TKey : notnull
 {
     /// <inheritdoc />
     /// <remarks>当成功时，<see cref="ItemResults"/> 必定有值。</remarks>

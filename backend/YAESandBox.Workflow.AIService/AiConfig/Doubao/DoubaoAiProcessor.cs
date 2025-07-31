@@ -9,12 +9,12 @@ file static class PromptRoleMapper
 {
     public static DoubaoChatMessage ToDoubaoMessage(this RoledPromptDto prompt)
     {
-        return prompt.Type switch
+        return prompt.Role switch
         {
             PromptRoleType.System => new DoubaoChatMessage("system", prompt.Content),
             PromptRoleType.User => new DoubaoChatMessage("user", prompt.Content, Name: prompt.Name),
             PromptRoleType.Assistant => new DoubaoChatMessage("assistant", prompt.Content),
-            _ => throw new ArgumentOutOfRangeException(nameof(prompt.Type), $"不支持的角色: {prompt.Type}")
+            _ => throw new ArgumentOutOfRangeException(nameof(prompt.Role), $"不支持的角色: {prompt.Role}")
         };
     }
 }

@@ -47,14 +47,12 @@ internal partial class PromptGenerationModuleProcessor(
 
         var prompt = new RoledPromptDto
         {
-            Type = PromptRoleTypeExtension.ToPromptRoleType(this.Config.RoleType),
+            Role = PromptRoleTypeExtension.ToPromptRoleType(this.Config.RoleType),
             Content = substitutedContent,
             Name = this.Config.PromptNameInAiModel ?? string.Empty
         };
 
-        var prompts = stepProcessorContent.InputVar(AiModuleConfig.PromptsName) as IEnumerable<RoledPromptDto> ?? []; // 将生成的提示词添加到步骤内容中
-        prompts = prompts.Append(prompt);
-        stepProcessorContent.OutputVar(AiModuleConfig.PromptsName, prompts);
+        stepProcessorContent.Prompts.Add(prompt);
 
         this.DebugDto.GeneratedPrompt = prompt;
         return Task.FromResult(Result.Ok());
