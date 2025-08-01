@@ -19,11 +19,11 @@ internal static class ToProcessor
     internal static WorkflowProcessor ToWorkflowProcessor(
         this WorkflowProcessorConfig workflowProcessorConfig,
         IReadOnlyDictionary<string, string> triggerParams,
-        IMasterAiService masterAiService,
+        SubAiService aiService,
         IWorkflowDataAccess dataAccess,
         IWorkflowCallback callback)
     {
-        var content = new WorkflowRuntimeService(masterAiService, dataAccess, callback);
+        var content = new WorkflowRuntimeService(aiService, dataAccess, callback);
         return new WorkflowProcessor(content, workflowProcessorConfig, triggerParams.ToDictionary());
     }
 }

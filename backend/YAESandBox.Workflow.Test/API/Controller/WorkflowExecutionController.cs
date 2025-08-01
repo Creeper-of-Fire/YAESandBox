@@ -7,6 +7,7 @@ using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Utility;
 using Microsoft.AspNetCore.Http;
+using YAESandBox.Authentication;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService;
 
@@ -18,7 +19,7 @@ namespace YAESandBox.Workflow.Test.API.Controller;
 [ApiController]
 [Route("api/v1/workflow-execution")]
 [ApiExplorerSettings(GroupName = WorkflowTestModule.WorkflowTestGroupName)]
-public class WorkflowExecutionController(IMasterAiService masterAiService) : ControllerBase
+public class WorkflowExecutionController(IMasterAiService masterAiService) : AuthenticatedApiControllerBase
 {
     private IMasterAiService MasterAiService { get; } = masterAiService;
 
@@ -59,7 +60,7 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Con
 
         var processor = request.WorkflowConfig.ToWorkflowProcessor(
             request.TriggerParams,
-            this.MasterAiService,
+            this.MasterAiService.ToSubAiService(this.UserId),
             mockDataAccess,
             callback
         );
@@ -125,7 +126,7 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Con
                 var mockDataAccess = new MockWorkflowDataAccess();
                 var processor = request.WorkflowConfig.ToWorkflowProcessor(
                     request.TriggerParams,
-                    this.MasterAiService,
+                    this.MasterAiService.ToSubAiService(this.UserId),
                     mockDataAccess,
                     callback
                 );

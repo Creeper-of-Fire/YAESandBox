@@ -48,6 +48,8 @@ interface FieldProps
 
     // UI 扩展字段 (非标准)
     'ui:widget'?: string | Component;
+    'ui:custom-renderer'?: Component;
+    'ui:hidden'?: boolean;
     'ui:options'?: {
         isEditableSelectOptions?: boolean;
         [key: string]: unknown;
@@ -94,7 +96,6 @@ export function preprocessSchemaForWidgets(originalSchema: Record<string, any>):
         return {};
     }
     const schema = cloneDeep(originalSchema as FieldProps);
-    // 启动递归，传入顶层的 definitions 供全局引用
     recursivePreprocess(schema, schema.definitions || {});
     return schema;
 }
@@ -111,9 +112,21 @@ function recursivePreprocess(schemaNode: FieldProps, definitions: Record<string,
 {
     // 步骤 1: 首先处理当前节点自身的元数据转换（oneOf, widget 等）。
     // 这确保了在检查子节点之前，父节点的信息是最终的。
-    Object.assign(schemaNode, preprocessSingleField(schemaNode, definitions));
+    // preprocessSingleField 的逻辑是正确的，它返回了一个我们想要的扁平化对象。
+    const processedNode = preprocessSingleField(cloneDeep(schemaNode), definitions);
 
-    // 步骤 2: 处理 definitions (如果当前节点有的话)
+    // =================================================================
+    // 步骤 2: 替换 schemaNode 的内容，而不是合并。
+    // 这可以确保像 oneOf 这样的属性被彻底从原始 schemaNode 中移除。
+    // =================================================================
+    // 2.1 先清空当前节点的所有键
+    Object.keys(schemaNode).forEach(key => delete (schemaNode as Record<string, any>)[key]);
+    // 2.2 再将新节点的所有属性复制过来
+    Object.assign(schemaNode, processedNode);
+
+    debugger
+
+    // 步骤 3: 处理 definitions (如果当前节点有的话)
     // 确保在处理 properties/items 之前，所有 definitions 已被处理。
     if (schemaNode.definitions)
     {
@@ -123,7 +136,7 @@ function recursivePreprocess(schemaNode: FieldProps, definitions: Record<string,
         }
     }
 
-    // 步骤 3: 处理 properties (如果当前节点是对象)
+    // 步骤 4: 处理 properties (如果当前节点是对象)
     if (schemaNode.properties)
     {
         for (const fieldName in schemaNode.properties)
@@ -132,7 +145,7 @@ function recursivePreprocess(schemaNode: FieldProps, definitions: Record<string,
         }
     }
 
-    // 步骤 4: 处理 items (如果当前节点是数组)
+    // 步骤 5: 处理 items (如果当前节点是数组)
     // 这是修复问题的核心所在，它对任何数组类型的节点都生效。
     if (isFieldType(schemaNode, 'array') && schemaNode.items && !Array.isArray(schemaNode.items) && typeof schemaNode.items === 'object')
     {
@@ -151,6 +164,27 @@ function recursivePreprocess(schemaNode: FieldProps, definitions: Record<string,
 
         // 清理完毕后，对 items 节点本身进行递归处理。
         recursivePreprocess(itemSchema, definitions);
+    }
+
+    // =================================================================
+    // 步骤 6: 最终custom-renderer分类和转换逻辑
+    // 在所有子节点都处理完毕后，对当前节点进行最终决策。
+    // =================================================================
+    if (schemaNode['ui:custom-renderer']) {
+        if (isFieldType(schemaNode, 'object')) {
+            // 这是对象级自定义组件
+            // 1. 保留 ui:custom-renderer 给我们的 CustomFieldRenderer 使用
+            // 2. 添加 ui:hidden: true，告诉 vue3-form-naive 不要渲染这个对象
+            if (!schemaNode['ui:options'])
+                schemaNode['ui:options'] = {};
+            schemaNode['ui:hidden'] = true;
+        } else {
+            // 这是字段级自定义组件
+            // 1. 将自定义组件赋给官方的 ui:widget
+            schemaNode['ui:widget'] = schemaNode['ui:custom-renderer'];
+            // 2. 清理掉我们的中间属性
+            delete schemaNode['ui:custom-renderer'];
+        }
     }
 }
 
@@ -296,7 +330,7 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
         const component = getVuePluginComponent(vueComponentName);
         if (component)
         {
-            processedProps['ui:widget'] = component;
+            processedProps['ui:custom-renderer'] = component;
         }
         else
         {
@@ -306,50 +340,55 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
     // 其次使用 Web Component
     else if (wcTagName)
     {
-        processedProps['ui:widget'] = WebComponentWrapper;
+        processedProps['ui:custom-renderer'] = WebComponentWrapper;
         processedProps['ui:options'] ??= {};
         processedProps['ui:options'].tagName = wcTagName;
     }
 
-    // === 主应用内建组件注入逻辑 ===
-    const customRendererKey = fieldProps['x-custom-renderer'] as string;
-    if (customRendererKey) {
-        const component = MAIN_APP_WIDGETS[customRendererKey];
-        if (component) {
-            processedProps['ui:widget'] = component;
-        } else {
-            console.warn(`未在主应用中找到键名为 "${customRendererKey}" 的自定义渲染组件。`);
-        }
-        // 清理掉自定义指令
-        delete processedProps['x-custom-renderer'];
-    }
-
     // monaco-editor 处理
-    const monacoConfig = fieldProps['x-monaco-editor'] as {
+    const monacoConfig = processedProps['x-monaco-editor'] as {
         language: string;
         simpleConfigUrl: string;
         languageServerWorkerUrl: string
     } | undefined;
-
     if (monacoConfig && monacoConfig.language)
     {
-        // 1. 设置 ui:widget 为我们的 MonacoEditorWidget 组件
-        fieldProps['ui:widget'] = MonacoEditorWidget;
+        // 1. 设置 ui:custom-renderer 为我们的 MonacoEditorWidget 组件
+        processedProps['ui:custom-renderer'] = MonacoEditorWidget;
 
         // 2. 确保 ui:options 存在
-        if (!fieldProps['ui:options'])
+        if (!processedProps['ui:options'])
         {
-            fieldProps['ui:options'] = {};
+            processedProps['ui:options'] = {};
         }
 
         // 3. 将 monacoConfig 的内容作为 props 传递给 ui:options
         // vue3-form-naive 会将 ui:options 的所有键值对作为 props 传递给自定义 widget
-        fieldProps['ui:options'].language = monacoConfig.language;
-        fieldProps['ui:options'].simpleConfigUrl = monacoConfig.simpleConfigUrl;
-        fieldProps['ui:options'].languageServerWorkerUrl = monacoConfig.languageServerWorkerUrl;
+        processedProps['ui:options'].language = monacoConfig.language;
+        processedProps['ui:options'].simpleConfigUrl = monacoConfig.simpleConfigUrl;
+        processedProps['ui:options'].languageServerWorkerUrl = monacoConfig.languageServerWorkerUrl;
 
         // 4. (可选) 删除自定义指令，保持最终 schema 干净
-        delete fieldProps['x-monaco-editor'];
+        delete processedProps['x-monaco-editor'];
+    }
+
+    // === 主应用内建组件注入逻辑 ===
+    const customRendererKey = processedProps['x-custom-renderer'] as string;
+    if (customRendererKey) {
+        const component = MAIN_APP_WIDGETS[customRendererKey];
+        if (component) {
+            // ui:widget 不支持 type:object
+            // 错误的方式：processedProps['ui:widget'] = component;
+            // 正确的方式：使用我们自己的、不会被表单库解释的属性
+            processedProps['ui:custom-renderer'] = component;
+            processedProps['ui:hidden'] = true;
+            delete processedProps['oneOf']
+        } else {
+            console.warn(`未在主应用中找到键名为 "${customRendererKey}" 的自定义渲染组件。`);
+        }
+
+        // 确保 x-custom-renderer 指令被清理掉，但我们新的 ui:custom-renderer 属性被保留
+        delete processedProps['x-custom-renderer'];
     }
 
     // 清理空的 ui:options

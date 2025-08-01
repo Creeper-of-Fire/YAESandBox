@@ -8,9 +8,9 @@ export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AbstractAiProcessorConfig } from './models/AbstractAiProcessorConfig';
+export type { AiConfigTypeWithSchemaDto } from './models/AiConfigTypeWithSchemaDto';
 export type { AiConfigurationSet } from './models/AiConfigurationSet';
 export type { ProblemDetails } from './models/ProblemDetails';
-export type { SelectOptionDto } from './models/SelectOptionDto';
 export type { TestAiDto } from './models/TestAiDto';
 
 export { AiConfigSchemasService } from './services/AiConfigSchemasService';

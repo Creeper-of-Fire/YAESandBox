@@ -14,16 +14,16 @@
                 - :type="isActive ? 'primary' : 'default'" 根据路由是否激活来改变按钮样式，提供视觉反馈。
               -->
               <n-space class="navigation-controls">
-<!--                <router-link v-slot="{ navigate, isActive }" custom to="/game">-->
-<!--                  <n-button-->
-<!--                      :ghost="!isActive"-->
-<!--                      :type="isActive ? 'primary' : 'default'"-->
-<!--                      strong-->
-<!--                      @click="navigate"-->
-<!--                  >-->
-<!--                    游戏-->
-<!--                  </n-button>-->
-<!--                </router-link>-->
+                <!--                <router-link v-slot="{ navigate, isActive }" custom to="/game">-->
+                <!--                  <n-button-->
+                <!--                      :ghost="!isActive"-->
+                <!--                      :type="isActive ? 'primary' : 'default'"-->
+                <!--                      strong-->
+                <!--                      @click="navigate"-->
+                <!--                  >-->
+                <!--                    游戏-->
+                <!--                  </n-button>-->
+                <!--                </router-link>-->
                 <router-link v-slot="{ navigate, isActive }" custom to="/workbench">
                   <n-button
                       :ghost="!isActive"
@@ -78,7 +78,9 @@
               <router-view v-slot="{ Component, route }">
                 <!--                transition 调了半天还是不舒服，扔了得了，美化是没完没了的-->
                 <!--                <transition name="fade" mode="in-out">-->
+                <keep-alive>
                   <component :is="Component" :key="route.path"/>
+                </keep-alive>
                 <!--                </transition>-->
               </router-view>
             </main>
@@ -93,8 +95,6 @@
 </template>
 
 <script lang="ts" setup>
-import {onMounted, onUnmounted} from 'vue';
-import {useConnectionStore} from '@/app-game/stores/connectionStore.ts';
 import {lightTheme} from "naive-ui";
 import {useAuthStore} from "@/app-authentication/stores/authStore.ts";
 // import GlobalErrorDisplay from '@/components/GlobalErrorDisplay.vue';
@@ -119,7 +119,8 @@ const authStore = useAuthStore();
 //   // connectionStore.disconnectSignalR(); // 如果有断开方法
 // });
 
-const handleLogout = () => {
+const handleLogout = () =>
+{
   authStore.logout();
 };
 </script>

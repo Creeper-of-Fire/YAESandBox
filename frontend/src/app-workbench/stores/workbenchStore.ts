@@ -166,7 +166,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      */
     const moduleSchemasAsync =  reactive(useAsyncState(
         async () =>
-        { // <--- 重点修改：将 handler 函数改为 async
+        {
             console.log("正在获取模块Schema和动态资源...");
             const response: ModuleSchemasResponse = await ModuleConfigService.getApiV1WorkflowsConfigsGlobalModulesAllModuleConfigsSchemas();
 
@@ -268,7 +268,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             return {success: false, name: "【未找到草稿】", id: globalId, type, error: '草稿未找到'};
 
         let savePromise: Promise<any>;
-        let refreshPromise: Promise<any>;
+        let refreshPromise: () => Promise<any>;
 
         switch (type)
         {
@@ -277,21 +277,21 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                     workflowId: globalId,
                     requestBody: draft.data as WorkflowProcessorConfig
                 });
-                refreshPromise = globalWorkflowsAsync.execute(0);
+                refreshPromise =() =>  globalWorkflowsAsync.execute();
                 break;
             case 'step':
                 savePromise = StepConfigService.putApiV1WorkflowsConfigsGlobalSteps({
                     stepId: globalId,
                     requestBody: draft.data as StepProcessorConfig
                 });
-                refreshPromise = globalStepsAsync.execute(0);
+                refreshPromise =() =>  globalStepsAsync.execute();
                 break;
             case 'module':
                 savePromise = ModuleConfigService.putApiV1WorkflowsConfigsGlobalModules({
                     moduleId: globalId,
                     requestBody: draft.data as AbstractModuleConfig
                 });
-                refreshPromise = globalModulesAsync.execute(0);
+                refreshPromise = () => globalModulesAsync.execute();
                 break;
             default:
                 console.error('保存失败：未知的草稿类型。');
@@ -302,7 +302,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         {
             await savePromise;
             draft.originalState = JSON.stringify(draft.data);
-            await refreshPromise;
+            await refreshPromise();
             return {success: true, name: draft.data.name, id: globalId, type};
         } catch (error)
         {
@@ -411,10 +411,10 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
         console.log(`准备保存 ${dirtyDrafts.length} 个已修改的草稿...`);
 
-        const savePromises = dirtyDrafts.map(id =>
+        const savePromises = dirtyDrafts.map(async id =>
         {
             const draft = drafts.value[id];
-            return _saveDraft(draft.type, id);
+            return await _saveDraft(draft.type, id);
         });
 
         const results = await Promise.all(savePromises);

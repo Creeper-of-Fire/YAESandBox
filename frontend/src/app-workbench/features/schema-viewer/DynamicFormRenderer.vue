@@ -8,17 +8,26 @@
     </div>
 
     <!-- 动态表单 -->
-    <vue-form
-        v-else-if="processedSchema && typeof modelValue === 'object' && !effectiveErrorMessage"
-        ref="jsonFormRef"
-        :form-footer="{ show: false }"
-        :form-props="formProps"
-        :model-value="modelValue"
-        :schema="processedSchema"
-        style="flex-grow: 1;"
-        @change="handleFormChange"
-        @update:modelValue="handleFormUpdate"
-    />
+    <div v-else-if="processedSchema && typeof modelValue === 'object' && !effectiveErrorMessage">
+      <!-- 1. 渲染由 @lljj/vue3-form-naive 处理的标准表单部分 -->
+      <vue-form
+          ref="jsonFormRef"
+          :form-footer="{ show: false }"
+          :form-props="formProps"
+          :model-value="modelValue"
+          :schema="processedSchema"
+          style="flex-grow: 1;"
+          @change="handleFormChange"
+          @update:modelValue="handleFormUpdate"
+      />
+
+      <!-- 2. 在表单下方，渲染我们的自定义组件渲染器 -->
+      <CustomFieldRenderer
+          :schema-node="processedSchema"
+          :model-value="modelValue"
+          @update:model-value="handleFormUpdate"
+      />
+    </div>
 
     <!-- Schema 未加载或数据类型不正确时的空状态 -->
     <n-empty v-else-if="!processedSchema && !isLoading" description="Schema 未提供或加载失败。"/>
@@ -27,11 +36,11 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, defineAsyncComponent, markRaw, ref} from 'vue';
+import {computed, ref} from 'vue';
 import {NAlert, NEmpty, NSpin} from 'naive-ui';
 import VueForm from '@lljj/vue3-form-naive';
-import {cloneDeep} from "lodash-es";
-import {preprocessSchemaForWidgets} from "@/app-workbench/features/schema-viewer/preprocessSchema.ts"; // 确认此库的准确导入名称和方式
+import {preprocessSchemaForWidgets} from "@/app-workbench/features/schema-viewer/preprocessSchema.ts";
+import CustomFieldRenderer from "@/app-workbench/features/schema-viewer/CustomFieldRenderer.vue"; // 确认此库的准确导入名称和方式
 
 // ----------- Props -----------
 const props = defineProps({
@@ -97,8 +106,8 @@ const processedSchema = computed(() =>
   {
     try
     {
-      // 如你所说，此处不再添加 showTitle/showDescription 的逻辑
       const result = preprocessSchemaForWidgets(props.schema);
+      debugger
       return result;
     } catch (error)
     {

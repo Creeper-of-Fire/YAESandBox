@@ -7,15 +7,14 @@ using YAESandBox.Depend.Schema.Attributes; // 假设 StringOptions 和其他自�
 namespace YAESandBox.Workflow.AIService.AiConfig.DeepSeek;
 
 /// <summary>
-/// DeepSeek AI 处理器的完整配置。
-/// 此配置类包含了与DeepSeek API对话端点相关的几乎所有可调参数，
-/// 并使用了数据注解特性以便于前端生成配置界面和进行验证。
+/// DeepSeek的AI配置。
 /// </summary>
 internal record DeepSeekAiProcessorConfig() : AbstractAiProcessorConfig("DeepSeek")
 {
     // --- 核心配置 ---
 
     [Required(ErrorMessage = "API密钥是必填项。")]
+    [DataType(DataType.Password)]
     [Display(Name = "API 密钥 (API Key)", Description = "您的 DeepSeek API 密钥。")]
     public string? ApiKey { get; init; }
 

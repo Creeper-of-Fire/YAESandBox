@@ -1,62 +1,63 @@
-﻿// src/stores/aiConfigSchemaStore.ts
-import {defineStore} from 'pinia';
-import {ref} from 'vue';
-import {AiConfigSchemasService} from '@/app-workbench/types/generated/ai-config-api-client'; // Adjust path
+﻿import {defineStore} from 'pinia';
+import {computed, ref} from 'vue';
+import {
+    AiConfigSchemasService,
+    type AiConfigTypeWithSchemaDto
+} from '@/app-workbench/types/generated/ai-config-api-client';
 
-export const useAiConfigSchemaStore = defineStore('schemaStore', () =>
-{
-    const schemas = ref<Record<string, Record<string, any>>>({});
-    const isLoading = ref<Record<string, boolean>>({});
-    const fetchError = ref<Record<string, string | null>>({});
+export const useAiConfigSchemaStore = defineStore('aiConfigSchema', () => {
+    // --- State ---
+    const definitions = ref<Record<string, AiConfigTypeWithSchemaDto>>({});
+    const isLoading = ref(false);
+    const error = ref<string | null>(null);
 
-    async function getOrFetchSchema(configTypeName: string): Promise<Record<string, any> | undefined>
-    {
-        if (schemas.value[configTypeName])
-        {
-            return schemas.value[configTypeName];
-        }
-        if (isLoading.value[configTypeName])
-        {
-            return undefined; // Indicate loading
-        }
+    // --- Action ---
+    async function fetchAllDefinitions() {
+        if (Object.keys(definitions.value).length > 0) return; // 已经加载过了
 
-        isLoading.value[configTypeName] = true;
-        fetchError.value[configTypeName] = null;
-
-        try
-        {
-            const schema = await AiConfigSchemasService.getApiAiConfigurationManagementSchemas({configTypeName});
-            if (schema)
-            {
-                schemas.value[configTypeName] = schema; // Cache it
-                return schema;
-            } else
-            {
-                fetchError.value[configTypeName] = `Received empty schema response for ${configTypeName}.`;
-                console.error(fetchError.value[configTypeName]);
-                return undefined;
+        isLoading.value = true;
+        error.value = null;
+        try {
+            const response = await AiConfigSchemasService.getApiAiConfigurationManagementDefinitions();
+            const defsMap: Record<string, AiConfigTypeWithSchemaDto> = {};
+            for (const def of response) {
+                defsMap[def.value] = def;
             }
-        } catch (error: any)
-        {
-            const errorMessage = `Failed to fetch schema for ${configTypeName}: ${error.body?.detail || error.message || 'Unknown error'}`;
-            fetchError.value[configTypeName] = errorMessage;
-            console.error(errorMessage, error);
-            return undefined; // Indicate error
-        } finally
-        {
-            isLoading.value[configTypeName] = false;
+            definitions.value = defsMap;
+        } catch (e: any) {
+            const errorMessage = `加载AI模型类型定义失败: ${e.body?.detail || e.message || '未知错误'}`;
+            error.value = errorMessage;
+            console.error(errorMessage, e);
+        } finally {
+            isLoading.value = false;
         }
     }
 
-    // Getters (暴露给组件使用)
-    const getSchema = (configTypeName: string): Record<string, any> | undefined => schemas.value[configTypeName];
-    const isSchemaLoading = (configTypeName: string): boolean => !!isLoading.value[configTypeName];
-    const getSchemaError = (configTypeName: string): string | null => fetchError.value[configTypeName] ?? null;
+    // --- Getters ---
+    const availableTypesOptions = computed(() =>
+        Object.values(definitions.value)
+            .map(def => ({
+                label: def.label,
+                value: def.value,
+            }))
+            .sort((a, b) => a.label.localeCompare(b.label))
+    );
+
+    const allSchemas = computed(() => Object.values(definitions.value));
+
+    function getSchemaByName(typeName: string): Record<string, any> | undefined {
+        return definitions.value[typeName]?.schema;
+    }
 
     return {
-        getOrFetchSchema,
-        getSchema,
-        isSchemaLoading,
-        getSchemaError,
+        // State
+        isLoading,
+        error,
+        // Getter
+        availableTypesOptions,
+        allSchemas,
+        // Action
+        fetchAllDefinitions,
+        getSchemaByName,
     };
 });

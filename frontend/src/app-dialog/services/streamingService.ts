@@ -1,5 +1,6 @@
 ﻿import { fetchEventSource } from '@microsoft/fetch-event-source';
 import type { WorkflowProcessorConfig } from "@/app-workbench/types/generated/workflow-config-api-client";
+import { useAuthStore } from "@/app-authentication/stores/authStore";
 
 // 请求体的类型
 interface StreamRequest {
@@ -22,14 +23,24 @@ interface StreamCallbacks {
 
 // 封装的流式请求函数
 export function executeWorkflowStream(requestBody: StreamRequest, callbacks: StreamCallbacks) {
+    const authStore = useAuthStore();
+    const token = authStore.token;
+
     const ctrl = new AbortController();
+
+    // 构建 headers 对象，并动态添加 Authorization
+    const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
+    };
+
+    if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+    }
 
     fetchEventSource('/api/v1/workflow-execution/execute-stream', {
         method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Accept': 'text/event-stream',
-        },
+        headers: headers,
         body: JSON.stringify(requestBody),
         signal: ctrl.signal,
 

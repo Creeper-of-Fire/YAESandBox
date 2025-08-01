@@ -11,30 +11,61 @@ public interface IMasterAiService
     /// <summary>
     /// 创建一个 AI 处理器
     /// </summary>
-    /// <param name="aiProcessorConfig"></param>
+    /// <param name="userId"></param>
+    /// <param name="aiProcessorConfigUuid"></param>
+    /// <param name="aiModuleType"></param>
     /// <returns></returns>
-    IAiProcessor CreateAiProcessor(AbstractAiProcessorConfig aiProcessorConfig);
+    IAiProcessor? CreateAiProcessor(string userId, string aiProcessorConfigUuid, string aiModuleType);
+
+    /// <summary>
+    /// 
+    /// </summary>
+    /// <param name="userId"></param>
+    /// <returns></returns>
+    SubAiService ToSubAiService(string userId) => new SubAiService(this, userId);
 }
 
 /// <summary>
-/// 主AI服务
+/// 子AI服务，基于用户名
 /// </summary>
-/// <param name="httpClientFactory">HTTP客户端工厂</param>
-public class MasterAiService(IHttpClientFactory httpClientFactory) : IMasterAiService
+/// <param name="MasterAiService"></param>
+/// <param name="UserId"></param>
+public record SubAiService(IMasterAiService MasterAiService, string UserId)
 {
-    private IHttpClientFactory HttpClientFactory { get; } = httpClientFactory;
-
     /// <summary>
     /// 创建一个 AI 处理器
     /// </summary>
-    /// <param name="aiProcessorConfig"></param>
+    /// <param name="aiProcessorConfigUuid"></param>
+    /// <param name="aiModuleType"></param>
     /// <returns></returns>
-    public IAiProcessor CreateAiProcessor(AbstractAiProcessorConfig aiProcessorConfig)
+    public IAiProcessor? CreateAiProcessor(string aiProcessorConfigUuid, string aiModuleType) =>
+        this.MasterAiService.CreateAiProcessor(this.UserId, aiProcessorConfigUuid, aiModuleType);
+}
+
+/// <inheritdoc />
+public class MasterAiService(IHttpClientFactory httpClientFactory, IAiConfigurationProvider configProvider) : IMasterAiService
+{
+    private IHttpClientFactory HttpClientFactory { get; } = httpClientFactory;
+    private IAiConfigurationProvider ConfigProvider { get; } = configProvider;
+
+    /// <inheritdoc />
+    public IAiProcessor? CreateAiProcessor(string userId, string aiProcessorConfigUuid, string aiModuleType)
     {
+        if (string.IsNullOrEmpty(aiProcessorConfigUuid))
+            return null;
+
+        var configs = this.ConfigProvider.GetConfigurationSet(userId, aiProcessorConfigUuid);
+
+        if (configs == null) return null;
+
         // 调用配置对象的工厂方法
-        var httpClient = this.HttpClientFactory.CreateClient(aiProcessorConfig.ConfigType); // 使用配置的类型作为客户端名称
+        var config = configs.FindAiConfig(aiModuleType);
+        if (!config.TryGetValue(out var value))
+            return null;
+
+        var httpClient = this.HttpClientFactory.CreateClient(aiModuleType);
         var dependencies = new AiProcessorDependencies(httpClient);
-        var specificService = aiProcessorConfig.ToAiProcessor(dependencies);
+        var specificService = value.ToAiProcessor(dependencies);
 
         return specificService;
     }

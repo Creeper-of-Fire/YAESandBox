@@ -6,7 +6,10 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Nito.Disposables.Internals;
 using YAESandBox.Authentication;
+using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema;
 using YAESandBox.Workflow.AIService.AiConfig;
 
@@ -67,13 +70,17 @@ public class AiConfigSchemasController : AuthenticatedApiControllerBase
                     var schemaNode = JsonNode.Parse(schemaJson); // 解析为 JsonNode 以便正确序列化为 JSON 对象
 
                     // 3. 组合成 DTO
+                    if (schemaNode == null)
+                        return null;
+
                     return new AiConfigTypeWithSchemaDto
                     {
                         Value = type.Name,
                         Label = label,
-                        Schema = schemaNode!
+                        Schema = schemaNode
                     };
                 })
+                .WhereNotNull()
                 .OrderBy(dto => dto.Label)
                 .ToList();
 
@@ -108,6 +115,6 @@ public class AiConfigSchemasController : AuthenticatedApiControllerBase
         /// 用于动态生成表单的 JSON Schema (包含UI指令)。
         /// </summary>
         [Required]
-        public JsonNode Schema { get; init; } = new JsonObject();
+        public object Schema { get; init; } = new JsonObject();
     }
 }

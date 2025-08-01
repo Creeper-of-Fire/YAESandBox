@@ -171,7 +171,7 @@ type DraggableResourceItem<T> = {
   item: GlobalResourceItem<T>; // 原始 Record 的 value
 };
 
-const activeTab = ref<'workflow' | 'step' | 'module'>('step'); // 默认激活“步骤”标签页
+const activeTab = ref<'workflow' | 'step' | 'module'>('workflow'); // 默认激活“步骤”标签页
 
 const emit = defineEmits<{ (e: 'start-editing', payload: { type: ConfigType; id: string }): void; }>();
 const workbenchStore = useWorkbenchStore();

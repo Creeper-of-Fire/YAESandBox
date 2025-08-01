@@ -28,7 +28,6 @@ internal class CustomObjectWidgetRendererSchemaProcessor : ISchemaProcessor
 {
     public void Process(SchemaProcessorContext context)
     {
-        // 仅处理属性
         var attribute = context.ContextualType.GetContextAttribute<RenderAsCustomObjectWidgetAttribute>(true);
         if (attribute == null) return;
 

@@ -31,7 +31,7 @@ import type { ChatMessage } from '../types';
 // 定义一个更丰富的消息类型，用于在前端分离思维过程和显示文本
 type DisplayMessage = {
   id: string;
-  role: 'user' | 'assistant';
+  role: 'User' | 'Assistant';
   originalContent: string;
   thinking: string | null;
   displayText: string;
@@ -48,7 +48,7 @@ const scrollbarInstRef = ref<ScrollbarInst | null>(null);
 const displayHistory = computed<DisplayMessage[]>(() => {
   const thinkRegex = /<think>([\s\S]*?)<\/think>\n?([\s\S]*)/;
   return props.history.map(msg => {
-    if (msg.role === 'assistant') {
+    if (msg.role === 'Assistant') {
       const match = msg.content.match(thinkRegex);
       if (match) {
         return {

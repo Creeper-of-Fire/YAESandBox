@@ -1,16 +1,14 @@
 ﻿<!-- src/app-workbench/components/.../MainEditPanel.vue -->
 <template>
   <n-empty v-if="!selectedConfig" description="无激活的编辑会话" style="margin-top: 20%;"/>
-  <div v-if="selectedType ==='step'" class="main-content-wrapper">
-    <StepEditor :step-context="selectedConfig as StepEditorContext"/>
-  </div>
-
-  <!-- 如果有激活的会话，显示模块编辑器 -->
-  <div v-if="selectedType === 'module'" class="main-content-wrapper">
-    <ModuleEditor :module-context="selectedConfig as ModuleEditorContext"/>
-  </div>
-
-
+  <n-scrollbar>
+    <div v-if="selectedType ==='step'" class="main-content-wrapper">
+      <StepEditor :step-context="selectedConfig as StepEditorContext"/>
+    </div>
+    <div v-if="selectedType === 'module'" class="main-content-wrapper">
+      <ModuleEditor :module-context="selectedConfig as ModuleEditorContext"/>
+    </div>
+  </n-scrollbar>
 </template>
 
 <script lang="ts" setup>
