@@ -31,11 +31,6 @@ public record StepProcessorConfig
     public required string ConfigId { get; init; }
 
     /// <summary>
-    /// 步骤的AI配置，如果不存在，则这个模块不需要AI处理
-    /// </summary>
-    public StepAiConfig? StepAiConfig { get; init; }
-
-    /// <summary>
     /// 按顺序执行的模块列表。
     /// StepProcessor 在执行时会严格按照此列表的顺序执行模块。
     /// </summary>

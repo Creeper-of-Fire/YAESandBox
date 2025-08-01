@@ -3,6 +3,7 @@ using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using NJsonSchema;
 using NJsonSchema.Generation;
+using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 
 namespace YAESandBox.Depend.Schema;
@@ -69,6 +70,7 @@ public static class VueFormSchemaGenerator
         settings.SchemaProcessors.Add(new DataTypeProcessor());
         settings.SchemaProcessors.Add(new ClassLabelProcessor());
         settings.SchemaProcessors.Add(new StringOptionsProcessor());
+        settings.SchemaProcessors.Add(new CustomObjectWidgetRendererSchemaProcessor());
 
         // 允许外部进一步配置
         configureSettings?.Invoke(settings);

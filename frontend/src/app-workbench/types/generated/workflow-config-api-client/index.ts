@@ -15,7 +15,6 @@ export type { ModuleSchemasResponse } from './models/ModuleSchemasResponse';
 export type { ModuleValidationResult } from './models/ModuleValidationResult';
 export type { ProblemDetails } from './models/ProblemDetails';
 export { RuleSeverity } from './models/RuleSeverity';
-export type { StepAiConfig } from './models/StepAiConfig';
 export type { StepProcessorConfig } from './models/StepProcessorConfig';
 export type { StepProcessorConfigJsonResultDto } from './models/StepProcessorConfigJsonResultDto';
 export type { StepValidationResult } from './models/StepValidationResult';

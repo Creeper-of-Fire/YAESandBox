@@ -28,16 +28,10 @@
     当前可自由配置输入/输出映射，但完整映射验证和上下文变量建议仅在关联工作流中可用。
     保存前请仔细检查映射配置的正确性。
   </n-alert>
-
-  <StepAiConfigEditor
-      v-model="props.stepContext.data.stepAiConfig"
-      style="margin-top: 12px; margin-bottom: 12px;"
-  />
   </n-card>
 </template>
 
 <script lang="ts" setup>
-import StepAiConfigEditor from "@/app-workbench/components/step/editor/StepAiConfigEditor.vue";
 import {NAlert} from "naive-ui";
 import StepMappingsEditor from "@/app-workbench/components/step/editor/StepMappingsEditor.vue";
 import {computed, watch, ref} from "vue";

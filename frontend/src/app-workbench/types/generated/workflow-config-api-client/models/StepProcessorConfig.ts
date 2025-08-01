@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AbstractModuleConfig } from './AbstractModuleConfig';
-import type { StepAiConfig } from './StepAiConfig';
 /**
  * 步骤的配置
  */
@@ -20,7 +19,6 @@ export type StepProcessorConfig = {
      * 唯一的 ID，在拷贝时也需要更新
      */
     configId: string;
-    stepAiConfig?: StepAiConfig;
     /**
      * 按顺序执行的模块列表。
      * StepProcessor 在执行时会严格按照此列表的顺序执行模块。

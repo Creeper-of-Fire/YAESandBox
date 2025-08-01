@@ -4,11 +4,13 @@ using Namotion.Reflection;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema.Attributes;
+using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Step;
 using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
 
@@ -18,7 +20,7 @@ namespace YAESandBox.Workflow.Module.ExactModule;
 /// Ai调用模块，Ai的配置保存在外部的Step，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiModuleConfig"/>里面。
 /// </summary>
 /// <param name="onChunkReceivedScript"></param>
-internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
+internal class AiModuleProcessor(Action<string> onChunkReceivedScript, AiModuleConfig config)
     : IWithDebugDto<AiModuleProcessorDebugDto>, INormalModule
 {
     /// <inheritdoc />
@@ -32,6 +34,7 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
 
     // TODO 这里是回调函数，应该由脚本完成
     private Action<string> OnChunkReceivedScript { get; } = onChunkReceivedScript;
+    private AiModuleConfig Config { get; } = config;
 
     /// <summary>
     /// AI模块的运行
@@ -57,20 +60,20 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
         AiModuleProcessor aiModule,
         CancellationToken cancellationToken = default)
     {
-        var stepAiConfig = stepProcessorContent.StepProcessorConfig.StepAiConfig;
+        var aiConfig = aiModule.Config.AiConfiguration;
         var workflowRuntimeService = stepProcessorContent.WorkflowRuntimeService;
-        if (stepAiConfig?.SelectedAiModuleType == null || stepAiConfig.AiProcessorConfigUuid == null)
+        if (aiConfig.SelectedAiModuleType == null || aiConfig.AiProcessorConfigUuid == null)
             return NormalError.Conflict($"步骤 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI模块。");
         var aiProcessor = workflowRuntimeService.MasterAiService.CreateAiProcessor(
-            stepAiConfig.AiProcessorConfigUuid,
-            stepAiConfig.SelectedAiModuleType);
+            aiConfig.AiProcessorConfigUuid,
+            aiConfig.SelectedAiModuleType);
         if (aiProcessor == null)
             return NormalError.Conflict(
-                $"未找到 AI 配置 {stepAiConfig.AiProcessorConfigUuid}配置下的类型：{stepAiConfig.SelectedAiModuleType}");
+                $"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiModuleType}");
         var prompt = stepProcessorContent.Prompts;
         var result = await aiModule.ExecuteAsync(aiProcessor,
             prompt,
-            stepAiConfig.IsStream,
+            aiConfig.IsStream,
             cancellationToken);
         if (result.TryGetError(out var error, out string? value))
             return error;
@@ -111,8 +114,6 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript)
         PrepareAndExecuteAiModule(stepProcessorContent, this, cancellationToken);
 }
 
-[NoConfig]
-[SingleInStep]
 [Behind(typeof(PromptGenerationModuleConfig))]
 [ClassLabel("🤖AI调用")]
 internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
@@ -127,6 +128,16 @@ internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
     internal const string PromptsName = nameof(StepProcessorContent.Prompts);
     internal const string AiOutputName = "AiOutput";
 
+    /// <summary>
+    /// AI 服务配置。
+    /// </summary>
+    [RenderAsCustomObjectWidget("AiConfigEditorWidget")]
+    [Display(Name = "AI 服务配置", Description = "为该AI调用模块配置AI服务、模型和流式选项。")]
+    public ModuleAiConfig AiConfiguration { get; init; } = new()
+    {
+        IsStream = false
+    };
+
 
     /// <inheritdoc />
     internal override List<string> GetConsumedVariables() => [PromptsName];
@@ -135,5 +146,21 @@ internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
     internal override List<string> GetProducedVariables() => [AiOutputName];
 
     protected override AiModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
-        new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); });
+        new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); },this);
+}
+
+/// <summary>
+/// 模块本身的 AI 配置。
+/// </summary>
+public record ModuleAiConfig
+{
+    /// <summary>AI服务的配置的UUID</summary>
+    public string? AiProcessorConfigUuid { get; init; }
+
+    /// <summary>当前选中的AI模型的类型名</summary>
+    public string? SelectedAiModuleType { get; init; }
+
+    /// <summary>是否为流式传输</summary>
+    [Required]
+    public required bool IsStream { get; init; } = false;
 }

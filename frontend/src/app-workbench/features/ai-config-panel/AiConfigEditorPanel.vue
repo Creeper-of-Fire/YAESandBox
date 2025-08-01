@@ -1,4 +1,5 @@
-﻿<template>
+﻿<!-- AiConfigEditorPanel.vue -->
+<template>
   <n-spin :show="componentLoading > 0">
     <n-flex vertical size="large">
       <!-- 上方控制区域：配置集选择与操作 -->
@@ -72,8 +73,7 @@
       </n-card>
 
       <!-- 下方区域：动态表单 -->
-      <n-card v-if="currentConfigSet && selectedAiModuleType && currentSchema"
-              :title="currentSchema.description"> <!-- 假设 description 仍然在原始 schema-viewer 中 -->
+      <n-card v-if="currentConfigSet && selectedAiModuleType && currentSchema" :title="currentSchema.description">
         <dynamic-form-renderer
             v-if="typeof formDataCopy === 'object'"
             :key="formRenderKey"

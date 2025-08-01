@@ -11,7 +11,12 @@ import MonacoEditorWidget from "@/app-workbench/features/schema-viewer/field-wid
 // =================================================================
 const MyCustomStringAutoComplete = markRaw(defineAsyncComponent(() => import('@/app-workbench/features/schema-viewer/field-widget/MyCustomStringAutoComplete.vue')));
 const SliderWithInputWidget = markRaw(defineAsyncComponent(() => import('@/app-workbench/features/schema-viewer/field-widget/SliderWithInputWidget.vue')));
-
+// --- 主应用内建的、通过键名引用的自定义组件 ---
+// 这是我们为 RenderWithMainAppComponent 设计的注册表
+const MAIN_APP_WIDGETS: Record<string, Component> = {
+    'AiConfigEditorWidget': markRaw(defineAsyncComponent(() => import('@/app-workbench/features/schema-viewer/field-widget/AiConfigEditorWidget.vue')))
+    // 未来可以添加更多内建组件...
+};
 
 // =================================================================
 // 2. 类型定义
@@ -304,6 +309,19 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
         processedProps['ui:widget'] = WebComponentWrapper;
         processedProps['ui:options'] ??= {};
         processedProps['ui:options'].tagName = wcTagName;
+    }
+
+    // === 主应用内建组件注入逻辑 ===
+    const customRendererKey = fieldProps['x-custom-renderer'] as string;
+    if (customRendererKey) {
+        const component = MAIN_APP_WIDGETS[customRendererKey];
+        if (component) {
+            processedProps['ui:widget'] = component;
+        } else {
+            console.warn(`未在主应用中找到键名为 "${customRendererKey}" 的自定义渲染组件。`);
+        }
+        // 清理掉自定义指令
+        delete processedProps['x-custom-renderer'];
     }
 
     // monaco-editor 处理

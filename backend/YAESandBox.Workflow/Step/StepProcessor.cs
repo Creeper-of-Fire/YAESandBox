@@ -95,8 +95,7 @@ internal class StepProcessor(
 
     private List<IWithDebugDto<IModuleProcessorDebugDto>> Modules { get; } =
         config.Modules.Select(module => module.ToModuleProcessor(workflowRuntimeService)).ToList();
-
-    internal StepAiConfig? StepAiConfig { get; } = config.StepAiConfig;
+    
     internal WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
 
     /// <summary>

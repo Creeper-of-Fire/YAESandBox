@@ -1,5 +1,4 @@
-<!-- src/app-workbench/components/.../StepAiConfigEditor.vue -->
-<template>
+﻿<template>
   <n-card
       :content-style="{padding:0}"
       :header-style="{ padding: '4px 16px' }"
@@ -7,7 +6,7 @@
   >
     <template #header>
       <div style="display: flex; justify-content: space-between; align-items: center;">
-        <span>步骤 AI 服务配置</span>
+        <span>AI 服务配置</span>
         <n-space align="center">
           <!-- 启用/禁用按钮 -->
           <n-popover v-if="!config" trigger="hover">
@@ -18,7 +17,7 @@
                 </template>
               </n-button>
             </template>
-            启用并配置步骤 AI 服务
+            启用并配置 AI 服务
           </n-popover>
           <n-popconfirm
               v-if="config"
@@ -35,10 +34,10 @@
                     </template>
                   </n-button>
                 </template>
-                删除步骤 AI 服务
+                禁用 AI 服务配置
               </n-popover>
             </template>
-            确定要禁用并删除此步骤的 AI 服务配置吗？
+            确定要禁用并清空此模块的 AI 服务配置吗？
           </n-popconfirm>
 
           <!-- 折叠按钮 (仅当配置存在时显示) -->
@@ -56,13 +55,10 @@
       </div>
     </template>
 
-    <!-- 可折叠的内容区域 -->
     <n-collapse-transition :show="isExpanded">
-      <!-- 当 config (即 props.modelValue) 存在时，显示配置表单 -->
-      <div v-if="config" :style="{ padding: isExpanded && config ? '12px 16px' : '0' }"> <!-- 展开时给内容一点上边距 -->
+      <div v-if="config" :style="{ padding: isExpanded && config ? '12px 16px' : '0' }">
         <n-spin :show="isLoadingAiConfigSets">
-          <!-- AI 配置集选择 -->
-          <n-form-item-row help="选择一个全局AI配置集作为此步骤AI服务的基础。" label="选择 AI 配置集">
+          <n-form-item-row help="选择一个全局AI配置集作为此AI服务的基础。" label="选择 AI 配置集">
             <n-select
                 v-model:value="config.aiProcessorConfigUuid"
                 :options="aiConfigSetOptions"
@@ -77,7 +73,6 @@
             系统中没有找到可用的 AI 配置集。请先在“全局AI配置”中创建。
           </n-alert>
 
-          <!-- AI 模型选择 (仅当配置集被选定时显示) -->
           <n-form-item-row v-if="config.aiProcessorConfigUuid != null" help="从选定的配置集中选择一个具体的AI模型。" label="选择 AI 模型">
             <n-select
                 v-model:value="config.selectedAiModuleType"
@@ -92,46 +87,47 @@
             </n-text>
           </n-form-item-row>
 
-          <!-- 流式传输开关 (仅当模型被选定时显示) -->
           <n-form-item-row v-if="config.selectedAiModuleType != null" help="是否要求AI服务以流式方式返回结果。" label="流式传输">
             <n-switch v-model:value="config.isStream"/>
           </n-form-item-row>
-
-          <!-- 移除原先底部的 "禁用步骤AI服务" 按钮，已移至 header -->
         </n-spin>
       </div>
-      <!-- 当 config 为 undefined (即未启用AI配置时)，折叠区域内不显示任何内容，由 header 的启用按钮控制 -->
     </n-collapse-transition>
-    <!-- 移除原先的 "启用并配置步骤 AI 服务" 按钮，已移至 header -->
   </n-card>
 </template>
 
 <script lang="ts" setup>
 import {computed, onMounted, ref} from 'vue';
-import {NAlert, NButton, NCard, NFormItemRow, NIcon, NSelect, NSpin, NSwitch, NText} from 'naive-ui';
-import {AddIcon, DeleteIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon } from '@/utils/icons.ts';
-import type {StepAiConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
+import {NAlert, NButton, NCard, NCollapseTransition, NFormItemRow, NIcon, NPopconfirm, NPopover, NSelect, NSpin, NSwitch, NText} from 'naive-ui';
+import {Add as AddIcon, TrashOutline as DeleteIcon, ChevronUp as KeyboardArrowUpIcon, ChevronDown as KeyboardArrowDownIcon} from '@vicons/ionicons5';
+// 定义新类型，或者从生成的文件中导入
+// 为了解耦，最好在这里本地定义
+interface AiModuleSpecificConfig {
+  aiProcessorConfigUuid: string | null;
+  selectedAiModuleType: string | null;
+  isStream: boolean;
+}
+
 import {type AiConfigurationSet, AiConfigurationsService} from '@/app-workbench/types/generated/ai-config-api-client';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
 import {useAsyncState} from '@vueuse/core';
 
+// 这是一个自定义表单字段，所以它接收 modelValue 并发出 update:modelValue
 const props = defineProps<{
-  modelValue: StepAiConfig | undefined;
+  modelValue: AiModuleSpecificConfig | undefined;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: StepAiConfig | undefined): void;
+  (e: 'update:modelValue', value: AiModuleSpecificConfig | undefined): void;
 }>();
 
-// 控制折叠状态的 ref，默认为展开
 const isExpanded = ref(true);
-
 const workbenchStore = useWorkbenchStore();
 
+// 使用一个可写的计算属性来代理 props.modelValue，这是 v-model 的标准实践
 const config = computed({
   get: () => props.modelValue,
-  set: (newValue) =>
-  {
+  set: (newValue) => {
     emit('update:modelValue', newValue);
   }
 });
@@ -142,29 +138,26 @@ const {state: allAiConfigSets, isLoading: isLoadingAiConfigSets, execute: fetchA
     {immediate: false}
 );
 
-onMounted(() =>
-{
+onMounted(() => {
   fetchAllAiConfigSets();
+  // 如果初始就有配置，则保持展开
+  isExpanded.value = !!props.modelValue;
 });
 
-const aiConfigSetOptions = computed(() =>
-{
+const aiConfigSetOptions = computed(() => {
   return Object.entries(allAiConfigSets.value || {}).map(([uuid, set]) => ({
     label: set.configSetName,
     value: uuid,
   }));
 });
 
-const currentSelectedAiConfigSet = computed<AiConfigurationSet | null>(() =>
-{
-  // 同时检查 null 和 undefined
+const currentSelectedAiConfigSet = computed<AiConfigurationSet | null>(() => {
   if (!config.value || config.value.aiProcessorConfigUuid == null) return null;
   const uuid = config.value.aiProcessorConfigUuid;
   return (allAiConfigSets.value && uuid) ? allAiConfigSets.value[uuid] : null;
 });
 
-const aiModuleTypeOptions = computed(() =>
-{
+const aiModuleTypeOptions = computed(() => {
   if (!currentSelectedAiConfigSet.value || !config.value) return [];
   return Object.keys(currentSelectedAiConfigSet.value.configurations).map(typeKey => ({
     label: workbenchStore.moduleMetadata[typeKey]?.classLabel || typeKey,
@@ -172,44 +165,32 @@ const aiModuleTypeOptions = computed(() =>
   }));
 });
 
-const handleConfigSetChange = (newUuid: string | null | undefined) =>
-{ // newUuid 也可能为 undefined
-  if (config.value)
-  {
-    // 确保在访问 config.value 之前，它已经被初始化（即用户点击了“启用”）
-    // 如果 config.value 存在，那么它的属性 aiProcessorConfigUuid 和 selectedAiModuleType 就可以被安全地赋值为 null
+const handleConfigSetChange = (newUuid: string | null) => {
+  if (config.value) {
     const selectedSet = newUuid ? allAiConfigSets.value?.[newUuid] : null;
-    if (!selectedSet || Object.keys(selectedSet.configurations).length === 0)
-    {
+    if (!selectedSet || Object.keys(selectedSet.configurations).length === 0) {
       config.value.selectedAiModuleType = null;
-    }
-    else
-    {
-      // 同时检查 null 和 undefined
+    } else {
       if (config.value.selectedAiModuleType != null &&
-          !selectedSet.configurations.hasOwnProperty(config.value.selectedAiModuleType))
-      {
+          !selectedSet.configurations.hasOwnProperty(config.value.selectedAiModuleType)) {
         config.value.selectedAiModuleType = null;
       }
     }
   }
 };
 
-const handleEnableAiConfig = () =>
-{
+const handleEnableAiConfig = () => {
+  // 发出事件来创建一个新的、有默认值的配置对象
   emit('update:modelValue', {
-    // 当启用时，显式地将可选属性设为 null 或一个有意义的初始空状态，而不是 undefined。
-    // 这样可以确保 config.value 对象始终具有这些属性，即使它们的值是空的。
-    // 如果你的业务逻辑允许它们在启用后仍然是 undefined，那么这里可以设为 undefined。
-    // 但通常设为 null 更易于后续处理，因为你可以确定属性存在。
     aiProcessorConfigUuid: null,
     selectedAiModuleType: null,
     isStream: false,
   });
+  isExpanded.value = true;
 };
 
-const handleDisableAiConfig = () =>
-{
+const handleDisableAiConfig = () => {
+  // 发出 undefined 来“删除”这个配置
   emit('update:modelValue', undefined);
 };
 
@@ -219,5 +200,7 @@ const handleDisableAiConfig = () =>
 .n-card {
   background-color: #fcfdff;
   border: 1px solid #f0f3f5;
+  /* 确保在 DynamicFormRenderer 中不会有奇怪的外边距 */
+  margin-top: 4px;
 }
 </style>

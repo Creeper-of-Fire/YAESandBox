@@ -9,7 +9,6 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AbstractModuleConfig } from './models/AbstractModuleConfig';
 export type { ProblemDetails } from './models/ProblemDetails';
-export type { StepAiConfig } from './models/StepAiConfig';
 export type { StepProcessorConfig } from './models/StepProcessorConfig';
 export type { WorkflowExecutionRequest } from './models/WorkflowExecutionRequest';
 export type { WorkflowExecutionResult } from './models/WorkflowExecutionResult';
