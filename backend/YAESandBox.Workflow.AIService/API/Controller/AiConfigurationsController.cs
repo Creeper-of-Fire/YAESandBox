@@ -34,7 +34,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<IReadOnlyDictionary<string, AiConfigurationSet>>> GetAllConfigurations()
     {
-        return await this.ConfigurationManager.GetAllConfigurationsAsync().ToActionResultAsync();
+        return await this.ConfigurationManager.GetAllConfigurationsAsync(this.UserId).ToActionResultAsync();
     }
 
     /// <summary>
@@ -54,62 +54,40 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (string.IsNullOrWhiteSpace(uuid))
             return this.BadRequest("UUID 不能为空。");
 
-        return await this.ConfigurationManager.GetConfigurationByUuidAsync(uuid).ToActionResultAsync();
+        return await this.ConfigurationManager.GetConfigurationByUuidAsync(this.UserId,uuid).ToActionResultAsync();
     }
 
     /// <summary>
-    /// 添加一个新的 AI 配置集。
+    /// 创建或更新一个 AI 配置集。此操作是幂等的。
     /// </summary>
-    /// <param name="configs">要添加的 AI 配置集对象。</param>
-    /// <returns>新创建配置集的 UUID。</returns>
-    /// <response code="201">配置集已成功创建，并返回新创建的 UUID。</response>
-    /// <response code="400">请求体无效或模型验证失败。</response>
-    /// <response code="500">添加配置集时发生内部服务器错误。</response>
-    [HttpPost]
-    [ProducesResponseType(typeof(string), StatusCodes.Status201Created)] // 返回新资源的 UUID
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<string>> AddConfiguration([FromBody] AiConfigurationSet configs)
-    {
-        var result = await this.ConfigurationManager.AddConfigurationAsync(configs);
-        if (result.TryGetValue(out string? value))
-        {
-            return this.CreatedAtAction(nameof(this.GetConfigurationByUuid), new { uuid = value }, value);
-        }
-
-        return this.Get500ErrorResult(result);
-    }
-
-    /// <summary>
-    /// 更新一个已存在的 AI 配置集。
-    /// </summary>
-    /// <param name="uuid">要更新的配置集的唯一标识符。</param>
-    /// <param name="config">包含更新信息的 AI 配置集对象。</param>
-    /// <returns>无内容响应表示成功。</returns>
+    /// <param name="uuid">要创建或更新的配置集的唯一标识符（由客户端提供）。</param>
+    /// <param name="config">包含完整信息的 AI 配置集对象。</param>
+    /// <returns>如果创建了新配置，返回 201 Created；如果更新了现有配置，返回 204 No Content。</returns>
+    /// <response code="201">配置集已成功创建。</response>
     /// <response code="204">配置集已成功更新。</response>
-    /// <response code="400">请求无效，例如 UUID 为空。</response>
-    /// <response code="404">未找到要更新的配置集。</response>
-    /// <response code="500">更新配置时发生内部服务器错误。</response>
+    /// <response code="400">请求无效，例如 UUID 为空或请求体无效。</response>
+    /// <response code="500">保存配置时发生内部服务器错误。</response>
     [HttpPut("{uuid}")]
-    [ProducesResponseType(StatusCodes.Status204NoContent)] // 成功更新，无内容返回
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status201Created)]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpdateConfiguration(string uuid, [FromBody] AiConfigurationSet config)
+    public async Task<IActionResult> UpsertConfiguration(string uuid, [FromBody] AiConfigurationSet config)
     {
-        // return this.StatusCode(StatusCodes.Status500InternalServerError, "更新配置前检查配置集失败。"); // 测试用
         if (string.IsNullOrWhiteSpace(uuid))
             return this.BadRequest("UUID 不能为空。");
 
-        // 验证：传入的 config 的 ModuleType 应该与存储中 uuid 对应的配置的 ModuleType 一致。
-        // 这一步可以在 Manager 层做，或者在这里做。
-        var existingConfigResult = await this.ConfigurationManager.GetConfigurationByUuidAsync(uuid);
-        if (existingConfigResult.TryGetError(out var error))
-            return this.Get500ErrorResult(error);
+        var result = await this.ConfigurationManager.UpsertConfigurationAsync(this.UserId, uuid, config);
 
-        return await this.ConfigurationManager.UpdateConfigurationAsync(uuid, config).ToActionResultAsync();
+        if (result.TryGetError(out var error, out var upsertType))
+        {
+            return this.Get500ErrorResult(error); 
+        }
+
+        return upsertType == UpsertResultType.Created
+            ? this.CreatedAtAction(nameof(this.GetConfigurationByUuid), new { uuid = uuid }, config)
+            : this.NoContent();
     }
-
     /// <summary>
     /// 根据 UUID 删除一个 AI 配置集。
     /// </summary>
@@ -127,7 +105,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (string.IsNullOrWhiteSpace(uuid))
             return this.BadRequest("UUID 不能为空。");
 
-        return await this.ConfigurationManager.DeleteConfigurationAsync(uuid).ToActionResultAsync();
+        return await this.ConfigurationManager.DeleteConfigurationAsync(this.UserId,uuid).ToActionResultAsync();
     }
 
     /// <summary>
@@ -180,7 +158,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
             // 理论上不会发生，ConfigSchemasHelper.GetTypeByName 可能已经处理
             return this.BadRequest($"类型 '{moduleType}' 不是一个有效的 AI 配置类型。");
 
-        var allSetsResult = await this.ConfigurationManager.GetAllConfigurationsAsync();
+        var allSetsResult = await this.ConfigurationManager.GetAllConfigurationsAsync(this.UserId);
         if (allSetsResult.TryGetValue(out var allSets))
         {
             var set = allSets.FirstOrDefault(s => s.Value.ConfigSetName == AiConfigurationSet.DefaultConfigSetName).Value;

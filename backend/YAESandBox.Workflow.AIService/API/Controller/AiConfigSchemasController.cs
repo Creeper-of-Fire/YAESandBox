@@ -1,4 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿// AiConfigSchemasController.cs
+
+using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text.Json;
 using System.Text.Json.Nodes;
@@ -20,118 +22,92 @@ namespace YAESandBox.Workflow.AIService.API.Controller;
 public class AiConfigSchemasController : AuthenticatedApiControllerBase
 {
     /// <summary>
-    /// 获取指定 AI 配置类型的表单 Schema 结构 (JSON Schema 格式，包含 ui: 指令)。
-    /// 用于前端动态生成该类型配置的【新建】或【编辑】表单骨架。
+    /// 获取所有可用的 AI 配置【类型定义及对应的UI Schema】。
+    /// 此端点一次性返回所有信息，用于前端高效构建配置选择列表和动态表单，取代了之前先获取类型列表再逐个请求 Schema 的流程。
     /// </summary>
-    /// <param name="configTypeName">AI 配置的类型名称 (例如 "DoubaoAiProcessorConfig")。</param>
-    /// <returns>一个 JSON 字符串，代表符合 JSON Schema 标准并包含 vue-json-schema-form UI 指令的 Schema。</returns>
-    /// <response code="200">成功获取指定配置类型的 JSON Schema。</response>
-    /// <response code="400">请求的配置类型名称无效。</response>
-    /// <response code="404">未找到指定名称的配置类型。</response>
-    /// <response code="500">生成 Schema 时发生内部服务器错误。</response>
-    [HttpGet("schemas/{configTypeName}")]
-    [Produces("application/json")] // 明确指定返回 application/json
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)] // 返回的是 JSON Schema 对象，typeof(object) 比较通用
-    [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    /// <returns>一个列表，每个对象包含：
+    /// 'Value': 配置类型的编程名称 (如 "DoubaoAiProcessorConfig")。
+    /// 'Label': 用户友好的类型显示名称 (如 "豆包AI模型")。
+    /// 'Schema': 该类型的完整 JSON Schema (包含 ui: 指令)，用于动态生成表单。
+    /// </returns>
+    /// <response code="200">成功获取所有 AI 配置类型的定义及其 Schema。</response>
+    /// <response code="500">生成 Schema 过程中发生内部服务器错误。</response>
+    [HttpGet("definitions")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(List<AiConfigTypeWithSchemaDto>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public ActionResult<object> GetSchemaForConfigType(string configTypeName) // 返回 ActionResult<object> 以便返回原始 JSON
+    public ActionResult<List<AiConfigTypeWithSchemaDto>> GetAllConfigTypesWithSchemas()
     {
-        if (string.IsNullOrWhiteSpace(configTypeName))
-        {
-            return this.BadRequest("配置类型名称 (configTypeName) 不能为空。");
-        }
-
-        var configType = ConfigSchemasHelper.GetAiConfigTypeByName(configTypeName);
-
-        if (configType == null)
-        {
-            return this.NotFound($"名为 '{configTypeName}' 的 AI 配置类型未找到。");
-        }
-
-        // GetTypeByName 已经确保了它是 AbstractAiProcessorConfig 的子类
-        // 但可以保留这个检查作为额外的防御层
-        if (!typeof(AbstractAiProcessorConfig).IsAssignableFrom(configType))
-        {
-            // 这个情况理论上不会发生，因为 GetTypeByName 已经筛选过了
-            return this.BadRequest($"类型 '{configTypeName}' 不是一个有效的 AI 配置类型。");
-        }
-
         try
         {
-            string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(configType);
-            var jsonNode = JsonNode.Parse(schemaJson);
-            return this.Ok(jsonNode);
-        }
-        catch (JsonException jsonEx)
-        {
-            // Log the error: schemaJson
-            // Log the exception: jsonEx
-            return this.StatusCode(StatusCodes.Status500InternalServerError, $"生成的 Schema 不是有效的 JSON 格式。错误: {jsonEx.Message}");
+            var availableTypes = ConfigSchemasHelper.GetAvailableAiConfigConcreteTypes();
+
+            var result = availableTypes.Select(type =>
+                {
+                    // 1. 获取用户友好的显示名称 (Label)
+                    var displayAttr = type.GetCustomAttribute<DisplayAttribute>(false);
+                    string label = displayAttr?.GetName() ?? type.Name;
+
+                    if (label.EndsWith("AiProcessorConfig", StringComparison.OrdinalIgnoreCase))
+                    {
+                        label = label[..^"AiProcessorConfig".Length].Trim();
+                    }
+                    else if (label.EndsWith("Config", StringComparison.OrdinalIgnoreCase))
+                    {
+                        label = label[..^"Config".Length].Trim();
+                    }
+
+                    if (string.IsNullOrEmpty(label))
+                    {
+                        label = type.Name; // Fallback
+                    }
+
+                    // 2. 生成并解析该类型的 JSON Schema
+                    string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(type);
+                    var schemaNode = JsonNode.Parse(schemaJson); // 解析为 JsonNode 以便正确序列化为 JSON 对象
+
+                    // 3. 组合成 DTO
+                    return new AiConfigTypeWithSchemaDto
+                    {
+                        Value = type.Name,
+                        Label = label,
+                        Schema = schemaNode!
+                    };
+                })
+                .OrderBy(dto => dto.Label)
+                .ToList();
+
+            return this.Ok(result);
         }
         catch (Exception ex)
         {
+            // 任何一个类型的 Schema 生成失败，都会导致整个请求失败，并记录详细错误
             // Log the exception: ex
-            return this.StatusCode(StatusCodes.Status500InternalServerError, $"为类型 '{configTypeName}' 生成 Schema 时发生内部错误: {ex.Message}");
+            return this.StatusCode(StatusCodes.Status500InternalServerError, $"生成 AI 配置类型定义列表时发生内部错误: {ex.Message}");
         }
     }
 
     /// <summary>
-    /// 获取所有可用的 AI 配置【类型定义】列表。
-    /// 用于前端展示可以【新建】哪些类型的 AI 配置。
+    /// 代表一个包含完整定义的 AI 配置类型，用于前端一次性加载。
     /// </summary>
-    /// <returns>一个列表，每个 SelectOptionDto 包含：
-    /// 'Value': 配置类型的编程名称 (如 "DoubaoAiProcessorConfig")，用于后续请求 Schema。
-    /// 'Label': 用户友好的类型显示名称 (如 "豆包AI模型")。
-    /// </returns>
-    /// <response code="200">成功获取所有可用的 AI 配置类型列表。</response>
-    [HttpGet("available-config-types")]
-    [ProducesResponseType(typeof(List<SelectOptionDto>), StatusCodes.Status200OK)] // SelectOptionDto 来自 Schema 命名空间
-    public ActionResult<List<SelectOptionDto>> GetAvailableConfigTypeDefinitions()
-    {
-        var availableTypes = ConfigSchemasHelper.GetAvailableAiConfigConcreteTypes();
-
-        var result = availableTypes.Select(type =>
-            {
-                // 尝试从 DisplayAttribute 获取用户友好的名称
-                var displayAttr = type.GetCustomAttribute<DisplayAttribute>(false); // false: 不检查继承链
-                string label = displayAttr?.GetName() ?? type.Name;
-
-                // 简化标签名称的逻辑 (与你之前提供的 AiConfigSchemasController 类似)
-                if (label.EndsWith("AiProcessorConfig", StringComparison.OrdinalIgnoreCase))
-                {
-                    label = label[..^"AiProcessorConfig".Length].Trim();
-                }
-                else if (label.EndsWith("Config", StringComparison.OrdinalIgnoreCase))
-                {
-                    label = label[..^"Config".Length].Trim();
-                }
-
-                if (string.IsNullOrEmpty(label)) label = type.Name; // Fallback
-
-                return new SelectOptionDto { Value = type.Name, Label = label };
-            })
-            .OrderBy(so => so.Label)
-            .ToList();
-
-        return this.Ok(result);
-    }
-
-    /// <summary>
-    /// 代表一个选择项，用于下拉列表或单选/复选按钮组。
-    /// </summary>
-    public class SelectOptionDto
+    public class AiConfigTypeWithSchemaDto
     {
         /// <summary>
-        /// 选项的实际值。
+        /// 选项的实际值，即配置类型的编程名称 (例如 "DoubaoAiProcessorConfig")。
         /// </summary>
         [Required]
-        public object Value { get; init; } = string.Empty;
+        public string Value { get; init; } = string.Empty;
 
         /// <summary>
-        /// 选项在UI上显示的文本。
+        /// 选项在UI上显示的文本 (例如 "豆包AI模型")。
         /// </summary>
         [Required]
         public string Label { get; init; } = string.Empty;
+
+        /// <summary>
+        /// 用于动态生成表单的 JSON Schema (包含UI指令)。
+        /// </summary>
+        [Required]
+        public JsonNode Schema { get; init; } = new JsonObject();
     }
 }

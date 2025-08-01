@@ -8,36 +8,33 @@ namespace YAESandBox.Workflow.AIService;
 /// </summary>
 public interface IMasterAiService
 {
-    public List<string>? GetAbleAiProcessorType(string aiProcessorConfigUuid);
-    IAiProcessor? CreateAiProcessor(string aiProcessorConfigUuid, string aiModuleType);
+    /// <summary>
+    /// 创建一个 AI 处理器
+    /// </summary>
+    /// <param name="aiProcessorConfig"></param>
+    /// <returns></returns>
+    IAiProcessor CreateAiProcessor(AbstractAiProcessorConfig aiProcessorConfig);
 }
 
-public class MasterAiService(IHttpClientFactory httpClientFactory, IAiConfigurationProvider configProvider) : IMasterAiService
+/// <summary>
+/// 主AI服务
+/// </summary>
+/// <param name="httpClientFactory">HTTP客户端工厂</param>
+public class MasterAiService(IHttpClientFactory httpClientFactory) : IMasterAiService
 {
     private IHttpClientFactory HttpClientFactory { get; } = httpClientFactory;
-    private IAiConfigurationProvider ConfigProvider { get; } = configProvider;
 
-    public List<string>? GetAbleAiProcessorType(string aiProcessorConfigUuid) =>
-        this.ConfigProvider.GetConfigurationSet(aiProcessorConfigUuid)?.GetAllDefinedTypes();
-
-    public IAiProcessor? CreateAiProcessor(string aiProcessorConfigUuid, string aiModuleType)
+    /// <summary>
+    /// 创建一个 AI 处理器
+    /// </summary>
+    /// <param name="aiProcessorConfig"></param>
+    /// <returns></returns>
+    public IAiProcessor CreateAiProcessor(AbstractAiProcessorConfig aiProcessorConfig)
     {
-        if (string.IsNullOrEmpty(aiProcessorConfigUuid))
-            return null;
-
-        var configs = this.ConfigProvider.GetConfigurationSet(aiProcessorConfigUuid);
-
-        if (configs == null) return null;
-
         // 调用配置对象的工厂方法
-        var config = configs.FindAiConfig(aiModuleType);
-        if (!config.TryGetValue(out var value))
-            return null;
-
-        var httpClient = this.HttpClientFactory.CreateClient(aiModuleType); // 使用配置的类型作为客户端名称
+        var httpClient = this.HttpClientFactory.CreateClient(aiProcessorConfig.ConfigType); // 使用配置的类型作为客户端名称
         var dependencies = new AiProcessorDependencies(httpClient);
-        var specificService = value.ToAiProcessor(dependencies);
-        // --- 变化结束 ---
+        var specificService = aiProcessorConfig.ToAiProcessor(dependencies);
 
         return specificService;
     }

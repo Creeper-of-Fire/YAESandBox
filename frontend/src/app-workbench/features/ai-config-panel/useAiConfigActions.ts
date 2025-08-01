@@ -252,7 +252,7 @@ export function useAiConfigActions(params: UseAiConfigActionsParams)
         // 如果 allConfigSets 为空，或者需要选择一个默认项，可以在这里处理
         // 考虑到后端保证至少有一个，这里可能不需要特殊处理空列表的情况
         // 但如果删除了当前选中的，最好是清空选择，或者选中列表中的第一个（如果存在）
-        if (Object.keys(allConfigSets).length > 0 && !selectedConfigSetUuid.value)
+        if (Object.keys(allConfigSets).length > 0)
         {
             // selectedConfigSetUuid.value = Object.keys(allConfigSets)[0]; // 可选：默认选中第一个
         } else if (Object.keys(allConfigSets).length === 0)

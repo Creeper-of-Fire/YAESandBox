@@ -24,30 +24,6 @@ export class AiConfigurationsService {
         });
     }
     /**
-     * 添加一个新的 AI 配置集。
-     * @returns string 配置集已成功创建，并返回新创建的 UUID。
-     * @throws ApiError
-     */
-    public static postApiAiConfigurations({
-        requestBody,
-    }: {
-        /**
-         * 要添加的 AI 配置集对象。
-         */
-        requestBody?: AiConfigurationSet,
-    }): CancelablePromise<string> {
-        return __request(OpenAPI, {
-            method: 'POST',
-            url: '/api/ai-configurations',
-            body: requestBody,
-            mediaType: 'application/json',
-            errors: {
-                400: `请求体无效或模型验证失败。`,
-                500: `添加配置集时发生内部服务器错误。`,
-            },
-        });
-    }
-    /**
      * 根据 UUID 获取一个特定的 AI 配置集。
      * @returns AiConfigurationSet 成功获取指定的 AI 配置集。
      * @throws ApiError
@@ -73,8 +49,8 @@ export class AiConfigurationsService {
         });
     }
     /**
-     * 更新一个已存在的 AI 配置集。
-     * @returns void
+     * 创建或更新一个 AI 配置集。此操作是幂等的。
+     * @returns any 配置集已成功创建。
      * @throws ApiError
      */
     public static putApiAiConfigurations({
@@ -82,14 +58,14 @@ export class AiConfigurationsService {
         requestBody,
     }: {
         /**
-         * 要更新的配置集的唯一标识符。
+         * 要创建或更新的配置集的唯一标识符（由客户端提供）。
          */
         uuid: string,
         /**
-         * 包含更新信息的 AI 配置集对象。
+         * 包含完整信息的 AI 配置集对象。
          */
         requestBody?: AiConfigurationSet,
-    }): CancelablePromise<void> {
+    }): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'PUT',
             url: '/api/ai-configurations/{uuid}',
@@ -99,9 +75,8 @@ export class AiConfigurationsService {
             body: requestBody,
             mediaType: 'application/json',
             errors: {
-                400: `请求无效，例如 UUID 为空。`,
-                404: `未找到要更新的配置集。`,
-                500: `更新配置时发生内部服务器错误。`,
+                400: `请求无效，例如 UUID 为空或请求体无效。`,
+                500: `保存配置时发生内部服务器错误。`,
             },
         });
     }
