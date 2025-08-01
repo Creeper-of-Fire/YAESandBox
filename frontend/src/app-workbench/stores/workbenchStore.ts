@@ -331,6 +331,59 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     // =================================================================
 
     /**
+     * @description 从后端和本地状态中删除一个全局配置项。
+     * @param type - 要删除的配置类型
+     * @param id - 全局配置的ID
+     * @returns 如果成功，返回 true；否则返回 false。
+     */
+    async function deleteGlobalConfig(type: ConfigType, id: string): Promise<boolean> {
+        let deletePromise: Promise<any>;
+
+        switch (type) {
+            case 'workflow':
+                deletePromise = WorkflowConfigService.deleteApiV1WorkflowsConfigsGlobalWorkflows({ workflowId: id });
+                break;
+            case 'step':
+                deletePromise = StepConfigService.deleteApiV1WorkflowsConfigsGlobalSteps({ stepId: id });
+                break;
+            case 'module':
+                deletePromise = ModuleConfigService.deleteApiV1WorkflowsConfigsGlobalModules({ moduleId: id });
+                break;
+            default:
+                console.error('删除失败：未知的配置类型。');
+                return false;
+        }
+
+        try {
+            await deletePromise;
+
+            // 从对应的全局资源状态中移除
+            switch (type) {
+                case 'workflow':
+                    if (globalWorkflowsAsync.state[id]) delete globalWorkflowsAsync.state[id];
+                    break;
+                case 'step':
+                    if (globalStepsAsync.state[id]) delete globalStepsAsync.state[id];
+                    break;
+                case 'module':
+                    if (globalModulesAsync.state[id]) delete globalModulesAsync.state[id];
+                    break;
+            }
+
+            // 如果这个项正在被编辑（存在于草稿中），也一并移除草稿
+            if (drafts.value[id]) {
+                delete drafts.value[id];
+            }
+
+            return true;
+        } catch (error) {
+            console.error(`删除 ${type} (ID: ${id}) 时发生错误:`, error);
+            // 这里可以向上抛出错误，让调用方处理 message 提示
+            throw error;
+        }
+    }
+
+    /**
      * 将一个已有的配置对象保存为新的全局配置。
      * @param configToSave - 要保存为全局的配置对象。
      */
@@ -542,6 +595,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
         // 其他
         createGlobalConfig,
+        deleteGlobalConfig,
 
         // --- 内部方法，供 EditSession 使用 ---
         // Vue 3 的 defineStore setup 语法不允许真正意义上的私有化，

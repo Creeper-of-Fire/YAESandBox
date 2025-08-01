@@ -107,7 +107,6 @@ const processedSchema = computed(() =>
     try
     {
       const result = preprocessSchemaForWidgets(props.schema);
-      debugger
       return result;
     } catch (error)
     {

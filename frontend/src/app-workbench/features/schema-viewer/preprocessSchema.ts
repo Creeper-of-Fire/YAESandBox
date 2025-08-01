@@ -124,8 +124,6 @@ function recursivePreprocess(schemaNode: FieldProps, definitions: Record<string,
     // 2.2 再将新节点的所有属性复制过来
     Object.assign(schemaNode, processedNode);
 
-    debugger
-
     // 步骤 3: 处理 definitions (如果当前节点有的话)
     // 确保在处理 properties/items 之前，所有 definitions 已被处理。
     if (schemaNode.definitions)

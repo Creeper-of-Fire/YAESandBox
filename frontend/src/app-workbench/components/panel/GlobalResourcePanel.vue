@@ -85,6 +85,7 @@
                 type="workflow"
                 @start-editing="startEditing"
                 @show-error-detail="showErrorDetail"
+                @contextmenu="handleContextMenu"
             />
           </div>
         </draggable>
@@ -113,6 +114,7 @@
                 type="step"
                 @start-editing="startEditing"
                 @show-error-detail="showErrorDetail"
+                @contextmenu="handleContextMenu"
             />
           </div>
         </draggable>
@@ -141,6 +143,7 @@
                 type="module"
                 @start-editing="startEditing"
                 @show-error-detail="showErrorDetail"
+                @contextmenu="handleContextMenu"
             />
           </div>
         </draggable>
@@ -148,12 +151,23 @@
       </div>
     </template>
   </HeaderAndBodyLayout>
+
+  <n-dropdown
+      placement="bottom-start"
+      trigger="manual"
+      :x="dropdownPosition.x"
+      :y="dropdownPosition.y"
+      :options="dropdownOptions"
+      :show="showDropdown"
+      @select="handleDropdownSelect"
+      @clickoutside="showDropdown = false"
+  />
 </template>
 
 
 <script lang="ts" setup>
-import {computed, h, onMounted, ref} from 'vue';
-import {NAlert, NButton, NEmpty, NFlex, NH4, NSpin, NTab, NTabs, useDialog, useMessage} from 'naive-ui';
+import {computed, h, nextTick, onMounted, reactive, ref} from 'vue';
+import {type DropdownOption, NAlert, NButton, NEmpty, NFlex, NH4, NIcon, NSpin, NTab, NTabs, useDialog, useMessage} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import type {ConfigObject, ConfigType} from "@/app-workbench/services/EditSession";
 import {VueDraggable as draggable} from "vue-draggable-plus";
@@ -163,7 +177,7 @@ import HeaderAndBodyLayout from "@/app-workbench/layouts/HeaderAndBodyLayout.vue
 import {createBlankConfig} from "@/app-workbench/utils/createBlankConfig.ts";
 import InlineInputPopover from "@/app-workbench/components/share/InlineInputPopover.vue";
 import type {EnhancedAction} from "@/app-workbench/composables/useConfigItemActions.ts";
-import {AddIcon} from "@/utils/icons.ts";
+import {AddIcon, EditIcon, TrashIcon} from "@/utils/icons.ts";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -411,6 +425,86 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement)
   }
 
   dataTransfer.effectAllowed = 'copy'
+}
+
+// --- 右键菜单 (Context Menu) 的状态和逻辑 ---
+const showDropdown = ref(false);
+const dropdownPosition = reactive({ x: 0, y: 0 });
+const activeContextItem = ref<{ type: ConfigType; id: string; name: string; isDamaged?: boolean } | null>(null);
+
+// 动态生成菜单选项
+const dropdownOptions = computed<DropdownOption[]>(() => {
+  if (!activeContextItem.value) return [];
+
+  const options: DropdownOption[] = [];
+
+  if (activeContextItem.value.isDamaged) {
+    options.push({
+      label: '强制删除',
+      key: 'delete',
+      icon: () => h(NIcon, { component: TrashIcon })
+    });
+  } else {
+    options.push({
+      label: '编辑',
+      key: 'edit',
+      icon: () => h(NIcon, { component: EditIcon })
+    });
+    options.push({
+      type: 'divider',
+      key: 'd1'
+    });
+    options.push({
+      label: '删除',
+      key: 'delete',
+      icon: () => h(NIcon, { component: TrashIcon })
+    });
+  }
+  return options;
+});
+
+// 处理从子组件发出的右键事件
+function handleContextMenu(payload: { type: ConfigType; id: string; name: string; isDamaged?: boolean; event: MouseEvent }) {
+  showDropdown.value = false; // 先隐藏任何已存在的菜单
+  activeContextItem.value = { ...payload };
+  dropdownPosition.x = payload.event.clientX;
+  dropdownPosition.y = payload.event.clientY;
+
+  nextTick(() => {
+    showDropdown.value = true; // 在下一个 DOM 更新周期显示菜单
+  });
+}
+
+// 处理菜单项点击
+function handleDropdownSelect(key: 'edit' | 'delete') {
+  showDropdown.value = false;
+  const item = activeContextItem.value;
+  if (!item) return;
+
+  if (key === 'edit') {
+    startEditing({ type: item.type, id: item.id });
+  } else if (key === 'delete') {
+    promptDelete(item.type, item.id, item.name);
+  }
+}
+
+// 弹出删除确认对话框
+function promptDelete(type: ConfigType, id: string, name: string) {
+  dialog.warning({
+    title: '确认删除',
+    content: `你确定要永久删除全局资源 “${name}” 吗？此操作不可恢复。`,
+    positiveText: '确定删除',
+    negativeText: '取消',
+    onPositiveClick: async () => {
+      try {
+        // 调用我们第一步在 store 中添加的方法
+        await workbenchStore.deleteGlobalConfig(type, id);
+        message.success(`已删除 “${name}”`);
+      } catch (error) {
+        message.error(`删除 “${name}” 失败，请查看控制台获取详情。`);
+      }
+    },
+  });
 }
 
 </script>

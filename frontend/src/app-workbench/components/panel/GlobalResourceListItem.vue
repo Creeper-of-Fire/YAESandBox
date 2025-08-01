@@ -1,8 +1,10 @@
 <!-- src/app-workbench/components/.../GlobalResourceListItem.vue -->
 <template>
   <div v-if="item.isSuccess"
+       ref="listItemRef"
        class="resource-item"
        @dblclick="$emit('start-editing', { type, id })"
+       @contextmenu.prevent="$emit('contextmenu', { type, id, name: item.data.name, event: $event })"
   >
 
     <span class="item-name">
@@ -30,7 +32,10 @@
       编辑 “{{ item.data.name }}”
     </n-popover>
   </div>
-  <div v-else class="resource-item-damaged">
+  <div v-else class="resource-item-damaged"
+       ref="listItemRef"
+       @contextmenu.prevent="$emit('contextmenu', { type, id, name: id, isDamaged: true, event: $event })"
+  >
     <n-icon :component="LinkOffIcon" color="#d03050"/>
     <n-popover trigger="hover">
       <template #trigger>
@@ -60,11 +65,12 @@
 </template>
 
 <script lang="ts" setup>
-import {NButton, NIcon, NTooltip} from 'naive-ui';
-import {EditIcon, FindInPageIcon,LinkOffIcon} from '@/utils/icons';
+import {NButton, NIcon} from 'naive-ui';
+import { onLongPress } from '@vueuse/core'
+import {EditIcon, FindInPageIcon, LinkOffIcon} from '@/utils/icons';
 import type {ConfigObject, ConfigType} from '@/app-workbench/services/EditSession';
 import type {GlobalResourceItem} from '@/types/ui';
-import {computed} from "vue";
+import {computed, ref} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 
 const props = defineProps<{
@@ -73,14 +79,34 @@ const props = defineProps<{
   type: ConfigType; // 资源的类型 ('workflow', 'step', 'module')
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'start-editing', payload: { type: ConfigType; id: string }): void; // 双击或点击“编辑”时触发
   (e: 'show-error-detail', errorMessage: string, originJsonString: string | null | undefined): void; // 点击“详情”时触发
+  (e: 'contextmenu', payload: { type: ConfigType; id: string; name: string; isDamaged?: boolean; event: MouseEvent | PointerEvent }): void;
 }>();
 
 // *** 检查当前项是否变脏 ***
 const workbenchStore = useWorkbenchStore();
 const isDirty = computed(() => workbenchStore.isDirty(props.id));
+
+// 实现长按逻辑
+const listItemRef = ref<HTMLElement | null>(null);
+
+onLongPress( // <-- 2. 修正钩子名称
+    listItemRef,
+    (event: PointerEvent) => {
+      // 长按触发时，总是发出 contextmenu 事件
+      // 我们在事件的 payload 中携带了所有必要的信息
+      emit('contextmenu', {
+        type: props.type,
+        id: props.id,
+        name: props.item.isSuccess ? props.item.data.name : props.id, // 根据成功/失败状态决定名称
+        isDamaged: !props.item.isSuccess,
+        event: event,
+      });
+    },
+    { delay: 500 }
+);
 
 </script>
 

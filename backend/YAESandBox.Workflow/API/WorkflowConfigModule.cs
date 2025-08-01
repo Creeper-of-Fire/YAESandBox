@@ -15,7 +15,8 @@ namespace YAESandBox.Workflow.API;
 /// <summary>
 /// 注册模块到 Program.cs
 /// </summary>
-public class WorkflowConfigModule : IProgramModule, IProgramModuleSwaggerUiOptionsConfigurator, IProgramModuleMvcConfigurator,IProgramModuleAppConfigurator
+public class WorkflowConfigModule : IProgramModule, IProgramModuleSwaggerUiOptionsConfigurator, IProgramModuleMvcConfigurator,
+    IProgramModuleAppConfigurator
 {
     /// <summary>
     /// Api文档的GroupName
@@ -62,12 +63,12 @@ public class WorkflowConfigModule : IProgramModule, IProgramModuleSwaggerUiOptio
     //           若有冲突，则抛出错误或自动重命名Schema中的x-vue-component/x-web-component指令值。
     //  - 方案3: 前端插件加载器对不同插件的同名组件进行命名空间隔离。
     //  目前，假定所有插件组件名称在全局范围内是唯一的。
-    
+
     /// <inheritdoc />
     public void ConfigureApp(IApplicationBuilder app)
     {
         // 在这里实现插件静态文件的动态挂载逻辑
-        
+
         // 从 IApplicationBuilder 的服务提供程序中获取 IWebHostEnvironment
         var env = app.ApplicationServices.GetRequiredService<IWebHostEnvironment>();
 
@@ -88,7 +89,7 @@ public class WorkflowConfigModule : IProgramModule, IProgramModuleSwaggerUiOptio
             // 4. 检查每个插件是否有自己的 wwwroot 文件夹
             string pluginWwwRoot = Path.Combine(pluginDir, "wwwroot");
             if (!Directory.Exists(pluginWwwRoot)) continue;
-            
+
             // 5. 获取插件名作为 URL 的一部分
             string pluginName = new DirectoryInfo(pluginDir).Name;
 
@@ -98,11 +99,11 @@ public class WorkflowConfigModule : IProgramModule, IProgramModuleSwaggerUiOptio
             {
                 // URL 请求路径：所有对 /plugins/{pluginName}/* 的请求...
                 RequestPath = $"/plugins/{pluginName}",
-                    
+
                 // ...都将从这个插件的 wwwroot 文件夹中提供文件。
                 FileProvider = new PhysicalFileProvider(pluginWwwRoot)
             });
-                
+
             // (可选) 在开发环境中打印日志，确认挂载成功
             if (env.IsDevelopment())
             {

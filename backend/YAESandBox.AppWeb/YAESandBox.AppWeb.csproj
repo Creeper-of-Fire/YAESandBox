@@ -27,9 +27,10 @@
         <ProjectReference Include="..\YAESandBox.Workflow.Test\YAESandBox.Workflow.Test.csproj" />
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
-
+    
     <ItemGroup>
         <Folder Include="wwwroot\"/>
+        <Content Update="Plugins\**\wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
     <!--    <Target Name="CreateSwaggerJson" AfterTargets="Build" Condition="$(Configuration)=='Debug'">-->
