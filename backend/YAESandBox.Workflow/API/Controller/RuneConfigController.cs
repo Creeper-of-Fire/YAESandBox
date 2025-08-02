@@ -77,11 +77,15 @@ public record RuneSchemasResponse
 [ApiController]
 [Route("api/v1/workflows-configs/global-runes")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
-public class RuneConfigController(WorkflowConfigFileService workflowConfigFileService, IPluginAssetService pluginAssetService)
+public class RuneConfigController(
+    WorkflowConfigFileService workflowConfigFileService,
+    IPluginAssetService pluginAssetService,
+    IPluginDiscoveryService pluginDiscoveryService)
     : AuthenticatedApiControllerBase
 {
     private WorkflowConfigFileService WorkflowConfigFileService { get; } = workflowConfigFileService;
     private IPluginAssetService PluginAssetService { get; } = pluginAssetService;
+    private IPluginDiscoveryService PluginDiscoveryService { get; } = pluginDiscoveryService;
 
     private List<DynamicComponentAsset> DiscoverDynamicAssets()
     {
@@ -93,7 +97,7 @@ public class RuneConfigController(WorkflowConfigFileService workflowConfigFileSe
             // 现在，我们遵循的是工作流模块内部的约定
             // "vue-bundle.js" 和 "web-bundle.js" 是工作流系统与插件生态间的一种契约。
             // 这种约定是允许的，因为它属于模块自身领域的知识。
-            
+
             // 检查 Vue 组件包 (约定)
             if (plugin.HasAsset("vue-bundle.js"))
             {
@@ -102,8 +106,8 @@ public class RuneConfigController(WorkflowConfigFileService workflowConfigFileSe
                     PluginName = plugin.Name,
                     ComponentType = "Vue",
                     ScriptUrl = plugin.GetAssetUrl("vue-bundle.js"),
-                    StyleUrl = plugin.HasAsset("vue-bundle.css") 
-                        ? plugin.GetAssetUrl("vue-bundle.css") 
+                    StyleUrl = plugin.HasAsset("vue-bundle.css")
+                        ? plugin.GetAssetUrl("vue-bundle.css")
                         : null
                 });
             }
@@ -116,12 +120,13 @@ public class RuneConfigController(WorkflowConfigFileService workflowConfigFileSe
                     PluginName = plugin.Name,
                     ComponentType = "WebComponent",
                     ScriptUrl = plugin.GetAssetUrl("web-bundle.js"),
-                    StyleUrl = plugin.HasAsset("web-bundle.css") 
-                        ? plugin.GetAssetUrl("web-bundle.css") 
+                    StyleUrl = plugin.HasAsset("web-bundle.css")
+                        ? plugin.GetAssetUrl("web-bundle.css")
                         : null
                 });
             }
         }
+
         return assets;
     }
 
@@ -148,7 +153,7 @@ public class RuneConfigController(WorkflowConfigFileService workflowConfigFileSe
                     settings.SchemaProcessors.Add(new RuneRuleAttributeProcessor());
                     settings.SchemaProcessors.Add(new VueComponentRendererSchemaProcessor());
                     settings.SchemaProcessors.Add(new WebComponentRendererSchemaProcessor());
-                    settings.SchemaProcessors.Add(new MonacoEditorRendererSchemaProcessor());
+                    settings.SchemaProcessors.Add(new MonacoEditorRendererSchemaProcessor(this.PluginDiscoveryService));
                 });
 
                 var value = JsonNode.Parse(schemaJson);

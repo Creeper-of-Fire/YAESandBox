@@ -94,9 +94,9 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Aut
         CancellationToken cancellationToken)
     {
         // 1. 设置响应头为 text/event-stream
-        Response.Headers.Append("Content-Type", "text/event-stream");
-        Response.Headers.Append("Cache-Control", "no-cache");
-        Response.Headers.Append("Connection", "keep-alive");
+        this.Response.Headers.Append("Content-Type", "text/event-stream");
+        this.Response.Headers.Append("Cache-Control", "no-cache");
+        this.Response.Headers.Append("Connection", "keep-alive");
 
         // 2. 创建一个 Channel 作为生产者-消费者队列
         var channel = Channel.CreateUnbounded<StreamMessage>();
@@ -167,8 +167,8 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Aut
                     // 为了与前端的 StreamEventPayload (camelCase) 匹配
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
                 });
-                await Response.WriteAsync($"data: {payload}\n\n", cancellationToken);
-                await Response.Body.FlushAsync(cancellationToken);
+                await this.Response.WriteAsync($"data: {payload}\n\n", cancellationToken);
+                await this.Response.Body.FlushAsync(cancellationToken);
 
                 // 如果收到 'done' 消息，就提前退出循环
                 if (message.Type == "done")
@@ -225,23 +225,23 @@ public class StreamingTextManager
         if (match.Success)
         {
             // 提取<think>标签内的内容并追加到思维过程缓冲区
-            _thinkingProcessBuilder.Append(match.Groups[1].Value.Trim());
+            this._thinkingProcessBuilder.Append(match.Groups[1].Value.Trim());
 
             // 从原片段中移除<think>标签，得到纯净内容
             chunk = ThinkTagRegex.Replace(chunk, string.Empty);
         }
 
         // 将纯净内容追加到主文本缓冲区
-        _fullTextBuilder.Append(chunk);
+        this._fullTextBuilder.Append(chunk);
 
         // 如果存在思维过程，则构建带<think>前缀的输出
-        if (_thinkingProcessBuilder.Length > 0)
+        if (this._thinkingProcessBuilder.Length > 0)
         {
-            return $"<think>{_thinkingProcessBuilder}</think>\n{_fullTextBuilder}";
+            return $"<think>{this._thinkingProcessBuilder}</think>\n{this._fullTextBuilder}";
         }
 
         // 否则只返回当前拼接的文本
-        return _fullTextBuilder.ToString();
+        return this._fullTextBuilder.ToString();
     }
 
     /// <summary>
@@ -249,6 +249,6 @@ public class StreamingTextManager
     /// </summary>
     public string GetFinalText()
     {
-        return _fullTextBuilder.ToString();
+        return this._fullTextBuilder.ToString();
     }
 }

@@ -1,5 +1,10 @@
-﻿<template>
-  <div :style="{ height: editorHeight }" class="monaco-editor-container">
+﻿<!-- MonacoEditorWidget.vue -->
+<template>
+  <div
+      ref="editorContainerRef"
+      :style="{ height: editorHeight }"
+      class="monaco-editor-container"
+  >
     <!--
       核心改动：移除 v-show，让编辑器组件的 DOM 结构保持稳定。
       Vue 将不再因为 isLoading 状态的改变而去尝试修改编辑器的显示属性。
@@ -25,9 +30,10 @@
         {{ error }}
       </n-alert>
     </div>
+
+    <div class="resize-handle" @mousedown="handleResizeStart"></div>
   </div>
 </template>
-<!--TODO 对于脚本来说，工作流的变量解析或其他字段不断变化的提示会带来非常糟糕的编辑体验。让我们想想办法-->
 <script lang="ts" setup>
 import {computed, onUnmounted, ref, watch} from 'vue';
 import {type MonacoEditor, VueMonacoEditor} from '@guolao/vue-monaco-editor';
@@ -58,7 +64,8 @@ const internalValue = ref(props.modelValue);
 const isLoading = ref(true); // 默认加载中
 const loadingText = ref('正在加载编辑器核心...');
 const error = ref<string | null>(null);
-const editorHeight = computed(() => props.height || '300px');
+const editorHeight = ref(props.height || '400px');
+const editorContainerRef = ref<HTMLElement | null>(null);
 const editorTheme = computed(() => props.theme || 'vs-dark');
 
 // Monaco Editor 的配置项
@@ -161,6 +168,42 @@ onUnmounted(() =>
     worker = null;
   }
 });
+
+// --- 拖拽调整大小的逻辑 ---
+function handleResizeStart(startEvent: MouseEvent)
+{
+  startEvent.preventDefault();
+
+  const initialHeight = editorContainerRef.value!.offsetHeight;
+  const startY = startEvent.clientY;
+
+  const handleMouseMove = (moveEvent: MouseEvent) =>
+  {
+    const deltaY = moveEvent.clientY - startY;
+    const newHeight = initialHeight + deltaY;
+    // 设置一个最小高度，防止拖得太小
+    editorHeight.value = `${Math.max(200, newHeight)}px`;
+  };
+
+  const handleMouseUp = () =>
+  {
+    // 清理事件监听器
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
+    // 恢复鼠标样式和文本选择
+    document.body.style.cursor = '';
+    document.body.style.userSelect = '';
+  };
+
+  // 在 window 上添加监听器，以确保鼠标移出元素也能拖拽
+  window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('mouseup', handleMouseUp);
+
+  // 拖拽时优化体验
+  document.body.style.cursor = 'ns-resize'; // 设置鼠标样式为上下拖拽
+  document.body.style.userSelect = 'none';  // 禁止拖拽时选中页面文本
+}
+
 </script>
 
 <style scoped>
@@ -170,6 +213,7 @@ onUnmounted(() =>
   border: 1px solid #333; /* 可以根据你的主题调整 */
   border-radius: 4px;
   text-align: left; /* 确保编辑器内容左对齐 */
+  overflow: hidden;
 }
 
 .loading-overlay,
@@ -187,6 +231,29 @@ onUnmounted(() =>
   z-index: 10;
   padding: 20px;
   box-sizing: border-box;
+}
+
+/* 拖拽手柄的样式 */
+.resize-handle {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 8px; /* 增加可点击区域 */
+  cursor: ns-resize; /* 上下拖动鼠标指针 */
+  background: repeating-linear-gradient(
+      45deg,
+      #555,
+      #555 1px,
+      transparent 1px,
+      transparent 4px
+  ) center;
+  background-size: 6px 6px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+}
+.resize-handle:hover {
+  opacity: 1;
 }
 
 .loading-text {
