@@ -14,6 +14,13 @@ using YAESandBox.Workflow.Utility;
 
 namespace YAESandBox.Workflow.API.Controller;
 
+// TODO: [PluginManagement] 考虑在多插件场景下，处理前端组件命名冲突问题。
+//  - 方案1: 强制约定插件组件名称需以插件名作为前缀。
+//  - 方案2: 后端在DiscoverDynamicAssets时，扫描所有插件声明的组件名，
+//           若有冲突，则抛出错误或自动重命名Schema中的x-vue-component/x-web-component指令值。
+//  - 方案3: 前端插件加载器对不同插件的同名组件进行命名空间隔离。
+//  目前，假定所有插件组件名称在全局范围内是唯一的。
+
 /// <summary>
 /// 描述一个需要动态加载的前端组件资源。
 /// </summary>

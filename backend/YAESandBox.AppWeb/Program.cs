@@ -43,7 +43,9 @@ builder.Services.AddCors(options =>
 });
 
 // 在程序启动早期就发现和加载所有模块（内置+插件）
-var (allModules, pluginAssemblies) = ApplicationModules.DiscoverAndLoadAllModules(builder.Environment, builder.Configuration);
+// ** 手动创建发现服务实例，用于模块加载 **
+var pluginDiscoveryService = new DefaultPluginDiscoveryService(builder.Environment, builder.Configuration);
+var (allModules, pluginAssemblies) = ApplicationModules.DiscoverAndLoadAllModules(pluginDiscoveryService);
 
 // 添加 MVC 服务
 var mvcBuilder = builder.Services.AddControllers()
@@ -115,42 +117,32 @@ builder.Services.AddCors(options =>
     });
 });
 
+
 allModules.ForEachModules<IProgramModuleWithInitialization>(it =>
     it.Initialize(new ModuleInitializationContext(allModules, pluginAssemblies)));
 
+builder.Services.AddSingleton<IPluginDiscoveryService>(pluginDiscoveryService);
 builder.Services.AddSingleton<IPluginAssetService, PluginAssetService>();
 
 var app = builder.Build();
 
 // 配置中间件
 // =================== 统一插件静态文件挂载 ===================
-// TODO: [PluginManagement] 考虑在多插件场景下，处理前端组件命名冲突问题。
-//  - 方案1: 强制约定插件组件名称需以插件名作为前缀。
-//  - 方案2: 后端在DiscoverDynamicAssets时，扫描所有插件声明的组件名，
-//           若有冲突，则抛出错误或自动重命名Schema中的x-vue-component/x-web-component指令值。
-//  - 方案3: 前端插件加载器对不同插件的同名组件进行命名空间隔离。
-//  目前，假定所有插件组件名称在全局范围内是唯一的。
-string pluginsRelativePath = app.Configuration.GetValue<string>("Plugins:RootPath") ?? "Plugins";
-string pluginsRootPath = Path.GetFullPath(Path.Combine(app.Environment.ContentRootPath, pluginsRelativePath));
-if (Directory.Exists(pluginsRootPath))
+var discoveryService = app.Services.GetRequiredService<IPluginDiscoveryService>();
+var discoveredPlugins = discoveryService.DiscoverPlugins();
+
+foreach (var plugin in discoveredPlugins)
 {
-    foreach (string pluginDir in Directory.GetDirectories(pluginsRootPath))
+    if (plugin.WwwRootPath is null) 
+        continue;
+    // 约定：所有插件的静态资源都通过 /plugins/{PluginName} 访问
+    app.UseStaticFiles(new StaticFileOptions
     {
-        string pluginName = new DirectoryInfo(pluginDir).Name;
-        string pluginWwwRootPath = Path.Combine(pluginDir, "wwwroot");
-
-        if (Directory.Exists(pluginWwwRootPath))
-        {
-            // 约定：所有插件的静态资源都通过 /plugins/{PluginName} 访问
-            app.UseStaticFiles(new StaticFileOptions
-            {
-                FileProvider = new PhysicalFileProvider(pluginWwwRootPath),
-                RequestPath = $"/plugins/{pluginName}"
-            });
-
-            Console.WriteLine($"[静态文件服务] 已为插件 '{pluginName}' 挂载 wwwroot: '{pluginWwwRootPath}' -> '/plugins/{pluginName}'");
-        }
-    }
+        FileProvider = new PhysicalFileProvider(plugin.WwwRootPath),
+        RequestPath = $"/plugins/{plugin.Name}"
+    });
+        
+    Console.WriteLine($"[静态文件服务] 已为插件 '{plugin.Name}' 挂载 wwwroot: '{plugin.WwwRootPath}' -> '/plugins/{plugin.Name}'");
 }
 // =========================================================
 
@@ -221,76 +213,66 @@ namespace YAESandBox.AppWeb
         /// <summary>
         /// 发现并加载所有模块，包括内置模块和来自插件目录的动态模块。
         /// </summary>
-        /// <param name="environment">Web主机环境，用于定位插件目录。</param>
+        /// <param name="pluginDiscoveryService"></param>
         /// <returns>一个包含所有模块实例和加载的插件程序集的元组。</returns>
         public static (IReadOnlyList<IProgramModule> Modules, IReadOnlyList<Assembly> PluginAssemblies)
-            DiscoverAndLoadAllModules(IWebHostEnvironment environment, IConfiguration configuration)
+            DiscoverAndLoadAllModules(IPluginDiscoveryService pluginDiscoveryService)
         {
             // 1. 定义内置的核心模块列表
-            var coreModules = new List<IProgramModule>
-            {
-                new CoreModule(),
-                new AiServiceConfigModule(),
-                new WorkflowConfigModule(),
-                new WorkflowTestModule(),
-                new AuthenticationModule()
-            };
+            var coreModules = CoreModules;
 
             var loadedPluginAssemblies = new List<Assembly>();
             var pluginModules = new List<IProgramModule>();
 
-            // 2. 扫描插件目录
-            string pluginsRelativePath = configuration.GetValue<string>("Plugins:RootPath") ?? "Plugins";
-            string pluginsPath = Path.GetFullPath(Path.Combine(environment.ContentRootPath, pluginsRelativePath));
+            // 2. 从发现服务获取所有插件
+            var discoveredPlugins = pluginDiscoveryService.DiscoverPlugins();
 
-            Console.WriteLine($"[插件加载器] 正在扫描插件目录: {pluginsPath}");
-
-            if (!Directory.Exists(pluginsPath))
+            // 3. 遍历发现的插件并加载模块
+            foreach (var plugin in discoveredPlugins)
             {
-                Console.WriteLine($"[插件加载器] 插件目录不存在，跳过加载。");
-                return (coreModules, loadedPluginAssemblies);
-            }
-
-            foreach (string pluginDir in Directory.GetDirectories(pluginsPath))
-            {
-                string pluginName = new DirectoryInfo(pluginDir).Name;
-                string pluginDllPath = Path.Combine(pluginDir, $"{pluginName}.dll");
-
-                if (!File.Exists(pluginDllPath))
-                    continue;
-
-                try
+                bool foundModuleInPlugin = false;
+                foreach (string dllPath in plugin.DllPaths)
                 {
-                    // 3. 加载插件程序集
-                    var assembly = Assembly.LoadFrom(pluginDllPath);
-                    loadedPluginAssemblies.Add(assembly);
-
-                    // 4. 在插件程序集中查找所有 IProgramModule 的实现
-                    var moduleTypes = assembly.GetTypes()
-                        .Where(t => typeof(IProgramModule).IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false });
-
-                    foreach (var type in moduleTypes)
+                    try
                     {
-                        // 5. 实例化并添加到插件模块列表
-                        if (Activator.CreateInstance(type) is not IProgramModule pluginModuleInstance)
-                            continue;
-                        pluginModules.Add(pluginModuleInstance);
-                        Console.WriteLine($"[插件加载器] 成功加载模块 '{type.Name}' (来自插件: {pluginName})");
+                        // 4. 加载程序集。这会让 .NET 运行时知晓这个程序集的存在，
+                        //    并能在后续需要时自动解析其依赖 (如果依赖也在同一目录)。
+                        var assembly = Assembly.LoadFrom(dllPath);
+                        loadedPluginAssemblies.Add(assembly);
+
+                        // 5. 在当前加载的程序集中查找所有 IProgramModule 的实现
+                        var moduleTypes = assembly.GetTypes()
+                            .Where(t => typeof(IProgramModule).IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false });
+
+                        foreach (var type in moduleTypes)
+                        {
+                            // 7. 实例化并添加到插件模块列表
+                            if (Activator.CreateInstance(type) is not IProgramModule pluginModuleInstance)
+                                continue;
+                            pluginModules.Add(pluginModuleInstance);
+                            Console.WriteLine($"[插件加载器] 成功加载模块 '{type.Name}' (来自插件: {plugin.Name})");
+                            foundModuleInPlugin = true;
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"[插件加载器] 错误: 加载插件 {plugin.Name} 失败. {ex.Message}");
+                        if (ex is BadImageFormatException)
+                            Console.WriteLine("[插件加载器] >>>> 提示: 该文件可能不是一个有效的 .NET 程序集，或者目标框架与主程序不兼容。");
                     }
                 }
-                catch (Exception ex)
-                {
-                    Console.WriteLine($"[插件加载器] 错误: 加载插件 {pluginName} 失败. {ex.Message}");
-                }
+
+                if (!foundModuleInPlugin)
+                    Console.WriteLine($"[插件加载器] 警告: 插件 '{plugin.Name}' 中虽然找到了 DLL 文件，但未能发现任何 IProgramModule 的实现。");
             }
 
-            // 6. 合并内置模块和插件模块
-            var allModules = coreModules.Concat(pluginModules).ToList();
+            // 8. 合并内置模块和插件模块
+            var allModules = coreModules.Concat(pluginModules);
 
-            return (allModules, loadedPluginAssemblies);
+            return (allModules.Distinct().ToList(), loadedPluginAssemblies.Distinct().ToList());
         }
 
-        private static IEnumerable<IProgramModule> Modules { get; } =
+        private static IReadOnlyList<IProgramModule> CoreModules { get; } =
         [
             new CoreModule(),
             new AiServiceConfigModule(),
@@ -300,12 +282,9 @@ namespace YAESandBox.AppWeb
         ];
 
         /// <summary>
-        /// 获取所有实现了指定接口 {T} 的模块。
+        /// 获取主要程序集中实现了指定接口 {T} 的模块。（用于自动类型生成等）
         /// </summary>
-        public static IEnumerable<T> GetModules<T>()
-        {
-            return Modules.OfType<T>();
-        }
+        public static IEnumerable<T> GetCoreModules<T>() => CoreModules.OfType<T>();
 
         /// <summary>
         /// 对实现了指定接口 {T} 的模块列表执行一个操作。
@@ -317,16 +296,5 @@ namespace YAESandBox.AppWeb
                 action(module);
             }
         }
-
-        // /// <summary>
-        // /// 对所有实现了指定接口 {T} 的模块执行一个操作。
-        // /// </summary>
-        // public static void ForEachModules<T>(Action<T> action)
-        // {
-        //     foreach (var module in Modules.OfType<T>())
-        //     {
-        //         action(module);
-        //     }
-        // }
     }
 }

@@ -87,7 +87,7 @@
              %(RecursiveDir) 会保留源文件在 wwwroot 下的相对路径。
         -->
         <ItemGroup>
-            <WwwRootSourceFiles Include="src/wwwroot/**" />
+            <WwwRootSourceFiles Include="wwwroot/**" />
         </ItemGroup>
         <Copy
                 SourceFiles="@(WwwRootSourceFiles)"

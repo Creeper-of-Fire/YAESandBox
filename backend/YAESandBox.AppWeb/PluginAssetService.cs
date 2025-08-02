@@ -15,40 +15,29 @@ public class PluginAssetService : IPluginAssetService
     /// <summary>
     /// 初始化 PluginAssetService。
     /// </summary>
-    /// <param name="environment"></param>
-    /// <param name="configuration">应用程序配置。</param>
-    public PluginAssetService(IWebHostEnvironment environment, IConfiguration configuration)
+    /// <param name="discoveryService">插件发现服务。</param>
+    public PluginAssetService(IPluginDiscoveryService discoveryService)
     {
         var pluginDict = new Dictionary<string, PluginInfo>(StringComparer.OrdinalIgnoreCase);
         
-        string pluginsRelativePath = configuration.GetValue<string>("Plugins:RootPath") ?? "Plugins";
-        string pluginsRootPath = Path.GetFullPath(Path.Combine(environment.ContentRootPath, pluginsRelativePath));
-        if (!Directory.Exists(pluginsRootPath))
-        {
-            this.Plugins = pluginDict;
-            return;
-        }
+        var discoveredPlugins = discoveryService.DiscoverPlugins();
 
-        foreach (string pluginDir in Directory.GetDirectories(pluginsRootPath))
+        foreach (var plugin in discoveredPlugins)
         {
-            string pluginName = new DirectoryInfo(pluginDir).Name;
-            string wwwrootPath = Path.Combine(pluginDir, "wwwroot");
-            
             var assetPaths = new List<string>();
-            if (Directory.Exists(wwwrootPath))
+            if (plugin.WwwRootPath is not null && Directory.Exists(plugin.WwwRootPath))
             {
-                string[] files = Directory.GetFiles(wwwrootPath, "*", SearchOption.AllDirectories);
-                assetPaths.AddRange(files.Select(file => Path.GetRelativePath(wwwrootPath, file).Replace('\\', '/')));
+                string[] files = Directory.GetFiles(plugin.WwwRootPath, "*", SearchOption.AllDirectories);
+                assetPaths.AddRange(files.Select(file => Path.GetRelativePath(plugin.WwwRootPath, file).Replace('\\', '/')));
             }
 
-            pluginDict[pluginName] = new PluginInfo
+            pluginDict[plugin.Name] = new PluginInfo
             {
-                Name = pluginName,
+                Name = plugin.Name,
                 AssetPaths = assetPaths.AsReadOnly()
             };
         }
         this.Plugins = pluginDict;
-        Console.WriteLine($"[PluginAssetService] 初始化完成, 发现 {this.Plugins.Count} 个插件。");
     }
 
     /// <inheritdoc />
