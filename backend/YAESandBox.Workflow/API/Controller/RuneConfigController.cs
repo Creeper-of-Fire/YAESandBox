@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Authentication;
 using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema;
 using YAESandBox.Workflow.API.Schema;
@@ -65,63 +66,55 @@ public record RuneSchemasResponse
 /// 提供工作流相关配置（工作流、祝祷、符文）的全局管理和Schema信息。
 /// </summary>
 /// <param name="workflowConfigFileService">工作流配置文件服务。</param>
-/// <param name="webHostEnvironment">Web 主机环境。</param>
+/// <param name="pluginAssetService">插件资源发现服务。</param>
 [ApiController]
 [Route("api/v1/workflows-configs/global-runes")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
-public class RuneConfigController(WorkflowConfigFileService workflowConfigFileService, IWebHostEnvironment webHostEnvironment)
+public class RuneConfigController(WorkflowConfigFileService workflowConfigFileService, IPluginAssetService pluginAssetService)
     : AuthenticatedApiControllerBase
 {
     private WorkflowConfigFileService WorkflowConfigFileService { get; } = workflowConfigFileService;
-    private IWebHostEnvironment WebHostEnvironment { get; } = webHostEnvironment;
+    private IPluginAssetService PluginAssetService { get; } = pluginAssetService;
 
     private List<DynamicComponentAsset> DiscoverDynamicAssets()
     {
         var assets = new List<DynamicComponentAsset>();
-        string pluginsRootDirectory = Path.Combine(this.WebHostEnvironment.ContentRootPath, "Plugins");
+        var allPlugins = this.PluginAssetService.GetAllPlugins();
 
-        if (!Directory.Exists(pluginsRootDirectory))
+        foreach (var plugin in allPlugins)
         {
-            return assets;
-        }
-
-        string[] pluginDirectories = Directory.GetDirectories(pluginsRootDirectory);
-        foreach (string pluginDir in pluginDirectories)
-        {
-            string pluginWwwRoot = Path.Combine(pluginDir, "wwwroot");
-            if (!Directory.Exists(pluginWwwRoot)) continue;
-
-            string pluginName = new DirectoryInfo(pluginDir).Name;
-
-            // 检查 Vue 组件包
-            string vueScriptPath = Path.Combine(pluginWwwRoot, "vue-bundle.js");
-            string vueStylePath = Path.Combine(pluginWwwRoot, "vue-bundle.css"); // 对应的CSS文件
-            if (System.IO.File.Exists(vueScriptPath))
+            // 现在，我们遵循的是工作流模块内部的约定
+            // "vue-bundle.js" 和 "web-bundle.js" 是工作流系统与插件生态间的一种契约。
+            // 这种约定是允许的，因为它属于模块自身领域的知识。
+            
+            // 检查 Vue 组件包 (约定)
+            if (plugin.HasAsset("vue-bundle.js"))
             {
                 assets.Add(new DynamicComponentAsset
                 {
-                    PluginName = pluginName,
+                    PluginName = plugin.Name,
                     ComponentType = "Vue",
-                    ScriptUrl = $"/plugins/{pluginName}/vue-bundle.js",
-                    StyleUrl = System.IO.File.Exists(vueStylePath) ? $"/plugins/{pluginName}/vue-bundle.css" : null
+                    ScriptUrl = plugin.GetAssetUrl("vue-bundle.js"),
+                    StyleUrl = plugin.HasAsset("vue-bundle.css") 
+                        ? plugin.GetAssetUrl("vue-bundle.css") 
+                        : null
                 });
             }
 
-            // 检查 WebComponent 组件包
-            string wcScriptPath = Path.Combine(pluginWwwRoot, "web-bundle.js");
-            string wcStylePath = Path.Combine(pluginWwwRoot, "web-bundle.css"); // 对应的CSS文件
-            if (System.IO.File.Exists(wcScriptPath))
+            // 检查 WebComponent 组件包 (约定)
+            if (plugin.HasAsset("web-bundle.js"))
             {
                 assets.Add(new DynamicComponentAsset
                 {
-                    PluginName = pluginName,
+                    PluginName = plugin.Name,
                     ComponentType = "WebComponent",
-                    ScriptUrl = $"/plugins/{pluginName}/web-bundle.js",
-                    StyleUrl = System.IO.File.Exists(wcStylePath) ? $"/plugins/{pluginName}/web-bundle.css" : null
+                    ScriptUrl = plugin.GetAssetUrl("web-bundle.js"),
+                    StyleUrl = plugin.HasAsset("web-bundle.css") 
+                        ? plugin.GetAssetUrl("web-bundle.css") 
+                        : null
                 });
             }
         }
-
         return assets;
     }
 

@@ -85,7 +85,7 @@ public class AuthController(UserService userService, IConfiguration configuratio
     /// </summary>
     private string GenerateJwtToken(User user)
     {
-        var jwtKey = this.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("未配置JWT密钥 (Jwt:Key)。");
+        string jwtKey = this.Configuration["Jwt:Key"] ?? throw new InvalidOperationException("未配置JWT密钥 (Jwt:Key)。");
         var securityKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey));
         var credentials = new SigningCredentials(securityKey, SecurityAlgorithms.HmacSha256);
 

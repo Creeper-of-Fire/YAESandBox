@@ -53,7 +53,7 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
         if (loadResult.TryGetError(out var error, out var configs))
             return error;
 
-        var wasPresent = configs.ContainsKey(uuid);
+        bool wasPresent = configs.ContainsKey(uuid);
         configs[uuid] = config;
 
         var saveResult = await this.SaveConfigurationsToFileAsync(userId, configs);

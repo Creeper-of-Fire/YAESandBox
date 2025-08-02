@@ -14,5 +14,5 @@ public interface INormalRune
     /// <param name="tuumProcessorContent">祝祷执行的上下文内容。</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    internal Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default);
+    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default);
 }

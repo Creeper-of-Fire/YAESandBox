@@ -187,12 +187,12 @@ internal partial record PromptGenerationRuneConfig
     internal static partial Regex PlaceholderRegex();
 
     /// <inheritdoc />
-    internal override List<string> GetConsumedVariables() => PlaceholderRegex().Matches(this.Template)
+    public override List<string> GetConsumedVariables() => PlaceholderRegex().Matches(this.Template)
         .Select(m => m.Groups[1].Value)
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToList();
     
-    internal override List<string> GetProducedVariables() => [AiRuneConfig.PromptsName];
+    public override List<string> GetProducedVariables() => [AiRuneConfig.PromptsName];
 }
 
 /// <summary>

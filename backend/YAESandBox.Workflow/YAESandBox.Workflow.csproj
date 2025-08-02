@@ -31,8 +31,4 @@
       </Compile>
     </ItemGroup>
 
-    <ItemGroup>
-      <EmbeddedResource Include="Rune\ExactRune\LuaRunner\json.lua" />
-    </ItemGroup>
-
 </Project>

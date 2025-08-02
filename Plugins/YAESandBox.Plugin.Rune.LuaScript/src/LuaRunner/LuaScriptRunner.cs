@@ -7,7 +7,7 @@ using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 #pragma warning disable CS8974 // 将方法组转换为非委托类型
 
-namespace YAESandBox.Workflow.Rune.ExactRune.LuaRunner;
+namespace YAESandBox.Plugin.Lua.LuaRunner;
 
 /// <summary>
 /// 通用的 Lua 脚本执行器。
@@ -58,7 +58,7 @@ internal partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent
     /// <param name="preExecutionSetup">在执行脚本之前，对 Lua 环境进行额外设置的委托。可用于注入特定于调用的变量。</param>
     /// <param name="cancellationToken">取消令牌。</param>
     /// <returns>执行结果。</returns>
-    public Task<Result> ExecuteAsync(string script, Action<Lua>? preExecutionSetup = null, CancellationToken cancellationToken = default)
+    public Task<Result> ExecuteAsync(string script, Action<NLua.Lua>? preExecutionSetup = null, CancellationToken cancellationToken = default)
     {
         if (string.IsNullOrWhiteSpace(script))
         {
@@ -67,7 +67,7 @@ internal partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent
 
         try
         {
-            using var lua = new Lua();
+            using var lua = new NLua.Lua();
             lua.State.Encoding = Encoding.UTF8;
 
             lua.LoadCLRPackage();
@@ -183,7 +183,7 @@ internal partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent
             }
 
             var builder = new StringBuilder();
-            foreach (var log in debugDto.Logs)
+            foreach (string log in debugDto.Logs)
             {
                 builder.AppendLine(log + "\n");
             }
@@ -219,11 +219,11 @@ internal partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent
                     var list = new List<object?>();
                     bool isList = true;
 
-                    foreach (var key in table.Keys)
+                    foreach (object? key in table.Keys)
                     {
                         // 键和值都需要递归转换
-                        var convertedKey = ConvertLuaToCSharp(key, logger);
-                        var convertedValue = ConvertLuaToCSharp(table[key], logger);
+                        object? convertedKey = ConvertLuaToCSharp(key, logger);
+                        object? convertedValue = ConvertLuaToCSharp(table[key], logger);
 
                         if (convertedKey == null) continue; // 不支持 nil 键
 

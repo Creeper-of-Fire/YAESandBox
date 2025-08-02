@@ -7,7 +7,7 @@ using YAESandBox.Workflow.Utility;
 
 namespace YAESandBox.Workflow;
 
-internal class WorkflowProcessor(
+public class WorkflowProcessor(
     WorkflowRuntimeService runtimeService,
     WorkflowProcessorConfig config,
     Dictionary<string, string> triggerParams)

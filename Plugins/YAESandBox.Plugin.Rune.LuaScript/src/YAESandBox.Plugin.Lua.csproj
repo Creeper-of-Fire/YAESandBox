@@ -1,0 +1,100 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <Content Update="wwwroot\api-manifest.json">
+        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </Content>
+    </ItemGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Include="LuaRunner\json.lua" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="NLua" Version="1.7.5" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\..\..\backend\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj" />
+      <ProjectReference Include="..\..\..\backend\YAESandBox.Workflow\YAESandBox.Workflow.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="LuaRunner\LuaScriptRunner.LuaBridge.cs">
+        <DependentUpon>LuaScriptRunner.cs</DependentUpon>
+      </Compile>
+      <Compile Update="LuaRunner\LuaScriptRunner.LuaDateTimeBridge.cs">
+        <DependentUpon>LuaScriptRunner.cs</DependentUpon>
+      </Compile>
+    </ItemGroup>
+
+    <!-- ⭐⭐⭐ 构建后自动复制到插件目录 ⭐⭐⭐ -->
+    <Target Name="CopyToPluginsFolder" AfterTargets="Build">
+        <!-- 
+        1. 定义插件的最终部署目录。
+           - MSBuildThisFileDirectory: 当前 .csproj 文件的目录 (例如 .../Plugins/YAESandBox.Plugin.Rune.LuaScript/src/)
+           - '..': 向上移动一级，到达插件的根目录 (例如 .../Plugins/YAESandBox.Plugin.Rune.LuaScript/)
+        -->
+        <PropertyGroup>
+            <PluginName>$(AssemblyName)</PluginName>
+            <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</PluginDestination>
+        </PropertyGroup>
+
+        <!-- 打印信息，方便确认路径是否正确 -->
+        <Message Text="插件源项目目录: $(MSBuildProjectDirectory)" Importance="high" />
+        <Message Text="插件最终部署目录: $(PluginDestination)" Importance="high" />
+
+        <!-- 2. 安全清理：只删除即将被替换的构建产物 -->
+        <ItemGroup>
+            <!-- 2a. 定义要删除的 DLL、PDB 和 deps.json 文件 -->
+            <FilesToDelete Include="$(PluginDestination)\$(PluginName).dll" />
+            <FilesToDelete Include="$(PluginDestination)\$(PluginName).pdb" />
+            <FilesToDelete Include="$(PluginDestination)\$(PluginName).deps.json" />
+        </ItemGroup>
+
+        <!-- 2b. 执行删除文件操作 -->
+        <Delete Files="@(FilesToDelete)" ContinueOnError="true" />
+
+        <!-- 2c. 安全地删除整个旧的 wwwroot 目录 -->
+        <RemoveDir Directories="$(PluginDestination)\wwwroot" ContinueOnError="true" />
+        <Message Text="已安全清理旧的构建产物和 wwwroot 目录。" Importance="normal" />
+
+        <!-- 
+        3. 复制编译产物 (dll, pdb, deps.json) 到插件根目录。
+           - SourceFiles: 从 bin/Debug/net9.0/ 目录中选取文件。
+           - DestinationFolder: 插件的根目录，例如 .../Plugins/YAESandBox.Plugin.Rune.LuaScript/
+        -->
+        <ItemGroup>
+            <OutputFiles Include="$(OutputPath)$(PluginName).dll" />
+            <OutputFiles Include="$(OutputPath)$(PluginName).pdb" Condition="Exists('$(OutputPath)$(PluginName).pdb')" />
+            <OutputFiles Include="$(OutputPath)$(PluginName).deps.json" />
+        </ItemGroup>
+        <Copy SourceFiles="@(OutputFiles)" DestinationFolder="$(PluginDestination)" />
+
+        <!-- 
+        4. 复制 wwwroot 目录。
+           - SourceFiles: 从 'src/wwwroot/' 目录下递归查找所有文件。
+           - DestinationFiles: 计算每个文件的目标路径。
+             %(RecursiveDir) 会保留源文件在 wwwroot 下的相对路径。
+        -->
+        <ItemGroup>
+            <WwwRootSourceFiles Include="src/wwwroot/**" />
+        </ItemGroup>
+        <Copy
+                SourceFiles="@(WwwRootSourceFiles)"
+                DestinationFiles="@(WwwRootSourceFiles -> '$(PluginDestination)/wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" />
+
+        <!-- 5. 打印成功日志 -->
+        <Message Text="已将插件 '$(PluginName)' 成功发布到: $(PluginDestination)" Importance="high" />
+    </Target>
+
+</Project>

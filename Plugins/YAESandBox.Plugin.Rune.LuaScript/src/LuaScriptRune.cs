@@ -1,27 +1,27 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
-using NLua;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
+using YAESandBox.Plugin.Lua.LuaRunner;
+using YAESandBox.Workflow;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Rune.ExactRune.LuaRunner;
-using static YAESandBox.Workflow.Rune.ExactRune.LuaScriptRuneProcessor;
+using YAESandBox.Workflow.Rune;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
 
-namespace YAESandBox.Workflow.Rune.ExactRune;
+namespace YAESandBox.Plugin.Lua;
 
 /// <summary>
 /// Lua 脚本符文处理器。
 /// 负责执行用户提供的 Lua 脚本，并通过一个安全桥接器与祝祷上下文交互。
 /// </summary>
 /// <param name="config">符文配置。</param>
-internal partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
-    : IWithDebugDto<LuaScriptRuneProcessorDebugDto>, INormalRune
+public partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
+    : IWithDebugDto<LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto>, INormalRune
 {
     private LuaScriptRuneConfig Config { get; } = config;
 
@@ -46,7 +46,7 @@ internal partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
     /// <summary>
     /// Lua 脚本符文处理器的调试数据传输对象。
     /// </summary>
-    internal class LuaScriptRuneProcessorDebugDto : IRuneProcessorDebugDto,ILogsDebugDto
+    public class LuaScriptRuneProcessorDebugDto : IRuneProcessorDebugDto,ILogsDebugDto
     {
         /// <summary>
         /// 实际执行的 Lua 脚本内容。
@@ -69,7 +69,7 @@ internal partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
 /// Lua 脚本符文的配置。
 /// </summary>
 [ClassLabel("📜Lua")]
-internal partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProcessor>
+public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProcessor>
 {
     /// <summary>
     /// 用户编写的 Lua 脚本。
@@ -111,7 +111,7 @@ internal partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRunePr
     /// <summary>
     /// 通过静态分析 Lua 脚本，提取所有通过 `ctx.get()` 消费的变量。
     /// </summary>
-    internal override List<string> GetConsumedVariables()
+    public override List<string> GetConsumedVariables()
     {
         if (string.IsNullOrWhiteSpace(this.Script))
         {
@@ -127,7 +127,7 @@ internal partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRunePr
     /// <summary>
     /// 通过静态分析 Lua 脚本，提取所有通过 `ctx.set()` 生产的变量。
     /// </summary>
-    internal override List<string> GetProducedVariables()
+    public override List<string> GetProducedVariables()
     {
         if (string.IsNullOrWhiteSpace(this.Script))
         {

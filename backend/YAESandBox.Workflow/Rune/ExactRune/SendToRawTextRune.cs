@@ -17,11 +17,11 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// <param name="config">符文配置。</param>
 internal class SendToRawTextRuneProcessor(
     WorkflowRuntimeService workflowRuntimeService,
-    SendToRawTextRune config)
+    SendToRawTextRuneConfig config)
     : IWithDebugDto<SendToRawTextRuneProcessorDebugDto>, INormalRune
 {
     private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-    private SendToRawTextRune Config { get; } = config;
+    private SendToRawTextRuneConfig Config { get; } = config;
 
     // 这个临时符文非常简单，可能不需要复杂的Debug DTO，
     // 但为了接口一致性，可以提供一个最小化的实现或直接返回 null。
@@ -47,7 +47,7 @@ internal class SendToRawTextRuneProcessor(
 /// </summary>
 [InLastTuum]
 [ClassLabel("😼结束")]
-internal record SendToRawTextRune : AbstractRuneConfig<SendToRawTextRuneProcessor>
+internal record SendToRawTextRuneConfig : AbstractRuneConfig<SendToRawTextRuneProcessor>
 {
     /// <inheritdoc />
     protected override SendToRawTextRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
@@ -65,5 +65,5 @@ internal record SendToRawTextRune : AbstractRuneConfig<SendToRawTextRuneProcesso
     public required string RequireVariables { get; init; } = "";
 
     /// <inheritdoc />
-    internal override List<string> GetConsumedVariables() => [this.RequireVariables];
+    public override List<string> GetConsumedVariables() => [this.RequireVariables];
 }

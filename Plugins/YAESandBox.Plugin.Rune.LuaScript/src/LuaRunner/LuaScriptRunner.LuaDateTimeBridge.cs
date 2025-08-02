@@ -2,7 +2,7 @@
 
 // ReSharper disable InconsistentNaming
 
-namespace YAESandBox.Workflow.Rune.ExactRune.LuaRunner;
+namespace YAESandBox.Plugin.Lua.LuaRunner;
 
 internal partial class LuaScriptRunner
 {

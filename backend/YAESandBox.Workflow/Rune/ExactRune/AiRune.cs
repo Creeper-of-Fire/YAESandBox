@@ -140,10 +140,10 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
 
 
     /// <inheritdoc />
-    internal override List<string> GetConsumedVariables() => [PromptsName];
+    public override List<string> GetConsumedVariables() => [PromptsName];
 
     /// <inheritdoc />
-    internal override List<string> GetProducedVariables() => [AiOutputName];
+    public override List<string> GetProducedVariables() => [AiOutputName];
 
     protected override AiRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
         new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); },this);

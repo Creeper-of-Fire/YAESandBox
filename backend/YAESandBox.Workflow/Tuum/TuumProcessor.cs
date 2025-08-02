@@ -15,7 +15,7 @@ namespace YAESandBox.Workflow.Tuum;
 /// <summary>
 /// 祝祷配置的运行时
 /// </summary>
-internal class TuumProcessor(
+public class TuumProcessor(
     WorkflowRuntimeService workflowRuntimeService,
     TuumProcessorConfig config)
     : IWithDebugDto<ITuumProcessorDebugDto>
@@ -28,14 +28,14 @@ internal class TuumProcessor(
     /// </summary>
     public class TuumProcessorContent(TuumProcessorConfig tuumProcessorConfig, WorkflowRuntimeService workflowRuntimeService)
     {
-        public Dictionary<string, object> TuumVariable { get; } = [];
+        public Dictionary<string, object?> TuumVariable { get; } = [];
 
         public object? InputVar(string name)
         {
             return this.TuumVariable.GetValueOrDefault(name);
         }
 
-        public void OutputVar(string name, object value)
+        public void OutputVar(string name, object? value)
         {
             this.TuumVariable[name] = value;
         }
@@ -56,7 +56,7 @@ internal class TuumProcessor(
                 try
                 {
                     // 将从 Lua 返回的 C# 对象（如 List<object>）序列化成 JSON 字符串
-                    var json = JsonSerializer.Serialize(value);
+                    string json = JsonSerializer.Serialize(value);
 
                     var result = JsonSerializer.Deserialize<List<RoledPromptDto>>(json, YaeSandBoxJsonHelper.JsonSerializerOptions);
 

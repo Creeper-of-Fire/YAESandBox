@@ -19,7 +19,7 @@ public interface IProgramModule
 /// <summary>
 /// 实现此接口的模块可以配置应用程序的中间件管道 (IApplicationBuilder)。
 /// </summary>
-public interface IProgramModuleAppConfigurator
+public interface IProgramModuleAppConfigurator: IProgramModule
 {
     /// <summary>
     /// 在应用构建后、运行前配置中间件。
@@ -28,7 +28,7 @@ public interface IProgramModuleAppConfigurator
     void ConfigureApp(IApplicationBuilder app);
 }
 
-public interface IProgramModuleMvcConfigurator
+public interface IProgramModuleMvcConfigurator: IProgramModule
 {
     /// <summary>
     /// 可以添加Mvc配置
@@ -37,23 +37,45 @@ public interface IProgramModuleMvcConfigurator
     void ConfigureMvc(IMvcBuilder mvcBuilder);
 }
 
-public interface IProgramModuleSwaggerUiOptionsConfigurator
+public interface IProgramModuleSwaggerUiOptionsConfigurator: IProgramModule
 {
     void ConfigureSwaggerUi(SwaggerUIOptions options);
 }
 
-public interface IProgramModuleSignalRTypeProvider
+public interface IProgramModuleSignalRTypeProvider: IProgramModule
 {
     public IEnumerable<Type> GetSignalRDtoTypes(DocumentFilterContext document);
 }
 
-public interface IProgramModuleHubRegistrar
+public interface IProgramModuleHubRegistrar: IProgramModule
 {
     /// <summary>
     /// 在应用程序的端点路由中映射此模块提供的 SignalR Hub。
     /// </summary>
     /// <param name="endpoints">应用程序的端点路由构建器。</param>
     void MapHubs(IEndpointRouteBuilder endpoints);
+}
+
+/// <summary>
+/// 为模块初始化提供所需的上下文信息。
+/// </summary>
+/// <param name="AllModules">所有已发现的模块实例的只读列表。</param>
+/// <param name="PluginAssemblies">所有已加载的插件程序集的只读列表。</param>
+public record ModuleInitializationContext(
+    IReadOnlyList<IProgramModule> AllModules,
+    IReadOnlyList<Assembly> PluginAssemblies
+);
+
+/// <summary>
+/// 标记一个模块，表明它需要在所有模块被发现后进行一次性的初始化。
+/// </summary>
+public interface IProgramModuleWithInitialization : IProgramModule
+{
+    /// <summary>
+    /// 在所有模块被发现后执行初始化逻辑。
+    /// </summary>
+    /// <param name="context">包含了初始化所需信息的上下文对象。</param>
+    void Initialize(ModuleInitializationContext context);
 }
 
 public record SwaggerModuleInfo(string GroupName);

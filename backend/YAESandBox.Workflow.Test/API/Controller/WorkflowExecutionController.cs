@@ -106,7 +106,7 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Aut
         var callback = new WorkflowRawTextCallbackTemp(
             requestDisplayUpdateCallback =>
             {
-                var processedText = streamingManager.ProcessChunk(requestDisplayUpdateCallback.Content);
+                string processedText = streamingManager.ProcessChunk(requestDisplayUpdateCallback.Content);
                 var message = new StreamMessage("data", processedText);
                 return channel.Writer.WriteAsync(message, cancellationToken).AsTask();
             },
@@ -160,7 +160,7 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Aut
             await foreach (var message in channel.Reader.ReadAllAsync(cancellationToken))
             {
                 // 7. 直接序列化消息对象，不再进行二次包装
-                var payload = JsonSerializer.Serialize(message, new JsonSerializerOptions
+                string payload = JsonSerializer.Serialize(message, new JsonSerializerOptions
                 {
                     // 在这里应用 UnsafeRelaxedJsonEscaping，确保中文正确
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,

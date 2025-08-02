@@ -1,5 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using System.Reflection;
+using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Workflow.API;
 using YAESandBox.Workflow.Config;
 
 namespace YAESandBox.Workflow.Utility;
@@ -12,51 +14,48 @@ internal static class RuneConfigTypeResolver
 {
     // 缓存所有已解析的类型。键为符文类型名称（不区分大小写），值为对应的 Role。
     // 使用 IReadOnlyDictionary 确保初始化后的不可变性。
-    private static readonly IReadOnlyDictionary<string, Type> ResolvedTypesCache;
+    private static IReadOnlyDictionary<string, Type> ResolvedTypesCache { get; set; } = new Dictionary<string, Type>();
 
     private static readonly Type InterfaceType = typeof(AbstractRuneConfig);
 
-    // 假设所有 AbstractRuneConfig 的实现都在 AbstractRuneConfig 接口所在的程序集中。
-    // 如果实现可能分布在多个程序集中，需要调整 TargetAssemblies 的获取逻辑。
-    private static readonly Assembly TargetAssembly = InterfaceType.Assembly; // TODO: 确认扫描范围是否足够
 
     /// <summary>
-    /// 静态构造函数，在类首次被访问时执行。
-    /// 负责扫描程序集并构建 ResolvedTypesCache。
+    /// 初始化解析器，通过查询所有模块来发现并注册符文类型。
+    /// 这个方法应该在应用启动时，在所有模块被发现后调用一次。
     /// </summary>
-    static RuneConfigTypeResolver()
+    /// <param name="runeProviders">应用程序中所有已发现的模块实例。</param>
+    public static void Initialize(IEnumerable<IProgramModuleRuneProvider> runeProviders)
     {
         var temporaryDictionary = new Dictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
 
-        // TODO: 如果需要扫描多个程序集，在此处调整 GetTypes() 的来源
-        var allTypesInAssembly = TargetAssembly.GetTypes();
-
-        foreach (var type in allTypesInAssembly)
+        foreach (var module in runeProviders)
         {
-            // 确保类型是非抽象的类，并且实现了 AbstractRuneConfig
-            if (type is not { IsClass: true, IsAbstract: false } || !InterfaceType.IsAssignableFrom(type))
-                continue;
-            // 约定：RuneType 的值等于类名。
-            // 这个值应该与 AbstractRuneConfig 构造函数中传入的 nameof(ConcreteType) 一致。
-            string runeTypeName = type.Name;
+            // 2. 从每个提供者模块获取它声明的符文类型
+            var runeTypesFromModule = module.RuneConfigTypes;
 
-            if (string.IsNullOrWhiteSpace(runeTypeName))
+            foreach (var type in runeTypesFromModule)
             {
-                // 理论上 type.Name 不会是空或空白，但作为防御性检查。
-                // 可以考虑记录一个警告或内部错误。
-                continue;
-            }
+                // 3. 执行与之前相同的验证和注册逻辑
+                if (type is not { IsClass: true, IsAbstract: false } || !InterfaceType.IsAssignableFrom(type))
+                {
+                    // 可以在这里记录一个警告，因为插件声明了一个无效的符文类型
+                    Console.WriteLine($"[警告] 模块 '{module.GetType().Name}' 提供的类型 '{type.Name}' 不是一个有效的符文配置类，将被忽略。");
+                    continue;
+                }
 
-            // 处理 RuneType 名称冲突 (忽略大小写)
-            if (temporaryDictionary.TryGetValue(runeTypeName, out var existingType))
-            {
-                // 如果已存在一个同名（忽略大小写）的符文类型，则抛出异常。
-                throw new InvalidOperationException(
-                    $"符文类型名称冲突：类型 '{type.FullName}' 和 '{existingType.FullName}' " +
-                    $"都希望注册为符文类型 '{runeTypeName}' (忽略大小写)。符文类型名称必须唯一。");
-            }
+                // 约定：RuneType 的值等于类名。
+                string runeTypeName = type.Name;
 
-            temporaryDictionary.Add(runeTypeName, type);
+                if (temporaryDictionary.TryGetValue(runeTypeName, out var existingType))
+                {
+                    throw new InvalidOperationException(
+                        $"符文类型名称冲突：类型 '{type.FullName}' 和 '{existingType.FullName}' " +
+                        $"都希望注册为符文类型 '{runeTypeName}' (忽略大小写)。符文类型名称必须唯一。");
+                }
+
+                temporaryDictionary.Add(runeTypeName, type);
+                Console.WriteLine($"[RuneResolver] 已从模块 '{module.GetType().Name}' 注册符文: {runeTypeName}");
+            }
         }
 
         ResolvedTypesCache = new ReadOnlyDictionary<string, Type>(temporaryDictionary);

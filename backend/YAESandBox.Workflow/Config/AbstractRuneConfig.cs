@@ -54,16 +54,16 @@ public abstract record AbstractRuneConfig
     /// 获得符文的输入变量
     /// </summary>
     /// <returns></returns>
-    internal virtual List<string> GetConsumedVariables() => [];
+    public virtual List<string> GetConsumedVariables() => [];
 
     /// <summary>
     /// 获得符文的输出变量
     /// </summary>
     /// <returns></returns>
-    internal virtual List<string> GetProducedVariables() => [];
+    public virtual List<string> GetProducedVariables() => [];
 }
 
-internal abstract record AbstractRuneConfig<T> : AbstractRuneConfig
+public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
     where T : IWithDebugDto<IRuneProcessorDebugDto>
 {
     /// <inheritdoc />

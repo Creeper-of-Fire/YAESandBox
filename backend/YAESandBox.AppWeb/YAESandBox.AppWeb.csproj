@@ -29,7 +29,7 @@
     </ItemGroup>
     
     <ItemGroup>
-        <Folder Include="wwwroot\"/>
+        <Folder Include="wwwroot\" />
         <Content Update="Plugins\**\wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
     </ItemGroup>
 
@@ -81,6 +81,10 @@
             <TsOutputSubDir>authentication-api-client</TsOutputSubDir>
         </SwaggerDocToGenerate>
 
+    </ItemGroup>
+
+    <ItemGroup>
+      <_ContentIncludedByDefault Remove="Plugins\LuaEditor\wwwroot\api-manifest.json" />
     </ItemGroup>
 
     <!-- ================================================================== -->
