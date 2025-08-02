@@ -76,7 +76,7 @@ import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 const props = defineProps<{
   id: string; // 原始 Record 的 key (资源的唯一ID)
   item: GlobalResourceItem<ConfigObject>; // 包含成功/失败状态和数据的资源项
-  type: ConfigType; // 资源的类型 ('workflow', 'step', 'module')
+  type: ConfigType; // 资源的类型 ('workflow', 'step', 'rune')
 }>();
 
 const emit = defineEmits<{

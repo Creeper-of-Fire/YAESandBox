@@ -44,12 +44,12 @@ public record DynamicComponentAsset
 }
 
 /// <summary>
-/// 获取模块 Schemas 的 API 的完整响应体。
+/// 获取符文 Schemas 的 API 的完整响应体。
 /// </summary>
-public record ModuleSchemasResponse
+public record RuneSchemasResponse
 {
     /// <summary>
-    /// 模块 Schema 的字典，键是模块类型名。
+    /// 符文 Schema 的字典，键是符文类型名。
     /// </summary>
     [Required]
     public required Dictionary<string, object> Schemas { get; init; }
@@ -62,14 +62,14 @@ public record ModuleSchemasResponse
 }
 
 /// <summary>
-/// 提供工作流相关配置（工作流、步骤、模块）的全局管理和Schema信息。
+/// 提供工作流相关配置（工作流、步骤、符文）的全局管理和Schema信息。
 /// </summary>
 /// <param name="workflowConfigFileService">工作流配置文件服务。</param>
 /// <param name="webHostEnvironment">Web 主机环境。</param>
 [ApiController]
-[Route("api/v1/workflows-configs/global-modules")]
+[Route("api/v1/workflows-configs/global-runes")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
-public class ModuleConfigController(WorkflowConfigFileService workflowConfigFileService, IWebHostEnvironment webHostEnvironment)
+public class RuneConfigController(WorkflowConfigFileService workflowConfigFileService, IWebHostEnvironment webHostEnvironment)
     : AuthenticatedApiControllerBase
 {
     private WorkflowConfigFileService WorkflowConfigFileService { get; } = workflowConfigFileService;
@@ -126,26 +126,26 @@ public class ModuleConfigController(WorkflowConfigFileService workflowConfigFile
     }
 
     /// <summary>
-    /// 获取所有注册的模块配置类型的表单 Schema 结构 (JSON Schema 格式，包含 UI 指令)，并附带它们依赖的动态前端组件资源。
+    /// 获取所有注册的符文配置类型的表单 Schema 结构 (JSON Schema 格式，包含 UI 指令)，并附带它们依赖的动态前端组件资源。
     /// 用于前端动态生成这些类型配置的【新建】或【编辑】表单骨架。
     /// </summary>
     /// <returns>一个包含所有 Schemas 和所需脚本内容的对象。</returns>
-    [HttpGet("all-module-configs-schemas")]
+    [HttpGet("all-rune-configs-schemas")]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(ModuleSchemasResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(RuneSchemasResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public Task<ActionResult<ModuleSchemasResponse>> GetAllModuleSchemas()
+    public Task<ActionResult<RuneSchemasResponse>> GetAllRuneSchemas()
     {
         var schemas = new Dictionary<string, object>();
-        var allModuleTypes = ModuleConfigTypeResolver.GetAllModuleConfigTypes();
+        var allRuneTypes = RuneConfigTypeResolver.GetAllRuneConfigTypes();
 
-        foreach (var type in allModuleTypes)
+        foreach (var type in allRuneTypes)
         {
             try
             {
                 string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(type, settings =>
                 {
-                    settings.SchemaProcessors.Add(new ModuleRuleAttributeProcessor());
+                    settings.SchemaProcessors.Add(new RuneRuleAttributeProcessor());
                     settings.SchemaProcessors.Add(new VueComponentRendererSchemaProcessor());
                     settings.SchemaProcessors.Add(new WebComponentRendererSchemaProcessor());
                     settings.SchemaProcessors.Add(new MonacoEditorRendererSchemaProcessor());
@@ -159,81 +159,81 @@ public class ModuleConfigController(WorkflowConfigFileService workflowConfigFile
             }
             catch (Exception ex)
             {
-                return Task.FromResult<ActionResult<ModuleSchemasResponse>>(this.StatusCode(StatusCodes.Status500InternalServerError,
+                return Task.FromResult<ActionResult<RuneSchemasResponse>>(this.StatusCode(StatusCodes.Status500InternalServerError,
                     $"为类型 '{type.Name}' 生成 Schema 时发生错误: {ex.Message}"));
             }
         }
 
         var dynamicAssets = this.DiscoverDynamicAssets();
 
-        var response = new ModuleSchemasResponse
+        var response = new RuneSchemasResponse
         {
             Schemas = schemas,
             DynamicAssets = dynamicAssets
         };
 
-        return Task.FromResult<ActionResult<ModuleSchemasResponse>>(this.Ok(response));
+        return Task.FromResult<ActionResult<RuneSchemasResponse>>(this.Ok(response));
     }
 
 
     /// <summary>
-    /// 获取所有全局模块配置的列表。
+    /// 获取所有全局符文配置的列表。
     /// </summary>
-    /// <returns>包含所有全局模块配置的列表。</returns>
-    /// <response code="200">成功获取所有全局模块配置的列表。</response>
+    /// <returns>包含所有全局符文配置的列表。</returns>
+    /// <response code="200">成功获取所有全局符文配置的列表。</response>
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<AbstractModuleConfig>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<AbstractRuneConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Dictionary<string, JsonResultDto<AbstractModuleConfig>>>> GetAllGlobalModuleConfigs() =>
-        await this.WorkflowConfigFileService.FindAllModuleConfig(this.UserId).ToActionResultAsync(dic =>
-            dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<AbstractModuleConfig>.ToJsonResultDto(kv.Value)));
+    public async Task<ActionResult<Dictionary<string, JsonResultDto<AbstractRuneConfig>>>> GetAllGlobalRuneConfigs() =>
+        await this.WorkflowConfigFileService.FindAllRuneConfig(this.UserId).ToActionResultAsync(dic =>
+            dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<AbstractRuneConfig>.ToJsonResultDto(kv.Value)));
 
     /// <summary>
-    /// 获取指定 ID 的全局模块配置。
+    /// 获取指定 ID 的全局符文配置。
     /// </summary>
-    /// <param name="moduleId">模块配置的唯一 ID。</param>
-    /// <returns>指定 ID 的模块配置。</returns>
-    /// <response code="200">成功获取指定的模块配置。</response>
-    /// <response code="404">未找到指定 ID 的模块配置。</response>
+    /// <param name="runeId">符文配置的唯一 ID。</param>
+    /// <returns>指定 ID 的符文配置。</returns>
+    /// <response code="200">成功获取指定的符文配置。</response>
+    /// <response code="404">未找到指定 ID 的符文配置。</response>
     /// <response code="500">获取配置时发生内部服务器错误。</response>
-    [HttpGet("{moduleId}")]
+    [HttpGet("{runeId}")]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(AbstractModuleConfig), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AbstractRuneConfig), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<AbstractModuleConfig>> GetGlobalModuleConfigById(string moduleId) =>
-        await this.WorkflowConfigFileService.FindModuleConfig(this.UserId, moduleId).ToActionResultAsync();
+    public async Task<ActionResult<AbstractRuneConfig>> GetGlobalRuneConfigById(string runeId) =>
+        await this.WorkflowConfigFileService.FindRuneConfig(this.UserId, runeId).ToActionResultAsync();
 
     /// <summary>
-    /// 创建或更新全局模块配置 (Upsert)。
-    /// 如果指定 ID 的模块配置已存在，则更新它；如果不存在，则创建它。
-    /// 前端负责生成并提供模块的唯一 ID (GUID)。
+    /// 创建或更新全局符文配置 (Upsert)。
+    /// 如果指定 ID 的符文配置已存在，则更新它；如果不存在，则创建它。
+    /// 前端负责生成并提供符文的唯一 ID (GUID)。
     /// </summary>
-    /// <param name="moduleId">要创建或更新的模块配置的唯一 ID。</param>
-    /// <param name="abstractModuleConfig">模块配置数据。</param>
+    /// <param name="runeId">要创建或更新的符文配置的唯一 ID。</param>
+    /// <param name="abstractRuneConfig">符文配置数据。</param>
     /// <returns>操作成功的响应。</returns>
-    /// <response code="204">模块配置已成功更新/创建。</response>
+    /// <response code="204">符文配置已成功更新/创建。</response>
     /// <response code="400">请求无效，例如：请求体为空或格式错误。</response>
     /// <response code="500">保存配置时发生内部服务器错误。</response>
-    [HttpPut("{moduleId}")]
+    [HttpPut("{runeId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpsertGlobalModuleConfig(string moduleId, [FromBody] AbstractModuleConfig abstractModuleConfig) =>
-        await this.WorkflowConfigFileService.SaveModuleConfig(this.UserId, moduleId, abstractModuleConfig).ToActionResultAsync();
+    public async Task<IActionResult> UpsertGlobalRuneConfig(string runeId, [FromBody] AbstractRuneConfig abstractRuneConfig) =>
+        await this.WorkflowConfigFileService.SaveRuneConfig(this.UserId, runeId, abstractRuneConfig).ToActionResultAsync();
 
     /// <summary>
-    /// 删除指定 ID 的全局模块配置。
+    /// 删除指定 ID 的全局符文配置。
     /// </summary>
-    /// <param name="moduleId">要删除的模块配置的唯一 ID。</param>
+    /// <param name="runeId">要删除的符文配置的唯一 ID。</param>
     /// <returns>删除成功的响应。</returns>
-    /// <response code="204">模块配置已成功删除。</response>
+    /// <response code="204">符文配置已成功删除。</response>
     /// <response code="500">删除配置时发生内部服务器错误。</response>
-    [HttpDelete("{moduleId}")]
+    [HttpDelete("{runeId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteGlobalModuleConfig(string moduleId) =>
-        await this.WorkflowConfigFileService.DeleteModuleConfig(this.UserId, moduleId).ToActionResultAsync();
+    public async Task<IActionResult> DeleteGlobalRuneConfig(string runeId) =>
+        await this.WorkflowConfigFileService.DeleteRuneConfig(this.UserId, runeId).ToActionResultAsync();
 }

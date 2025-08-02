@@ -7,27 +7,27 @@ using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
-using static YAESandBox.Workflow.Module.ExactModule.PromptGenerationModuleProcessor;
+using static YAESandBox.Workflow.Rune.ExactRune.PromptGenerationRuneProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
 
-namespace YAESandBox.Workflow.Module.ExactModule;
+namespace YAESandBox.Workflow.Rune.ExactRune;
 
 /// <summary>
-/// 提示词生成模块处理器。
+/// 提示词生成符文处理器。
 /// 根据配置的模板和上下文数据，生成一个RoledPromptDto。
 /// </summary>
 /// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
-/// <param name="config">模块配置。</param>
-internal partial class PromptGenerationModuleProcessor(
+/// <param name="config">符文配置。</param>
+internal partial class PromptGenerationRuneProcessor(
     WorkflowRuntimeService workflowRuntimeService,
-    PromptGenerationModuleConfig config)
-    : IWithDebugDto<PromptGenerationModuleProcessorDebugDto>, INormalModule
+    PromptGenerationRuneConfig config)
+    : IWithDebugDto<PromptGenerationRuneProcessorDebugDto>, INormalRune
 {
     private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-    private PromptGenerationModuleConfig Config { get; init; } = config;
+    private PromptGenerationRuneConfig Config { get; init; } = config;
 
     /// <inheritdoc />
-    public PromptGenerationModuleProcessorDebugDto DebugDto { get; init; } = new()
+    public PromptGenerationRuneProcessorDebugDto DebugDto { get; init; } = new()
     {
         OriginalTemplate = config.Template,
         ConfiguredRole = PromptRoleTypeExtension.ToPromptRoleType(config.RoleType),
@@ -65,7 +65,7 @@ internal partial class PromptGenerationModuleProcessor(
     {
         var resolvedValues = new Dictionary<string, string?>();
 
-        var uniquePlaceholderNames = PromptGenerationModuleConfig.PlaceholderRegex().Matches(template)
+        var uniquePlaceholderNames = PromptGenerationRuneConfig.PlaceholderRegex().Matches(template)
             .Select(m => m.Groups[1].Value)
             .Distinct(StringComparer.OrdinalIgnoreCase) // 占位符名称不区分大小写
             .ToList();
@@ -121,22 +121,22 @@ internal partial class PromptGenerationModuleProcessor(
 
 
     /// <summary>
-    /// 提示词生成模块处理器的调试数据传输对象。
+    /// 提示词生成符文处理器的调试数据传输对象。
     /// </summary>
-    internal class PromptGenerationModuleProcessorDebugDto : IModuleProcessorDebugDto
+    internal class PromptGenerationRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         /// <summary>
-        /// 模块配置中原始的提示词模板。
+        /// 符文配置中原始的提示词模板。
         /// </summary>
         public string OriginalTemplate { get; internal set; } = string.Empty;
 
         /// <summary>
-        /// 模块配置中指定的角色类型。
+        /// 符文配置中指定的角色类型。
         /// </summary>
         public PromptRoleType ConfiguredRole { get; internal set; }
 
         /// <summary>
-        /// 模块配置中指定的AI模型中的提示词名称。
+        /// 符文配置中指定的AI模型中的提示词名称。
         /// </summary>
         public string? ConfiguredPromptName { get; internal set; }
 
@@ -178,7 +178,7 @@ internal partial class PromptGenerationModuleProcessor(
     }
 }
 
-internal partial record PromptGenerationModuleConfig
+internal partial record PromptGenerationRuneConfig
 {
     // 使用 Regex.Matches 获取所有唯一的占位符名称
     // 使用 lookahead 和 lookbehind 来确保我们只匹配 [[}} 包裹的内容，并且不能处理嵌套 [[}} 的情况
@@ -192,15 +192,15 @@ internal partial record PromptGenerationModuleConfig
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToList();
     
-    internal override List<string> GetProducedVariables() => [AiModuleConfig.PromptsName];
+    internal override List<string> GetProducedVariables() => [AiRuneConfig.PromptsName];
 }
 
 /// <summary>
-/// 提示词生成模块的配置。
+/// 提示词生成符文的配置。
 /// </summary>
-[InFrontOf(typeof(AiModuleConfig))]
+[InFrontOf(typeof(AiRuneConfig))]
 [ClassLabel("✍️提示词")]
-internal partial record PromptGenerationModuleConfig : AbstractModuleConfig<PromptGenerationModuleProcessor>
+internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGenerationRuneProcessor>
 {
     /// <summary>
     /// 生成的提示词的角色类型 (System, User, Assistant)。
@@ -239,6 +239,6 @@ internal partial record PromptGenerationModuleConfig : AbstractModuleConfig<Prom
 
 
     /// <inheritdoc />
-    protected override PromptGenerationModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
+    protected override PromptGenerationRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
         new(workflowRuntimeService, this);
 }

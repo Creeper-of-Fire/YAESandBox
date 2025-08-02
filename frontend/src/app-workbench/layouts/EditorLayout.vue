@@ -21,9 +21,9 @@
       </template>
     </n-split>
 
-    <!-- 3. 模块编辑区 -->
-    <div v-show="isModulePanelVisible" class="panel module-panel">
-      <slot name="module-panel"></slot>
+    <!-- 3. 符文编辑区 -->
+    <div v-show="isRunePanelVisible" class="panel rune-panel">
+      <slot name="rune-panel"></slot>
     </div>
 
     <!-- 4. 右侧监视器 (暂未实现) -->
@@ -50,7 +50,7 @@ const props = defineProps({
     type: Boolean,
     default: true,
   },
-  isModulePanelVisible: {
+  isRunePanelVisible: {
     type: Boolean,
     default: true,
   },
@@ -96,7 +96,7 @@ const props = defineProps({
   padding: 12px 8px;
 }
 
-.module-panel {
+.rune-panel {
   padding: 12px 8px;
   flex: 1; /* 占据剩余空间 */
   flex-shrink: 0;

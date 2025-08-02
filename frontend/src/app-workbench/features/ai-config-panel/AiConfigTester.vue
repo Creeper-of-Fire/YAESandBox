@@ -5,7 +5,7 @@
         type="info"
         secondary
         @click="handleOpenTestModal"
-        :disabled="!formDataCopy || !moduleType"
+        :disabled="!formDataCopy || !aiModelType"
         title="点击测试当前选中的 AI 模型配置"
     >
       测试当前模型
@@ -26,7 +26,7 @@
     >
       <n-spin :show="isLoading" description="正在请求 AI 服务...">
         <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
-          当前测试对象：配置集 "{{ configSetName }}" 中的 "{{ moduleType }}" 模型。
+          当前测试对象：配置集 "{{ configSetName }}" 中的 "{{ aiModelType }}" 模型。
         </n-alert>
 
         <n-flex vertical>
@@ -46,7 +46,7 @@
               type="primary"
               @click="runTest"
               :loading="isLoading"
-              :disabled="!testText.trim() || isLoading || !formDataCopy || !moduleType"
+              :disabled="!testText.trim() || isLoading || !formDataCopy || !aiModelType"
               block
           >
             执行测试
@@ -92,7 +92,7 @@ import type {AbstractAiProcessorConfig} from "@/app-workbench/types/generated/ai
 const props = defineProps<{
   formDataCopy: AbstractAiProcessorConfig | null; // 配置集 UUID
   configSetName: string | null; // 配置集名称 (用于显示)
-  moduleType: string | null;    // AI 模型类型
+  aiModelType: string | null;    // AI 模型类型
 }>();
 
 const defaultTestText = '只回答“test”';
@@ -124,7 +124,7 @@ function handleOpenTestModal()
  */
 async function runTest()
 {
-  if (!props.formDataCopy || !props.moduleType)
+  if (!props.formDataCopy || !props.aiModelType)
   {
     message.error('配置集 UUID 或模型类型无效，无法执行测试。');
     return;
@@ -144,7 +144,7 @@ async function runTest()
   {
     testResult.value = await AiConfigurationsService.postApiAiConfigurationsAiConfigTest({
       requestBody: {configJson: props.formDataCopy, testText: testText.value},
-      moduleType: props.moduleType,
+      aiModelType: props.aiModelType,
     });
     message.success('测试成功！');
 

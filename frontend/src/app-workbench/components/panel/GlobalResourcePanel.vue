@@ -54,8 +54,8 @@
         <n-tab name="workflow" tab="工作流"/>
         <!-- 步骤标签页 -->
         <n-tab name="step" tab="步骤"/>
-        <!-- 模块标签页 -->
-        <n-tab name="module" tab="模块"/>
+        <!-- 符文标签页 -->
+        <n-tab name="rune" tab="符文"/>
       </n-tabs>
 
 
@@ -120,34 +120,34 @@
         </draggable>
         <n-empty v-else class="empty-container" description="无全局步骤" small/>
       </div>
-      <div v-if="activeTab===`module`">
+      <div v-if="activeTab===`rune`">
         <draggable
-            v-if="modulesList.length > 0"
-            v-model="modulesList"
+            v-if="runesList.length > 0"
+            v-model="runesList"
             :animation="150"
             :clone="handleResourceClone"
-            :group="{ name: 'modules-group', pull: 'clone', put: false }"
+            :group="{ name: 'runes-group', pull: 'clone', put: false }"
             :setData="handleSetData"
             :sort="false"
             class="resource-list"
             item-key="id"
         >
-          <div v-for="element in modulesList"
+          <div v-for="element in runesList"
                :key="element.id"
                :data-drag-id="element.id"
-               data-drag-type="module"
+               data-drag-type="rune"
           >
             <GlobalResourceListItem
                 :id="element.id"
                 :item="element.item"
-                type="module"
+                type="rune"
                 @start-editing="startEditing"
                 @show-error-detail="showErrorDetail"
                 @contextmenu="handleContextMenu"
             />
           </div>
         </draggable>
-        <n-empty v-else class="empty-container" description="无全局模块" small/>
+        <n-empty v-else class="empty-container" description="无全局符文" small/>
       </div>
     </template>
   </HeaderAndBodyLayout>
@@ -185,7 +185,7 @@ type DraggableResourceItem<T> = {
   item: GlobalResourceItem<T>; // 原始 Record 的 value
 };
 
-const activeTab = ref<'workflow' | 'step' | 'module'>('workflow'); // 默认激活“步骤”标签页
+const activeTab = ref<'workflow' | 'step' | 'rune'>('workflow'); // 默认激活“步骤”标签页
 
 const emit = defineEmits<{ (e: 'start-editing', payload: { type: ConfigType; id: string }): void; }>();
 const workbenchStore = useWorkbenchStore();
@@ -194,10 +194,10 @@ const message = useMessage();
 
 const workflowsAsync = workbenchStore.globalWorkflowsAsync;
 const stepsAsync = workbenchStore.globalStepsAsync;
-const modulesAsync = workbenchStore.globalModulesAsync;
+const runesAsync = workbenchStore.globalRunesAsync;
 const workflows = computed(() => workflowsAsync.state);
 const steps = computed(() => stepsAsync.state);
-const modules = computed(() => modulesAsync.state);
+const runes = computed(() => runesAsync.state);
 
 // 为所有资源类型创建可用于 v-model 的列表
 const workflowsList = computed({
@@ -212,21 +212,21 @@ const stepsList = computed({
   {
   }
 });
-const modulesList = computed({
-  get: () => modules.value ? Object.entries(modules.value).map(([id, item]) => ({id, item})) : [],
+const runesList = computed({
+  get: () => runes.value ? Object.entries(runes.value).map(([id, item]) => ({id, item})) : [],
   set: () =>
   {
   }
 });
 
-const aggregatedIsLoading = computed(() => workflowsAsync.isLoading || stepsAsync.isLoading || modulesAsync.isLoading);
-const aggregatedError = computed(() => workflowsAsync.error || stepsAsync.error || modulesAsync.error);
+const aggregatedIsLoading = computed(() => workflowsAsync.isLoading || stepsAsync.isLoading || runesAsync.isLoading);
+const aggregatedError = computed(() => workflowsAsync.error || stepsAsync.error || runesAsync.error);
 
 function executeAll()
 {
   workflowsAsync.execute();
   stepsAsync.execute();
-  modulesAsync.execute();
+  runesAsync.execute();
 }
 
 
@@ -268,20 +268,20 @@ const currentTabLabel = computed(() =>
       return '工作流';
     case 'step':
       return '步骤';
-    case 'module':
-      return '模块';
+    case 'rune':
+      return '符文';
     default:
       return '资源';
   }
 });
 
-const moduleTypeOptions = computed(() =>
+const runeTypeOptions = computed(() =>
 {
-  const schemas = workbenchStore.moduleSchemasAsync.state;
+  const schemas = workbenchStore.runeSchemasAsync.state;
   if (!schemas) return [];
   return Object.keys(schemas).map(key =>
   {
-    const metadata = workbenchStore.moduleMetadata[key];
+    const metadata = workbenchStore.runeMetadata[key];
     return {
       label: metadata?.classLabel || schemas[key].title || key,
       value: key,
@@ -289,27 +289,27 @@ const moduleTypeOptions = computed(() =>
   });
 });
 
-const moduleDefaultNameGenerator = (newType: string, options: any[]) =>
+const runeDefaultNameGenerator = (newType: string, options: any[]) =>
 {
   if (newType)
   {
-    const schema = workbenchStore.moduleSchemasAsync.state[newType];
+    const schema = workbenchStore.runeSchemasAsync.state[newType];
     const defaultName = schema?.properties?.name?.default;
     if (typeof defaultName === 'string')
     {
       return defaultName;
     }
-    return options.find(opt => opt.value === newType)?.label || '新模块';
+    return options.find(opt => opt.value === newType)?.label || '新符文';
   }
   return '';
 };
 /**
- * :content-type="activeTab === 'module' ? 'select-and-input' : 'input'"
- *             :default-name-generator="moduleDefaultNameGenerator"
+ * :content-type="activeTab === 'rune' ? 'select-and-input' : 'input'"
+ *             :default-name-generator="runeDefaultNameGenerator"
  *             :initial-value="`新建${currentTabLabel}`"
  *             :input-placeholder="`请输入新的${currentTabLabel}名称`"
- *             :select-options="moduleTypeOptions"
- *             :select-placeholder="'请选择模块类型'"
+ *             :select-options="runeTypeOptions"
+ *             :select-placeholder="'请选择符文类型'"
  *             :title="`新建全局${currentTabLabel}`"
  */
 const createNewAction = computed<EnhancedAction>(()=>
@@ -319,12 +319,12 @@ const createNewAction = computed<EnhancedAction>(()=>
       label: '新建全局配置',
       renderType: 'button',
       disabled: false,
-      popoverContentType: activeTab.value === 'module' ? 'select-and-input' : 'input',
-      popoverDefaultNameGenerator: moduleDefaultNameGenerator,
+      popoverContentType: activeTab.value === 'rune' ? 'select-and-input' : 'input',
+      popoverDefaultNameGenerator: runeDefaultNameGenerator,
       popoverInitialValue: `新建${currentTabLabel.value}`,
       popoverInputPlaceholder: `请输入新的${currentTabLabel.value}名称`,
-      popoverSelectOptions: moduleTypeOptions.value,
-      popoverSelectPlaceholder: '请选择模块类型',
+      popoverSelectOptions: runeTypeOptions.value,
+      popoverSelectPlaceholder: '请选择符文类型',
       popoverTitle: `新建全局${currentTabLabel.value}`,
       onConfirm: handleCreateNew
     })
@@ -342,19 +342,19 @@ async function handleCreateNew(payload: { name?: string, type?: string })
     return;
   }
   const resourceType = activeTab.value;
-  const moduleType = payload.type;
+  const runeType = payload.type;
 
-  if (resourceType === 'module' && !moduleType)
+  if (resourceType === 'rune' && !runeType)
   {
-    message.error('创建模块时必须选择模块类型');
+    message.error('创建符文时必须选择符文类型');
     return;
   }
 
   try
   {
     const blankConfig =
-        resourceType === 'module'
-            ? createBlankConfig('module', name, {moduleType: moduleType!})
+        resourceType === 'rune'
+            ? createBlankConfig('rune', name, {runeType: runeType!})
             : resourceType === 'workflow'
                 ? createBlankConfig('workflow', name)
                 : createBlankConfig('step', name);

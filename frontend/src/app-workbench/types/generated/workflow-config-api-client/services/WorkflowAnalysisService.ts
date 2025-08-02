@@ -2,8 +2,8 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AbstractModuleConfig } from '../models/AbstractModuleConfig';
-import type { ModuleAnalysisResult } from '../models/ModuleAnalysisResult';
+import type { AbstractRuneConfig } from '../models/AbstractRuneConfig';
+import type { RuneAnalysisResult } from '../models/RuneAnalysisResult';
 import type { WorkflowProcessorConfig } from '../models/WorkflowProcessorConfig';
 import type { WorkflowValidationReport } from '../models/WorkflowValidationReport';
 import type { CancelablePromise } from '../core/CancelablePromise';
@@ -11,22 +11,22 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class WorkflowAnalysisService {
     /**
-     * 分析单个模块配置，动态计算其输入和输出变量。
-     * 用于编辑器在用户修改模块配置时，实时获取其数据依赖，以增强智能提示和即时反馈。
-     * @returns ModuleAnalysisResult OK
+     * 分析单个符文配置，动态计算其输入和输出变量。
+     * 用于编辑器在用户修改符文配置时，实时获取其数据依赖，以增强智能提示和即时反馈。
+     * @returns RuneAnalysisResult OK
      * @throws ApiError
      */
-    public static postApiV1WorkflowsConfigsAnalysisAnalyzeModule({
+    public static postApiV1WorkflowsConfigsAnalysisAnalyzeRune({
         requestBody,
     }: {
         /**
-         * 包含模块配置草稿的请求体。
+         * 包含符文配置草稿的请求体。
          */
-        requestBody?: AbstractModuleConfig,
-    }): CancelablePromise<ModuleAnalysisResult> {
+        requestBody?: AbstractRuneConfig,
+    }): CancelablePromise<RuneAnalysisResult> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/workflows-configs/analysis/analyze-module',
+            url: '/api/v1/workflows-configs/analysis/analyze-rune',
             body: requestBody,
             mediaType: 'application/json',
         });

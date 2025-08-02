@@ -7,7 +7,7 @@ using static YAESandBox.Workflow.Step.StepProcessor;
 
 #pragma warning disable CS8974 // 将方法组转换为非委托类型
 
-namespace YAESandBox.Workflow.Module.ExactModule.LuaRunner;
+namespace YAESandBox.Workflow.Rune.ExactRune.LuaRunner;
 
 /// <summary>
 /// 通用的 Lua 脚本执行器。
@@ -72,7 +72,7 @@ internal partial class LuaScriptRunner(StepProcessorContent stepProcessorContent
 
             lua.LoadCLRPackage();
 
-            // --- 沙箱化：移除危险的内建模块 ---
+            // --- 沙箱化：移除危险的内建符文 ---
             lua.DoString(@"
                 os = nil; 
                 io = nil; 
@@ -84,7 +84,7 @@ internal partial class LuaScriptRunner(StepProcessorContent stepProcessorContent
             ");
 
 
-            // --- 注入标准 API 模块 ---
+            // --- 注入标准 API 符文 ---
             var logger = new LuaLogBridge(debugDto);
             // 注册 log.*
             lua.NewTable("log");

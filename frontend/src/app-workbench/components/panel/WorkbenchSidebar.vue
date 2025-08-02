@@ -71,7 +71,7 @@
         </template>
 
         <template v-else-if="session.type === 'step' && stepData">
-          <p class="sidebar-description">拖拽全局模块到模块列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
+          <p class="sidebar-description">拖拽全局符文到符文列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
           <StepItemRenderer
               :is-collapsible="false"
               :is-draggable="false"
@@ -81,9 +81,9 @@
           />
         </template>
 
-        <template v-else-if="session.type === 'module' && moduleData">
+        <template v-else-if="session.type === 'rune' && runeData">
           <n-alert style="margin-top: 16px;" title="提示" type="info">
-            这是一个独立的模块。请在中间的主编辑区完成详细配置。
+            这是一个独立的符文。请在中间的主编辑区完成详细配置。
           </n-alert>
         </template>
       </template>
@@ -118,7 +118,7 @@ import {computed, ref} from 'vue';
 import {NH4, NIcon, useDialog, useMessage} from 'naive-ui';
 import type {ConfigType, EditSession} from "@/app-workbench/services/EditSession.ts";
 import type {
-  AbstractModuleConfig,
+  AbstractRuneConfig,
   StepProcessorConfig,
   WorkflowProcessorConfig
 } from "@/app-workbench/types/generated/workflow-config-api-client";
@@ -204,7 +204,7 @@ const {actions} = useConfigItemActions({
 const typeHierarchy: Record<ConfigType, number> = {
   workflow: 3,
   step: 2,
-  module: 1,
+  rune: 1,
 };
 
 /**
@@ -216,7 +216,7 @@ function getDraggedItemType(event: DragEvent): ConfigType | null
 {
   for (const type of event.dataTransfer?.types ?? [])
   {
-    const match = type.match(/^application\/vnd\.workbench\.item\.(workflow|step|module)$/);
+    const match = type.match(/^application\/vnd\.workbench\.item\.(workflow|step|rune)$/);
     if (match)
     {
       return match[1] as ConfigType;
@@ -302,15 +302,15 @@ const workflowData = computed(() =>
 const stepData = computed(() =>
     props.session?.type === 'step' ? props.session.getData().value as StepProcessorConfig : null
 );
-const moduleData = computed(() =>
-    props.session?.type === 'module' ? props.session.getData().value as AbstractModuleConfig : null
+const runeData = computed(() =>
+    props.session?.type === 'rune' ? props.session.getData().value as AbstractRuneConfig : null
 );
 const currentConfigName = computed(() =>
 {
   if (!props.session) return ''; // 如果没有会话，返回空字符串
   if (props.session.type === 'workflow' && workflowData.value) return `工作流: ${workflowData.value.name}`;
   if (props.session.type === 'step' && stepData.value) return `步骤: ${stepData.value.name}`;
-  if (props.session.type === 'module' && moduleData.value) return `模块: ${moduleData.value.name}`;
+  if (props.session.type === 'rune' && runeData.value) return `符文: ${runeData.value.name}`;
   return '未知';
 });
 </script>

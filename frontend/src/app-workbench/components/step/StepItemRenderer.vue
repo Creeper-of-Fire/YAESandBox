@@ -32,25 +32,25 @@
       <template #content-below>
         <!-- 使用本地的 isExpanded 状态 -->
         <n-collapse-transition :show="isExpanded">
-          <div class="module-list-container">
+          <div class="rune-list-container">
             <draggable
-                v-if="step.modules"
-                v-model="step.modules"
+                v-if="step.runes"
+                v-model="step.runes"
                 :animation="150"
-                :group="{ name: 'modules-group', put: ['modules-group'] }"
-                class="module-draggable-area"
+                :group="{ name: 'runes-group', put: ['runes-group'] }"
+                class="rune-draggable-area"
                 ghost-class="workbench-ghost-item"
                 handle=".drag-handle"
                 item-key="configId"
             >
-              <div v-for="moduleItem in step.modules" :key="moduleItem.configId" class="module-item-wrapper">
-                <ModuleItemRenderer
-                    :module="moduleItem"
+              <div v-for="runeItem in step.runes" :key="runeItem.configId" class="rune-item-wrapper">
+                <RuneItemRenderer
+                    :rune="runeItem"
                     :parent-step="step"
                 />
               </div>
             </draggable>
-            <n-empty v-else description="拖拽模块到此处" small/>
+            <n-empty v-else description="拖拽符文到此处" small/>
           </div>
         </n-collapse-transition>
       </template>
@@ -63,7 +63,7 @@ import {NButton, NCollapseTransition, NEmpty, NIcon} from 'naive-ui';
 import {EllipsisHorizontalIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@/utils/icons.ts';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue'; // 导入基础组件
-import ModuleItemRenderer from '../module/ModuleItemRenderer.vue'; // 导入模块渲染器
+import RuneItemRenderer from '@/app-workbench/components/rune/RuneItemRenderer.vue'; // 导入符文渲染器
 import type {StepProcessorConfig, WorkflowProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {computed, inject, ref, toRef} from "vue";
 import ColorHash from "color-hash";
@@ -141,12 +141,12 @@ function toggleExpansion()
 
 // // 监听器也需要判断上下文
 // // TODO 因为循环观测的问题，先删掉
-// watch(() => props.step.modules, (newModules, oldModules) =>
+// watch(() => props.step.runes, (newRunes, oldRunes) =>
 // {
 //   // 只有在有上下文的情况下，才执行智能协调
 //   if (isInWorkflowContext.value)
 //   {
-//     console.log('在工作流上下文中，模块列表已变化，需要同步输入/输出映射！');
+//     console.log('在工作流上下文中，符文列表已变化，需要同步输入/输出映射！');
 //     // TODO: 实现智能协调算法
 //   }
 // }, {deep: true});
@@ -167,8 +167,8 @@ function toggleExpansion()
   /* 可以添加更多样式来美化步骤标题 */
 }
 
-/* 模块列表的容器样式 */
-.module-list-container {
+/* 符文列表的容器样式 */
+.rune-list-container {
   border-radius: 4px;
   margin-top: 8px;
   padding: 8px;
@@ -176,20 +176,20 @@ function toggleExpansion()
   border: 1px dashed #dcdfe6; /* 虚线边框，表示可拖入 */
   display: flex;
   flex-direction: column;
-  gap: 6px; /* 模块之间的间距 */
+  gap: 6px; /* 符文之间的间距 */
 }
 
-.module-item-wrapper {
-  /* 可以为每个模块项的包裹 div 添加一些样式，如果需要的话 */
+.rune-item-wrapper {
+  /* 可以为每个符文项的包裹 div 添加一些样式，如果需要的话 */
 }
 
-/* 模块列表为空时的占位符样式 */
-.module-empty-placeholder {
+/* 符文列表为空时的占位符样式 */
+.rune-empty-placeholder {
   padding: 10px; /* 增加内边距使其更显眼 */
 }
 
-/* 模块拖拽区域的最小高度，确保即使没有模块时也能作为拖拽目标 */
-.module-draggable-area {
+/* 符文拖拽区域的最小高度，确保即使没有符文时也能作为拖拽目标 */
+.rune-draggable-area {
   min-height: 40px;
   display: flex;
   flex-direction: column;

@@ -5,30 +5,30 @@ using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
-using static YAESandBox.Workflow.Module.ExactModule.SendToRawTextModuleProcessor;
+using static YAESandBox.Workflow.Rune.ExactRune.SendToRawTextRuneProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
 
-namespace YAESandBox.Workflow.Module.ExactModule;
+namespace YAESandBox.Workflow.Rune.ExactRune;
 
 /// <summary>
 /// 用于将步骤变量名直接写入到 WorkflowRuntimeService.RawText。
 /// </summary>
 /// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
-/// <param name="config">模块配置。</param>
-internal class SendToRawTextModuleProcessor(
+/// <param name="config">符文配置。</param>
+internal class SendToRawTextRuneProcessor(
     WorkflowRuntimeService workflowRuntimeService,
-    SendToRawTextModuleConfig config)
-    : IWithDebugDto<SendToRawTextModuleProcessorDebugDto>, INormalModule
+    SendToRawTextRune config)
+    : IWithDebugDto<SendToRawTextRuneProcessorDebugDto>, INormalRune
 {
     private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-    private SendToRawTextModuleConfig Config { get; } = config;
+    private SendToRawTextRune Config { get; } = config;
 
-    // 这个临时模块非常简单，可能不需要复杂的Debug DTO，
+    // 这个临时符文非常简单，可能不需要复杂的Debug DTO，
     // 但为了接口一致性，可以提供一个最小化的实现或直接返回 null。
     // 为了简单起见，这里我们先不实现具体的Debug DTO。
-    public SendToRawTextModuleProcessorDebugDto DebugDto => new(); // 暂时不提供Debug信息
+    public SendToRawTextRuneProcessorDebugDto DebugDto => new(); // 暂时不提供Debug信息
 
-    public record SendToRawTextModuleProcessorDebugDto : IModuleProcessorDebugDto;
+    public record SendToRawTextRuneProcessorDebugDto : IRuneProcessorDebugDto;
 
     public async Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent, CancellationToken cancellationToken = default)
     {
@@ -47,14 +47,14 @@ internal class SendToRawTextModuleProcessor(
 /// </summary>
 [InLastStep]
 [ClassLabel("😼结束")]
-internal record SendToRawTextModuleConfig : AbstractModuleConfig<SendToRawTextModuleProcessor>
+internal record SendToRawTextRune : AbstractRuneConfig<SendToRawTextRuneProcessor>
 {
     /// <inheritdoc />
-    protected override SendToRawTextModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
+    protected override SendToRawTextRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
         new(workflowRuntimeService, this);
 
     /// <summary>
-    /// 获取执行此模块所需的变量名
+    /// 获取执行此符文所需的变量名
     /// </summary>
     [Required]
     [Display(

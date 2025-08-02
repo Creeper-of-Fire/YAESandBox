@@ -8,17 +8,17 @@ using YAESandBox.Workflow.Utility;
 namespace YAESandBox.Workflow.Config;
 
 /// <summary>
-/// 模块的配置
+/// 符文的配置
 /// </summary>
-[JsonConverter(typeof(ModuleConfigConverter))]
-public abstract record AbstractModuleConfig
+[JsonConverter(typeof(RuneConfigConverter))]
+public abstract record AbstractRuneConfig
 {
     /// <summary>
     /// 名字
     /// </summary>
     [Required]
     [HiddenInForm(true)]
-    [Display(Name = "配置名称", Description = "模块的配置名称，用于在界面上显示。")]
+    [Display(Name = "配置名称", Description = "符文的配置名称，用于在界面上显示。")]
     public abstract string Name { get; init; }
 
     /// <summary>
@@ -37,34 +37,34 @@ public abstract record AbstractModuleConfig
     public abstract string ConfigId { get; init; }
 
     /// <summary>
-    /// 模块的类型
+    /// 符文的类型
     /// </summary>
     [Required]
     [HiddenInForm(true)]
-    public abstract string ModuleType { get; init; }
+    public abstract string RuneType { get; init; }
 
     /// <summary>
     /// 转为实例化的运行时状态
     /// </summary>
     /// <param name="workflowRuntimeService"></param>
     /// <returns></returns>
-    internal abstract IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor(WorkflowRuntimeService workflowRuntimeService);
+    internal abstract IWithDebugDto<IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService);
 
     /// <summary>
-    /// 获得模块的输入变量
+    /// 获得符文的输入变量
     /// </summary>
     /// <returns></returns>
     internal virtual List<string> GetConsumedVariables() => [];
 
     /// <summary>
-    /// 获得模块的输出变量
+    /// 获得符文的输出变量
     /// </summary>
     /// <returns></returns>
     internal virtual List<string> GetProducedVariables() => [];
 }
 
-internal abstract record AbstractModuleConfig<T> : AbstractModuleConfig
-    where T : IWithDebugDto<IModuleProcessorDebugDto>
+internal abstract record AbstractRuneConfig<T> : AbstractRuneConfig
+    where T : IWithDebugDto<IRuneProcessorDebugDto>
 {
     /// <inheritdoc />
     public override string Name { get; init; } = string.Empty;
@@ -76,10 +76,10 @@ internal abstract record AbstractModuleConfig<T> : AbstractModuleConfig
     public override string ConfigId { get; init; } = string.Empty;
 
     /// <inheritdoc/>
-    public override string ModuleType { get; init; } = nameof(T);
+    public override string RuneType { get; init; } = nameof(T);
 
-    internal override IWithDebugDto<IModuleProcessorDebugDto> ToModuleProcessor(WorkflowRuntimeService workflowRuntimeService) =>
-        this.ToCurrentModule(workflowRuntimeService);
+    internal override IWithDebugDto<IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService) =>
+        this.ToCurrentRune(workflowRuntimeService);
 
-    protected abstract T ToCurrentModule(WorkflowRuntimeService workflowRuntimeService);
+    protected abstract T ToCurrentRune(WorkflowRuntimeService workflowRuntimeService);
 }

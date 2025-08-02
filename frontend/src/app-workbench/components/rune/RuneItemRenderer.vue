@@ -1,20 +1,20 @@
-<!-- src/app-workbench/components/.../ModuleItemRenderer.vue -->
+<!-- src/app-workbench/components/.../RuneItemRenderer.vue -->
 <template>
   <ConfigItemBase
-      v-model:enabled="module.enabled"
-      :highlight-color-calculator="props.module.moduleType"
+      v-model:enabled="rune.enabled"
+      :highlight-color-calculator="props.rune.runeType"
       :is-selected="isSelected"
       is-draggable
       @click="updateSelectedConfig"
   >
     <template #content>
-<!--      <span v-if="moduleClassLabel" class="module-alias">{{ moduleClassLabel }}</span>-->
-      <span class="module-name">{{ module.name }}</span>
+<!--      <span v-if="runeClassLabel" class="rune-alias">{{ runeClassLabel }}</span>-->
+      <span class="rune-name">{{ rune.name }}</span>
     </template>
 
     <template #actions>
       <n-popover
-          v-if="moduleAnalysisResult && (hasConsumedVariables || hasProducedVariables)"
+          v-if="runeAnalysisResult && (hasConsumedVariables || hasProducedVariables)"
           trigger="hover">
         <template #trigger>
           <n-icon :component="FindInPageIcon" style="color: #999; margin-left: 8px;"/>
@@ -22,17 +22,17 @@
         <div v-if="hasConsumedVariables">
           <n-h4>输入:</n-h4>
           <n-ul>
-            <n-li v-for="variable in moduleAnalysisResult.consumedVariables" :key="variable">{{ variable }}</n-li>
+            <n-li v-for="variable in runeAnalysisResult.consumedVariables" :key="variable">{{ variable }}</n-li>
           </n-ul>
         </div>
         <div v-if="hasProducedVariables">
           <n-h4>输出:</n-h4>
           <n-ul>
-            <n-li v-for="variable in moduleAnalysisResult.producedVariables" :key="variable">{{ variable }}</n-li>
+            <n-li v-for="variable in runeAnalysisResult.producedVariables" :key="variable">{{ variable }}</n-li>
           </n-ul>
         </div>
       </n-popover>
-      <n-popover v-if="rulesForThisModule" trigger="hover">
+      <n-popover v-if="rulesForThisRune" trigger="hover">
         <template #trigger>
           <n-icon :component="InfoIcon" style="color: #999; margin-left: 8px;"/>
         </template>
@@ -50,98 +50,98 @@
 
 <script lang="ts" setup>
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue';
-import type {AbstractModuleConfig, StepProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
+import type {AbstractRuneConfig, StepProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {computed, inject, toRef} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
 import ColorHash from "color-hash";
 import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 import {FindInPageIcon} from "@/utils/icons.ts";
-import {useModuleAnalysis} from "@/app-workbench/composables/useModuleAnalysis.ts";
+import {useRuneAnalysis} from "@/app-workbench/composables/useRuneAnalysis.ts";
 import {useConfigItemActions} from "@/app-workbench/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemActionsMenu.vue";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
-  module: AbstractModuleConfig;
+  rune: AbstractRuneConfig;
   parentStep: StepProcessorConfig | null;
 }>();
 
 
 const {
-  analysisResult: moduleAnalysisResult,
+  analysisResult: runeAnalysisResult,
   hasConsumedVariables,
   hasProducedVariables
-} = useModuleAnalysis(
-    computed(() => props.module),
-    computed(() => props.module.configId)
+} = useRuneAnalysis(
+    computed(() => props.rune),
+    computed(() => props.rune.configId)
 );
 
 const selectedConfigItem = inject(SelectedConfigItemKey);
 
 function updateSelectedConfig()
 {
-  selectedConfigItem?.update({data: props.module});
+  selectedConfigItem?.update({data: props.rune});
 }
 
 const selectedConfig = selectedConfigItem?.data;
 
 const isSelected = computed(() =>
 {
-  return selectedConfig?.value?.data.configId === props.module.configId;
+  return selectedConfig?.value?.data.configId === props.rune.configId;
 });
 
 const workbenchStore = useWorkbenchStore();
 
-// 获取当前模块的元数据
-const metadataForThisModule = computed(() =>
-    workbenchStore.moduleMetadata[props.module.moduleType]
+// 获取当前符文的元数据
+const metadataForThisRune = computed(() =>
+    workbenchStore.runeMetadata[props.rune.runeType]
 );
 
-const rulesForThisModule = computed(() => metadataForThisModule.value?.rules);
+const rulesForThisRune = computed(() => metadataForThisRune.value?.rules);
 
-const moduleClassLabel = computed(() => metadataForThisModule.value?.classLabel);
+const runeClassLabel = computed(() => metadataForThisRune.value?.classLabel);
 
 const {actions: itemActions} = useConfigItemActions({
-  itemRef: toRef(props, 'module'),
+  itemRef: toRef(props, 'rune'),
   parentContextRef: computed(() =>
       props.parentStep
-          ? {parent: props.parentStep, list: props.parentStep.modules}
+          ? {parent: props.parentStep, list: props.parentStep.runes}
           : null
   ),
 });
 
 /**
- * 辅助函数：根据模块类型名获取其别名
- * @param moduleType - 模块的原始类型名，例如 "PromptGenerationModuleConfig"
- * @returns 模块的别名，如果不存在则返回原始类型名
+ * 辅助函数：根据符文类型名获取其别名
+ * @param runeType - 符文的原始类型名，例如 "PromptGenerationRuneConfig"
+ * @returns 符文的别名，如果不存在则返回原始类型名
  */
-function getModuleAlias(moduleType: string): string
+function getRuneAlias(runeType: string): string
 {
-  const metadata = workbenchStore.moduleMetadata[moduleType];
-  const schema = workbenchStore.moduleSchemasAsync.state[moduleType];
-  return metadata?.classLabel || schema?.title || moduleType;
+  const metadata = workbenchStore.runeMetadata[runeType];
+  const schema = workbenchStore.runeSchemasAsync.state[runeType];
+  return metadata?.classLabel || schema?.title || runeType;
 }
 
 // 将规则对象转换为用户可读的文本描述
 const ruleDescriptions = computed(() =>
 {
   const descriptions: string[] = [];
-  const rules = rulesForThisModule.value;
+  const rules = rulesForThisRune.value;
   if (!rules) return descriptions;
 
-  if (rules.noConfig) descriptions.push('此模块不能有配置。')
-  if (rules.singleInStep) descriptions.push('此模块在每个步骤中只能使用一次。');
-  if (rules.inLastStep) descriptions.push('此模块必须位于工作流的最后一个步骤中。');
+  if (rules.noConfig) descriptions.push('此符文不能有配置。')
+  if (rules.singleInStep) descriptions.push('此符文在每个步骤中只能使用一次。');
+  if (rules.inLastStep) descriptions.push('此符文必须位于工作流的最后一个步骤中。');
   if (rules.inFrontOf && rules.inFrontOf.length > 0)
   {
-    const aliases = rules.inFrontOf.map(getModuleAlias).join('、');
-    descriptions.push(`必须位于「${aliases}」模块之前。`);
+    const aliases = rules.inFrontOf.map(getRuneAlias).join('、');
+    descriptions.push(`必须位于「${aliases}」符文之前。`);
   }
   if (rules.behind && rules.behind.length > 0)
   {
-    const aliases = rules.behind.map(getModuleAlias).join('、');
-    descriptions.push(`必须位于「${aliases}」模块之后。`);
+    const aliases = rules.behind.map(getRuneAlias).join('、');
+    descriptions.push(`必须位于「${aliases}」符文之后。`);
   }
 
   return descriptions;

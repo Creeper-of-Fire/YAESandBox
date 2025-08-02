@@ -2,17 +2,17 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { ModuleValidationResult } from './ModuleValidationResult';
+import type { RuneValidationResult } from './RuneValidationResult';
 import type { ValidationMessage } from './ValidationMessage';
 /**
  * 单个步骤的校验结果。
  */
 export type StepValidationResult = {
     /**
-     * 该步骤内每个模块的校验结果。
-     * Key是模块的ConfigId。
+     * 该步骤内每个符文的校验结果。
+     * Key是符文的ConfigId。
      */
-    moduleResults: Record<string, ModuleValidationResult>;
+    runeResults: Record<string, RuneValidationResult>;
     /**
      * 仅针对步骤本身的校验信息。
      */

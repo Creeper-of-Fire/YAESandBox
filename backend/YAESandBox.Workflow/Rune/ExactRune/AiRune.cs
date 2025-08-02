@@ -11,22 +11,22 @@ using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Step;
-using static YAESandBox.Workflow.Module.ExactModule.AiModuleProcessor;
+using static YAESandBox.Workflow.Rune.ExactRune.AiRuneProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
 
-namespace YAESandBox.Workflow.Module.ExactModule;
+namespace YAESandBox.Workflow.Rune.ExactRune;
 
 /// <summary>
-/// Ai调用模块，Ai的配置保存在外部的Step，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiModuleConfig"/>里面。
+/// Ai调用符文，Ai的配置保存在外部的Step，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiRuneConfig"/>里面。
 /// </summary>
 /// <param name="onChunkReceivedScript"></param>
-internal class AiModuleProcessor(Action<string> onChunkReceivedScript, AiModuleConfig config)
-    : IWithDebugDto<AiModuleProcessorDebugDto>, INormalModule
+internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfig config)
+    : IWithDebugDto<AiRuneProcessorDebugDto>, INormalRune
 {
     /// <inheritdoc />
-    public AiModuleProcessorDebugDto DebugDto { get; } = new();
+    public AiRuneProcessorDebugDto DebugDto { get; } = new();
 
-    internal class AiModuleProcessorDebugDto : IModuleProcessorDebugDto
+    internal class AiRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         public IList<RoledPromptDto> Prompts { get; init; } = [];
         public int TokenUsage { get; set; } = 0;
@@ -34,10 +34,10 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript, AiModuleC
 
     // TODO 这里是回调函数，应该由脚本完成
     private Action<string> OnChunkReceivedScript { get; } = onChunkReceivedScript;
-    private AiModuleConfig Config { get; } = config;
+    private AiRuneConfig Config { get; } = config;
 
     /// <summary>
-    /// AI模块的运行
+    /// AI符文的运行
     /// </summary>
     /// <param name="aiProcessor">从AI配置中实例化的运行时对象</param>
     /// <param name="prompts">提示词</param>
@@ -55,29 +55,29 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript, AiModuleC
     }
 
 
-    private static async Task<Result> PrepareAndExecuteAiModule(
+    private static async Task<Result> PrepareAndExecuteAiRune(
         StepProcessorContent stepProcessorContent,
-        AiModuleProcessor aiModule,
+        AiRuneProcessor aiRune,
         CancellationToken cancellationToken = default)
     {
-        var aiConfig = aiModule.Config.AiConfiguration;
+        var aiConfig = aiRune.Config.AiConfiguration;
         var workflowRuntimeService = stepProcessorContent.WorkflowRuntimeService;
-        if (aiConfig.SelectedAiModuleType == null || aiConfig.AiProcessorConfigUuid == null)
-            return NormalError.Conflict($"步骤 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI模块。");
+        if (aiConfig.SelectedAiRuneType == null || aiConfig.AiProcessorConfigUuid == null)
+            return NormalError.Conflict($"步骤 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI符文。");
         var aiProcessor = workflowRuntimeService.AiService.CreateAiProcessor(
             aiConfig.AiProcessorConfigUuid,
-            aiConfig.SelectedAiModuleType);
+            aiConfig.SelectedAiRuneType);
         if (aiProcessor == null)
             return NormalError.Conflict(
-                $"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiModuleType}");
+                $"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiRuneType}");
         var prompt = stepProcessorContent.Prompts;
-        var result = await aiModule.ExecuteAsync(aiProcessor,
+        var result = await aiRune.ExecuteAsync(aiProcessor,
             prompt,
             aiConfig.IsStream,
             cancellationToken);
         if (result.TryGetError(out var error, out string? value))
             return error;
-        stepProcessorContent.OutputVar(AiModuleConfig.AiOutputName, value);
+        stepProcessorContent.OutputVar(AiRuneConfig.AiOutputName, value);
         return Result.Ok();
     }
 
@@ -111,18 +111,18 @@ internal class AiModuleProcessor(Action<string> onChunkReceivedScript, AiModuleC
     /// <inheritdoc />
     public Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent,
         CancellationToken cancellationToken = default) =>
-        PrepareAndExecuteAiModule(stepProcessorContent, this, cancellationToken);
+        PrepareAndExecuteAiRune(stepProcessorContent, this, cancellationToken);
 }
 
-[Behind(typeof(PromptGenerationModuleConfig))]
+[Behind(typeof(PromptGenerationRuneConfig))]
 [ClassLabel("🤖AI调用")]
-internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
+internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
 {
     /// <inheritdoc />
     [Required]
     [ReadOnly(true)]
     [HiddenInForm(true)]
-    [Display(Name = "配置名称", Description = "模块的配置名称，用于在界面上显示。")]
+    [Display(Name = "配置名称", Description = "符文的配置名称，用于在界面上显示。")]
     public override string Name { get; init; } = string.Empty;
 
     internal const string PromptsName = nameof(StepProcessorContent.Prompts);
@@ -132,8 +132,8 @@ internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
     /// AI 服务配置。
     /// </summary>
     [RenderAsCustomObjectWidget("AiConfigEditorWidget")]
-    [Display(Name = "AI 服务配置", Description = "为该AI调用模块配置AI服务、模型和流式选项。")]
-    public ModuleAiConfig AiConfiguration { get; init; } = new()
+    [Display(Name = "AI 服务配置", Description = "为该AI调用符文配置AI服务、模型和流式选项。")]
+    public RuneAiConfig AiConfiguration { get; init; } = new()
     {
         IsStream = false
     };
@@ -145,20 +145,20 @@ internal record AiModuleConfig : AbstractModuleConfig<AiModuleProcessor>
     /// <inheritdoc />
     internal override List<string> GetProducedVariables() => [AiOutputName];
 
-    protected override AiModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) =>
+    protected override AiRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
         new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); },this);
 }
 
 /// <summary>
-/// 模块本身的 AI 配置。
+/// 符文本身的 AI 配置。
 /// </summary>
-public record ModuleAiConfig
+public record RuneAiConfig
 {
     /// <summary>AI服务的配置的UUID</summary>
     public string? AiProcessorConfigUuid { get; init; }
 
     /// <summary>当前选中的AI模型的类型名</summary>
-    public string? SelectedAiModuleType { get; init; }
+    public string? SelectedAiRuneType { get; init; }
 
     /// <summary>是否为流式传输</summary>
     [Required]

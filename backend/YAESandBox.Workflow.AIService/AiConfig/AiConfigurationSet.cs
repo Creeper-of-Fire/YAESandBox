@@ -53,13 +53,13 @@ public class AiConfigurationSet
     /// <summary>
     /// 尝试获取指定模块类型的AI配置
     /// </summary>
-    /// <param name="moduleType"></param>
+    /// <param name="aiModelType"></param>
     /// <returns></returns>
-    public Result<AbstractAiProcessorConfig> FindAiConfig(string moduleType)
+    public Result<AbstractAiProcessorConfig> FindAiConfig(string aiModelType)
     {
-        this.Configurations.TryGetValue(moduleType, out var config);
+        this.Configurations.TryGetValue(aiModelType, out var config);
         if (config == null)
-            return NormalError.NotFound($"{this.ConfigSetName}中未定义 AI 配置类型: {moduleType}");
+            return NormalError.NotFound($"{this.ConfigSetName}中未定义 AI 配置类型: {aiModelType}");
         return Result.Ok(config);
     }
 

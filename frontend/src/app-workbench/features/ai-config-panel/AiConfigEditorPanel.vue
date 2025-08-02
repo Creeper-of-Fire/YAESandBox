@@ -33,7 +33,7 @@
         <n-flex justify="space-between" align="center">
           <n-form-item label="选择或添加 AI 模型类型" style="flex-grow: 1;">
             <n-select
-                v-model:value="selectedAiModuleType"
+                v-model:value="selectedAiRuneType"
                 :options="aiTypeOptionsWithMarker"
                 placeholder="选择 AI 模型类型"
                 clearable
@@ -45,20 +45,20 @@
             <template #trigger>
               <n-button type="warning" tertiary :disabled="!canRemoveCurrentAiConfig">移除当前模型配置</n-button>
             </template>
-            确定要移除模型 "{{ selectedAiModuleType }}" 的配置吗？此操作需点击“保存变更”才会生效。
+            确定要移除模型 "{{ selectedAiRuneType }}" 的配置吗？此操作需点击“保存变更”才会生效。
           </n-popconfirm>
           <ai-config-tester
-              v-if="selectedUuid && selectedAiModuleType && currentConfigSet"
+              v-if="selectedUuid && selectedAiRuneType && currentConfigSet"
               :form-data-copy="formDataCopy"
               :config-set-name="currentConfigSet?.configSetName || '未知'"
-              :module-type="selectedAiModuleType"
-              :key="`${selectedUuid}-${selectedAiModuleType}`"
+              :ai-model-type="selectedAiRuneType"
+              :key="`${selectedUuid}-${selectedAiRuneType}`"
           />
         </n-flex>
       </n-card>
 
       <!-- 下方区域 -->
-      <n-card v-if="currentConfigSet && selectedAiModuleType && currentSchema" :title="currentSchema.description">
+      <n-card v-if="currentConfigSet && selectedAiRuneType && currentSchema" :title="currentSchema.description">
         <dynamic-form-renderer
             v-if="typeof formDataCopy === 'object'"
             :key="formRenderKey"
@@ -72,7 +72,7 @@
 
       <!-- 空状态 -->
       <n-empty v-if="!selectedUuid && !configStore.isLoading" description="请选择或新建一个AI配置集。"/>
-      <n-empty v-else-if="currentConfigSet && !selectedAiModuleType && !configStore.isLoading" description="请选择一个AI模型类型进行配置。"/>
+      <n-empty v-else-if="currentConfigSet && !selectedAiRuneType && !configStore.isLoading" description="请选择一个AI模型类型进行配置。"/>
     </n-flex>
   </n-spin>
 </template>
@@ -97,7 +97,7 @@ const { selectedUuid, currentConfigSet, configSetOptions } = storeToRefs(configS
 const dynamicFormRendererRef = ref<DynamicFormRendererInstance | null>(null);
 
 // --- Component-local State for Editing ---
-const selectedAiModuleType = ref<string | null>(null);
+const selectedAiRuneType = ref<string | null>(null);
 const formDataCopy = ref<AbstractAiProcessorConfig | null>(null);
 const originalDataForCompare = ref<AbstractAiProcessorConfig | null>(null);
 const currentSchema = ref<Record<string, any> | null>(null);
@@ -107,7 +107,7 @@ const formChanged = ref(false);
 // --- Computed Properties ---
 const canSaveChanges = computed(() => !!selectedUuid.value && formChanged.value);
 const canRemoveCurrentAiConfig = computed(() =>
-    !!selectedAiModuleType.value && !!currentConfigSet.value?.configurations?.[selectedAiModuleType.value]
+    !!selectedAiRuneType.value && !!currentConfigSet.value?.configurations?.[selectedAiRuneType.value]
 );
 const aiTypeOptionsWithMarker = computed(() => {
   return schemaStore.availableTypesOptions.map(type => ({
@@ -135,8 +135,8 @@ async function handleSave() {
 
   // 构造最新的配置集数据
   const updatedSet = cloneDeep(currentConfigSet.value);
-  if (selectedAiModuleType.value && formDataCopy.value) {
-    updatedSet.configurations[selectedAiModuleType.value] = formDataCopy.value;
+  if (selectedAiRuneType.value && formDataCopy.value) {
+    updatedSet.configurations[selectedAiRuneType.value] = formDataCopy.value;
   }
 
   await configStore.saveConfigSet(updatedSet);
@@ -214,20 +214,20 @@ async function handleConfigSetSelectionChange(newUuid: string | null) {
 }
 
 async function handleAiTypeSelectionChange(newType: string | null) {
-  if (newType === selectedAiModuleType.value) return;
+  if (newType === selectedAiRuneType.value) return;
   if (await confirmAbandonChanges()) {
-    selectedAiModuleType.value = newType;
+    selectedAiRuneType.value = newType;
   }
 }
 
 function handleRemoveCurrentAiConfig() {
-  if (!selectedAiModuleType.value || !currentConfigSet.value) return;
+  if (!selectedAiRuneType.value || !currentConfigSet.value) return;
 
   // 这是本地修改，需要保存后才生效
-  delete currentConfigSet.value.configurations[selectedAiModuleType.value];
+  delete currentConfigSet.value.configurations[selectedAiRuneType.value];
 
   // 清理UI
-  selectedAiModuleType.value = null;
+  selectedAiRuneType.value = null;
   formDataCopy.value = null;
   currentSchema.value = null;
 
@@ -243,14 +243,14 @@ function checkFormChange() {
 watch(selectedUuid, (newUuid, oldUuid) => {
   if (newUuid === oldUuid) return;
   // 切换配置集时，重置AI类型和表单
-  selectedAiModuleType.value = null;
+  selectedAiRuneType.value = null;
   currentSchema.value = null;
   formDataCopy.value = null;
   originalDataForCompare.value = null;
   formChanged.value = false;
 });
 
-watch(selectedAiModuleType, async (newType) => {
+watch(selectedAiRuneType, async (newType) => {
   formChanged.value = false;
 
   if (!newType) {

@@ -2,12 +2,12 @@
 
 // ReSharper disable InconsistentNaming
 
-namespace YAESandBox.Workflow.Module.ExactModule.LuaRunner;
+namespace YAESandBox.Workflow.Rune.ExactRune.LuaRunner;
 
 internal partial class LuaScriptRunner
 {
     /// <summary>
-    /// 日期时间模块的工厂类，暴露给 Lua 作为 'datetime'。
+    /// 日期时间符文的工厂类，暴露给 Lua 作为 'datetime'。
     /// </summary>
     private class LuaDateTimeBridge(LuaLogBridge logger)
     {

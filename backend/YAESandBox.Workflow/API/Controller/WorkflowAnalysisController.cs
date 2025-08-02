@@ -17,40 +17,40 @@ public class WorkflowAnalysisController(WorkflowValidationService validationServ
     // --- DTOs for this controller ---
 
     /// <summary>
-    /// 模块的分析结果
+    /// 符文的分析结果
     /// </summary>
-    public record ModuleAnalysisResult
+    public record RuneAnalysisResult
     {
         /// <summary>
-        /// 模块消费的输入参数
+        /// 符文消费的输入参数
         /// </summary>
         [Required]
         public List<string> ConsumedVariables { get; init; } = [];
 
         /// <summary>
-        /// 模块生产的输出参数
+        /// 符文生产的输出参数
         /// </summary>
         [Required]
         public List<string> ProducedVariables { get; init; } = [];
     }
 
     /// <summary>
-    /// 分析单个模块配置，动态计算其输入和输出变量。
+    /// 分析单个符文配置，动态计算其输入和输出变量。
     /// </summary>
     /// <remarks>
-    /// 用于编辑器在用户修改模块配置时，实时获取其数据依赖，以增强智能提示和即时反馈。
+    /// 用于编辑器在用户修改符文配置时，实时获取其数据依赖，以增强智能提示和即时反馈。
     /// </remarks>
-    /// <param name="moduleConfig">包含模块配置草稿的请求体。</param>
-    /// <returns>该模块消费和生产的变量列表。</returns>
-    [HttpPost("analyze-module")]
+    /// <param name="runeConfig">包含符文配置草稿的请求体。</param>
+    /// <returns>该符文消费和生产的变量列表。</returns>
+    [HttpPost("analyze-rune")]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(ModuleAnalysisResult), StatusCodes.Status200OK)]
-    public ActionResult<ModuleAnalysisResult> AnalyzeModule([FromBody] AbstractModuleConfig moduleConfig)
+    [ProducesResponseType(typeof(RuneAnalysisResult), StatusCodes.Status200OK)]
+    public ActionResult<RuneAnalysisResult> AnalyzeRune([FromBody] AbstractRuneConfig runeConfig)
     {
-        var analysisResult = new ModuleAnalysisResult
+        var analysisResult = new RuneAnalysisResult
         {
-            ConsumedVariables = moduleConfig.GetConsumedVariables(),
-            ProducedVariables = moduleConfig.GetProducedVariables()
+            ConsumedVariables = runeConfig.GetConsumedVariables(),
+            ProducedVariables = runeConfig.GetProducedVariables()
         };
 
         return this.Ok(analysisResult);

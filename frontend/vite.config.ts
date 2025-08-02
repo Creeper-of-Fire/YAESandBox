@@ -114,7 +114,7 @@ export default defineConfig({
             output: {
                 /**
                  * 手动分包，把大块的依赖拆分出来
-                 * @param {string} id - 模块的路径
+                 * @param {string} id - 符文的路径
                  * @returns {string | undefined} - 返回自定义的 chunk 名称
                  */
                 manualChunks(id: string) {

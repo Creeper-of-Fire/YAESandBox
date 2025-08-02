@@ -27,7 +27,7 @@ function loadScript(url: string): Promise<void> {
         const script = document.createElement('script');
         script.src = url;
         script.async = true;
-        script.type = 'module';
+        script.type = 'rune';
         script.onload = () => {
             loadedScriptUrls.add(url);
             resolve();

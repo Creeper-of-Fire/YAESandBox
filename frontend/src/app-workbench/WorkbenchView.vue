@@ -65,7 +65,7 @@
       </template>
 
       <!-- 2c. 主内容区插槽 -->
-      <template #module-panel>
+      <template #rune-panel>
         <MainEditPanel/>
       </template>
     </EditorLayout>
@@ -100,15 +100,15 @@ import WorkbenchSidebar from '@/app-workbench/components/panel/WorkbenchSidebar.
 import AiConfigEditorPanel from "@/app-workbench/features/ai-config-panel/AiConfigEditorPanel.vue";
 import MainEditPanel from "@/app-workbench/components/panel/MainEditPanel.vue";
 import {type SelectedConfigItem, SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
-import type {AbstractModuleConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
+import type {AbstractRuneConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import type {StepEditorContext} from "@/app-workbench/components/step/editor/StepEditorContext.ts";
-import type {ModuleEditorContext} from "@/app-workbench/components/module/editor/ModuleEditorContext.ts";
+import type {RuneEditorContext} from "@/app-workbench/components/rune/editor/RuneEditorContext.ts";
 
 defineOptions({
   name: 'WorkbenchView'
 });
 
-const selectedConfig = ref<StepEditorContext | ModuleEditorContext | null>(null);
+const selectedConfig = ref<StepEditorContext | RuneEditorContext | null>(null);
 
 provide<SelectedConfigItem>(SelectedConfigItemKey, {
   data: selectedConfig,
@@ -199,7 +199,7 @@ async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: 
   // 如果点击的是当前已激活的会话，则根据类型辅助性地打开面板，然后直接返回
   if (activeSession.value && activeSession.value.globalId === globalId)
   {
-    if (type !== 'module')
+    if (type !== 'rune')
     {
       isEditorPanelVisible.value = true;
     }
@@ -218,20 +218,20 @@ async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: 
     {
       activeSession.value = session;
 
-      // 如果编辑的是一个独立的模块，则默认选中它自己，
+      // 如果编辑的是一个独立的符文，则默认选中它自己，
       // 以便在右侧的 EditorTargetRenderer 中立即显示其配置表单。
-      if (session.type === 'module')
+      if (session.type === 'rune')
       {
-        const moduleData = session.getData().value as AbstractModuleConfig | null;
-        if (moduleData)
+        const runeData = session.getData().value as AbstractRuneConfig | null;
+        if (runeData)
         {
-          selectedConfig.value = {data: moduleData};
+          selectedConfig.value = {data: runeData};
         }
       }
       // --- 修复逻辑结束 ---
 
-      // 辅助性UI逻辑：如果编辑的不是模块，自动打开“当前编辑”面板
-      if (type !== 'module')
+      // 辅助性UI逻辑：如果编辑的不是符文，自动打开“当前编辑”面板
+      if (type !== 'rune')
       {
         isEditorPanelVisible.value = true;
       }
@@ -266,7 +266,7 @@ const beforeUnloadHandler = (event: BeforeUnloadEvent) =>
 onMounted(() =>
 {
   window.addEventListener('beforeunload', beforeUnloadHandler);
-  workbenchStore.moduleSchemasAsync.execute();
+  workbenchStore.runeSchemasAsync.execute();
 });
 
 onBeforeUnmount(() =>

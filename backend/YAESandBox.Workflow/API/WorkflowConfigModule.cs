@@ -34,7 +34,7 @@ public class WorkflowConfigModule : IProgramModule, IProgramModuleSwaggerUiOptio
     /// <inheritdoc />
     public void ConfigureMvc(IMvcBuilder mvcBuilder)
     {
-        mvcBuilder.AddApplicationPart(typeof(ModuleConfigController).Assembly);
+        mvcBuilder.AddApplicationPart(typeof(RuneConfigController).Assembly);
     }
 
     /// <inheritdoc />
@@ -50,7 +50,7 @@ public class WorkflowConfigModule : IProgramModule, IProgramModuleSwaggerUiOptio
                 Description = "包含工作流配置相关的API。"
             });
 
-            options.AddSwaggerDocumentation(typeof(ModuleConfigController).Assembly);
+            options.AddSwaggerDocumentation(typeof(RuneConfigController).Assembly);
         });
 
         service.AddSingleton<WorkflowConfigFileService>();

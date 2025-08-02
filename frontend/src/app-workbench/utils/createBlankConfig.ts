@@ -2,7 +2,7 @@
 import {v4 as uuidv4} from 'uuid';
 import type {ConfigObject, ConfigType,} from '@/app-workbench/services/EditSession';
 import type {
-    AbstractModuleConfig,
+    AbstractRuneConfig,
     StepProcessorConfig,
     WorkflowProcessorConfig
 } from "@/app-workbench/types/generated/workflow-config-api-client";
@@ -12,7 +12,7 @@ import type {
  * 创建一个空白的配置对象。
  * @param type - 要创建的配置类型。
  * @param name - 新配置的名称。
- * @param options - 额外选项，例如创建模块时需要指定 moduleType。
+ * @param options - 额外选项，例如创建符文时需要指定 runeType。
  * @returns 一个全新的、符合规范的空白配置对象。
  */
 export function createBlankConfig(
@@ -24,14 +24,14 @@ export function createBlankConfig(
     name: string
 ): StepProcessorConfig;
 export function createBlankConfig(
-    type: 'module',
+    type: 'rune',
     name: string,
-    options: { moduleType: string }
-): AbstractModuleConfig;
+    options: { runeType: string }
+): AbstractRuneConfig;
 export function createBlankConfig(
     type: ConfigType,
     name: string,
-    options?: { moduleType?: string }
+    options?: { runeType?: string }
 ): ConfigObject
 {
     const newConfigId = uuidv4();
@@ -50,21 +50,21 @@ export function createBlankConfig(
                 configId: newConfigId,
                 name: name,
                 enabled: true,
-                modules: [],
+                runes: [],
                 inputMappings: {},
                 outputMappings: {},
             };
-        case 'module':
-            if (!options?.moduleType)
+        case 'rune':
+            if (!options?.runeType)
             {
-                throw new Error('创建空白模块时必须提供 moduleType！');
+                throw new Error('创建空白符文时必须提供 runeType！');
             }
             return {
                 configId: newConfigId,
                 name: name,
                 enabled: true,
-                moduleType: options.moduleType,
-                // 其他模块特定的默认值可以由 schema-viewer 表单来处理
+                runeType: options.runeType,
+                // 其他符文特定的默认值可以由 schema-viewer 表单来处理
             };
         default:
             throw new Error(`未知的配置类型: ${type}`);

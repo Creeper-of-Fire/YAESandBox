@@ -115,7 +115,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     /// <returns></returns>
     /// <response code="200">AI 配置测试成功，返回 AI 生成的完整文本。</response>
     /// <response code="500">测试期间发生错误，例如 AI 服务调用失败。</response>
-    [HttpPost("ai-config-test/{moduleType}")]
+    [HttpPost("ai-config-test/{aiModelType}")]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<ActionResult<string>> TestAiConfig([FromBody] TestAiDto testAiDto)
@@ -129,34 +129,34 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
     }
 
     /// <summary>
-    /// 获取指定 AI 模块类型的初始默认数据。
+    /// 获取指定 AI 模型类型的初始默认数据。
     /// 用于前端为新配置项生成表单。
     /// </summary>
-    /// <param name="moduleType">AI 模块的类型名称 (例如 "DoubaoAiProcessorConfig")。</param>
+    /// <param name="aiModelType">AI 模型的类型名称 (例如 "DoubaoAiProcessorConfig")。</param>
     /// <returns>初始数据。</returns>
-    /// <response code="200">成功获取指定 AI 模块类型的默认数据。</response>
-    /// <response code="400">请求的模块类型名称无效。</response>
-    /// <response code="404">未找到指定名称的 AI 模块类型。</response>
+    /// <response code="200">成功获取指定 AI 模型类型的默认数据。</response>
+    /// <response code="400">请求的模型类型名称无效。</response>
+    /// <response code="404">未找到指定名称的 AI 模型类型。</response>
     /// <response code="500">获取默认数据时发生内部服务器错误。</response>
-    [HttpGet("default-data/{moduleType}")]
+    [HttpGet("default-data/{aiModelType}")]
     [ProducesResponseType(typeof(AbstractAiProcessorConfig), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     [Obsolete("我们希望前端创建空对象并且实现加载默认值的功能。")]
-    public async Task<ActionResult<AbstractAiProcessorConfig>> GetConfigurationDefaultData(string moduleType)
+    public async Task<ActionResult<AbstractAiProcessorConfig>> GetConfigurationDefaultData(string aiModelType)
     {
-        if (string.IsNullOrWhiteSpace(moduleType))
-            return this.BadRequest("AI 模块类型名称 (moduleType) 不能为空。");
+        if (string.IsNullOrWhiteSpace(aiModelType))
+            return this.BadRequest("AI 模块类型名称 (aiModelType) 不能为空。");
 
-        var configType = ConfigSchemasHelper.GetAiConfigTypeByName(moduleType);
+        var configType = ConfigSchemasHelper.GetAiConfigTypeByName(aiModelType);
 
         if (configType == null)
-            return this.NotFound($"名为 '{moduleType}' 的 AI 模块类型未找到。");
+            return this.NotFound($"名为 '{aiModelType}' 的 AI 模块类型未找到。");
 
         if (!typeof(AbstractAiProcessorConfig).IsAssignableFrom(configType))
             // 理论上不会发生，ConfigSchemasHelper.GetTypeByName 可能已经处理
-            return this.BadRequest($"类型 '{moduleType}' 不是一个有效的 AI 配置类型。");
+            return this.BadRequest($"类型 '{aiModelType}' 不是一个有效的 AI 配置类型。");
 
         var allSetsResult = await this.ConfigurationManager.GetAllConfigurationsAsync(this.UserId);
         if (allSetsResult.TryGetValue(out var allSets))
@@ -164,7 +164,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
             var set = allSets.FirstOrDefault(s => s.Value.ConfigSetName == AiConfigurationSet.DefaultConfigSetName).Value;
             if (set != null)
             {
-                if (set.Configurations.TryGetValue(moduleType, out var defaultConfig))
+                if (set.Configurations.TryGetValue(aiModelType, out var defaultConfig))
                 {
                     object? configWithRequiredOnly = YaeSandBoxJsonHelper.CreateObjectWithRequiredPropertiesOnly(defaultConfig, configType);
                     if (configWithRequiredOnly is AbstractAiProcessorConfig aiProcessorConfig)
@@ -174,7 +174,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         }
 
         if (Activator.CreateInstance(configType) is not AbstractAiProcessorConfig initialData)
-            return this.StatusCode(StatusCodes.Status500InternalServerError, $"无法为类型 '{moduleType}' 创建初始数据实例。请确保它有一个公共无参数构造函数。");
+            return this.StatusCode(StatusCodes.Status500InternalServerError, $"无法为类型 '{aiModelType}' 创建初始数据实例。请确保它有一个公共无参数构造函数。");
 
         return this.Ok(initialData);
     }

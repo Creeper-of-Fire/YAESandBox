@@ -6,7 +6,7 @@ namespace YAESandBox.Workflow.DebugDto;
 public interface IStepProcessorDebugDto : IDebugDto
 {
     /// <summary>
-    /// 下属的 <see cref="AbstractModuleConfig{T}"/> 的Debug信息
+    /// 下属的 <see cref="AbstractRuneConfig{T}"/> 的Debug信息
     /// </summary>
-    IList<IModuleProcessorDebugDto> ModuleProcessorDebugDtos { get; }
+    IList<IRuneProcessorDebugDto> RuneProcessorDebugDtos { get; }
 }

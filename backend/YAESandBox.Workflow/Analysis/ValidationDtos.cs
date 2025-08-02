@@ -21,11 +21,11 @@ public record WorkflowValidationReport
 public record StepValidationResult
 {
     /// <summary>
-    /// 该步骤内每个模块的校验结果。
-    /// Key是模块的ConfigId。
+    /// 该步骤内每个符文的校验结果。
+    /// Key是符文的ConfigId。
     /// </summary>
     [Required]
-    public Dictionary<string, ModuleValidationResult> ModuleResults { get; init; } = [];
+    public Dictionary<string, RuneValidationResult> RuneResults { get; init; } = [];
 
     /// <summary>
     /// 仅针对步骤本身的校验信息。
@@ -35,15 +35,15 @@ public record StepValidationResult
 }
 
 /// <summary>
-/// 单个模块的校验结果。
+/// 单个符文的校验结果。
 /// </summary>
-public record ModuleValidationResult
+public record RuneValidationResult
 {
     /// <summary>
-    /// 针对该模块的校验信息列表。
+    /// 针对该符文的校验信息列表。
     /// </summary>
     [Required]
-    public List<ValidationMessage> ModuleMessages { get; init; } = [];
+    public List<ValidationMessage> RuneMessages { get; init; } = [];
 }
 
 /// <summary>

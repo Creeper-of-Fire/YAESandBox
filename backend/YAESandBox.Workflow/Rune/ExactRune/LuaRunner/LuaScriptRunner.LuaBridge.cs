@@ -8,7 +8,7 @@ using static YAESandBox.Workflow.Step.StepProcessor;
 
 // ReSharper disable InconsistentNaming
 
-namespace YAESandBox.Workflow.Module.ExactModule.LuaRunner;
+namespace YAESandBox.Workflow.Rune.ExactRune.LuaRunner;
 
 internal partial class LuaScriptRunner
 {

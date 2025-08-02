@@ -1,12 +1,12 @@
 ﻿using YAESandBox.Depend.Results;
 using static YAESandBox.Workflow.Step.StepProcessor;
 
-namespace YAESandBox.Workflow.Module;
+namespace YAESandBox.Workflow.Rune;
 
 /// <summary>
-/// 普通的模块
+/// 普通的符文
 /// </summary>
-public interface INormalModule
+public interface INormalRune
 {
     /// <summary>
     /// 启动步骤流程

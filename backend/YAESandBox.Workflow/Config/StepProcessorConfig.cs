@@ -31,21 +31,21 @@ public record StepProcessorConfig
     public required string ConfigId { get; init; }
 
     /// <summary>
-    /// 按顺序执行的模块列表。
-    /// StepProcessor 在执行时会严格按照此列表的顺序执行模块。
+    /// 按顺序执行的符文列表。
+    /// StepProcessor 在执行时会严格按照此列表的顺序执行符文。
     /// </summary>
     [Required]
     [HiddenInForm(true)]
-    public List<AbstractModuleConfig> Modules { get; init; } = [];
+    public List<AbstractRuneConfig> Runes { get; init; } = [];
 
     /// <summary>
     /// 定义了此步骤如何将其内部变量暴露到工作流的全局变量池。
     /// Key: 全局变量名 (在工作流中使用的名字)
-    /// Value: 步骤内部的变量名 (由模块产生的名字)
+    /// Value: 步骤内部的变量名 (由符文产生的名字)
     /// </summary>
     /// <example>
-    /// "final_greeting": "module_A_raw_text"
-    /// 这意味着，将此步骤内部名为 "module_A_raw_text" 的变量，
+    /// "final_greeting": "rune_A_raw_text"
+    /// 这意味着，将此步骤内部名为 "rune_A_raw_text" 的变量，
     /// 以 "final_greeting" 的名字发布到全局。
     /// </example>
     [Required]
@@ -53,13 +53,13 @@ public record StepProcessorConfig
     
     /// <summary>
     /// 定义了此步骤如何从工作流的全局变量池获取输入，并映射到步骤内部使用的变量名。
-    /// Key: 步骤内部期望的变量名 (模块消费的名字)
+    /// Key: 步骤内部期望的变量名 (符文消费的名字)
     /// Value: 全局变量名 (在工作流中可用的名字)
     /// </summary>
     /// <example>
     /// "initial_query": "customer_question"
     /// 这意味着，将全局变量池中的 "initial_query" 变量，
-    /// 作为名为 "customer_question" 的输入提供给此步骤内部的模块使用。
+    /// 作为名为 "customer_question" 的输入提供给此步骤内部的符文使用。
     /// </example>
     [Required]
     public Dictionary<string, string> InputMappings { get; init; } = [];

@@ -36,22 +36,22 @@ import {NAlert} from "naive-ui";
 import StepMappingsEditor from "@/app-workbench/components/step/editor/StepMappingsEditor.vue";
 import {computed, watch, ref} from "vue";
 import type {StepEditorContext} from "@/app-workbench/components/step/editor/StepEditorContext.ts";
-import { useModuleAnalysisStore } from '@/app-workbench/stores/useModuleAnalysisStore.ts';
+import { useRuneAnalysisStore } from '@/app-workbench/stores/useRuneAnalysisStore.ts';
 
 const props = defineProps<{
   stepContext: StepEditorContext;
 }>();
 
-const moduleAnalysisStore = useModuleAnalysisStore();
-const moduleAnalysisResults = ref<Record<string, { consumedVariables: string[], producedVariables: string[] }>>({});
+const runeAnalysisStore = useRuneAnalysisStore();
+const runeAnalysisResults = ref<Record<string, { consumedVariables: string[], producedVariables: string[] }>>({});
 
-watch(() => props.stepContext.data.modules, async (newModules) => {
-  if (newModules) {
-    const analysisPromises = newModules.map(async (mod) => {
+watch(() => props.stepContext.data.runes, async (newRunes) => {
+  if (newRunes) {
+    const analysisPromises = newRunes.map(async (mod) => {
       // Assuming mod has a unique identifier like configId
-      const result = await moduleAnalysisStore.analyzeModule(mod, mod.configId);
+      const result = await runeAnalysisStore.analyzeRune(mod, mod.configId);
       if (result) {
-        moduleAnalysisResults.value[mod.configId] = result;
+        runeAnalysisResults.value[mod.configId] = result;
       }
     });
     await Promise.all(analysisPromises);
@@ -62,14 +62,14 @@ watch(() => props.stepContext.data.modules, async (newModules) => {
 // 计算属性，判断当前是否处于有上下文的环境中
 const isInWorkflowContext = computed(() => props.stepContext.availableGlobalVarsForStep !== undefined);
 
-// 计算属性：计算当前步骤所有模块需要的总输入
+// 计算属性：计算当前步骤所有符文需要的总输入
 const requiredStepInputs = computed(() => {
   const requiredInputs = new Set<string>();
   const producedOutputs = new Set<string>();
 
-  if (props.stepContext.data.modules) {
-    for (const mod of props.stepContext.data.modules) {
-      const analysisResult = moduleAnalysisResults.value[mod.configId];
+  if (props.stepContext.data.runes) {
+    for (const mod of props.stepContext.data.runes) {
+      const analysisResult = runeAnalysisResults.value[mod.configId];
       if (analysisResult) {
       (analysisResult.consumedVariables || []).forEach(input => {
         if (!producedOutputs.has(input)) {

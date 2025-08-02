@@ -4,12 +4,12 @@
 /* eslint-disable */
 import type { ValidationMessage } from './ValidationMessage';
 /**
- * 单个模块的校验结果。
+ * 单个符文的校验结果。
  */
-export type ModuleValidationResult = {
+export type RuneValidationResult = {
     /**
-     * 针对该模块的校验信息列表。
+     * 针对该符文的校验信息列表。
      */
-    moduleMessages: Array<ValidationMessage>;
+    runeMessages: Array<ValidationMessage>;
 };
 

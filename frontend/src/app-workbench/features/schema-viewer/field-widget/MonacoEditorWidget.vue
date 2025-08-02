@@ -140,10 +140,10 @@ async function startLanguageServer(monaco: MonacoEditor, model: any)
  */
 async function applySimpleConfig(monaco: MonacoEditor)
 {
-  const serviceModule = await import(/* @vite-ignore */ props.simpleConfigUrl!);
-  if (serviceModule.default && typeof serviceModule.default.configure === 'function')
+  const serviceRune = await import(/* @vite-ignore */ props.simpleConfigUrl!);
+  if (serviceRune.default && typeof serviceRune.default.configure === 'function')
   {
-    serviceModule.default.configure(monaco);
+    serviceRune.default.configure(monaco);
   }
 }
 

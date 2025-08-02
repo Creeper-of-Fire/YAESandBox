@@ -36,7 +36,7 @@
       <slot name="actions"></slot>
     </div>
   </div>
-  <!-- 内容插槽：用于在条目下方展开额外内容，例如步骤的子模块列表 -->
+  <!-- 内容插槽：用于在条目下方展开额外内容，例如步骤的子符文列表 -->
   <slot name="content-below"></slot>
 </template>
 

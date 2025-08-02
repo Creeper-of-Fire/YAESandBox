@@ -1,28 +1,28 @@
 import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
-import type {AbstractModuleConfig, ModuleAnalysisResult} from '@/app-workbench/types/generated/workflow-config-api-client';
+import type {AbstractRuneConfig, RuneAnalysisResult} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {WorkflowAnalysisService} from '@/app-workbench/types/generated/workflow-config-api-client';
 
-interface ModuleAnalysisCache
+interface RuneAnalysisCache
 {
-    [key: string]: ModuleAnalysisResult;
+    [key: string]: RuneAnalysisResult;
 }
 
 interface PendingRequestCache
 {
-    [configString: string]: Promise<ModuleAnalysisResult | undefined>;
+    [configString: string]: Promise<RuneAnalysisResult | undefined>;
 }
 
-export const useModuleAnalysisStore = defineStore('moduleAnalysis', () =>
+export const useRuneAnalysisStore = defineStore('runeAnalysis', () =>
 {
 
-    const analysisCache = ref<ModuleAnalysisCache>({});
+    const analysisCache = ref<RuneAnalysisCache>({});
 
     const pendingRequests = ref<PendingRequestCache>({});
 
-    async function _analyze(moduleConfig: AbstractModuleConfig, moduleId: string)
+    async function _analyze(runeConfig: AbstractRuneConfig, runeId: string)
     {
-        const configString = JSON.stringify(moduleConfig); // 使用字符串化的配置作为缓存键
+        const configString = JSON.stringify(runeConfig); // 使用字符串化的配置作为缓存键
 
         if (analysisCache.value[configString])
         {
@@ -43,14 +43,14 @@ export const useModuleAnalysisStore = defineStore('moduleAnalysis', () =>
         // 这完美地替代了 new Promise(executor) 的用法，且更安全、简洁。
         const analysisPromise = (async () => {
             try {
-                const result = await WorkflowAnalysisService.postApiV1WorkflowsConfigsAnalysisAnalyzeModule({
-                    requestBody: moduleConfig,
+                const result = await WorkflowAnalysisService.postApiV1WorkflowsConfigsAnalysisAnalyzeRune({
+                    requestBody: runeConfig,
                 });
                 // 请求成功，存入缓存
                 analysisCache.value[configString] = result;
                 return result; // <--- 正确地返回结果，这将 resolve Promise
             } catch (error) {
-                console.error(`在分析模块 ${moduleId} 时失败: `, error);
+                console.error(`在分析符文 ${runeId} 时失败: `, error);
                 throw error; // <--- 正确地抛出错误，这将 reject Promise
             } finally {
                 // 无论成功或失败，都从在途请求中移除
@@ -65,13 +65,13 @@ export const useModuleAnalysisStore = defineStore('moduleAnalysis', () =>
         return analysisPromise;
     }
 
-    // 分析单个模块的动作，带有缓存功能
-    const analyzeModule = _analyze;
+    // 分析单个符文的动作，带有缓存功能
+    const analyzeRune = _analyze;
 
     // 从缓存中获取分析结果的getter
-    const getAnalysisResult = computed(() => (moduleConfig: AbstractModuleConfig) =>
+    const getAnalysisResult = computed(() => (runeConfig: AbstractRuneConfig) =>
     {
-        const configString = JSON.stringify(moduleConfig);
+        const configString = JSON.stringify(runeConfig);
         return analysisCache.value[configString];
     });
 
@@ -83,7 +83,7 @@ export const useModuleAnalysisStore = defineStore('moduleAnalysis', () =>
 
     return {
         analysisCache,
-        analyzeModule,
+        analyzeRune,
         getAnalysisResult,
         clearCache,
     };

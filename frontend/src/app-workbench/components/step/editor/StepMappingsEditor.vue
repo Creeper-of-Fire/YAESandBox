@@ -14,7 +14,7 @@
 
       <!-- 1. 缺少必要输入的警告 -->
       <n-alert v-if="missingInputs.length > 0" :show-icon="true" title="缺少必要的输入映射" type="error">
-        <p style="margin-top: 4px;">此步骤中的模块需要以下输入，但尚未配置映射来源：</p>
+        <p style="margin-top: 4px;">此步骤中的符文需要以下输入，但尚未配置映射来源：</p>
         <n-tag v-for="input in missingInputs" :key="input" style="margin-right: 8px; margin-top: 4px;" type="error">
           {{ input }}
         </n-tag>
@@ -76,7 +76,7 @@ interface EditableMappingRow
 {
   line_id: number; // 唯一键，用于 v-for
   globalVar: string; // 全局变量（来源）
-  localVar: string; // 模块内部变量（目标）
+  localVar: string; // 符文内部变量（目标）
   isOrphaned?: boolean; // 是否是孤立的（即 localVar 不在 requiredInputs 中）
 }
 
@@ -86,7 +86,7 @@ const props = defineProps<{
   inputMappings: Record<string, string>;
   outputMappings: Record<string, string>;
   // 从父组件计算好的上下文信息
-  requiredInputs: string[];      // 所有模块需要的输入变量名集合
+  requiredInputs: string[];      // 所有符文需要的输入变量名集合
   availableGlobalVars?: string[]; // 此步骤可用的全局变量名集合，用于自动完成提示
 }>();
 
@@ -346,7 +346,7 @@ const renderCellWithStatus = (
 
 const inputColumns: DataTableColumns<EditableMappingRow> = [
   {
-    title: '模块变量 (目标)',
+    title: '符文变量 (目标)',
     key: 'localVar',
     render(row, index)
     {
@@ -357,15 +357,15 @@ const inputColumns: DataTableColumns<EditableMappingRow> = [
       const status = isDuplicate ? 'error' : (isOrphaned ? 'warning' : undefined);
 
       const inputNode = h(NInput, {
-        value: row.localVar, placeholder: '输入模块内部变量名',
+        value: row.localVar, placeholder: '输入符文内部变量名',
         readonly: false, status: status,
         onUpdateValue: (v) => editableInputMappings.value[index].localVar = v
       });
 
       return renderCellWithStatus(
           inputNode,
-          isDuplicate, '模块变量名重复，这将导致映射被覆盖。',
-          isOrphaned, '这个映射的目标变量已不是当前模块的必需输入。'
+          isDuplicate, '符文变量名重复，这将导致映射被覆盖。',
+          isOrphaned, '这个映射的目标变量已不是当前符文的必需输入。'
       );
     }
   },
@@ -397,11 +397,11 @@ const inputColumns: DataTableColumns<EditableMappingRow> = [
 
 const outputColumns: DataTableColumns<EditableMappingRow> = [
   {
-    title: '模块变量 (来源)', key: 'localVar',
+    title: '符文变量 (来源)', key: 'localVar',
     render(row, index)
     {
       return h(NInput, {
-        value: row.localVar, placeholder: '模块内要输出的变量',
+        value: row.localVar, placeholder: '符文内要输出的变量',
         onUpdateValue: (v) => editableOutputMappings.value[index].localVar = v,
       });
     },

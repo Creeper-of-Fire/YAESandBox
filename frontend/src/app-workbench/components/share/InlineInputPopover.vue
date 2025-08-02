@@ -19,7 +19,7 @@
 
       <!-- 不同的内容类型渲染 -->
       <template v-if="contentType === 'input' || contentType === 'select-and-input'">
-        <!-- 模块类型选择 (仅在 content-type 为 'select-and-input' 时显示) -->
+        <!-- 符文类型选择 (仅在 content-type 为 'select-and-input' 时显示) -->
         <n-form-item v-if="contentType === 'select-and-input'" label="类型" required>
           <n-select
               v-model:value="selectValue"

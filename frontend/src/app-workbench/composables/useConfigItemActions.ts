@@ -43,13 +43,13 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
     const message = useMessage();
     const workbenchStore = useWorkbenchStore();
 
-    const moduleTypeOptions = computed(() =>
+    const runeTypeOptions = computed(() =>
     {
-        const schemas = workbenchStore.moduleSchemasAsync.state;
+        const schemas = workbenchStore.runeSchemasAsync.state;
         if (!schemas) return [];
         return Object.keys(schemas).map(key =>
         {
-            const metadata = workbenchStore.moduleMetadata[key];
+            const metadata = workbenchStore.runeMetadata[key];
             return {
                 label: metadata?.classLabel || schemas[key].title || key,
                 value: key,
@@ -57,17 +57,17 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
         });
     });
 
-    const moduleDefaultNameGenerator = (newType: string, options: any[]) =>
+    const runeDefaultNameGenerator = (newType: string, options: any[]) =>
     {
         if (newType)
         {
-            const schema = workbenchStore.moduleSchemasAsync.state[newType];
+            const schema = workbenchStore.runeSchemasAsync.state[newType];
             const defaultName = schema?.properties?.name?.default;
             if (typeof defaultName === 'string')
             {
                 return defaultName;
             }
-            return options.find(opt => opt.value === newType)?.label || '新模块';
+            return options.find(opt => opt.value === newType)?.label || '新符文';
         }
         return '';
     };
@@ -122,25 +122,25 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
                 },
             };
         }
-        else if (item && 'modules' in item)
-        { // 步骤添加模块
+        else if (item && 'runes' in item)
+        { // 步骤添加符文
             action = {
-                key: 'add-module',
-                label: '添加模块',
+                key: 'add-rune',
+                label: '添加符文',
                 icon: AddIcon,
                 renderType: 'popover',
                 type: 'primary',
-                popoverTitle: '添加新模块',
+                popoverTitle: '添加新符文',
                 popoverContentType: 'select-and-input',
-                popoverSelectOptions: moduleTypeOptions.value,
-                popoverSelectPlaceholder: '请选择模块类型',
-                popoverDefaultNameGenerator: moduleDefaultNameGenerator,
+                popoverSelectOptions: runeTypeOptions.value,
+                popoverSelectPlaceholder: '请选择符文类型',
+                popoverDefaultNameGenerator: runeDefaultNameGenerator,
                 handler: ({name, type}) =>
                 {
                     if (!name || !type) return;
-                    const newModule = createBlankConfig('module', name, {moduleType: type});
-                    item.modules.push(newModule);
-                    message.success('已添加新模块');
+                    const newRune = createBlankConfig('rune', name, {runeType: type});
+                    item.runes.push(newRune);
+                    message.success('已添加新符文');
                 },
             };
         }

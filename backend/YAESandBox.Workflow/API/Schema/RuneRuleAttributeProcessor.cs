@@ -4,16 +4,16 @@ using YAESandBox.Workflow.Config;
 namespace YAESandBox.Workflow.API.Schema;
 
 /// <summary>
-/// 一个独立的 SchemaProcessor，用于处理所有与工作流模块规则相关的 Attribute，
+/// 一个独立的 SchemaProcessor，用于处理所有与工作流符文规则相关的 Attribute，
 /// 并将它们序列化为一个统一的对象附加到 Schema 中。
 /// </summary>
-public class ModuleRuleAttributeProcessor : ISchemaProcessor
+public class RuneRuleAttributeProcessor : ISchemaProcessor
 {
     /// <inheritdoc />
     public void Process(SchemaProcessorContext context)
     {
-        // 1. 检查当前处理的类型是否是我们的目标类型（模块配置）
-        if (!typeof(AbstractModuleConfig).IsAssignableFrom(context.ContextualType))
+        // 1. 检查当前处理的类型是否是我们的目标类型（符文配置）
+        if (!typeof(AbstractRuneConfig).IsAssignableFrom(context.ContextualType))
         {
             return;
         }
@@ -60,6 +60,6 @@ public class ModuleRuleAttributeProcessor : ISchemaProcessor
         // 4. 如果收集到了任何规则，就将它们一次性添加到 Schema 的扩展数据中
         if (rules.Count <= 0) return;
         context.Schema.ExtensionData ??= new Dictionary<string, object?>();
-        context.Schema.ExtensionData["x-workflow-module-rules"] = rules;
+        context.Schema.ExtensionData["x-workflow-rune-rules"] = rules;
     }
 }

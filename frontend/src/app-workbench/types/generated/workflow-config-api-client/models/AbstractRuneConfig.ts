@@ -3,9 +3,9 @@
 /* tslint:disable */
 /* eslint-disable */
 /**
- * 模块的配置
+ * 符文的配置
  */
-export type AbstractModuleConfig = {
+export type AbstractRuneConfig = {
     /**
      * 名字
      */
@@ -19,8 +19,8 @@ export type AbstractModuleConfig = {
      */
     configId: string;
     /**
-     * 模块的类型
+     * 符文的类型
      */
-    moduleType: string;
+    runeType: string;
 };
 

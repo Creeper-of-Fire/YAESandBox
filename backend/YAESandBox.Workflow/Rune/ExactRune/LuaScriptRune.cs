@@ -7,26 +7,26 @@ using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Module.ExactModule.LuaRunner;
-using static YAESandBox.Workflow.Module.ExactModule.LuaScriptModuleProcessor;
+using YAESandBox.Workflow.Rune.ExactRune.LuaRunner;
+using static YAESandBox.Workflow.Rune.ExactRune.LuaScriptRuneProcessor;
 using static YAESandBox.Workflow.Step.StepProcessor;
 
 // ReSharper disable InconsistentNaming
 
-namespace YAESandBox.Workflow.Module.ExactModule;
+namespace YAESandBox.Workflow.Rune.ExactRune;
 
 /// <summary>
-/// Lua 脚本模块处理器。
+/// Lua 脚本符文处理器。
 /// 负责执行用户提供的 Lua 脚本，并通过一个安全桥接器与步骤上下文交互。
 /// </summary>
-/// <param name="config">模块配置。</param>
-internal partial class LuaScriptModuleProcessor(LuaScriptModuleConfig config)
-    : IWithDebugDto<LuaScriptModuleProcessorDebugDto>, INormalModule
+/// <param name="config">符文配置。</param>
+internal partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
+    : IWithDebugDto<LuaScriptRuneProcessorDebugDto>, INormalRune
 {
-    private LuaScriptModuleConfig Config { get; } = config;
+    private LuaScriptRuneConfig Config { get; } = config;
 
     /// <inheritdoc />
-    public LuaScriptModuleProcessorDebugDto DebugDto { get; } = new();
+    public LuaScriptRuneProcessorDebugDto DebugDto { get; } = new();
 
     /// <summary>
     /// 执行 Lua 脚本。
@@ -44,9 +44,9 @@ internal partial class LuaScriptModuleProcessor(LuaScriptModuleConfig config)
     }
     
     /// <summary>
-    /// Lua 脚本模块处理器的调试数据传输对象。
+    /// Lua 脚本符文处理器的调试数据传输对象。
     /// </summary>
-    internal class LuaScriptModuleProcessorDebugDto : IModuleProcessorDebugDto,ILogsDebugDto
+    internal class LuaScriptRuneProcessorDebugDto : IRuneProcessorDebugDto,ILogsDebugDto
     {
         /// <summary>
         /// 实际执行的 Lua 脚本内容。
@@ -59,17 +59,17 @@ internal partial class LuaScriptModuleProcessor(LuaScriptModuleConfig config)
         public string? RuntimeError { get; set; }
 
         /// <summary>
-        /// 脚本通过 log 模块输出的日志。
+        /// 脚本通过 log 符文输出的日志。
         /// </summary>
         public List<string> Logs { get; } = new();
     }
 }
 
 /// <summary>
-/// Lua 脚本模块的配置。
+/// Lua 脚本符文的配置。
 /// </summary>
 [ClassLabel("📜Lua")]
-internal partial record LuaScriptModuleConfig : AbstractModuleConfig<LuaScriptModuleProcessor>
+internal partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProcessor>
 {
     /// <summary>
     /// 用户编写的 Lua 脚本。
@@ -95,7 +95,7 @@ internal partial record LuaScriptModuleConfig : AbstractModuleConfig<LuaScriptMo
     public string? Script { get; init; } = "";
 
     /// <inheritdoc />
-    protected override LuaScriptModuleProcessor ToCurrentModule(WorkflowRuntimeService workflowRuntimeService) => new(this);
+    protected override LuaScriptRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this);
 
     // --- 变量静态分析 ---
 

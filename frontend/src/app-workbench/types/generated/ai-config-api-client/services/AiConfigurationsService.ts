@@ -111,10 +111,10 @@ export class AiConfigurationsService {
      * @throws ApiError
      */
     public static postApiAiConfigurationsAiConfigTest({
-        moduleType,
+        aiModelType,
         requestBody,
     }: {
-        moduleType: string,
+        aiModelType: string,
         /**
          * 配置和测试文本。
          */
@@ -122,9 +122,9 @@ export class AiConfigurationsService {
     }): CancelablePromise<string> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/ai-configurations/ai-config-test/{moduleType}',
+            url: '/api/ai-configurations/ai-config-test/{aiModelType}',
             path: {
-                'moduleType': moduleType,
+                'aiModelType': aiModelType,
             },
             body: requestBody,
             mediaType: 'application/json',
@@ -135,28 +135,28 @@ export class AiConfigurationsService {
     }
     /**
      * @deprecated
-     * 获取指定 AI 模块类型的初始默认数据。
+     * 获取指定 AI 模型类型的初始默认数据。
      * 用于前端为新配置项生成表单。
-     * @returns AbstractAiProcessorConfig 成功获取指定 AI 模块类型的默认数据。
+     * @returns AbstractAiProcessorConfig 成功获取指定 AI 模型类型的默认数据。
      * @throws ApiError
      */
     public static getApiAiConfigurationsDefaultData({
-        moduleType,
+        aiModelType,
     }: {
         /**
-         * AI 模块的类型名称 (例如 "DoubaoAiProcessorConfig")。
+         * AI 模型的类型名称 (例如 "DoubaoAiProcessorConfig")。
          */
-        moduleType: string,
+        aiModelType: string,
     }): CancelablePromise<AbstractAiProcessorConfig> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/ai-configurations/default-data/{moduleType}',
+            url: '/api/ai-configurations/default-data/{aiModelType}',
             path: {
-                'moduleType': moduleType,
+                'aiModelType': aiModelType,
             },
             errors: {
-                400: `请求的模块类型名称无效。`,
-                404: `未找到指定名称的 AI 模块类型。`,
+                400: `请求的模型类型名称无效。`,
+                404: `未找到指定名称的 AI 模型类型。`,
                 500: `获取默认数据时发生内部服务器错误。`,
             },
         });

@@ -41,7 +41,7 @@
                   禁用 AI 服务配置
                 </n-popover>
               </template>
-              确定要禁用并清空此模块的 AI 服务配置吗？
+              确定要禁用并清空此符文的 AI 服务配置吗？
             </n-popconfirm>
 
             <!-- 折叠按钮 -->
@@ -80,19 +80,19 @@
 
             <n-form-item-row v-if="config.aiProcessorConfigUuid != null" help="从选定的配置集中选择一个具体的AI模型。" label="选择 AI 模型">
               <n-select
-                  v-model:value="config.selectedAiModuleType"
-                  :disabled="!config.aiProcessorConfigUuid || aiModuleTypeOptions.length === 0"
-                  :options="aiModuleTypeOptions"
+                  v-model:value="config.selectedAiRuneType"
+                  :disabled="!config.aiProcessorConfigUuid || aiRuneTypeOptions.length === 0"
+                  :options="aiRuneTypeOptions"
                   clearable
                   placeholder="请选择 AI 模型"
               />
-              <n-text v-if="aiModuleTypeOptions.length === 0 && currentSelectedAiConfigSet" depth="3"
+              <n-text v-if="aiRuneTypeOptions.length === 0 && currentSelectedAiConfigSet" depth="3"
                       style="font-size: 12px; margin-top: 4px;">
                 选中的配置集 “{{ currentSelectedAiConfigSet.configSetName }}” 内没有可用的 AI 模型。
               </n-text>
             </n-form-item-row>
 
-            <n-form-item-row v-if="config.selectedAiModuleType != null" help="是否要求AI服务以流式方式返回结果。" label="流式传输">
+            <n-form-item-row v-if="config.selectedAiRuneType != null" help="是否要求AI服务以流式方式返回结果。" label="流式传输">
               <n-switch v-model:value="config.isStream"/>
             </n-form-item-row>
 
@@ -130,9 +130,9 @@ import { storeToRefs } from 'pinia';
 import AiConfigEditorPanel from '@/app-workbench/features/ai-config-panel/AiConfigEditorPanel.vue';
 
 // --- 数据模型定义 ---
-interface AiModuleSpecificConfig {
+interface AiRuneSpecificConfig {
   aiProcessorConfigUuid: string | null;
-  selectedAiModuleType: string | null;
+  selectedAiRuneType: string | null;
   isStream: boolean;
 }
 
@@ -143,11 +143,11 @@ import type {AiConfigurationSet} from "@/app-workbench/types/generated/ai-config
 
 // --- Props and Emits (v-model) ---
 const props = defineProps<{
-  modelValue: AiModuleSpecificConfig | undefined;
+  modelValue: AiRuneSpecificConfig | undefined;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: AiModuleSpecificConfig | undefined): void;
+  (e: 'update:modelValue', value: AiRuneSpecificConfig | undefined): void;
 }>();
 
 // --- 本地 UI 状态 ---
@@ -183,7 +183,7 @@ const currentSelectedAiConfigSet = computed<AiConfigurationSet | null>(() => {
   return allConfigSets.value[config.value.aiProcessorConfigUuid] ?? null;
 });
 
-const aiModuleTypeOptions = computed(() => {
+const aiRuneTypeOptions = computed(() => {
   if (!currentSelectedAiConfigSet.value) return [];
   const configuredTypes = Object.keys(currentSelectedAiConfigSet.value.configurations);
   return schemaStore.availableTypesOptions
@@ -197,10 +197,10 @@ const handleConfigSetChange = (newUuid: string | null) => {
   if (config.value) {
     const selectedSet = newUuid ? allConfigSets.value?.[newUuid] : null;
     if (!selectedSet || Object.keys(selectedSet.configurations).length === 0) {
-      config.value.selectedAiModuleType = null;
+      config.value.selectedAiRuneType = null;
     } else {
-      if (config.value.selectedAiModuleType && !selectedSet.configurations.hasOwnProperty(config.value.selectedAiModuleType)) {
-        config.value.selectedAiModuleType = null;
+      if (config.value.selectedAiRuneType && !selectedSet.configurations.hasOwnProperty(config.value.selectedAiRuneType)) {
+        config.value.selectedAiRuneType = null;
       }
     }
   }
@@ -209,7 +209,7 @@ const handleConfigSetChange = (newUuid: string | null) => {
 const handleEnableAiConfig = () => {
   emit('update:modelValue', {
     aiProcessorConfigUuid: null,
-    selectedAiModuleType: null,
+    selectedAiRuneType: null,
     isStream: false,
   });
   isExpanded.value = true;

@@ -13,8 +13,8 @@ export type AiConfigurationSet = {
     configSetName: string;
     /**
      * 包含在此配置集中的具体 AI 配置。
-     * Key 是 AI 配置的模块类型 (ModuleType, 例如 "DoubaoAiProcessorConfig")。
-     * Value 是该模块类型的具体配置数据对象 (不包含 ConfigName 和 ModuleType 字段本身)。
+     * Key 是 AI 配置的模块类型 (RuneType, 例如 "DoubaoAiProcessorConfig")。
+     * Value 是该模块类型的具体配置数据对象 (不包含 ConfigName 和 RuneType 字段本身)。
      */
     configurations: Record<string, AbstractAiProcessorConfig>;
 };

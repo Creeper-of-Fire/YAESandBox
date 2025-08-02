@@ -5,8 +5,8 @@ import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router';
 // 1. 导入共享的/核心的视图组件 (如果直接在主路由中定义)
 // 假设这是游戏模式的入口视图
 // import NotFoundView from '@/views/NotFoundView.vue'; // 404页面示例
-// 2. 导入特性模块暴露的路由配置
-//    每个特性模块内部可以有一个 routes.ts 文件，导出该特性相关的子路由数组
+// 2. 导入特性符文暴露的路由配置
+//    每个特性符文内部可以有一个 routes.ts 文件，导出该特性相关的子路由数组
 // import { routes as workflowEditorRoutes } from '@/app-view/';
 import {routes as gamePlayerRoutes} from '@/app-game/routes.ts';
 import {routes as workbenchRoutes} from '@/app-workbench/routes.ts';
@@ -29,8 +29,8 @@ const mainRoutes: RouteRecordRaw[] = [
     ...workbenchRoutes,
     ...testHarnessRoutes,
     ...dialogRoutes,
-    // 可以将特性模块的路由作为顶层路由，如果它们有自己的完整页面布局
-    // 这种方式下，特性模块的 routes.ts 导出的就是顶层路由配置了
+    // 可以将特性符文的路由作为顶层路由，如果它们有自己的完整页面布局
+    // 这种方式下，特性符文的 routes.ts 导出的就是顶层路由配置了
     // ...workflowEditorRoutes, // 假设 workflowEditorRoutes 是 [{ path: '/editor/...', ... }]
     // ...userProfileRoutes,
 

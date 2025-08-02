@@ -7,7 +7,7 @@ export { CancelablePromise, CancelError } from './core/CancelablePromise';
 export { OpenAPI } from './core/OpenAPI';
 export type { OpenAPIConfig } from './core/OpenAPI';
 
-export type { AbstractModuleConfig } from './models/AbstractModuleConfig';
+export type { AbstractRuneConfig } from './models/AbstractRuneConfig';
 export type { ProblemDetails } from './models/ProblemDetails';
 export type { StepProcessorConfig } from './models/StepProcessorConfig';
 export type { WorkflowExecutionRequest } from './models/WorkflowExecutionRequest';

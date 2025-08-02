@@ -5,12 +5,12 @@ import {computed, reactive, ref} from 'vue';
 import {v4 as uuidv4} from 'uuid';
 import {type ConfigObject, type ConfigType, EditSession,} from '@/app-workbench/services/EditSession.ts';
 import type {
-    AbstractModuleConfig,
-    ModuleSchemasResponse,
+    AbstractRuneConfig,
+    RuneSchemasResponse,
     StepProcessorConfig,
     WorkflowProcessorConfig,
 } from '@/app-workbench/types/generated/workflow-config-api-client';
-import {ModuleConfigService, StepConfigService, WorkflowConfigService,} from '@/app-workbench/types/generated/workflow-config-api-client';
+import {RuneConfigService, StepConfigService, WorkflowConfigService,} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {useAsyncState} from "@vueuse/core";
 import type {GlobalResourceItem} from "@/types/ui.ts";
 import {cloneDeep} from "lodash-es";
@@ -23,7 +23,7 @@ export type WorkbenchStore = ReturnType<typeof useWorkbenchStore>;
 // 为不同类型的资源创建具体的别名，方便使用
 export type WorkflowResourceItem = GlobalResourceItem<WorkflowProcessorConfig>;
 export type StepResourceItem = GlobalResourceItem<StepProcessorConfig>;
-export type ModuleResourceItem = GlobalResourceItem<AbstractModuleConfig>;
+export type RuneResourceItem = GlobalResourceItem<AbstractRuneConfig>;
 
 /**
  * @internal
@@ -48,22 +48,22 @@ export interface SaveResult
     error?: any; // 保存具体的错误信息
 }
 
-export interface WorkflowModuleRules
+export interface WorkflowRuneRules
 {
     noConfig?: boolean;
     singleInStep?: boolean;
     inLastStep?: boolean;
-    inFrontOf?: string[]; // 存储的是模块的类型名 (e.g., "PromptGenerationModuleConfig")
-    behind?: string[]; // 存储的是模块的类型名 (e.g., "PromptGenerationModuleConfig")
+    inFrontOf?: string[]; // 存储的是符文的类型名 (e.g., "PromptGenerationRuneConfig")
+    behind?: string[]; // 存储的是符文的类型名 (e.g., "PromptGenerationRuneConfig")
 }
 
 /**
  * 元数据接口，整合了规则和类别标签。
  * 这提供了一个统一的元数据访问点。
  */
-export interface ModuleMetadata
+export interface RuneMetadata
 {
-    rules?: WorkflowModuleRules;
+    rules?: WorkflowRuneRules;
     classLabel?: string;
 }
 
@@ -153,22 +153,22 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         {immediate: false, shallow: false}
     ));
 
-    const globalModulesAsync = reactive(useAsyncState(
-        () => ModuleConfigService.getApiV1WorkflowsConfigsGlobalModules()
+    const globalRunesAsync = reactive(useAsyncState(
+        () => RuneConfigService.getApiV1WorkflowsConfigsGlobalRunes()
             .then(processDtoToViewModel),
-        {} as Record<string, ModuleResourceItem>,
+        {} as Record<string, RuneResourceItem>,
         {immediate: false, shallow: false}
     ));
 
     /**
-     * 存储所有模块类型的 Schema
-     * Key 是模块的 moduleType, Value 是对应的 JSON Schema
+     * 存储所有符文类型的 Schema
+     * Key 是符文的 runeType, Value 是对应的 JSON Schema
      */
-    const moduleSchemasAsync =  reactive(useAsyncState(
+    const runeSchemasAsync =  reactive(useAsyncState(
         async () =>
         {
-            console.log("正在获取模块Schema和动态资源...");
-            const response: ModuleSchemasResponse = await ModuleConfigService.getApiV1WorkflowsConfigsGlobalModulesAllModuleConfigsSchemas();
+            console.log("正在获取符文Schema和动态资源...");
+            const response: RuneSchemasResponse = await RuneConfigService.getApiV1WorkflowsConfigsGlobalRunesAllRuneConfigsSchemas();
 
             console.log("已获取后端响应，准备加载插件资源...");
             // 1. 加载并注册所有动态组件
@@ -190,28 +190,28 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     /**
      * 元数据服务。
      * 该计算属性提供了一个单一的、聚合的元数据来源。
-     * 它会从每个模块的 Schema 中提取 `x-workflow-module-rules` 和 `classLabel` 等元数据信息。
+     * 它会从每个符文的 Schema 中提取 `x-workflow-rune-rules` 和 `classLabel` 等元数据信息。
      */
-    const moduleMetadata = computed(() =>
+    const runeMetadata = computed(() =>
     {
-        const metadataMap: Record<string, ModuleMetadata> = {};
-        const schemas = moduleSchemasAsync.state;
+        const metadataMap: Record<string, RuneMetadata> = {};
+        const schemas = runeSchemasAsync.state;
 
         if (schemas)
         {
-            for (const moduleType in schemas)
+            for (const runeType in schemas)
             {
-                const schema = schemas[moduleType];
+                const schema = schemas[runeType];
                 if (schema)
                 {
-                    const rules = schema['x-workflow-module-rules'] as WorkflowModuleRules | undefined;
+                    const rules = schema['x-workflow-rune-rules'] as WorkflowRuneRules | undefined;
                     // 从 Schema 中提取新的类别标签属性
                     const classLabel = schema['classLabel'] as string | undefined;
 
                     // 只要 Schema 中包含任何一个元数据，就为其创建一个条目
                     if (rules || classLabel)
                     {
-                        const metadata: ModuleMetadata = {};
+                        const metadata: RuneMetadata = {};
                         if (rules)
                         {
                             metadata.rules = rules;
@@ -220,7 +220,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                         {
                             metadata.classLabel = classLabel;
                         }
-                        metadataMap[moduleType] = metadata;
+                        metadataMap[runeType] = metadata;
                     }
                 }
             }
@@ -286,12 +286,12 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                 });
                 refreshPromise =() =>  globalStepsAsync.execute();
                 break;
-            case 'module':
-                savePromise = ModuleConfigService.putApiV1WorkflowsConfigsGlobalModules({
-                    moduleId: globalId,
-                    requestBody: draft.data as AbstractModuleConfig
+            case 'rune':
+                savePromise = RuneConfigService.putApiV1WorkflowsConfigsGlobalRunes({
+                    runeId: globalId,
+                    requestBody: draft.data as AbstractRuneConfig
                 });
-                refreshPromise = () => globalModulesAsync.execute();
+                refreshPromise = () => globalRunesAsync.execute();
                 break;
             default:
                 console.error('保存失败：未知的草稿类型。');
@@ -346,8 +346,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             case 'step':
                 deletePromise = StepConfigService.deleteApiV1WorkflowsConfigsGlobalSteps({ stepId: id });
                 break;
-            case 'module':
-                deletePromise = ModuleConfigService.deleteApiV1WorkflowsConfigsGlobalModules({ moduleId: id });
+            case 'rune':
+                deletePromise = RuneConfigService.deleteApiV1WorkflowsConfigsGlobalRunes({ runeId: id });
                 break;
             default:
                 console.error('删除失败：未知的配置类型。');
@@ -365,8 +365,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                 case 'step':
                     if (globalStepsAsync.state[id]) delete globalStepsAsync.state[id];
                     break;
-                case 'module':
-                    if (globalModulesAsync.state[id]) delete globalModulesAsync.state[id];
+                case 'rune':
+                    if (globalRunesAsync.state[id]) delete globalRunesAsync.state[id];
                     break;
             }
 
@@ -407,7 +407,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             });
             refreshPromise = () => globalWorkflowsAsync.execute();
         }
-        else if ('modules' in newGlobalConfig)
+        else if ('runes' in newGlobalConfig)
         {
             type = 'step';
             savePromise = StepConfigService.putApiV1WorkflowsConfigsGlobalSteps({
@@ -418,12 +418,12 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         }
         else
         {
-            type = 'module';
-            savePromise = ModuleConfigService.putApiV1WorkflowsConfigsGlobalModules({
-                moduleId: newGlobalId,
+            type = 'rune';
+            savePromise = RuneConfigService.putApiV1WorkflowsConfigsGlobalRunes({
+                runeId: newGlobalId,
                 requestBody: newGlobalConfig,
             });
-            refreshPromise = () => globalModulesAsync.execute();
+            refreshPromise = () => globalRunesAsync.execute();
         }
 
         // 3. 执行保存和刷新
@@ -507,8 +507,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             case 'step':
                 stateObject = globalStepsAsync;
                 break;
-            case 'module':
-                stateObject = globalModulesAsync;
+            case 'rune':
+                stateObject = globalRunesAsync;
                 break;
             default:
                 // 不太可能发生，但作为防御性编程
@@ -582,9 +582,9 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         // --- 只读数据访问器 ---
         globalWorkflowsAsync,
         globalStepsAsync,
-        globalModulesAsync,
-        moduleSchemasAsync,
-        moduleMetadata,
+        globalRunesAsync,
+        runeSchemasAsync,
+        runeMetadata,
 
         hasDirtyDrafts,
         isDirty: _isDirty,

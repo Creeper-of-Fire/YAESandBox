@@ -21,13 +21,13 @@ public class WorkflowValidationService
         // 初始时，可用的变量池只包含工作流声明的触发参数
         var availableVariables = new HashSet<string>(config.TriggerParams);
 
-        var stepModules = config.Steps
-            .Select(s => new { Step = s, Modules = s.Modules })
+        var stepRunes = config.Steps
+            .Select(s => new { Step = s, Runes = s.Runes })
             .ToList();
 
-        for (int i = 0; i < stepModules.Count; i++)
+        for (int i = 0; i < stepRunes.Count; i++)
         {
-            var currentStepInfo = stepModules[i];
+            var currentStepInfo = stepRunes[i];
             var step = currentStepInfo.Step;
             var stepResult = new StepValidationResult();
 
@@ -38,7 +38,7 @@ public class WorkflowValidationService
             this.ValidateAttributeRules(step, config.Steps, i, stepResult);
 
             // 如果当前步骤有任何校验信息，就添加到报告中
-            if (stepResult.ModuleResults.Any() || stepResult.StepMessages.Any())
+            if (stepResult.RuneResults.Any() || stepResult.StepMessages.Any())
             {
                 report.StepResults[step.ConfigId] = stepResult;
             }
@@ -54,7 +54,7 @@ public class WorkflowValidationService
     }
 
     /// <summary>
-    /// 校验数据流：检查所有模块消费的变量是否都已在之前的步骤、触发参数或本步骤的前置模块中定义。
+    /// 校验数据流：检查所有符文消费的变量是否都已在之前的步骤、触发参数或本步骤的前置符文中定义。
     /// </summary>
     private void ValidateDataFlow(StepProcessorConfig step, ISet<string> initialAvailableVariables, StepValidationResult stepResult)
     {
@@ -72,28 +72,28 @@ public class WorkflowValidationService
             }
         }
 
-        // 2. 模拟步骤内部的执行流程，动态计算每个模块执行前的可用变量池
+        // 2. 模拟步骤内部的执行流程，动态计算每个符文执行前的可用变量池
         //    这个变量池包含了“外部注入的”和“内部生产的”所有变量。
         var inStepAvailableVars = new HashSet<string>(step.InputMappings.Keys);
 
-        foreach (var module in step.Modules)
+        foreach (var rune in step.Runes)
         {
-            // 2a. 对当前模块进行校验：检查其消费的变量是否都存在于【当前】的可用变量池中
-            var requiredVars = module.GetConsumedVariables();
+            // 2a. 对当前符文进行校验：检查其消费的变量是否都存在于【当前】的可用变量池中
+            var requiredVars = rune.GetConsumedVariables();
             var missingVars = requiredVars.Except(inStepAvailableVars);
 
             foreach (string missingVar in missingVars)
             {
-                this.AddMessageToModule(stepResult, module.ConfigId, new ValidationMessage
+                this.AddMessageToRune(stepResult, rune.ConfigId, new ValidationMessage
                 {
                     Severity = RuleSeverity.Error,
-                    Message = $"模块必需的输入变量 '{missingVar}' 未被提供。它既没有在步骤的 InputMappings 中映射，也不是由本步骤中任何前置模块产生的。",
+                    Message = $"符文必需的输入变量 '{missingVar}' 未被提供。它既没有在步骤的 InputMappings 中映射，也不是由本步骤中任何前置符文产生的。",
                     RuleSource = "DataFlow"
                 });
             }
 
-            // 2b. 更新可用变量池：将当前模块【生产】的变量添加到池中，供后续模块使用
-            var producedVars = module.GetProducedVariables();
+            // 2b. 更新可用变量池：将当前符文【生产】的变量添加到池中，供后续符文使用
+            var producedVars = rune.GetProducedVariables();
             foreach (string producedVar in producedVars)
             {
                 inStepAvailableVars.Add(producedVar);
@@ -101,7 +101,7 @@ public class WorkflowValidationService
         }
 
         // 3. (新增) 检查 OutputMappings 的源（Value，即步骤内部变量）是否真的被生产出来了
-        var allProducedInStepVars = new HashSet<string>(step.Modules.SelectMany(m => m.GetProducedVariables()));
+        var allProducedInStepVars = new HashSet<string>(step.Runes.SelectMany(m => m.GetProducedVariables()));
         var allAvailableInStepVars = new HashSet<string>(step.InputMappings.Keys).Union(allProducedInStepVars);
 
         foreach (var mapping in step.OutputMappings)
@@ -128,64 +128,64 @@ public class WorkflowValidationService
         StepValidationResult stepResult)
     {
         // a. [InLastStep] 校验
-        var finalModule = step.Modules.FirstOrDefault(m => m.GetType().GetCustomAttribute<InLastStepAttribute>() != null);
-        if (finalModule != null && currentIndex != allSteps.Count - 1)
+        var finalRune = step.Runes.FirstOrDefault(m => m.GetType().GetCustomAttribute<InLastStepAttribute>() != null);
+        if (finalRune != null && currentIndex != allSteps.Count - 1)
         {
             // 这是一个步骤级别的错误
             stepResult.StepMessages.Add(new ValidationMessage
             {
                 Severity = RuleSeverity.Error,
-                Message = $"此步骤包含一个终结模块 ({finalModule.GetType().Name})，但它不是工作流的最后一个步骤。",
+                Message = $"此步骤包含一个终结符文 ({finalRune.GetType().Name})，但它不是工作流的最后一个步骤。",
                 RuleSource = "InLastStep"
             });
         }
 
-        // 遍历模块进行模块级Attribute校验
-        foreach (var module in step.Modules)
+        // 遍历符文进行符文级Attribute校验
+        foreach (var rune in step.Runes)
         {
-            var moduleType = module.GetType();
+            var runeType = rune.GetType();
 
             // b. [SingleInStep] 校验
-            if (moduleType.GetCustomAttribute<SingleInStepAttribute>() != null)
+            if (runeType.GetCustomAttribute<SingleInStepAttribute>() != null)
             {
-                if (step.Modules.Count(m => m.GetType() == moduleType) > 1)
+                if (step.Runes.Count(m => m.GetType() == runeType) > 1)
                 {
-                    this.AddMessageToModule(stepResult, module.ConfigId, new ValidationMessage
+                    this.AddMessageToRune(stepResult, rune.ConfigId, new ValidationMessage
                     {
                         // 这通常是一个警告，因为逻辑上可能允许（按顺序执行），但不是最佳实践
                         Severity = RuleSeverity.Warning,
-                        Message = $"模块类型 '{moduleType.Name}' 在此步骤中出现了多次，但它被建议只使用一次。",
+                        Message = $"符文类型 '{runeType.Name}' 在此步骤中出现了多次，但它被建议只使用一次。",
                         RuleSource = "SingleInStep"
                     });
                 }
             }
 
             // c. [InFrontOf] / [Behind] 校验 (步骤内部顺序)
-            this.ValidateRelativeOrder(module, step.Modules, stepResult);
+            this.ValidateRelativeOrder(rune, step.Runes, stepResult);
         }
     }
 
     /// <summary>
-    /// 校验单个模块在其步骤内的相对顺序。
+    /// 校验单个符文在其步骤内的相对顺序。
     /// </summary>
-    private void ValidateRelativeOrder(AbstractModuleConfig module, List<AbstractModuleConfig> stepModules,
+    private void ValidateRelativeOrder(AbstractRuneConfig rune, List<AbstractRuneConfig> stepRunes,
         StepValidationResult stepResult)
     {
-        var moduleType = module.GetType();
-        int moduleIndex = stepModules.IndexOf(module);
+        var runeType = rune.GetType();
+        int runeIndex = stepRunes.IndexOf(rune);
 
         // [InFrontOf] 规则
-        if (moduleType.GetCustomAttribute<InFrontOfAttribute>() is { } inFrontOfAttr)
+        if (runeType.GetCustomAttribute<InFrontOfAttribute>() is { } inFrontOfAttr)
         {
             foreach (var targetType in inFrontOfAttr.InFrontOfType)
             {
-                int targetIndex = stepModules.ToList().FindIndex(m => m.GetType() == targetType);
-                if (targetIndex != -1 && moduleIndex > targetIndex)
+                int targetIndex = stepRunes.ToList().FindIndex(m => m.GetType() == targetType);
+                if (targetIndex != -1 && runeIndex > targetIndex)
                 {
-                    this.AddMessageToModule(stepResult, module.ConfigId, new ValidationMessage
+                    this.AddMessageToRune(stepResult, rune.ConfigId, new ValidationMessage
                     {
                         Severity = RuleSeverity.Warning,
-                        Message = $"模块 '{moduleType.Name}' 应该在 '{targetType.Name}' 之前执行。",
+                        Message = $"符文 '{runeType.Name}' 应该在 '{targetType.Name}' 之前执行。",
                         RuleSource = "InFrontOf"
                     });
                 }
@@ -193,17 +193,17 @@ public class WorkflowValidationService
         }
 
         // [Behind] 规则
-        if (moduleType.GetCustomAttribute<BehindAttribute>() is { } behindAttr)
+        if (runeType.GetCustomAttribute<BehindAttribute>() is { } behindAttr)
         {
             foreach (var targetType in behindAttr.BehindType)
             {
-                int targetIndex = stepModules.ToList().FindIndex(m => m.GetType() == targetType);
-                if (targetIndex != -1 && moduleIndex < targetIndex)
+                int targetIndex = stepRunes.ToList().FindIndex(m => m.GetType() == targetType);
+                if (targetIndex != -1 && runeIndex < targetIndex)
                 {
-                    this.AddMessageToModule(stepResult, module.ConfigId, new ValidationMessage
+                    this.AddMessageToRune(stepResult, rune.ConfigId, new ValidationMessage
                     {
                         Severity = RuleSeverity.Warning,
-                        Message = $"模块 '{moduleType.Name}' 应该在 '{targetType.Name}' 之后执行。",
+                        Message = $"符文 '{runeType.Name}' 应该在 '{targetType.Name}' 之后执行。",
                         RuleSource = "Behind"
                     });
                 }
@@ -212,16 +212,16 @@ public class WorkflowValidationService
     }
 
     /// <summary>
-    /// 辅助方法，安全地向模块的校验结果中添加消息。
+    /// 辅助方法，安全地向符文的校验结果中添加消息。
     /// </summary>
-    private void AddMessageToModule(StepValidationResult stepResult, string moduleId, ValidationMessage message)
+    private void AddMessageToRune(StepValidationResult stepResult, string runeId, ValidationMessage message)
     {
-        if (!stepResult.ModuleResults.TryGetValue(moduleId, out var moduleResult))
+        if (!stepResult.RuneResults.TryGetValue(runeId, out var runeResult))
         {
-            moduleResult = new ModuleValidationResult();
-            stepResult.ModuleResults[moduleId] = moduleResult;
+            runeResult = new RuneValidationResult();
+            stepResult.RuneResults[runeId] = runeResult;
         }
 
-        moduleResult.ModuleMessages.Add(message);
+        runeResult.RuneMessages.Add(message);
     }
 }
