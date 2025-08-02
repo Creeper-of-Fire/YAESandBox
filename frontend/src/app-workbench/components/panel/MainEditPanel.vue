@@ -27,7 +27,7 @@ const selectedType = computed(() =>
   if (!data) return null;
 
   // 检查是否包含 AbstractRuneConfig 的特征属性（runeType）
-  if ('aiModalType' in data)
+  if ('runeType' in data)
   {
     return 'rune';  // 符文类型
   }
