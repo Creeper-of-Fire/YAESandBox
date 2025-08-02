@@ -21,30 +21,30 @@ public class WorkflowValidationService
         // 初始时，可用的变量池只包含工作流声明的触发参数
         var availableVariables = new HashSet<string>(config.TriggerParams);
 
-        var stepRunes = config.Steps
-            .Select(s => new { Step = s, Runes = s.Runes })
+        var tuumRunes = config.Tuums
+            .Select(s => new { Tuum = s, Runes = s.Runes })
             .ToList();
 
-        for (int i = 0; i < stepRunes.Count; i++)
+        for (int i = 0; i < tuumRunes.Count; i++)
         {
-            var currentStepInfo = stepRunes[i];
-            var step = currentStepInfo.Step;
-            var stepResult = new StepValidationResult();
+            var currentTuumInfo = tuumRunes[i];
+            var tuum = currentTuumInfo.Tuum;
+            var tuumResult = new TuumValidationResult();
 
             // 1. 进行数据流校验 (变量的生产与消费)
-            this.ValidateDataFlow(step, availableVariables, stepResult);
+            this.ValidateDataFlow(tuum, availableVariables, tuumResult);
 
             // 2. 进行基于Attribute的拓扑/结构规则校验
-            this.ValidateAttributeRules(step, config.Steps, i, stepResult);
+            this.ValidateAttributeRules(tuum, config.Tuums, i, tuumResult);
 
-            // 如果当前步骤有任何校验信息，就添加到报告中
-            if (stepResult.RuneResults.Any() || stepResult.StepMessages.Any())
+            // 如果当前祝祷有任何校验信息，就添加到报告中
+            if (tuumResult.RuneResults.Any() || tuumResult.TuumMessages.Any())
             {
-                report.StepResults[step.ConfigId] = stepResult;
+                report.TuumResults[tuum.ConfigId] = tuumResult;
             }
 
-            // 3. 在处理完一个步骤后，将其产生的全局变量加入可用池，供后续步骤使用
-            foreach (string producedVar in step.OutputMappings.Keys)
+            // 3. 在处理完一个祝祷后，将其产生的全局变量加入可用池，供后续祝祷使用
+            foreach (string producedVar in tuum.OutputMappings.Keys)
             {
                 availableVariables.Add(producedVar);
             }
@@ -54,16 +54,16 @@ public class WorkflowValidationService
     }
 
     /// <summary>
-    /// 校验数据流：检查所有符文消费的变量是否都已在之前的步骤、触发参数或本步骤的前置符文中定义。
+    /// 校验数据流：检查所有符文消费的变量是否都已在之前的祝祷、触发参数或本祝祷的前置符文中定义。
     /// </summary>
-    private void ValidateDataFlow(StepProcessorConfig step, ISet<string> initialAvailableVariables, StepValidationResult stepResult)
+    private void ValidateDataFlow(TuumProcessorConfig tuum, ISet<string> initialAvailableVariables, TuumValidationResult tuumResult)
     {
         // 1. (保持不变) 检查 InputMappings 的源（Value，即全局变量）是否存在于上游的可用池中
-        foreach (string globalName in step.InputMappings.Values.ToHashSet())
+        foreach (string globalName in tuum.InputMappings.Values.ToHashSet())
         {
             if (!initialAvailableVariables.Contains(globalName))
             {
-                stepResult.StepMessages.Add(new ValidationMessage
+                tuumResult.TuumMessages.Add(new ValidationMessage
                 {
                     Severity = RuleSeverity.Error,
                     Message = $"输入映射错误：上游未提供可用的全局变量 '{globalName}'。",
@@ -72,22 +72,22 @@ public class WorkflowValidationService
             }
         }
 
-        // 2. 模拟步骤内部的执行流程，动态计算每个符文执行前的可用变量池
+        // 2. 模拟祝祷内部的执行流程，动态计算每个符文执行前的可用变量池
         //    这个变量池包含了“外部注入的”和“内部生产的”所有变量。
-        var inStepAvailableVars = new HashSet<string>(step.InputMappings.Keys);
+        var inTuumAvailableVars = new HashSet<string>(tuum.InputMappings.Keys);
 
-        foreach (var rune in step.Runes)
+        foreach (var rune in tuum.Runes)
         {
             // 2a. 对当前符文进行校验：检查其消费的变量是否都存在于【当前】的可用变量池中
             var requiredVars = rune.GetConsumedVariables();
-            var missingVars = requiredVars.Except(inStepAvailableVars);
+            var missingVars = requiredVars.Except(inTuumAvailableVars);
 
             foreach (string missingVar in missingVars)
             {
-                this.AddMessageToRune(stepResult, rune.ConfigId, new ValidationMessage
+                this.AddMessageToRune(tuumResult, rune.ConfigId, new ValidationMessage
                 {
                     Severity = RuleSeverity.Error,
-                    Message = $"符文必需的输入变量 '{missingVar}' 未被提供。它既没有在步骤的 InputMappings 中映射，也不是由本步骤中任何前置符文产生的。",
+                    Message = $"符文必需的输入变量 '{missingVar}' 未被提供。它既没有在祝祷的 InputMappings 中映射，也不是由本祝祷中任何前置符文产生的。",
                     RuleSource = "DataFlow"
                 });
             }
@@ -96,22 +96,22 @@ public class WorkflowValidationService
             var producedVars = rune.GetProducedVariables();
             foreach (string producedVar in producedVars)
             {
-                inStepAvailableVars.Add(producedVar);
+                inTuumAvailableVars.Add(producedVar);
             }
         }
 
-        // 3. (新增) 检查 OutputMappings 的源（Value，即步骤内部变量）是否真的被生产出来了
-        var allProducedInStepVars = new HashSet<string>(step.Runes.SelectMany(m => m.GetProducedVariables()));
-        var allAvailableInStepVars = new HashSet<string>(step.InputMappings.Keys).Union(allProducedInStepVars);
+        // 3. (新增) 检查 OutputMappings 的源（Value，即祝祷内部变量）是否真的被生产出来了
+        var allProducedInTuumVars = new HashSet<string>(tuum.Runes.SelectMany(m => m.GetProducedVariables()));
+        var allAvailableInTuumVars = new HashSet<string>(tuum.InputMappings.Keys).Union(allProducedInTuumVars);
 
-        foreach (var mapping in step.OutputMappings)
+        foreach (var mapping in tuum.OutputMappings)
         {
             string localSourceVar = mapping.Value; // 局部变量名
             string globalTargetVar = mapping.Key; // 全局变量名
 
-            if (!allAvailableInStepVars.Contains(localSourceVar))
+            if (!allAvailableInTuumVars.Contains(localSourceVar))
             {
-                stepResult.StepMessages.Add(new ValidationMessage
+                tuumResult.TuumMessages.Add(new ValidationMessage
                 {
                     Severity = RuleSeverity.Error,
                     Message = $"输出映射错误：尝试将不存在的内部变量 '{localSourceVar}' 映射到全局变量 '{globalTargetVar}'。",
@@ -122,67 +122,67 @@ public class WorkflowValidationService
     }
 
     /// <summary>
-    /// 校验基于Attribute的规则，如[SingleInStep], [InLastStep]等。
+    /// 校验基于Attribute的规则，如[SingleInTuum], [InLastTuum]等。
     /// </summary>
-    private void ValidateAttributeRules(StepProcessorConfig step, List<StepProcessorConfig> allSteps, int currentIndex,
-        StepValidationResult stepResult)
+    private void ValidateAttributeRules(TuumProcessorConfig tuum, List<TuumProcessorConfig> allTuums, int currentIndex,
+        TuumValidationResult tuumResult)
     {
-        // a. [InLastStep] 校验
-        var finalRune = step.Runes.FirstOrDefault(m => m.GetType().GetCustomAttribute<InLastStepAttribute>() != null);
-        if (finalRune != null && currentIndex != allSteps.Count - 1)
+        // a. [InLastTuum] 校验
+        var finalRune = tuum.Runes.FirstOrDefault(m => m.GetType().GetCustomAttribute<InLastTuumAttribute>() != null);
+        if (finalRune != null && currentIndex != allTuums.Count - 1)
         {
-            // 这是一个步骤级别的错误
-            stepResult.StepMessages.Add(new ValidationMessage
+            // 这是一个祝祷级别的错误
+            tuumResult.TuumMessages.Add(new ValidationMessage
             {
                 Severity = RuleSeverity.Error,
-                Message = $"此步骤包含一个终结符文 ({finalRune.GetType().Name})，但它不是工作流的最后一个步骤。",
-                RuleSource = "InLastStep"
+                Message = $"此祝祷包含一个终结符文 ({finalRune.GetType().Name})，但它不是工作流的最后一个祝祷。",
+                RuleSource = "InLastTuum"
             });
         }
 
         // 遍历符文进行符文级Attribute校验
-        foreach (var rune in step.Runes)
+        foreach (var rune in tuum.Runes)
         {
             var runeType = rune.GetType();
 
-            // b. [SingleInStep] 校验
-            if (runeType.GetCustomAttribute<SingleInStepAttribute>() != null)
+            // b. [SingleInTuum] 校验
+            if (runeType.GetCustomAttribute<SingleInTuumAttribute>() != null)
             {
-                if (step.Runes.Count(m => m.GetType() == runeType) > 1)
+                if (tuum.Runes.Count(m => m.GetType() == runeType) > 1)
                 {
-                    this.AddMessageToRune(stepResult, rune.ConfigId, new ValidationMessage
+                    this.AddMessageToRune(tuumResult, rune.ConfigId, new ValidationMessage
                     {
                         // 这通常是一个警告，因为逻辑上可能允许（按顺序执行），但不是最佳实践
                         Severity = RuleSeverity.Warning,
-                        Message = $"符文类型 '{runeType.Name}' 在此步骤中出现了多次，但它被建议只使用一次。",
-                        RuleSource = "SingleInStep"
+                        Message = $"符文类型 '{runeType.Name}' 在此祝祷中出现了多次，但它被建议只使用一次。",
+                        RuleSource = "SingleInTuum"
                     });
                 }
             }
 
-            // c. [InFrontOf] / [Behind] 校验 (步骤内部顺序)
-            this.ValidateRelativeOrder(rune, step.Runes, stepResult);
+            // c. [InFrontOf] / [Behind] 校验 (祝祷内部顺序)
+            this.ValidateRelativeOrder(rune, tuum.Runes, tuumResult);
         }
     }
 
     /// <summary>
-    /// 校验单个符文在其步骤内的相对顺序。
+    /// 校验单个符文在其祝祷内的相对顺序。
     /// </summary>
-    private void ValidateRelativeOrder(AbstractRuneConfig rune, List<AbstractRuneConfig> stepRunes,
-        StepValidationResult stepResult)
+    private void ValidateRelativeOrder(AbstractRuneConfig rune, List<AbstractRuneConfig> tuumRunes,
+        TuumValidationResult tuumResult)
     {
         var runeType = rune.GetType();
-        int runeIndex = stepRunes.IndexOf(rune);
+        int runeIndex = tuumRunes.IndexOf(rune);
 
         // [InFrontOf] 规则
         if (runeType.GetCustomAttribute<InFrontOfAttribute>() is { } inFrontOfAttr)
         {
             foreach (var targetType in inFrontOfAttr.InFrontOfType)
             {
-                int targetIndex = stepRunes.ToList().FindIndex(m => m.GetType() == targetType);
+                int targetIndex = tuumRunes.ToList().FindIndex(m => m.GetType() == targetType);
                 if (targetIndex != -1 && runeIndex > targetIndex)
                 {
-                    this.AddMessageToRune(stepResult, rune.ConfigId, new ValidationMessage
+                    this.AddMessageToRune(tuumResult, rune.ConfigId, new ValidationMessage
                     {
                         Severity = RuleSeverity.Warning,
                         Message = $"符文 '{runeType.Name}' 应该在 '{targetType.Name}' 之前执行。",
@@ -197,10 +197,10 @@ public class WorkflowValidationService
         {
             foreach (var targetType in behindAttr.BehindType)
             {
-                int targetIndex = stepRunes.ToList().FindIndex(m => m.GetType() == targetType);
+                int targetIndex = tuumRunes.ToList().FindIndex(m => m.GetType() == targetType);
                 if (targetIndex != -1 && runeIndex < targetIndex)
                 {
-                    this.AddMessageToRune(stepResult, rune.ConfigId, new ValidationMessage
+                    this.AddMessageToRune(tuumResult, rune.ConfigId, new ValidationMessage
                     {
                         Severity = RuleSeverity.Warning,
                         Message = $"符文 '{runeType.Name}' 应该在 '{targetType.Name}' 之后执行。",
@@ -214,12 +214,12 @@ public class WorkflowValidationService
     /// <summary>
     /// 辅助方法，安全地向符文的校验结果中添加消息。
     /// </summary>
-    private void AddMessageToRune(StepValidationResult stepResult, string runeId, ValidationMessage message)
+    private void AddMessageToRune(TuumValidationResult tuumResult, string runeId, ValidationMessage message)
     {
-        if (!stepResult.RuneResults.TryGetValue(runeId, out var runeResult))
+        if (!tuumResult.RuneResults.TryGetValue(runeId, out var runeResult))
         {
             runeResult = new RuneValidationResult();
-            stepResult.RuneResults[runeId] = runeResult;
+            tuumResult.RuneResults[runeId] = runeResult;
         }
 
         runeResult.RuneMessages.Add(message);

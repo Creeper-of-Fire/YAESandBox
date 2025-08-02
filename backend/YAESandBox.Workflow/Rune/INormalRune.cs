@@ -1,5 +1,5 @@
 ﻿using YAESandBox.Depend.Results;
-using static YAESandBox.Workflow.Step.StepProcessor;
+using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 namespace YAESandBox.Workflow.Rune;
 
@@ -9,10 +9,10 @@ namespace YAESandBox.Workflow.Rune;
 public interface INormalRune
 {
     /// <summary>
-    /// 启动步骤流程
+    /// 启动祝祷流程
     /// </summary>
-    /// <param name="stepProcessorContent">步骤执行的上下文内容。</param>
+    /// <param name="tuumProcessorContent">祝祷执行的上下文内容。</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    internal Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent, CancellationToken cancellationToken = default);
+    internal Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default);
 }

@@ -23,9 +23,9 @@ public record WorkflowProcessorConfig
     public List<string> TriggerParams { get; init; } = [];
 
     /// <summary>
-    /// 一个工作流含有的步骤（有序）
+    /// 一个工作流含有的祝祷（有序）
     /// </summary>
     [Required]
     [HiddenInForm(true)]
-    public List<StepProcessorConfig> Steps { get; init; } = [];
+    public List<TuumProcessorConfig> Tuums { get; init; } = [];
 }

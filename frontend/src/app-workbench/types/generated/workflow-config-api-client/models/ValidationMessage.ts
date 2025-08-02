@@ -14,7 +14,7 @@ export type ValidationMessage = {
     message: string;
     /**
      * 触发此消息的规则来源，便于前端分类处理。
-     * 例如："DataFlow", "SingleInStep", "FormValidation"。
+     * 例如："DataFlow", "SingleInTuum", "FormValidation"。
      */
     ruleSource: string;
 };

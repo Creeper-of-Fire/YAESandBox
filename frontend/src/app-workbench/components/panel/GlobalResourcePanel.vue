@@ -52,8 +52,8 @@
       >
         <!-- 工作流标签页 -->
         <n-tab name="workflow" tab="工作流"/>
-        <!-- 步骤标签页 -->
-        <n-tab name="step" tab="步骤"/>
+        <!-- 祝祷标签页 -->
+        <n-tab name="tuum" tab="祝祷"/>
         <!-- 符文标签页 -->
         <n-tab name="rune" tab="符文"/>
       </n-tabs>
@@ -91,34 +91,34 @@
         </draggable>
         <n-empty v-else class="empty-container" description="无全局工作流" small/>
       </div>
-      <div v-if="activeTab===`step`">
+      <div v-if="activeTab===`tuum`">
         <draggable
-            v-if="stepsList.length > 0"
-            v-model="stepsList"
+            v-if="tuumsList.length > 0"
+            v-model="tuumsList"
             :animation="150"
             :clone="handleResourceClone"
-            :group="{ name: 'steps-group', pull: 'clone', put: false }"
+            :group="{ name: 'tuums-group', pull: 'clone', put: false }"
             :setData="handleSetData"
             :sort="false"
             class="resource-list"
             item-key="id"
         >
-          <div v-for="element in stepsList"
+          <div v-for="element in tuumsList"
                :key="element.id"
                :data-drag-id="element.id"
-               data-drag-type="step"
+               data-drag-type="tuum"
           >
             <GlobalResourceListItem
                 :id="element.id"
                 :item="element.item"
-                type="step"
+                type="tuum"
                 @start-editing="startEditing"
                 @show-error-detail="showErrorDetail"
                 @contextmenu="handleContextMenu"
             />
           </div>
         </draggable>
-        <n-empty v-else class="empty-container" description="无全局步骤" small/>
+        <n-empty v-else class="empty-container" description="无全局祝祷" small/>
       </div>
       <div v-if="activeTab===`rune`">
         <draggable
@@ -185,7 +185,7 @@ type DraggableResourceItem<T> = {
   item: GlobalResourceItem<T>; // 原始 Record 的 value
 };
 
-const activeTab = ref<'workflow' | 'step' | 'rune'>('workflow'); // 默认激活“步骤”标签页
+const activeTab = ref<'workflow' | 'tuum' | 'rune'>('workflow'); // 默认激活“祝祷”标签页
 
 const emit = defineEmits<{ (e: 'start-editing', payload: { type: ConfigType; id: string }): void; }>();
 const workbenchStore = useWorkbenchStore();
@@ -193,10 +193,10 @@ const dialog = useDialog();
 const message = useMessage();
 
 const workflowsAsync = workbenchStore.globalWorkflowsAsync;
-const stepsAsync = workbenchStore.globalStepsAsync;
+const tuumsAsync = workbenchStore.globalTuumsAsync;
 const runesAsync = workbenchStore.globalRunesAsync;
 const workflows = computed(() => workflowsAsync.state);
-const steps = computed(() => stepsAsync.state);
+const tuums = computed(() => tuumsAsync.state);
 const runes = computed(() => runesAsync.state);
 
 // 为所有资源类型创建可用于 v-model 的列表
@@ -206,8 +206,8 @@ const workflowsList = computed({
   {
   }
 });
-const stepsList = computed({
-  get: () => steps.value ? Object.entries(steps.value).map(([id, item]) => ({id, item})) : [],
+const tuumsList = computed({
+  get: () => tuums.value ? Object.entries(tuums.value).map(([id, item]) => ({id, item})) : [],
   set: () =>
   {
   }
@@ -219,13 +219,13 @@ const runesList = computed({
   }
 });
 
-const aggregatedIsLoading = computed(() => workflowsAsync.isLoading || stepsAsync.isLoading || runesAsync.isLoading);
-const aggregatedError = computed(() => workflowsAsync.error || stepsAsync.error || runesAsync.error);
+const aggregatedIsLoading = computed(() => workflowsAsync.isLoading || tuumsAsync.isLoading || runesAsync.isLoading);
+const aggregatedError = computed(() => workflowsAsync.error || tuumsAsync.error || runesAsync.error);
 
 function executeAll()
 {
   workflowsAsync.execute();
-  stepsAsync.execute();
+  tuumsAsync.execute();
   runesAsync.execute();
 }
 
@@ -266,8 +266,8 @@ const currentTabLabel = computed(() =>
   {
     case 'workflow':
       return '工作流';
-    case 'step':
-      return '步骤';
+    case 'tuum':
+      return '祝祷';
     case 'rune':
       return '符文';
     default:
@@ -357,7 +357,7 @@ async function handleCreateNew(payload: { name?: string, type?: string })
             ? createBlankConfig('rune', name, {runeType: runeType!})
             : resourceType === 'workflow'
                 ? createBlankConfig('workflow', name)
-                : createBlankConfig('step', name);
+                : createBlankConfig('tuum', name);
 
     await workbenchStore.createGlobalConfig(blankConfig);
     message.success(`成功创建全局${currentTabLabel.value}“${name}”！`);

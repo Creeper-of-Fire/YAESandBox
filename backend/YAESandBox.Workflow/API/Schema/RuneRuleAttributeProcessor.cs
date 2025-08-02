@@ -31,16 +31,16 @@ public class RuneRuleAttributeProcessor : ISchemaProcessor
             rules["noConfig"] = true;
         }
 
-        // 处理 [SingleInStep]
-        if (attrs.OfType<SingleInStepAttribute>().Any())
+        // 处理 [SingleInTuum]
+        if (attrs.OfType<SingleInTuumAttribute>().Any())
         {
-            rules["singleInStep"] = true;
+            rules["singleInTuum"] = true;
         }
 
-        // 处理 [InLastStep]
-        if (attrs.OfType<InLastStepAttribute>().Any())
+        // 处理 [InLastTuum]
+        if (attrs.OfType<InLastTuumAttribute>().Any())
         {
-            rules["inLastStep"] = true;
+            rules["inLastTuum"] = true;
         }
 
         // 处理 [InFrontOf]

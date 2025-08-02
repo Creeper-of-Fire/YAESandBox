@@ -6,12 +6,12 @@ using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Rune.ExactRune.SendToRawTextRuneProcessor;
-using static YAESandBox.Workflow.Step.StepProcessor;
+using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 namespace YAESandBox.Workflow.Rune.ExactRune;
 
 /// <summary>
-/// 用于将步骤变量名直接写入到 WorkflowRuntimeService.RawText。
+/// 用于将祝祷变量名直接写入到 WorkflowRuntimeService.RawText。
 /// </summary>
 /// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
 /// <param name="config">符文配置。</param>
@@ -30,9 +30,9 @@ internal class SendToRawTextRuneProcessor(
 
     public record SendToRawTextRuneProcessorDebugDto : IRuneProcessorDebugDto;
 
-    public async Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent, CancellationToken cancellationToken = default)
+    public async Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
-        string? outputVar = stepProcessorContent.InputVar(this.Config.RequireVariables)?.ToString();
+        string? outputVar = tuumProcessorContent.InputVar(this.Config.RequireVariables)?.ToString();
         if (outputVar == null)
             return Result.Ok(); // 只处理非null的输出
 
@@ -42,10 +42,10 @@ internal class SendToRawTextRuneProcessor(
 }
 
 /// <summary>
-/// 用于将步骤变量名直接写入到 WorkflowRuntimeService.RawText 的配置。
-/// 该配置定义了需要从步骤中提取并存储到RawText中的变量。
+/// 用于将祝祷变量名直接写入到 WorkflowRuntimeService.RawText 的配置。
+/// 该配置定义了需要从祝祷中提取并存储到RawText中的变量。
 /// </summary>
-[InLastStep]
+[InLastTuum]
 [ClassLabel("😼结束")]
 internal record SendToRawTextRune : AbstractRuneConfig<SendToRawTextRuneProcessor>
 {
@@ -59,7 +59,7 @@ internal record SendToRawTextRune : AbstractRuneConfig<SendToRawTextRuneProcesso
     [Required]
     [Display(
         Name = "需求变量名",
-        Description = "指定需要从步骤中提取并写入RawText的变量名称",
+        Description = "指定需要从祝祷中提取并写入RawText的变量名称",
         Prompt = "请输入变量名"
     )]
     public required string RequireVariables { get; init; } = "";

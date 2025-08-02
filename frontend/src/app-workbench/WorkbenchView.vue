@@ -101,14 +101,14 @@ import AiConfigEditorPanel from "@/app-workbench/features/ai-config-panel/AiConf
 import MainEditPanel from "@/app-workbench/components/panel/MainEditPanel.vue";
 import {type SelectedConfigItem, SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 import type {AbstractRuneConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
-import type {StepEditorContext} from "@/app-workbench/components/step/editor/StepEditorContext.ts";
+import type {TuumEditorContext} from "@/app-workbench/components/tuum/editor/TuumEditorContext.ts";
 import type {RuneEditorContext} from "@/app-workbench/components/rune/editor/RuneEditorContext.ts";
 
 defineOptions({
   name: 'WorkbenchView'
 });
 
-const selectedConfig = ref<StepEditorContext | RuneEditorContext | null>(null);
+const selectedConfig = ref<TuumEditorContext | RuneEditorContext | null>(null);
 
 provide<SelectedConfigItem>(SelectedConfigItemKey, {
   data: selectedConfig,

@@ -248,7 +248,7 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
         {
             processedProps['ui:widget'] = SliderWithInputWidget;
             const options = processedProps['ui:options'];
-            options.step = processedProps.multipleOf;
+            options.tuum = processedProps.multipleOf;
             options.default = processedProps.default;
             options.max = processedProps.maximum;
             options.min = processedProps.minimum;

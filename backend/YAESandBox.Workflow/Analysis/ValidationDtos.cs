@@ -8,30 +8,30 @@ namespace YAESandBox.Workflow.Analysis;
 public record WorkflowValidationReport
 {
     /// <summary>
-    /// 每个步骤的校验结果。
-    /// Key是步骤的ConfigId。
+    /// 每个祝祷的校验结果。
+    /// Key是祝祷的ConfigId。
     /// </summary>
     [Required]
-    public Dictionary<string, StepValidationResult> StepResults { get; init; } = [];
+    public Dictionary<string, TuumValidationResult> TuumResults { get; init; } = [];
 }
 
 /// <summary>
-/// 单个步骤的校验结果。
+/// 单个祝祷的校验结果。
 /// </summary>
-public record StepValidationResult
+public record TuumValidationResult
 {
     /// <summary>
-    /// 该步骤内每个符文的校验结果。
+    /// 该祝祷内每个符文的校验结果。
     /// Key是符文的ConfigId。
     /// </summary>
     [Required]
     public Dictionary<string, RuneValidationResult> RuneResults { get; init; } = [];
 
     /// <summary>
-    /// 仅针对步骤本身的校验信息。
+    /// 仅针对祝祷本身的校验信息。
     /// </summary>
     [Required]
-    public List<ValidationMessage> StepMessages { get; init; } = [];
+    public List<ValidationMessage> TuumMessages { get; init; } = [];
 }
 
 /// <summary>
@@ -65,7 +65,7 @@ public record ValidationMessage
 
     /// <summary>
     /// 触发此消息的规则来源，便于前端分类处理。
-    /// 例如："DataFlow", "SingleInStep", "FormValidation"。
+    /// 例如："DataFlow", "SingleInTuum", "FormValidation"。
     /// </summary>
     [Required]
     public required string RuleSource { get; init; }

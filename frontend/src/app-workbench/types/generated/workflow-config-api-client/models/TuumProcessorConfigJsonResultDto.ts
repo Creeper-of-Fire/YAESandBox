@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { StepProcessorConfig } from './StepProcessorConfig';
-export type StepProcessorConfigJsonResultDto = {
+import type { TuumProcessorConfig } from './TuumProcessorConfig';
+export type TuumProcessorConfigJsonResultDto = {
     isSuccess: boolean;
-    data: StepProcessorConfig;
+    data: TuumProcessorConfig;
     errorMessage: string | null;
     /**
      * 失败时，有可能返回序列化错误时的原始文本

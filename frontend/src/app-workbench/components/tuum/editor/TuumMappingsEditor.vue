@@ -1,6 +1,6 @@
-﻿<!-- src/app-workbench/components/editor/StepMappingsEditor.vue -->
+﻿<!-- src/app-workbench/components/editor/TuumMappingsEditor.vue -->
 <template>
-  <div class="step-mappings-editor">
+  <div class="tuum-mappings-editor">
     <!-- 输入映射 -->
     <n-card :bordered="true" size="small" title="输入映射">
       <template #header-extra>
@@ -14,7 +14,7 @@
 
       <!-- 1. 缺少必要输入的警告 -->
       <n-alert v-if="missingInputs.length > 0" :show-icon="true" title="缺少必要的输入映射" type="error">
-        <p style="margin-top: 4px;">此步骤中的符文需要以下输入，但尚未配置映射来源：</p>
+        <p style="margin-top: 4px;">此祝祷中的符文需要以下输入，但尚未配置映射来源：</p>
         <n-tag v-for="input in missingInputs" :key="input" style="margin-right: 8px; margin-top: 4px;" type="error">
           {{ input }}
         </n-tag>
@@ -87,7 +87,7 @@ const props = defineProps<{
   outputMappings: Record<string, string>;
   // 从父组件计算好的上下文信息
   requiredInputs: string[];      // 所有符文需要的输入变量名集合
-  availableGlobalVars?: string[]; // 此步骤可用的全局变量名集合，用于自动完成提示
+  availableGlobalVars?: string[]; // 此祝祷可用的全局变量名集合，用于自动完成提示
 }>();
 
 const emit = defineEmits(['update:inputMappings', 'update:outputMappings']);
@@ -465,7 +465,7 @@ const addOutputMappingRow = () =>
 </script>
 
 <style scoped>
-.step-mappings-editor {
+.tuum-mappings-editor {
   margin-bottom: 12px;
   background-color: #fcfcfd;
   padding: 12px;

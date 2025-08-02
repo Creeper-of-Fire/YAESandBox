@@ -2,7 +2,7 @@
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Step;
+using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.Utility;
 
 namespace YAESandBox.Workflow;
@@ -16,17 +16,17 @@ internal class WorkflowProcessor(
     /// <inheritdoc />
     public IWorkflowProcessorDebugDto DebugDto => new WorkflowProcessorDebugDto
     {
-        StepProcessorDebugDtos = this.Steps.ConvertAll(it => it.DebugDto)
+        TuumProcessorDebugDtos = this.Tuums.ConvertAll(it => it.DebugDto)
     };
 
     /// <inheritdoc />
     public record WorkflowProcessorDebugDto : IWorkflowProcessorDebugDto
     {
         /// <inheritdoc />
-        public required IList<IStepProcessorDebugDto> StepProcessorDebugDtos { get; init; }
+        public required IList<ITuumProcessorDebugDto> TuumProcessorDebugDtos { get; init; }
     }
 
-    private List<StepProcessor> Steps { get; } = config.Steps.ConvertAll(it => it.ToStepProcessor(runtimeService));
+    private List<TuumProcessor> Tuums { get; } = config.Tuums.ConvertAll(it => it.ToTuumProcessor(runtimeService));
 
     private WorkflowRuntimeService RuntimeService { get; } = runtimeService;
     private WorkflowRuntimeContext Context { get; } = new(triggerParams);
@@ -34,7 +34,7 @@ internal class WorkflowProcessor(
 
     /// <summary>
     /// 封装工作流执行期间的有状态数据。
-    /// 这个对象是可变的，并在整个工作流的步骤之间传递和修改。
+    /// 这个对象是可变的，并在整个工作流的祝祷之间传递和修改。
     /// </summary>
     public class WorkflowRuntimeContext(IReadOnlyDictionary<string, string> triggerParams)
     {
@@ -45,7 +45,7 @@ internal class WorkflowProcessor(
 
         /// <summary>
         /// 全局变量池。
-        /// 每个步骤的输出可以写回这里，供后续步骤使用。
+        /// 每个祝祷的输出可以写回这里，供后续祝祷使用。
         /// </summary>
         public Dictionary<string, object> GlobalVariables { get; } = triggerParams.ToDictionary(kv => kv.Key, object (kv) => kv.Value);
 
@@ -67,27 +67,27 @@ internal class WorkflowProcessor(
     {
         // --- 1. 依赖分析与执行计划生成 ---
 
-        // 节点列表，每个节点代表一个步骤
-        var nodes = this.Steps.ToDictionary(step => step, step => new ExecutionNode(step));
+        // 节点列表，每个节点代表一个祝祷
+        var nodes = this.Tuums.ToDictionary(tuum => tuum, tuum => new ExecutionNode(tuum));
 
         // 构建依赖图
-        var stepWithIndex = this.Steps.Select((step, index) => new { step, index }).ToList();
+        var tuumWithIndex = this.Tuums.Select((tuum, index) => new { tuum, index }).ToList();
 
-        foreach (var current in stepWithIndex)
+        foreach (var current in tuumWithIndex)
         {
-            var currentNode = nodes[current.step];
+            var currentNode = nodes[current.tuum];
 
-            // 遍历当前步骤消费的所有变量
-            foreach (string consumedVar in current.step.GlobalConsumers)
+            // 遍历当前祝祷消费的所有变量
+            foreach (string consumedVar in current.tuum.GlobalConsumers)
             {
-                // 在当前步骤【之前】的所有步骤中，寻找该变量的生产者
+                // 在当前祝祷【之前】的所有祝祷中，寻找该变量的生产者
                 for (int i = 0; i < current.index; i++)
                 {
-                    var potentialProducer = stepWithIndex[i];
-                    if (potentialProducer.step.GlobalProducers.Contains(consumedVar))
+                    var potentialProducer = tuumWithIndex[i];
+                    if (potentialProducer.tuum.GlobalProducers.Contains(consumedVar))
                     {
                         // 找到了一个前置生产者，添加依赖关系
-                        var producerNode = nodes[potentialProducer.step];
+                        var producerNode = nodes[potentialProducer.tuum];
                         currentNode.Dependencies.Add(producerNode);
                         producerNode.Dependents.Add(currentNode);
                     }
@@ -113,7 +113,7 @@ internal class WorkflowProcessor(
             // 保留此检测是为了系统的健壮性和未来的扩展性。
             if (readyToExecute.Count == 0)
             {
-                string remainingNodeNames = string.Join(", ", nodes.Values.Except(completedNodes).Select(n => n.Step.Config.ConfigId));
+                string remainingNodeNames = string.Join(", ", nodes.Values.Except(completedNodes).Select(n => n.Tuum.Config.ConfigId));
                 return new WorkflowExecutionResult(false, $"工作流存在循环依赖，无法继续执行。剩余节点: {remainingNodeNames}", "CircularDependency");
             }
 
@@ -124,8 +124,8 @@ internal class WorkflowProcessor(
                 currentBatch.Add(node);
             }
 
-            // 并行执行当前批次的所有步骤
-            var tasks = currentBatch.Select(node => this.ExecuteSingleStepAsync(node.Step, cancellationToken)).ToList();
+            // 并行执行当前批次的所有祝祷
+            var tasks = currentBatch.Select(node => this.ExecuteSingleTuumAsync(node.Tuum, cancellationToken)).ToList();
             var results = await Task.WhenAll(tasks);
 
             // --- 3. 处理执行结果与更新依赖 ---
@@ -134,8 +134,8 @@ internal class WorkflowProcessor(
             {
                 if (result.TryGetError(out var error))
                 {
-                    // 任何一个并行步骤失败，则整个工作流失败
-                    return new WorkflowExecutionResult(false, error.Message, "StepExecutionFailed");
+                    // 任何一个并行祝祷失败，则整个工作流失败
+                    return new WorkflowExecutionResult(false, error.Message, "TuumExecutionFailed");
                 }
             }
 
@@ -163,12 +163,12 @@ internal class WorkflowProcessor(
     }
 
     /// <summary>
-    /// 辅助方法：执行单个步骤并将其结果合并到全局上下文
+    /// 辅助方法：执行单个祝祷并将其结果合并到全局上下文
     /// </summary>
-    private async Task<Result> ExecuteSingleStepAsync(StepProcessor step, CancellationToken cancellationToken)
+    private async Task<Result> ExecuteSingleTuumAsync(TuumProcessor tuum, CancellationToken cancellationToken)
     {
-        var stepResult = await step.ExecuteStepsAsync(this.Context, cancellationToken);
-        if (stepResult.TryGetError(out var error, out var stepOutput))
+        var tuumResult = await tuum.ExecuteTuumsAsync(this.Context, cancellationToken);
+        if (tuumResult.TryGetError(out var error, out var tuumOutput))
         {
             return error;
         }
@@ -176,7 +176,7 @@ internal class WorkflowProcessor(
         // 使用锁来保证并行写入全局变量池的线程安全
         lock (this.Context.GlobalVariables)
         {
-            foreach (var outputVariable in stepOutput)
+            foreach (var outputVariable in tuumOutput)
             {
                 this.Context.GlobalVariables[outputVariable.Key] = outputVariable.Value;
             }
@@ -188,9 +188,9 @@ internal class WorkflowProcessor(
     /// <summary>
     /// 辅助类：用于构建依赖图的节点
     /// </summary>
-    private class ExecutionNode(StepProcessor step)
+    private class ExecutionNode(TuumProcessor tuum)
     {
-        public StepProcessor Step { get; } = step;
+        public TuumProcessor Tuum { get; } = tuum;
         public HashSet<ExecutionNode> Dependencies { get; } = []; // 它依赖谁
         public HashSet<ExecutionNode> Dependents { get; } = []; // 谁依赖它
     }

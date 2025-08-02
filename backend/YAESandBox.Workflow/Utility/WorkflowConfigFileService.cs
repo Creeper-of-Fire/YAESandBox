@@ -10,7 +10,7 @@ namespace YAESandBox.Workflow.Utility;
 /// 工作流配置服务，主要承担全局模板的管理与访问。
 /// 注意：此服务不参与运行时的配置解析。工作流执行时依赖的是前端提供的、包含所有内联子配置的完整配置快照。
 ///
-/// 全局模板（如符文模板、步骤模板、完整工作流模板）提供可复用的配置蓝图。
+/// 全局模板（如符文模板、祝祷模板、完整工作流模板）提供可复用的配置蓝图。
 /// 从模板拷贝时，其内容会被复制到具体的配置中，并为所有新生成的配置实例（包括配置自身及其内嵌子配置）分配全新的唯一ID。
 ///
 /// 工作流的模板有所不同，它在前端会区分“运行”和“拷贝”。在运行时，它并不会重新分配子配置的ID，因为它自身会被分配一个ID用以区分。
@@ -24,14 +24,14 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     private static string GetIdFromFileName(string fileName) => Path.GetFileNameWithoutExtension(fileName);
     private const string MainDirectory = "WorkflowConfigurations";
     private const string WorkflowDirectory = "GlobalWorkflows";
-    private const string StepDirectory = "GlobalSteps";
+    private const string TuumDirectory = "GlobalTuums";
     private const string RuneDirectory = "GlobalRunes";
 
     private ScopedJsonStorage ForWorkflow { get; } =
         generalJsonStorage.ForConfig().CreateScope(MainDirectory).CreateScope(WorkflowDirectory);
 
-    private ScopedJsonStorage ForStep { get; } =
-        generalJsonStorage.ForConfig().CreateScope(MainDirectory).CreateScope(StepDirectory);
+    private ScopedJsonStorage ForTuum { get; } =
+        generalJsonStorage.ForConfig().CreateScope(MainDirectory).CreateScope(TuumDirectory);
 
     private ScopedJsonStorage ForRune { get; } =
         generalJsonStorage.ForConfig().CreateScope(MainDirectory).CreateScope(RuneDirectory);
@@ -47,13 +47,13 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
         await FindConfig<WorkflowProcessorConfig>(this.ForWorkflow, userId, workflowId);
 
     /// <summary>
-    /// 只在全局的步骤配置中查找，不查找内联的私有部分
+    /// 只在全局的祝祷配置中查找，不查找内联的私有部分
     /// </summary>
     /// <param name="userId"></param>
-    /// <param name="stepId"></param>
+    /// <param name="tuumId"></param>
     /// <returns></returns>
-    internal async Task<Result<StepProcessorConfig>> FindStepConfig(string userId, string stepId) =>
-        await FindConfig<StepProcessorConfig>(this.ForStep, userId, stepId);
+    internal async Task<Result<TuumProcessorConfig>> FindTuumConfig(string userId, string tuumId) =>
+        await FindConfig<TuumProcessorConfig>(this.ForTuum, userId, tuumId);
 
     /// <summary>
     /// 只在全局的符文配置中查找，不查找内联的私有部分
@@ -73,12 +73,12 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
         await FindAllConfig<WorkflowProcessorConfig>(this.ForWorkflow, userId);
 
     /// <summary>
-    /// 只寻找所有的全局步骤配置，不查找内联的私有部分
+    /// 只寻找所有的全局祝祷配置，不查找内联的私有部分
     /// </summary>
     /// <param name="userId"></param>
     /// <returns></returns>
-    public async Task<DictionaryResult<string, StepProcessorConfig>> FindAllStepConfig(string userId) =>
-        await FindAllConfig<StepProcessorConfig>(this.ForStep, userId);
+    public async Task<DictionaryResult<string, TuumProcessorConfig>> FindAllTuumConfig(string userId) =>
+        await FindAllConfig<TuumProcessorConfig>(this.ForTuum, userId);
 
     /// <summary>
     /// 只寻找所有的全局符文配置，不查找内联的私有部分
@@ -99,14 +99,14 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
         await SaveConfig(this.ForWorkflow, userId, workflowId, workflowProcessorConfig);
 
     /// <summary>
-    /// 保存步骤配置到全局
+    /// 保存祝祷配置到全局
     /// </summary>
     /// <param name="userId"></param>
-    /// <param name="stepId"></param>
-    /// <param name="stepProcessorConfig"></param>
+    /// <param name="tuumId"></param>
+    /// <param name="tuumProcessorConfig"></param>
     /// <returns></returns>
-    public async Task<Result> SaveStepConfig(string userId, string stepId, StepProcessorConfig stepProcessorConfig) =>
-        await SaveConfig(this.ForStep, userId, stepId, stepProcessorConfig);
+    public async Task<Result> SaveTuumConfig(string userId, string tuumId, TuumProcessorConfig tuumProcessorConfig) =>
+        await SaveConfig(this.ForTuum, userId, tuumId, tuumProcessorConfig);
 
     /// <summary>
     /// 保存符文配置到全局
@@ -128,13 +128,13 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
         await DeleteConfig(this.ForWorkflow, userId, workflowId);
 
     /// <summary>
-    /// 删除全局的步骤配置
+    /// 删除全局的祝祷配置
     /// </summary>
     /// <param name="userId"></param>
-    /// <param name="stepId"></param>
+    /// <param name="tuumId"></param>
     /// <returns></returns>
-    public async Task<Result> DeleteStepConfig(string userId, string stepId) =>
-        await DeleteConfig(this.ForStep, userId, stepId);
+    public async Task<Result> DeleteTuumConfig(string userId, string tuumId) =>
+        await DeleteConfig(this.ForTuum, userId, tuumId);
 
     /// <summary>
     /// 删除全局的符文配置

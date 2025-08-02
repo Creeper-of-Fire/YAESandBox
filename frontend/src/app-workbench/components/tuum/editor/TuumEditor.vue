@@ -1,22 +1,22 @@
-﻿<!-- src/app-workbench/components/.../StepEditor.vue -->
+﻿<!-- src/app-workbench/components/.../TuumEditor.vue -->
 <template>
   <!-- 只有在有上下文的情况下才渲染映射编辑器 -->
   <n-card>
     <template #header>
       <n-flex justify="space-between" align="center">
-        <span>编辑步骤：{{ props.stepContext.data.name }}</span>
-        <n-form-item label="启用此步骤" label-placement="left" style="margin-bottom: 0;">
-          <n-switch v-model:value="props.stepContext.data.enabled" />
+        <span>编辑祝祷：{{ props.tuumContext.data.name }}</span>
+        <n-form-item label="启用此祝祷" label-placement="left" style="margin-bottom: 0;">
+          <n-switch v-model:value="props.tuumContext.data.enabled" />
         </n-form-item>
       </n-flex>
     </template>
-  <StepMappingsEditor
-      :available-global-vars="stepContext.availableGlobalVarsForStep"
-      :input-mappings="stepContext.data.inputMappings"
-      :output-mappings="stepContext.data.outputMappings"
-      :required-inputs="requiredStepInputs"
-      @update:input-mappings="newMappings => stepContext.data.inputMappings = newMappings"
-      @update:output-mappings="newMappings => stepContext.data.outputMappings = newMappings"
+  <TuumMappingsEditor
+      :available-global-vars="tuumContext.availableGlobalVarsForTuum"
+      :input-mappings="tuumContext.data.inputMappings"
+      :output-mappings="tuumContext.data.outputMappings"
+      :required-inputs="requiredTuumInputs"
+      @update:input-mappings="newMappings => tuumContext.data.inputMappings = newMappings"
+      @update:output-mappings="newMappings => tuumContext.data.outputMappings = newMappings"
   />
   <n-alert
       v-if="!isInWorkflowContext"
@@ -33,19 +33,19 @@
 
 <script lang="ts" setup>
 import {NAlert} from "naive-ui";
-import StepMappingsEditor from "@/app-workbench/components/step/editor/StepMappingsEditor.vue";
+import TuumMappingsEditor from "@/app-workbench/components/tuum/editor/TuumMappingsEditor.vue";
 import {computed, watch, ref} from "vue";
-import type {StepEditorContext} from "@/app-workbench/components/step/editor/StepEditorContext.ts";
+import type {TuumEditorContext} from "@/app-workbench/components/tuum/editor/TuumEditorContext.ts";
 import { useRuneAnalysisStore } from '@/app-workbench/stores/useRuneAnalysisStore.ts';
 
 const props = defineProps<{
-  stepContext: StepEditorContext;
+  tuumContext: TuumEditorContext;
 }>();
 
 const runeAnalysisStore = useRuneAnalysisStore();
 const runeAnalysisResults = ref<Record<string, { consumedVariables: string[], producedVariables: string[] }>>({});
 
-watch(() => props.stepContext.data.runes, async (newRunes) => {
+watch(() => props.tuumContext.data.runes, async (newRunes) => {
   if (newRunes) {
     const analysisPromises = newRunes.map(async (mod) => {
       // Assuming mod has a unique identifier like configId
@@ -60,15 +60,15 @@ watch(() => props.stepContext.data.runes, async (newRunes) => {
 
 
 // 计算属性，判断当前是否处于有上下文的环境中
-const isInWorkflowContext = computed(() => props.stepContext.availableGlobalVarsForStep !== undefined);
+const isInWorkflowContext = computed(() => props.tuumContext.availableGlobalVarsForTuum !== undefined);
 
-// 计算属性：计算当前步骤所有符文需要的总输入
-const requiredStepInputs = computed(() => {
+// 计算属性：计算当前祝祷所有符文需要的总输入
+const requiredTuumInputs = computed(() => {
   const requiredInputs = new Set<string>();
   const producedOutputs = new Set<string>();
 
-  if (props.stepContext.data.runes) {
-    for (const mod of props.stepContext.data.runes) {
+  if (props.tuumContext.data.runes) {
+    for (const mod of props.tuumContext.data.runes) {
       const analysisResult = runeAnalysisResults.value[mod.configId];
       if (analysisResult) {
       (analysisResult.consumedVariables || []).forEach(input => {

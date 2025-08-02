@@ -102,28 +102,28 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
             disabled: true
         };
 
-        if (item && 'steps' in item)
-        { // 工作流添加步骤
+        if (item && 'tuums' in item)
+        { // 工作流添加祝祷
             action = {
-                key: 'add-step',
-                label: '添加步骤',
+                key: 'add-tuum',
+                label: '添加祝祷',
                 icon: AddIcon,
                 renderType: 'popover',
                 type: 'primary',
-                popoverTitle: '添加新步骤',
+                popoverTitle: '添加新祝祷',
                 popoverContentType: 'input',
-                popoverInitialValue: '新步骤',
+                popoverInitialValue: '新祝祷',
                 handler: ({name}) =>
                 {
                     if (!name) return;
-                    const newStep = createBlankConfig('step', name);
-                    item.steps.push(newStep);
-                    message.success('已添加新步骤');
+                    const newTuum = createBlankConfig('tuum', name);
+                    item.tuums.push(newTuum);
+                    message.success('已添加新祝祷');
                 },
             };
         }
         else if (item && 'runes' in item)
-        { // 步骤添加符文
+        { // 祝祷添加符文
             action = {
                 key: 'add-rune',
                 label: '添加符文',

@@ -8,7 +8,7 @@ using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Rune.ExactRune.PromptGenerationRuneProcessor;
-using static YAESandBox.Workflow.Step.StepProcessor;
+using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 namespace YAESandBox.Workflow.Rune.ExactRune;
 
@@ -35,14 +35,14 @@ internal partial class PromptGenerationRuneProcessor(
     };
 
     /// <summary>
-    /// 启动步骤流程
+    /// 启动祝祷流程
     /// </summary>
-    /// <param name="stepProcessorContent">步骤执行的上下文内容。</param>
+    /// <param name="tuumProcessorContent">祝祷执行的上下文内容。</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent, CancellationToken cancellationToken = default)
+    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
-        string substitutedContent = this.SubstitutePlaceholdersAsync(this.Config.Template, stepProcessorContent);
+        string substitutedContent = this.SubstitutePlaceholdersAsync(this.Config.Template, tuumProcessorContent);
         this.DebugDto.FinalPromptContent = substitutedContent;
 
         var prompt = new RoledPromptDto
@@ -52,7 +52,7 @@ internal partial class PromptGenerationRuneProcessor(
             Name = this.Config.PromptNameInAiModel ?? string.Empty
         };
 
-        stepProcessorContent.Prompts.Add(prompt);
+        tuumProcessorContent.Prompts.Add(prompt);
 
         this.DebugDto.GeneratedPrompt = prompt;
         return Task.FromResult(Result.Ok());
@@ -61,7 +61,7 @@ internal partial class PromptGenerationRuneProcessor(
 
     private string SubstitutePlaceholdersAsync(
         string template,
-        StepProcessorContent stepContent)
+        TuumProcessorContent tuumContent)
     {
         var resolvedValues = new Dictionary<string, string?>();
 
@@ -75,20 +75,20 @@ internal partial class PromptGenerationRuneProcessor(
             string? value = null;
             bool found = false;
 
-            // 尝试从 StepVariable (dynamic, 假设其内部是 IDictionary<string, object>)
+            // 尝试从 TuumVariable (dynamic, 假设其内部是 IDictionary<string, object>)
             try
             {
-                if (stepContent.StepVariable is IDictionary<string, object> stepInputDict &&
-                    stepInputDict.TryGetValue(placeholderName, out object? stepValObj))
+                if (tuumContent.TuumVariable is IDictionary<string, object> tuumInputDict &&
+                    tuumInputDict.TryGetValue(placeholderName, out object? tuumValObj))
                 {
-                    value = stepValObj.ToString();
+                    value = tuumValObj.ToString();
                     found = true;
                 }
             }
             catch (Exception ex)
             {
-                // 记录尝试从StepInput获取时的潜在错误到调试信息
-                this.DebugDto.AddResolutionAttemptLog($"尝试从 StepVariable 获取 '{placeholderName}' 失败: {ex.Message}");
+                // 记录尝试从TuumInput获取时的潜在错误到调试信息
+                this.DebugDto.AddResolutionAttemptLog($"尝试从 TuumVariable 获取 '{placeholderName}' 失败: {ex.Message}");
             }
 
 

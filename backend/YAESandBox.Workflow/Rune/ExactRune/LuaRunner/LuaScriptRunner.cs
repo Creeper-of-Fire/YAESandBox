@@ -3,7 +3,7 @@ using System.Text;
 using NLua;
 using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.DebugDto;
-using static YAESandBox.Workflow.Step.StepProcessor;
+using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 #pragma warning disable CS8974 // 将方法组转换为非委托类型
 
@@ -13,9 +13,9 @@ namespace YAESandBox.Workflow.Rune.ExactRune.LuaRunner;
 /// 通用的 Lua 脚本执行器。
 /// 负责创建安全的沙箱环境、注入标准的 API 桥并执行脚本。
 /// </summary>
-/// <param name="stepProcessorContent">当前步骤的执行上下文，用于访问变量。</param>
+/// <param name="tuumProcessorContent">当前祝祷的执行上下文，用于访问变量。</param>
 /// <param name="debugDto">用于记录日志和错误的调试对象。</param>
-internal partial class LuaScriptRunner(StepProcessorContent stepProcessorContent, ILogsDebugDto debugDto)
+internal partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, ILogsDebugDto debugDto)
 {
     /// <summary>
     /// 从当前程序集的嵌入式资源中加载脚本文件，无需硬编码完整路径。
@@ -132,7 +132,7 @@ internal partial class LuaScriptRunner(StepProcessorContent stepProcessorContent
                 ");
             }
 
-            var contextBridge = new LuaContextBridge(stepProcessorContent, logger, lua);
+            var contextBridge = new LuaContextBridge(tuumProcessorContent, logger, lua);
             var regexBridge = new LuaRegexBridge(logger);
             var dateTimeBridge = new LuaDateTimeBridge(logger);
 

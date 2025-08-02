@@ -18,6 +18,6 @@ export {default as ListIcon} from '@vicons/ionicons5/es/ListOutline';
 export {default as HelpCircleIcon} from '@vicons/ionicons5/es/HelpCircleOutline';
 export {default as AlertCircleIcon} from '@vicons/ionicons5/es/AlertCircleOutline';
 export {default as WorkflowIcon} from '@vicons/material/es/AccountTreeOutlined';
-export {default as StepIcon} from '@vicons/material/es/AccountTreeOutlined';
+export {default as TuumIcon} from '@vicons/material/es/AccountTreeOutlined';
 export {default as TrashIcon} from '@vicons/ionicons5/es/TrashBinOutline';
 export {default as EllipsisHorizontalIcon} from '@vicons/ionicons5/es/EllipsisHorizontal';

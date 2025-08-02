@@ -7,7 +7,7 @@
           :value="internalValue ?? undefined"
           :min="props.min ?? 0"
           :max="props.max ?? 100"
-          :step="props.step ?? 1"
+          :tuum="props.tuum ?? 1"
           :disabled="props.disabled || props.readonly"
           @update:value="handleSliderChange"
           :format-tooltip="(value: number) => value.toString()"
@@ -21,7 +21,7 @@
         :min="props.min"
         :max="props.max"
         :placeholder="props.placeholder ?? undefined"
-        :step="props.step ?? 1"
+        :tuum="props.tuum ?? 1"
         :disabled="props.disabled || props.readonly"
         @update:value="handleInputNumberChange"
         :show-button="disabled"
@@ -43,7 +43,7 @@ const props = defineProps<{
   // 接收从 ui:options 传递的约束信息和 nullable 标记
   min?: number;
   max?: number;
-  step?: number;
+  tuum?: number;
   default?: number;
 }>();
 
@@ -56,7 +56,7 @@ const internalValue = ref<number | null | undefined>(props.modelValue);
 // const constraints = computed(() => ({
 //   minimum: props.min,
 //   maximum: props.max,
-//   step: props.step,
+//   tuum: props.tuum,
 //   default: props.default,
 // }));
 

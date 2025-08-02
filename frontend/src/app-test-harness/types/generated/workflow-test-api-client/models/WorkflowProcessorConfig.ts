@@ -2,7 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { StepProcessorConfig } from './StepProcessorConfig';
+import type { TuumProcessorConfig } from './TuumProcessorConfig';
 /**
  * 工作流的配置
  */
@@ -17,8 +17,8 @@ export type WorkflowProcessorConfig = {
      */
     triggerParams: Array<string>;
     /**
-     * 一个工作流含有的步骤（有序）
+     * 一个工作流含有的祝祷（有序）
      */
-    steps: Array<StepProcessorConfig>;
+    tuums: Array<TuumProcessorConfig>;
 };
 

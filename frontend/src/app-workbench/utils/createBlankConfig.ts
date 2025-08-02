@@ -3,7 +3,7 @@ import {v4 as uuidv4} from 'uuid';
 import type {ConfigObject, ConfigType,} from '@/app-workbench/services/EditSession';
 import type {
     AbstractRuneConfig,
-    StepProcessorConfig,
+    TuumProcessorConfig,
     WorkflowProcessorConfig
 } from "@/app-workbench/types/generated/workflow-config-api-client";
 
@@ -20,9 +20,9 @@ export function createBlankConfig(
     name: string
 ): WorkflowProcessorConfig;
 export function createBlankConfig(
-    type: 'step',
+    type: 'tuum',
     name: string
-): StepProcessorConfig;
+): TuumProcessorConfig;
 export function createBlankConfig(
     type: 'rune',
     name: string,
@@ -43,9 +43,9 @@ export function createBlankConfig(
                 // 工作流没有内部 configId，它是顶级容器
                 name: name,
                 triggerParams: [],
-                steps: [],
+                tuums: [],
             };
-        case 'step':
+        case 'tuum':
             return {
                 configId: newConfigId,
                 name: name,

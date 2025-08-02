@@ -22,10 +22,10 @@
     <n-h5>界面设置 (示例)</n-h5>
     <n-form>
       <!--      <n-form-item label="左侧面板宽度">-->
-      <!--        <n-input-number v-model:value="uiStore.leftPanelWidth" :min="200" :max="800" :step="10" />-->
+      <!--        <n-input-number v-model:value="uiStore.leftPanelWidth" :min="200" :max="800" :tuum="10" />-->
       <!--      </n-form-item>-->
       <!--      <n-form-item label="右侧面板宽度">-->
-      <!--        <n-input-number v-model:value="uiStore.rightPanelWidth" :min="200" :max="800" :step="10" />-->
+      <!--        <n-input-number v-model:value="uiStore.rightPanelWidth" :min="200" :max="800" :tuum="10" />-->
       <!--      </n-form-item>-->
     </n-form>
 

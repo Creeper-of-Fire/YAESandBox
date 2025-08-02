@@ -4,7 +4,7 @@ using System.Text.RegularExpressions;
 using NLua;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.DebugDto;
-using static YAESandBox.Workflow.Step.StepProcessor;
+using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
 
@@ -16,14 +16,14 @@ internal partial class LuaScriptRunner
     /// 作为 C# 与 Lua 脚本之间交互的安全桥梁。
     /// 仅暴露 Get 和 Set 方法，防止 Lua 脚本访问不应访问的内部状态。
     /// </summary>
-    private class LuaContextBridge(StepProcessorContent stepContent, LuaLogBridge logger, Lua luaState)
+    private class LuaContextBridge(TuumProcessorContent tuumContent, LuaLogBridge logger, Lua luaState)
     {
-        private StepProcessorContent StepContent { get; } = stepContent;
+        private TuumProcessorContent TuumContent { get; } = tuumContent;
         private LuaLogBridge Logger { get; } = logger;
         private Lua LuaState { get; } = luaState;
 
         /// <summary>
-        /// 从步骤变量池中获取一个变量。暴露给 Lua 使用。
+        /// 从祝祷变量池中获取一个变量。暴露给 Lua 使用。
         /// </summary>
         /// <param name="name">变量名。</param>
         /// <returns>变量的值，如果不存在则为 null。</returns>
@@ -31,7 +31,7 @@ internal partial class LuaScriptRunner
         {
             try
             {
-                object? rawValue = this.StepContent.InputVar(name);
+                object? rawValue = this.TuumContent.InputVar(name);
 
                 // 如果值是 null 或者已经是基础类型，直接返回
                 if (rawValue is null or string or bool or double or int or long)
@@ -62,7 +62,7 @@ internal partial class LuaScriptRunner
         }
 
         /// <summary>
-        ///向步骤变量池中设置一个变量。暴露给 Lua 使用。
+        ///向祝祷变量池中设置一个变量。暴露给 Lua 使用。
         /// </summary>
         /// <param name="name">变量名。</param>
         /// <param name="value">要设置的值。</param>
@@ -72,7 +72,7 @@ internal partial class LuaScriptRunner
             {
                 // 在将变量存入 C# 上下文之前，将其从 Lua 对象深度转换为纯 C# 对象。
                 object? csharpValue = LuaConverter.ConvertLuaToCSharp(value, this.Logger);
-                this.StepContent.OutputVar(name, csharpValue);
+                this.TuumContent.OutputVar(name, csharpValue);
             }
             catch (Exception ex)
             {

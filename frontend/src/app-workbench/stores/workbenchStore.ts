@@ -7,10 +7,10 @@ import {type ConfigObject, type ConfigType, EditSession,} from '@/app-workbench/
 import type {
     AbstractRuneConfig,
     RuneSchemasResponse,
-    StepProcessorConfig,
+    TuumProcessorConfig,
     WorkflowProcessorConfig,
 } from '@/app-workbench/types/generated/workflow-config-api-client';
-import {RuneConfigService, StepConfigService, WorkflowConfigService,} from '@/app-workbench/types/generated/workflow-config-api-client';
+import {RuneConfigService, TuumConfigService, WorkflowConfigService,} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {useAsyncState} from "@vueuse/core";
 import type {GlobalResourceItem} from "@/types/ui.ts";
 import {cloneDeep} from "lodash-es";
@@ -22,7 +22,7 @@ export type WorkbenchStore = ReturnType<typeof useWorkbenchStore>;
 
 // 为不同类型的资源创建具体的别名，方便使用
 export type WorkflowResourceItem = GlobalResourceItem<WorkflowProcessorConfig>;
-export type StepResourceItem = GlobalResourceItem<StepProcessorConfig>;
+export type TuumResourceItem = GlobalResourceItem<TuumProcessorConfig>;
 export type RuneResourceItem = GlobalResourceItem<AbstractRuneConfig>;
 
 /**
@@ -51,8 +51,8 @@ export interface SaveResult
 export interface WorkflowRuneRules
 {
     noConfig?: boolean;
-    singleInStep?: boolean;
-    inLastStep?: boolean;
+    singleInTuum?: boolean;
+    inLastTuum?: boolean;
     inFrontOf?: string[]; // 存储的是符文的类型名 (e.g., "PromptGenerationRuneConfig")
     behind?: string[]; // 存储的是符文的类型名 (e.g., "PromptGenerationRuneConfig")
 }
@@ -146,10 +146,10 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         {immediate: false, shallow: false}
     ));
 
-    const globalStepsAsync = reactive(useAsyncState(
-        () => StepConfigService.getApiV1WorkflowsConfigsGlobalSteps()
+    const globalTuumsAsync = reactive(useAsyncState(
+        () => TuumConfigService.getApiV1WorkflowsConfigsGlobalTuums()
             .then(processDtoToViewModel),
-        {} as Record<string, StepResourceItem>,
+        {} as Record<string, TuumResourceItem>,
         {immediate: false, shallow: false}
     ));
 
@@ -241,7 +241,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     // 方法现在接收 globalId
     const _getDraftData = (globalId: string): ConfigObject | null => drafts.value[globalId]?.data ?? null;
 
-    // 所有 UI State 相关的方法 (_getUiState, _setSelectedItemInDraft, _toggleStepExpansionInDraft) 已被彻底移除。
+    // 所有 UI State 相关的方法 (_getUiState, _setSelectedItemInDraft, _toggleTuumExpansionInDraft) 已被彻底移除。
 
     const _isDirty = (globalId: string): boolean =>
     {
@@ -279,12 +279,12 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                 });
                 refreshPromise =() =>  globalWorkflowsAsync.execute();
                 break;
-            case 'step':
-                savePromise = StepConfigService.putApiV1WorkflowsConfigsGlobalSteps({
-                    stepId: globalId,
-                    requestBody: draft.data as StepProcessorConfig
+            case 'tuum':
+                savePromise = TuumConfigService.putApiV1WorkflowsConfigsGlobalTuums({
+                    tuumId: globalId,
+                    requestBody: draft.data as TuumProcessorConfig
                 });
-                refreshPromise =() =>  globalStepsAsync.execute();
+                refreshPromise =() =>  globalTuumsAsync.execute();
                 break;
             case 'rune':
                 savePromise = RuneConfigService.putApiV1WorkflowsConfigsGlobalRunes({
@@ -343,8 +343,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             case 'workflow':
                 deletePromise = WorkflowConfigService.deleteApiV1WorkflowsConfigsGlobalWorkflows({ workflowId: id });
                 break;
-            case 'step':
-                deletePromise = StepConfigService.deleteApiV1WorkflowsConfigsGlobalSteps({ stepId: id });
+            case 'tuum':
+                deletePromise = TuumConfigService.deleteApiV1WorkflowsConfigsGlobalTuums({ tuumId: id });
                 break;
             case 'rune':
                 deletePromise = RuneConfigService.deleteApiV1WorkflowsConfigsGlobalRunes({ runeId: id });
@@ -362,8 +362,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                 case 'workflow':
                     if (globalWorkflowsAsync.state[id]) delete globalWorkflowsAsync.state[id];
                     break;
-                case 'step':
-                    if (globalStepsAsync.state[id]) delete globalStepsAsync.state[id];
+                case 'tuum':
+                    if (globalTuumsAsync.state[id]) delete globalTuumsAsync.state[id];
                     break;
                 case 'rune':
                     if (globalRunesAsync.state[id]) delete globalRunesAsync.state[id];
@@ -398,7 +398,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         let refreshPromise: () => Promise<any>;
 
         // 2. 判断类型并准备API调用
-        if ('steps' in newGlobalConfig)
+        if ('tuums' in newGlobalConfig)
         {
             type = 'workflow';
             savePromise = WorkflowConfigService.putApiV1WorkflowsConfigsGlobalWorkflows({
@@ -409,12 +409,12 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         }
         else if ('runes' in newGlobalConfig)
         {
-            type = 'step';
-            savePromise = StepConfigService.putApiV1WorkflowsConfigsGlobalSteps({
-                stepId: newGlobalId,
+            type = 'tuum';
+            savePromise = TuumConfigService.putApiV1WorkflowsConfigsGlobalTuums({
+                tuumId: newGlobalId,
                 requestBody: newGlobalConfig,
             });
-            refreshPromise = () => globalStepsAsync.execute();
+            refreshPromise = () => globalTuumsAsync.execute();
         }
         else
         {
@@ -504,8 +504,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             case 'workflow':
                 stateObject = globalWorkflowsAsync;
                 break;
-            case 'step':
-                stateObject = globalStepsAsync;
+            case 'tuum':
+                stateObject = globalTuumsAsync;
                 break;
             case 'rune':
                 stateObject = globalRunesAsync;
@@ -581,7 +581,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     return {
         // --- 只读数据访问器 ---
         globalWorkflowsAsync,
-        globalStepsAsync,
+        globalTuumsAsync,
         globalRunesAsync,
         runeSchemasAsync,
         runeMetadata,

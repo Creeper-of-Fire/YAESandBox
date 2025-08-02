@@ -29,7 +29,7 @@ public class CustomRangeAttribute : Attribute
 
     /// <summary>
     /// 获取或初始化操作数的预期类型（例如 typeof(int), typeof(double)）。
-    /// 这有助于 JSON Schema 生成器理解 Minimum, Maximum, Step 的预期数据类型。
+    /// 这有助于 JSON Schema 生成器理解 Minimum, Maximum, Tuum 的预期数据类型。
     /// 如果为 null，则类型未指定，可能需要从属性本身的类型推断。
     /// </summary>
     public Type OperandType { get; init; }

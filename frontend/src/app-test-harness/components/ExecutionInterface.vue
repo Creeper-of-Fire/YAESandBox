@@ -1,7 +1,7 @@
 ﻿<template>
   <div class="execution-interface">
     <div class="header">
-      <h4>测试: {{ config.name }} ({{ configType === 'workflow' ? '工作流' : '步骤' }})</h4>
+      <h4>测试: {{ config.name }} ({{ configType === 'workflow' ? '工作流' : '祝祷' }})</h4>
     </div>
     <n-scrollbar class="content-area">
       <div class="form-section">
@@ -30,12 +30,12 @@
 <script setup lang="ts">
 import {ref, reactive, computed, watch} from 'vue';
 import { NScrollbar, NInput, NButton, NForm, NFormItem, NEmpty, NH5, NCard, NAlert, useMessage } from 'naive-ui';
-import type { WorkflowProcessorConfig, StepProcessorConfig } from '@/app-workbench/types/generated/workflow-config-api-client';
+import type { WorkflowProcessorConfig, TuumProcessorConfig } from '@/app-workbench/types/generated/workflow-config-api-client';
 import {type WorkflowExecutionResult, WorkflowExecutionService} from "@/app-test-harness/types/generated/workflow-test-api-client";
 
 const props = defineProps<{
-  config: WorkflowProcessorConfig | StepProcessorConfig;
-  configType: 'workflow' | 'step';
+  config: WorkflowProcessorConfig | TuumProcessorConfig;
+  configType: 'workflow' | 'tuum';
 }>();
 
 const message = useMessage();
@@ -48,8 +48,8 @@ const paramsToFill = computed<string[]>(() => {
   if (props.configType === 'workflow') {
     return (props.config as WorkflowProcessorConfig).triggerParams || [];
   } else {
-    const stepConfig = props.config as StepProcessorConfig;
-    const globalVars = Object.values(stepConfig.inputMappings || {});
+    const tuumConfig = props.config as TuumProcessorConfig;
+    const globalVars = Object.values(tuumConfig.inputMappings || {});
     return [...new Set(globalVars)];
   }
 });
@@ -91,11 +91,11 @@ async function handleExecute() {
       triggerParams: paramValues
     };
   } else {
-    const stepConfig = props.config as StepProcessorConfig;
-    const triggerParamsForTempWorkflow = [...new Set(Object.values(stepConfig.inputMappings))];
+    const tuumConfig = props.config as TuumProcessorConfig;
+    const triggerParamsForTempWorkflow = [...new Set(Object.values(tuumConfig.inputMappings))];
     const tempWorkflow: WorkflowProcessorConfig = {
-      name: `测试步骤: ${stepConfig.name}`,
-      steps: [stepConfig],
+      name: `测试祝祷: ${tuumConfig.name}`,
+      tuums: [tuumConfig],
       triggerParams: triggerParamsForTempWorkflow,
     };
     requestBody = {

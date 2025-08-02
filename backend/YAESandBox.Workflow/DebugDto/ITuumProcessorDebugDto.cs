@@ -3,7 +3,7 @@
 namespace YAESandBox.Workflow.DebugDto;
 
 /// <inheritdoc />
-public interface IStepProcessorDebugDto : IDebugDto
+public interface ITuumProcessorDebugDto : IDebugDto
 {
     /// <summary>
     /// 下属的 <see cref="AbstractRuneConfig{T}"/> 的Debug信息

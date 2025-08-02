@@ -50,7 +50,7 @@
 
 <script lang="ts" setup>
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue';
-import type {AbstractRuneConfig, StepProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
+import type {AbstractRuneConfig, TuumProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {computed, inject, toRef} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
@@ -64,7 +64,7 @@ import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemAc
 // 定义 Props 和 Emits
 const props = defineProps<{
   rune: AbstractRuneConfig;
-  parentStep: StepProcessorConfig | null;
+  parentTuum: TuumProcessorConfig | null;
 }>();
 
 
@@ -105,8 +105,8 @@ const runeClassLabel = computed(() => metadataForThisRune.value?.classLabel);
 const {actions: itemActions} = useConfigItemActions({
   itemRef: toRef(props, 'rune'),
   parentContextRef: computed(() =>
-      props.parentStep
-          ? {parent: props.parentStep, list: props.parentStep.runes}
+      props.parentTuum
+          ? {parent: props.parentTuum, list: props.parentTuum.runes}
           : null
   ),
 });
@@ -131,8 +131,8 @@ const ruleDescriptions = computed(() =>
   if (!rules) return descriptions;
 
   if (rules.noConfig) descriptions.push('此符文不能有配置。')
-  if (rules.singleInStep) descriptions.push('此符文在每个步骤中只能使用一次。');
-  if (rules.inLastStep) descriptions.push('此符文必须位于工作流的最后一个步骤中。');
+  if (rules.singleInTuum) descriptions.push('此符文在每个祝祷中只能使用一次。');
+  if (rules.inLastTuum) descriptions.push('此符文必须位于工作流的最后一个祝祷中。');
   if (rules.inFrontOf && rules.inFrontOf.length > 0)
   {
     const aliases = rules.inFrontOf.map(getRuneAlias).join('、');

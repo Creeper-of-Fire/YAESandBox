@@ -10,14 +10,14 @@ using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Step;
+using YAESandBox.Workflow.Tuum;
 using static YAESandBox.Workflow.Rune.ExactRune.AiRuneProcessor;
-using static YAESandBox.Workflow.Step.StepProcessor;
+using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 namespace YAESandBox.Workflow.Rune.ExactRune;
 
 /// <summary>
-/// Ai调用符文，Ai的配置保存在外部的Step，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiRuneConfig"/>里面。
+/// Ai调用符文，Ai的配置保存在外部的Tuum，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiRuneConfig"/>里面。
 /// </summary>
 /// <param name="onChunkReceivedScript"></param>
 internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfig config)
@@ -56,28 +56,28 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
 
 
     private static async Task<Result> PrepareAndExecuteAiRune(
-        StepProcessorContent stepProcessorContent,
+        TuumProcessorContent tuumProcessorContent,
         AiRuneProcessor aiRune,
         CancellationToken cancellationToken = default)
     {
         var aiConfig = aiRune.Config.AiConfiguration;
-        var workflowRuntimeService = stepProcessorContent.WorkflowRuntimeService;
+        var workflowRuntimeService = tuumProcessorContent.WorkflowRuntimeService;
         if (aiConfig.SelectedAiRuneType == null || aiConfig.AiProcessorConfigUuid == null)
-            return NormalError.Conflict($"步骤 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI符文。");
+            return NormalError.Conflict($"祝祷 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI符文。");
         var aiProcessor = workflowRuntimeService.AiService.CreateAiProcessor(
             aiConfig.AiProcessorConfigUuid,
             aiConfig.SelectedAiRuneType);
         if (aiProcessor == null)
             return NormalError.Conflict(
                 $"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiRuneType}");
-        var prompt = stepProcessorContent.Prompts;
+        var prompt = tuumProcessorContent.Prompts;
         var result = await aiRune.ExecuteAsync(aiProcessor,
             prompt,
             aiConfig.IsStream,
             cancellationToken);
         if (result.TryGetError(out var error, out string? value))
             return error;
-        stepProcessorContent.OutputVar(AiRuneConfig.AiOutputName, value);
+        tuumProcessorContent.OutputVar(AiRuneConfig.AiOutputName, value);
         return Result.Ok();
     }
 
@@ -109,9 +109,9 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
     }
 
     /// <inheritdoc />
-    public Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent,
+    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent,
         CancellationToken cancellationToken = default) =>
-        PrepareAndExecuteAiRune(stepProcessorContent, this, cancellationToken);
+        PrepareAndExecuteAiRune(tuumProcessorContent, this, cancellationToken);
 }
 
 [Behind(typeof(PromptGenerationRuneConfig))]
@@ -125,7 +125,7 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     [Display(Name = "配置名称", Description = "符文的配置名称，用于在界面上显示。")]
     public override string Name { get; init; } = string.Empty;
 
-    internal const string PromptsName = nameof(StepProcessorContent.Prompts);
+    internal const string PromptsName = nameof(TuumProcessorContent.Prompts);
     internal const string AiOutputName = "AiOutput";
 
     /// <summary>

@@ -62,7 +62,7 @@ public record RuneSchemasResponse
 }
 
 /// <summary>
-/// 提供工作流相关配置（工作流、步骤、符文）的全局管理和Schema信息。
+/// 提供工作流相关配置（工作流、祝祷、符文）的全局管理和Schema信息。
 /// </summary>
 /// <param name="workflowConfigFileService">工作流配置文件服务。</param>
 /// <param name="webHostEnvironment">Web 主机环境。</param>

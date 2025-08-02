@@ -1,7 +1,7 @@
 ﻿using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Config;
-using YAESandBox.Workflow.Step;
+using YAESandBox.Workflow.Tuum;
 
 namespace YAESandBox.Workflow.Utility;
 
@@ -10,10 +10,10 @@ namespace YAESandBox.Workflow.Utility;
 // 现在由前端直接把完整的Config发给后端，而不是在构建/同步前端的变动
 internal static class ToProcessor
 {
-    internal static StepProcessor ToStepProcessor(this StepProcessorConfig stepProcessorConfig,
+    internal static TuumProcessor ToTuumProcessor(this TuumProcessorConfig tuumProcessorConfig,
         WorkflowRuntimeService workflowRuntimeService)
     {
-        return new StepProcessor(workflowRuntimeService, stepProcessorConfig);
+        return new TuumProcessor(workflowRuntimeService, tuumProcessorConfig);
     }
 
     internal static WorkflowProcessor ToWorkflowProcessor(

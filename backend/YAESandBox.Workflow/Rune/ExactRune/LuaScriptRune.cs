@@ -9,7 +9,7 @@ using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune.ExactRune.LuaRunner;
 using static YAESandBox.Workflow.Rune.ExactRune.LuaScriptRuneProcessor;
-using static YAESandBox.Workflow.Step.StepProcessor;
+using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
 
@@ -17,7 +17,7 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 
 /// <summary>
 /// Lua 脚本符文处理器。
-/// 负责执行用户提供的 Lua 脚本，并通过一个安全桥接器与步骤上下文交互。
+/// 负责执行用户提供的 Lua 脚本，并通过一个安全桥接器与祝祷上下文交互。
 /// </summary>
 /// <param name="config">符文配置。</param>
 internal partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
@@ -31,13 +31,13 @@ internal partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
     /// <summary>
     /// 执行 Lua 脚本。
     /// </summary>
-    public Task<Result> ExecuteAsync(StepProcessorContent stepProcessorContent, CancellationToken cancellationToken = default)
+    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
         string script = this.Config.Script ?? "";
         this.DebugDto.ExecutedScript = script;
         
         // 创建并使用通用的 Lua 脚本执行器
-        var runner = new LuaScriptRunner(stepProcessorContent, this.DebugDto);
+        var runner = new LuaScriptRunner(tuumProcessorContent, this.DebugDto);
         
         // 直接执行脚本，无需其他设置
         return runner.ExecuteAsync(script, cancellationToken: cancellationToken);

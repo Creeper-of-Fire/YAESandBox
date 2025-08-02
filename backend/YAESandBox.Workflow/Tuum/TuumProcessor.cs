@@ -8,39 +8,39 @@ using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using static YAESandBox.Workflow.WorkflowProcessor;
 
-namespace YAESandBox.Workflow.Step;
+namespace YAESandBox.Workflow.Tuum;
 
-//step的信息：
-// 使用的脚本符文们的UUID（注意，脚本符文本身就是绑定在步骤上的，如果需要把符文复制到更广的地方，可以考虑直接复制步骤之类的）
+//tuum的信息：
+// 使用的脚本符文们的UUID（注意，脚本符文本身就是绑定在祝祷上的，如果需要把符文复制到更广的地方，可以考虑直接复制祝祷之类的）
 /// <summary>
-/// 步骤配置的运行时
+/// 祝祷配置的运行时
 /// </summary>
-internal class StepProcessor(
+internal class TuumProcessor(
     WorkflowRuntimeService workflowRuntimeService,
-    StepProcessorConfig config)
-    : IWithDebugDto<IStepProcessorDebugDto>
+    TuumProcessorConfig config)
+    : IWithDebugDto<ITuumProcessorDebugDto>
 {
-    internal StepProcessorConfig Config { get; } = config;
-    internal StepProcessorContent StepContent { get; } = new(config, workflowRuntimeService);
+    internal TuumProcessorConfig Config { get; } = config;
+    internal TuumProcessorContent TuumContent { get; } = new(config, workflowRuntimeService);
 
     /// <summary>
-    /// 步骤运行时的上下文
+    /// 祝祷运行时的上下文
     /// </summary>
-    public class StepProcessorContent(StepProcessorConfig stepProcessorConfig, WorkflowRuntimeService workflowRuntimeService)
+    public class TuumProcessorContent(TuumProcessorConfig tuumProcessorConfig, WorkflowRuntimeService workflowRuntimeService)
     {
-        public Dictionary<string, object> StepVariable { get; } = [];
+        public Dictionary<string, object> TuumVariable { get; } = [];
 
         public object? InputVar(string name)
         {
-            return this.StepVariable.GetValueOrDefault(name);
+            return this.TuumVariable.GetValueOrDefault(name);
         }
 
         public void OutputVar(string name, object value)
         {
-            this.StepVariable[name] = value;
+            this.TuumVariable[name] = value;
         }
 
-        public StepProcessorConfig StepProcessorConfig { get; } = stepProcessorConfig;
+        public TuumProcessorConfig TuumProcessorConfig { get; } = tuumProcessorConfig;
 
         public WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
 
@@ -48,7 +48,7 @@ internal class StepProcessor(
         {
             get
             {
-                if (!this.StepVariable.TryGetValue(nameof(this.Prompts), out object? value))
+                if (!this.TuumVariable.TryGetValue(nameof(this.Prompts), out object? value))
                     return new List<RoledPromptDto>();
                 if (value is IList<RoledPromptDto> prompts)
                     return prompts;
@@ -66,8 +66,8 @@ internal class StepProcessor(
                         return new List<RoledPromptDto>();
                     }
 
-                    // 为了后续访问效率，可以将转换后的结果写回 StepVariable
-                    this.StepVariable[nameof(this.Prompts)] = result;
+                    // 为了后续访问效率，可以将转换后的结果写回 TuumVariable
+                    this.TuumVariable[nameof(this.Prompts)] = result;
 
                     return result;
                 }
@@ -75,7 +75,7 @@ internal class StepProcessor(
                 {
                     // 提供详细的错误信息
                     throw new InvalidCastException(
-                        $"无法将 StepVariable中的'Prompts'值(类型: {value.GetType().FullName})转换为 IList<RoledPromptDto>。JSON 转换失败: {ex.Message}",
+                        $"无法将 TuumVariable中的'Prompts'值(类型: {value.GetType().FullName})转换为 IList<RoledPromptDto>。JSON 转换失败: {ex.Message}",
                         ex);
                 }
             }
@@ -83,13 +83,13 @@ internal class StepProcessor(
     }
 
     /// <summary>
-    /// 消费者（Consumes）：此步骤需要从全局变量池中获取的所有变量的【全局名称】。
+    /// 消费者（Consumes）：此祝祷需要从全局变量池中获取的所有变量的【全局名称】。
     /// 在严格模式下，这个集合就是 InputMappings 的所有 Value。
     /// </summary>
     internal IEnumerable<string> GlobalConsumers { get; } = config.InputMappings.Values;
 
     /// <summary>
-    /// 生产者（Produces）：此步骤通过 OutputMappings 向全局变量池声明输出的变量。
+    /// 生产者（Produces）：此祝祷通过 OutputMappings 向全局变量池声明输出的变量。
     /// </summary>
     internal IEnumerable<string> GlobalProducers { get; } = config.OutputMappings.Keys;
 
@@ -99,59 +99,59 @@ internal class StepProcessor(
     internal WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
 
     /// <summary>
-    /// 启动步骤流程
+    /// 启动祝祷流程
     /// </summary>
     /// <param name="workflowRuntimeContext"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public async Task<Result<Dictionary<string, object>>> ExecuteStepsAsync(
+    public async Task<Result<Dictionary<string, object>>> ExecuteTuumsAsync(
         WorkflowRuntimeContext workflowRuntimeContext, CancellationToken cancellationToken = default)
     {
-        // 严格根据 InputMappings 从全局变量池填充步骤的内部变量池
+        // 严格根据 InputMappings 从全局变量池填充祝祷的内部变量池
         foreach ((string localName, string globalName) in this.Config.InputMappings)
         {
             if (!workflowRuntimeContext.GlobalVariables.TryGetValue(globalName, out object? value))
             {
                 // 这一层校验理论上在静态分析时已完成，但在这里，“直接获取然后失败时抛错误”和“失败时返回Result”是一样的。
-                return NormalError.Conflict($"执行步骤 '{this.Config.ConfigId}' 失败：找不到必需的全局输入变量 '{globalName}'。");
+                return NormalError.Conflict($"执行祝祷 '{this.Config.ConfigId}' 失败：找不到必需的全局输入变量 '{globalName}'。");
             }
 
-            this.StepContent.StepVariable[localName] = value;
+            this.TuumContent.TuumVariable[localName] = value;
         }
 
-        // this.StepContent.StepVariable[nameof(WorkflowRuntimeContext.FinalRawText)] = workflowRuntimeContext.FinalRawText;
-        // this.StepContent.StepVariable[nameof(WorkflowRuntimeContext.GeneratedOperations)] = workflowRuntimeContext.GeneratedOperations;
+        // this.TuumContent.TuumVariable[nameof(WorkflowRuntimeContext.FinalRawText)] = workflowRuntimeContext.FinalRawText;
+        // this.TuumContent.TuumVariable[nameof(WorkflowRuntimeContext.GeneratedOperations)] = workflowRuntimeContext.GeneratedOperations;
 
         foreach (var rune in this.Runes)
         {
             switch (rune)
             {
                 case INormalRune normalRune:
-                    var result = await normalRune.ExecuteAsync(this.StepContent, cancellationToken);
+                    var result = await normalRune.ExecuteAsync(this.TuumContent, cancellationToken);
                     if (result.TryGetError(out var error))
                         return error;
                     break;
             }
         }
 
-        var stepOutput = new Dictionary<string, object>();
+        var tuumOutput = new Dictionary<string, object>();
 
-        // if (this.StepContent.StepVariable.TryGetValue(nameof(WorkflowRuntimeContext.FinalRawText), out object? finalRawText))
+        // if (this.TuumContent.TuumVariable.TryGetValue(nameof(WorkflowRuntimeContext.FinalRawText), out object? finalRawText))
         // {
         //     workflowRuntimeContext.FinalRawText = (string)finalRawText;
         // }
         //
-        // if (this.StepContent.StepVariable.TryGetValue(nameof(WorkflowRuntimeContext.GeneratedOperations), out object? generatedOperations))
+        // if (this.TuumContent.TuumVariable.TryGetValue(nameof(WorkflowRuntimeContext.GeneratedOperations), out object? generatedOperations))
         // {
         //     workflowRuntimeContext.GeneratedOperations = (List<AtomicOperation>)generatedOperations;
         // }
 
         foreach ((string globalName, string localName) in this.Config.OutputMappings)
         {
-            // 从本步骤的内部变量池中查找由符文产生的局部变量
-            if (this.StepContent.StepVariable.TryGetValue(localName, out object? localValue))
+            // 从本祝祷的内部变量池中查找由符文产生的局部变量
+            if (this.TuumContent.TuumVariable.TryGetValue(localName, out object? localValue))
             {
-                stepOutput[globalName] = localValue;
+                tuumOutput[globalName] = localValue;
             }
             // else 
             // {
@@ -161,16 +161,16 @@ internal class StepProcessor(
             // }
         }
 
-        return stepOutput;
+        return tuumOutput;
     }
 
 
     /// <inheritdoc />
-    public IStepProcessorDebugDto DebugDto => new StepProcessorDebugDto
+    public ITuumProcessorDebugDto DebugDto => new TuumProcessorDebugDto
         { RuneProcessorDebugDtos = this.Runes.ConvertAll(it => it.DebugDto) };
 
     /// <inheritdoc />
-    internal record StepProcessorDebugDto : IStepProcessorDebugDto
+    internal record TuumProcessorDebugDto : ITuumProcessorDebugDto
     {
         /// <inheritdoc />
         public required IList<IRuneProcessorDebugDto> RuneProcessorDebugDtos { get; init; }

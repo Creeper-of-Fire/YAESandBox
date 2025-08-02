@@ -66,17 +66,17 @@
       <!-- 2b. 可滚动的内容区域 -->
       <template #body>
         <template v-if="session.type === 'workflow' && workflowData">
-          <p class="sidebar-description">拖拽全局步骤到步骤列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
+          <p class="sidebar-description">拖拽全局祝祷到祝祷列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
           <WorkflowItemRenderer :workflow="workflowData"/>
         </template>
 
-        <template v-else-if="session.type === 'step' && stepData">
+        <template v-else-if="session.type === 'tuum' && tuumData">
           <p class="sidebar-description">拖拽全局符文到符文列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
-          <StepItemRenderer
+          <TuumItemRenderer
               :is-collapsible="false"
               :is-draggable="false"
               :parent-workflow="null"
-              :step="stepData"
+              :tuum="tuumData"
               style="margin-top: 16px"
           />
         </template>
@@ -119,10 +119,10 @@ import {NH4, NIcon, useDialog, useMessage} from 'naive-ui';
 import type {ConfigType, EditSession} from "@/app-workbench/services/EditSession.ts";
 import type {
   AbstractRuneConfig,
-  StepProcessorConfig,
+  TuumProcessorConfig,
   WorkflowProcessorConfig
 } from "@/app-workbench/types/generated/workflow-config-api-client";
-import StepItemRenderer from '../step/StepItemRenderer.vue';
+import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "@/app-workbench/components/workflow/WorkflowItemRenderer.vue";
 import {AddBoxIcon, SwapHorizIcon} from '@/utils/icons';
 import {CloseIcon} from "naive-ui/es/_internal/icons";
@@ -203,7 +203,7 @@ const {actions} = useConfigItemActions({
 // 定义配置类型的等级
 const typeHierarchy: Record<ConfigType, number> = {
   workflow: 3,
-  step: 2,
+  tuum: 2,
   rune: 1,
 };
 
@@ -216,7 +216,7 @@ function getDraggedItemType(event: DragEvent): ConfigType | null
 {
   for (const type of event.dataTransfer?.types ?? [])
   {
-    const match = type.match(/^application\/vnd\.workbench\.item\.(workflow|step|rune)$/);
+    const match = type.match(/^application\/vnd\.workbench\.item\.(workflow|tuum|rune)$/);
     if (match)
     {
       return match[1] as ConfigType;
@@ -299,8 +299,8 @@ function handleDrop(event: DragEvent)
 const workflowData = computed(() =>
     props.session?.type === 'workflow' ? props.session.getData().value as WorkflowProcessorConfig : null
 );
-const stepData = computed(() =>
-    props.session?.type === 'step' ? props.session.getData().value as StepProcessorConfig : null
+const tuumData = computed(() =>
+    props.session?.type === 'tuum' ? props.session.getData().value as TuumProcessorConfig : null
 );
 const runeData = computed(() =>
     props.session?.type === 'rune' ? props.session.getData().value as AbstractRuneConfig : null
@@ -309,7 +309,7 @@ const currentConfigName = computed(() =>
 {
   if (!props.session) return ''; // 如果没有会话，返回空字符串
   if (props.session.type === 'workflow' && workflowData.value) return `工作流: ${workflowData.value.name}`;
-  if (props.session.type === 'step' && stepData.value) return `步骤: ${stepData.value.name}`;
+  if (props.session.type === 'tuum' && tuumData.value) return `祝祷: ${tuumData.value.name}`;
   if (props.session.type === 'rune' && runeData.value) return `符文: ${runeData.value.name}`;
   return '未知';
 });

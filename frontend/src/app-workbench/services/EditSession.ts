@@ -3,14 +3,14 @@
 import {computed, type Ref} from 'vue';
 import type {
     AbstractRuneConfig,
-    StepProcessorConfig,
+    TuumProcessorConfig,
     WorkflowProcessorConfig,
 } from '@/app-workbench/types/generated/workflow-config-api-client';
 import {type SaveResult, useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
 
 // 定义了可编辑配置的类型别名，方便在整个应用中重用。
-export type ConfigType = 'workflow' | 'step' | 'rune';
-export type ConfigObject = WorkflowProcessorConfig | StepProcessorConfig | AbstractRuneConfig;
+export type ConfigType = 'workflow' | 'tuum' | 'rune';
+export type ConfigObject = WorkflowProcessorConfig | TuumProcessorConfig | AbstractRuneConfig;
 
 // /**
 //  * EditSession 的公共接口 (契约)。
@@ -33,8 +33,8 @@ export type ConfigObject = WorkflowProcessorConfig | StepProcessorConfig | Abstr
 //     // UI 状态管理
 //     getSelectedItemId(): Ref<string | null>;
 //     selectItem(itemId: string | null): void;
-//     isStepExpanded(stepId: string): Ref<boolean>;
-//     toggleStepExpansion(stepId: string): void;
+//     isTuumExpanded(tuumId: string): Ref<boolean>;
+//     toggleTuumExpansion(tuumId: string): void;
 // }
 
 /**
