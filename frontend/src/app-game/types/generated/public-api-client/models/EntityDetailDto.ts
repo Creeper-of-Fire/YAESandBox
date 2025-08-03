@@ -5,7 +5,7 @@
 import type { EntityType } from './EntityType';
 /**
  * 用于 API 响应，表示实体的详细信息，包含所有属性。
- * 继承自 YAESandBox.Core.DTOs.EntitySummaryDto。
+ * 继承自 YAESandBox.Seed.DTOs.EntitySummaryDto。
  */
 export type EntityDetailDto = {
     /**

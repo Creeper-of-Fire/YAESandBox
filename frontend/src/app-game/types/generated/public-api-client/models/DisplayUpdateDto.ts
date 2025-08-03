@@ -10,7 +10,7 @@ import type { UpdateMode } from './UpdateMode';
  */
 export type DisplayUpdateDto = {
     /**
-     * 关联的原始工作流请求 ID (YAESandBox.Core.DTOs.WebSocket.TriggerMainWorkflowRequestDto.RequestId 或 YAESandBox.Core.DTOs.WebSocket.TriggerMicroWorkflowRequestDto.RequestId)。
+     * 关联的原始工作流请求 ID (YAESandBox.Seed.DTOs.WebSocket.TriggerMainWorkflowRequestDto.RequestId 或 YAESandBox.Seed.DTOs.WebSocket.TriggerMicroWorkflowRequestDto.RequestId)。
      */
     requestId: string;
     /**

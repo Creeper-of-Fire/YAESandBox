@@ -20,7 +20,7 @@ export type TriggerMicroWorkflowRequestDto = {
     contextBlockId: string;
     /**
      * (关键) 目标 UI 元素或逻辑区域的标识符。
-     * 后端会将此工作流产生的 YAESandBox.Core.DTOs.WebSocket.DisplayUpdateDto 消息的 YAESandBox.Core.DTOs.WebSocket.DisplayUpdateDto.TargetElementId 设置为此值，
+     * 后端会将此工作流产生的 YAESandBox.Seed.DTOs.WebSocket.DisplayUpdateDto 消息的 YAESandBox.Seed.DTOs.WebSocket.DisplayUpdateDto.TargetElementId 设置为此值，
      * 以便前端知道更新哪个 UI 组件。该 ID 由前端定义和解释。
      */
     targetElementId: string;

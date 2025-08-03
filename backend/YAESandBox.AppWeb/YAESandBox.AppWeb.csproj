@@ -39,13 +39,22 @@
     <!-- ================================================================== -->
 
     <!-- 
+      主入口 Target: 这个 Target 在 Build 之后触发。
+      它的唯一职责就是按顺序调用其他两个 Target。
+    -->
+    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
+        <CallTarget Targets="CollectSwaggerDocs" />
+        <CallTarget Targets="GenerateSwaggerFromReferences" />
+    </Target>
+    
+    <!-- 
       步骤 1: 构建完成后，从所有项目引用中收集 <SwaggerDocToGenerate> 的定义。
       - `ProjectReference` 是一个 ItemGroup，包含了此项目引用的所有其他项目。
       - `%(ProjectReference.Identity)` 是被引用项目 csproj 文件的路径。
       - `MSBuild` 命令在这里的作用是：去查询每一个被引用的项目，并取回它们定义的 `SwaggerDocToGenerate` 列表。
       - 结果会被聚合到 `_AllSwaggerDocs` 这个新的 ItemGroup 中。
     -->
-    <Target Name="CollectSwaggerDocs" BeforeTargets="GenerateSwaggerFromReferences">
+    <Target Name="CollectSwaggerDocs">
         <MSBuild Projects="%(ProjectReference.Identity)" Targets="GetSwaggerDocsForReference">
             <Output TaskParameter="TargetOutputs" ItemName="_AllSwaggerDocs" />
         </MSBuild>
@@ -58,7 +67,7 @@
       - 这个 Target 只在 AppWeb 项目中执行。
       - Condition 确保只有在收集到了文档定义时才运行。
     -->
-    <Target Name="GenerateSwaggerFromReferences" AfterTargets="Build" DependsOnTargets="CollectSwaggerDocs" Condition="'$(Configuration)' == 'Debug' AND '@(_AllSwaggerDocs)' != ''">
+    <Target Name="GenerateSwaggerFromReferences" Condition="'$(Configuration)' == 'Debug' AND '@(_AllSwaggerDocs)' != ''">
         <Message Text="------------------------------------------------------------------" Importance="high"/>
         <Message Text="[AppWeb] 开始集中生成所有 Swagger JSON 和 TypeScript 文件..." Importance="high"/>
 

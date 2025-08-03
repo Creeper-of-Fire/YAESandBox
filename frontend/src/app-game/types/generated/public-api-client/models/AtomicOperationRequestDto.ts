@@ -31,7 +31,7 @@ export type AtomicOperationRequestDto = {
     /**
      * (仅用于 ModifyEntity 操作)
      * 修改操作符。预期值为 "=", "+=", "-=" 等表示赋值、增加、减少等操作的字符串。
-     * 具体支持的操作符取决于后端实现 (YAESandBox.Core.State.Entity.OperatorHelper)。
+     * 具体支持的操作符取决于后端实现 (YAESandBox.Seed.State.Entity.OperatorHelper)。
      */
     modifyOperator?: string | null;
     /**

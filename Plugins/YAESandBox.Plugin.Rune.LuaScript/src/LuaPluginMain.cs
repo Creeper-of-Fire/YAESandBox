@@ -6,6 +6,7 @@ using YAESandBox.Workflow.Rune.ExactRune;
 
 namespace YAESandBox.Plugin.Lua;
 
+/// <inheritdoc cref="IYaeSandBoxPlugin"/>
 public class LuaPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider
 {
     /// <inheritdoc />
