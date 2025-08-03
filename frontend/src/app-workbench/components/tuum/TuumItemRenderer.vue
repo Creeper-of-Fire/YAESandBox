@@ -64,7 +64,7 @@ import {EllipsisHorizontalIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from
 import {VueDraggable as draggable} from 'vue-draggable-plus';
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue'; // 导入基础组件
 import RuneItemRenderer from '@/app-workbench/components/rune/RuneItemRenderer.vue'; // 导入符文渲染器
-import type {TuumProcessorConfig, WorkflowProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
+import type {TuumConfig, WorkflowConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {computed, inject, ref, toRef} from "vue";
 import ColorHash from "color-hash";
 import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
@@ -73,8 +73,8 @@ import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemAc
 
 // 定义组件的 props
 const props = withDefaults(defineProps<{
-  tuum: TuumProcessorConfig;
-  parentWorkflow: WorkflowProcessorConfig | null;
+  tuum: TuumConfig;
+  parentWorkflow: WorkflowConfig | null;
   isCollapsible?: boolean; // 是否可折叠
   isDraggable?: boolean;   // 祝祷自身是否可拖拽
   // 从父级(Workflow)传入此祝祷可用的全局变量，为空代表不进行检测

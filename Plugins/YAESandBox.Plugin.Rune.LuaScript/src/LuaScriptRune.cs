@@ -46,7 +46,7 @@ public partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
     /// <summary>
     /// Lua 脚本符文处理器的调试数据传输对象。
     /// </summary>
-    public class LuaScriptRuneProcessorDebugDto : IRuneProcessorDebugDto,ILogsDebugDto
+    public class LuaScriptRuneProcessorDebugDto : IRuneProcessorDebugDto,IDebugDtoWithLogs
     {
         /// <summary>
         /// 实际执行的 Lua 脚本内容。

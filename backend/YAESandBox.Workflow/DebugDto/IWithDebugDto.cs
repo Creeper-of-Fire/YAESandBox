@@ -1,5 +1,9 @@
 ﻿namespace YAESandBox.Workflow.DebugDto;
 
+/// <summary>
+/// 一种携带了DebugDTO的类型
+/// </summary>
+/// <typeparam name="T"></typeparam>
 public interface IWithDebugDto<out T> where T : IDebugDto
 {
     /// <summary>
@@ -8,7 +12,10 @@ public interface IWithDebugDto<out T> where T : IDebugDto
     T DebugDto { get; }
 }
 
-public interface ILogsDebugDto
+/// <summary>
+/// 一种有日志的Debug信息
+/// </summary>
+public interface IDebugDtoWithLogs
 {
     /// <summary>
     /// 获得Debug信息

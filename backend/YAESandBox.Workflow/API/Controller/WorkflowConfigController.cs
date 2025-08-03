@@ -27,11 +27,11 @@ public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFi
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<WorkflowProcessorConfig>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<WorkflowConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Dictionary<string, JsonResultDto<WorkflowProcessorConfig>>>> GetAllGlobalWorkflowConfigs() =>
+    public async Task<ActionResult<Dictionary<string, JsonResultDto<WorkflowConfig>>>> GetAllGlobalWorkflowConfigs() =>
         await this.WorkflowConfigFileService.FindAllWorkflowConfig(this.UserId).ToActionResultAsync(dic =>
-            dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<WorkflowProcessorConfig>.ToJsonResultDto(kv.Value)));
+            dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<WorkflowConfig>.ToJsonResultDto(kv.Value)));
 
     /// <summary>
     /// 获取指定 ID 的全局工作流配置。
@@ -43,10 +43,10 @@ public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFi
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet("{workflowId}")]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(WorkflowProcessorConfig), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(WorkflowConfig), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<WorkflowProcessorConfig>> GetGlobalWorkflowConfigById(string workflowId) =>
+    public async Task<ActionResult<WorkflowConfig>> GetGlobalWorkflowConfigById(string workflowId) =>
         await this.WorkflowConfigFileService.FindWorkflowConfig(this.UserId, workflowId).ToActionResultAsync();
 
     /// <summary>
@@ -60,7 +60,7 @@ public class WorkflowConfigController(WorkflowConfigFileService workflowConfigFi
     [HttpPut("{workflowId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpsertGlobalWorkflowConfig(string workflowId, [FromBody] WorkflowProcessorConfig workflowConfig) =>
+    public async Task<IActionResult> UpsertGlobalWorkflowConfig(string workflowId, [FromBody] WorkflowConfig workflowConfig) =>
         await this.WorkflowConfigFileService.SaveWorkflowConfig(this.UserId, workflowId, workflowConfig).ToActionResultAsync();
 
     /// <summary>

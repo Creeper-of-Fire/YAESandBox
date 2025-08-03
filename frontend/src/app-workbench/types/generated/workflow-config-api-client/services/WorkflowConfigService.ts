@@ -2,18 +2,18 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { WorkflowProcessorConfig } from '../models/WorkflowProcessorConfig';
-import type { WorkflowProcessorConfigJsonResultDto } from '../models/WorkflowProcessorConfigJsonResultDto';
+import type { WorkflowConfig } from '../models/WorkflowConfig';
+import type { WorkflowConfigJsonResultDto } from '../models/WorkflowConfigJsonResultDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class WorkflowConfigService {
     /**
      * 获取所有全局工作流配置的列表。
-     * @returns WorkflowProcessorConfigJsonResultDto 成功获取所有全局工作流配置的列表。
+     * @returns WorkflowConfigJsonResultDto 成功获取所有全局工作流配置的列表。
      * @throws ApiError
      */
-    public static getApiV1WorkflowsConfigsGlobalWorkflows(): CancelablePromise<Record<string, WorkflowProcessorConfigJsonResultDto>> {
+    public static getApiV1WorkflowsConfigsGlobalWorkflows(): CancelablePromise<Record<string, WorkflowConfigJsonResultDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/workflows-configs/global-workflows',
@@ -24,7 +24,7 @@ export class WorkflowConfigService {
     }
     /**
      * 获取指定 ID 的全局工作流配置。
-     * @returns WorkflowProcessorConfig 成功获取指定的工作流配置。
+     * @returns WorkflowConfig 成功获取指定的工作流配置。
      * @throws ApiError
      */
     public static getApiV1WorkflowsConfigsGlobalWorkflows1({
@@ -34,7 +34,7 @@ export class WorkflowConfigService {
          * 工作流配置的唯一 ID。
          */
         workflowId: string,
-    }): CancelablePromise<WorkflowProcessorConfig> {
+    }): CancelablePromise<WorkflowConfig> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/workflows-configs/global-workflows/{workflowId}',
@@ -63,7 +63,7 @@ export class WorkflowConfigService {
         /**
          * 工作流配置数据。
          */
-        requestBody?: WorkflowProcessorConfig,
+        requestBody?: WorkflowConfig,
     }): CancelablePromise<void> {
         return __request(OpenAPI, {
             method: 'PUT',

@@ -40,13 +40,13 @@
 <script lang="ts" setup>
 import {NEmpty} from 'naive-ui';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
-import type {WorkflowProcessorConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
+import type {WorkflowConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import { computed } from 'vue';
 
 // 定义组件的 Props
 const props = defineProps<{
-  workflow: WorkflowProcessorConfig;
+  workflow: WorkflowConfig;
 }>();
 
 const triggerParamsRef = computed({

@@ -3,8 +3,8 @@ import {v4 as uuidv4} from 'uuid';
 import type {ConfigObject, ConfigType,} from '@/app-workbench/services/EditSession';
 import type {
     AbstractRuneConfig,
-    TuumProcessorConfig,
-    WorkflowProcessorConfig
+    TuumConfig,
+    WorkflowConfig
 } from "@/app-workbench/types/generated/workflow-config-api-client";
 
 // noinspection JSCommentMatchesSignature
@@ -18,11 +18,11 @@ import type {
 export function createBlankConfig(
     type: 'workflow',
     name: string
-): WorkflowProcessorConfig;
+): WorkflowConfig;
 export function createBlankConfig(
     type: 'tuum',
     name: string
-): TuumProcessorConfig;
+): TuumConfig;
 export function createBlankConfig(
     type: 'rune',
     name: string,

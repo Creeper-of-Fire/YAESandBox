@@ -6,7 +6,7 @@ namespace YAESandBox.Workflow.Config;
 /// <summary>
 /// 工作流的配置
 /// </summary>
-public record WorkflowProcessorConfig
+public record WorkflowConfig
 {
     /// <summary>
     /// 名字
@@ -27,5 +27,5 @@ public record WorkflowProcessorConfig
     /// </summary>
     [Required]
     [HiddenInForm(true)]
-    public List<TuumProcessorConfig> Tuums { get; init; } = [];
+    public List<TuumConfig> Tuums { get; init; } = [];
 }

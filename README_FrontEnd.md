@@ -83,7 +83,7 @@
 *   **前端即编译器:** 前端在内存中维护着整个工作流的依赖图和变量作用域信息，它扮演着一个轻量级编译器的角色，为用户提供即时反馈。
 *   **API 交互:**
     *   **启动时:** 调用`GET /api/v1/workflows-configs/global-runes/all-rune-configs-schemas`获取所有符文的配置结构。
-    *   **编辑时:** 实时构建符合`WorkflowProcessorConfig`结构的JSON对象。
+    *   **编辑时:** 实时构建符合`WorkflowConfig`结构的JSON对象。
     *   **保存时:** 调用`PUT /api/v1/workflows-configs/global-workflows/{workflowId}`将完整的JSON配置发送到后端。**后端信任前端已经完成了大部分逻辑校验,即使是暂时错误的草稿也可以保存**。
 
 **3. 核心原则与风格:**

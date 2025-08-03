@@ -43,8 +43,8 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="userId"></param>
     /// <param name="workflowId"></param>
     /// <returns></returns>
-    internal async Task<Result<WorkflowProcessorConfig>> FindWorkflowConfig(string userId, string workflowId) =>
-        await FindConfig<WorkflowProcessorConfig>(this.ForWorkflow, userId, workflowId);
+    internal async Task<Result<WorkflowConfig>> FindWorkflowConfig(string userId, string workflowId) =>
+        await FindConfig<WorkflowConfig>(this.ForWorkflow, userId, workflowId);
 
     /// <summary>
     /// 只在全局的祝祷配置中查找，不查找内联的私有部分
@@ -52,8 +52,8 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="userId"></param>
     /// <param name="tuumId"></param>
     /// <returns></returns>
-    internal async Task<Result<TuumProcessorConfig>> FindTuumConfig(string userId, string tuumId) =>
-        await FindConfig<TuumProcessorConfig>(this.ForTuum, userId, tuumId);
+    internal async Task<Result<TuumConfig>> FindTuumConfig(string userId, string tuumId) =>
+        await FindConfig<TuumConfig>(this.ForTuum, userId, tuumId);
 
     /// <summary>
     /// 只在全局的符文配置中查找，不查找内联的私有部分
@@ -69,16 +69,16 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// </summary>
     /// <param name="userId"></param>
     /// <returns></returns>
-    public async Task<DictionaryResult<string, WorkflowProcessorConfig>> FindAllWorkflowConfig(string userId) =>
-        await FindAllConfig<WorkflowProcessorConfig>(this.ForWorkflow, userId);
+    public async Task<DictionaryResult<string, WorkflowConfig>> FindAllWorkflowConfig(string userId) =>
+        await FindAllConfig<WorkflowConfig>(this.ForWorkflow, userId);
 
     /// <summary>
     /// 只寻找所有的全局祝祷配置，不查找内联的私有部分
     /// </summary>
     /// <param name="userId"></param>
     /// <returns></returns>
-    public async Task<DictionaryResult<string, TuumProcessorConfig>> FindAllTuumConfig(string userId) =>
-        await FindAllConfig<TuumProcessorConfig>(this.ForTuum, userId);
+    public async Task<DictionaryResult<string, TuumConfig>> FindAllTuumConfig(string userId) =>
+        await FindAllConfig<TuumConfig>(this.ForTuum, userId);
 
     /// <summary>
     /// 只寻找所有的全局符文配置，不查找内联的私有部分
@@ -93,20 +93,20 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// </summary>
     /// <param name="userId"></param>
     /// <param name="workflowId"></param>
-    /// <param name="workflowProcessorConfig"></param>
+    /// <param name="workflowConfig"></param>
     /// <returns></returns>
-    public async Task<Result> SaveWorkflowConfig(string userId, string workflowId, WorkflowProcessorConfig workflowProcessorConfig) =>
-        await SaveConfig(this.ForWorkflow, userId, workflowId, workflowProcessorConfig);
+    public async Task<Result> SaveWorkflowConfig(string userId, string workflowId, WorkflowConfig workflowConfig) =>
+        await SaveConfig(this.ForWorkflow, userId, workflowId, workflowConfig);
 
     /// <summary>
     /// 保存祝祷配置到全局
     /// </summary>
     /// <param name="userId"></param>
     /// <param name="tuumId"></param>
-    /// <param name="tuumProcessorConfig"></param>
+    /// <param name="tuumConfig"></param>
     /// <returns></returns>
-    public async Task<Result> SaveTuumConfig(string userId, string tuumId, TuumProcessorConfig tuumProcessorConfig) =>
-        await SaveConfig(this.ForTuum, userId, tuumId, tuumProcessorConfig);
+    public async Task<Result> SaveTuumConfig(string userId, string tuumId, TuumConfig tuumConfig) =>
+        await SaveConfig(this.ForTuum, userId, tuumId, tuumConfig);
 
     /// <summary>
     /// 保存符文配置到全局

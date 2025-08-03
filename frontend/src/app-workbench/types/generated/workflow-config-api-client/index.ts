@@ -15,12 +15,12 @@ export { RuleSeverity } from './models/RuleSeverity';
 export type { RuneAnalysisResult } from './models/RuneAnalysisResult';
 export type { RuneSchemasResponse } from './models/RuneSchemasResponse';
 export type { RuneValidationResult } from './models/RuneValidationResult';
-export type { TuumProcessorConfig } from './models/TuumProcessorConfig';
-export type { TuumProcessorConfigJsonResultDto } from './models/TuumProcessorConfigJsonResultDto';
+export type { TuumConfig } from './models/TuumConfig';
+export type { TuumConfigJsonResultDto } from './models/TuumConfigJsonResultDto';
 export type { TuumValidationResult } from './models/TuumValidationResult';
 export type { ValidationMessage } from './models/ValidationMessage';
-export type { WorkflowProcessorConfig } from './models/WorkflowProcessorConfig';
-export type { WorkflowProcessorConfigJsonResultDto } from './models/WorkflowProcessorConfigJsonResultDto';
+export type { WorkflowConfig } from './models/WorkflowConfig';
+export type { WorkflowConfigJsonResultDto } from './models/WorkflowConfigJsonResultDto';
 export type { WorkflowValidationReport } from './models/WorkflowValidationReport';
 
 export { RuneConfigService } from './services/RuneConfigService';

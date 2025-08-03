@@ -63,6 +63,7 @@ public abstract record AbstractRuneConfig
     public virtual List<string> GetProducedVariables() => [];
 }
 
+/// <inheritdoc />
 public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
     where T : IWithDebugDto<IRuneProcessorDebugDto>
 {
@@ -81,5 +82,10 @@ public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
     internal override IWithDebugDto<IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService) =>
         this.ToCurrentRune(workflowRuntimeService);
 
+    /// <summary>
+    /// 用于将当前配置转为运行时对象，提供了类型提示，而非通用的接口
+    /// </summary>
+    /// <param name="workflowRuntimeService"></param>
+    /// <returns></returns>
     protected abstract T ToCurrentRune(WorkflowRuntimeService workflowRuntimeService);
 }

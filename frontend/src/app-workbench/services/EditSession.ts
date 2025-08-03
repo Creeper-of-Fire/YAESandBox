@@ -3,14 +3,14 @@
 import {computed, type Ref} from 'vue';
 import type {
     AbstractRuneConfig,
-    TuumProcessorConfig,
-    WorkflowProcessorConfig,
+    TuumConfig,
+    WorkflowConfig,
 } from '@/app-workbench/types/generated/workflow-config-api-client';
 import {type SaveResult, useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
 
 // 定义了可编辑配置的类型别名，方便在整个应用中重用。
 export type ConfigType = 'workflow' | 'tuum' | 'rune';
-export type ConfigObject = WorkflowProcessorConfig | TuumProcessorConfig | AbstractRuneConfig;
+export type ConfigObject = WorkflowConfig | TuumConfig | AbstractRuneConfig;
 
 // /**
 //  * EditSession 的公共接口 (契约)。

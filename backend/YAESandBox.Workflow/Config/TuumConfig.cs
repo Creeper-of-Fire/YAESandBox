@@ -7,7 +7,7 @@ namespace YAESandBox.Workflow.Config;
 /// <summary>
 /// 祝祷的配置
 /// </summary>
-public record TuumProcessorConfig
+public record TuumConfig
 {
     /// <summary>
     /// 名字

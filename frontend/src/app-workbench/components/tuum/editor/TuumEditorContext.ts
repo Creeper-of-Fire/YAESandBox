@@ -1,4 +1,4 @@
-﻿import type {TuumProcessorConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
+﻿import type {TuumConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 
 /**
  * 祝祷配置编辑上下文类型
@@ -7,7 +7,7 @@
 export interface TuumEditorContext
 {
     /** 当前选中的祝祷配置数据（核心业务数据） */
-    data: TuumProcessorConfig;
+    data: TuumConfig;
 
     /**
      * 可选：工作流上下文中的可用全局变量列表

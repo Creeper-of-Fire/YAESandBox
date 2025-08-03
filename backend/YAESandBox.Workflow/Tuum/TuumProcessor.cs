@@ -17,31 +17,50 @@ namespace YAESandBox.Workflow.Tuum;
 /// </summary>
 public class TuumProcessor(
     WorkflowRuntimeService workflowRuntimeService,
-    TuumProcessorConfig config)
+    TuumConfig config)
     : IWithDebugDto<ITuumProcessorDebugDto>
 {
-    internal TuumProcessorConfig Config { get; } = config;
+    private TuumConfig Config { get; } = config;
     internal TuumProcessorContent TuumContent { get; } = new(config, workflowRuntimeService);
 
     /// <summary>
     /// 祝祷运行时的上下文
     /// </summary>
-    public class TuumProcessorContent(TuumProcessorConfig tuumProcessorConfig, WorkflowRuntimeService workflowRuntimeService)
+    public class TuumProcessorContent(TuumConfig tuumConfig, WorkflowRuntimeService workflowRuntimeService)
     {
+        /// <summary>
+        /// 祝祷的内部变量池
+        /// </summary>
         public Dictionary<string, object?> TuumVariable { get; } = [];
 
-        public object? InputVar(string name)
+        /// <summary>
+        /// 得到祝祷的变量
+        /// </summary>
+        /// <param name="name"></param>
+        /// <returns></returns>
+        public object? GetTuumVar(string name)
         {
             return this.TuumVariable.GetValueOrDefault(name);
         }
 
-        public void OutputVar(string name, object? value)
+        /// <summary>
+        /// 设置祝祷的变量
+        /// </summary>
+        /// <param name="name"></param>
+        /// <param name="value"></param>
+        public void SetTuumVar(string name, object? value)
         {
             this.TuumVariable[name] = value;
         }
 
-        public TuumProcessorConfig TuumProcessorConfig { get; } = tuumProcessorConfig;
+        /// <summary>
+        /// 祝祷的配置
+        /// </summary>
+        public TuumConfig TuumConfig { get; } = tuumConfig;
 
+        /// <summary>
+        /// 工作流的运行时服务
+        /// </summary>
         public WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
 
         public IList<RoledPromptDto> Prompts

@@ -27,11 +27,11 @@ public class TuumConfigController(WorkflowConfigFileService workflowConfigFileSe
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<TuumProcessorConfig>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<TuumConfig>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Dictionary<string, JsonResultDto<TuumProcessorConfig>>>> GetAllGlobalTuumConfigs() =>
+    public async Task<ActionResult<Dictionary<string, JsonResultDto<TuumConfig>>>> GetAllGlobalTuumConfigs() =>
         await this.WorkflowConfigFileService.FindAllTuumConfig(this.UserId).ToActionResultAsync(dic =>
-            dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<TuumProcessorConfig>.ToJsonResultDto(kv.Value)));
+            dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<TuumConfig>.ToJsonResultDto(kv.Value)));
 
     /// <summary>
     /// 获取指定 ID 的全局祝祷配置。
@@ -43,10 +43,10 @@ public class TuumConfigController(WorkflowConfigFileService workflowConfigFileSe
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet("{tuumId}")]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(TuumProcessorConfig), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(TuumConfig), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<TuumProcessorConfig>> GetGlobalTuumConfigById(string tuumId) =>
+    public async Task<ActionResult<TuumConfig>> GetGlobalTuumConfigById(string tuumId) =>
         await this.WorkflowConfigFileService.FindTuumConfig(this.UserId, tuumId).ToActionResultAsync();
 
     /// <summary>
@@ -60,7 +60,7 @@ public class TuumConfigController(WorkflowConfigFileService workflowConfigFileSe
     [HttpPut("{tuumId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpsertGlobalTuumConfig(string tuumId, [FromBody] TuumProcessorConfig tuumConfig) =>
+    public async Task<IActionResult> UpsertGlobalTuumConfig(string tuumId, [FromBody] TuumConfig tuumConfig) =>
         await this.WorkflowConfigFileService.SaveTuumConfig(this.UserId, tuumId, tuumConfig).ToActionResultAsync();
 
     /// <summary>

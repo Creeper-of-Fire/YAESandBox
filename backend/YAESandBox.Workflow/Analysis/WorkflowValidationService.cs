@@ -14,7 +14,7 @@ public class WorkflowValidationService
     /// </summary>
     /// <param name="config"></param>
     /// <returns></returns>
-    public WorkflowValidationReport Validate(WorkflowProcessorConfig config)
+    public WorkflowValidationReport Validate(WorkflowConfig config)
     {
         var report = new WorkflowValidationReport();
 
@@ -56,7 +56,7 @@ public class WorkflowValidationService
     /// <summary>
     /// 校验数据流：检查所有符文消费的变量是否都已在之前的祝祷、触发参数或本祝祷的前置符文中定义。
     /// </summary>
-    private void ValidateDataFlow(TuumProcessorConfig tuum, ISet<string> initialAvailableVariables, TuumValidationResult tuumResult)
+    private void ValidateDataFlow(TuumConfig tuum, ISet<string> initialAvailableVariables, TuumValidationResult tuumResult)
     {
         // 1. (保持不变) 检查 InputMappings 的源（Value，即全局变量）是否存在于上游的可用池中
         foreach (string globalName in tuum.InputMappings.Values.ToHashSet())
@@ -124,7 +124,7 @@ public class WorkflowValidationService
     /// <summary>
     /// 校验基于Attribute的规则，如[SingleInTuum], [InLastTuum]等。
     /// </summary>
-    private void ValidateAttributeRules(TuumProcessorConfig tuum, List<TuumProcessorConfig> allTuums, int currentIndex,
+    private void ValidateAttributeRules(TuumConfig tuum, List<TuumConfig> allTuums, int currentIndex,
         TuumValidationResult tuumResult)
     {
         // a. [InLastTuum] 校验

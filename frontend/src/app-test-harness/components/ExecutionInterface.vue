@@ -30,11 +30,11 @@
 <script setup lang="ts">
 import {ref, reactive, computed, watch} from 'vue';
 import { NScrollbar, NInput, NButton, NForm, NFormItem, NEmpty, NH5, NCard, NAlert, useMessage } from 'naive-ui';
-import type { WorkflowProcessorConfig, TuumProcessorConfig } from '@/app-workbench/types/generated/workflow-config-api-client';
+import type { WorkflowConfig, TuumConfig } from '@/app-workbench/types/generated/workflow-config-api-client';
 import {type WorkflowExecutionResult, WorkflowExecutionService} from "@/app-test-harness/types/generated/workflow-test-api-client";
 
 const props = defineProps<{
-  config: WorkflowProcessorConfig | TuumProcessorConfig;
+  config: WorkflowConfig | TuumConfig;
   configType: 'workflow' | 'tuum';
 }>();
 
@@ -46,9 +46,9 @@ const paramValues = reactive<Record<string, string>>({});
 // 1. computed 属性现在只负责计算和返回参数列表，不再有任何副作用。
 const paramsToFill = computed<string[]>(() => {
   if (props.configType === 'workflow') {
-    return (props.config as WorkflowProcessorConfig).triggerParams || [];
+    return (props.config as WorkflowConfig).triggerParams || [];
   } else {
-    const tuumConfig = props.config as TuumProcessorConfig;
+    const tuumConfig = props.config as TuumConfig;
     const globalVars = Object.values(tuumConfig.inputMappings || {});
     return [...new Set(globalVars)];
   }
@@ -87,13 +87,13 @@ async function handleExecute() {
 
   if (props.configType === 'workflow') {
     requestBody = {
-      workflowConfig: props.config as WorkflowProcessorConfig,
+      workflowConfig: props.config as WorkflowConfig,
       triggerParams: paramValues
     };
   } else {
-    const tuumConfig = props.config as TuumProcessorConfig;
+    const tuumConfig = props.config as TuumConfig;
     const triggerParamsForTempWorkflow = [...new Set(Object.values(tuumConfig.inputMappings))];
-    const tempWorkflow: WorkflowProcessorConfig = {
+    const tempWorkflow: WorkflowConfig = {
       name: `测试祝祷: ${tuumConfig.name}`,
       tuums: [tuumConfig],
       triggerParams: triggerParamsForTempWorkflow,

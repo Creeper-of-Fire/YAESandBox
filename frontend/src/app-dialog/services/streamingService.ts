@@ -1,10 +1,10 @@
 ﻿import { fetchEventSource } from '@microsoft/fetch-event-source';
-import type { WorkflowProcessorConfig } from "@/app-workbench/types/generated/workflow-config-api-client";
+import type { WorkflowConfig } from "@/app-workbench/types/generated/workflow-config-api-client";
 import { useAuthStore } from "@/app-authentication/stores/authStore";
 
 // 请求体的类型
 interface StreamRequest {
-    workflowConfig: WorkflowProcessorConfig;
+    workflowConfig: WorkflowConfig;
     triggerParams: Record<string, string>;
 }
 

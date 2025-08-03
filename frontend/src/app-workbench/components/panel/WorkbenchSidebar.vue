@@ -119,8 +119,8 @@ import {NH4, NIcon, useDialog, useMessage} from 'naive-ui';
 import type {ConfigType, EditSession} from "@/app-workbench/services/EditSession.ts";
 import type {
   AbstractRuneConfig,
-  TuumProcessorConfig,
-  WorkflowProcessorConfig
+  TuumConfig,
+  WorkflowConfig
 } from "@/app-workbench/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "@/app-workbench/components/workflow/WorkflowItemRenderer.vue";
@@ -297,10 +297,10 @@ function handleDrop(event: DragEvent)
 
 // --- 为不同编辑类型创建独立的计算属性，使模板更清晰 ---
 const workflowData = computed(() =>
-    props.session?.type === 'workflow' ? props.session.getData().value as WorkflowProcessorConfig : null
+    props.session?.type === 'workflow' ? props.session.getData().value as WorkflowConfig : null
 );
 const tuumData = computed(() =>
-    props.session?.type === 'tuum' ? props.session.getData().value as TuumProcessorConfig : null
+    props.session?.type === 'tuum' ? props.session.getData().value as TuumConfig : null
 );
 const runeData = computed(() =>
     props.session?.type === 'rune' ? props.session.getData().value as AbstractRuneConfig : null

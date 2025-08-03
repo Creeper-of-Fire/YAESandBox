@@ -32,7 +32,7 @@ internal class SendToRawTextRuneProcessor(
 
     public async Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
-        string? outputVar = tuumProcessorContent.InputVar(this.Config.RequireVariables)?.ToString();
+        string? outputVar = tuumProcessorContent.GetTuumVar(this.Config.RequireVariables)?.ToString();
         if (outputVar == null)
             return Result.Ok(); // 只处理非null的输出
 

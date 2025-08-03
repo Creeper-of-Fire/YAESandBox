@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { AbstractRuneConfig } from '../models/AbstractRuneConfig';
 import type { RuneAnalysisResult } from '../models/RuneAnalysisResult';
-import type { WorkflowProcessorConfig } from '../models/WorkflowProcessorConfig';
+import type { WorkflowConfig } from '../models/WorkflowConfig';
 import type { WorkflowValidationReport } from '../models/WorkflowValidationReport';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -43,7 +43,7 @@ export class WorkflowAnalysisService {
         /**
          * 工作流配置的完整草稿。
          */
-        requestBody?: WorkflowProcessorConfig,
+        requestBody?: WorkflowConfig,
     }): CancelablePromise<WorkflowValidationReport> {
         return __request(OpenAPI, {
             method: 'POST',

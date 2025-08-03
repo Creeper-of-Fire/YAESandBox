@@ -24,7 +24,7 @@ import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
 import type {MenuOption} from 'naive-ui';
 import {NAlert, NButton, NH4, NIcon, NMenu, NSpin} from 'naive-ui';
 import {WorkflowIcon} from '@/utils/icons.ts';
-import type {WorkflowProcessorConfig} from "@/app-workbench/types/generated/workflow-config-api-client"; // 假设你有一个工作流图标
+import type {WorkflowConfig} from "@/app-workbench/types/generated/workflow-config-api-client"; // 假设你有一个工作流图标
 
 const workbenchStore = useWorkbenchStore();
 const workflowsAsync = workbenchStore.globalWorkflowsAsync;
@@ -38,7 +38,7 @@ const emit = defineEmits(['workflow-selected']);
 const selectedKey = ref<string | null>(null);
 
 // 定义一个更具体的成功状态类型，用于类型谓词
-type SuccessWorkflowResourceItem = { isSuccess: true; data: WorkflowProcessorConfig }
+type SuccessWorkflowResourceItem = { isSuccess: true; data: WorkflowConfig }
 
 const menuOptions = computed<MenuOption[]>(() =>
 {

@@ -16,7 +16,7 @@ import { ref } from 'vue';
 import { useMessage } from 'naive-ui';
 import { v4 as uuidv4 } from 'uuid';
 
-import type { WorkflowProcessorConfig } from '@/app-workbench/types/generated/workflow-config-api-client';
+import type { WorkflowConfig } from '@/app-workbench/types/generated/workflow-config-api-client';
 // 移除了原来的 WorkflowExecutionService 导入
 import type { ChatMessage, Prompt } from '@/app-dialog/types';
 import { executeWorkflowStream } from '@/app-dialog/services/streamingService'; // 导入新的流式服务
@@ -28,9 +28,9 @@ import MessageInput from '@/app-dialog/components/MessageInput.vue';
 const message = useMessage();
 const isLoading = ref(false);
 const chatHistory = ref<ChatMessage[]>([]);
-const selectedWorkflow = ref<{ id: string; config: WorkflowProcessorConfig } | null>(null);
+const selectedWorkflow = ref<{ id: string; config: WorkflowConfig } | null>(null);
 
-function handleWorkflowSelected(payload: { id: string; config: WorkflowProcessorConfig }) {
+function handleWorkflowSelected(payload: { id: string; config: WorkflowConfig }) {
   selectedWorkflow.value = payload;
   chatHistory.value = [];
   message.success(`已选择工作流: ${payload.config.name}`);

@@ -22,7 +22,7 @@ import {computed, onMounted, ref} from 'vue';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import type {SelectOption} from 'naive-ui';
 import {NAlert, NButton, NH5, NSelect} from 'naive-ui';
-import type {WorkflowProcessorConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
+import type {WorkflowConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 
 const emit = defineEmits(['workflow-selected']);
 
@@ -34,7 +34,7 @@ const workflows = computed(() => workflowsAsync.state);
 
 const selectedKey = ref<string | null>(null);
 
-type SuccessWorkflowResourceItem = { isSuccess: true; data: WorkflowProcessorConfig };
+type SuccessWorkflowResourceItem = { isSuccess: true; data: WorkflowConfig };
 
 const selectOptions = computed<SelectOption[]>(() =>
 {

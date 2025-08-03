@@ -15,7 +15,7 @@ namespace YAESandBox.Plugin.Lua.LuaRunner;
 /// </summary>
 /// <param name="tuumProcessorContent">当前祝祷的执行上下文，用于访问变量。</param>
 /// <param name="debugDto">用于记录日志和错误的调试对象。</param>
-internal partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, ILogsDebugDto debugDto)
+internal partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, IDebugDtoWithLogs debugDto)
 {
     /// <summary>
     /// 从当前程序集的嵌入式资源中加载脚本文件，无需硬编码完整路径。

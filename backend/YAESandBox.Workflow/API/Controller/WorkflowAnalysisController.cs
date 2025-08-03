@@ -7,6 +7,10 @@ using YAESandBox.Workflow.Config;
 
 namespace YAESandBox.Workflow.API.Controller;
 
+/// <summary>
+/// 分析符文的配置文件
+/// </summary>
+/// <param name="validationService"></param>
 [ApiController]
 [Route("api/v1/workflows-configs/analysis")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
@@ -67,7 +71,7 @@ public class WorkflowAnalysisController(WorkflowValidationService validationServ
     [HttpPost("validate-workflow")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(WorkflowValidationReport), StatusCodes.Status200OK)]
-    public ActionResult<WorkflowValidationReport> ValidateWorkflow([FromBody] WorkflowProcessorConfig workflowConfig)
+    public ActionResult<WorkflowValidationReport> ValidateWorkflow([FromBody] WorkflowConfig workflowConfig)
     {
         return this.Ok(this.ValidationService.Validate(workflowConfig));
     }

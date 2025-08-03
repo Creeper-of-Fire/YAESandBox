@@ -2,11 +2,11 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TuumProcessorConfig } from './TuumProcessorConfig';
+import type { TuumConfig } from './TuumConfig';
 /**
  * 工作流的配置
  */
-export type WorkflowProcessorConfig = {
+export type WorkflowConfig = {
     /**
      * 名字
      */
@@ -19,6 +19,6 @@ export type WorkflowProcessorConfig = {
     /**
      * 一个工作流含有的祝祷（有序）
      */
-    tuums: Array<TuumProcessorConfig>;
+    tuums: Array<TuumConfig>;
 };
 

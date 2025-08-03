@@ -195,7 +195,7 @@ public record WorkflowExecutionRequest
     /// <summary>
     /// 要执行的工作流的完整配置。
     /// </summary>
-    public required WorkflowProcessorConfig WorkflowConfig { get; init; }
+    public required WorkflowConfig WorkflowConfig { get; init; }
 
     /// <summary>
     /// 工作流启动所需的触发参数。

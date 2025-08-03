@@ -2,9 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { WorkflowProcessorConfig } from './WorkflowProcessorConfig';
+import type { WorkflowConfig } from './WorkflowConfig';
 export type WorkflowExecutionRequest = {
-    workflowConfig: WorkflowProcessorConfig;
+    workflowConfig: WorkflowConfig;
     triggerParams: Record<string, string> | null;
 };
 

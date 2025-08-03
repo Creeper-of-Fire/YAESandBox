@@ -7,8 +7,8 @@ import {type ConfigObject, type ConfigType, EditSession,} from '@/app-workbench/
 import type {
     AbstractRuneConfig,
     RuneSchemasResponse,
-    TuumProcessorConfig,
-    WorkflowProcessorConfig,
+    TuumConfig,
+    WorkflowConfig,
 } from '@/app-workbench/types/generated/workflow-config-api-client';
 import {RuneConfigService, TuumConfigService, WorkflowConfigService,} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {useAsyncState} from "@vueuse/core";
@@ -21,8 +21,8 @@ import {preprocessSchemaForWidgets} from "@/app-workbench/features/schema-viewer
 export type WorkbenchStore = ReturnType<typeof useWorkbenchStore>;
 
 // 为不同类型的资源创建具体的别名，方便使用
-export type WorkflowResourceItem = GlobalResourceItem<WorkflowProcessorConfig>;
-export type TuumResourceItem = GlobalResourceItem<TuumProcessorConfig>;
+export type WorkflowResourceItem = GlobalResourceItem<WorkflowConfig>;
+export type TuumResourceItem = GlobalResourceItem<TuumConfig>;
 export type RuneResourceItem = GlobalResourceItem<AbstractRuneConfig>;
 
 /**
@@ -275,14 +275,14 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             case 'workflow':
                 savePromise = WorkflowConfigService.putApiV1WorkflowsConfigsGlobalWorkflows({
                     workflowId: globalId,
-                    requestBody: draft.data as WorkflowProcessorConfig
+                    requestBody: draft.data as WorkflowConfig
                 });
                 refreshPromise =() =>  globalWorkflowsAsync.execute();
                 break;
             case 'tuum':
                 savePromise = TuumConfigService.putApiV1WorkflowsConfigsGlobalTuums({
                     tuumId: globalId,
-                    requestBody: draft.data as TuumProcessorConfig
+                    requestBody: draft.data as TuumConfig
                 });
                 refreshPromise =() =>  globalTuumsAsync.execute();
                 break;

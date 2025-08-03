@@ -2,18 +2,18 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TuumProcessorConfig } from '../models/TuumProcessorConfig';
-import type { TuumProcessorConfigJsonResultDto } from '../models/TuumProcessorConfigJsonResultDto';
+import type { TuumConfig } from '../models/TuumConfig';
+import type { TuumConfigJsonResultDto } from '../models/TuumConfigJsonResultDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class TuumConfigService {
     /**
      * 获取所有全局祝祷配置的列表。
-     * @returns TuumProcessorConfigJsonResultDto 成功获取所有全局祝祷配置的列表。
+     * @returns TuumConfigJsonResultDto 成功获取所有全局祝祷配置的列表。
      * @throws ApiError
      */
-    public static getApiV1WorkflowsConfigsGlobalTuums(): CancelablePromise<Record<string, TuumProcessorConfigJsonResultDto>> {
+    public static getApiV1WorkflowsConfigsGlobalTuums(): CancelablePromise<Record<string, TuumConfigJsonResultDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/workflows-configs/global-tuums',
@@ -24,7 +24,7 @@ export class TuumConfigService {
     }
     /**
      * 获取指定 ID 的全局祝祷配置。
-     * @returns TuumProcessorConfig 成功获取指定的祝祷配置。
+     * @returns TuumConfig 成功获取指定的祝祷配置。
      * @throws ApiError
      */
     public static getApiV1WorkflowsConfigsGlobalTuums1({
@@ -34,7 +34,7 @@ export class TuumConfigService {
          * 祝祷配置的唯一 ID。
          */
         tuumId: string,
-    }): CancelablePromise<TuumProcessorConfig> {
+    }): CancelablePromise<TuumConfig> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/workflows-configs/global-tuums/{tuumId}',
@@ -63,7 +63,7 @@ export class TuumConfigService {
         /**
          * 祝祷配置数据。
          */
-        requestBody?: TuumProcessorConfig,
+        requestBody?: TuumConfig,
     }): CancelablePromise<void> {
         return __request(OpenAPI, {
             method: 'PUT',

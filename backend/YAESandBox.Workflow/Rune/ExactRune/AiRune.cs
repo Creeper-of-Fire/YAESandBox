@@ -79,7 +79,7 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
             cancellationToken);
         if (result.TryGetError(out var error, out string? value))
             return error;
-        tuumProcessorContent.OutputVar(AiRuneConfig.AiOutputName, value);
+        tuumProcessorContent.SetTuumVar(AiRuneConfig.AiOutputName, value);
         return Result.Ok();
     }
 

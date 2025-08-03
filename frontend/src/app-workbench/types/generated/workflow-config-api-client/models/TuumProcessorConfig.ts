@@ -6,7 +6,7 @@ import type { AbstractRuneConfig } from './AbstractRuneConfig';
 /**
  * 祝祷的配置
  */
-export type TuumProcessorConfig = {
+export type TuumConfig = {
     /**
      * 名字
      */

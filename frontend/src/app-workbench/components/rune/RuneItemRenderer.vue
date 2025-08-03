@@ -50,7 +50,7 @@
 
 <script lang="ts" setup>
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue';
-import type {AbstractRuneConfig, TuumProcessorConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
+import type {AbstractRuneConfig, TuumConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {computed, inject, toRef} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
@@ -64,7 +64,7 @@ import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemAc
 // 定义 Props 和 Emits
 const props = defineProps<{
   rune: AbstractRuneConfig;
-  parentTuum: TuumProcessorConfig | null;
+  parentTuum: TuumConfig | null;
 }>();
 
 

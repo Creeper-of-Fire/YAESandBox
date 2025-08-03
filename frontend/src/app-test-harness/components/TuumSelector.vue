@@ -24,7 +24,7 @@ import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import type {MenuOption} from 'naive-ui';
 import {NAlert, NButton, NH4, NIcon, NMenu, NSpin} from 'naive-ui';
 import {TuumIcon} from '@/utils/icons';
-import type {TuumProcessorConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
+import type {TuumConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 
 const workbenchStore = useWorkbenchStore();
 const tuumsAsync = workbenchStore.globalTuumsAsync;
@@ -34,7 +34,7 @@ const emit = defineEmits(['tuum-selected']);
 
 const selectedKey = ref<string | null>(null);
 
-type SuccessTuumResourceItem = { isSuccess: true; data: TuumProcessorConfig };
+type SuccessTuumResourceItem = { isSuccess: true; data: TuumConfig };
 
 const menuOptions = computed<MenuOption[]>(() =>
 {

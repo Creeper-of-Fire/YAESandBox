@@ -10,20 +10,20 @@ namespace YAESandBox.Workflow.Utility;
 // 现在由前端直接把完整的Config发给后端，而不是在构建/同步前端的变动
 internal static class ToProcessor
 {
-    internal static TuumProcessor ToTuumProcessor(this TuumProcessorConfig tuumProcessorConfig,
+    internal static TuumProcessor ToTuumProcessor(this TuumConfig tuumConfig,
         WorkflowRuntimeService workflowRuntimeService)
     {
-        return new TuumProcessor(workflowRuntimeService, tuumProcessorConfig);
+        return new TuumProcessor(workflowRuntimeService, tuumConfig);
     }
 
     internal static WorkflowProcessor ToWorkflowProcessor(
-        this WorkflowProcessorConfig workflowProcessorConfig,
+        this WorkflowConfig workflowConfig,
         IReadOnlyDictionary<string, string> triggerParams,
         SubAiService aiService,
         IWorkflowDataAccess dataAccess,
         IWorkflowCallback callback)
     {
         var content = new WorkflowRuntimeService(aiService, dataAccess, callback);
-        return new WorkflowProcessor(content, workflowProcessorConfig, triggerParams.ToDictionary());
+        return new WorkflowProcessor(content, workflowConfig, triggerParams.ToDictionary());
     }
 }

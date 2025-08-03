@@ -30,7 +30,7 @@ internal partial class LuaScriptRunner
         {
             try
             {
-                object? rawValue = this.TuumContent.InputVar(name);
+                object? rawValue = this.TuumContent.GetTuumVar(name);
 
                 // 如果值是 null 或者已经是基础类型，直接返回
                 if (rawValue is null or string or bool or double or int or long)
@@ -71,7 +71,7 @@ internal partial class LuaScriptRunner
             {
                 // 在将变量存入 C# 上下文之前，将其从 Lua 对象深度转换为纯 C# 对象。
                 object? csharpValue = LuaConverter.ConvertLuaToCSharp(value, this.Logger);
-                this.TuumContent.OutputVar(name, csharpValue);
+                this.TuumContent.SetTuumVar(name, csharpValue);
             }
             catch (Exception ex)
             {
@@ -131,9 +131,9 @@ internal partial class LuaScriptRunner
     /// <summary>
     /// 向 Lua 暴露一个安全的日志记录器。
     /// </summary>
-    private class LuaLogBridge(ILogsDebugDto debugDto)
+    private class LuaLogBridge(IDebugDtoWithLogs debugDto)
     {
-        private ILogsDebugDto DebugDto { get; } = debugDto;
+        private IDebugDtoWithLogs DebugDto { get; } = debugDto;
 
         // ReSharper disable once InconsistentNaming
         public void info(string message) => this.DebugDto.Logs.Add($"[INFO] {message}");

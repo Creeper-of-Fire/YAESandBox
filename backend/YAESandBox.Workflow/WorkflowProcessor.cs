@@ -9,7 +9,7 @@ namespace YAESandBox.Workflow;
 
 public class WorkflowProcessor(
     WorkflowRuntimeService runtimeService,
-    WorkflowProcessorConfig config,
+    WorkflowConfig config,
     Dictionary<string, string> triggerParams)
     : IWithDebugDto<IWorkflowProcessorDebugDto>
 {
@@ -113,7 +113,8 @@ public class WorkflowProcessor(
             // 保留此检测是为了系统的健壮性和未来的扩展性。
             if (readyToExecute.Count == 0)
             {
-                string remainingNodeNames = string.Join(", ", nodes.Values.Except(completedNodes).Select(n => n.Tuum.Config.ConfigId));
+                string remainingNodeNames = string.Join(", ",
+                    nodes.Values.Except(completedNodes).Select(n => n.Tuum.TuumContent.TuumConfig.ConfigId));
                 return new WorkflowExecutionResult(false, $"工作流存在循环依赖，无法继续执行。剩余节点: {remainingNodeNames}", "CircularDependency");
             }
 
