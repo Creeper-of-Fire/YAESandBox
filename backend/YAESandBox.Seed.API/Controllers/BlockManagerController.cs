@@ -16,7 +16,7 @@ namespace YAESandBox.Seed.API.Controllers;
 /// </summary>
 [ApiController]
 [Route("api/manage/blocks")]
-[ApiExplorerSettings(GroupName = GlobalSwaggerConstants.PublicApiGroupName)]
+[ApiExplorerSettings(GroupName = PublicApiGroupName)]
 public class BlockManagementController(
     IBlockManagementService blockManagementService,
     IBlockWritService writServices,

@@ -4,9 +4,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using YAESandBox.Depend.AspNetCore;
-using YAESandBox.Workflow.Abstractions;
-using YAESandBox.Workflow.Test.API.Controller;
+using Depend.AspNetCore;
+using Abstractions;
+using Controller;
 
 /// <summary>
 /// 用于测试工作流执行功能的模块。

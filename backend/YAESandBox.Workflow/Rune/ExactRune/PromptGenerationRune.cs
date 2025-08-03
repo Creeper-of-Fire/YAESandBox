@@ -51,10 +51,12 @@ internal partial class PromptGenerationRuneProcessor(
             Content = substitutedContent,
             Name = this.Config.PromptNameInAiModel ?? string.Empty
         };
-
-        tuumProcessorContent.Prompts.Add(prompt);
-
         this.DebugDto.GeneratedPrompt = prompt;
+
+        var prompts = tuumProcessorContent.GetTuumVar<List<RoledPromptDto>>(this.Config.PromptsName) ?? [];
+        prompts.Add(prompt);
+        tuumProcessorContent.SetTuumVar(this.Config.PromptsName, prompts);
+        
         return Task.FromResult(Result.Ok());
     }
 
@@ -191,8 +193,8 @@ internal partial record PromptGenerationRuneConfig
         .Select(m => m.Groups[1].Value)
         .Distinct(StringComparer.OrdinalIgnoreCase)
         .ToList();
-    
-    public override List<string> GetProducedVariables() => [AiRuneConfig.PromptsName];
+
+    public override List<string> GetProducedVariables() => [this.PromptsName];
 }
 
 /// <summary>
@@ -202,6 +204,13 @@ internal partial record PromptGenerationRuneConfig
 [ClassLabel("✍️提示词")]
 internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGenerationRuneProcessor>
 {
+    /// <summary>
+    /// 输出的提示词列表变量的名称（若存在则在列表中添加，若不存在则创建）。
+    /// </summary>
+    [Required]
+    [DefaultValue(AiRuneConfig.PromptsDefaultName)]
+    public string PromptsName { get; init; } = AiRuneConfig.PromptsDefaultName;
+
     /// <summary>
     /// 生成的提示词的角色类型 (System, User, Assistant)。
     /// </summary>

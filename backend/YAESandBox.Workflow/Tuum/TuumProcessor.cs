@@ -62,41 +62,46 @@ public class TuumProcessor(
         /// 工作流的运行时服务
         /// </summary>
         public WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-
-        public IList<RoledPromptDto> Prompts
+        
+        /// <summary>
+        /// 获得祝祷的变量，带有类型转换，并且有序列化尝试
+        /// </summary>
+        /// <param name="valueName"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        /// <exception cref="InvalidCastException"></exception>
+        public T? GetTuumVar<T>(string valueName)
         {
-            get
+            object? tryGetValue = this.GetTuumVar(valueName);
+            if (tryGetValue is null || tryGetValue.Equals(default(T)))
+                return default;
+
+            if (tryGetValue is T promptsValue)
+                return promptsValue;
+
+            try
             {
-                if (!this.TuumVariable.TryGetValue(nameof(this.Prompts), out object? value) || value == null)
-                    return new List<RoledPromptDto>();
-                if (value is IList<RoledPromptDto> prompts)
-                    return prompts;
+                // 将 C# 对象序列化成 JSON 字符串
+                string json = JsonSerializer.Serialize(tryGetValue);
 
-                try
-                {
-                    // 将从 Lua 返回的 C# 对象（如 List<object>）序列化成 JSON 字符串
-                    string json = JsonSerializer.Serialize(value);
+                var result = JsonSerializer.Deserialize<T>(json, YaeSandBoxJsonHelper.JsonSerializerOptions);
 
-                    var result = JsonSerializer.Deserialize<List<RoledPromptDto>>(json, YaeSandBoxJsonHelper.JsonSerializerOptions);
+                if (result is null || result.Equals(default(T)))
+                    return default;
 
-                    if (result == null)
-                    {
-                        // 如果反序列化结果是 null (例如，输入是 "null" 字符串)，返回空列表
-                        return new List<RoledPromptDto>();
-                    }
+                // 为了后续访问效率，可以将转换后的结果写回 TuumVariable
+                this.SetTuumVar(valueName, result);
 
-                    // 为了后续访问效率，可以将转换后的结果写回 TuumVariable
-                    this.TuumVariable[nameof(this.Prompts)] = result;
-
-                    return result;
-                }
-                catch (Exception ex)
-                {
-                    // 提供详细的错误信息
-                    throw new InvalidCastException(
-                        $"无法将 TuumVariable中的'Prompts'值(类型: {value.GetType().FullName})转换为 IList<RoledPromptDto>。JSON 转换失败: {ex.Message}",
-                        ex);
-                }
+                return result;
+            }
+            catch (Exception ex)
+            {
+                return default;
+                // 提供详细的错误信息
+                // TODO 应该记录在Tuum的Debug里面
+                
+                // throw new InvalidCastException(
+                    // $"无法将值'{valueName}'(类型: {tryGetValue.GetType().FullName})转换为 {typeof(T).FullName}。JSON 转换失败: {ex.Message}", ex);
             }
         }
     }

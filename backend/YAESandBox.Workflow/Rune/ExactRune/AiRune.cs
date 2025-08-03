@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Depend.Schema.SchemaProcessor;
+using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
@@ -13,7 +15,6 @@ using static YAESandBox.Workflow.Rune.ExactRune.AiRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 namespace YAESandBox.Workflow.Rune.ExactRune;
-
 
 /// <summary>
 /// Ai调用符文，Ai的配置保存在外部的Tuum，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiRuneConfig"/>里面。
@@ -62,22 +63,25 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
     {
         var aiConfig = aiRune.Config.AiConfiguration;
         var workflowRuntimeService = tuumProcessorContent.WorkflowRuntimeService;
+        
         if (aiConfig.SelectedAiRuneType == null || aiConfig.AiProcessorConfigUuid == null)
             return NormalError.Conflict($"祝祷 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI符文。");
+        
         var aiProcessor = workflowRuntimeService.AiService.CreateAiProcessor(
             aiConfig.AiProcessorConfigUuid,
             aiConfig.SelectedAiRuneType);
         if (aiProcessor == null)
-            return NormalError.Conflict(
-                $"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiRuneType}");
-        var prompt = tuumProcessorContent.Prompts;
+            return NormalError.Conflict($"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiRuneType}");
+
+        var prompt = tuumProcessorContent.GetTuumVar<List<RoledPromptDto>>(aiRune.Config.PromptsName) ?? [];
         var result = await aiRune.ExecuteAsync(aiProcessor,
             prompt,
             aiConfig.IsStream,
             cancellationToken);
         if (result.TryGetError(out var error, out string? value))
             return error;
-        tuumProcessorContent.SetTuumVar(AiRuneConfig.AiOutputName, value);
+        
+        tuumProcessorContent.SetTuumVar(aiRune.Config.AiOutputName, value);
         return Result.Ok();
     }
 
@@ -118,6 +122,9 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
 [ClassLabel("🤖AI调用")]
 internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
 {
+    internal const string PromptsDefaultName = "Prompts";
+    internal const string AiOutputDefaultName = "AiOutput";
+
     /// <inheritdoc />
     [Required]
     [ReadOnly(true)]
@@ -125,8 +132,19 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     [Display(Name = "配置名称", Description = "符文的配置名称，用于在界面上显示。")]
     public override string Name { get; init; } = string.Empty;
 
-    internal const string PromptsName = nameof(TuumProcessorContent.Prompts);
-    internal const string AiOutputName = "AiOutput";
+    /// <summary>
+    /// 输入的提示词列表变量的名称
+    /// </summary>
+    [Required]
+    [DefaultValue(PromptsDefaultName)]
+    public string PromptsName { get; init; } = PromptsDefaultName;
+
+    /// <summary>
+    /// 输出的AI输出变量的名称
+    /// </summary>
+    [Required]
+    [DefaultValue(AiOutputDefaultName)]
+    public string AiOutputName { get; init; } = AiOutputDefaultName;
 
     /// <summary>
     /// AI 服务配置。
@@ -140,13 +158,13 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
 
 
     /// <inheritdoc />
-    public override List<string> GetConsumedVariables() => [PromptsName];
+    public override List<string> GetConsumedVariables() => [PromptsDefaultName];
 
     /// <inheritdoc />
-    public override List<string> GetProducedVariables() => [AiOutputName];
+    public override List<string> GetProducedVariables() => [AiOutputDefaultName];
 
     protected override AiRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
-        new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); },this);
+        new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); }, this);
 }
 
 /// <summary>
