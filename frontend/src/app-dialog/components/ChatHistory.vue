@@ -1,20 +1,31 @@
 ﻿<template>
-  <!-- 使用 :scrollbar-inst-ref 来绑定实例 -->
   <n-scrollbar class="chat-history-area" :scrollbar-inst-ref="scrollbarInstRef">
     <div class="message-list">
       <div v-if="history.length === 0" class="empty-chat">
         <n-empty description="还没有消息，开始对话吧！" />
       </div>
+      <!-- 1. 修改v-for，直接遍历 props.history -->
       <div
-          v-for="message in displayHistory"
+          v-for="message in history"
           :key="message.id"
           class="message-wrapper"
-          :class="`role-${message.role}`"
+          :class="`role-${message.role.toLowerCase()}`"
       >
+        <!-- 2. 添加头像 -->
+        <n-avatar
+            round
+            :style="{
+              backgroundColor: message.role === 'User' ? '#A0E9A9' : '#ffffff',
+              color: message.role === 'User' ? '#333' : '#007AFF'
+            }"
+        >
+          {{ message.role === 'User' ? 'U' : 'A' }}
+        </n-avatar>
+
+        <!-- 3. 气泡容器 -->
         <div class="message-bubble">
-          <!-- 这里我们将解析和渲染<think>标签 -->
-          <pre v-if="message.thinking" class="thinking-block">{{ message.thinking }}</pre>
-          <p>{{ message.displayText }}</p>
+          <!-- 直接渲染消息内容，不再有复杂的解析 -->
+          <p>{{ message.content }}</p>
         </div>
       </div>
     </div>
@@ -22,70 +33,31 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, nextTick, computed } from 'vue';
-// 1. 导入 ScrollbarInst 类型
+import { ref, watch, nextTick } from 'vue';
 import type { ScrollbarInst } from 'naive-ui';
-import { NScrollbar, NEmpty } from 'naive-ui';
+import { NScrollbar, NEmpty, NAvatar } from 'naive-ui';
 import type { ChatMessage } from '../types';
-
-// 定义一个更丰富的消息类型，用于在前端分离思维过程和显示文本
-type DisplayMessage = {
-  id: string;
-  role: 'User' | 'Assistant';
-  originalContent: string;
-  thinking: string | null;
-  displayText: string;
-}
 
 const props = defineProps<{
   history: ChatMessage[];
 }>();
 
-// 2. 创建一个用于接收 ScrollbarInst 实例的 ref
 const scrollbarInstRef = ref<ScrollbarInst | null>(null);
 
-// 使用 computed 属性来处理后端返回的文本，将其解析为 DisplayMessage
-const displayHistory = computed<DisplayMessage[]>(() => {
-  const thinkRegex = /<think>([\s\S]*?)<\/think>\n?([\s\S]*)/;
-  return props.history.map(msg => {
-    if (msg.role === 'Assistant') {
-      const match = msg.content.match(thinkRegex);
-      if (match) {
-        return {
-          id: msg.id,
-          role: msg.role,
-          originalContent: msg.content,
-          thinking: match[1].trim(),
-          displayText: match[2].trim(),
-        };
-      }
-    }
-    // 对于用户消息或不含<think>的助手消息
-    return {
-      id: msg.id,
-      role: msg.role,
-      originalContent: msg.content,
-      thinking: null,
-      displayText: msg.content,
-    };
-  });
-});
-
+// **逻辑简化**
+// 由于后端不再返回<think>标签，我们不再需要 `displayHistory` 这个 computed 属性来解析消息。
+// 代码现在直接使用 `props.history` 进行渲染，变得更加简洁和高效。
 
 // 监视历史记录的变化，自动滚动到底部
-watch(() => [props.history, displayHistory.value.length], async () => {
+watch(() => props.history.length, async () => {
       await nextTick();
       const scrollbarInstance = scrollbarInstRef.value;
       if (scrollbarInstance) {
-        // **关键修改在这里**
-        // 我们不再需要访问 DOM 元素或计算 scrollHeight。
-        // 只需让它滚动到一个非常大的数字，它就会自动停在最底部。
         scrollbarInstance.scrollTo({ top: 999999, behavior: 'smooth' });
       }
     },
-    { deep: true, flush: 'post' }
+    { flush: 'post' }
 );
-
 </script>
 
 <style scoped>
@@ -97,38 +69,52 @@ watch(() => [props.history, displayHistory.value.length], async () => {
 .message-list {
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 20px; /* 增加消息间的垂直间距 */
 }
+
+/* --- 新增：消息行容器 --- */
 .message-wrapper {
   display: flex;
+  align-items: flex-start; /* 头像和气泡顶部对齐 */
+  gap: 10px;
   max-width: 80%;
 }
+
 .message-bubble {
   padding: 10px 14px;
-  border-radius: 12px;
-  color: #333;
+  border-radius: 18px; /* 更圆润的边角 */
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 .message-bubble p {
   margin: 0;
   white-space: pre-wrap;
   word-wrap: break-word;
+  line-height: 1.6;
 }
 
+/* --- 用户消息样式 (右侧) --- */
 .role-user {
   align-self: flex-end;
+  /* 头像在右，气泡在左 */
+  flex-direction: row-reverse;
 }
 .role-user .message-bubble {
   background-color: #A0E9A9;
-  border-top-right-radius: 2px;
+  color: #000;
+  /* 小技巧：调整一个角的弧度，模拟微信气泡的尾巴 */
+  border-top-right-radius: 5px;
 }
 
+/* --- 助手消息样式 (左侧) --- */
 .role-assistant {
   align-self: flex-start;
 }
 .role-assistant .message-bubble {
   background-color: #ffffff;
+  color: #333;
   border: 1px solid #e8e8e8;
-  border-top-left-radius: 2px;
+  /* 小技巧：调整一个角的弧度，模拟微信气泡的尾巴 */
+  border-top-left-radius: 5px;
 }
 
 .empty-chat {

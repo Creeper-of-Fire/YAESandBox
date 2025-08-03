@@ -8,8 +8,6 @@ import {
     type RegisterRequest
 } from '@/app-authentication/types/generated/authentication-api-client';
 
-import router from '@/router';
-
 export const useAuthStore = defineStore('authentication', () =>
 {
     // --- State ---
@@ -37,7 +35,13 @@ export const useAuthStore = defineStore('authentication', () =>
             user.value = { userId: response.userId, username: response.username };
             localStorage.setItem('authToken', token.value);
             localStorage.setItem('authUser', JSON.stringify(user.value));
-            await router.push({ name: 'Workbench' });
+
+            // --- 优雅的改动 ---
+            // 检查路由中是否有 'redirect' 参数，实现登录后跳转回原页面的功能
+            const urlParams = new URLSearchParams(window.location.search);
+             // 默认重定向到根目录
+            window.location.href = urlParams.get('redirect') || '/'; // 跳转并刷新
+
             return true; // 返回成功
         } catch (error: any) {
             console.error("Login failed:", error);
@@ -83,7 +87,7 @@ export const useAuthStore = defineStore('authentication', () =>
 
         if (redirect)
         {
-            router.push({name: 'Login'}); // 假设登录页路由的 name 是 'Login'
+            window.location.href = '/login'; // 假设登录页的路径是 /login
         }
     }
 
