@@ -11,7 +11,7 @@ export interface DynamicAsset {
 // --- 内部状态 ---
 const vueComponentRegistry = new Map<string, Component>();
 const loadedScriptUrls = new Set<string>();
-const loadedStyleUrls = new Set<string>(); // <--- 新增：跟踪已加载的样式URL
+const loadedStyleUrls = new Set<string>();
 let loadingPromise: Promise<any> | null = null;
 
 /**

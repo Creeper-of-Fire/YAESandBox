@@ -97,6 +97,8 @@
 <script lang="ts" setup>
 import {lightTheme} from "naive-ui";
 import {useAuthStore} from "@/app-authentication/stores/authStore.ts";
+import {provide} from "vue";
+import axiosInstance from "@/utils/axiosInstance.ts";
 // import GlobalErrorDisplay from '@/components/GlobalErrorDisplay.vue';
 // import AppWideNotifications from '@/components/AppWideNotifications.vue';
 const authStore = useAuthStore();
@@ -118,6 +120,9 @@ const authStore = useAuthStore();
 //   console.log("App [onUnmounted]: 应用关闭。");
 //   // connectionStore.disconnectSignalR(); // 如果有断开方法
 // });
+
+// axios，给第三方组件使用，提供鉴权服务
+provide('axios', axiosInstance);
 
 const handleLogout = () =>
 {

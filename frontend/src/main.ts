@@ -103,7 +103,7 @@ async function initAuth()
         return authStore.token ?? ''; // 关键：如果 token 是 null/undefined，则返回 ''
     };
 
-// 为每一个 API 客户端设置 TOKEN 解析器
+    // 为每一个 API 客户端设置 TOKEN 解析器
     AuthApiClient.TOKEN = tokenResolver;
     AiConfigApiClient.TOKEN = tokenResolver;
     WorkflowConfigApiClient.TOKEN = tokenResolver;
