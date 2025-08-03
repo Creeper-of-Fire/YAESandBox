@@ -9,7 +9,7 @@
     </PropertyGroup>
 
     <ItemGroup>
-        <PackageReference Include="DotNetEnv" Version="3.1.1" />
+        <PackageReference Include="DotNetEnv" Version="3.1.1"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.0-preview.3.25172.1"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
         <PackageReference Include="Swashbuckle.AspNetCore" Version="8.1.1"/>
@@ -17,161 +17,23 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.Core.API\YAESandBox.Core.API.csproj"/>
-        <ProjectReference Include="..\YAESandBox.Core.DTOs\YAESandBox.Core.DTOs.csproj"/>
-        <ProjectReference Include="..\YAESandBox.Core.Services\YAESandBox.Core.Services.csproj"/>
-        <ProjectReference Include="..\YAESandBox.Core.Block\YAESandBox.Core.Block.csproj"/>
-        <ProjectReference Include="..\YAESandBox.Core\YAESandBox.Core.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Seed.API\YAESandBox.Seed.API.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Seed.DTOs\YAESandBox.Seed.DTOs.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Seed.Services\YAESandBox.Seed.Services.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Seed.Block\YAESandBox.Seed.Block.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Seed\YAESandBox.Seed.csproj"/>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
-        <ProjectReference Include="..\YAESandBox.Workflow.Test\YAESandBox.Workflow.Test.csproj" />
+        <ProjectReference Include="..\YAESandBox.Workflow.Test\YAESandBox.Workflow.Test.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
-    
-    <ItemGroup>
-        <Folder Include="wwwroot\" />
-        <Content Update="Plugins\**\wwwroot\**" CopyToOutputDirectory="PreserveNewest" />
-    </ItemGroup>
-
-    <!--    <Target Name="CreateSwaggerJson" AfterTargets="Build" Condition="$(Configuration)=='Debug'">-->
-    <!--        <Exec Command="swagger tofile &#45;&#45;output $(SwaggerJsonPath) $(OutputPath)$(AssemblyName).dll v1-public" WorkingDirectory="$(ProjectDir)" />-->
-    <!--    </Target>-->
-
-    <!-- ================================================================== -->
-    <!-- == 定义所有需要生成客户端代码的 Swagger 文档 == -->
-    <!-- ================================================================== -->
 
     <ItemGroup>
-        <!-- 
-          - Identity (Include): Swagger 文档的名称，必须和 C# 代码中的 docName 完全一致。
-          - JsonFileName: 生成的 swagger.json 文件的名字。
-          - TsOutputSubDir: 生成的 TypeScript 客户端代码的子目录名。
-        -->
-
-        <!-- 1. 公共 API (来自 CoreModule) -->
-        <SwaggerDocToGenerate Include="v1-public" Visible="false">
-            <JsonFileName>public-api.swagger.json</JsonFileName>
-            <TsOutputModuleDir>app-game</TsOutputModuleDir>
-            <TsOutputSubDir>public-api-client</TsOutputSubDir>
-        </SwaggerDocToGenerate>
-
-        <!-- 2. AI 服务配置 API (来自 AiServiceConfigModule) -->
-        <SwaggerDocToGenerate Include="v1-ai-config" Visible="false">
-            <JsonFileName>ai-config-api.swagger.json</JsonFileName>
-            <TsOutputModuleDir>app-workbench</TsOutputModuleDir>
-            <TsOutputSubDir>ai-config-api-client</TsOutputSubDir>
-        </SwaggerDocToGenerate>
-
-        <!-- 2. AI 服务配置 API (来自 WorkflowConfigModule) -->
-        <SwaggerDocToGenerate Include="v1-workflow-config" Visible="false">
-            <JsonFileName>workflow-config-api.swagger.json</JsonFileName>
-            <TsOutputModuleDir>app-workbench</TsOutputModuleDir>
-            <TsOutputSubDir>workflow-config-api-client</TsOutputSubDir>
-        </SwaggerDocToGenerate>
-
-        <SwaggerDocToGenerate Include="v1-workflow-test" Visible="false">
-            <JsonFileName>workflow-test-api.swagger.json</JsonFileName>
-            <TsOutputModuleDir>app-test-harness</TsOutputModuleDir>
-            <TsOutputSubDir>workflow-test-api-client</TsOutputSubDir>
-        </SwaggerDocToGenerate>
-
-        <SwaggerDocToGenerate Include="v1-authentication" Visible="false">
-            <JsonFileName>authentication-api.swagger.json</JsonFileName>
-            <TsOutputModuleDir>app-authentication</TsOutputModuleDir>
-            <TsOutputSubDir>authentication-api-client</TsOutputSubDir>
-        </SwaggerDocToGenerate>
-
+        <Folder Include="wwwroot\"/>
+        <Content Update="Plugins\**\wwwroot\**" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
 
-    <ItemGroup>
-      <_ContentIncludedByDefault Remove="Plugins\LuaEditor\wwwroot\api-manifest.json" />
-    </ItemGroup>
 
-    <!-- ================================================================== -->
-    <!-- == 自动生成 Swagger JSON 和 TypeScript 类型 == -->
-    <!-- ================================================================== -->
-
-    <!-- 步骤 1: 构建完成后循环生成所有 swagger.json 文件 -->
-    <Target Name="GenerateSwaggerDoc" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
-        <Message Text="------------------------------------------------------------------" Importance="high"/>
-        <Message Text="正在循环生成所有 Swagger JSON 文件..." Importance="high"/>
-
-        <PropertyGroup>
-            <!-- 定义一些通用的基础路径 -->
-            <FrontendBaseDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend'))</FrontendBaseDir>
-            <JsonOutputBaseDir>$(MSBuildProjectDirectory)/obj/swagger_temp</JsonOutputBaseDir>
-            <ApiDllPath>$(OutputPath)$(AssemblyName).dll</ApiDllPath>
-        </PropertyGroup>
-
-        <!-- 
-          这里是魔法发生的地方：
-          MSBuild 会为 <SwaggerDocToGenerate> ItemGroup 中的每一项执行一次这个 <Exec> 命令。
-          在命令中，我们可以通过 %(ItemName.MetadataName) 的语法来引用每一项的元数据。
-        -->
-        <Exec Command="swagger tofile --output $(JsonOutputBaseDir)/%(SwaggerDocToGenerate.JsonFileName) $(ApiDllPath) %(SwaggerDocToGenerate.Identity)"
-              WorkingDirectory="$(ProjectDir)"/>
-
-        <!-- %(SwaggerDocToGenerate.Identity) 会获取 Include 属性的值，即 "v1-public", "v1-ai-config" 等 -->
-        <Message Text="%(SwaggerDocToGenerate.Identity) 的 JSON 已临时生成到: $(JsonOutputBaseDir)/%(SwaggerDocToGenerate.JsonFileName)" Importance="high"/>
-        <Message Text="------------------------------------------------------------------" Importance="high"/>
-    </Target>
-
-    <!-- 步骤 2: 循环生成所有 TypeScript API 客户端和类型 -->
-    <Target Name="GenerateApiTypes" AfterTargets="GenerateSwaggerDoc">
-        <Message Text="------------------------------------------------------------------" Importance="high"/>
-        <Message Text="正在循环生成所有 TypeScript API 客户端..." Importance="high"/>
-
-        <PropertyGroup>
-            <!-- 基础路径可以从上一个 Target 继承，或者重新定义以确保独立性 -->
-            <FrontendBaseDir>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend'))</FrontendBaseDir>
-            <JsonOutputBaseDir>$(MSBuildProjectDirectory)/obj/swagger_temp</JsonOutputBaseDir>
-        </PropertyGroup>
-
-        <Exec Command="npx openapi-typescript-codegen --input $(JsonOutputBaseDir)/%(SwaggerDocToGenerate.JsonFileName) --output $(FrontendBaseDir)/src/%(SwaggerDocToGenerate.TsOutputModuleDir)/types/generated/%(SwaggerDocToGenerate.TsOutputSubDir) --client axios --useOptions"
-              WorkingDirectory="$(FrontendBaseDir)"
-              ContinueOnError="false"/>
-
-        <Message Text="%(SwaggerDocToGenerate.Identity) 的 TypeScript 客户端已生成到: $(FrontendBaseDir)/src/%(SwaggerDocToGenerate.TsOutputModuleDir)/types/generated/%(SwaggerDocToGenerate.TsOutputSubDir)" Importance="high"/>
-        <Message Text="------------------------------------------------------------------" Importance="high"/>
-    </Target>
-
-    <!-- Target to generate NuGet license report after build -->
-    <Target Name="GenerateLicenseReportForSolution" AfterTargets="Build" Condition="'$(BuildingSolutionFile)' == 'true'">
-        <!--
-          这个 Target 会在每次成功构建 API 项目后运行 nuget-license，
-          扫描位于解决方案根目录的 .sln 文件，并将报告生成在 backend 目录下。
-          前提条件: nuget-license 工具已全局安装 (dotnet tool install -global nuget-license)
-    
-          MSBuild 属性说明:
-          $(SolutionDir)   : 解决方案文件 (.sln) 所在的目录 (例如 "YAESandBox\")
-          $(ProjectDir)    : 当前项目文件 (.csproj) 所在的目录 (例如 "YAESandBox\backend\YAESandBox.API\")
-          $(SolutionFileName): 解决方案文件的名称 (例如 "YAESandBox.sln")
-        -->
-        <Message Text="%(Target.Name): Generating NuGet license report for solution '$(SolutionFileName)'..." Importance="high"/>
-
-        <!-- 定义输入解决方案文件的路径 -->
-        <PropertyGroup>
-            <SolutionFilePath Condition="Exists('$(SolutionDir)$(SolutionFileName)')">$(SolutionDir)$(SolutionFileName)</SolutionFilePath>
-            <!-- 定义输出文件的路径 -->
-            <LicenseOutputPath>$(SolutionDir)\licenses.json</LicenseOutputPath>
-            <!-- 定义输出目录的路径 (用于检查) -->
-            <LicenseOutputDir>$(SolutionDir)</LicenseOutputDir>
-        </PropertyGroup>
-
-        <!-- 检查解决方案文件是否存在 -->
-        <Error Text="Solution file not found at '$(SolutionDir)$(SolutionFileName)'. Cannot generate license report." Condition="'$(SolutionFilePath)' == ''"/>
-        <!-- 检查输出目录是否存在 (可选，Exec 可能会自动创建？保险起见) -->
-        <MakeDir Directories="$(LicenseOutputDir)" Condition="!Exists('$(LicenseOutputDir)')"/>
-
-        <!-- 执行 nuget-license 命令 -->
-        <Exec Command="nuget-license -i $(SolutionFilePath) -t -o jsonPretty -fo $(LicenseOutputPath) -exclude-projects *Tests*"
-              ContinueOnError="false"
-              Condition="'$(SolutionFilePath)' != ''"/>
-        <!-- 你可以在这里添加 -exclude-projects 参数来排除测试项目 -->
-        <!-- 例如: -exclude-projects "*Tests*" -->
-
-        <Message Text="%(Target.Name): NuGet license report generated at $(LicenseOutputPath)" Importance="high" Condition="Exists('$(LicenseOutputPath)')"/>
-    </Target>
 
 
 </Project>

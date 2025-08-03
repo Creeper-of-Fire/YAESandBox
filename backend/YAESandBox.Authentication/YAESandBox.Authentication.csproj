@@ -17,4 +17,24 @@
       <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj" />
     </ItemGroup>
 
+    <PropertyGroup>
+        <!-- 
+          定义此项目生成的 TS 客户端的目标前端根目录。
+          $(MSBuildProjectDirectory) 是当前 csproj 文件所在的目录。
+        -->
+        <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../../frontend'))</TsClientRoot>
+    </PropertyGroup>
+    <ItemGroup>
+        <!-- 
+          - Identity (Include): Swagger 文档的名称，必须和 C# 代码中的 docName 完全一致。
+          - JsonFileName: 生成的 swagger.json 文件的名字。
+          - TsOutputSubDir: 生成的 TypeScript 客户端代码的子目录名。
+        -->
+        <!-- 授权模块 -->
+        <SwaggerDocToGenerate Include="v1-authentication" Visible="false">
+            <JsonFileName>authentication-api.swagger.json</JsonFileName>
+            <TsOutputModuleDir>app-authentication</TsOutputModuleDir>
+            <TsOutputSubDir>authentication-api-client</TsOutputSubDir>
+        </SwaggerDocToGenerate>
+    </ItemGroup>
 </Project>

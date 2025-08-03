@@ -1,0 +1,91 @@
+<!-- YAESandBox\Directory.Build.targets -->
+<Project>
+    <!-- 
+      这个文件中的构建目标 (Target) 会被自动应用到
+      当前目录及所有子目录下的所有 C# 项目中 (包括 backend 和 Plugins 目录下的项目)。
+    -->
+
+    <!-- ================================================================== -->
+    <!-- == 通用的 Swagger JSON 和 TypeScript 生成逻辑 == -->
+    <!-- ================================================================== -->
+
+    <!-- 
+      步骤 1: 构建完成后，为那些定义了 <SwaggerDocToGenerate> 的项目生成 swagger.json 文件。
+      Condition: 只有在 Debug 模式下，并且当前项目定义了至少一个 <SwaggerDocToGenerate> 项时才运行。
+    -->
+    <Target Name="GenerateSwaggerDoc_Shared" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' AND '@(SwaggerDocToGenerate)' != ''">
+        <Message Text="------------------------------------------------------------------" Importance="high"/>
+        <Message Text="[SHARED] 发现 Swagger 生成任务，正在为项目 [$(MSBuildProjectName)] 生成 JSON 文件..." Importance="high"/>
+
+        <PropertyGroup>
+            <!-- 临时存放 swagger.json 的目录，每个项目都会在自己的 obj 目录下创建 -->
+            <JsonOutputBaseDir>$(MSBuildProjectDirectory)/obj/swagger_temp</JsonOutputBaseDir>
+            <!-- API Dll 的完整路径 -->
+            <ApiDllPath>$(OutputPath)$(AssemblyName).dll</ApiDllPath>
+        </PropertyGroup>
+
+        <!-- 
+          为当前项目中定义的每一个 <SwaggerDocToGenerate> 项执行一次 swagger tofile 命令。
+        -->
+        <Exec Command="swagger tofile --output $(JsonOutputBaseDir)/%(SwaggerDocToGenerate.JsonFileName) $(ApiDllPath) %(SwaggerDocToGenerate.Identity)"
+              WorkingDirectory="$(ProjectDir)"/>
+
+        <Message Text="[SHARED] %(SwaggerDocToGenerate.Identity) 的 JSON 已临时生成到: $(JsonOutputBaseDir)/%(SwaggerDocToGenerate.JsonFileName)" Importance="high"/>
+        <Message Text="------------------------------------------------------------------" Importance="high"/>
+    </Target>
+
+    <!-- 
+      步骤 2: 生成完 JSON 后，接着生成 TypeScript API 客户端。
+      Condition: 只有在定义了 TsClientRoot 属性 (告诉我们 TS 代码放哪)，并且定义了 <SwaggerDocToGenerate> 项时才运行。
+    -->
+    <Target Name="GenerateApiTypes_Shared" AfterTargets="GenerateSwaggerDoc_Shared" Condition="'$(TsClientRoot)' != '' AND '@(SwaggerDocToGenerate)' != ''">
+        <Message Text="------------------------------------------------------------------" Importance="high"/>
+        <Message Text="[SHARED] 正在为项目 [$(MSBuildProjectName)] 生成 TypeScript 客户端..." Importance="high"/>
+
+        <PropertyGroup>
+            <JsonOutputBaseDir>$(MSBuildProjectDirectory)/obj/swagger_temp</JsonOutputBaseDir>
+        </PropertyGroup>
+
+        <!-- 
+          这里的魔法在于：
+          - `%(SwaggerDocToGenerate.JsonFileName)`: 使用每个项定义的 JSON 文件名。
+          - `$(TsClientRoot)`: 使用项目自己定义的 TS 输出根目录！这是实现插件独立输出的关键。
+          - `%(SwaggerDocToGenerate.TsOutputModuleDir)` 和 `%(SwaggerDocToGenerate.TsOutputSubDir)`: 就像之前一样，定义子目录。
+        -->
+        <Exec Command="npx openapi-typescript-codegen --input $(JsonOutputBaseDir)/%(SwaggerDocToGenerate.JsonFileName) --output $(TsClientRoot)/src/%(SwaggerDocToGenerate.TsOutputModuleDir)/types/generated/%(SwaggerDocToGenerate.TsOutputSubDir) --client axios --useOptions"
+              WorkingDirectory="$(TsClientRoot)"
+              ContinueOnError="false"/>
+
+        <Message Text="[SHARED] %(SwaggerDocToGenerate.Identity) 的 TypeScript 客户端已生成到: $(TsClientRoot)/src/%(SwaggerDocToGenerate.TsOutputModuleDir)/types/generated/%(SwaggerDocToGenerate.TsOutputSubDir)" Importance="high"/>
+        <Message Text="------------------------------------------------------------------" Importance="high"/>
+    </Target>
+
+
+    <!-- ================================================================== -->
+    <!-- == 解决方案级别的 NuGet 许可证报告生成 == -->
+    <!-- ================================================================== -->
+
+    <!--
+      这个 Target 会在解决方案构建时运行一次。
+      - `Condition="'$(BuildingSolutionFile)' == 'true'"` 确保只在构建整个 .sln 时触发。
+      - `Condition="'$(_LicenseReportGenerated)' != 'true'"` 是一个信号量，防止此 Target 在一次解决方案构建中被多个项目重复执行。
+    -->
+    <Target Name="GenerateLicenseReportForSolution_Shared" AfterTargets="Build" Condition="'$(BuildingSolutionFile)' == 'true' AND '$(_LicenseReportGenerated)' != 'true'">
+        <Message Text="[SHARED] 正在为解决方案 '$(SolutionFileName)' 生成 NuGet 许可证报告..." Importance="high"/>
+
+        <PropertyGroup>
+            <SolutionFilePath>$(SolutionPath)</SolutionFilePath>
+            <LicenseOutputPath>$(SolutionDir)licenses.json</LicenseOutputPath>
+            <!-- 设置一个信号量属性，告诉后续项目构建无需再次运行此 Target -->
+            <_LicenseReportGenerated>true</_LicenseReportGenerated>
+        </PropertyGroup>
+
+        <Error Text="解决方案文件未找到: '$(SolutionFilePath)'" Condition="!Exists('$(SolutionFilePath)')"/>
+
+        <Exec Command="nuget-license -i $(SolutionFilePath) -t -o jsonPretty -fo $(LicenseOutputPath) -exclude-projects *Tests*"
+              ContinueOnError="false"/>
+
+        <Message Text="[SHARED] NuGet 许可证报告已生成到: $(LicenseOutputPath)" Importance="high" Condition="Exists('$(LicenseOutputPath)')"/>
+    </Target>
+
+</Project>
