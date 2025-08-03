@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
+using YAESandBox.Plugin.LuaScript.Rune;
 using YAESandBox.Workflow.API;
 
 namespace YAESandBox.Plugin.LuaScript;
@@ -20,5 +21,9 @@ public class LuaPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider
     );
 
     /// <inheritdoc />
-    public IReadOnlyList<Type> RuneConfigTypes => [typeof(Rune.LuaScriptRuneConfig)];
+    public IReadOnlyList<Type> RuneConfigTypes =>
+    [
+        typeof(LuaScriptRuneConfig),
+        typeof(LuaStringProcessorRuneConfig)
+    ];
 }

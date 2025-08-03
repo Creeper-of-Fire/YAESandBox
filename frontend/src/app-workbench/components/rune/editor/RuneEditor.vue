@@ -17,8 +17,8 @@
               <template #trigger>
                 <n-button
                     :focusable="false"
-                    circle
                     :type="isPopoverPinned ? 'info' : 'default'"
+                    circle
                     style="margin-left: 8px;"
                     text
                     @mouseenter="handleMouseEnter"
@@ -90,6 +90,7 @@ import {useDebounceFn} from "@vueuse/core";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
 import type {RuneEditorContext} from "@/app-workbench/components/rune/editor/RuneEditorContext.ts";
 import {useRuneAnalysis} from "@/app-workbench/composables/useRuneAnalysis.ts";
+import {synchronizeModelWithSchema} from "@/app-workbench/utils/synchronizeModelWithSchema.ts";
 
 // --- Props ---
 const props = defineProps<{
@@ -128,16 +129,19 @@ function handleMouseLeave()
   }, 200);
 }
 
-function handleTriggerClick() {
+function handleTriggerClick()
+{
   // 清除任何可能存在的隐藏定时器，确保点击后不会意外关闭
-  if (hideTimer) {
+  if (hideTimer)
+  {
     clearTimeout(hideTimer);
     hideTimer = null;
   }
 
   // 点击的作用只有一个：将 Popover 的状态设置为“已固定”
   // 如果它已经是固定的，则这次点击不执行任何状态变更。
-  if (!isPopoverPinned.value) {
+  if (!isPopoverPinned.value)
+  {
     isPopoverPinned.value = true;
   }
 
@@ -157,22 +161,25 @@ function handleClickOutside()
     }, 100);
   }
 }
+const rune = computed(() =>
+{
+  return props.runeContext.data;
+})
 
 const {
   analysisResult: runeAnalysisResult,
   hasConsumedVariables,
   hasProducedVariables
 } = useRuneAnalysis(
-    computed(() => props.runeContext.data),
-    computed(() => props.runeContext.data.configId)
+    computed(() => rune.value),
+    computed(() => rune.value.configId)
 );
-
 
 const workbenchStore = useWorkbenchStore();
 
 const runeSchemas = computed(() => workbenchStore.runeSchemasAsync.state)
 const isLoadingSchema = computed(() => workbenchStore.runeSchemasAsync.isLoading);
-const rune = computed(() => props.runeContext.data);
+
 /**
  * 计算属性，用于获取符文类型的显示标签。
  */

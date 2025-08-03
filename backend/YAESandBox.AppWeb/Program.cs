@@ -1,7 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using DotNetEnv;
-using JetBrains.Annotations;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
@@ -189,7 +188,6 @@ app.MapControllers(); // Map attribute-routed controllers
 allModules.ForEachModules<IProgramModuleHubRegistrar>(it => it.MapHubs(app));
 
 app.Run();
-
 namespace YAESandBox.AppWeb
 {
     // --- Records/Classes used in Program.cs ---
@@ -199,8 +197,7 @@ namespace YAESandBox.AppWeb
     internal class EnumSchemaFilter : ISchemaFilter
     {
         /// <inheritdoc />
-        public void Apply(OpenApiSchema schema,
-            SchemaFilterContext context)
+        public void Apply(OpenApiSchema schema, SchemaFilterContext context)
         {
             if (!context.Type.IsEnum) return;
             schema.Enum.Clear();

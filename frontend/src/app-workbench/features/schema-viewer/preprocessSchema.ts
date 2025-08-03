@@ -18,6 +18,8 @@ const MAIN_APP_WIDGETS: Record<string, Component> = {
     // 未来可以添加更多内建组件...
 };
 
+type SchemaType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null';
+
 // =================================================================
 // 2. 类型定义
 // 为 JSON Schema 及其 UI 扩展属性定义严谨的类型接口
@@ -25,7 +27,7 @@ const MAIN_APP_WIDGETS: Record<string, Component> = {
 interface FieldProps
 {
     // 标准 JSON Schema 字段
-    type?: 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | string[];
+    type?: SchemaType | SchemaType[];
     title?: string;
     description?: string;
     default?: unknown;
@@ -48,7 +50,7 @@ interface FieldProps
 
     // UI 扩展字段 (非标准)
     'ui:widget'?: string | Component;
-    'ui:custom-renderer'?: Component;
+    'ui:custom-renderer-property'?: Component;
     'ui:hidden'?: boolean;
     'ui:options'?: {
         isEditableSelectOptions?: boolean;
@@ -100,16 +102,20 @@ export function preprocessSchemaForWidgets(originalSchema: Record<string, any>):
     // ================= 优先检查类级别的组件渲染器 =================
     // 这是我们的“快速通道”，如果检测到，就直接处理并返回，不再进行深度递归。
     const classVueComponent = schema['x-vue-component-class'] as string;
-    if (classVueComponent) {
+    if (classVueComponent)
+    {
         const component = getVuePluginComponent(classVueComponent);
-        if (component) {
+        if (component)
+        {
             // 注入我们自己约定的、vue-form不认识的属性
             schema['ui:whole-component-renderer'] = component;
             // 清理掉原始指令
             delete schema['x-vue-component-class'];
             // 直接返回，跳过后续所有递归处理
             return schema;
-        } else {
+        }
+        else
+        {
             console.warn(`[preprocessSchema] 未找到类级别插件组件: "${classVueComponent}"`);
         }
     }
@@ -129,6 +135,28 @@ export function preprocessSchemaForWidgets(originalSchema: Record<string, any>):
  */
 function recursivePreprocess(schemaNode: FieldProps, definitions: Record<string, FieldProps>): void
 {
+    // =================================================================
+    // 处理包含 'null' 的 type 数组。
+    // 在处理任何节点之前，先清理其 type 属性，这可以简化后续的类型判断逻辑。
+    // =================================================================
+    if (Array.isArray(schemaNode.type))
+    {
+        const nonNullTypes = schemaNode.type.filter(t => t !== 'null');
+        if (nonNullTypes.length === 1)
+        {
+            // 如果移除 'null' 后只剩一种类型，则将 type 从数组简化为字符串。
+            // 例如: ['string', 'null'] -> 'string'
+            schemaNode.type = nonNullTypes[0];
+        }
+        else
+        {
+            // 否则，更新为不含 'null' 的数组。
+            // 例如: ['string', 'number', 'null'] -> ['string', 'number']
+            // 如果原数组只有 ['null']，则会变为空数组 []，该字段将无类型。
+            schemaNode.type = nonNullTypes;
+        }
+    }
+
     // 步骤 1: 首先处理当前节点自身的元数据转换（oneOf, widget 等）。
     // 这确保了在检查子节点之前，父节点的信息是最终的。
     // preprocessSingleField 的逻辑是正确的，它返回了一个我们想要的扁平化对象。
@@ -184,23 +212,27 @@ function recursivePreprocess(schemaNode: FieldProps, definitions: Record<string,
     }
 
     // =================================================================
-    // 步骤 6: 最终custom-renderer分类和转换逻辑
+    // 步骤 6: 最终custom-renderer-property分类和转换逻辑
     // 在所有子节点都处理完毕后，对当前节点进行最终决策。
     // =================================================================
-    if (schemaNode['ui:custom-renderer']) {
-        if (isFieldType(schemaNode, 'object')) {
+    if (schemaNode['ui:custom-renderer-property'])
+    {
+        if (isFieldType(schemaNode, 'object'))
+        {
             // 这是对象级自定义组件
-            // 1. 保留 ui:custom-renderer 给我们的 CustomFieldRenderer 使用
+            // 1. 保留 ui:custom-renderer-property 给我们的 CustomFieldRenderer 使用
             // 2. 添加 ui:hidden: true，告诉 vue3-form-naive 不要渲染这个对象
             if (!schemaNode['ui:options'])
                 schemaNode['ui:options'] = {};
             schemaNode['ui:hidden'] = true;
-        } else {
+        }
+        else
+        {
             // 这是字段级自定义组件
             // 1. 将自定义组件赋给官方的 ui:widget
-            schemaNode['ui:widget'] = schemaNode['ui:custom-renderer'];
+            schemaNode['ui:widget'] = schemaNode['ui:custom-renderer-property'];
             // 2. 清理掉我们的中间属性
-            delete schemaNode['ui:custom-renderer'];
+            delete schemaNode['ui:custom-renderer-property'];
         }
     }
 }
@@ -338,8 +370,8 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
     }
 
     // === 动态组件注入逻辑 ===
-    const vueComponentName = processedProps['x-vue-component'] as string;
-    const wcTagName = processedProps['x-web-component'] as string;
+    const vueComponentName = processedProps['x-vue-component-property'] as string;
+    const wcTagName = processedProps['x-web-component-property'] as string;
 
     // 优先使用 Vue 组件
     if (vueComponentName)
@@ -347,7 +379,7 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
         const component = getVuePluginComponent(vueComponentName);
         if (component)
         {
-            processedProps['ui:custom-renderer'] = component;
+            processedProps['ui:custom-renderer-property'] = component;
         }
         else
         {
@@ -357,7 +389,7 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
     // 其次使用 Web Component
     else if (wcTagName)
     {
-        processedProps['ui:custom-renderer'] = WebComponentWrapper;
+        processedProps['ui:custom-renderer-property'] = WebComponentWrapper;
         processedProps['ui:options'] ??= {};
         processedProps['ui:options'].tagName = wcTagName;
     }
@@ -370,8 +402,8 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
     } | undefined;
     if (monacoConfig && monacoConfig.language)
     {
-        // 1. 设置 ui:custom-renderer 为我们的 MonacoEditorWidget 组件
-        processedProps['ui:custom-renderer'] = MonacoEditorWidget;
+        // 1. 设置 ui:custom-renderer-property 为我们的 MonacoEditorWidget 组件
+        processedProps['ui:custom-renderer-property'] = MonacoEditorWidget;
 
         // 2. 确保 ui:options 存在
         if (!processedProps['ui:options'])
@@ -390,22 +422,26 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
     }
 
     // === 主应用内建组件注入逻辑 ===
-    const customRendererKey = processedProps['x-custom-renderer'] as string;
-    if (customRendererKey) {
+    const customRendererKey = processedProps['x-custom-renderer-property'] as string;
+    if (customRendererKey)
+    {
         const component = MAIN_APP_WIDGETS[customRendererKey];
-        if (component) {
+        if (component)
+        {
             // ui:widget 不支持 type:object
             // 错误的方式：processedProps['ui:widget'] = component;
             // 正确的方式：使用我们自己的、不会被表单库解释的属性
-            processedProps['ui:custom-renderer'] = component;
+            processedProps['ui:custom-renderer-property'] = component;
             processedProps['ui:hidden'] = true;
             delete processedProps['oneOf']
-        } else {
+        }
+        else
+        {
             console.warn(`未在主应用中找到键名为 "${customRendererKey}" 的自定义渲染组件。`);
         }
 
-        // 确保 x-custom-renderer 指令被清理掉，但我们新的 ui:custom-renderer 属性被保留
-        delete processedProps['x-custom-renderer'];
+        // 确保 x-custom-renderer-property 指令被清理掉，但我们新的 ui:custom-renderer-property 属性被保留
+        delete processedProps['x-custom-renderer-property'];
     }
 
     // 清理空的 ui:options

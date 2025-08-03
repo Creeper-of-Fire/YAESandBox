@@ -12,9 +12,11 @@
         <NSelect v-model:value="formValue.extractionMode" @update:value="updateModel" :options="extractionModeOptions" />
       </NFormItem>
       <!-- 条件渲染 -->
-      <NFormItem v-if="formValue.extractionMode === 'Attribute'" label="属性名">
-        <NInput v-model:value="formValue.attributeName" @update:value="updateModel" placeholder="例如：src, href, data-id" />
-      </NFormItem>
+      <div v-if="formValue.extractionMode === 'Attribute'">
+        <NFormItem  label="属性名">
+          <NInput v-model:value="formValue.attributeName" @update:value="updateModel" placeholder="例如：src, href, data-id" />
+        </NFormItem>
+      </div>
       <NFormItem label="返回格式">
         <NSelect v-model:value="formValue.returnFormat" @update:value="updateModel" :options="returnFormatOptions" />
       </NFormItem>

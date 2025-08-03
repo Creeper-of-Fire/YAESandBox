@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using Namotion.Reflection;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema.Attributes;
@@ -10,7 +9,6 @@ using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Tuum;
 using static YAESandBox.Workflow.Rune.ExactRune.AiRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 

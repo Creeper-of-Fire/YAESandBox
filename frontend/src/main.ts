@@ -2,7 +2,7 @@
 import {createApp} from 'vue';
 import {createPinia} from 'pinia';
 import App from './App.vue';
-import {OpenAPI} from './app-game/types/generated/public-api-client'; // 确认路径正确
+import * as Vue from 'vue'
 // 通用字体
 import 'vfonts/Lato.css'
 // 等宽字体
@@ -50,10 +50,11 @@ const naiveForVueForm = create({
     ]
 })
 
-
-// 配置后端 API 的基础 URL
-// 通常从环境变量读取，例如 Vite 的 import.meta.env
-OpenAPI.BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7018'; // 替换为你的实际后端地址
+// ---  为插件暴露全局依赖 ---
+// 这段代码是专门为了让插件能够找到Vue
+// @ts-ignore
+window.Vue = Vue;
+// ------------------------------------
 
 const app = createApp(App);
 
@@ -61,31 +62,29 @@ app.use(router)
 app.use(naiveForVueForm)
 app.use(VueVirtualScroller)
 app.use(createPinia())
-
-
+await initAuth();
 installBuiltinComponents();
 app.mount('#app')
-await initAuth();
 
 // 可以在这里或 App.vue 的 onMounted 中初始化 SignalR 连接
 // import { useNarrativeStore } from './stores/narrativeStore';
 // const narrativeStore = useNarrativeStore();
 // narrativeStore.connectSignalR();
 
-
+// --- 将 Token 注入到所有 API 请求中 ---
+// 必须在 Pinia 安装之后，才能使用 useAuthStore
+// 导入所有需要认证的 API 客户端的 OpenAPI 对象
+import  {OpenAPI as AuthApiClient}  from  '@/app-authentication/types/generated/authentication-api-client'
+import  {OpenAPI as AiConfigApiClient}  from '@/app-workbench/types/generated/ai-config-api-client'
+import  {OpenAPI as WorkflowConfigApiClient}  from '@/app-workbench/types/generated/workflow-config-api-client'
+import  {OpenAPI as WorkflowTestApiClient}  from '@/app-test-harness/types/generated/workflow-test-api-client'
+import  {OpenAPI as PublicApiClient} from '@/app-game/types/generated/public-api-client'
+import  {useAuthStore} from "@/app-authentication/stores/authStore.ts"
+// 导入 ApiRequestOptions 类型，我们可以从任何一个客户端导入，因为它们是相同的
 import  type {ApiRequestOptions}  from '@/app-workbench/types/generated/workflow-config-api-client/core/ApiRequestOptions'
 async function initAuth()
 {
-    // --- 将 Token 注入到所有 API 请求中 ---
-    // 必须在 Pinia 安装之后，才能使用 useAuthStore
-    // 导入所有需要认证的 API 客户端的 OpenAPI 对象
-    const  {OpenAPI : AuthApiClient}  = await import( '@/app-authentication/types/generated/authentication-api-client')
-    const  {OpenAPI : AiConfigApiClient}  = await import( '@/app-workbench/types/generated/ai-config-api-client')
-    const  {OpenAPI : WorkflowConfigApiClient}  = await import( '@/app-workbench/types/generated/workflow-config-api-client')
-    const  {OpenAPI : WorkflowTestApiClient}  = await import( '@/app-test-harness/types/generated/workflow-test-api-client')
-    const  {OpenAPI : PublicApiClient}  = await import( '@/app-game/types/generated/public-api-client')
-    const  {useAuthStore}  = await import( "@/app-authentication/stores/authStore.ts")
-    // 导入 ApiRequestOptions 类型，我们可以从任何一个客户端导入，因为它们是相同的
+
 
     // 定义一个函数，用于从 store 中获取 token
     /**

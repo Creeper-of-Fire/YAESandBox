@@ -41,7 +41,8 @@ public partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, 
             // lua.LoadCLRPackage();
 
             // --- 沙箱化：移除危险的内建符文 ---
-            lua.DoString(@"
+            lua.DoString(
+                """
                 os = nil; 
                 io = nil; 
                 debug = nil; 
@@ -49,7 +50,8 @@ public partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, 
                 dofile = nil; 
                 loadfile = nil; 
                 require = nil;
-            ");
+                """
+            );
 
 
             // --- 2. 准备核心服务：日志记录器 ---

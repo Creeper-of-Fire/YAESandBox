@@ -103,6 +103,7 @@ import {type SelectedConfigItem, SelectedConfigItemKey} from "@/app-workbench/ut
 import type {AbstractRuneConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import type {TuumEditorContext} from "@/app-workbench/components/tuum/editor/TuumEditorContext.ts";
 import type {RuneEditorContext} from "@/app-workbench/components/rune/editor/RuneEditorContext.ts";
+import {synchronizeModelWithSchema} from "@/app-workbench/utils/synchronizeModelWithSchema.ts";
 
 defineOptions({
   name: 'WorkbenchView'
@@ -114,7 +115,51 @@ provide<SelectedConfigItem>(SelectedConfigItemKey, {
   data: selectedConfig,
   update: (config) =>
   {
-    selectedConfig.value = config;
+    try{
+      selectedConfig.value = config;
+    }
+    catch(e){
+      console.error(e);
+    }
+    // if (!config)
+    // {
+    //   selectedConfig.value = null;
+    //   return;
+    // }
+    //
+    // // --- 这是核心修改部分 ---
+    //
+    // // 1. 确保 Schema 已加载
+    // // 这里的判断逻辑可能需要根据你的实现调整，这里假设是符文配置
+    // const isRune = 'runeType' in config.data;
+    // if (!isRune)
+    // {
+    //   // 如果不是符文（例如是 Workflow 或 Tuum），直接赋值
+    //   selectedConfig.value = config;
+    //   return;
+    // }
+    //
+    // const runeConfig = config as RuneEditorContext;
+    // if (!workbenchStore.runeSchemasAsync.isReady)
+    // {
+    //   await workbenchStore.runeSchemasAsync.execute();
+    // }
+    // const schema = workbenchStore.runeSchemasAsync.state[runeConfig.data.runeType];
+    //
+    // if (!schema)
+    // {
+    //   // 如果找不到 Schema，作为降级策略，直接使用原始数据
+    //   console.warn(`未找到类型为 "${runeConfig.data.runeType}" 的 Schema，无法同步模型。`);
+    //   selectedConfig.value = config;
+    //   return;
+    // }
+    //
+    // // 2. 使用 Schema 来“水合”数据模型
+    // const hydratedConfig = synchronizeModelWithSchema(runeConfig.data, schema);
+    //
+    // Object.assign(runeConfig, {data: hydratedConfig});
+    //
+    // selectedConfig.value = runeConfig;
   }
 });
 
@@ -263,10 +308,10 @@ const beforeUnloadHandler = (event: BeforeUnloadEvent) =>
   }
 };
 
-onMounted(() =>
+onMounted(async () =>
 {
   window.addEventListener('beforeunload', beforeUnloadHandler);
-  workbenchStore.runeSchemasAsync.execute();
+  await workbenchStore.runeSchemasAsync.execute();
 });
 
 onBeforeUnmount(() =>

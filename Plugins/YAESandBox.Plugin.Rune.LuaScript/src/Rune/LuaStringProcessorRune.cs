@@ -98,7 +98,8 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
     public required string OutputVariableName { get; init; }
 
     private const string DefaultScript =
-        @"-- 这是一个透传脚本，它会将输入直接作为输出。
+        """
+        -- 这是一个透传脚本，它会将输入直接作为输出。
         -- 您可以在此基础上进行修改。
         local input = input_string
 
@@ -108,7 +109,7 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
         set_output(input)
 
         log.info('已将输入直接透传为输出。')
-        ";
+        """;
 
     /// <summary>
     /// 用户编写的 Lua 脚本。

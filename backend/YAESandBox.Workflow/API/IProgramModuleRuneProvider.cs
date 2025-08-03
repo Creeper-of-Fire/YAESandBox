@@ -1,5 +1,4 @@
 ﻿using YAESandBox.Depend.AspNetCore;
-using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 
 namespace YAESandBox.Workflow.API;
 

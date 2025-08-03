@@ -9,7 +9,7 @@ namespace YAESandBox.Plugin.TextParser;
 /// <summary>
 /// 文本处理器插件，提供标签解析和正则生成等高级文本处理功能。
 /// </summary>
-public class TextParserPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IProgramModuleMvcConfigurator // 添加接口
+public class TextParserPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IProgramModuleMvcConfigurator
 {
     /// <inheritdoc />
     public PluginMetadata Metadata { get; } = new(

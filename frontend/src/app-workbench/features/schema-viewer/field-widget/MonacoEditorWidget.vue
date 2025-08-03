@@ -60,7 +60,7 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue']);
 
 // --- 内部状态 ---
-const internalValue = ref(props.modelValue);
+const internalValue = ref(props.modelValue ?? '');
 const isLoading = ref(true); // 默认加载中
 const loadingText = ref('正在加载编辑器核心...');
 const error = ref<string | null>(null);
@@ -79,9 +79,10 @@ const editorOptions = {
 // 使用防抖来更新 v-model，避免在快速输入时频繁触发
 const debouncedUpdate = useDebounceFn((newValue: string) =>
 {
-  if (props.modelValue !== newValue)
+  const valueToSet = newValue ?? '';
+  if (props.modelValue !== valueToSet)
   {
-    emit('update:modelValue', newValue);
+    emit('update:modelValue', valueToSet);
   }
 }, 300);
 
@@ -94,9 +95,10 @@ watch(internalValue, (newValue) =>
 // 监听从父组件传入的值的变化
 watch(() => props.modelValue, (newValue) =>
 {
-  if (internalValue.value !== newValue)
+  const valueToSet = newValue ?? '';
+  if (internalValue.value !== valueToSet)
   {
-    internalValue.value = newValue;
+    internalValue.value = valueToSet;
   }
 });
 

@@ -22,7 +22,7 @@ public class RenderAsCustomObjectWidgetAttribute(string widgetKey) : Attribute
 /// 处理 [RenderAsCustomObjectWidget] 特性。
 /// 1. 将 schema 的类型强制设为 'object'。
 /// 2. **移除所有内部属性定义（properties, oneOf, allOf 等），使其成为不透明对象。**
-/// 3. 添加 'x-custom-renderer' 指令，以便前端查找组件。
+/// 3. 添加 'x-custom-renderer-property' 指令，以便前端查找组件。
 /// </summary>
 internal class CustomObjectWidgetRendererSchemaProcessor : ISchemaProcessor
 {
@@ -44,6 +44,6 @@ internal class CustomObjectWidgetRendererSchemaProcessor : ISchemaProcessor
         schema.ExtensionData ??= new Dictionary<string, object?>();
 
         // 步骤 3: 注入前端指令
-        schema.ExtensionData["x-custom-renderer"] = attribute.WidgetKey;
+        schema.ExtensionData["x-custom-renderer-property"] = attribute.WidgetKey;
     }
 }

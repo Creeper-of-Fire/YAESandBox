@@ -8,38 +8,38 @@
       @click="updateSelectedConfig"
   >
     <template #content>
-<!--      <span v-if="runeClassLabel" class="rune-alias">{{ runeClassLabel }}</span>-->
+      <!--      <span v-if="runeClassLabel" class="rune-alias">{{ runeClassLabel }}</span>-->
       <span class="rune-name">{{ rune.name }}</span>
     </template>
 
     <template #actions>
-      <n-popover
-          v-if="runeAnalysisResult && (hasConsumedVariables || hasProducedVariables)"
-          trigger="hover">
-        <template #trigger>
-          <n-icon :component="FindInPageIcon" style="color: #999; margin-left: 8px;"/>
-        </template>
-        <div v-if="hasConsumedVariables">
-          <n-h4>输入:</n-h4>
-          <n-ul>
-            <n-li v-for="variable in runeAnalysisResult.consumedVariables" :key="variable">{{ variable }}</n-li>
-          </n-ul>
-        </div>
-        <div v-if="hasProducedVariables">
-          <n-h4>输出:</n-h4>
-          <n-ul>
-            <n-li v-for="variable in runeAnalysisResult.producedVariables" :key="variable">{{ variable }}</n-li>
-          </n-ul>
-        </div>
-      </n-popover>
       <n-popover v-if="rulesForThisRune" trigger="hover">
         <template #trigger>
-          <n-icon :component="InfoIcon" style="color: #999; margin-left: 8px;"/>
+          <n-icon :color="normalIconColor" :component="InfoIcon" style="margin-left: 8px;"/>
         </template>
         <!-- 动态生成提示内容 -->
         <n-ul>
           <n-li v-for="ruleText in ruleDescriptions" :key="ruleText">{{ ruleText }}</n-li>
         </n-ul>
+      </n-popover>
+      <n-popover
+          :disabled="!showAnalysisPopover"
+          trigger="hover">
+        <template #trigger>
+          <n-icon :color="analysisIconColor" :component="FindInPageIcon" style="margin-left: 8px;"/>
+        </template>
+        <div v-if="hasConsumedVariables&&runeAnalysisResult">
+          <n-h4>输入:</n-h4>
+          <n-ul>
+            <n-li v-for="variable in runeAnalysisResult.consumedVariables" :key="variable">{{ variable }}</n-li>
+          </n-ul>
+        </div>
+        <div v-if="hasProducedVariables&&runeAnalysisResult">
+          <n-h4>输出:</n-h4>
+          <n-ul>
+            <n-li v-for="variable in runeAnalysisResult.producedVariables" :key="variable">{{ variable }}</n-li>
+          </n-ul>
+        </div>
       </n-popover>
 
       <!-- "更多" 操作的下拉菜单 -->
@@ -54,12 +54,12 @@ import type {AbstractRuneConfig, TuumConfig} from '@/app-workbench/types/generat
 import {computed, inject, toRef} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
-import ColorHash from "color-hash";
 import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 import {FindInPageIcon} from "@/utils/icons.ts";
 import {useRuneAnalysis} from "@/app-workbench/composables/useRuneAnalysis.ts";
 import {useConfigItemActions} from "@/app-workbench/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemActionsMenu.vue";
+import {useThemeVars} from "naive-ui";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
@@ -76,6 +76,24 @@ const {
     computed(() => props.rune),
     computed(() => props.rune.configId)
 );
+
+// 创建一个计算属性来控制分析结果 Popover 的显示
+const showAnalysisPopover = computed(() =>
+    !!runeAnalysisResult.value && (hasConsumedVariables.value || hasProducedVariables.value)
+);
+
+// 使用 Naive UI 的 useThemeVars hook
+const themeVars = useThemeVars();
+
+const normalIconColor = computed(() => themeVars.value.textColor2); // 正常状态的颜色
+const dimIconColor = computed(() => themeVars.value.textColor3);    // 暗淡状态的颜色
+
+// 为分析图标创建一个动态的颜色计算属性
+const analysisIconColor = computed(() =>
+{
+  // 如果有输入或输出变量信息，使用正常颜色；否则，使用暗淡颜色。
+  return showAnalysisPopover.value ? normalIconColor.value : dimIconColor.value;
+});
 
 const selectedConfigItem = inject(SelectedConfigItemKey);
 

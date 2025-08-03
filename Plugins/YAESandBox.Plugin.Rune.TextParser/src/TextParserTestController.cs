@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
-using YAESandBox.Depend.Results;
 using YAESandBox.Plugin.TextParser.Rune;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;

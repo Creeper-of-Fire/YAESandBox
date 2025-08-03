@@ -1,23 +1,19 @@
-using Microsoft.Extensions.Logging;
+using System.Reflection;
 using Namotion.Reflection;
-using NJsonSchema;
 using NJsonSchema.Generation;
-using YAESandBox.Depend;
-using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Workflow.Utility;
 
 namespace YAESandBox.Workflow.API.Schema;
 
 /// <summary>
-/// 指示该属性在前端应使用插件提供的、预编译的 Vue 组件进行渲染。
+/// 指示该属性/类型在前端应使用插件提供的、预编译的 Vue 组件进行渲染。
 /// </summary>
 /// <param name="componentName">
 /// Vue 组件在插件包中导出的名称。例如，如果插件包导出 { LuaEditor: ..., MarkdownEditor: ... }，
 /// 那么这里就应该传入 "LuaEditor"。
 /// </param>
-[AttributeUsage(AttributeTargets.Property)]
-internal class RenderWithVueComponentAttribute(string componentName) : Attribute
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Class)]
+public class RenderWithVueComponentAttribute(string componentName) : Attribute
 {
     /// <summary>
     /// 组件在插件包中导出的名称。
@@ -26,14 +22,14 @@ internal class RenderWithVueComponentAttribute(string componentName) : Attribute
 }
 
 /// <summary>
-/// 指示该属性在前端应使用插件提供的 Web Component 进行渲染。
+/// 指示该属性/类型在前端应使用插件提供的 Web Component 进行渲染。
 /// </summary>
 /// <param name="componentTagName">
 /// 要渲染的 Web Component 的 HTML 标签名。例如 "lua-editor-component"。
 /// 脚本在加载后应该通过 customElements.define() 注册这个标签。
 /// </param>
-[AttributeUsage(AttributeTargets.Property)]
-internal class RenderWithWebComponentAttribute(string componentTagName) : Attribute
+[AttributeUsage(AttributeTargets.Property | AttributeTargets.Class)]
+public class RenderWithWebComponentAttribute(string componentTagName) : Attribute
 {
     /// <summary>
     /// Web Component 的 HTML 标签名。
@@ -42,133 +38,59 @@ internal class RenderWithWebComponentAttribute(string componentTagName) : Attrib
 }
 
 /// <summary>
-/// 指示该属性在前端应使用 Monaco Editor 进行渲染，并提供语言服务的配置 URL。
+/// 处理 [RenderWithWebComponent] 特性。
+/// 根据特性是附着在类还是属性上，为 Schema 添加 'x-web-component-class' 或 'x-web-component-property' 指令。
 /// </summary>
-/// <remarks>
-/// <para><b>插件内部资源路径解析:</b></para>
-/// <para>
-/// 对于需要引用插件包内文件的 `SimpleConfigUrl` 和 `LanguageServerWorkerUrl` 属性，
-/// 请使用我们约定的 `plugin://` 协议。
-/// </para>
-/// <para>
-/// 例如: `[RenderWithMonacoEditor("lua", SimpleConfigUrl = "plugin://monaco-lua-service.js")]`
-/// </para>
-/// <para>
-/// 在运行时，系统会自动将 `plugin://` 前缀的路径解析为完整的、可公开访问的 URL。
-/// 它会查找定义此特性的符文配置类所在的插件，并构建出类似 `/plugins/{PluginName}/monaco-lua-service.js` 的最终路径。
-/// 这使得路径声明与插件的具体名称解耦，更加健壮和可移植。
-/// </para>
-/// <para>
-/// 对于外部或固定的 URL，请直接提供完整的路径，不要使用 `plugin://` 协议。
-/// </para>
-/// </remarks>
-/// <param name="language">要配置的语言 ID，例如 "lua"、"javascript"。</param>
-[AttributeUsage(AttributeTargets.Property)]
-public class RenderWithMonacoEditorAttribute(string language) : Attribute
+internal class WebComponentRendererSchemaProcessor : ISchemaProcessor
 {
-    /// <summary>
-    /// Monaco Editor 中定义的语言 ID。
-    /// </summary>
-    public string Language { get; } = language;
-
-    /// <summary>
-    /// (可选) 指向一个 JS 文件，该文件导出一个 `configure` 函数，用于简单的语言配置。
-    /// <para>支持使用 `plugin://` 协议来引用插件内部的资源。</para>
-    /// <example>"plugin://my-config.js"</example>
-    /// </summary>
-    public string? SimpleConfigUrl { get; set; }
-    
-    /// <summary>
-    /// (可选) 指向语言服务器的 Web Worker 脚本 URL。
-    /// 如果提供了此项，将启用完整的 LSP 支持。
-    /// <para>支持使用 `plugin://` 协议来引用插件内部的资源。</para>
-    /// <example>"plugin://language-servers/lua-worker.js"</example>
-    /// </summary>
-    public string? LanguageServerWorkerUrl { get; set; }
-}
-
-/// <summary>
-/// 处理 [RenderWithWebComponent] 特性，为 Schema 添加 'x-web-component' 指令。
-/// </summary>
-internal class WebComponentRendererSchemaProcessor() : NormalAttributeProcessor<RenderWithWebComponentAttribute>((extension, attribute) =>
-    extension["x-web-component"] = attribute.ComponentTagName);
-
-/// <summary>
-/// 处理 [RenderWithVueComponent] 特性，为 Schema 添加 'x-vue-component' 指令。
-/// </summary>
-internal class VueComponentRendererSchemaProcessor() : NormalAttributeProcessor<RenderWithVueComponentAttribute>((extension, attribute) =>
-    extension["x-vue-component"] = attribute.ComponentName);
-
-/// <summary>
-/// 处理 [RenderWithMonacoEditor] 特性，为 Schema 添加 'x-monaco-editor' 指令，
-/// 并能动态解析插件内部的资源路径。
-/// </summary>
-internal class MonacoEditorRendererSchemaProcessor(IPluginDiscoveryService pluginDiscoveryService) : ISchemaProcessor
-{
-    private readonly IPluginDiscoveryService _pluginDiscoveryService = pluginDiscoveryService;
-    private const string PluginScheme = "plugin://";
-
     /// <inheritdoc />
     public void Process(SchemaProcessorContext context)
     {
-        var attribute = context.ContextualType.GetContextAttribute<RenderWithMonacoEditorAttribute>(true);
+        var attribute = context.ContextualType.GetContextAttribute<RenderWithWebComponentAttribute>(true);
         if (attribute is null)
             return;
 
-        // 解析 URL
-        string? resolvedSimpleConfigUrl = this.ResolvePluginUrl(attribute.SimpleConfigUrl, context.ContextualType.Type);
-        string? resolvedWorkerUrl = this.ResolvePluginUrl(attribute.LanguageServerWorkerUrl, context.ContextualType.Type);
-        
-        context.Schema.ExtensionData ??= new Dictionary<string, object?>();
-        context.Schema.ExtensionData["x-monaco-editor"] = new
+        string extensionKey = context.ContextualType.Context switch
         {
-            language = attribute.Language,
-            simpleConfigUrl = resolvedSimpleConfigUrl,
-            languageServerWorkerUrl = resolvedWorkerUrl,
+            // 判断特性附着在类上还是属性上
+            PropertyInfo => "x-web-component-property",
+            TypeInfo => "x-web-component-class",
+            _ => string.Empty
         };
+
+        if (string.IsNullOrEmpty(extensionKey))
+            return;
+
+        context.Schema.ExtensionData ??= new Dictionary<string, object?>();
+        context.Schema.ExtensionData[extensionKey] = attribute.ComponentTagName;
     }
+}
 
-    /// <summary>
-    /// 解析包含 plugin:// 协议的 URL。
-    /// </summary>
-    private string? ResolvePluginUrl(string? templateUrl, Type ownerType)
+/// <summary>
+/// 处理 [RenderWithVueComponent] 特性。
+/// 根据特性是附着在类还是属性上，为 Schema 添加 'x-vue-component-class' 或 'x-vue-component-property' 指令。
+/// </summary>
+internal class VueComponentRendererSchemaProcessor : ISchemaProcessor
+{
+    /// <inheritdoc />
+    public void Process(SchemaProcessorContext context)
     {
-        if (string.IsNullOrEmpty(templateUrl))
+        var attribute = context.ContextualType.GetContextAttribute<RenderWithVueComponentAttribute>(true);
+        if (attribute is null)
+            return;
+
+        string extensionKey = context.ContextualType.Context switch
         {
-            return null;
-        }
+            // 判断特性附着在类上还是属性上
+            PropertyInfo => "x-vue-component-property",
+            TypeInfo => "x-vue-component-class",
+            _ => string.Empty
+        };
 
-        // 如果 URL 不是以 plugin:// 开头，直接返回原样
-        if (!templateUrl.StartsWith(PluginScheme, StringComparison.OrdinalIgnoreCase))
-        {
-            return templateUrl;
-        }
+        if (string.IsNullOrEmpty(extensionKey))
+            return;
 
-        // 提取相对路径，例如 "monaco-lua-service.js"
-        string relativePath = templateUrl[PluginScheme.Length..];
-
-        // 1. 查找此类型是由哪个模块提供的
-        var providerModule = RuneConfigTypeResolver.GetProviderModuleForType(ownerType);
-        if (providerModule is null)
-        {
-            // 如果找不到提供者（可能是内置符文），则无法解析路径，记录警告并返回 null
-            Log.Warning($"[SchemaProcessor] 警告: 无法解析路径 '{templateUrl}'，因为类型 '{ownerType.Name}' 没有找到对应的插件提供者。");
-            return null;
-        }
-
-        // 2. 从模块的类型信息中推断出程序集名称，这通常就是插件名
-        // 这是一个合理的约定：插件的主模块类在主 DLL 中。
-        string? pluginAssemblyName = providerModule.GetType().Assembly.GetName().Name;
-
-        // 3. 在已发现的插件中查找同名插件
-        var plugin = this._pluginDiscoveryService.DiscoverPlugins().FirstOrDefault(p =>
-            string.Equals(p.Name, pluginAssemblyName, StringComparison.OrdinalIgnoreCase));
-
-        // 4. 构建最终的公开 URL
-        if (plugin is not null)
-            return $"/plugins/{plugin.Name}/{relativePath}";
-
-        Log.Warning($"[SchemaProcessor] 警告: 无法解析路径 '{templateUrl}'，因为找不到名为 '{pluginAssemblyName}' 的已发现插件。");
-        return null;
+        context.Schema.ExtensionData ??= new Dictionary<string, object?>();
+        context.Schema.ExtensionData[extensionKey] = attribute.ComponentName;
     }
 }

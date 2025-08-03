@@ -1,6 +1,4 @@
-﻿using Microsoft.AspNetCore.Hosting;
-
-namespace YAESandBox.Depend.AspNetCore.PluginDiscovery;
+﻿namespace YAESandBox.Depend.AspNetCore.PluginDiscovery;
 
 /// <summary>
 /// 提供查询已发现插件及其静态资源信息的功能。

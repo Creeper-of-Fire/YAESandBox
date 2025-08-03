@@ -7,6 +7,7 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow;
+using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
@@ -126,8 +127,8 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
 /// “标签解析”符文的配置。
 /// 使用CSS选择器从HTML/XML文本中精确提取数据。
 /// </summary>
-[ClassLabel("🏷️ 标签解析")]
-// [RenderWithVueComponent("TagParserEditor")] // 我们先注释掉，等前端组件写好再打开
+[ClassLabel("🏷️标签解析")]
+[RenderWithVueComponent("TagParserEditor")]
 public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
 {
     #region 配置项
@@ -174,8 +175,6 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
     /// 当“提取模式”为“提取属性”时，指定要提取的属性名称。
     /// </summary>
     [Display(Name = "属性名", Description = "当提取模式为“提取属性”时，填写此项。例如 'src', 'href'。")]
-    // TODO:这个特性可以让前端仅在特定条件下显示此字段，但是并没有这个特性（悲）
-    // [DependsOn(nameof(ExtractionMode), "Attribute")] 
     public string? AttributeName { get; init; }
 
     /// <summary>

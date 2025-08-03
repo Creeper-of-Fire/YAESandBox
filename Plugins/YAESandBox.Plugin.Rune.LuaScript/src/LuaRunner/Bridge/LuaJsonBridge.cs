@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using NLua;
+
 // ReSharper disable InconsistentNaming
 namespace YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 
@@ -35,23 +36,25 @@ public class LuaJsonBridge : ILuaBridge
             logger.error($"加载JSON库失败: {ex.Message}");
 
             // 回退到内置简单实现
-            luaState.DoString(@"
-                    json = {
-                        decode = function(str)
-                            if str == 'null' then return nil end
-                            local fn, err = load('return '..str)
-                            if not fn then 
-                                log.error('JSON解析错误: '..err)
-                                return nil 
-                            end
-                            return fn()
-                        end,
-                        encode = function(tbl)
-                            return tostring(tbl) -- 简化实现
+            luaState.DoString(
+                """
+                json = {
+                    decode = function(str)
+                        if str == 'null' then return nil end
+                        local fn, err = load('return '..str)
+                        if not fn then 
+                            log.error('JSON解析错误: '..err)
+                            return nil 
                         end
-                    }
-                    log.warn('使用内置简易JSON解析器')
-                ");
+                        return fn()
+                    end,
+                    encode = function(tbl)
+                        return tostring(tbl) -- 简化实现
+                    end
+                }
+                log.warn('使用内置简易JSON解析器')     
+                """
+            );
         }
     }
 

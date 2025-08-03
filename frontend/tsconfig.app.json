@@ -8,8 +8,10 @@
       "@/*": [
         "src/*"
       ]
-      // <--- 检查这行或类似配置
     },
+    "lib": [
+      "ESNext"
+    ],
     "skipLibCheck": true,
     /* Linting */
     "strict": true,

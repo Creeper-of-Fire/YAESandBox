@@ -4,6 +4,7 @@ using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow;
+using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
@@ -89,8 +90,8 @@ public class RegexGeneratorRuneProcessor(RegexGeneratorRuneConfig config)
 /// “正则生成”符文的配置。
 /// 遍历文本中所有匹配正则表达式的片段，并使用模板生成新的内容。
 /// </summary>
-[ClassLabel("⚙️ 正则生成")]
-// [RenderWithVueComponent("RegexGeneratorEditor")] // 同样先注释掉
+[ClassLabel("⚙️正则生成")]
+[RenderWithVueComponent("RegexGeneratorEditor")] // 同样先注释掉
 public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRuneProcessor>
 {
     #region 配置项

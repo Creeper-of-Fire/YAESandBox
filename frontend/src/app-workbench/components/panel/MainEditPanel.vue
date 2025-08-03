@@ -1,14 +1,20 @@
 ﻿<!-- src/app-workbench/components/.../MainEditPanel.vue -->
 <template>
   <n-empty v-if="!selectedConfig" description="无激活的编辑会话" style="margin-top: 20%;"/>
-  <n-scrollbar>
-    <div v-if="selectedType ==='tuum'" class="main-content-wrapper">
-      <TuumEditor :tuum-context="selectedConfig as TuumEditorContext"/>
-    </div>
-    <div v-if="selectedType === 'rune'" class="main-content-wrapper">
-      <RuneEditor :rune-context="selectedConfig as RuneEditorContext"/>
-    </div>
-  </n-scrollbar>
+  <div v-else>
+    <n-scrollbar>
+      <div v-if="selectedType ==='tuum'" class="main-content-wrapper">
+        <TuumEditor
+            :key="selectedConfig?.data.configId"
+            :tuum-context="selectedConfig as TuumEditorContext"/>
+      </div>
+      <div v-if="selectedType === 'rune'" class="main-content-wrapper">
+        <RuneEditor
+            :key="selectedConfig?.data.configId"
+            :rune-context="selectedConfig as RuneEditorContext"/>
+      </div>
+    </n-scrollbar>
+  </div>
 </template>
 
 <script lang="ts" setup>
@@ -20,7 +26,9 @@ import type {TuumEditorContext} from "@/app-workbench/components/tuum/editor/Tuu
 import type {RuneEditorContext} from "@/app-workbench/components/rune/editor/RuneEditorContext.ts";
 
 const selectedConfigItem = inject(SelectedConfigItemKey);
-const selectedConfig = computed(() => selectedConfigItem?.data.value || null);
+const selectedConfig = computed(() =>
+    selectedConfigItem?.data.value || null
+);
 const selectedType = computed(() =>
 {
   const data = selectedConfig.value?.data;

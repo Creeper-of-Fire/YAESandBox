@@ -102,22 +102,19 @@ public class WorkflowValidationService
 
         // 3. (新增) 检查 OutputMappings 的源（Value，即祝祷内部变量）是否真的被生产出来了
         var allProducedInTuumVars = new HashSet<string>(tuum.Runes.SelectMany(m => m.GetProducedVariables()));
-        var allAvailableInTuumVars = new HashSet<string>(tuum.InputMappings.Keys).Union(allProducedInTuumVars);
+        var allAvailableInTuumVars = new HashSet<string>(tuum.InputMappings.Keys).Union(allProducedInTuumVars).ToHashSet();
 
-        foreach (var mapping in tuum.OutputMappings)
+        foreach ((string globalTargetVar, string localSourceVar) in tuum.OutputMappings)
         {
-            string localSourceVar = mapping.Value; // 局部变量名
-            string globalTargetVar = mapping.Key; // 全局变量名
+            if (allAvailableInTuumVars.Contains(localSourceVar))
+                continue;
 
-            if (!allAvailableInTuumVars.Contains(localSourceVar))
+            tuumResult.TuumMessages.Add(new ValidationMessage
             {
-                tuumResult.TuumMessages.Add(new ValidationMessage
-                {
-                    Severity = RuleSeverity.Error,
-                    Message = $"输出映射错误：尝试将不存在的内部变量 '{localSourceVar}' 映射到全局变量 '{globalTargetVar}'。",
-                    RuleSource = "DataFlow"
-                });
-            }
+                Severity = RuleSeverity.Error,
+                Message = $"输出映射错误：尝试将不存在的内部变量 '{localSourceVar}' 映射到全局变量 '{globalTargetVar}'。",
+                RuleSource = "DataFlow"
+            });
         }
     }
 

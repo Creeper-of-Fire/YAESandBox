@@ -1,9 +1,11 @@
 ﻿using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.Depend.AspNetCore;
 
 // 使用你新的命名空间
@@ -13,7 +15,7 @@ namespace YAESandBox.Authentication;
 /// <summary>
 /// 注册认证和授权相关的服务到 Program.cs
 /// </summary>
-public class AuthenticationModule : IProgramModule, IProgramModuleMvcConfigurator
+public class AuthenticationModule : IProgramModuleMvcConfigurator,IProgramModuleSwaggerUiOptionsConfigurator
 {
     internal const string AuthenticationGroupName = "v1-authentication";
 
@@ -89,5 +91,11 @@ public class AuthenticationModule : IProgramModule, IProgramModuleMvcConfigurato
                 }
             });
         });
+    }
+
+    /// <inheritdoc />
+    public void ConfigureSwaggerUi(SwaggerUIOptions options)
+    {
+        options.SwaggerEndpoint($"/swagger/{AuthenticationGroupName}/swagger.json", "YAESandBox API (Authentication)");
     }
 }

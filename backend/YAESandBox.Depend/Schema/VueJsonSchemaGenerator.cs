@@ -3,7 +3,6 @@ using System.Text.Json.Serialization;
 using JetBrains.Annotations;
 using NJsonSchema;
 using NJsonSchema.Generation;
-using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 
 namespace YAESandBox.Depend.Schema;
