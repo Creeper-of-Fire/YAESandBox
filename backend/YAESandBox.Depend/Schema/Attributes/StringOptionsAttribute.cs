@@ -10,28 +10,6 @@
 /// - 动态选项加载（通过 API 端点）
 /// - 是否允许用户输入自定义值（combobox 行为）
 /// </remarks>
-/// <example>
-/// 示例 1：静态定义 Value 和 Label 不同的选项
-/// <code>
-/// [StringOptions(
-///     ("en", "English"),
-///     ("zh", "中文"),
-///     ("ja", "日本語"))]
-/// public string Language { get; set; }
-/// </code>
-/// 
-/// 示例 2：Value 和 Label 相同的简写形式
-/// <code>
-/// [StringOptions("Option1", "Option2", "Option3")]
-/// public string Choices { get; set; }
-/// </code>
-/// 
-/// 示例 3：使用动态端点加载选项并允许自定义输入
-/// <code>
-/// [StringOptions(optionsProviderEndpoint = "/api/options/roles", isEditableSelectOptions = true)]
-/// public string Role { get; set; }
-/// </code>
-/// </example>
 [AttributeUsage(AttributeTargets.Property)]
 public class StringOptionsAttribute() : Attribute
 {

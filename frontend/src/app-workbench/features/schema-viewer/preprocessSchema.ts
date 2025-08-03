@@ -96,6 +96,25 @@ export function preprocessSchemaForWidgets(originalSchema: Record<string, any>):
         return {};
     }
     const schema = cloneDeep(originalSchema as FieldProps);
+
+    // ================= 优先检查类级别的组件渲染器 =================
+    // 这是我们的“快速通道”，如果检测到，就直接处理并返回，不再进行深度递归。
+    const classVueComponent = schema['x-vue-component-class'] as string;
+    if (classVueComponent) {
+        const component = getVuePluginComponent(classVueComponent);
+        if (component) {
+            // 注入我们自己约定的、vue-form不认识的属性
+            schema['ui:whole-component-renderer'] = component;
+            // 清理掉原始指令
+            delete schema['x-vue-component-class'];
+            // 直接返回，跳过后续所有递归处理
+            return schema;
+        } else {
+            console.warn(`[preprocessSchema] 未找到类级别插件组件: "${classVueComponent}"`);
+        }
+    }
+    // =====================================================================
+
     recursivePreprocess(schema, schema.definitions || {});
     return schema;
 }

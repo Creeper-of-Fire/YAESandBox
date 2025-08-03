@@ -10,16 +10,29 @@
     <!-- 动态表单 -->
     <div v-else-if="processedSchema && typeof modelValue === 'object' && !effectiveErrorMessage">
       <!-- 1. 渲染由 @lljj/vue3-form-naive 处理的标准表单部分 -->
-      <vue-form
-          ref="jsonFormRef"
-          :form-footer="{ show: false }"
-          :form-props="formProps"
-          :model-value="modelValue"
-          :schema="processedSchema"
-          style="flex-grow: 1;"
-          @change="handleFormChange"
-          @update:modelValue="handleFormUpdate"
-      />
+
+      <div :style="formWrapperStyle">
+        <vue-form
+            ref="jsonFormRef"
+            :form-footer="{ show: false }"
+            :form-props="formProps"
+            :model-value="modelValue"
+            :schema="processedSchema"
+            style="flex-grow: 1;"
+            @change="handleFormChange"
+            @update:modelValue="handleFormUpdate"
+        />
+      </div>
+
+      <!-- 如果有类级别组件，则渲染它 -->
+      <div v-if="wholeComponentRenderer">
+        <component
+            :is="wholeComponentRenderer"
+            :model-value="modelValue"
+            @update:modelValue="handleFormUpdate"
+            :schema="processedSchema"
+        />
+      </div>
 
       <!-- 2. 在表单下方，渲染我们的自定义组件渲染器 -->
       <CustomFieldRenderer
@@ -36,7 +49,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from 'vue';
+import {type Component, computed, ref, type StyleValue} from 'vue';
 import {NAlert, NEmpty, NSpin} from 'naive-ui';
 import VueForm from '@lljj/vue3-form-naive';
 import {preprocessSchemaForWidgets} from "@/app-workbench/features/schema-viewer/preprocessSchema.ts";
@@ -120,6 +133,22 @@ const processedSchema = computed(() =>
 
 const internalErrorMessage = ref<string | null>(null);
 const effectiveErrorMessage = computed(() => props.errorMessage || internalErrorMessage.value);
+
+const wholeComponentRenderer = computed<Component | null>(() => {
+  return processedSchema.value?.['ui:whole-component-renderer'] as Component || null;
+});
+
+const formWrapperStyle = computed((): StyleValue => {
+  // 如果有类级别的渲染器，则隐藏 vue-form
+  if (wholeComponentRenderer.value) {
+    return {
+      display: 'none',
+    };
+  }
+  // 否则，正常显示
+  return {};
+});
+
 
 // ----------- Event Handlers -----------
 function handleFormUpdate(newValue: Record<string, any>)
