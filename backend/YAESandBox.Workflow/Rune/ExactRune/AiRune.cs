@@ -16,10 +16,12 @@ using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 namespace YAESandBox.Workflow.Rune.ExactRune;
 
+
 /// <summary>
 /// Ai调用符文，Ai的配置保存在外部的Tuum，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiRuneConfig"/>里面。
 /// </summary>
 /// <param name="onChunkReceivedScript"></param>
+/// <param name="config"></param>
 internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfig config)
     : IWithDebugDto<AiRuneProcessorDebugDto>, INormalRune
 {

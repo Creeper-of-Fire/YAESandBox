@@ -7,28 +7,36 @@ using Swashbuckle.AspNetCore.SwaggerUI;
 
 namespace YAESandBox.Depend.AspNetCore;
 
+/// <summary>
+/// 程序模块的基础接口，所有模块都需要实现此接口
+/// 用于在应用程序启动时注册依赖注入服务和其他配置
+/// </summary>
 public interface IProgramModule
 {
     /// <summary>
     /// 注册 DI 服务和其他杂项
     /// </summary>
-    /// <param name="service"></param>
+    /// <param name="service">注入的服务集合，用于注册依赖注入服务</param>
     public void RegisterServices(IServiceCollection service);
 }
 
 /// <summary>
 /// 实现此接口的模块可以配置应用程序的中间件管道 (IApplicationBuilder)。
 /// </summary>
-public interface IProgramModuleAppConfigurator: IProgramModule
+public interface IProgramModuleAppConfigurator : IProgramModule
 {
     /// <summary>
     /// 在应用构建后、运行前配置中间件。
     /// </summary>
-    /// <param name="app">应用程序构建器。</param>
+    /// <param name="app">注入的应用程序构建器，用于配置HTTP请求管道等。</param>
     void ConfigureApp(IApplicationBuilder app);
 }
 
-public interface IProgramModuleMvcConfigurator: IProgramModule
+/// <summary>
+/// 实现此接口的模块可以配置MVC相关设置
+/// 用于自定义MVC框架的行为
+/// </summary>
+public interface IProgramModuleMvcConfigurator : IProgramModule
 {
     /// <summary>
     /// 可以添加Mvc配置
@@ -37,17 +45,38 @@ public interface IProgramModuleMvcConfigurator: IProgramModule
     void ConfigureMvc(IMvcBuilder mvcBuilder);
 }
 
-public interface IProgramModuleSwaggerUiOptionsConfigurator: IProgramModule
+/// <summary>
+/// 实现此接口的模块可以配置Swagger UI选项
+/// 用于自定义API文档界面的行为和外观
+/// </summary>
+public interface IProgramModuleSwaggerUiOptionsConfigurator : IProgramModule
 {
+    /// <summary>
+    /// 配置Swagger UI选项
+    /// </summary>
+    /// <param name="options">注入的Swagger UI配置选项</param>
     void ConfigureSwaggerUi(SwaggerUIOptions options);
 }
 
-public interface IProgramModuleSignalRTypeProvider: IProgramModule
+/// <summary>
+/// 实现此接口的模块可以提供SignalR相关的DTO类型信息
+/// 用于在API文档中正确显示SignalR相关数据结构和程序生成
+/// </summary>
+public interface IProgramModuleSignalRTypeProvider : IProgramModule
 {
+    /// <summary>
+    /// 获取SignalR数据传输对象类型列表
+    /// </summary>
+    /// <param name="document">Swagger文档过滤器上下文</param>
+    /// <returns>DTO类型集合</returns>
     public IEnumerable<Type> GetSignalRDtoTypes(DocumentFilterContext document);
 }
 
-public interface IProgramModuleHubRegistrar: IProgramModule
+/// <summary>
+/// 实现此接口的模块可以注册SignalR Hub
+/// 用于将SignalR实时通信功能集成到应用程序中
+/// </summary>
+public interface IProgramModuleHubRegistrar : IProgramModule
 {
     /// <summary>
     /// 在应用程序的端点路由中映射此模块提供的 SignalR Hub。
@@ -78,10 +107,16 @@ public interface IProgramModuleWithInitialization : IProgramModule
     void Initialize(ModuleInitializationContext context);
 }
 
-public record SwaggerModuleInfo(string GroupName);
-
+/// <summary>
+/// Swagger帮助类，提供Swagger文档相关的辅助方法
+/// </summary>
 public static class SwaggerHelper
 {
+    /// <summary>
+    /// 为Swagger添加XML注释文档
+    /// </summary>
+    /// <param name="options">Swagger生成选项</param>
+    /// <param name="assembly">需要添加注释的程序集</param>
     public static void AddSwaggerDocumentation(this SwaggerGenOptions options, Assembly assembly)
     {
         try

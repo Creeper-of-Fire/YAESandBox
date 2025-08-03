@@ -98,6 +98,12 @@ public record CollectionResult<T> : Result
 /// </summary>
 public static class CollectionResultExtension
 {
+    /// <summary>
+    /// 把结果列表转换成CollectionResult
+    /// </summary>
+    /// <param name="values"></param>
+    /// <typeparam name="TValue"></typeparam>
+    /// <returns></returns>
     public static CollectionResult<TValue> ToCollectionResult<TValue>(this IReadOnlyList<Result<TValue>> values)
     {
         return CollectionResult<TValue>.Ok(values);

@@ -47,7 +47,7 @@ public class WorkflowProcessor(
         /// 全局变量池。
         /// 每个祝祷的输出可以写回这里，供后续祝祷使用。
         /// </summary>
-        public Dictionary<string, object> GlobalVariables { get; } = triggerParams.ToDictionary(kv => kv.Key, object (kv) => kv.Value);
+        public Dictionary<string, object?> GlobalVariables { get; } = triggerParams.ToDictionary(kv => kv.Key, object? (kv) => kv.Value);
 
         // /// <summary>
         // /// 最终生成的、要呈现给用户的原始文本。

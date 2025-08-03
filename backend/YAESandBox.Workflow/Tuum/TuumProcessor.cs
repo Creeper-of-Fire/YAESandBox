@@ -48,7 +48,7 @@ public class TuumProcessor(
         {
             get
             {
-                if (!this.TuumVariable.TryGetValue(nameof(this.Prompts), out object? value))
+                if (!this.TuumVariable.TryGetValue(nameof(this.Prompts), out object? value) || value == null)
                     return new List<RoledPromptDto>();
                 if (value is IList<RoledPromptDto> prompts)
                     return prompts;
@@ -104,7 +104,7 @@ public class TuumProcessor(
     /// <param name="workflowRuntimeContext"></param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
-    public async Task<Result<Dictionary<string, object>>> ExecuteTuumsAsync(
+    public async Task<Result<Dictionary<string, object?>>> ExecuteTuumsAsync(
         WorkflowRuntimeContext workflowRuntimeContext, CancellationToken cancellationToken = default)
     {
         // 严格根据 InputMappings 从全局变量池填充祝祷的内部变量池
@@ -134,7 +134,7 @@ public class TuumProcessor(
             }
         }
 
-        var tuumOutput = new Dictionary<string, object>();
+        var tuumOutput = new Dictionary<string, object?>();
 
         // if (this.TuumContent.TuumVariable.TryGetValue(nameof(WorkflowRuntimeContext.FinalRawText), out object? finalRawText))
         // {

@@ -18,7 +18,7 @@ internal class SignalRDtoDocumentFilter(ISchemaGenerator schemaGenerator) : IDoc
     {
         Console.WriteLine($"SignalRDtoDocumentFilter: 正在为文档 '{context.DocumentName}' 应用 SignalR DTO 注入。");
 
-        var dtoTypes = ApplicationModules.GetCoreModules<IProgramModuleSignalRTypeProvider>()
+        var dtoTypes = ApplicationModules.GetAllModules<IProgramModuleSignalRTypeProvider>()
             .SelectMany(module => module.GetSignalRDtoTypes(context))
             .Distinct().ToList();
         if (!dtoTypes.Any()) return;

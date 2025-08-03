@@ -74,6 +74,7 @@ public record RuneSchemasResponse
 /// </summary>
 /// <param name="workflowConfigFileService">工作流配置文件服务。</param>
 /// <param name="pluginAssetService">插件资源发现服务。</param>
+/// <param name="pluginDiscoveryService">插件总发现服务。</param>
 [ApiController]
 [Route("api/v1/workflows-configs/global-runes")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]

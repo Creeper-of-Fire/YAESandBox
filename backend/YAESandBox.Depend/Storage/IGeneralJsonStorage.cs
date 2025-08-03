@@ -63,6 +63,9 @@ public interface IGeneralJsonStorage : IRootPathProvider
     /// <returns></returns>
     Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories);
 
+    /// <summary>
+    /// 文件筛选选项
+    /// </summary>
     public record ListFileOption
     {
         internal static ListFileOption Default { get; } = new();

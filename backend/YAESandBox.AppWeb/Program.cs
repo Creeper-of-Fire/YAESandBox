@@ -1,5 +1,7 @@
+using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using DotNetEnv;
+using JetBrains.Annotations;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
@@ -133,7 +135,7 @@ var discoveredPlugins = discoveryService.DiscoverPlugins();
 
 foreach (var plugin in discoveredPlugins)
 {
-    if (plugin.WwwRootPath is null) 
+    if (plugin.WwwRootPath is null)
         continue;
     // 约定：所有插件的静态资源都通过 /plugins/{PluginName} 访问
     app.UseStaticFiles(new StaticFileOptions
@@ -141,7 +143,7 @@ foreach (var plugin in discoveredPlugins)
         FileProvider = new PhysicalFileProvider(plugin.WwwRootPath),
         RequestPath = $"/plugins/{plugin.Name}"
     });
-        
+
     Console.WriteLine($"[静态文件服务] 已为插件 '{plugin.Name}' 挂载 wwwroot: '{plugin.WwwRootPath}' -> '/plugins/{plugin.Name}'");
 }
 // =========================================================
@@ -267,9 +269,9 @@ namespace YAESandBox.AppWeb
             }
 
             // 8. 合并内置模块和插件模块
-            var allModules = coreModules.Concat(pluginModules);
-
-            return (allModules.Distinct().ToList(), loadedPluginAssemblies.Distinct().ToList());
+            var allModules = coreModules.Concat(pluginModules).Distinct().ToList();
+            AllModules = allModules;
+            return (allModules, loadedPluginAssemblies.Distinct().ToList());
         }
 
         private static IReadOnlyList<IProgramModule> CoreModules { get; } =
@@ -281,10 +283,17 @@ namespace YAESandBox.AppWeb
             new AuthenticationModule()
         ];
 
+        [field: AllowNull, MaybeNull]
+        private static IReadOnlyList<IProgramModule> AllModules
+        {
+            get => field ?? CoreModules;
+            set;
+        }
+
         /// <summary>
         /// 获取主要程序集中实现了指定接口 {T} 的模块。（用于自动类型生成等）
         /// </summary>
-        public static IEnumerable<T> GetCoreModules<T>() => CoreModules.OfType<T>();
+        public static IEnumerable<T> GetAllModules<T>() => AllModules.OfType<T>();
 
         /// <summary>
         /// 对实现了指定接口 {T} 的模块列表执行一个操作。

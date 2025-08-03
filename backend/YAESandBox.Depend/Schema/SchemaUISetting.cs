@@ -16,6 +16,11 @@ public record SchemaUiSetting
     [JsonPropertyName("isEditableSelectOptions")]
     public bool? IsEditableSelectOptions { get; set; } = false;
 
+    /// <summary>
+    /// TODO 未在前端实现
+    /// 
+    /// 把属性值渲染为带模态框的按钮
+    /// </summary>
     [JsonPropertyName("toButtonPopUp")] public bool? ToButtonPopUp { get; set; }
 
     /// <summary>
