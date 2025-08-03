@@ -3,7 +3,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
-using YAESandBox.Plugin.Lua.LuaRunner;
+using YAESandBox.Plugin.LuaScript.LuaRunner;
+using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config;
@@ -13,7 +14,7 @@ using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
 
-namespace YAESandBox.Plugin.Lua;
+namespace YAESandBox.Plugin.LuaScript.Rune;
 
 /// <summary>
 /// Lua 脚本符文处理器。
@@ -35,18 +36,22 @@ public partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
     {
         string script = this.Config.Script ?? "";
         this.DebugDto.ExecutedScript = script;
-        
+
         // 创建并使用通用的 Lua 脚本执行器
-        var runner = new LuaScriptRunner(tuumProcessorContent, this.DebugDto);
-        
+        var runner = new LuaRunnerBuilder(tuumProcessorContent, this.DebugDto)
+            .AddBridge(new LuaContextBridge(tuumProcessorContent)) // 添加 ctx 功能
+            .AddBridge(new LuaRegexBridge()) // 添加 regex 功能
+            .AddBridge(new LuaDateTimeBridge()) // 添加 datetime 功能
+            .Build();
+
         // 直接执行脚本，无需其他设置
         return runner.ExecuteAsync(script, cancellationToken: cancellationToken);
     }
-    
+
     /// <summary>
     /// Lua 脚本符文处理器的调试数据传输对象。
     /// </summary>
-    public class LuaScriptRuneProcessorDebugDto : IRuneProcessorDebugDto,IDebugDtoWithLogs
+    public class LuaScriptRuneProcessorDebugDto : IRuneProcessorDebugDto, IDebugDtoWithLogs
     {
         /// <summary>
         /// 实际执行的 Lua 脚本内容。
@@ -78,7 +83,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
     /// 使用 `ctx.set('var_name', value)` 设置变量。
     /// </summary>
     [DataType(DataType.MultilineText)]
-    [RenderWithMonacoEditor("lua", SimpleConfigUrl = "plugin://monaco-lua-service.js")]
+    [RenderWithMonacoEditor("lua", SimpleConfigUrl = "plugin://lua-main/monaco-lua-service-main.js")]
     [Display(
         Name = "Lua 脚本",
         Description = "在此处编写 Lua 脚本。使用 ctx.get('变量名') 获取输入，使用 ctx.set('变量名', 值) 设置输出。",

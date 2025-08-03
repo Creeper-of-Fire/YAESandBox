@@ -1,0 +1,6 @@
+﻿{
+  "apiFiles": [
+    "../shared/api-def/stdlib-api-safe.json",
+    "./api-def/custom-api-main.json"
+  ]
+}

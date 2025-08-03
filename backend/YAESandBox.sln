@@ -34,7 +34,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Depend.Results",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Authentication", "YAESandBox.Authentication\YAESandBox.Authentication.csproj", "{93CA16F1-ACEC-4928-9D9B-F037C3CE7D45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Plugin.Lua", "..\Plugins\YAESandBox.Plugin.Rune.LuaScript\src\YAESandBox.Plugin.Lua.csproj", "{E0A04829-F37C-4B07-971A-DA1180901FAF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Plugin.LuaScript", "..\Plugins\YAESandBox.Plugin.Rune.LuaScript\src\YAESandBox.Plugin.LuaScript.csproj", "{E0A04829-F37C-4B07-971A-DA1180901FAF}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

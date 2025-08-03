@@ -30,15 +30,6 @@
       <ProjectReference Include="..\..\..\backend\YAESandBox.Workflow\YAESandBox.Workflow.csproj" />
     </ItemGroup>
 
-    <ItemGroup>
-      <Compile Update="LuaRunner\LuaScriptRunner.LuaBridge.cs">
-        <DependentUpon>LuaScriptRunner.cs</DependentUpon>
-      </Compile>
-      <Compile Update="LuaRunner\LuaScriptRunner.LuaDateTimeBridge.cs">
-        <DependentUpon>LuaScriptRunner.cs</DependentUpon>
-      </Compile>
-    </ItemGroup>
-
     <!-- ⭐⭐⭐ 构建后自动复制到插件目录 ⭐⭐⭐ -->
     <Target Name="CopyToPluginsFolder" AfterTargets="Build">
         <!-- 
