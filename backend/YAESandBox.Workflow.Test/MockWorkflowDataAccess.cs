@@ -1,6 +1,6 @@
-﻿using YAESandBox.Core.State;
-using YAESandBox.Core.State.Entity;
-using YAESandBox.Core.Workflow.CoreModules;
+﻿using YAESandBox.Seed.State;
+using YAESandBox.Seed.State.Entity;
+using YAESandBox.Seed.Workflow.CoreModules;
 
 namespace YAESandBox.Workflow.Test;
 

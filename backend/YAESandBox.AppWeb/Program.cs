@@ -7,7 +7,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.AppWeb;
 using YAESandBox.Authentication;
-using YAESandBox.Core.API;
+using YAESandBox.Seed.API;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.Storage;
@@ -274,7 +274,7 @@ namespace YAESandBox.AppWeb
 
         private static IReadOnlyList<IProgramModule> CoreModules { get; } =
         [
-            new CoreModule(),
+            new SeedModule(),
             new AiServiceConfigModule(),
             new WorkflowConfigModule(),
             new WorkflowTestModule(),

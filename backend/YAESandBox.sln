@@ -2,15 +2,15 @@
 Microsoft Visual Studio Solution File, Format Version 12.00
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.AppWeb", "YAESandBox.AppWeb\YAESandBox.AppWeb.csproj", "{5F5667AF-F238-488E-B467-3A56420023C4}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Core", "YAESandBox.Core\YAESandBox.Core.csproj", "{5C1F0133-D0DB-4777-86F8-438B9DA0DBED}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Seed", "YAESandBox.Seed\YAESandBox.Seed.csproj", "{5C1F0133-D0DB-4777-86F8-438B9DA0DBED}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Depend", "YAESandBox.Depend\YAESandBox.Depend.csproj", "{5984DD21-98F2-4B9E-9ABA-CDCA9C668583}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Core.Block", "YAESandBox.Core.Block\YAESandBox.Core.Block.csproj", "{560F7FD6-D399-4DC1-BD94-ABDF9A094A3F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Seed.Block", "YAESandBox.Seed.Block\YAESandBox.Seed.Block.csproj", "{560F7FD6-D399-4DC1-BD94-ABDF9A094A3F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Core.Services", "YAESandBox.Core.Services\YAESandBox.Core.Services.csproj", "{F3E9A585-044C-4071-9F77-82AEC4DE7DEE}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Seed.Services", "YAESandBox.Seed.Services\YAESandBox.Seed.Services.csproj", "{F3E9A585-044C-4071-9F77-82AEC4DE7DEE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Core.DTOs", "YAESandBox.Core.DTOs\YAESandBox.Core.DTOs.csproj", "{E325CAC5-54F5-428D-BCFA-95B4F1691BD2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Seed.DTOs", "YAESandBox.Seed.DTOs\YAESandBox.Seed.DTOs.csproj", "{E325CAC5-54F5-428D-BCFA-95B4F1691BD2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Workflow", "YAESandBox.Workflow\YAESandBox.Workflow.csproj", "{F119413A-7A2B-4C19-B7B3-2F07860A85AE}"
 EndProject
@@ -20,9 +20,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Workflow.Test", 
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Depend.AspNetCore", "YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj", "{03A8E129-CDCE-4FE3-83D2-A44153BF8C9C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Core.API", "YAESandBox.Core.API\YAESandBox.Core.API.csproj", "{9B0A7694-7050-4236-9D50-C6768AAC06E0}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Seed.API", "YAESandBox.Seed.API\YAESandBox.Seed.API.csproj", "{9B0A7694-7050-4236-9D50-C6768AAC06E0}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Core.Workflow.CoreModules", "YAESandBox.Core.Workflow.CoreModules\YAESandBox.Core.Workflow.CoreModules.csproj", "{72C38B20-E041-470B-AE3D-D0AA83368E0F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Seed.Workflow.CoreModules", "YAESandBox.Seed.Workflow.CoreModules\YAESandBox.Seed.Workflow.CoreModules.csproj", "{72C38B20-E041-470B-AE3D-D0AA83368E0F}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Analyzers", "YAESandBox.Analyzers\YAESandBox.Analyzers\YAESandBox.Analyzers.csproj", "{D1EBAAAC-8B93-49DE-B4CA-192C2BFC7BB7}"
 EndProject
