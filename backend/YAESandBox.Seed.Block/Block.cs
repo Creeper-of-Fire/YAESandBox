@@ -345,7 +345,7 @@ public class Block : NodeBlock
         switch (op.OperationType)
         {
             case AtomicOperationType.CreateEntity:
-                var existing = worldState.FindEntityById(op.EntityId, op.EntityType, false);
+                var existing = worldState.FindEntityById(op.EntityId, op.EntityType);
                 if (existing != null)
                     return OperationHandledIssue.Conflict(op, $"实体 '{op.EntityType}:{op.EntityId}' 已存在。");
 
@@ -360,7 +360,7 @@ public class Block : NodeBlock
 
             case AtomicOperationType.ModifyEntity:
                 var entityToModify =
-                    worldState.FindEntityById(op.EntityId, op.EntityType, false);
+                    worldState.FindEntityById(op.EntityId, op.EntityType);
                 if (entityToModify == null)
                     return OperationHandledIssue.NotFound(op, $"实体 '{op.EntityType}:{op.EntityId}' 未找到或已被销毁。");
                 // 注意：这里的检查需要根据你的 AtomicOperation 定义调整
@@ -377,7 +377,7 @@ public class Block : NodeBlock
                 return Result.Ok(op);
 
             case AtomicOperationType.DeleteEntity:
-                var entityToDelete = worldState.FindEntityById(op.EntityId, op.EntityType, false);
+                var entityToDelete = worldState.FindEntityById(op.EntityId, op.EntityType);
                 if (entityToDelete != null)
                     entityToDelete.IsDestroyed = true;
 

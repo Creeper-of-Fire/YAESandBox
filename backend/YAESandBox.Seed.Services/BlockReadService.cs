@@ -83,7 +83,7 @@ public class BlockReadService(IBlockManager blockManager, INotifierService notif
         try
         {
             var targetWs = block.CurrentWorldState;
-            return targetWs.FindEntity(entityRef, false); // Find non-destroyed
+            return targetWs.FindEntity(entityRef); // Find non-destroyed
         }
         catch (Exception ex)
         {

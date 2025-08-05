@@ -27,7 +27,7 @@
           </NFormItemGi>
           <NFormItemGi>
             <NCheckbox v-model:checked="formValue.dotall" @update:checked="updateModel">
-              单行模式 (s)
+              点号匹配所有 (s)
             </NCheckbox>
           </NFormItemGi>
         </NGrid>

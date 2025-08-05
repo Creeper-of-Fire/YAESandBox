@@ -1,6 +1,10 @@
 ﻿{
   "apiFiles": [
     "../shared/api-def/stdlib-api-safe.json",
+    "../shared/api-def/log-bridge.json",
+    "../shared/api-def/json-bridge.json",
+    "../shared/api-def/regex-bridge.json",
+    "../shared/api-def/datetime-bridge.json",
     "./api-def/custom-api-main.json"
   ]
 }

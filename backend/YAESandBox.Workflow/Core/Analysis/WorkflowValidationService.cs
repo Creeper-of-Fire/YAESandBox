@@ -101,7 +101,7 @@ public class WorkflowValidationService
             }
         }
 
-        // 3. (新增) 检查 OutputMappings 的源（Value，即祝祷内部变量）是否真的被生产出来了
+        // 3.检查 OutputMappings 的源（Value，即祝祷内部变量）是否真的被生产出来了
         var allProducedInTuumVars = new HashSet<string>(tuum.Runes.SelectMany(m => m.GetProducedSpec()));
         var allAvailableInTuumVars = new HashSet<string>(tuum.InputMappings.Keys).Union(allProducedInTuumVars).ToHashSet();
 
