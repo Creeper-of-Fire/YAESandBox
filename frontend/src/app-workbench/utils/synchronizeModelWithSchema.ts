@@ -1,4 +1,4 @@
-﻿import {cloneDeep} from "lodash";
+﻿import {cloneDeep} from "lodash-es";
 /**
  * 辅助函数：根据 JSON Schema 创建一个“宽容”版的object。
  * 它会填充缺失的必填字段。

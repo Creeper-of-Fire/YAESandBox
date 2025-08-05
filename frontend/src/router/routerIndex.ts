@@ -1,4 +1,4 @@
-﻿// src/router/index.ts
+﻿// src/router/routerIndex.ts
 
 import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router';
 

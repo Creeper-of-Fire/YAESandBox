@@ -6,11 +6,13 @@ import AutoImport from 'unplugin-auto-import/vite'
 import {NaiveUiResolver} from 'unplugin-vue-components/resolvers'
 import Components from 'unplugin-vue-components/vite'
 import {visualizer} from "rollup-plugin-visualizer";
+import VitePluginVueDevTools from "vite-plugin-vue-devtools";
 
 // https://vite.dev/config/
 export default defineConfig({
     plugins: [
         vue(),
+        VitePluginVueDevTools(),
         // --- 添加 license 插件配置 ---
         license({
             sourcemap: true,
