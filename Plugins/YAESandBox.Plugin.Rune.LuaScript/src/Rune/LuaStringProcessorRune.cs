@@ -9,6 +9,7 @@ using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
+using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Plugin.LuaScript.Rune.LuaScriptRuneProcessor;
 
 namespace YAESandBox.Plugin.LuaScript.Rune;
@@ -123,13 +124,17 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
     )]
     [DefaultValue(DefaultScript)]
     public string? Script { get; init; } = DefaultScript;
-
+    
     /// <inheritdoc />
     protected override LuaStringProcessorRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this);
 
+    
+    // TODO 增加脚本的变量映射功能，否则就全是`Any?`了
+    // 目前强制所有的脚本输入/输出都为 Any，且不能为空
+    
     /// <inheritdoc />
-    public override List<string> GetConsumedVariables() => [this.InputVariableName];
+    public override List<ConsumedSpec> GetConsumedSpec() => [new(this.InputVariableName, CoreVarDefs.Any) { IsNullable = false }];
 
     /// <inheritdoc />
-    public override List<string> GetProducedVariables() => [this.OutputVariableName];
+    public override List<ProducedSpec> GetProducedSpec() => [new(this.OutputVariableName, CoreVarDefs.Any) { IsNullable = false }];
 }

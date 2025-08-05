@@ -9,6 +9,7 @@ using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
@@ -115,7 +116,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
     /// <summary>
     /// 通过静态分析 Lua 脚本，提取所有通过 `ctx.get()` 消费的变量。
     /// </summary>
-    public override List<string> GetConsumedVariables()
+    public override List<ConsumedSpec> GetConsumedSpec()
     {
         if (string.IsNullOrWhiteSpace(this.Script))
         {
@@ -125,13 +126,14 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
         return ConsumedVariableRegex().Matches(this.Script)
             .Select(match => match.Groups[1].Value)
             .Distinct()
+            .Select(name => new ConsumedSpec(name, CoreVarDefs.Any) { IsNullable = false })
             .ToList();
     }
 
     /// <summary>
     /// 通过静态分析 Lua 脚本，提取所有通过 `ctx.set()` 生产的变量。
     /// </summary>
-    public override List<string> GetProducedVariables()
+    public override List<ProducedSpec> GetProducedSpec()
     {
         if (string.IsNullOrWhiteSpace(this.Script))
         {
@@ -141,6 +143,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
         return ProducedVariableRegex().Matches(this.Script)
             .Select(match => match.Groups[1].Value)
             .Distinct()
+            .Select(name => new ProducedSpec(name, CoreVarDefs.Any) { IsNullable = false })
             .ToList();
     }
 }
