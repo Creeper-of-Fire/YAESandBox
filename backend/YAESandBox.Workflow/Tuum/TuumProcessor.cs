@@ -19,7 +19,11 @@ public class TuumProcessor(
     TuumConfig config)
     : IProcessorWithDebugDto<ITuumProcessorDebugDto>
 {
-    public TuumConfig Config { get; } = config;
+    private TuumConfig Config { get; } = config;
+
+    /// <summary>
+    /// 祝祷的上下文/内部运行时
+    /// </summary>
     public TuumProcessorContent TuumContent { get; } = new(config, workflowRuntimeService);
 
     /// <summary>
@@ -61,7 +65,7 @@ public class TuumProcessor(
         /// 工作流的运行时服务
         /// </summary>
         public WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-        
+
         /// <summary>
         /// 获得祝祷的变量，带有类型转换，并且有序列化尝试
         /// </summary>
@@ -98,9 +102,9 @@ public class TuumProcessor(
                 return default;
                 // 提供详细的错误信息
                 // TODO 应该记录在Tuum的Debug里面
-                
+
                 // throw new InvalidCastException(
-                    // $"无法将值'{valueName}'(类型: {tryGetValue.GetType().FullName})转换为 {typeof(T).FullName}。JSON 转换失败: {ex.Message}", ex);
+                // $"无法将值'{valueName}'(类型: {tryGetValue.GetType().FullName})转换为 {typeof(T).FullName}。JSON 转换失败: {ex.Message}", ex);
             }
         }
     }
@@ -117,8 +121,6 @@ public class TuumProcessor(
 
     private List<IProcessorWithDebugDto<IRuneProcessorDebugDto>> Runes { get; } =
         config.Runes.Select(rune => rune.ToRuneProcessor(workflowRuntimeService)).ToList();
-    
-    internal WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
 
     /// <summary>
     /// 启动祝祷流程。
@@ -137,7 +139,7 @@ public class TuumProcessor(
             // 如果到这里还找不到，说明上游逻辑有误。
             this.TuumContent.SetTuumVar(internalName, inputs.TryGetValue(endpointName, out object? value) ? value : null);
         }
-        
+
         // 2. 依次执行所有符文
         foreach (var rune in this.Runes)
         {

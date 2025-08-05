@@ -1,4 +1,5 @@
-﻿using YAESandBox.Depend.Results;
+﻿using System.Collections.Immutable;
+using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Tuum;
@@ -19,51 +20,18 @@ public class WorkflowProcessor(
     /// Key 是一个端点（祝祷ID + 端点名），Value 是该端点产生的数据。
     /// 这个存储区在工作流执行期间被动态填充。
     /// </summary>
-    private readonly Dictionary<TuumConnectionEndpoint, object?> _workflowDataStore = [];
+    private Dictionary<TuumConnectionEndpoint, object?> WorkflowDataStore { get; } = [];
 
-    private readonly Lock _dataStoreLock = new();
+    private Lock DataStoreLock { get; } = new();
 
-
-    private List<TuumProcessor> Tuums { get; } = config.Tuums.ConvertAll(it => it.ToTuumProcessor(runtimeService));
 
     private WorkflowRuntimeService RuntimeService { get; } = runtimeService;
-    private WorkflowRuntimeContext Context { get; } = new(triggerParams);
-    
+    private List<TuumProcessor> Tuums { get; } = config.Tuums.ConvertAll(it => it.ToTuumProcessor(runtimeService));
+
     /// <summary>
     /// 一个特殊的TuumId，用于表示工作流的入口。
     /// </summary>
     private const string WorkflowInputSourceId = "@workflow";
-
-
-    /// <summary>
-    /// 封装工作流执行期间的有状态数据。
-    /// 这个对象是可变的，并在整个工作流的祝祷之间传递和修改。
-    /// </summary>
-    public class WorkflowRuntimeContext(IReadOnlyDictionary<string, string> triggerParams)
-    {
-        // /// <summary>
-        // /// 工作流的输入参数被放入这里，
-        // /// </summary>
-        // public IReadOnlyDictionary<string, string> TriggerParams { get; } = triggerParams;
-
-        /// <summary>
-        /// 全局变量池。
-        /// 每个祝祷的输出可以写回这里，供后续祝祷使用。
-        /// </summary>
-        public Dictionary<string, object?> GlobalVariables { get; } = triggerParams.ToDictionary(kv => kv.Key, object? (kv) => kv.Value);
-
-        // /// <summary>
-        // /// 最终生成的、要呈现给用户的原始文本。
-        // /// </summary>
-        // public string FinalRawText =>
-        //     this.GlobalVariables.GetValueOrDefault(nameof(this.FinalRawText)) as string ?? string.Empty;
-
-        // /// <summary>
-        // /// 整个工作流生成的所有原子操作列表。
-        // /// </summary>
-        // public List<IWorkflowAtomicOperation> GeneratedOperations =>
-        //     this.GlobalVariables.GetValueOrDefault(nameof(this.GeneratedOperations)) as List<IWorkflowAtomicOperation> ?? [];
-    }
 
     /// <inheritdoc />
     public IWorkflowProcessorDebugDto DebugDto => new WorkflowProcessorDebugDto
@@ -89,11 +57,11 @@ public class WorkflowProcessor(
         foreach (var param in triggerParams)
         {
             var workflowInputEndpoint = new TuumConnectionEndpoint(WorkflowInputSourceId, param.Key);
-            this._workflowDataStore[workflowInputEndpoint] = param.Value;
+            this.WorkflowDataStore[workflowInputEndpoint] = param.Value;
         }
 
         // --- 1. 依赖分析与执行计划生成 ---
-        var nodes = this.Tuums.ToDictionary(tuum => tuum.Config.ConfigId, tuum => new ExecutionNode(tuum));
+        var nodes = this.Tuums.ToDictionary(tuum => tuum.TuumContent.TuumConfig.ConfigId, tuum => new ExecutionNode(tuum));
 
         // 根据显式连接构建依赖图
         foreach (var connection in this.Config.Connections)
@@ -118,16 +86,17 @@ public class WorkflowProcessor(
         {
             if (readyToExecute.Count == 0)
             {
-                string remainingNodeNames = string.Join(", ", nodes.Values.Except(completedNodes).Select(n => n.Tuum.Config.ConfigId));
+                string remainingNodeNames = string.Join(", ",
+                    nodes.Values.Except(completedNodes).Select(n => n.Tuum.TuumContent.TuumConfig.ConfigId));
                 return new WorkflowExecutionResult(false, $"工作流存在循环依赖或连接断裂，无法继续执行。剩余节点: {remainingNodeNames}", "CircularDependency");
             }
-            
+
             var currentBatch = new List<ExecutionNode>();
             while (readyToExecute.TryDequeue(out var node))
             {
                 currentBatch.Add(node);
             }
-            
+
             var tasks = currentBatch.Select(node => this.ExecuteSingleTuumAsync(node, cancellationToken)).ToList();
             var results = await Task.WhenAll(tasks);
 
@@ -140,7 +109,7 @@ public class WorkflowProcessor(
                     return new WorkflowExecutionResult(false, error.Message, "TuumExecutionFailed");
                 }
             }
-            
+
             foreach (var executedNode in currentBatch)
             {
                 completedNodes.Add(executedNode);
@@ -164,7 +133,7 @@ public class WorkflowProcessor(
     private async Task<Result> ExecuteSingleTuumAsync(ExecutionNode node, CancellationToken cancellationToken)
     {
         var tuum = node.Tuum;
-        var tuumId = tuum.Config.ConfigId;
+        var tuumId = tuum.TuumContent.TuumConfig.ConfigId;
 
         // 1. 准备输入：从数据存储区为当前祝祷收集所有需要的输入数据
         var tuumInputs = new Dictionary<string, object?>();
@@ -173,7 +142,7 @@ public class WorkflowProcessor(
         foreach (var connection in connectionsToThisTuum)
         {
             // 从数据存储区查找源端点的值
-            if (this._workflowDataStore.TryGetValue(connection.Source, out var sourceValue))
+            if (this.WorkflowDataStore.TryGetValue(connection.Source, out var sourceValue))
             {
                 tuumInputs[connection.Target.EndpointName] = sourceValue;
             }
@@ -191,17 +160,67 @@ public class WorkflowProcessor(
             return error;
         }
 
-        // 3. 存储输出：将祝祷的输出结果存回工作流的数据存储区
-        lock (this._dataStoreLock)
+        // 3. 存储输出：将祝祷的输出结果经过净化处理后，存回工作流的数据存储区
+        lock (this.DataStoreLock)
         {
             foreach (var output in tuumOutputs)
             {
                 var outputEndpoint = new TuumConnectionEndpoint(tuumId, output.Key);
-                this._workflowDataStore[outputEndpoint] = output.Value;
+                // 对输出值进行净化（克隆/转不可变），以保证数据隔离
+                this.WorkflowDataStore[outputEndpoint] = CloneAndSanitizeForFanOut(output.Value);
             }
         }
 
         return Result.Ok();
+    }
+
+    /// <summary>
+    /// 对要扇出的数据进行净化处理，防止并行任务中的意外修改。
+    /// </summary>
+    /// <param name="originalValue">原始数据对象。</param>
+    /// <returns>一个被处理过的、更安全的数据副本。</returns>
+    private object? CloneAndSanitizeForFanOut(object? originalValue)
+    {
+        if (originalValue is null)
+        {
+            return null;
+        }
+
+        // 对于常见集合类型，转换为不可变集合
+        switch (originalValue)
+        {
+            case IList<object> list:
+                return list.ToImmutableList();
+            case IDictionary<object, object> dict:
+                return dict.ToImmutableDictionary();
+            case IList<string> stringList:
+                return stringList.ToImmutableList();
+            case IDictionary<string, object> stringDict:
+                return stringDict.ToImmutableDictionary();
+            // 可以根据需要在这里添加更多的集合类型转换
+        }
+
+        // 对于可克隆的 record 类型，执行浅克隆
+        // C#没有一个统一的 IsRecord() 方法，但我们可以利用 ICloneable 接口
+        // 如果你的 record 都实现了 ICloneable (with 表达式不会自动实现这个)
+        // 一个更通用的方法是检查 with 表达式所需的方法，但这太复杂。
+        // 最佳实践是让需要保护的自定义对象实现一个 Clone 方法。
+        if (originalValue is ICloneable cloneable)
+        {
+            return cloneable.Clone();
+        }
+
+        var type = originalValue.GetType();
+
+        // 对于值类型和字符串，它们本身是不可变的或按值传递的，直接返回
+        if (type.IsValueType || originalValue is string)
+        {
+            return originalValue;
+        }
+
+        // 对于未知的引用类型，我们只能传递引用，并依赖开发者约定
+        // 这里可以加一条警告日志，如果需要严格模式的话
+        return originalValue;
     }
 
     /// <summary>

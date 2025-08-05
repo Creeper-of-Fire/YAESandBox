@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using System.Collections.Immutable;
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
@@ -54,7 +55,7 @@ internal partial class PromptGenerationRuneProcessor(
         };
         this.DebugDto.GeneratedPrompt = prompt;
 
-        var prompts = tuumProcessorContent.GetTuumVar<List<RoledPromptDto>>(this.Config.PromptsName) ?? [];
+        var prompts = (tuumProcessorContent.GetTuumVar<ImmutableList<RoledPromptDto>>(this.Config.PromptsName) ?? []).ToList();
         prompts.Add(prompt);
         tuumProcessorContent.SetTuumVar(this.Config.PromptsName, prompts);
 
