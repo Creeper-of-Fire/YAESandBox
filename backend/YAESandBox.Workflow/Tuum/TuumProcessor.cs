@@ -19,8 +19,8 @@ public class TuumProcessor(
     TuumConfig config)
     : IProcessorWithDebugDto<ITuumProcessorDebugDto>
 {
-    private TuumConfig Config { get; } = config;
-    internal TuumProcessorContent TuumContent { get; } = new(config, workflowRuntimeService);
+    public TuumConfig Config { get; } = config;
+    public TuumProcessorContent TuumContent { get; } = new(config, workflowRuntimeService);
 
     /// <summary>
     /// 祝祷运行时的上下文
@@ -106,15 +106,14 @@ public class TuumProcessor(
     }
 
     /// <summary>
-    /// 消费者（Consumes）：此祝祷需要从全局变量池中获取的所有变量的【全局名称】。
-    /// 在严格模式下，这个集合就是 InputMappings 的所有 Value。
+    /// 此祝祷声明的所有输入端点的名称。
     /// </summary>
-    internal IEnumerable<string> GlobalConsumers { get; } = config.InputMappings.Values;
+    internal IEnumerable<string> InputEndpoints { get; } = config.InputMappings.Values.Distinct();
 
     /// <summary>
-    /// 生产者（Produces）：此祝祷通过 OutputMappings 向全局变量池声明输出的变量。
+    /// 此祝祷声明的所有输出端点的名称。
     /// </summary>
-    internal IEnumerable<string> GlobalProducers { get; } = config.OutputMappings.Keys;
+    internal IEnumerable<string> OutputEndpoints { get; } = config.OutputMappings.Keys;
 
     private List<IProcessorWithDebugDto<IRuneProcessorDebugDto>> Runes { get; } =
         config.Runes.Select(rune => rune.ToRuneProcessor(workflowRuntimeService)).ToList();
@@ -122,69 +121,52 @@ public class TuumProcessor(
     internal WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
 
     /// <summary>
-    /// 启动祝祷流程
+    /// 启动祝祷流程。
     /// </summary>
-    /// <param name="workflowRuntimeContext"></param>
+    /// <param name="inputs">一个字典，Key是输入端点的名称，Value是输入的数据。</param>
     /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    public async Task<Result<Dictionary<string, object?>>> ExecuteTuumsAsync(
-        WorkflowRuntimeContext workflowRuntimeContext, CancellationToken cancellationToken = default)
+    /// <returns>一个包含此祝祷所有输出的字典，Key是输出端点的名称。</returns>
+    public async Task<Result<Dictionary<string, object?>>> ExecuteAsync(
+        IReadOnlyDictionary<string, object?> inputs, CancellationToken cancellationToken = default)
     {
-        // 严格根据 InputMappings 从全局变量池填充祝祷的内部变量池
-        foreach ((string localName, string globalName) in this.Config.InputMappings)
+        // 1. 根据输入端点的数据，填充祝祷的内部变量池
+        foreach ((string internalName, string endpointName) in this.Config.InputMappings)
         {
-            if (!workflowRuntimeContext.GlobalVariables.TryGetValue(globalName, out object? value))
-            {
-                // 这一层校验理论上在静态分析时已完成，但在这里，“直接获取然后失败时抛错误”和“失败时返回Result”是一样的。
-                return NormalError.Conflict($"执行祝祷 '{this.Config.ConfigId}' 失败：找不到必需的全局输入变量 '{globalName}'。");
-            }
-
-            this.TuumContent.TuumVariable[localName] = value;
+            // 如果输入端点没有提供数据（可能因连接或上游问题），则内部变量为 null
+            // 理论上，WorkflowProcessor应该确保所有连接的输入都被提供。
+            // 如果到这里还找不到，说明上游逻辑有误。
+            this.TuumContent.SetTuumVar(internalName, inputs.TryGetValue(endpointName, out object? value) ? value : null);
         }
-
-        // this.TuumContent.TuumVariable[nameof(WorkflowRuntimeContext.FinalRawText)] = workflowRuntimeContext.FinalRawText;
-        // this.TuumContent.TuumVariable[nameof(WorkflowRuntimeContext.GeneratedOperations)] = workflowRuntimeContext.GeneratedOperations;
-
+        
+        // 2. 依次执行所有符文
         foreach (var rune in this.Runes)
         {
-            switch (rune)
+            // (仅处理INormalRune，未来可扩展)
+            if (rune is INormalRune normalRune)
             {
-                case INormalRune normalRune:
-                    var result = await normalRune.ExecuteAsync(this.TuumContent, cancellationToken);
-                    if (result.TryGetError(out var error))
-                        return error;
-                    break;
+                var result = await normalRune.ExecuteAsync(this.TuumContent, cancellationToken);
+                if (result.TryGetError(out var error))
+                    return error; // 如果任何一个符文失败，整个祝祷失败
             }
         }
 
-        var tuumOutput = new Dictionary<string, object?>();
-
-        // if (this.TuumContent.TuumVariable.TryGetValue(nameof(WorkflowRuntimeContext.FinalRawText), out object? finalRawText))
-        // {
-        //     workflowRuntimeContext.FinalRawText = (string)finalRawText;
-        // }
-        //
-        // if (this.TuumContent.TuumVariable.TryGetValue(nameof(WorkflowRuntimeContext.GeneratedOperations), out object? generatedOperations))
-        // {
-        //     workflowRuntimeContext.GeneratedOperations = (List<AtomicOperation>)generatedOperations;
-        // }
-
-        foreach ((string globalName, string localName) in this.Config.OutputMappings)
+        // 3. 根据输出映射，从内部变量池收集所有输出
+        var tuumOutputs = new Dictionary<string, object?>();
+        foreach ((string endpointName, string internalName) in this.Config.OutputMappings)
         {
-            // 从本祝祷的内部变量池中查找由符文产生的局部变量
-            if (this.TuumContent.TuumVariable.TryGetValue(localName, out object? localValue))
+            // 从内部变量池中查找由符文产生的局部变量
+            if (this.TuumContent.TuumVariable.TryGetValue(internalName, out object? internalValue))
             {
-                tuumOutput[globalName] = localValue;
+                tuumOutputs[endpointName] = internalValue;
             }
-            // else 
-            // {
-            //   可选：在这里可以处理映射声明了，但符文实际并未产生输出的情况
-            //   例如：记录一个警告日志，或者根据严格模式抛出异常
-            //   根据“后端不验证”的原则，我们暂时忽略这种情况
-            // }
+            else
+            {
+                // 如果映射声明了，但符文未产生输出，则该输出端点的值为 null
+                tuumOutputs[endpointName] = null;
+            }
         }
 
-        return tuumOutput;
+        return tuumOutputs;
     }
 
 

@@ -52,7 +52,6 @@ export interface WorkflowRuneRules
 {
     noConfig?: boolean;
     singleInTuum?: boolean;
-    inLastTuum?: boolean;
     inFrontOf?: string[]; // 存储的是符文的类型名 (e.g., "PromptGenerationRuneConfig")
     behind?: string[]; // 存储的是符文的类型名 (e.g., "PromptGenerationRuneConfig")
 }

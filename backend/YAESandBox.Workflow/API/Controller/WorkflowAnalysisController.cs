@@ -54,8 +54,8 @@ public class WorkflowAnalysisController(WorkflowValidationService validationServ
     {
         var analysisResult = new RuneAnalysisResult
         {
-            ConsumedVariables = runeConfig.GetConsumedSpec(),
-            ProducedVariables = runeConfig.GetProducedSpec()
+            ConsumedVariables = runeConfig.GetConsumedSpec().Select(spec => spec.Name).ToList(),
+            ProducedVariables = runeConfig.GetProducedSpec().Select(spec => spec.Name).ToList()
         };
 
         return this.Ok(analysisResult);

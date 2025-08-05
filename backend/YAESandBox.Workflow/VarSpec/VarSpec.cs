@@ -9,44 +9,6 @@
 public record VarSpecDef(string TypeName, string? Description);
 
 /// <summary>
-/// 为VarSpecDef提供扩展方法
-/// </summary>
-public static class VarSpecDefExtends
-{
-    // /// <summary>
-    // /// 把一个IVarSpec转换成包含其的单元素列表
-    // /// </summary>
-    // /// <param name="spec"></param>
-    // /// <typeparam name="T"></typeparam>
-    // /// <returns></returns>
-    // public static List<T> MakeList<T>(this T spec) where T : IVarSpec => [spec];
-    //
-    // /// <summary>
-    // /// 把一个VarSpecDef转换成ProducedSpec，默认不可为空
-    // /// </summary>
-    // /// <param name="def"></param>
-    // /// <param name="name"></param>
-    // /// <param name="isNullable"></param>
-    // /// <returns></returns>
-    // public static ProducedSpec ToProduced(this VarSpecDef def, string name, bool isNullable = false)
-    // {
-    //     return new ProducedSpec(name, def, isNullable);
-    // }
-    //
-    // /// <summary>
-    // /// 把一个VarSpecDef转换成ConsumedSpec，默认不可为空
-    // /// </summary>
-    // /// <param name="def"></param>
-    // /// <param name="name"></param>
-    // /// <param name="isNullable"></param>
-    // /// <returns></returns>
-    // public static ConsumedSpec ToConsumed(this VarSpecDef def, string name, bool isNullable = false)
-    // {
-    //     return new ConsumedSpec(name, def, isNullable);
-    // }
-}
-
-/// <summary>
 /// 定义了一个变量
 /// </summary>
 public interface IVarSpec

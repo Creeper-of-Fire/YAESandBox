@@ -46,7 +46,6 @@ internal class SendToRawTextRuneProcessor(
 /// 用于将祝祷变量名直接写入到 WorkflowRuntimeService.RawText 的配置。
 /// 该配置定义了需要从祝祷中提取并存储到RawText中的变量。
 /// </summary>
-[InLastTuum]
 [ClassLabel("😼结束")]
 internal record SendToRawTextRuneConfig : AbstractRuneConfig<SendToRawTextRuneProcessor>
 {

@@ -17,11 +17,11 @@ public record WorkflowConfig
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
-    /// 声明此工作流启动时需要提供的触发参数列表。
-    /// 用于校验和前端提示。
+    /// 声明此工作流启动时需要提供的入口参数列表。
+    /// 这些输入可以作为连接的源头。
     /// </summary>
     [Required]
-    public List<string> TriggerParams { get; init; } = [];
+    public List<string> WorkflowInputs { get; init; } = [];
 
     /// <summary>
     /// 一个工作流含有的祝祷（有序）
@@ -29,4 +29,11 @@ public record WorkflowConfig
     [Required]
     [HiddenInForm(true)]
     public List<TuumConfig> Tuums { get; init; } = [];
+    
+    /// <summary>
+    /// 定义了工作流中所有祝祷之间的显式连接。
+    /// 这是工作流数据流向的唯一依据。
+    /// </summary>
+    [Required]
+    public List<WorkflowConnection> Connections { get; init; } = [];
 }

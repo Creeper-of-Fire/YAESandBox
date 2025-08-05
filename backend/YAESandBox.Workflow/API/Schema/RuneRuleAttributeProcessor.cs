@@ -37,12 +37,6 @@ public class RuneRuleAttributeProcessor : ISchemaProcessor
             rules["singleInTuum"] = true;
         }
 
-        // 处理 [InLastTuum]
-        if (attrs.OfType<InLastTuumAttribute>().Any())
-        {
-            rules["inLastTuum"] = true;
-        }
-
         // 处理 [InFrontOf]
         if (attrs.OfType<InFrontOfAttribute>().FirstOrDefault() is { } inFrontOfAttr)
         {

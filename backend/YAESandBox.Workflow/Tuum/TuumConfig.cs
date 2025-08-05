@@ -39,28 +39,30 @@ public record TuumConfig
     public List<AbstractRuneConfig> Runes { get; init; } = [];
 
     /// <summary>
-    /// 定义了此祝祷如何将其内部变量暴露到工作流的全局变量池。
-    /// Key: 全局变量名 (在工作流中使用的名字)
-    /// Value: 祝祷内部的变量名 (由符文产生的名字)
-    /// </summary>
-    /// <example>
-    /// "final_greeting": "rune_A_raw_text"
-    /// 这意味着，将此祝祷内部名为 "rune_A_raw_text" 的变量，
-    /// 以 "final_greeting" 的名字发布到全局。
-    /// </example>
-    [Required]
-    public Dictionary<string, string> OutputMappings { get; init; } = [];
-    
-    /// <summary>
-    /// 定义了此祝祷如何从工作流的全局变量池获取输入，并映射到祝祷内部使用的变量名。
-    /// Key: 祝祷内部期望的变量名 (符文消费的名字)
-    /// Value: 全局变量名 (在工作流中可用的名字)
+    /// 定义了此祝祷可被连接的【输入端点】。
+    /// Key: 祝祷内部期望的变量名 (供符文消费)。
+    /// Value: 输入端点的名称 (供外部连接使用)。
     /// </summary>
     /// <example>
     /// "initial_query": "customer_question"
-    /// 这意味着，将全局变量池中的 "initial_query" 变量，
-    /// 作为名为 "customer_question" 的输入提供给此祝祷内部的符文使用。
+    /// 这意味着，一个名为 "customer_question" 的输入端点，
+    /// 会将数据提供给祝祷内部名为 "initial_query" 的变量。
+    /// 多个内部变量可以连接到同一个输入端点。
     /// </example>
     [Required]
     public Dictionary<string, string> InputMappings { get; init; } = [];
+
+    /// <summary>
+    /// 定义了此祝祷可被连接的【输出端点】。
+    /// Key: 输出端点的名称 (供外部连接使用)。
+    /// Value: 提供数据的祝祷内部变量名 (由符文产生)。
+    /// </summary>
+    /// <example>
+    /// "final_greeting": "rune_A_raw_text"
+    /// 这定义了一个名为 "final_greeting" 的输出端点，
+    /// 其数据来源于祝祷内部名为 "rune_A_raw_text" 的变量。
+    /// 一个内部变量可以被映射到多个输出端点。
+    /// </example>
+    [Required]
+    public Dictionary<string, string> OutputMappings { get; init; } = [];
 }

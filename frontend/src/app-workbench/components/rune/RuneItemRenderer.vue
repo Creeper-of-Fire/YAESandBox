@@ -150,7 +150,6 @@ const ruleDescriptions = computed(() =>
 
   if (rules.noConfig) descriptions.push('此符文不能有配置。')
   if (rules.singleInTuum) descriptions.push('此符文在每个祝祷中只能使用一次。');
-  if (rules.inLastTuum) descriptions.push('此符文必须位于工作流的最后一个祝祷中。');
   if (rules.inFrontOf && rules.inFrontOf.length > 0)
   {
     const aliases = rules.inFrontOf.map(getRuneAlias).join('、');
