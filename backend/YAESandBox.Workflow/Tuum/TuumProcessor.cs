@@ -3,10 +3,10 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
-using static YAESandBox.Workflow.WorkflowProcessor;
+using static YAESandBox.Workflow.Core.WorkflowProcessor;
 
 namespace YAESandBox.Workflow.Tuum;
 
@@ -18,7 +18,7 @@ namespace YAESandBox.Workflow.Tuum;
 public class TuumProcessor(
     WorkflowRuntimeService workflowRuntimeService,
     TuumConfig config)
-    : IWithDebugDto<ITuumProcessorDebugDto>
+    : IProcessorWithDebugDto<ITuumProcessorDebugDto>
 {
     private TuumConfig Config { get; } = config;
     internal TuumProcessorContent TuumContent { get; } = new(config, workflowRuntimeService);
@@ -117,7 +117,7 @@ public class TuumProcessor(
     /// </summary>
     internal IEnumerable<string> GlobalProducers { get; } = config.OutputMappings.Keys;
 
-    private List<IWithDebugDto<IRuneProcessorDebugDto>> Runes { get; } =
+    private List<IProcessorWithDebugDto<IRuneProcessorDebugDto>> Runes { get; } =
         config.Runes.Select(rune => rune.ToRuneProcessor(workflowRuntimeService)).ToList();
     
     internal WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;

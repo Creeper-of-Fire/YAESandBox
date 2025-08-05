@@ -7,7 +7,7 @@ using YAESandBox.Seed.DTOs.WebSocket;
 using YAESandBox.Seed.Services.InterFaceAndBasic;
 using YAESandBox.Seed.State.Entity;
 using YAESandBox.Depend;
-using YAESandBox.Workflow.Abstractions;
+using YAESandBox.Workflow.Core.Abstractions;
 
 // For serializing params
 

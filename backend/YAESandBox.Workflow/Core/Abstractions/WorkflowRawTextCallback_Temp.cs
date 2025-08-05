@@ -1,4 +1,4 @@
-﻿namespace YAESandBox.Workflow.Abstractions;
+﻿namespace YAESandBox.Workflow.Core.Abstractions;
 
 /// <summary>
 /// 一个暂时的回调

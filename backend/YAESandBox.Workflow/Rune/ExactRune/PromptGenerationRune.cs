@@ -5,7 +5,7 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Rune.ExactRune.PromptGenerationRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
@@ -21,7 +21,7 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 internal partial class PromptGenerationRuneProcessor(
     WorkflowRuntimeService workflowRuntimeService,
     PromptGenerationRuneConfig config)
-    : IWithDebugDto<PromptGenerationRuneProcessorDebugDto>, INormalRune
+    : IProcessorWithDebugDto<PromptGenerationRuneProcessorDebugDto>, INormalRune
 {
     private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
     private PromptGenerationRuneConfig Config { get; init; } = config;

@@ -1,5 +1,5 @@
 ﻿using NJsonSchema.Generation;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Rune;
 
 namespace YAESandBox.Workflow.API.Schema;
 

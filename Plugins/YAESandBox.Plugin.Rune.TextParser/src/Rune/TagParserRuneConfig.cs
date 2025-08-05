@@ -8,7 +8,7 @@ using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
@@ -19,7 +19,7 @@ namespace YAESandBox.Plugin.TextParser.Rune;
 /// “标签解析”符文的运行时处理器。
 /// </summary>
 public class TagParserRuneProcessor(TagParserRuneConfig config)
-    : IWithDebugDto<TagParserRuneProcessor.TagParserRuneDebugDto>, INormalRune
+    : IProcessorWithDebugDto<TagParserRuneProcessor.TagParserRuneDebugDto>, INormalRune
 {
     private TagParserRuneConfig Config { get; } = config;
 

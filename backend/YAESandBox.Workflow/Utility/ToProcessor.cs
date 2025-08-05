@@ -1,6 +1,6 @@
-﻿using YAESandBox.Workflow.Abstractions;
-using YAESandBox.Workflow.AIService;
-using YAESandBox.Workflow.Config;
+﻿using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.Core;
+using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.Tuum;
 
 namespace YAESandBox.Workflow.Utility;

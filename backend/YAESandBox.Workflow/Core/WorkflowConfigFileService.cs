@@ -1,10 +1,11 @@
 ﻿using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Tuum;
 using static YAESandBox.Depend.Storage.ScopedStorageFactory;
 
-namespace YAESandBox.Workflow.Utility;
+namespace YAESandBox.Workflow.Core;
 
 /// <summary>
 /// 工作流配置服务，主要承担全局模板的管理与访问。

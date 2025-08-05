@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace YAESandBox.Workflow.Analysis;
+namespace YAESandBox.Workflow.Core.Analysis;
 
 /// <summary>
 /// 整个工作流的校验报告。

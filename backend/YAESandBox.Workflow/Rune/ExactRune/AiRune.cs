@@ -6,10 +6,10 @@ using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Depend.Storage;
-using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Core;
+using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Rune.ExactRune.AiRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
@@ -22,7 +22,7 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// <param name="onChunkReceivedScript"></param>
 /// <param name="config"></param>
 internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfig config)
-    : IWithDebugDto<AiRuneProcessorDebugDto>, INormalRune
+    : IProcessorWithDebugDto<AiRuneProcessorDebugDto>, INormalRune
 {
     /// <inheritdoc />
     public AiRuneProcessorDebugDto DebugDto { get; } = new();

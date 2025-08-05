@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend;
-using YAESandBox.Workflow.Abstractions;
+using YAESandBox.Workflow.Core.Abstractions;
 
 namespace YAESandBox.Seed.DTOs.WebSocket;
 // --- 服务器推送到客户端的消息 DTOs ---

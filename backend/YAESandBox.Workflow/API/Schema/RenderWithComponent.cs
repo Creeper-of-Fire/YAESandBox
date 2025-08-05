@@ -46,19 +46,23 @@ internal class WebComponentRendererSchemaProcessor : ISchemaProcessor
     /// <inheritdoc />
     public void Process(SchemaProcessorContext context)
     {
-        var attribute = context.ContextualType.GetContextAttribute<RenderWithWebComponentAttribute>(true);
-        if (attribute is null)
-            return;
+        var typeInfo = context.ContextualType;
+        
+        RenderWithWebComponentAttribute? attribute = null;
 
-        string extensionKey = context.ContextualType.Context switch
+        string extensionKey = string.Empty;
+        if (typeInfo.GetCustomAttributes(true).OfType<RenderWithWebComponentAttribute>().FirstOrDefault() is { } classAttr)
         {
-            // 判断特性附着在类上还是属性上
-            PropertyInfo => "x-web-component-property",
-            TypeInfo => "x-web-component-class",
-            _ => string.Empty
-        };
+            extensionKey = "x-web-component-class";
+            attribute = classAttr;
+        }
+        else if (typeInfo.GetContextAttribute<RenderWithWebComponentAttribute>(true) is { } propertyAttr)
+        {
+            extensionKey = "x-web-component-property";
+            attribute = propertyAttr;
+        }
 
-        if (string.IsNullOrEmpty(extensionKey))
+        if (string.IsNullOrEmpty(extensionKey) || attribute is null)
             return;
 
         context.Schema.ExtensionData ??= new Dictionary<string, object?>();
@@ -75,19 +79,23 @@ internal class VueComponentRendererSchemaProcessor : ISchemaProcessor
     /// <inheritdoc />
     public void Process(SchemaProcessorContext context)
     {
-        var attribute = context.ContextualType.GetContextAttribute<RenderWithVueComponentAttribute>(true);
-        if (attribute is null)
-            return;
+        var typeInfo = context.ContextualType;
+        
+        RenderWithVueComponentAttribute? attribute = null;
 
-        string extensionKey = context.ContextualType.Context switch
+        string extensionKey = string.Empty;
+        if (typeInfo.GetCustomAttributes(true).OfType<RenderWithVueComponentAttribute>().FirstOrDefault() is { } classAttr)
         {
-            // 判断特性附着在类上还是属性上
-            PropertyInfo => "x-vue-component-property",
-            TypeInfo => "x-vue-component-class",
-            _ => string.Empty
-        };
+            extensionKey = "x-vue-component-class";
+            attribute = classAttr;
+        }
+        else if (typeInfo.GetContextAttribute<RenderWithVueComponentAttribute>(true) is { } propertyAttr)
+        {
+            extensionKey = "x-vue-component-property";
+            attribute = propertyAttr;
+        }
 
-        if (string.IsNullOrEmpty(extensionKey))
+        if (string.IsNullOrEmpty(extensionKey) || attribute is null)
             return;
 
         context.Schema.ExtensionData ??= new Dictionary<string, object?>();

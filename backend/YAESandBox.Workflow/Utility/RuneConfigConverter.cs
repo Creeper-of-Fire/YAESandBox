@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Serialization;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Rune;
 
 namespace YAESandBox.Workflow.Utility;
 

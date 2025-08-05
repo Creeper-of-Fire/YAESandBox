@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
-using YAESandBox.Workflow.Abstractions;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Core;
+using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Rune.ExactRune.SendToRawTextRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
@@ -18,7 +18,7 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 internal class SendToRawTextRuneProcessor(
     WorkflowRuntimeService workflowRuntimeService,
     SendToRawTextRuneConfig config)
-    : IWithDebugDto<SendToRawTextRuneProcessorDebugDto>, INormalRune
+    : IProcessorWithDebugDto<SendToRawTextRuneProcessorDebugDto>, INormalRune
 {
     private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
     private SendToRawTextRuneConfig Config { get; } = config;

@@ -2,10 +2,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.Attributes;
+using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Utility;
 
-namespace YAESandBox.Workflow.Config;
+namespace YAESandBox.Workflow.Rune;
 
 /// <summary>
 /// 符文的配置
@@ -48,7 +49,7 @@ public abstract record AbstractRuneConfig
     /// </summary>
     /// <param name="workflowRuntimeService"></param>
     /// <returns></returns>
-    internal abstract IWithDebugDto<IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService);
+    internal abstract IProcessorWithDebugDto<IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService);
 
     /// <summary>
     /// 获得符文的输入变量
@@ -65,7 +66,7 @@ public abstract record AbstractRuneConfig
 
 /// <inheritdoc />
 public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
-    where T : IWithDebugDto<IRuneProcessorDebugDto>
+    where T : IProcessorWithDebugDto<IRuneProcessorDebugDto>
 {
     /// <inheritdoc />
     public override string Name { get; init; } = string.Empty;
@@ -79,7 +80,7 @@ public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
     /// <inheritdoc/>
     public override string RuneType { get; init; } = nameof(T);
 
-    internal override IWithDebugDto<IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService) =>
+    internal override IProcessorWithDebugDto<IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService) =>
         this.ToCurrentRune(workflowRuntimeService);
 
     /// <summary>

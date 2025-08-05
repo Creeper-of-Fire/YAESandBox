@@ -1,6 +1,6 @@
 ﻿// --- File: YAESandBox.Workflow/Abstractions/IWorkflowEngine.cs ---
 
-namespace YAESandBox.Workflow.Abstractions;
+namespace YAESandBox.Workflow.Core.Abstractions;
 
 /// <summary>
 /// 工作流执行的最终结果。

@@ -1,6 +1,6 @@
 ﻿using System.Collections.ObjectModel;
 using YAESandBox.Workflow.API;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Rune;
 
 namespace YAESandBox.Workflow.Utility;
 

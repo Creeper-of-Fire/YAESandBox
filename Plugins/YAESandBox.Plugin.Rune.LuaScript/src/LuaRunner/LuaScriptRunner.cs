@@ -60,7 +60,7 @@ public partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, 
             logger.Register(lua, logger); // 日志桥自己注册自己
 
             // --- 3. 注册所有通过构建器添加的功能桥 ---
-            foreach (var bridge in bridges)
+            foreach (var bridge in this.Bridges)
             {
                 try
                 {

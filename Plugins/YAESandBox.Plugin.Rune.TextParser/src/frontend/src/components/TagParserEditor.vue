@@ -1,36 +1,42 @@
 ﻿<template>
   <div class="editor-container">
     <!-- 1. 默认的表单字段，通过 v-model 绑定到 props.modelValue -->
-    <NForm label-placement="left" label-width="auto" :style="{ maxWidth: '800px' }">
+    <NForm
+        label-placement="left"
+        label-width="auto"
+        :style="{ maxWidth: '800px' }"
+        :model="modelValue"
+    >
       <NFormItem label="输入变量名">
-        <NInput v-model:value="formValue.inputVariableName" @update:value="updateModel" />
+        <NInput v-model:value="formValue.inputVariableName" @update:value="updateModel"/>
       </NFormItem>
       <NFormItem label="CSS 选择器">
-        <NInput v-model:value="formValue.selector" @update:value="updateModel" type="textarea" :autosize="{ minRows: 2 }" />
+        <NInput v-model:value="formValue.selector" @update:value="updateModel" type="textarea" :autosize="{ minRows: 2 }"/>
       </NFormItem>
       <NFormItem label="提取模式">
-        <NSelect v-model:value="formValue.extractionMode" @update:value="updateModel" :options="extractionModeOptions" />
+        <NSelect v-model:value="formValue.extractionMode" @update:value="updateModel" :options="extractionModeOptions"/>
       </NFormItem>
       <!-- 条件渲染 -->
       <div v-if="formValue.extractionMode === 'Attribute'">
-        <NFormItem  label="属性名">
-          <NInput v-model:value="formValue.attributeName" @update:value="updateModel" placeholder="例如：src, href, data-id" />
+        <NFormItem label="属性名">
+          <NInput v-model:value="formValue.attributeName" @update:value="updateModel" placeholder="例如：src, href, data-id"/>
         </NFormItem>
       </div>
       <NFormItem label="返回格式">
-        <NSelect v-model:value="formValue.returnFormat" @update:value="updateModel" :options="returnFormatOptions" />
+        <NSelect v-model:value="formValue.returnFormat" @update:value="updateModel" :options="returnFormatOptions"/>
       </NFormItem>
       <NFormItem label="输出变量名">
-        <NInput v-model:value="formValue.outputVariableName" @update:value="updateModel" />
+        <NInput v-model:value="formValue.outputVariableName" @update:value="updateModel"/>
       </NFormItem>
     </NForm>
 
-    <NDivider />
+    <NDivider/>
 
     <!-- 2. 测试区域 -->
     <div class="test-section">
       <NFormItem label="测试输入文本">
-        <NInput type="textarea" v-model:value="sampleInput" placeholder="在此处粘贴带标签的示例文本..." :autosize="{ minRows: 5, maxRows: 15 }" />
+        <NInput type="textarea" v-model:value="sampleInput" placeholder="在此处粘贴带标签的示例文本..."
+                :autosize="{ minRows: 5, maxRows: 15 }"/>
       </NFormItem>
       <NButton @click="runTest" :loading="isLoading" type="primary">执行测试</NButton>
 
@@ -42,9 +48,9 @@
           </NAlert>
           <div v-if="testResult" :style="{ marginTop: '16px' }">
             <p><strong>测试结果:</strong></p>
-            <NCode :code="formattedResult" language="json" word-wrap />
+            <NCode :code="formattedResult" language="json" word-wrap/>
             <p :style="{ marginTop: '10px' }"><strong>调试信息:</strong></p>
-            <NCode :code="formattedDebugInfo" language="json" word-wrap />
+            <NCode :code="formattedDebugInfo" language="json" word-wrap/>
           </div>
         </div>
       </NCollapseTransition>
@@ -53,8 +59,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, inject, watch, reactive } from 'vue';
-import { NForm, NFormItem, NInput, NButton, NDivider, NCode, NAlert, NSelect, NCollapseTransition } from 'naive-ui';
+import {ref, computed, inject, watch, reactive} from 'vue';
+import {NForm, NFormItem, NInput, NButton, NDivider, NCode, NAlert, NSelect, NCollapseTransition} from 'naive-ui';
 
 // Vue Form Generator 会通过 props 传入 modelValue
 const props = defineProps<{
@@ -68,29 +74,31 @@ const emit = defineEmits(['update:modelValue']);
 const axios = inject('axios') as any;
 
 // 为了避免直接修改props，我们创建一个响应式的本地副本
-const formValue = reactive({ ...props.modelValue });
+const formValue: any = reactive({...props.modelValue});
 
 // 监听外部变化，同步到本地
-watch(() => props.modelValue, (newValue) => {
+watch(() => props.modelValue, (newValue) =>
+{
   Object.assign(formValue, newValue);
-}, { deep: true });
+}, {deep: true});
 
 // 每次本地表单更新时，通知父组件
-const updateModel = () => {
-  emit('update:modelValue', { ...formValue });
+const updateModel = () =>
+{
+  emit('update:modelValue', {...formValue});
 };
 
 const extractionModeOptions = [
-  { label: '纯文本', value: 'TextContent' },
-  { label: '内部HTML', value: 'InnerHtml' },
-  { label: '完整HTML', value: 'OuterHtml' },
-  { label: '提取属性', value: 'Attribute' },
+  {label: '纯文本', value: 'TextContent'},
+  {label: '内部HTML', value: 'InnerHtml'},
+  {label: '完整HTML', value: 'OuterHtml'},
+  {label: '提取属性', value: 'Attribute'},
 ];
 
 const returnFormatOptions = [
-  { label: '仅第一个', value: 'First' },
-  { label: '作为列表', value: 'AsList' },
-  { label: '作为JSON字符串', value: 'AsJsonString' },
+  {label: '仅第一个', value: 'First'},
+  {label: '作为列表', value: 'AsList'},
+  {label: '作为JSON字符串', value: 'AsJsonString'},
 ];
 
 const sampleInput = ref('<div class="item">Hello <b>World</b>!</div>\n<div class="item" data-id="123">Another item.</div>');
@@ -102,8 +110,10 @@ const isLoading = ref(false);
 const formattedResult = computed(() => testResult.value ? JSON.stringify(testResult.value, null, 2) : '');
 const formattedDebugInfo = computed(() => testDebugInfo.value ? JSON.stringify(testDebugInfo.value, null, 2) : '');
 
-async function runTest() {
-  if (!axios) {
+async function runTest()
+{
+  if (!axios)
+  {
     testError.value = "错误：未能获取到 axios 实例。";
     return;
   }
@@ -117,20 +127,25 @@ async function runTest() {
     sampleInputText: sampleInput.value,
   };
 
-  try {
+  try
+  {
     const response = await axios.post('/api/v1/plugins/text-parser/test-parser/run-test', requestPayload);
     const data = response.data;
 
-    if (data.isSuccess) {
+    if (data.isSuccess)
+    {
       testResult.value = data.result;
-    } else {
+    } else
+    {
       testError.value = data.errorMessage || '未知错误';
     }
     testDebugInfo.value = data.debugInfo;
 
-  } catch (error: any) {
+  } catch (error: any)
+  {
     testError.value = error.response?.data?.title || error.message || '请求失败';
-  } finally {
+  } finally
+  {
     isLoading.value = false;
   }
 }
@@ -142,9 +157,11 @@ async function runTest() {
   border: 1px solid #eee;
   border-radius: 4px;
 }
+
 .test-section {
   margin-top: 20px;
 }
+
 .result-section {
   margin-top: 16px;
   padding: 16px;

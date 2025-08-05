@@ -1,9 +1,9 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Plugin.TextParser.Rune;
-using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Tuum;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 namespace YAESandBox.Plugin.TextParser;
@@ -73,7 +73,7 @@ public class TextParserTestController : ControllerBase
     public async Task<ActionResult<TestResponseDto>> RunTest([FromBody] TestRequestDto request)
     {
         // 1. 根据传入的 Config 类型，在内存中动态创建对应的 Processor
-        IWithDebugDto<IRuneProcessorDebugDto> processor;
+        IProcessorWithDebugDto<IRuneProcessorDebugDto> processor;
         string inputVariableName;
         string outputVariableName;
 

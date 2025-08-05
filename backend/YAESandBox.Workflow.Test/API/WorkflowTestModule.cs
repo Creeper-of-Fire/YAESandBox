@@ -1,11 +1,12 @@
-﻿namespace YAESandBox.Workflow.Test.API;
+﻿using YAESandBox.Workflow.Core.Abstractions;
+
+namespace YAESandBox.Workflow.Test.API;
 
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using Depend.AspNetCore;
-using Abstractions;
 using Controller;
 
 /// <summary>

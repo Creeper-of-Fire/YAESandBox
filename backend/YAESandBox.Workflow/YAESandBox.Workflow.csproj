@@ -19,7 +19,6 @@
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2025.1.0-eap1"/>
         <PackageReference Include="NJsonSchema" Version="11.3.2"/>
-        <PackageReference Include="NLua" Version="1.7.5" />
     </ItemGroup>
 
     <ItemGroup>

@@ -1,17 +1,16 @@
 ﻿using YAESandBox.Depend.Results;
-using YAESandBox.Workflow.Abstractions;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.Utility;
 
-namespace YAESandBox.Workflow;
+namespace YAESandBox.Workflow.Core;
 
 public class WorkflowProcessor(
     WorkflowRuntimeService runtimeService,
     WorkflowConfig config,
     Dictionary<string, string> triggerParams)
-    : IWithDebugDto<IWorkflowProcessorDebugDto>
+    : IProcessorWithDebugDto<IWorkflowProcessorDebugDto>
 {
     /// <inheritdoc />
     public IWorkflowProcessorDebugDto DebugDto => new WorkflowProcessorDebugDto

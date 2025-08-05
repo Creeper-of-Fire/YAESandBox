@@ -1,8 +1,9 @@
 ﻿using System.Reflection;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Tuum;
 
-namespace YAESandBox.Workflow.Analysis;
+namespace YAESandBox.Workflow.Core.Analysis;
 
 /// <summary>
 /// 工作流的校验服务

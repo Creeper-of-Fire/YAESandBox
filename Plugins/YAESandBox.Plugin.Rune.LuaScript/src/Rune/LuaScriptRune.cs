@@ -7,7 +7,7 @@ using YAESandBox.Plugin.LuaScript.LuaRunner;
 using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
@@ -22,7 +22,7 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 /// </summary>
 /// <param name="config">符文配置。</param>
 public partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
-    : IWithDebugDto<LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto>, INormalRune
+    : IProcessorWithDebugDto<LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto>, INormalRune
 {
     private LuaScriptRuneConfig Config { get; } = config;
 

@@ -1,6 +1,6 @@
 ﻿using YAESandBox.Depend.Results;
 
-namespace YAESandBox.Workflow.Abstractions;
+namespace YAESandBox.Workflow.Core.Abstractions;
 
 /// <summary>
 /// 工作流的回调

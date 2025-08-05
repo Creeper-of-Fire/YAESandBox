@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Schema.Attributes;
+using YAESandBox.Workflow.Rune;
 
-namespace YAESandBox.Workflow.Config;
+namespace YAESandBox.Workflow.Tuum;
 
 /// <summary>
 /// 祝祷的配置

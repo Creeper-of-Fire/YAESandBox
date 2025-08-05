@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Schema.Attributes;
+using YAESandBox.Workflow.Tuum;
 
-namespace YAESandBox.Workflow.Config;
+namespace YAESandBox.Workflow.Core;
 
 /// <summary>
 /// 工作流的配置

@@ -6,7 +6,7 @@ using YAESandBox.Plugin.LuaScript.LuaRunner;
 using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
@@ -19,7 +19,7 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 /// 专注于接收一个字符串，通过 Lua 脚本处理，并输出一个字符串。
 /// </summary>
 public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config)
-    : IWithDebugDto<LuaStringProcessorRuneProcessor.LuaStringProcessorRuneDebugDto>, INormalRune
+    : IProcessorWithDebugDto<LuaStringProcessorRuneProcessor.LuaStringProcessorRuneDebugDto>, INormalRune
 {
     private LuaStringProcessorRuneConfig Config { get; } = config;
 

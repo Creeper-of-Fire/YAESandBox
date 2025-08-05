@@ -1,6 +1,6 @@
 ﻿using YAESandBox.Seed.State;
 using YAESandBox.Seed.State.Entity;
-using YAESandBox.Workflow.Abstractions;
+using YAESandBox.Workflow.Core.Abstractions;
 
 namespace YAESandBox.Seed.Workflow.CoreModules;
 

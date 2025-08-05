@@ -3,12 +3,12 @@ using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using Microsoft.AspNetCore.Mvc;
-using YAESandBox.Workflow.Abstractions;
-using YAESandBox.Workflow.Config;
 using YAESandBox.Workflow.Utility;
 using Microsoft.AspNetCore.Http;
 using YAESandBox.Authentication;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.Core;
+using YAESandBox.Workflow.Core.Abstractions;
 
 namespace YAESandBox.Workflow.Test.API.Controller;
 

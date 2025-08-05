@@ -39,9 +39,11 @@ export default defineConfig({
                 globals: {
                     vue: 'Vue'
                 },
-                assetFileNames: (assetInfo) => {
+                assetFileNames: (assetInfo) =>
+                {
                     // 不再关心原始文件名，只要是CSS文件就进行重命名
-                    if (assetInfo.name && assetInfo.name.endsWith('.css')) {
+                    if (assetInfo.name && assetInfo.name.endsWith('.css'))
+                    {
                         return 'vue-bundle.css';
                     }
                     // 对于其他可能的资源（如字体、图片），保持其原有名称

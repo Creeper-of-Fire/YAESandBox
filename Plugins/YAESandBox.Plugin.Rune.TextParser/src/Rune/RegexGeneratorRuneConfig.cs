@@ -5,7 +5,7 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.Attributes;
 using YAESandBox.Workflow;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
@@ -16,7 +16,7 @@ namespace YAESandBox.Plugin.TextParser.Rune;
 /// “正则生成”符文的运行时处理器。
 /// </summary>
 public class RegexGeneratorRuneProcessor(RegexGeneratorRuneConfig config)
-    : IWithDebugDto<RegexGeneratorRuneProcessor.RegexGeneratorDebugDto>, INormalRune
+    : IProcessorWithDebugDto<RegexGeneratorRuneProcessor.RegexGeneratorDebugDto>, INormalRune
 {
     private RegexGeneratorRuneConfig Config { get; } = config;
 

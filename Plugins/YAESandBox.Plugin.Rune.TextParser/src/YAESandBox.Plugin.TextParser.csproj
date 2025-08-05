@@ -5,6 +5,7 @@
         <LangVersion>preview</LangVersion>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     </PropertyGroup>
 
     <ItemGroup>
@@ -20,61 +21,47 @@
 
     <!-- ⭐⭐⭐ 构建后自动复制到插件目录 ⭐⭐⭐ -->
     <Target Name="CopyToPluginsFolder" AfterTargets="Build">
-        <!-- 
-        1. 定义插件的最终部署目录。
-           - MSBuildThisFileDirectory: 当前 .csproj 文件的目录 (例如 .../Plugins/YAESandBox.Plugin.Rune.LuaScript/src/)
-           - '..': 向上移动一级，到达插件的根目录 (例如 .../Plugins/YAESandBox.Plugin.Rune.LuaScript/)
-        -->
+
+        <!-- 1. 定义变量 -->
         <PropertyGroup>
             <PluginName>$(AssemblyName)</PluginName>
             <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</PluginDestination>
         </PropertyGroup>
 
-        <!-- 打印信息，方便确认路径是否正确 -->
-        <Message Text="插件源项目目录: $(MSBuildProjectDirectory)" Importance="high" />
-        <Message Text="插件最终部署目录: $(PluginDestination)" Importance="high" />
+        <Message Text="[COPY PLUGIN] 插件源输出目录 (OutputPath): $(OutputPath)" Importance="high" />
+        <Message Text="[COPY PLUGIN] 插件目标部署目录 (PluginDestination): $(PluginDestination)" Importance="high" />
 
-        <!-- 2. 安全清理：只删除即将被替换的构建产物 -->
+<!--        &lt;!&ndash; 2. 先删除旧目录 &ndash;&gt;-->
+<!--        <RemoveDir Directories="$(PluginDestination)" />-->
+<!--        <MakeDir Directories="$(PluginDestination)" />-->
+
         <ItemGroup>
-            <!-- 2a. 定义要删除的 DLL、PDB 和 deps.json 文件 -->
-            <FilesToDelete Include="$(PluginDestination)\$(PluginName).dll" />
-            <FilesToDelete Include="$(PluginDestination)\$(PluginName).pdb" />
-            <FilesToDelete Include="$(PluginDestination)\$(PluginName).deps.json" />
+            <!-- a) 复制插件自己的主文件 -->
+            <FilesToCopy Include="$(OutputPath)$(AssemblyName).dll" />
+            <FilesToCopy Include="$(OutputPath)$(AssemblyName).pdb" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')" />
+            <FilesToCopy Include="$(OutputPath)$(AssemblyName).deps.json" />
+
+            <!-- 
+              b) 【核心】自动将 PackageReference 列表转换为文件路径
+                 - `%(PackageReference.Identity)`: 获取包名，例如 "AngleSharp"
+                 - `$(OutputPath)%(PackageReference.Identity).dll`: 拼接出在本地输出目录中的完整路径
+            -->
+            <FilesToCopy Include="$(OutputPath)%(PackageReference.Identity).dll" />
         </ItemGroup>
 
-        <!-- 2b. 执行删除文件操作 -->
-        <Delete Files="@(FilesToDelete)" ContinueOnError="true" />
+        <!-- 执行复制 -->
+        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(PluginDestination)" SkipUnchangedFiles="true" />
 
-        <!-- 2c. 安全地删除整个旧的 wwwroot 目录 -->
-        <RemoveDir Directories="$(PluginDestination)\wwwroot" ContinueOnError="true" />
-        <Message Text="已安全清理旧的构建产物和 wwwroot 目录。" Importance="normal" />
-
-        <!-- 
-        3. 复制编译产物 (dll, pdb, deps.json) 到插件根目录。
-           - SourceFiles: 从 bin/Debug/net9.0/ 目录中选取文件。
-           - DestinationFolder: 插件的根目录，例如 .../Plugins/YAESandBox.Plugin.Rune.LuaScript/
-        -->
+        <!-- 5. 专门处理 wwwroot -->
         <ItemGroup>
-            <OutputFiles Include="$(OutputPath)$(PluginName).dll" />
-            <OutputFiles Include="$(OutputPath)$(PluginName).pdb" Condition="Exists('$(OutputPath)$(PluginName).pdb')" />
-            <OutputFiles Include="$(OutputPath)$(PluginName).deps.json" />
-        </ItemGroup>
-        <Copy SourceFiles="@(OutputFiles)" DestinationFolder="$(PluginDestination)" />
-
-        <!-- 
-        4. 复制 wwwroot 目录。
-           - SourceFiles: 从 'src/wwwroot/' 目录下递归查找所有文件。
-           - DestinationFiles: 计算每个文件的目标路径。
-             %(RecursiveDir) 会保留源文件在 wwwroot 下的相对路径。
-        -->
-        <ItemGroup>
-            <WwwRootSourceFiles Include="wwwroot/**" />
+            <WwwRootFiles Include="wwwroot\**\*.*" />
         </ItemGroup>
         <Copy
-                SourceFiles="@(WwwRootSourceFiles)"
-                DestinationFiles="@(WwwRootSourceFiles -> '$(PluginDestination)/wwwroot/%(RecursiveDir)%(Filename)%(Extension)')" />
+                SourceFiles="@(WwwRootFiles)"
+                DestinationFiles="@(WwwRootFiles -> '$(PluginDestination)\wwwroot\%(RecursiveDir)%(Filename)%(Extension)')"
+                SkipUnchangedFiles="true"
+        />
 
-        <!-- 5. 打印成功日志 -->
-        <Message Text="已将插件 '$(PluginName)' 成功发布到: $(PluginDestination)" Importance="high" />
+        <Message Text="[COPY PLUGIN] 成功将插件 '$(PluginName)' 和其声明的 NuGet 包依赖复制到目标目录。" Importance="high" />
     </Target>
 </Project>

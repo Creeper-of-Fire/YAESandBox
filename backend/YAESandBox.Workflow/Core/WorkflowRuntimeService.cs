@@ -1,7 +1,7 @@
-﻿using YAESandBox.Workflow.Abstractions;
-using YAESandBox.Workflow.AIService;
+﻿using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.Core.Abstractions;
 
-namespace YAESandBox.Workflow;
+namespace YAESandBox.Workflow.Core;
 
 /// <summary>
 /// 封装工作流执行所需的无状态、只读的外部服务。
