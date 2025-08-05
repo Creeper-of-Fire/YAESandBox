@@ -5,6 +5,7 @@ using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Utility;
+using YAESandBox.Workflow.VarSpec;
 
 namespace YAESandBox.Workflow.Rune;
 
@@ -55,13 +56,13 @@ public abstract record AbstractRuneConfig
     /// 获得符文的输入变量
     /// </summary>
     /// <returns></returns>
-    public virtual List<string> GetConsumedVariables() => [];
+    public virtual List<ConsumedSpec> GetConsumedSpec() => [];
 
     /// <summary>
     /// 获得符文的输出变量
     /// </summary>
     /// <returns></returns>
-    public virtual List<string> GetProducedVariables() => [];
+    public virtual List<ProducedSpec> GetProducedSpec() => [];
 }
 
 /// <inheritdoc />

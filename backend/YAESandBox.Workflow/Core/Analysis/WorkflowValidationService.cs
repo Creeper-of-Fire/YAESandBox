@@ -80,7 +80,7 @@ public class WorkflowValidationService
         foreach (var rune in tuum.Runes)
         {
             // 2a. 对当前符文进行校验：检查其消费的变量是否都存在于【当前】的可用变量池中
-            var requiredVars = rune.GetConsumedVariables();
+            var requiredVars = rune.GetConsumedSpec();
             var missingVars = requiredVars.Except(inTuumAvailableVars);
 
             foreach (string missingVar in missingVars)
@@ -94,7 +94,7 @@ public class WorkflowValidationService
             }
 
             // 2b. 更新可用变量池：将当前符文【生产】的变量添加到池中，供后续符文使用
-            var producedVars = rune.GetProducedVariables();
+            var producedVars = rune.GetProducedSpec();
             foreach (string producedVar in producedVars)
             {
                 inTuumAvailableVars.Add(producedVar);
@@ -102,7 +102,7 @@ public class WorkflowValidationService
         }
 
         // 3. (新增) 检查 OutputMappings 的源（Value，即祝祷内部变量）是否真的被生产出来了
-        var allProducedInTuumVars = new HashSet<string>(tuum.Runes.SelectMany(m => m.GetProducedVariables()));
+        var allProducedInTuumVars = new HashSet<string>(tuum.Runes.SelectMany(m => m.GetProducedSpec()));
         var allAvailableInTuumVars = new HashSet<string>(tuum.InputMappings.Keys).Union(allProducedInTuumVars).ToHashSet();
 
         foreach ((string globalTargetVar, string localSourceVar) in tuum.OutputMappings)

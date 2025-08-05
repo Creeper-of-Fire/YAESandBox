@@ -7,6 +7,7 @@ using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Rune.ExactRune.PromptGenerationRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
@@ -56,7 +57,7 @@ internal partial class PromptGenerationRuneProcessor(
         var prompts = tuumProcessorContent.GetTuumVar<List<RoledPromptDto>>(this.Config.PromptsName) ?? [];
         prompts.Add(prompt);
         tuumProcessorContent.SetTuumVar(this.Config.PromptsName, prompts);
-        
+
         return Task.FromResult(Result.Ok());
     }
 
@@ -69,7 +70,7 @@ internal partial class PromptGenerationRuneProcessor(
 
         var uniquePlaceholderNames = PromptGenerationRuneConfig.PlaceholderRegex().Matches(template)
             .Select(m => m.Groups[1].Value)
-            .Distinct(StringComparer.OrdinalIgnoreCase) // 占位符名称不区分大小写
+            .Distinct()
             .ToList();
 
         foreach (string placeholderName in uniquePlaceholderNames)
@@ -189,12 +190,18 @@ internal partial record PromptGenerationRuneConfig
     internal static partial Regex PlaceholderRegex();
 
     /// <inheritdoc />
-    public override List<string> GetConsumedVariables() => PlaceholderRegex().Matches(this.Template)
-        .Select(m => m.Groups[1].Value)
-        .Distinct(StringComparer.OrdinalIgnoreCase)
-        .ToList();
+    public override List<ConsumedSpec> GetConsumedSpec()
+    {
+        var namesSpec = PlaceholderRegex().Matches(this.Template)
+            .Select(m => m.Groups[1].Value)
+            .Distinct()
+            .Select(n => new ConsumedSpec(n, CoreVarDefs.String))
+            .ToList();
+        namesSpec.Add(new ConsumedSpec(this.PromptsName, CoreVarDefs.PromptList) { IsNullable = true });
+        return namesSpec;
+    }
 
-    public override List<string> GetProducedVariables() => [this.PromptsName];
+    public override List<ProducedSpec> GetProducedSpec() => [new(this.PromptsName, CoreVarDefs.PromptList)];
 }
 
 /// <summary>

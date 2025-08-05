@@ -5,6 +5,7 @@ using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Rune.ExactRune.SendToRawTextRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
@@ -65,5 +66,5 @@ internal record SendToRawTextRuneConfig : AbstractRuneConfig<SendToRawTextRunePr
     public required string RequireVariables { get; init; } = "";
 
     /// <inheritdoc />
-    public override List<string> GetConsumedVariables() => [this.RequireVariables];
+    public override List<ConsumedSpec> GetConsumedSpec() => [new(this.RequireVariables, CoreVarDefs.String)];
 }

@@ -8,6 +8,7 @@ using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Rune.ExactRune.AiRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
@@ -60,10 +61,10 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
     {
         var aiConfig = aiRune.Config.AiConfiguration;
         var workflowRuntimeService = tuumProcessorContent.WorkflowRuntimeService;
-        
+
         if (aiConfig.SelectedAiRuneType == null || aiConfig.AiProcessorConfigUuid == null)
             return NormalError.Conflict($"祝祷 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI符文。");
-        
+
         var aiProcessor = workflowRuntimeService.AiService.CreateAiProcessor(
             aiConfig.AiProcessorConfigUuid,
             aiConfig.SelectedAiRuneType);
@@ -77,7 +78,7 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
             cancellationToken);
         if (result.TryGetError(out var error, out string? value))
             return error;
-        
+
         tuumProcessorContent.SetTuumVar(aiRune.Config.AiOutputName, value);
         return Result.Ok();
     }
@@ -155,10 +156,10 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
 
 
     /// <inheritdoc />
-    public override List<string> GetConsumedVariables() => [PromptsDefaultName];
+    public override List<ConsumedSpec> GetConsumedSpec() => [new(this.PromptsName, CoreVarDefs.PromptList)];
 
     /// <inheritdoc />
-    public override List<string> GetProducedVariables() => [AiOutputDefaultName];
+    public override List<ProducedSpec> GetProducedSpec() => [new(this.AiOutputName, CoreVarDefs.String)];
 
     protected override AiRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
         new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); }, this);
