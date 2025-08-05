@@ -2,7 +2,7 @@
 
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using YAESandBox.Depend.Schema.Attributes; // 假设 StringOptions 和其他自定义特性在此命名空间下
+using YAESandBox.Depend.Schema.SchemaProcessor;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.DeepSeek;
 

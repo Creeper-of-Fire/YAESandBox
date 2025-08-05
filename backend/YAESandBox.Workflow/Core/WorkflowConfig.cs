@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using YAESandBox.Depend.Schema.Attributes;
+using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.Tuum;
 
 namespace YAESandBox.Workflow.Core;

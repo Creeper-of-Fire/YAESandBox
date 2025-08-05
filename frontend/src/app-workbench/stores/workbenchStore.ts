@@ -190,7 +190,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     /**
      * 元数据服务。
      * 该计算属性提供了一个单一的、聚合的元数据来源。
-     * 它会从每个符文的 Schema 中提取 `x-workflow-rune-rules` 和 `classLabel` 等元数据信息。
+     * 它会从每个符文的 Schema 中提取 `x-workflow-rune-rules` 和 `x-classLabel` 等元数据信息。
      */
     const runeMetadata = computed(() =>
     {
@@ -206,7 +206,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                 {
                     const rules = schema['x-workflow-rune-rules'] as WorkflowRuneRules | undefined;
                     // 从 Schema 中提取新的类别标签属性
-                    const classLabel = schema['classLabel'] as string | undefined;
+                    const classLabel = schema['x-classLabel'] as string | undefined;
 
                     // 只要 Schema 中包含任何一个元数据，就为其创建一个条目
                     if (rules || classLabel)

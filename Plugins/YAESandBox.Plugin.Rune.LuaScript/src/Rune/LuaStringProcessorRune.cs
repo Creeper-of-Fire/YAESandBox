@@ -1,10 +1,9 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Results;
-using YAESandBox.Depend.Schema.Attributes;
+using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Plugin.LuaScript.LuaRunner;
 using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
-using YAESandBox.Workflow;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;

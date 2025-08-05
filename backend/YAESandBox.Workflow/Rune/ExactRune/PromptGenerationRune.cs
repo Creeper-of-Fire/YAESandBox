@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
-using YAESandBox.Depend.Schema.Attributes;
+using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;

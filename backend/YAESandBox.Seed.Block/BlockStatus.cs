@@ -303,7 +303,7 @@ public class ErrorBlockStatus(Block block) : BlockStatus(block);
 /// 并且调用者（通常是 BlockManager）需要在转换后确保更新 BlockManager.blocks 字典，
 /// 并建议使用 EnsureStatusUpdated 进行检查。
 /// </summary>
-[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false, AllowMultiple = false)]
+[AttributeUsage(AttributeTargets.Method | AttributeTargets.Class, Inherited = false)]
 // AttributeTargets.Method: 可以标记方法
 // AttributeTargets.Class: 也可以标记整个类（如果类主要负责状态转换）
 // Inherited = false: 此属性不被派生类继承
