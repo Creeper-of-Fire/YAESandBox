@@ -112,12 +112,12 @@ public class TuumProcessor(
     /// <summary>
     /// 此祝祷声明的所有输入端点的名称。
     /// </summary>
-    internal IEnumerable<string> InputEndpoints { get; } = config.InputMappings.Values.Distinct();
+    internal IEnumerable<string> InputEndpoints { get; } = config.InputMappings.Keys;
 
     /// <summary>
     /// 此祝祷声明的所有输出端点的名称。
     /// </summary>
-    internal IEnumerable<string> OutputEndpoints { get; } = config.OutputMappings.Keys;
+    internal IEnumerable<string> OutputEndpoints { get; } = config.OutputMappings.Values.SelectMany(v => v).Distinct();
 
     private List<IProcessorWithDebugDto<IRuneProcessorDebugDto>> Runes { get; } =
         config.Runes.Select(rune => rune.ToRuneProcessor(workflowRuntimeService)).ToList();
@@ -132,12 +132,19 @@ public class TuumProcessor(
         IReadOnlyDictionary<string, object?> inputs, CancellationToken cancellationToken = default)
     {
         // 1. 根据输入端点的数据，填充祝祷的内部变量池
-        foreach ((string internalName, string endpointName) in this.Config.InputMappings)
+        // 遍历输入映射: "外部端点名" -> [ "内部变量名1", "内部变量名2", ... ]
+        foreach ((string endpointName, var internalNames) in this.Config.InputMappings)
         {
-            // 如果输入端点没有提供数据（可能因连接或上游问题），则内部变量为 null
-            // 理论上，WorkflowProcessor应该确保所有连接的输入都被提供。
-            // 如果到这里还找不到，说明上游逻辑有误。
-            this.TuumContent.SetTuumVar(internalName, inputs.TryGetValue(endpointName, out object? value) ? value : null);
+            // 从工作流提供的输入中获取该端点的值
+            inputs.TryGetValue(endpointName, out object? endpointValue);
+
+            // 将这个值赋给所有映射到的内部变量 (Fan-in)
+            foreach (string internalName in internalNames)
+            {
+                // 如果上游没有提供数据，则内部变量为 null。
+                // 校验阶段应确保所有必要的输入都被连接。
+                this.TuumContent.SetTuumVar(internalName, endpointValue);
+            }
         }
 
         // 2. 依次执行所有符文
@@ -154,17 +161,16 @@ public class TuumProcessor(
 
         // 3. 根据输出映射，从内部变量池收集所有输出
         var tuumOutputs = new Dictionary<string, object?>();
-        foreach ((string endpointName, string internalName) in this.Config.OutputMappings)
+        // 遍历输出映射: "内部变量名" -> [ "外部端点名1", "外部端点名2", ... ]
+        foreach ((string internalName, var endpointNames) in this.Config.OutputMappings)
         {
-            // 从内部变量池中查找由符文产生的局部变量
-            if (this.TuumContent.TuumVariable.TryGetValue(internalName, out object? internalValue))
+            // 从内部变量池中查找由符文产生的局部变量的值
+            object? internalValue = this.TuumContent.TuumVariable.GetValueOrDefault(internalName);
+
+            // 将这个内部变量的值赋给所有映射到的外部输出端点 (Fan-out)
+            foreach (string endpointName in endpointNames)
             {
                 tuumOutputs[endpointName] = internalValue;
-            }
-            else
-            {
-                // 如果映射声明了，但符文未产生输出，则该输出端点的值为 null
-                tuumOutputs[endpointName] = null;
             }
         }
 

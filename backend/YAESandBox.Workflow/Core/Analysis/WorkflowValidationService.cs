@@ -49,32 +49,78 @@ public class WorkflowValidationService
 
             // 校验1: 祝祷的输出映射是否引用了有效的内部变量
             this.ValidateTuumOutputMappingSource(tuum, tuumResult);
+            
+            // 新增校验 1.5: 校验输入和输出映射的唯一性规则
+            this.ValidateTuumMappingUniqueness(tuum, tuumResult);
 
-            // 校验2: 祝祷内部的符文Attribute规则 (如 SingleInTuum, InFrontOf)
+            // 校验 2: 祝祷内部的符文Attribute规则 (如 SingleInTuum, InFrontOf)
             this.ValidateInTuumRuneAttributeRules(tuum, tuumResult);
         }
     }
-    
-     /// <summary>
+
+    /// <summary>
     /// 校验祝祷的OutputMappings是否引用了在内部真实存在的变量。
+    /// (此方法需要微调以适应新结构)
     /// </summary>
     private void ValidateTuumOutputMappingSource(TuumConfig tuum, TuumValidationResult tuumResult)
     {
-        // 祝祷内部，所有可用的变量名 = 外部注入的(InputMappings.Keys) + 内部产生的
+        // 祝祷内部，所有可用的变量名 = 外部注入的(InputMappings) + 内部产生的
         var allProducedInTuumVars = new HashSet<string>(tuum.Runes.SelectMany(r => r.GetProducedSpec().Select(p => p.Name)));
-        var allAvailableInTuumVars = new HashSet<string>(tuum.InputMappings.Keys).Union(allProducedInTuumVars).ToHashSet();
+        var allInjectedInTuumVars = tuum.InputMappings.Values.SelectMany(v => v).ToHashSet();
+        var allAvailableInTuumVars = allInjectedInTuumVars.Union(allProducedInTuumVars).ToHashSet();
 
-        foreach ((string endpointName, string internalVarName) in tuum.OutputMappings)
+        foreach ((string internalVarName, var endpointNames) in tuum.OutputMappings)
         {
             if (!allAvailableInTuumVars.Contains(internalVarName))
             {
+                // 注意：我们将错误附加到祝祷上，因为这是关于整个祝祷映射配置的错误
                 tuumResult.TuumMessages.Add(new ValidationMessage
                 {
                     Severity = RuleSeverity.Error,
-                    Message = $"输出端点 '{endpointName}' 错误：其源内部变量 '{internalVarName}' 在此祝祷中从未被定义或产生。",
+                    Message = $"输出映射错误：源内部变量 '{internalVarName}' 在此祝祷中从未被定义或产生。",
                     RuleSource = "DataFlow"
                 });
             }
+        }
+    }
+
+    /// <summary>
+    /// 校验祝祷的输入和输出映射是否满足唯一性约束。
+    /// </summary>
+    private void ValidateTuumMappingUniqueness(TuumConfig tuum, TuumValidationResult tuumResult)
+    {
+        // 校验规则1：一个内部变量只能有一个数据源 (在所有InputMappings的Value列表中唯一)
+        var allTargetInternalVars = tuum.InputMappings.Values.SelectMany(v => v);
+        var duplicateInternalVars = allTargetInternalVars
+            .GroupBy(v => v)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key);
+
+        foreach (var duplicateVar in duplicateInternalVars)
+        {
+            tuumResult.TuumMessages.Add(new ValidationMessage
+            {
+                Severity = RuleSeverity.Error,
+                Message = $"输入映射冲突：内部变量 '{duplicateVar}' 被多个外部输入端点驱动，它只能有一个数据源。",
+                RuleSource = "MappingUniqueness"
+            });
+        }
+        
+        // 校验规则2：一个外部输出端点只能被一个内部变量驱动 (在所有OutputMappings的Value列表中唯一)
+        var allTargetExternalEndpoints = tuum.OutputMappings.Values.SelectMany(v => v);
+        var duplicateExternalEndpoints = allTargetExternalEndpoints
+            .GroupBy(e => e)
+            .Where(g => g.Count() > 1)
+            .Select(g => g.Key);
+
+        foreach (var duplicateEndpoint in duplicateExternalEndpoints)
+        {
+            tuumResult.TuumMessages.Add(new ValidationMessage
+            {
+                Severity = RuleSeverity.Error,
+                Message = $"输出映射冲突：外部端点 '{duplicateEndpoint}' 被多个内部变量驱动，它只能有一个数据源。",
+                RuleSource = "MappingUniqueness"
+            });
         }
     }
     
@@ -174,7 +220,8 @@ public class WorkflowValidationService
             }
             else if (allTuumConfigs.TryGetValue(conn.Source.TuumId, out var sourceTuum))
             {
-                if (!sourceTuum.OutputMappings.ContainsKey(conn.Source.EndpointName))
+                // 一个内部变量可以驱动多个外部端点，所以我们需要检查所有列表
+                if (!sourceTuum.OutputMappings.Values.SelectMany(v => v).Contains(conn.Source.EndpointName))
                 {
                     report.TuumResults.GetOrAdd(sourceTuum.ConfigId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
                     {
@@ -201,7 +248,8 @@ public class WorkflowValidationService
             // 校验目标端点
             if (allTuumConfigs.TryGetValue(conn.Target.TuumId, out var targetTuum))
             {
-                if (!targetTuum.InputMappings.Values.Contains(conn.Target.EndpointName))
+                // 检查Key中是否存在该输入端点
+                if (!targetTuum.InputMappings.ContainsKey(conn.Target.EndpointName))
                 {
                     report.TuumResults.GetOrAdd(targetTuum.ConfigId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
                     {
@@ -237,9 +285,10 @@ public class WorkflowValidationService
         foreach (var tuum in config.Tuums)
         {
             var tuumResult = report.TuumResults.GetOrAdd(tuum.ConfigId, () => new TuumValidationResult());
-            var declaredInputs = tuum.InputMappings.Values.Distinct();
+            // 声明的输入端点现在是 InputMappings 的 Keys
+            var declaredInputEndpoints = tuum.InputMappings.Keys;
 
-            foreach (var inputEndpointName in declaredInputs)
+            foreach (var inputEndpointName in declaredInputEndpoints)
             {
                 var connectionsToThisInput = targetEndpoints.Count(t => t.TuumId == tuum.ConfigId && t.EndpointName == inputEndpointName);
 

@@ -22,6 +22,11 @@ public interface IVarSpec
     /// 变量的类型定义。
     /// </summary>
     VarSpecDef Def { get; }
+
+    /// <summary>
+    /// 此变量是否可为空。默认为 false。
+    /// </summary>
+    public bool IsNullable { get; init; }
 }
 
 /// <summary>
