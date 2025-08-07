@@ -25,6 +25,6 @@ export type WorkflowConfig = {
      * 定义了工作流中所有枢机之间的显式连接。
      * 这是工作流数据流向的唯一依据。
      */
-    connections: Array<WorkflowConnection>;
+    connections?: Array<WorkflowConnection> | null;
 };
 

@@ -1,11 +1,17 @@
 ﻿import {computed, onMounted, ref, type Ref, watch} from "vue";
-import type {AbstractRuneConfig, RuneAnalysisResult} from "@/app-workbench/types/generated/workflow-config-api-client";
+import type {AbstractRuneConfig, RuneAnalysisResult, TuumConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import {useRuneAnalysisStore} from "@/app-workbench/stores/useRuneAnalysisStore.ts";
 import {useDebounceFn} from "@vueuse/core";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
-import { synchronizeModelWithSchema } from "../utils/synchronizeModelWithSchema.ts";
+import {synchronizeModelWithSchema} from "../utils/synchronizeModelWithSchema.ts";
 
-export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: Ref<string>)
+/**
+ * 一个 Vue Composable，用于对符文（Rune）配置进行实时分析。
+ * @param rune 包含符文配置的响应式 Ref。
+ * @param configId 符文的唯一ID Ref。
+ * @param tuumContext (可选) 包含符文所在枢机上下文的响应式 Ref。
+ */
+export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: Ref<string>, tuumContext: Ref<TuumConfig | null>)
 {
     const runeAnalysisStore = useRuneAnalysisStore();
     const workbenchStore = useWorkbenchStore();
@@ -21,7 +27,7 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: 
 
     const debouncedExecuteAnalysis = useDebounceFn(executeAnalysis, 300);
 
-    async function executeAnalysis(newRune: AbstractRuneConfig | null)
+    async function executeAnalysis(newRune: AbstractRuneConfig | null, context: TuumConfig | null): Promise<void>
     {
         try
         {
@@ -47,15 +53,20 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: 
 
 
             // 3. 使用这个副本进行分析
-            if (tolerantRune) {
+            if (tolerantRune)
+            {
                 analysisResult.value = await runeAnalysisStore.analyzeRune(
                     tolerantRune,
-                    tolerantRune.configId
+                    tolerantRune.configId,
+                    context
                 ) || null;
-                if (!analysisResult.value) {
+                if (!analysisResult.value)
+                {
                     console.error(`[useRuneAnalysis] 分析结果为null`);
                 }
-            } else {
+            }
+            else
+            {
                 analysisResult.value = null;
             }
             // console.log(`[useRuneAnalysis] 分析结果: `, analysisResult.value);
@@ -66,17 +77,17 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: 
         }
     }
 
-    watch(rune, async (newRune) =>
-    {
-        await debouncedExecuteAnalysis(newRune)
-    }, {immediate: false, deep: true});
+    // 同时监听符文和其上下文的变化
+    watch([rune, tuumContext], async ([newRune, newContext]) => {
+        await debouncedExecuteAnalysis(newRune, newContext)
+    }, {immediate: true, deep: true}); // immediate:true 确保挂载时执行
 
-    onMounted(async () => await executeAnalysis(rune.value));
+    // onMounted(async () => await executeAnalysis(rune.value));
 
     return {
         analysisResult,
         hasConsumedVariables,
         hasProducedVariables,
-        refresh: () => executeAnalysis(rune.value)
+        refresh: () => executeAnalysis(rune.value, tuumContext.value)
     };
 }

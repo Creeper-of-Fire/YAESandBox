@@ -172,7 +172,8 @@ const {
   hasProducedVariables
 } = useRuneAnalysis(
     computed(() => rune.value),
-    computed(() => rune.value.configId)
+    computed(() => rune.value.configId),
+    ref(null)
 );
 
 const workbenchStore = useWorkbenchStore();

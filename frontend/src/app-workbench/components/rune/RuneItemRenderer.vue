@@ -74,7 +74,8 @@ const {
   hasProducedVariables
 } = useRuneAnalysis(
     computed(() => props.rune),
-    computed(() => props.rune.configId)
+    computed(() => props.rune.configId),
+    computed(() => props.parentTuum
 );
 
 // 创建一个计算属性来控制分析结果 Popover 的显示

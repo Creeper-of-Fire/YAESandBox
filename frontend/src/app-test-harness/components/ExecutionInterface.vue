@@ -49,7 +49,7 @@ const paramsToFill = computed<string[]>(() => {
     return (props.config as WorkflowConfig).workflowInputs || [];
   } else {
     const tuumConfig = props.config as TuumConfig;
-    const globalVars = Object.values(tuumConfig.inputMappings || {});
+    const globalVars = Object.keys(tuumConfig.inputMappings || {});
     return [...new Set(globalVars)];
   }
 });
@@ -86,17 +86,18 @@ async function handleExecute() {
   let requestBody;
 
   if (props.configType === 'workflow') {
+    const workflowConfig = props.config as WorkflowConfig;
     requestBody = {
-      workflowConfig: props.config as WorkflowConfig,
+      workflowConfig: workflowConfig,
       workflowInputs: paramValues
     };
   } else {
     const tuumConfig = props.config as TuumConfig;
-    const workflowInputsForTempWorkflow = [...new Set(Object.values(tuumConfig.inputMappings))];
+    const workflowInputsForTempWorkflow = [...new Set(Object.keys(tuumConfig.inputMappings))];
     const tempWorkflow: WorkflowConfig = {
       name: `测试枢机: ${tuumConfig.name}`,
       tuums: [tuumConfig],
-      workflowInputs: workflowInputsForTempWorkflow,
+      workflowInputs: workflowInputsForTempWorkflow
     };
     requestBody = {
       workflowConfig: tempWorkflow,

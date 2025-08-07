@@ -38,69 +38,36 @@ import TuumMappingsEditor from "@/app-workbench/components/tuum/editor/TuumMappi
 import {computed, watch, ref} from "vue";
 import type {TuumEditorContext} from "@/app-workbench/components/tuum/editor/TuumEditorContext.ts";
 import { useRuneAnalysisStore } from '@/app-workbench/stores/useRuneAnalysisStore.ts';
+import {useTuumAnalysis} from "@/app-workbench/composables/useTuumAnalysis.ts";
 
 const props = defineProps<{
   tuumContext: TuumEditorContext;
 }>();
 
-const runeAnalysisStore = useRuneAnalysisStore();
-const runeAnalysisResults = ref<Record<string, { consumedVariables: string[], producedVariables: string[] }>>({});
-
-watch(() => props.tuumContext.data.runes, async (newRunes) => {
-  if (newRunes) {
-    const analysisPromises = newRunes.map(async (mod) => {
-      // Assuming mod has a unique identifier like configId
-      const result = await runeAnalysisStore.analyzeRune(mod, mod.configId);
-      if (result) {
-        runeAnalysisResults.value[mod.configId] = result;
-      }
-    });
-    await Promise.all(analysisPromises);
-  }
-}, { immediate: true, deep: true });
-
+// --- 使用新的 useTuumAnalysis Composable ---
+const {analysisResult} = useTuumAnalysis(
+    // 将整个枢机配置数据作为响应式 Ref 传入
+    computed(() => props.tuumContext.data)
+);
 
 // 计算属性，判断当前是否处于有上下文的环境中
 const isInWorkflowContext = computed(() => props.tuumContext.availableGlobalVarsForTuum !== undefined);
 
-// 计算属性：计算当前枢机所有符文需要的总输入
+// --- 从 Tuum 分析结果中派生出所需输入 ---
 const requiredTuumInputs = computed(() => {
-  const requiredInputs = new Set<string>();
-  const producedOutputs = new Set<string>();
-
-  if (props.tuumContext.data.runes) {
-    for (const mod of props.tuumContext.data.runes) {
-      const analysisResult = runeAnalysisResults.value[mod.configId];
-      if (analysisResult) {
-      (analysisResult.consumedVariables || []).forEach(input => {
-        if (!producedOutputs.has(input)) {
-          requiredInputs.add(input);
-        }
-      });
-      (analysisResult.producedVariables || []).forEach(output => producedOutputs.add(output));
-      }
-    }
-  }
-
-  return Array.from(requiredInputs);
+  // 从分析结果的 `consumedEndpoints` 中提取所有需要的外部输入变量名
+  return analysisResult.value?.consumedEndpoints
+          ?.map(endpoint => endpoint.name)
+          // 过滤掉可能为 null 或 undefined 的值
+          .filter((name): name is string => !!name)
+      ?? [];
 });
 
-// 计算属性：计算当前枢机内部可以产生的所有输出变量
-const producibleTuumOutputs = computed(() =>
-{
-  const producedOutputs = new Set<string>();
-  if (props.tuumContext.data.runes)
-  {
-    for (const rune of props.tuumContext.data.runes)
-    {
-      const analysisResult = runeAnalysisResults.value[rune.configId];
-      if (analysisResult?.producedVariables)
-      {
-        analysisResult.producedVariables.forEach(output => producedOutputs.add(output));
-      }
-    }
-  }
-  return Array.from(producedOutputs);
+// --- 从 Tuum 分析结果中派生出可供映射的内部输出 ---
+const producibleTuumOutputs = computed(() => {
+  // 从分析结果的 `internalVariableDefinitions` 中提取所有内部变量名
+  // 这些变量是枢机内所有符文产生的，可以被映射到外部输出
+  return Object.keys(analysisResult.value?.internalVariableDefinitions ?? {});
 });
 
 </script>

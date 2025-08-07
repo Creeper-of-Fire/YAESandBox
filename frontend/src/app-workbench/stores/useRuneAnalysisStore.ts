@@ -1,6 +1,11 @@
 import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
-import type {AbstractRuneConfig, RuneAnalysisResult} from '@/app-workbench/types/generated/workflow-config-api-client';
+import type {
+    AbstractRuneConfig,
+    RuneAnalysisRequest,
+    RuneAnalysisResult,
+    TuumConfig
+} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {WorkflowAnalysisService} from '@/app-workbench/types/generated/workflow-config-api-client';
 
 interface RuneAnalysisCache
@@ -20,9 +25,10 @@ export const useRuneAnalysisStore = defineStore('runeAnalysis', () =>
 
     const pendingRequests = ref<PendingRequestCache>({});
 
-    async function _analyze(runeConfig: AbstractRuneConfig, runeId: string)
+    async function _analyze(runeConfig: AbstractRuneConfig, runeId: string, tuumContext: TuumConfig | null = null)
     {
-        const configString = JSON.stringify(runeConfig); // 使用字符串化的配置作为缓存键
+        // 使用包含/不包含上下文的完整配置作为缓存键，以区分不同上下文下的相同符文
+        const configString = JSON.stringify({config: runeConfig, context: tuumContext}); // 使用字符串化的配置作为缓存键
 
         if (analysisCache.value[configString])
         {
@@ -43,8 +49,14 @@ export const useRuneAnalysisStore = defineStore('runeAnalysis', () =>
         // 这完美地替代了 new Promise(executor) 的用法，且更安全、简洁。
         const analysisPromise = (async () => {
             try {
+                // 构造请求体，包含符文和可选的枢机上下文
+                const requestBody: RuneAnalysisRequest = {
+                    runeToAnalyze: runeConfig,
+                    // 如果 tuumContext 为 null，则后端会收到 undefined，这符合预期
+                    tuumContext: tuumContext ?? undefined
+                };
                 const result = await WorkflowAnalysisService.postApiV1WorkflowsConfigsAnalysisAnalyzeRune({
-                    requestBody: runeConfig,
+                    requestBody: requestBody,
                 });
                 // 请求成功，存入缓存
                 analysisCache.value[configString] = result;
