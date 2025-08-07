@@ -17,11 +17,11 @@ public interface IBlockManager
     /// </summary>
     /// <param name="parentBlockId"></param>
     /// <param name="workFlowName"></param>
-    /// <param name="triggerParams"></param>
+    /// <param name="workflowInputs"></param>
     /// <returns></returns>
     [MustUseReturnValue]
     Task<LoadingBlockStatus?> CreateChildBlock_Async(string? parentBlockId, string workFlowName,
-        IReadOnlyDictionary<string, string> triggerParams);
+        IReadOnlyDictionary<string, string> workflowInputs);
 
     /// <summary>
     /// 获取从根节点到指定块ID可达的最深层叶子节点（根据“最后一个子节点”规则）的完整路径。

@@ -10,7 +10,7 @@ namespace YAESandBox.Workflow.Core;
 public class WorkflowProcessor(
     WorkflowRuntimeService runtimeService,
     WorkflowConfig config,
-    Dictionary<string, string> triggerParams)
+    Dictionary<string, string> workflowInputs)
     : IProcessorWithDebugDto<IWorkflowProcessorDebugDto>
 {
     private WorkflowConfig Config { get; } = config;
@@ -54,17 +54,35 @@ public class WorkflowProcessor(
     {
         // --- 0. 初始化数据存储区 ---
         // 将工作流的触发参数（入口）预加载到数据存储区中
-        foreach (var param in triggerParams)
+        foreach (var param in workflowInputs)
         {
             var workflowInputEndpoint = new TuumConnectionEndpoint(WorkflowInputSourceId, param.Key);
             this.WorkflowDataStore[workflowInputEndpoint] = param.Value;
+        }
+
+        List<WorkflowConnection> effectiveConnections;
+        // 如果连接未定义，则尝试自动连接
+        if (this.Config.Connections is null)
+        {
+            var autoConnectResult = this.TryAutoConnect();
+            if (autoConnectResult.TryGetError(out var error, out var generatedConnections))
+            {
+                // 自动连接失败，返回错误
+                return new WorkflowExecutionResult(false, error.Message, "AutoConnectionFailed");
+            }
+
+            effectiveConnections = generatedConnections;
+        }
+        else
+        {
+            effectiveConnections = this.Config.Connections;
         }
 
         // --- 1. 依赖分析与执行计划生成 ---
         var nodes = this.Tuums.ToDictionary(tuum => tuum.TuumContent.TuumConfig.ConfigId, tuum => new ExecutionNode(tuum));
 
         // 根据显式连接构建依赖图
-        foreach (var connection in this.Config.Connections)
+        foreach (var connection in effectiveConnections)
         {
             // 如果源或目标枢机不存在，则跳过（校验阶段会报告此错误）
             if (!nodes.TryGetValue(connection.Source.TuumId, out var sourceNode) ||
@@ -97,7 +115,7 @@ public class WorkflowProcessor(
                 currentBatch.Add(node);
             }
 
-            var tasks = currentBatch.Select(node => this.ExecuteSingleTuumAsync(node, cancellationToken)).ToList();
+            var tasks = currentBatch.Select(node => this.ExecuteSingleTuumAsync(node,effectiveConnections, cancellationToken)).ToList();
             var results = await Task.WhenAll(tasks);
 
             // --- 3. 处理执行结果与更新依赖 ---
@@ -128,16 +146,79 @@ public class WorkflowProcessor(
     }
 
     /// <summary>
+    /// 尝试基于命名约定自动生成工作流连接。
+    /// </summary>
+    /// <returns>成功时返回生成的连接列表，失败时返回错误信息。</returns>
+    private Result<List<WorkflowConnection>> TryAutoConnect()
+    {
+        var generatedConnections = new List<WorkflowConnection>();
+        var allAvailableOutputs = new Dictionary<string, TuumConnectionEndpoint>();
+
+        // 1. 收集所有可用的输出源（工作流输入 + 所有祝祷的输出）
+        // 首先添加工作流自身的输入作为顶级数据源
+        foreach (string workflowInputName in this.Config.WorkflowInputs)
+        {
+            if (allAvailableOutputs.ContainsKey(workflowInputName))
+            {
+                return Result.Fail($"自动连接失败：输出端点名称 '{workflowInputName}' 在工作流输入中已存在，与其它输出源冲突。");
+            }
+
+            allAvailableOutputs.Add(workflowInputName, new TuumConnectionEndpoint(WorkflowInputSourceId, workflowInputName));
+        }
+
+        // 然后添加所有祝祷的输出端点
+        foreach (var tuum in this.Tuums)
+        {
+            var tuumConfig = tuum.TuumContent.TuumConfig;
+            // Tuum 的输出端点是 OutputMappings 的 Values 展平后的结果
+            var tuumOutputEndpoints = tuumConfig.OutputMappings.Values.SelectMany(names => names).Distinct();
+
+            foreach (string outputEndpointName in tuumOutputEndpoints)
+            {
+                if (allAvailableOutputs.TryGetValue(outputEndpointName, out var existingSource))
+                {
+                    return Result.Fail(
+                        $"自动连接失败：存在多个名为 '{outputEndpointName}' 的输出端点，无法明确连接源。冲突发生在祝祷 '{tuumConfig.ConfigId}' 与 '{existingSource.TuumId}' 之间。");
+                }
+
+                allAvailableOutputs.Add(outputEndpointName, new TuumConnectionEndpoint(tuumConfig.ConfigId, outputEndpointName));
+            }
+        }
+
+        // 2. 遍历所有祝祷的输入，并尝试为它们查找匹配的输出源
+        foreach (var tuum in this.Tuums)
+        {
+            var tuumConfig = tuum.TuumContent.TuumConfig;
+            // Tuum 的输入端点是 InputMappings 的 Keys
+            foreach (string inputEndpointName in tuumConfig.InputMappings.Keys)
+            {
+                if (allAvailableOutputs.TryGetValue(inputEndpointName, out var sourceEndpoint))
+                {
+                    var targetEndpoint = new TuumConnectionEndpoint(tuumConfig.ConfigId, inputEndpointName);
+                    generatedConnections.Add(new WorkflowConnection(sourceEndpoint, targetEndpoint));
+                }
+                else
+                {
+                    // 如果找不到匹配的源，则自动连接失败
+                    return Result.Fail($"自动连接失败：祝祷 '{tuumConfig.ConfigId}' 的输入端点 '{inputEndpointName}' 找不到任何匹配的输出源。");
+                }
+            }
+        }
+
+        return Result.Ok(generatedConnections);
+    }
+
+    /// <summary>
     /// 辅助方法：执行单个枢机，包括准备输入和存储输出。
     /// </summary>
-    private async Task<Result> ExecuteSingleTuumAsync(ExecutionNode node, CancellationToken cancellationToken)
+    private async Task<Result> ExecuteSingleTuumAsync(ExecutionNode node, List<WorkflowConnection> connections, CancellationToken cancellationToken)
     {
         var tuum = node.Tuum;
         string tuumId = tuum.TuumContent.TuumConfig.ConfigId;
 
         // 1. 准备输入：从数据存储区为当前枢机收集所有需要的输入数据
         var tuumInputs = new Dictionary<string, object?>();
-        var connectionsToThisTuum = this.Config.Connections.Where(c => c.Target.TuumId == tuumId);
+        var connectionsToThisTuum = connections.Where(c => c.Target.TuumId == tuumId);
 
         foreach (var connection in connectionsToThisTuum)
         {

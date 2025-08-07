@@ -20,9 +20,9 @@ public class WorkFlowBlockService(INotifierService notifierService, IBlockManage
 
     /// <inheritdoc/>
     public async Task<LoadingBlockStatus?> CreateChildBlockAsync(string parentBlockId, string workFlowName,
-        Dictionary<string, string> triggerParams)
+        Dictionary<string, string> workflowInputs)
     {
-        var childBlock = await this.BlockManager.CreateChildBlock_Async(parentBlockId, workFlowName, triggerParams);
+        var childBlock = await this.BlockManager.CreateChildBlock_Async(parentBlockId, workFlowName, workflowInputs);
         if (childBlock != null)
         {
             await this.NotifierService.NotifyBlockUpdateAsync(parentBlockId, BlockDataFields.ChildrenInfo);

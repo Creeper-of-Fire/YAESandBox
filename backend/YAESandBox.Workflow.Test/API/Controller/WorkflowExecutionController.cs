@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Channels;
@@ -58,7 +59,7 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Aut
         var mockDataAccess = new MockWorkflowDataAccess();
 
         var processor = request.WorkflowConfig.ToWorkflowProcessor(
-            request.TriggerParams,
+            request.WorkflowInputs,
             this.MasterAiService.ToSubAiService(this.UserId),
             mockDataAccess,
             callback
@@ -124,7 +125,7 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Aut
             {
                 var mockDataAccess = new MockWorkflowDataAccess();
                 var processor = request.WorkflowConfig.ToWorkflowProcessor(
-                    request.TriggerParams,
+                    request.WorkflowInputs,
                     this.MasterAiService.ToSubAiService(this.UserId),
                     mockDataAccess,
                     callback
@@ -164,7 +165,7 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Aut
                     // 在这里应用 UnsafeRelaxedJsonEscaping，确保中文正确
                     Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
                     // 为了与前端的 StreamEventPayload (camelCase) 匹配
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase 
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
                 });
                 await this.Response.WriteAsync($"data: {payload}\n\n", cancellationToken);
                 await this.Response.Body.FlushAsync(cancellationToken);
@@ -194,13 +195,15 @@ public record WorkflowExecutionRequest
     /// <summary>
     /// 要执行的工作流的完整配置。
     /// </summary>
+    [Required]
     public required WorkflowConfig WorkflowConfig { get; init; }
 
     /// <summary>
     /// 工作流启动所需的触发参数。
     /// Key 是参数名，Value 是参数值。
     /// </summary>
-    public required Dictionary<string, string> TriggerParams { get; init; }
+    [Required]
+    public required Dictionary<string, string> WorkflowInputs { get; init; }
 }
 
 /// <summary>

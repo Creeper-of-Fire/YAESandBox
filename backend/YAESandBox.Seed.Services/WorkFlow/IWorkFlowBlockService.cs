@@ -18,10 +18,10 @@ public interface IWorkFlowBlockService
     /// </summary>
     /// <param name="parentBlockId">父 Block ID。</param>
     /// <param name="workFlowName">触发的工作流名称</param>
-    /// <param name="triggerParams">触发工作流的参数。</param>
+    /// <param name="workflowInputs">触发工作流的参数。</param>
     /// <returns>新创建的子 Block，如果失败则返回 null。</returns>
     Task<LoadingBlockStatus?> CreateChildBlockAsync(string parentBlockId, string workFlowName,
-        Dictionary<string, string> triggerParams);
+        Dictionary<string, string> workflowInputs);
 
     /// <summary>
     /// 处理工作流执行完成后的回调。

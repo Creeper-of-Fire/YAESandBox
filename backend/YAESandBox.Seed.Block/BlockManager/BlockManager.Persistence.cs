@@ -96,7 +96,7 @@ public partial class BlockManager
             // Metadata and TriggeredChildParams might need deep copy?
             var metadata = blockDto.Metadata.ToDictionary(entry => entry.Key, entry => entry.Value);
             var triggeredChildParams = blockDto.TriggeredChildParams.ToDictionary(entry => entry.Key, entry => entry.Value);
-            var triggerParams = blockDto.TriggeredParams.ToDictionary(entry => entry.Key, entry => entry.Value);
+            var workflowInputs = blockDto.TriggeredParams.ToDictionary(entry => entry.Key, entry => entry.Value);
 
             // --- 恢复 WorldState 快照 ---
             var wsInput = PersistenceMapper.MapWorldState(blockDto.WorldStates.GetValueOrDefault("wsInput"));
@@ -124,7 +124,7 @@ public partial class BlockManager
                     blockDto.BlockContent,
                     metadata,
                     triggeredChildParams,
-                    triggerParams,
+                    workflowInputs,
                     gameState,
                     wsInput, // wsInput is mandatory now (except maybe root)
                     wsPostAi,

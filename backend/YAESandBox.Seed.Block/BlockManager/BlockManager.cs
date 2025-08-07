@@ -54,10 +54,10 @@ public partial class BlockManager : IBlockManager
     /// </summary>
     /// <param name="parentBlockId"></param>
     /// <param name="workFlowName"></param>
-    /// <param name="triggerParams"></param>
+    /// <param name="workflowInputs"></param>
     /// <returns></returns>
     public async Task<LoadingBlockStatus?> CreateChildBlock_Async(
-        string? parentBlockId, string workFlowName, IReadOnlyDictionary<string, string> triggerParams)
+        string? parentBlockId, string workFlowName, IReadOnlyDictionary<string, string> workflowInputs)
     {
         parentBlockId ??= WorldRootId;
         using (await this.GetLockForBlock(parentBlockId).LockAsync()) // Lock parent to add child info
@@ -76,7 +76,7 @@ public partial class BlockManager : IBlockManager
                 return null;
             }
 
-            parentBlock.Block.TriggeredChildParams = triggerParams.ToDictionary();
+            parentBlock.Block.TriggeredChildParams = workflowInputs.ToDictionary();
 
             (string newBlockId, var newChildBlock) = idleParentBlock.CreateNewChildrenBlock(workFlowName);
 

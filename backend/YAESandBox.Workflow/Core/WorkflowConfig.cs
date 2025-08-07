@@ -34,6 +34,5 @@ public record WorkflowConfig
     /// 定义了工作流中所有枢机之间的显式连接。
     /// 这是工作流数据流向的唯一依据。
     /// </summary>
-    [Required]
-    public List<WorkflowConnection> Connections { get; init; } = [];
+    public List<WorkflowConnection>? Connections { get; init; } = [];
 }

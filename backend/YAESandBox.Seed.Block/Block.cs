@@ -130,7 +130,7 @@ public class Block : NodeBlock
     /// 创建一个新的子 Block (由 BlockManager 调用)。
     /// </summary>
     private Block(string blockId, string? parentBlockId, string workflowName, WorldState sourceWorldState, GameState sourceGameState,
-        Dictionary<string, string> triggerParams) : base(blockId, parentBlockId)
+        Dictionary<string, string> workflowInputs) : base(blockId, parentBlockId)
     {
         if (string.IsNullOrWhiteSpace(blockId))
             throw new ArgumentException("Block ID cannot be null or whitespace.", nameof(blockId));
@@ -138,7 +138,7 @@ public class Block : NodeBlock
         //     throw new ArgumentException("Parent Block ID cannot be null or whitespace.", nameof(parentBlockId));
 
         this.AddOrSetMetaData("CreationTime", DateTime.UtcNow.ToString(CultureInfo.InvariantCulture));
-        this.TriggeredParams = triggerParams;
+        this.TriggeredParams = workflowInputs;
         this.WorkflowName = workflowName;
 
         // --- 在构造函数内部完成克隆 ---
@@ -155,13 +155,13 @@ public class Block : NodeBlock
     /// <param name="workFlowName"></param>
     /// <param name="sourceWorldState"></param>
     /// <param name="sourceGameState"></param>
-    /// <param name="triggerParams"></param>
+    /// <param name="workflowInputs"></param>
     /// <returns></returns>
     public static LoadingBlockStatus CreateBlock(string blockId, string? parentBlockId, string workFlowName, WorldState sourceWorldState,
-        GameState sourceGameState, Dictionary<string, string>? triggerParams = null)
+        GameState sourceGameState, Dictionary<string, string>? workflowInputs = null)
     {
         return new LoadingBlockStatus(
-            new Block(blockId, parentBlockId, workFlowName, sourceWorldState, sourceGameState, triggerParams ?? []));
+            new Block(blockId, parentBlockId, workFlowName, sourceWorldState, sourceGameState, workflowInputs ?? []));
     }
 
 
