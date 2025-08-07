@@ -13,10 +13,11 @@ namespace YAESandBox.Plugin.LuaScript.LuaRunner;
 /// 通用的 Lua 脚本执行器。
 /// 负责创建安全的沙箱环境、注入标准的 API 桥并执行脚本。
 /// </summary>
-/// <param name="tuumProcessorContent">当前枢机的执行上下文，用于访问变量。</param>
 /// <param name="debugDto">用于记录日志和错误的调试对象。</param>
-public partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, IDebugDtoWithLogs debugDto, IEnumerable<ILuaBridge> bridges)
+/// <param name="bridges"></param>
+public partial class LuaScriptRunner(IDebugDtoWithLogs debugDto, IEnumerable<ILuaBridge> bridges)
 {
+    private IDebugDtoWithLogs DebugDto { get; } = debugDto;
     private IEnumerable<ILuaBridge> Bridges { get; } = bridges;
 
     /// <summary>
@@ -56,7 +57,7 @@ public partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, 
 
             // --- 2. 准备核心服务：日志记录器 ---
             // 日志是基础服务，所有桥都可能需要它，所以我们首先创建它。
-            var logger = new LuaLogBridge(debugDto);
+            var logger = new LuaLogBridge(this.DebugDto);
             logger.Register(lua, logger); // 日志桥自己注册自己
 
             // --- 3. 注册所有通过构建器添加的功能桥 ---
@@ -87,7 +88,7 @@ public partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, 
             string conciseErrorMessage = $"执行 Lua 脚本时发生错误: [{primaryException.GetType().Name}] {primaryException.Message}";
             string fullErrorDetails = ex.ToString();
 
-            if (debugDto is { } loggableDto)
+            if (this.DebugDto is { } loggableDto)
             {
                 loggableDto.RuntimeError = conciseErrorMessage;
                 loggableDto.Logs.Add($"[FATAL] 脚本执行异常. 详细信息如下:");
@@ -99,7 +100,7 @@ public partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, 
             }
 
             var builder = new StringBuilder();
-            foreach (string log in debugDto.Logs)
+            foreach (string log in this.DebugDto.Logs)
             {
                 builder.AppendLine(log + "\n");
             }

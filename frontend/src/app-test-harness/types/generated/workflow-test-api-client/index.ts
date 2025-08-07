@@ -10,7 +10,9 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 export type { AbstractRuneConfig } from './models/AbstractRuneConfig';
 export type { ProblemDetails } from './models/ProblemDetails';
 export type { TuumConfig } from './models/TuumConfig';
+export type { TuumConnectionEndpoint } from './models/TuumConnectionEndpoint';
 export type { WorkflowConfig } from './models/WorkflowConfig';
+export type { WorkflowConnection } from './models/WorkflowConnection';
 export type { WorkflowExecutionRequest } from './models/WorkflowExecutionRequest';
 export type { WorkflowExecutionResult } from './models/WorkflowExecutionResult';
 

@@ -104,12 +104,12 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
         List<IElement> matchedElements)
     {
         var replacementDetails = new List<ReplacementDebugInfo>();
-        var extractedRawForDebug = new List<string?>();
+        var extractedRawForDebug = new List<string>();
 
         foreach (var element in matchedElements)
         {
             // a. 提取用于模板占位符的内容
-            string? originalContent = this.MatchContentFromElement(element);
+            string originalContent = this.MatchContentFromElement(element);
             extractedRawForDebug.Add(originalContent);
 
             // 记录替换前的状态

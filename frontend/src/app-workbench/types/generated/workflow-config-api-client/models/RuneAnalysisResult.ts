@@ -2,8 +2,9 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { ValidationMessage } from './ValidationMessage';
 /**
- * 符文的分析结果
+ * 单个符文的校验结果。
  */
 export type RuneAnalysisResult = {
     /**
@@ -14,5 +15,9 @@ export type RuneAnalysisResult = {
      * 符文生产的输出参数
      */
     producedVariables: Array<string>;
+    /**
+     * 针对该符文的校验信息列表。
+     */
+    runeMessages: Array<ValidationMessage>;
 };
 

@@ -13,6 +13,8 @@ namespace YAESandBox.Workflow.API.Controller;
 /// 分析符文的配置文件
 /// </summary>
 /// <param name="workflowValidationService"></param>
+/// <param name="tuumAnalysisService"></param>
+/// <param name="runeAnalysisService"></param>
 [ApiController]
 [Route("api/v1/workflows-configs/analysis")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]

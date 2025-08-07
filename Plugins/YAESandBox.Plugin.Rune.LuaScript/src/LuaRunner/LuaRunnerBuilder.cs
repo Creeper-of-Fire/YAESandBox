@@ -30,6 +30,6 @@ public class LuaRunnerBuilder(TuumProcessorContent tuumContent, IDebugDtoWithLog
     /// <returns>一个配置完成的 LuaScriptRunner。</returns>
     public LuaScriptRunner Build()
     {
-        return new LuaScriptRunner(this.TuumContent, this.DebugDto, this.Bridges);
+        return new LuaScriptRunner(this.DebugDto, this.Bridges);
     }
 }
