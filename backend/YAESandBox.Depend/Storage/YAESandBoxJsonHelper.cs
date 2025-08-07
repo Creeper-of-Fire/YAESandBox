@@ -55,7 +55,7 @@ public static class YaeSandBoxJsonHelper
 
             object? oldValue = prop.GetValue(oldOptions);
             object? newValue = prop.GetValue(newOptions);
-            Type propertyType = prop.PropertyType;
+            var propertyType = prop.PropertyType;
 
             // 3. 检查 oldOptions 的属性值是否为其类型的默认值
             //    "如果有值了 (即不是默认值)，那就不复制"

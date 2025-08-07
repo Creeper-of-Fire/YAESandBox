@@ -133,8 +133,8 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
     // 目前强制所有的脚本输入/输出都为 Any，且不能为空
     
     /// <inheritdoc />
-    public override List<ConsumedSpec> GetConsumedSpec() => [new(this.InputVariableName, CoreVarDefs.Any) { IsNullable = false }];
+    public override List<ConsumedSpec> GetConsumedSpec() => [new(this.InputVariableName, CoreVarDefs.Any) { IsOptional = false }];
 
     /// <inheritdoc />
-    public override List<ProducedSpec> GetProducedSpec() => [new(this.OutputVariableName, CoreVarDefs.Any) { IsNullable = false }];
+    public override List<ProducedSpec> GetProducedSpec() => [new(this.OutputVariableName, CoreVarDefs.Any)];
 }

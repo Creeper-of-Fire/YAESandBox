@@ -5,61 +5,74 @@ using YAESandBox.Authentication;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Analysis;
 using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Tuum;
 
 namespace YAESandBox.Workflow.API.Controller;
 
 /// <summary>
 /// 分析符文的配置文件
 /// </summary>
-/// <param name="validationService"></param>
+/// <param name="workflowValidationService"></param>
 [ApiController]
 [Route("api/v1/workflows-configs/analysis")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
-public class WorkflowAnalysisController(WorkflowValidationService validationService) : AuthenticatedApiControllerBase
+public class WorkflowAnalysisController(
+    WorkflowValidationService workflowValidationService,
+    TuumAnalysisService tuumAnalysisService,
+    RuneAnalysisService runeAnalysisService
+) : AuthenticatedApiControllerBase
 {
-    private WorkflowValidationService ValidationService { get; } = validationService;
+    private WorkflowValidationService WorkflowValidationService { get; } = workflowValidationService;
+    private TuumAnalysisService TuumAnalysisService { get; } = tuumAnalysisService;
+    private RuneAnalysisService RuneAnalysisService { get; } = runeAnalysisService;
 
     // --- DTOs for this controller ---
-
     /// <summary>
-    /// 符文的分析结果
+    /// 为 analyze-rune 端点设计的请求体。
     /// </summary>
-    public record RuneAnalysisResult
+    public record RuneAnalysisRequest
     {
         /// <summary>
-        /// 符文消费的输入参数
+        /// 需要被分析和校验的目标符文配置。
         /// </summary>
         [Required]
-        public List<string> ConsumedVariables { get; init; } = [];
+        public required AbstractRuneConfig RuneToAnalyze { get; init; }
 
         /// <summary>
-        /// 符文生产的输出参数
+        /// （可选）该符文所在的枢机的完整配置，作为校验上下文。
+        /// 提供此上下文可以进行依赖顺序等更深入的校验。
         /// </summary>
-        [Required]
-        public List<string> ProducedVariables { get; init; } = [];
+        public TuumConfig? TuumContext { get; init; }
     }
 
     /// <summary>
-    /// 分析单个符文配置，动态计算其输入和输出变量。
+    /// 对单个符文配置进行全面的分析和校验。
     /// </summary>
     /// <remarks>
-    /// 用于编辑器在用户修改符文配置时，实时获取其数据依赖，以增强智能提示和即时反馈。
+    /// 用于符文编辑器在用户修改配置时，实时获取其数据依赖和校验状态。
     /// </remarks>
-    /// <param name="runeConfig">包含符文配置草稿的请求体。</param>
-    /// <returns>该符文消费和生产的变量列表。</returns>
+    /// <param name="request">包含符文配置及其可选上下文的请求体。</param>
+    /// <returns>该符文的输入、输出和所有校验消息。</returns>
     [HttpPost("analyze-rune")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(RuneAnalysisResult), StatusCodes.Status200OK)]
-    public ActionResult<RuneAnalysisResult> AnalyzeRune([FromBody] AbstractRuneConfig runeConfig)
-    {
-        var analysisResult = new RuneAnalysisResult
-        {
-            ConsumedVariables = runeConfig.GetConsumedSpec().Select(spec => spec.Name).ToList(),
-            ProducedVariables = runeConfig.GetProducedSpec().Select(spec => spec.Name).ToList()
-        };
+    public ActionResult<RuneAnalysisResult> AnalyzeRune([FromBody] RuneAnalysisRequest request) =>
+        this.Ok(this.RuneAnalysisService.Analyze(request.RuneToAnalyze, request.TuumContext));
 
-        return this.Ok(analysisResult);
-    }
+    /// <summary>
+    /// 对单个枢机（Tuum）配置草稿进行高级分析（不包含符文级校验）。
+    /// </summary>
+    /// <remarks>
+    /// 用于枢机编辑器在用户进行连接、映射等操作时，分析枢机的接口、内部变量和数据流。
+    /// 具体的符文级校验由符文校验端点负责。
+    /// </remarks>
+    /// <param name="tuumConfig">枢机配置的完整草稿。</param>
+    /// <returns>一份包含枢机接口和数据流分析的报告。</returns>
+    [HttpPost("analyze-tuum")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(TuumAnalysisResult), StatusCodes.Status200OK)]
+    public ActionResult<TuumAnalysisResult> AnalyzeTuum([FromBody] TuumConfig tuumConfig) =>
+        this.Ok(this.TuumAnalysisService.Analyze(tuumConfig));
 
     /// <summary>
     /// 对整个工作流配置草稿进行全面的静态校验。
@@ -69,11 +82,10 @@ public class WorkflowAnalysisController(WorkflowValidationService validationServ
     /// </remarks>
     /// <param name="workflowConfig">工作流配置的完整草稿。</param>
     /// <returns>一份包含所有校验信息的结构化报告。</returns>
+    // TODO 对应的校验还没有完成
     [HttpPost("validate-workflow")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(WorkflowValidationReport), StatusCodes.Status200OK)]
-    public ActionResult<WorkflowValidationReport> ValidateWorkflow([FromBody] WorkflowConfig workflowConfig)
-    {
-        return this.Ok(this.ValidationService.Validate(workflowConfig));
-    }
+    public ActionResult<WorkflowValidationReport> ValidateWorkflow([FromBody] WorkflowConfig workflowConfig) =>
+        this.Ok(this.WorkflowValidationService.Validate(workflowConfig));
 }

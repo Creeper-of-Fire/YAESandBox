@@ -41,7 +41,10 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
         {
             // 如果输入为空，则直接设置空输出并成功返回
             tuumProcessorContent.SetTuumVar(this.Config.OutputVariableName,
-                this.Config.OperationMode == OperationModeEnum.Replace ? string.Empty : null);
+                this.Config.OperationMode == OperationModeEnum.Replace
+                    ? string.Empty // 替换模式输出空字符串
+                    : this.FormatOutput([]) // 提取模式使用空列表生成默认输出
+            );
             return Result.Ok();
         }
 
@@ -60,12 +63,14 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
             if (this.Config.OperationMode == OperationModeEnum.Extract)
             {
                 // --- 提取模式逻辑 ---
-                await this.HandleExtractModeAsync(tuumProcessorContent, matchedElements);
+                object finalOutput = this.HandleExtractModeAsync(tuumProcessorContent, matchedElements);
+                tuumProcessorContent.SetTuumVar(this.Config.OutputVariableName, finalOutput);
             }
             else // OperationModeEnum.Replace
             {
                 // --- 替换模式逻辑 ---
-                await this.HandleReplaceModeAsync(tuumProcessorContent, document, matchedElements);
+                string finalOutput = this.HandleReplaceModeAsync(tuumProcessorContent, document, matchedElements);
+                tuumProcessorContent.SetTuumVar(this.Config.OutputVariableName, finalOutput);
             }
 
             return Result.Ok();
@@ -73,31 +78,29 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
         catch (Exception ex)
         {
             this.DebugDto.RuntimeError = $"解析失败: {ex.Message}";
-            return Result.Fail($"标签解析符文执行失败: {ex.Message}").ToResult();
+            return Result.Fail($"标签解析符文执行失败: {ex.Message}");
         }
     }
 
     /// <summary>
     /// 处理提取模式的逻辑。
     /// </summary>
-    private Task HandleExtractModeAsync(TuumProcessor.TuumProcessorContent tuumProcessorContent, List<IElement> matchedElements)
+    private object HandleExtractModeAsync(TuumProcessor.TuumProcessorContent tuumProcessorContent, List<IElement> matchedElements)
     {
         var extractedValues = matchedElements.Select(this.MatchContentFromElement).ToList();
 
         this.DebugDto.ExtractedRawValues = extractedValues;
 
-        object? finalOutput = this.FormatOutput(extractedValues);
+        object finalOutput = this.FormatOutput(extractedValues);
         this.DebugDto.FinalOutput = finalOutput;
 
-        tuumProcessorContent.SetTuumVar(this.Config.OutputVariableName, finalOutput);
-
-        return Task.CompletedTask;
+        return finalOutput;
     }
 
     /// <summary>
     /// 【已重构】处理替换模式的逻辑。
     /// </summary>
-    private Task HandleReplaceModeAsync(TuumProcessor.TuumProcessorContent tuumProcessorContent, IDocument document,
+    private string HandleReplaceModeAsync(TuumProcessor.TuumProcessorContent tuumProcessorContent, IDocument document,
         List<IElement> matchedElements)
     {
         var replacementDetails = new List<ReplacementDebugInfo>();
@@ -130,9 +133,8 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
         this.DebugDto.ExtractedRawValues = extractedRawForDebug;
         this.DebugDto.ReplacementDetails = replacementDetails;
         this.DebugDto.FinalOutput = finalModifiedHtml;
-        tuumProcessorContent.SetTuumVar(this.Config.OutputVariableName, finalModifiedHtml);
 
-        return Task.CompletedTask;
+        return finalModifiedHtml;
     }
 
     /// <summary>
@@ -180,7 +182,7 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
     /// <summary>
     /// 辅助方法：从单个元素中提取值。
     /// </summary>
-    private string? MatchContentFromElement(IElement element)
+    private string MatchContentFromElement(IElement element)
     {
         return this.Config.MatchContentMode switch
         {
@@ -188,23 +190,23 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
             nameof(MatchContentModeEnum.InnerHtml) => element.InnerHtml,
             nameof(MatchContentModeEnum.OuterHtml) => element.OuterHtml,
             nameof(MatchContentModeEnum.Attribute) => !string.IsNullOrEmpty(this.Config.AttributeName)
-                ? element.GetAttribute(this.Config.AttributeName)
-                : null,
-            _ => null
+                ? element.GetAttribute(this.Config.AttributeName) ?? string.Empty
+                : string.Empty,
+            _ => string.Empty
         };
     }
 
     /// <summary>
     /// 辅助方法：根据配置格式化输出。
     /// </summary>
-    private object? FormatOutput(List<string?> values)
+    private object FormatOutput(List<string> values)
     {
         return this.Config.ReturnFormat switch
         {
-            nameof(ReturnFormatEnum.First) => values.FirstOrDefault(),
+            nameof(ReturnFormatEnum.First) => values.FirstOrDefault() ?? string.Empty,
             nameof(ReturnFormatEnum.AsList) => values,
             nameof(ReturnFormatEnum.AsJsonString) => JsonSerializer.Serialize(values, YaeSandBoxJsonHelper.JsonSerializerOptions),
-            _ => null
+            _ => string.Empty
         };
     }
 
@@ -220,7 +222,7 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
     {
         public string? InputText { get; set; }
         public int MatchedElementCount { get; set; }
-        public List<string?> ExtractedRawValues { get; set; } = [];
+        public List<string> ExtractedRawValues { get; set; } = [];
         public object? FinalOutput { get; set; }
         public string? RuntimeError { get; set; }
 
@@ -362,17 +364,10 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
             nameof(ReturnFormatEnum.AsJsonString) => CoreVarDefs.String,
             _ => CoreVarDefs.String // 默认或错误情况
         };
-        bool nullable = this.ReturnFormat switch
-        {
-            nameof(ReturnFormatEnum.First) => true,
-            nameof(ReturnFormatEnum.AsList) => false,
-            nameof(ReturnFormatEnum.AsJsonString) => false,
-            _ => true // 默认或错误情况
-        };
 
         return
         [
-            new ProducedSpec(this.OutputVariableName, producedDef) { IsNullable = nullable }
+            new ProducedSpec(this.OutputVariableName, producedDef)
         ];
     }
 

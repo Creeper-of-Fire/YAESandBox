@@ -198,7 +198,7 @@ internal partial record PromptGenerationRuneConfig
             .Distinct()
             .Select(n => new ConsumedSpec(n, CoreVarDefs.String))
             .ToList();
-        namesSpec.Add(new ConsumedSpec(this.PromptsName, CoreVarDefs.PromptList) { IsNullable = true });
+        namesSpec.Add(new ConsumedSpec(this.PromptsName, CoreVarDefs.PromptList) { IsOptional = true });
         return namesSpec;
     }
 

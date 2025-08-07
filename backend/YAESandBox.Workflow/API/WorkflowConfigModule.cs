@@ -54,6 +54,8 @@ public class WorkflowConfigModule :
 
         service.AddSingleton<WorkflowConfigFileService>();
         service.AddTransient<WorkflowValidationService>();
+        service.AddTransient<TuumAnalysisService>();
+        service.AddTransient<RuneAnalysisService>();
     }
 
     /// <inheritdoc />
@@ -66,8 +68,8 @@ public class WorkflowConfigModule :
     /// <inheritdoc />
     public IReadOnlyList<Type> RuneConfigTypes { get; } =
     [
-        typeof(SendToRawTextRuneConfig), 
-        typeof(PromptGenerationRuneConfig), 
+        typeof(SendToRawTextRuneConfig),
+        typeof(PromptGenerationRuneConfig),
         typeof(AiRuneConfig),
     ];
 }

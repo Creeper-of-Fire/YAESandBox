@@ -126,7 +126,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
         return ConsumedVariableRegex().Matches(this.Script)
             .Select(match => match.Groups[1].Value)
             .Distinct()
-            .Select(name => new ConsumedSpec(name, CoreVarDefs.Any) { IsNullable = false })
+            .Select(name => new ConsumedSpec(name, CoreVarDefs.Any) { IsOptional = false })
             .ToList();
     }
 
@@ -143,7 +143,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
         return ProducedVariableRegex().Matches(this.Script)
             .Select(match => match.Groups[1].Value)
             .Distinct()
-            .Select(name => new ProducedSpec(name, CoreVarDefs.Any) { IsNullable = false })
+            .Select(name => new ProducedSpec(name, CoreVarDefs.Any))
             .ToList();
     }
 }

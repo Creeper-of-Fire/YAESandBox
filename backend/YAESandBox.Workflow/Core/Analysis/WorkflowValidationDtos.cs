@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 
 namespace YAESandBox.Workflow.Core.Analysis;
 
@@ -12,38 +13,19 @@ public record WorkflowValidationReport
     /// Key是枢机的ConfigId。
     /// </summary>
     [Required]
-    public Dictionary<string, TuumValidationResult> TuumResults { get; init; } = [];
-}
-
-/// <summary>
-/// 单个枢机的校验结果。
-/// </summary>
-public record TuumValidationResult
-{
-    /// <summary>
-    /// 该枢机内每个符文的校验结果。
-    /// Key是符文的ConfigId。
-    /// </summary>
-    [Required]
-    public Dictionary<string, RuneValidationResult> RuneResults { get; init; } = [];
+    public Dictionary<string, TuumAnalysisResult> TuumResults { get; init; } = [];
 
     /// <summary>
-    /// 仅针对枢机本身的校验信息。
+    /// Key: Connection的唯一标识符
     /// </summary>
     [Required]
-    public List<ValidationMessage> TuumMessages { get; init; } = [];
-}
+    public Dictionary<string, List<ValidationMessage>> ConnectionMessages { get; init; } = [];
 
-/// <summary>
-/// 单个符文的校验结果。
-/// </summary>
-public record RuneValidationResult
-{
     /// <summary>
-    /// 针对该符文的校验信息列表。
+    /// 用于存放循环依赖等无法归属到任何单一实体的错误
     /// </summary>
     [Required]
-    public List<ValidationMessage> RuneMessages { get; init; } = [];
+    public List<ValidationMessage> GlobalMessages { get; init; } = [];
 }
 
 /// <summary>
@@ -69,6 +51,21 @@ public record ValidationMessage
     /// </summary>
     [Required]
     public required string RuleSource { get; init; }
+}
+
+internal static class ConnectionIdentifier
+{
+    /// <summary>
+    /// 为一条工作流连接生成一个唯一的、可预测的字符串标识符。
+    /// </summary>
+    /// <param name="connection">工作流连接对象。</param>
+    /// <returns>唯一的字符串ID。</returns>
+    internal static string GetId(this WorkflowConnection connection)
+    {
+        // 使用JSON序列化来确保一个稳定、可读的ID。
+        // 使用紧凑的选项以避免格式化差异。
+        return JsonSerializer.Serialize(connection, options: new JsonSerializerOptions() { WriteIndented = false });
+    }
 }
 
 /// <summary>

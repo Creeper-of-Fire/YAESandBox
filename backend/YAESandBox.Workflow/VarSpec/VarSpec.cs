@@ -22,11 +22,6 @@ public interface IVarSpec
     /// 变量的类型定义。
     /// </summary>
     VarSpecDef Def { get; }
-
-    /// <summary>
-    /// 此变量是否可为空。默认为 false。
-    /// </summary>
-    public bool IsNullable { get; init; }
 }
 
 /// <summary>
@@ -34,13 +29,7 @@ public interface IVarSpec
 /// </summary>
 /// <param name="Name">被生产的变量名</param>
 /// <param name="Def">变量的类型定义。</param>
-public record ProducedSpec(string Name, VarSpecDef Def) : IVarSpec
-{
-    /// <summary>
-    /// 此变量是否可为空。默认为 false。
-    /// </summary>
-    public bool IsNullable { get; init; } = false;
-}
+public record ProducedSpec(string Name, VarSpecDef Def) : IVarSpec;
 
 /// <inheritdoc/>
 /// <summary>
@@ -51,7 +40,7 @@ public record ProducedSpec(string Name, VarSpecDef Def) : IVarSpec
 public record ConsumedSpec(string Name, VarSpecDef Def) : IVarSpec
 {
     /// <summary>
-    /// 此变量是否可为空。默认为 false。
+    /// 此变量是否可选。默认为 false。
     /// </summary>
-    public bool IsNullable { get; init; } = false;
+    public bool IsOptional { get; init; } = false;
 }

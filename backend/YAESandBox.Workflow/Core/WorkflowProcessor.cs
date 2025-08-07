@@ -133,7 +133,7 @@ public class WorkflowProcessor(
     private async Task<Result> ExecuteSingleTuumAsync(ExecutionNode node, CancellationToken cancellationToken)
     {
         var tuum = node.Tuum;
-        var tuumId = tuum.TuumContent.TuumConfig.ConfigId;
+        string tuumId = tuum.TuumContent.TuumConfig.ConfigId;
 
         // 1. 准备输入：从数据存储区为当前枢机收集所有需要的输入数据
         var tuumInputs = new Dictionary<string, object?>();
@@ -142,7 +142,7 @@ public class WorkflowProcessor(
         foreach (var connection in connectionsToThisTuum)
         {
             // 从数据存储区查找源端点的值
-            if (this.WorkflowDataStore.TryGetValue(connection.Source, out var sourceValue))
+            if (this.WorkflowDataStore.TryGetValue(connection.Source, out object? sourceValue))
             {
                 tuumInputs[connection.Target.EndpointName] = sourceValue;
             }

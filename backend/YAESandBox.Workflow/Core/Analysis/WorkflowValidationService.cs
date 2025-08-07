@@ -14,7 +14,7 @@ public class WorkflowValidationService
     /// 一个特殊的TuumId，用于表示工作流的入口。
     /// </summary>
     private const string WorkflowInputSourceId = "@workflow";
-    
+
     /// <summary>
     /// 对整个工作流配置进行静态校验。
     /// </summary>
@@ -23,254 +23,113 @@ public class WorkflowValidationService
         var report = new WorkflowValidationReport();
         var allTuumConfigs = config.Tuums.ToDictionary(t => t.ConfigId);
 
-        // 校验每个枢机自身，并收集所有端点信息
-        this.ValidateIndividualTuums(config, report);
-
         // 校验连接
         this.ValidateConnections(config, report, allTuumConfigs);
 
         // 校验数据流和输入完整性
+        // 这个方法现在只检查Tuum节点的输入是否悬空
         this.ValidateDataFlow(config, report);
-        
+
         // 检测循环依赖
+        // 这个方法的错误将放入 GlobalMessages
         this.DetectCycles(config, report);
 
         return report;
     }
-    
-    /// <summary>
-    /// 遍历并校验每个枢机的内部配置，包括输出映射和符文的Attribute规则。
-    /// </summary>
-    private void ValidateIndividualTuums(WorkflowConfig config, WorkflowValidationReport report)
-    {
-        foreach (var tuum in config.Tuums)
-        {
-            var tuumResult = report.TuumResults.GetOrAdd(tuum.ConfigId, () => new TuumValidationResult());
-
-            // 校验1: 枢机的输出映射是否引用了有效的内部变量
-            this.ValidateTuumOutputMappingSource(tuum, tuumResult);
-            
-            // 新增校验 1.5: 校验输入和输出映射的唯一性规则
-            this.ValidateTuumMappingUniqueness(tuum, tuumResult);
-
-            // 校验 2: 枢机内部的符文Attribute规则 (如 SingleInTuum, InFrontOf)
-            this.ValidateInTuumRuneAttributeRules(tuum, tuumResult);
-        }
-    }
 
     /// <summary>
-    /// 校验枢机的OutputMappings是否引用了在内部真实存在的变量。
-    /// (此方法需要微调以适应新结构)
+    /// 辅助方法，安全地向连接的校验结果中添加消息。
     /// </summary>
-    private void ValidateTuumOutputMappingSource(TuumConfig tuum, TuumValidationResult tuumResult)
+    private void AddMessageToConnection(WorkflowValidationReport report, WorkflowConnection connection, ValidationMessage message)
     {
-        // 枢机内部，所有可用的变量名 = 外部注入的(InputMappings) + 内部产生的
-        var allProducedInTuumVars = new HashSet<string>(tuum.Runes.SelectMany(r => r.GetProducedSpec().Select(p => p.Name)));
-        var allInjectedInTuumVars = tuum.InputMappings.Values.SelectMany(v => v).ToHashSet();
-        var allAvailableInTuumVars = allInjectedInTuumVars.Union(allProducedInTuumVars).ToHashSet();
-
-        foreach ((string internalVarName, var endpointNames) in tuum.OutputMappings)
+        string connectionId = connection.GetId();
+        if (!report.ConnectionMessages.TryGetValue(connectionId, out var messages))
         {
-            if (!allAvailableInTuumVars.Contains(internalVarName))
-            {
-                // 注意：我们将错误附加到枢机上，因为这是关于整个枢机映射配置的错误
-                tuumResult.TuumMessages.Add(new ValidationMessage
-                {
-                    Severity = RuleSeverity.Error,
-                    Message = $"输出映射错误：源内部变量 '{internalVarName}' 在此枢机中从未被定义或产生。",
-                    RuleSource = "DataFlow"
-                });
-            }
+            messages = [];
+            report.ConnectionMessages[connectionId] = messages;
         }
+
+        messages.Add(message);
     }
 
-    /// <summary>
-    /// 校验枢机的输入和输出映射是否满足唯一性约束。
-    /// </summary>
-    private void ValidateTuumMappingUniqueness(TuumConfig tuum, TuumValidationResult tuumResult)
-    {
-        // 校验规则1：一个内部变量只能有一个数据源 (在所有InputMappings的Value列表中唯一)
-        var allTargetInternalVars = tuum.InputMappings.Values.SelectMany(v => v);
-        var duplicateInternalVars = allTargetInternalVars
-            .GroupBy(v => v)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key);
-
-        foreach (var duplicateVar in duplicateInternalVars)
-        {
-            tuumResult.TuumMessages.Add(new ValidationMessage
-            {
-                Severity = RuleSeverity.Error,
-                Message = $"输入映射冲突：内部变量 '{duplicateVar}' 被多个外部输入端点驱动，它只能有一个数据源。",
-                RuleSource = "MappingUniqueness"
-            });
-        }
-        
-        // 校验规则2：一个外部输出端点只能被一个内部变量驱动 (在所有OutputMappings的Value列表中唯一)
-        var allTargetExternalEndpoints = tuum.OutputMappings.Values.SelectMany(v => v);
-        var duplicateExternalEndpoints = allTargetExternalEndpoints
-            .GroupBy(e => e)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key);
-
-        foreach (var duplicateEndpoint in duplicateExternalEndpoints)
-        {
-            tuumResult.TuumMessages.Add(new ValidationMessage
-            {
-                Severity = RuleSeverity.Error,
-                Message = $"输出映射冲突：外部端点 '{duplicateEndpoint}' 被多个内部变量驱动，它只能有一个数据源。",
-                RuleSource = "MappingUniqueness"
-            });
-        }
-    }
-    
-    /// <summary>
-    /// 校验枢机内部的符文是否满足其Attribute定义的规则。
-    /// </summary>
-    private void ValidateInTuumRuneAttributeRules(TuumConfig tuum, TuumValidationResult tuumResult)
-    {
-        for (int i = 0; i < tuum.Runes.Count; i++)
-        {
-            var rune = tuum.Runes[i];
-            var runeType = rune.GetType();
-            
-            // 规则: [SingleInTuum]
-            if (runeType.GetCustomAttribute<SingleInTuumAttribute>() != null)
-            {
-                if (tuum.Runes.Count(r => r.GetType() == runeType) > 1)
-                {
-                    this.AddMessageToRune(tuumResult, rune.ConfigId, new ValidationMessage
-                    {
-                        Severity = RuleSeverity.Warning,
-                        Message = $"符文类型 '{runeType.Name}' 在此枢机中出现了多次，但它被建议只使用一次。",
-                        RuleSource = "SingleInTuum"
-                    });
-                }
-            }
-            
-            // 规则: [InFrontOf] 和 [Behind]
-            this.ValidateRelativeOrderInTuum(rune, tuum.Runes, i, tuumResult);
-        }
-    }
-    
-    /// <summary>
-    /// 校验单个符文在其枢机内的相对顺序。
-    /// </summary>
-    private void ValidateRelativeOrderInTuum(AbstractRuneConfig rune, List<AbstractRuneConfig> tuumRunes, int runeIndex, TuumValidationResult tuumResult)
-    {
-        var runeType = rune.GetType();
-
-        // 规则: [InFrontOf]
-        if (runeType.GetCustomAttribute<InFrontOfAttribute>() is { } inFrontOfAttr)
-        {
-            foreach (var targetType in inFrontOfAttr.InFrontOfType)
-            {
-                int targetIndex = tuumRunes.FindIndex(m => m.GetType() == targetType);
-                if (targetIndex != -1 && runeIndex > targetIndex)
-                {
-                    this.AddMessageToRune(tuumResult, rune.ConfigId, new ValidationMessage
-                    {
-                        Severity = RuleSeverity.Warning,
-                        Message = $"顺序警告：符文 '{runeType.Name}' 应该在 '{targetType.Name}' 之前执行。",
-                        RuleSource = "InFrontOf"
-                    });
-                }
-            }
-        }
-
-        // 规则: [Behind]
-        if (runeType.GetCustomAttribute<BehindAttribute>() is { } behindAttr)
-        {
-            foreach (var targetType in behindAttr.BehindType)
-            {
-                int targetIndex = tuumRunes.FindIndex(m => m.GetType() == targetType);
-                if (targetIndex != -1 && runeIndex < targetIndex)
-                {
-                    this.AddMessageToRune(tuumResult, rune.ConfigId, new ValidationMessage
-                    {
-                        Severity = RuleSeverity.Warning,
-                        Message = $"顺序警告：符文 '{runeType.Name}' 应该在 '{targetType.Name}' 之后执行。",
-                        RuleSource = "Behind"
-                    });
-                }
-            }
-        }
-    }
-
-    
     /// <summary>
     /// 校验所有连接的端点是否存在且合法。
     /// </summary>
-    private void ValidateConnections(WorkflowConfig config, WorkflowValidationReport report, IReadOnlyDictionary<string, TuumConfig> allTuumConfigs)
+    private void ValidateConnections(WorkflowConfig config, WorkflowValidationReport report,
+        IReadOnlyDictionary<string, TuumConfig> allTuumConfigs)
     {
         foreach (var conn in config.Connections)
         {
-            // 校验源端点
+            bool sourceTuumExists = conn.Source.TuumId == WorkflowInputSourceId || allTuumConfigs.ContainsKey(conn.Source.TuumId);
+            bool targetTuumExists = allTuumConfigs.ContainsKey(conn.Target.TuumId);
+
+            // 校验1: 源枢机和目标枢机是否存在
+            if (!sourceTuumExists)
+            {
+                AddMessageToConnection(report, conn, new ValidationMessage
+                {
+                    Severity = RuleSeverity.Error,
+                    Message = $"连接断开：找不到ID为 '{conn.Source.TuumId}' 的源枢机。",
+                    RuleSource = "ConnectionValidation.MissingSourceTuum"
+                });
+            }
+
+            if (!targetTuumExists)
+            {
+                AddMessageToConnection(report, conn, new ValidationMessage
+                {
+                    Severity = RuleSeverity.Error,
+                    Message = $"连接断开：找不到ID为 '{conn.Target.TuumId}' 的目标枢机。",
+                    RuleSource = "ConnectionValidation.MissingTargetTuum"
+                });
+            }
+
+            // 如果源或目标枢机本身就不存在，后续的端点校验就没有意义了，直接跳过此连接的剩余检查。
+            if (!sourceTuumExists || !targetTuumExists)
+            {
+                continue;
+            }
+
+            // 校验 2: 源端点是否存在
             if (conn.Source.TuumId == WorkflowInputSourceId)
             {
+                // 情况 2a: 源是工作流的入口
                 if (!config.WorkflowInputs.Contains(conn.Source.EndpointName))
                 {
-                    report.TuumResults.GetOrAdd(conn.Target.TuumId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
+                    AddMessageToConnection(report, conn, new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
                         Message = $"连接错误：源端点 '{conn.Source.EndpointName}' 不是一个有效的工作流输入。",
-                        RuleSource = "ConnectionValidation"
+                        RuleSource = "ConnectionValidation.InvalidWorkflowInput"
                     });
                 }
             }
-            else if (allTuumConfigs.TryGetValue(conn.Source.TuumId, out var sourceTuum))
+            else // 情况 2b: 源是一个普通的枢机
             {
-                // 一个内部变量可以驱动多个外部端点，所以我们需要检查所有列表
+                var sourceTuum = allTuumConfigs[conn.Source.TuumId];
+                // 检查该枢机的所有输出映射的 "Value" 列表里，是否包含这个端点名
                 if (!sourceTuum.OutputMappings.Values.SelectMany(v => v).Contains(conn.Source.EndpointName))
                 {
-                    report.TuumResults.GetOrAdd(sourceTuum.ConfigId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
+                    AddMessageToConnection(report, conn, new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
-                        Message = $"连接错误：此枢机没有一个名为 '{conn.Source.EndpointName}' 的输出端点。",
-                        RuleSource = "ConnectionValidation"
-                    });
-                }
-            }
-            else
-            {
-                // 如果源枢机ID本身就找不到，将错误信息附加到目标枢机上，因为这是连接的另一端。
-                if (allTuumConfigs.ContainsKey(conn.Target.TuumId))
-                {
-                    report.TuumResults.GetOrAdd(conn.Target.TuumId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
-                    {
-                        Severity = RuleSeverity.Error,
-                        Message = $"连接错误：找不到ID为 '{conn.Source.TuumId}' 的源枢机。",
-                        RuleSource = "ConnectionValidation"
+                        Message = $"连接错误：源枢机 '{sourceTuum.Name}' (ID: {sourceTuum.ConfigId}) 没有一个名为 '{conn.Source.EndpointName}' 的输出端点。",
+                        RuleSource = "ConnectionValidation.MissingSourceEndpoint"
                     });
                 }
             }
 
-            // 校验目标端点
-            if (allTuumConfigs.TryGetValue(conn.Target.TuumId, out var targetTuum))
+            // 校验 3: 目标端点是否存在
+            var targetTuum = allTuumConfigs[conn.Target.TuumId];
+            // 检查该枢机的输入映射的 "Key" 里，是否包含这个端点名
+            if (!targetTuum.InputMappings.ContainsKey(conn.Target.EndpointName))
             {
-                // 检查Key中是否存在该输入端点
-                if (!targetTuum.InputMappings.ContainsKey(conn.Target.EndpointName))
+                AddMessageToConnection(report, conn, new ValidationMessage
                 {
-                    report.TuumResults.GetOrAdd(targetTuum.ConfigId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
-                    {
-                        Severity = RuleSeverity.Error,
-                        Message = $"连接错误：此枢机没有一个名为 '{conn.Target.EndpointName}' 的输入端点。",
-                        RuleSource = "ConnectionValidation"
-                    });
-                }
-            }
-            else
-            {
-                 // 如果目标枢机ID本身就找不到，将错误附加到源枢机上。
-                 if(allTuumConfigs.ContainsKey(conn.Source.TuumId))
-                 {
-                    report.TuumResults.GetOrAdd(conn.Source.TuumId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
-                    {
-                        Severity = RuleSeverity.Error,
-                        Message = $"连接错误：找不到ID为 '{conn.Target.TuumId}' 的目标枢机。",
-                        RuleSource = "ConnectionValidation"
-                    });
-                 }
+                    Severity = RuleSeverity.Error,
+                    Message = $"连接错误：目标枢机 '{targetTuum.Name}' (ID: {targetTuum.ConfigId}) 没有一个名为 '{conn.Target.EndpointName}' 的输入端点。",
+                    RuleSource = "ConnectionValidation.MissingTargetEndpoint"
+                });
             }
         }
     }
@@ -284,17 +143,17 @@ public class WorkflowValidationService
 
         foreach (var tuum in config.Tuums)
         {
-            var tuumResult = report.TuumResults.GetOrAdd(tuum.ConfigId, () => new TuumValidationResult());
+            var tuumResult = report.TuumResults.GetOrAdd(tuum.ConfigId, () => new TuumAnalysisResult());
             // 声明的输入端点现在是 InputMappings 的 Keys
             var declaredInputEndpoints = tuum.InputMappings.Keys;
 
-            foreach (var inputEndpointName in declaredInputEndpoints)
+            foreach (string inputEndpointName in declaredInputEndpoints)
             {
-                var connectionsToThisInput = targetEndpoints.Count(t => t.TuumId == tuum.ConfigId && t.EndpointName == inputEndpointName);
+                int connectionsToThisInput = targetEndpoints.Count(t => t.TuumId == tuum.ConfigId && t.EndpointName == inputEndpointName);
 
                 if (connectionsToThisInput == 0)
                 {
-                    tuumResult.TuumMessages.Add(new ValidationMessage
+                    tuumResult.Messages.Add(new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
                         Message = $"输入端点 '{inputEndpointName}' 未被连接。",
@@ -303,7 +162,7 @@ public class WorkflowValidationService
                 }
                 else if (connectionsToThisInput > 1)
                 {
-                    tuumResult.TuumMessages.Add(new ValidationMessage
+                    tuumResult.Messages.Add(new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
                         Message = $"输入端点 '{inputEndpointName}' 被连接了 {connectionsToThisInput} 次，只能连接一次。",
@@ -313,7 +172,7 @@ public class WorkflowValidationService
             }
         }
     }
-    
+
     /// <summary>
     /// 使用DFS检测工作流中的循环依赖。
     /// </summary>
@@ -327,7 +186,7 @@ public class WorkflowValidationService
         var visiting = new HashSet<string>();
         var visited = new HashSet<string>();
 
-        foreach (var tuumId in config.Tuums.Select(t => t.ConfigId))
+        foreach (string tuumId in config.Tuums.Select(t => t.ConfigId))
         {
             if (!visited.Contains(tuumId) && HasCycle(tuumId, graph, visiting, visited, report, []))
             {
@@ -335,7 +194,7 @@ public class WorkflowValidationService
             }
         }
     }
-    
+
     private bool HasCycle(string currentNodeId, IReadOnlyDictionary<string, List<string>> graph,
         HashSet<string> visiting, HashSet<string> visited, WorkflowValidationReport report, List<string> path)
     {
@@ -344,13 +203,13 @@ public class WorkflowValidationService
 
         if (graph.TryGetValue(currentNodeId, out var neighbors))
         {
-            foreach (var neighborId in neighbors)
+            foreach (string neighborId in neighbors)
             {
                 if (visiting.Contains(neighborId))
                 {
                     // 发现循环
-                    var cyclePath = string.Join(" -> ", path) + $" -> {neighborId}";
-                    report.TuumResults.GetOrAdd(currentNodeId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
+                    string cyclePath = string.Join(" -> ", path) + $" -> {neighborId}";
+                    report.TuumResults.GetOrAdd(currentNodeId, () => new TuumAnalysisResult()).Messages.Add(new ValidationMessage
                     {
                         Severity = RuleSeverity.Fatal,
                         Message = $"检测到循环依赖：{cyclePath}",
@@ -374,24 +233,6 @@ public class WorkflowValidationService
         visited.Add(currentNodeId);
         return false;
     }
-
-    /// <summary>
-    /// 辅助方法，安全地向符文的校验结果中添加消息。
-    /// </summary>
-    private void AddMessageToRune(TuumValidationResult tuumResult, string runeId, ValidationMessage message)
-    {
-        if (!tuumResult.RuneResults.TryGetValue(runeId, out var runeResult))
-        {
-            runeResult = new RuneValidationResult();
-            tuumResult.RuneResults[runeId] = runeResult;
-        }
-        
-        // 防止对同一个符文添加完全相同的警告信息
-        if (!runeResult.RuneMessages.Any(m => m.RuleSource == message.RuleSource && m.Message == message.Message))
-        {
-            runeResult.RuneMessages.Add(message);
-        }
-    }
 }
 
 /// <summary>
@@ -399,13 +240,14 @@ public class WorkflowValidationService
 /// </summary>
 internal static class DictionaryExtensions
 {
-    public static TValue GetOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, Func<TValue> valueFactory) where TKey : notnull
+    public static TValue GetOrAdd<TKey, TValue>(this Dictionary<TKey, TValue> dictionary, TKey key, Func<TValue> valueFactory)
+        where TKey : notnull
     {
         if (dictionary.TryGetValue(key, out var value))
         {
             return value;
         }
-        
+
         var newValue = valueFactory();
         dictionary[key] = newValue;
         return newValue;
