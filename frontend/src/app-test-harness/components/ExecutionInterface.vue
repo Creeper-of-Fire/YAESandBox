@@ -1,7 +1,7 @@
 ﻿<template>
   <div class="execution-interface">
     <div class="header">
-      <h4>测试: {{ config.name }} ({{ configType === 'workflow' ? '工作流' : '祝祷' }})</h4>
+      <h4>测试: {{ config.name }} ({{ configType === 'workflow' ? '工作流' : '枢机' }})</h4>
     </div>
     <n-scrollbar class="content-area">
       <div class="form-section">
@@ -94,7 +94,7 @@ async function handleExecute() {
     const tuumConfig = props.config as TuumConfig;
     const triggerParamsForTempWorkflow = [...new Set(Object.values(tuumConfig.inputMappings))];
     const tempWorkflow: WorkflowConfig = {
-      name: `测试祝祷: ${tuumConfig.name}`,
+      name: `测试枢机: ${tuumConfig.name}`,
       tuums: [tuumConfig],
       triggerParams: triggerParamsForTempWorkflow,
     };

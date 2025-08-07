@@ -24,14 +24,14 @@ public record WorkflowConfig
     public List<string> WorkflowInputs { get; init; } = [];
 
     /// <summary>
-    /// 一个工作流含有的祝祷（有序）
+    /// 一个工作流含有的枢机（有序）
     /// </summary>
     [Required]
     [HiddenInForm(true)]
     public List<TuumConfig> Tuums { get; init; } = [];
     
     /// <summary>
-    /// 定义了工作流中所有祝祷之间的显式连接。
+    /// 定义了工作流中所有枢机之间的显式连接。
     /// 这是工作流数据流向的唯一依据。
     /// </summary>
     [Required]

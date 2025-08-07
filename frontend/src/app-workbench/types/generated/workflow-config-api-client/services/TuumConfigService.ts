@@ -9,8 +9,8 @@ import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class TuumConfigService {
     /**
-     * 获取所有全局祝祷配置的列表。
-     * @returns TuumConfigJsonResultDto 成功获取所有全局祝祷配置的列表。
+     * 获取所有全局枢机配置的列表。
+     * @returns TuumConfigJsonResultDto 成功获取所有全局枢机配置的列表。
      * @throws ApiError
      */
     public static getApiV1WorkflowsConfigsGlobalTuums(): CancelablePromise<Record<string, TuumConfigJsonResultDto>> {
@@ -23,15 +23,15 @@ export class TuumConfigService {
         });
     }
     /**
-     * 获取指定 ID 的全局祝祷配置。
-     * @returns TuumConfig 成功获取指定的祝祷配置。
+     * 获取指定 ID 的全局枢机配置。
+     * @returns TuumConfig 成功获取指定的枢机配置。
      * @throws ApiError
      */
     public static getApiV1WorkflowsConfigsGlobalTuums1({
         tuumId,
     }: {
         /**
-         * 祝祷配置的唯一 ID。
+         * 枢机配置的唯一 ID。
          */
         tuumId: string,
     }): CancelablePromise<TuumConfig> {
@@ -42,13 +42,13 @@ export class TuumConfigService {
                 'tuumId': tuumId,
             },
             errors: {
-                404: `未找到指定 ID 的祝祷配置。`,
+                404: `未找到指定 ID 的枢机配置。`,
                 500: `获取配置时发生内部服务器错误。`,
             },
         });
     }
     /**
-     * 创建或更新全局祝祷配置 (Upsert)。
+     * 创建或更新全局枢机配置 (Upsert)。
      * @returns void
      * @throws ApiError
      */
@@ -57,11 +57,11 @@ export class TuumConfigService {
         requestBody,
     }: {
         /**
-         * 要创建或更新的祝祷配置的唯一 ID。
+         * 要创建或更新的枢机配置的唯一 ID。
          */
         tuumId: string,
         /**
-         * 祝祷配置数据。
+         * 枢机配置数据。
          */
         requestBody?: TuumConfig,
     }): CancelablePromise<void> {
@@ -79,7 +79,7 @@ export class TuumConfigService {
         });
     }
     /**
-     * 删除指定 ID 的全局祝祷配置。
+     * 删除指定 ID 的全局枢机配置。
      * @returns void
      * @throws ApiError
      */
@@ -87,7 +87,7 @@ export class TuumConfigService {
         tuumId,
     }: {
         /**
-         * 要删除的祝祷配置的唯一 ID。
+         * 要删除的枢机配置的唯一 ID。
          */
         tuumId: string,
     }): CancelablePromise<void> {

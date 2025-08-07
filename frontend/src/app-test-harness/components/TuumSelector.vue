@@ -1,10 +1,10 @@
 ﻿<template>
   <div>
-    <n-h4>选择祝祷</n-h4>
+    <n-h4>选择枢机</n-h4>
     <n-spin :show="tuumsAsync.isLoading">
       <div v-if="tuumsAsync.error" class="error-state">
         <n-alert title="加载失败" type="error">
-          无法加载祝祷列表。
+          无法加载枢机列表。
         </n-alert>
         <n-button block secondary strong style="margin-top: 12px;" @click="tuumsAsync.execute(0)">重试</n-button>
       </div>

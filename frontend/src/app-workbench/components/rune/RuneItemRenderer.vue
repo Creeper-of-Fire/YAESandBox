@@ -149,7 +149,7 @@ const ruleDescriptions = computed(() =>
   if (!rules) return descriptions;
 
   if (rules.noConfig) descriptions.push('此符文不能有配置。')
-  if (rules.singleInTuum) descriptions.push('此符文在每个祝祷中只能使用一次。');
+  if (rules.singleInTuum) descriptions.push('此符文在每个枢机中只能使用一次。');
   if (rules.inFrontOf && rules.inFrontOf.length > 0)
   {
     const aliases = rules.inFrontOf.map(getRuneAlias).join('、');

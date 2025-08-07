@@ -4,13 +4,13 @@
     <!-- 新增：工作流触发参数编辑器 -->
     <n-card size="small" style="margin-bottom: 16px;" title="工作流触发参数">
       <n-text depth="3" style="font-size: 12px; display: block; margin-bottom: 8px;">
-        定义工作流启动时需要从外部传入的参数名称。这些参数后续可以在祝祷的输入映射中使用。
+        定义工作流启动时需要从外部传入的参数名称。这些参数后续可以在枢机的输入映射中使用。
       </n-text>
       <n-dynamic-tags v-model:value="triggerParamsRef"/>
     </n-card>
 
 
-    <!-- 工作流的祝祷列表 (可拖拽排序，接受来自全局资源的祝祷) -->
+    <!-- 工作流的枢机列表 (可拖拽排序，接受来自全局资源的枢机) -->
     <draggable
         v-if="workflow.tuums && workflow.tuums.length > 0"
         v-model="workflow.tuums"
@@ -32,8 +32,8 @@
         </div>
       </div>
     </draggable>
-    <!-- 工作流祝祷列表为空时的提示 -->
-    <n-empty v-else class="workflow-tuum-empty-placeholder" description="拖拽祝祷到此处" small/>
+    <!-- 工作流枢机列表为空时的提示 -->
+    <n-empty v-else class="workflow-tuum-empty-placeholder" description="拖拽枢机到此处" small/>
   </div>
 </template>
 
@@ -55,8 +55,8 @@ const triggerParamsRef = computed({
 });
 
 /**
- * 计算在指定索引的祝祷开始执行前，所有可用的全局变量。
- * @param tuumIndex - 祝祷在工作流中的索引。
+ * 计算在指定索引的枢机开始执行前，所有可用的全局变量。
+ * @param tuumIndex - 枢机在工作流中的索引。
  */
 function getAvailableVarsForTuum(tuumIndex: number): string[]
 {
@@ -84,11 +84,11 @@ function getAvailableVarsForTuum(tuumIndex: number): string[]
 </script>
 
 <style scoped>
-/* 工作流中的祝祷列表容器样式 */
+/* 工作流中的枢机列表容器样式 */
 .workflow-tuum-list-container {
   display: flex;
   flex-direction: column;
-  gap: 16px; /* 祝祷之间的间距 */
+  gap: 16px; /* 枢机之间的间距 */
   min-height: 50px;
   border: 1px dashed #dcdfe6;
   border-radius: 6px;
@@ -96,13 +96,13 @@ function getAvailableVarsForTuum(tuumIndex: number): string[]
   background-color: #fcfcfc;
 }
 
-/* 单个祝祷项在列表中的容器 */
+/* 单个枢机项在列表中的容器 */
 .tuum-item-container {
   height: 100%;
   /* 未来可以添加样式 */
 }
 
-/* 工作流祝祷列表为空时的占位符样式 */
+/* 工作流枢机列表为空时的占位符样式 */
 .workflow-tuum-empty-placeholder {
   padding: 20px;
   border: 1px dashed #dcdfe6;

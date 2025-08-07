@@ -10,9 +10,9 @@ using static YAESandBox.Workflow.Core.WorkflowProcessor;
 namespace YAESandBox.Workflow.Tuum;
 
 //tuum的信息：
-// 使用的脚本符文们的UUID（注意，脚本符文本身就是绑定在祝祷上的，如果需要把符文复制到更广的地方，可以考虑直接复制祝祷之类的）
+// 使用的脚本符文们的UUID（注意，脚本符文本身就是绑定在枢机上的，如果需要把符文复制到更广的地方，可以考虑直接复制枢机之类的）
 /// <summary>
-/// 祝祷配置的运行时
+/// 枢机配置的运行时
 /// </summary>
 public class TuumProcessor(
     WorkflowRuntimeService workflowRuntimeService,
@@ -22,22 +22,22 @@ public class TuumProcessor(
     private TuumConfig Config { get; } = config;
 
     /// <summary>
-    /// 祝祷的上下文/内部运行时
+    /// 枢机的上下文/内部运行时
     /// </summary>
     public TuumProcessorContent TuumContent { get; } = new(config, workflowRuntimeService);
 
     /// <summary>
-    /// 祝祷运行时的上下文
+    /// 枢机运行时的上下文
     /// </summary>
     public class TuumProcessorContent(TuumConfig tuumConfig, WorkflowRuntimeService workflowRuntimeService)
     {
         /// <summary>
-        /// 祝祷的内部变量池
+        /// 枢机的内部变量池
         /// </summary>
         public Dictionary<string, object?> TuumVariable { get; } = [];
 
         /// <summary>
-        /// 得到祝祷的变量
+        /// 得到枢机的变量
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
@@ -47,7 +47,7 @@ public class TuumProcessor(
         }
 
         /// <summary>
-        /// 设置祝祷的变量
+        /// 设置枢机的变量
         /// </summary>
         /// <param name="name"></param>
         /// <param name="value"></param>
@@ -57,7 +57,7 @@ public class TuumProcessor(
         }
 
         /// <summary>
-        /// 祝祷的配置
+        /// 枢机的配置
         /// </summary>
         public TuumConfig TuumConfig { get; } = tuumConfig;
 
@@ -67,7 +67,7 @@ public class TuumProcessor(
         public WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
 
         /// <summary>
-        /// 获得祝祷的变量，带有类型转换，并且有序列化尝试
+        /// 获得枢机的变量，带有类型转换，并且有序列化尝试
         /// </summary>
         /// <param name="valueName"></param>
         /// <typeparam name="T"></typeparam>
@@ -110,12 +110,12 @@ public class TuumProcessor(
     }
 
     /// <summary>
-    /// 此祝祷声明的所有输入端点的名称。
+    /// 此枢机声明的所有输入端点的名称。
     /// </summary>
     internal IEnumerable<string> InputEndpoints { get; } = config.InputMappings.Keys;
 
     /// <summary>
-    /// 此祝祷声明的所有输出端点的名称。
+    /// 此枢机声明的所有输出端点的名称。
     /// </summary>
     internal IEnumerable<string> OutputEndpoints { get; } = config.OutputMappings.Values.SelectMany(v => v).Distinct();
 
@@ -123,15 +123,15 @@ public class TuumProcessor(
         config.Runes.Select(rune => rune.ToRuneProcessor(workflowRuntimeService)).ToList();
 
     /// <summary>
-    /// 启动祝祷流程。
+    /// 启动枢机流程。
     /// </summary>
     /// <param name="inputs">一个字典，Key是输入端点的名称，Value是输入的数据。</param>
     /// <param name="cancellationToken"></param>
-    /// <returns>一个包含此祝祷所有输出的字典，Key是输出端点的名称。</returns>
+    /// <returns>一个包含此枢机所有输出的字典，Key是输出端点的名称。</returns>
     public async Task<Result<Dictionary<string, object?>>> ExecuteAsync(
         IReadOnlyDictionary<string, object?> inputs, CancellationToken cancellationToken = default)
     {
-        // 1. 根据输入端点的数据，填充祝祷的内部变量池
+        // 1. 根据输入端点的数据，填充枢机的内部变量池
         // 遍历输入映射: "外部端点名" -> [ "内部变量名1", "内部变量名2", ... ]
         foreach ((string endpointName, var internalNames) in this.Config.InputMappings)
         {
@@ -155,7 +155,7 @@ public class TuumProcessor(
             {
                 var result = await normalRune.ExecuteAsync(this.TuumContent, cancellationToken);
                 if (result.TryGetError(out var error))
-                    return error; // 如果任何一个符文失败，整个祝祷失败
+                    return error; // 如果任何一个符文失败，整个枢机失败
             }
         }
 

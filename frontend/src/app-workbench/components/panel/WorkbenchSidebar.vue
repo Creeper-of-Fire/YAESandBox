@@ -66,7 +66,7 @@
       <!-- 2b. 可滚动的内容区域 -->
       <template #body>
         <template v-if="session.type === 'workflow' && workflowData">
-          <p class="sidebar-description">拖拽全局祝祷到祝祷列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
+          <p class="sidebar-description">拖拽全局枢机到枢机列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
           <WorkflowItemRenderer :workflow="workflowData"/>
         </template>
 
@@ -309,7 +309,7 @@ const currentConfigName = computed(() =>
 {
   if (!props.session) return ''; // 如果没有会话，返回空字符串
   if (props.session.type === 'workflow' && workflowData.value) return `工作流: ${workflowData.value.name}`;
-  if (props.session.type === 'tuum' && tuumData.value) return `祝祷: ${tuumData.value.name}`;
+  if (props.session.type === 'tuum' && tuumData.value) return `枢机: ${tuumData.value.name}`;
   if (props.session.type === 'rune' && runeData.value) return `符文: ${runeData.value.name}`;
   return '未知';
 });

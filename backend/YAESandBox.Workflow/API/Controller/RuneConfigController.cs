@@ -70,7 +70,7 @@ public record RuneSchemasResponse
 }
 
 /// <summary>
-/// 提供工作流相关配置（工作流、祝祷、符文）的全局管理和Schema信息。
+/// 提供工作流相关配置（工作流、枢机、符文）的全局管理和Schema信息。
 /// </summary>
 /// <param name="workflowConfigFileService">工作流配置文件服务。</param>
 /// <param name="pluginAssetService">插件资源发现服务。</param>

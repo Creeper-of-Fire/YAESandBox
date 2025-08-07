@@ -14,7 +14,7 @@
       <template #content>
         <div class="tuum-header-content">
           <span>{{ tuum.name }}</span>
-          <!-- 可以考虑在这里添加一个祝祷类型或图标 -->
+          <!-- 可以考虑在这里添加一个枢机类型或图标 -->
         </div>
       </template>
 
@@ -26,7 +26,7 @@
           </template>
         </n-button>
 
-        <!-- 祝祷的操作按钮 -->
+        <!-- 枢机的操作按钮 -->
         <ConfigItemActionsMenu :actions="itemActions" />
       </template>
       <template #content-below>
@@ -76,8 +76,8 @@ const props = withDefaults(defineProps<{
   tuum: TuumConfig;
   parentWorkflow: WorkflowConfig | null;
   isCollapsible?: boolean; // 是否可折叠
-  isDraggable?: boolean;   // 祝祷自身是否可拖拽
-  // 从父级(Workflow)传入此祝祷可用的全局变量，为空代表不进行检测
+  isDraggable?: boolean;   // 枢机自身是否可拖拽
+  // 从父级(Workflow)传入此枢机可用的全局变量，为空代表不进行检测
   availableGlobalVarsForTuum?: string[];
 }>(), {
   isCollapsible: true, // 默认为 true，保持原有行为
@@ -164,7 +164,7 @@ function toggleExpansion()
 .tuum-header-content {
   display: flex;
   align-items: center;
-  /* 可以添加更多样式来美化祝祷标题 */
+  /* 可以添加更多样式来美化枢机标题 */
 }
 
 /* 符文列表的容器样式 */

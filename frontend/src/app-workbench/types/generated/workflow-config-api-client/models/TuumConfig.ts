@@ -4,7 +4,7 @@
 /* eslint-disable */
 import type { AbstractRuneConfig } from './AbstractRuneConfig';
 /**
- * 祝祷的配置
+ * 枢机的配置
  */
 export type TuumConfig = {
     /**
@@ -25,14 +25,14 @@ export type TuumConfig = {
      */
     runes: Array<AbstractRuneConfig>;
     /**
-     * 定义了此祝祷如何将其内部变量暴露到工作流的全局变量池。
+     * 定义了此枢机如何将其内部变量暴露到工作流的全局变量池。
      * Key: 全局变量名 (在工作流中使用的名字)
-     * Value: 祝祷内部的变量名 (由符文产生的名字)
+     * Value: 枢机内部的变量名 (由符文产生的名字)
      */
     outputMappings: Record<string, string>;
     /**
-     * 定义了此祝祷如何从工作流的全局变量池获取输入，并映射到祝祷内部使用的变量名。
-     * Key: 祝祷内部期望的变量名 (符文消费的名字)
+     * 定义了此枢机如何从工作流的全局变量池获取输入，并映射到枢机内部使用的变量名。
+     * Key: 枢机内部期望的变量名 (符文消费的名字)
      * Value: 全局变量名 (在工作流中可用的名字)
      */
     inputMappings: Record<string, string>;

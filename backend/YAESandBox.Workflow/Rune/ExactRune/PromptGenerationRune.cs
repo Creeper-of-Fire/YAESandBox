@@ -37,9 +37,9 @@ internal partial class PromptGenerationRuneProcessor(
     };
 
     /// <summary>
-    /// 启动祝祷流程
+    /// 启动枢机流程
     /// </summary>
-    /// <param name="tuumProcessorContent">祝祷执行的上下文内容。</param>
+    /// <param name="tuumProcessorContent">枢机执行的上下文内容。</param>
     /// <param name="cancellationToken"></param>
     /// <returns></returns>
     public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)

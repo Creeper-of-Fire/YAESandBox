@@ -170,7 +170,7 @@ public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRunePr
     #region 配置项
 
     /// <summary>
-    /// 指定从哪个祝祷变量中读取源文本。
+    /// 指定从哪个枢机变量中读取源文本。
     /// </summary>
     [Required]
     [Display(Name = "输入变量名", Description = "包含源文本的变量。")]
@@ -232,7 +232,7 @@ public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRunePr
     public string JoinSeparator { get; init; } = "\n";
 
     /// <summary>
-    /// 指定将最终拼接好的结果存入哪个祝祷变量。
+    /// 指定将最终拼接好的结果存入哪个枢机变量。
     /// </summary>
     [Required]
     [Display(Name = "输出变量名", Description = "用于存储最终生成文本的目标变量。")]

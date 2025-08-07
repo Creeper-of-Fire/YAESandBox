@@ -9,7 +9,7 @@ using YAESandBox.Workflow.Tuum;
 namespace YAESandBox.Workflow.API.Controller;
 
 /// <summary>
-/// 提供全局祝祷配置 (Tuum) 的管理功能。
+/// 提供全局枢机配置 (Tuum) 的管理功能。
 /// </summary>
 /// <param name="workflowConfigFileService">工作流配置文件服务。</param>
 [ApiController]
@@ -20,10 +20,10 @@ public class TuumConfigController(WorkflowConfigFileService workflowConfigFileSe
     private WorkflowConfigFileService WorkflowConfigFileService { get; } = workflowConfigFileService;
 
     /// <summary>
-    /// 获取所有全局祝祷配置的列表。
+    /// 获取所有全局枢机配置的列表。
     /// </summary>
-    /// <returns>包含所有全局祝祷配置的列表。</returns>
-    /// <response code="200">成功获取所有全局祝祷配置的列表。</response>
+    /// <returns>包含所有全局枢机配置的列表。</returns>
+    /// <response code="200">成功获取所有全局枢机配置的列表。</response>
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [Produces("application/json")]
@@ -34,12 +34,12 @@ public class TuumConfigController(WorkflowConfigFileService workflowConfigFileSe
             dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<TuumConfig>.ToJsonResultDto(kv.Value)));
 
     /// <summary>
-    /// 获取指定 ID 的全局祝祷配置。
+    /// 获取指定 ID 的全局枢机配置。
     /// </summary>
-    /// <param name="tuumId">祝祷配置的唯一 ID。</param>
-    /// <returns>指定 ID 的祝祷配置。</returns>
-    /// <response code="200">成功获取指定的祝祷配置。</response>
-    /// <response code="404">未找到指定 ID 的祝祷配置。</response>
+    /// <param name="tuumId">枢机配置的唯一 ID。</param>
+    /// <returns>指定 ID 的枢机配置。</returns>
+    /// <response code="200">成功获取指定的枢机配置。</response>
+    /// <response code="404">未找到指定 ID 的枢机配置。</response>
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet("{tuumId}")]
     [Produces("application/json")]
@@ -50,12 +50,12 @@ public class TuumConfigController(WorkflowConfigFileService workflowConfigFileSe
         await this.WorkflowConfigFileService.FindTuumConfig(this.UserId, tuumId).ToActionResultAsync();
 
     /// <summary>
-    /// 创建或更新全局祝祷配置 (Upsert)。
+    /// 创建或更新全局枢机配置 (Upsert)。
     /// </summary>
-    /// <param name="tuumId">要创建或更新的祝祷配置的唯一 ID。</param>
-    /// <param name="tuumConfig">祝祷配置数据。</param>
+    /// <param name="tuumId">要创建或更新的枢机配置的唯一 ID。</param>
+    /// <param name="tuumConfig">枢机配置数据。</param>
     /// <returns>操作成功的响应。</returns>
-    /// <response code="204">祝祷配置已成功更新/创建。</response>
+    /// <response code="204">枢机配置已成功更新/创建。</response>
     /// <response code="500">保存配置时发生内部服务器错误。</response>
     [HttpPut("{tuumId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
@@ -64,11 +64,11 @@ public class TuumConfigController(WorkflowConfigFileService workflowConfigFileSe
         await this.WorkflowConfigFileService.SaveTuumConfig(this.UserId, tuumId, tuumConfig).ToActionResultAsync();
 
     /// <summary>
-    /// 删除指定 ID 的全局祝祷配置。
+    /// 删除指定 ID 的全局枢机配置。
     /// </summary>
-    /// <param name="tuumId">要删除的祝祷配置的唯一 ID。</param>
+    /// <param name="tuumId">要删除的枢机配置的唯一 ID。</param>
     /// <returns>删除成功的响应。</returns>
-    /// <response code="204">祝祷配置已成功删除。</response>
+    /// <response code="204">枢机配置已成功删除。</response>
     /// <response code="500">删除配置时发生内部服务器错误。</response>
     [HttpDelete("{tuumId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]

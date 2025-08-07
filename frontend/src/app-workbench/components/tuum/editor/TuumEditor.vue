@@ -4,8 +4,8 @@
   <n-card>
     <template #header>
       <n-flex justify="space-between" align="center">
-        <span>编辑祝祷：{{ props.tuumContext.data.name }}</span>
-        <n-form-item label="启用此祝祷" label-placement="left" style="margin-bottom: 0;">
+        <span>编辑枢机：{{ props.tuumContext.data.name }}</span>
+        <n-form-item label="启用此枢机" label-placement="left" style="margin-bottom: 0;">
           <n-switch v-model:value="props.tuumContext.data.enabled" />
         </n-form-item>
       </n-flex>
@@ -62,7 +62,7 @@ watch(() => props.tuumContext.data.runes, async (newRunes) => {
 // 计算属性，判断当前是否处于有上下文的环境中
 const isInWorkflowContext = computed(() => props.tuumContext.availableGlobalVarsForTuum !== undefined);
 
-// 计算属性：计算当前祝祷所有符文需要的总输入
+// 计算属性：计算当前枢机所有符文需要的总输入
 const requiredTuumInputs = computed(() => {
   const requiredInputs = new Set<string>();
   const producedOutputs = new Set<string>();

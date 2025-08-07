@@ -63,7 +63,7 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
         var workflowRuntimeService = tuumProcessorContent.WorkflowRuntimeService;
 
         if (aiConfig.SelectedAiRuneType == null || aiConfig.AiProcessorConfigUuid == null)
-            return NormalError.Conflict($"祝祷 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI符文。");
+            return NormalError.Conflict($"枢机 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI符文。");
 
         var aiProcessor = workflowRuntimeService.AiService.CreateAiProcessor(
             aiConfig.AiProcessorConfigUuid,

@@ -5,7 +5,7 @@
         <n-tab-pane name="workflow" tab="工作流">
           <workflow-selector @workflow-selected="handleSelection" />
         </n-tab-pane>
-        <n-tab-pane name="tuum" tab="祝祷">
+        <n-tab-pane name="tuum" tab="枢机">
           <tuum-selector @tuum-selected="handleSelection" />
         </n-tab-pane>
       </n-tabs>
@@ -17,7 +17,7 @@
           :config="selectedItem.item.data"
           :config-type="selectedItem.type"
       />
-      <n-empty v-else description="请先从左侧选择一个工作流或祝祷进行测试" class="empty-state" />
+      <n-empty v-else description="请先从左侧选择一个工作流或枢机进行测试" class="empty-state" />
     </div>
   </div>
 </template>

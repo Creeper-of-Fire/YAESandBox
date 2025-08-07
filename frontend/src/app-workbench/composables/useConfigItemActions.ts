@@ -103,27 +103,27 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
         };
 
         if (item && 'tuums' in item)
-        { // 工作流添加祝祷
+        { // 工作流添加枢机
             action = {
                 key: 'add-tuum',
-                label: '添加祝祷',
+                label: '添加枢机',
                 icon: AddIcon,
                 renderType: 'popover',
                 type: 'primary',
-                popoverTitle: '添加新祝祷',
+                popoverTitle: '添加新枢机',
                 popoverContentType: 'input',
-                popoverInitialValue: '新祝祷',
+                popoverInitialValue: '新枢机',
                 handler: ({name}) =>
                 {
                     if (!name) return;
                     const newTuum = createBlankConfig('tuum', name);
                     item.tuums.push(newTuum);
-                    message.success('已添加新祝祷');
+                    message.success('已添加新枢机');
                 },
             };
         }
         else if (item && 'runes' in item)
-        { // 祝祷添加符文
+        { // 枢机添加符文
             action = {
                 key: 'add-rune',
                 label: '添加符文',

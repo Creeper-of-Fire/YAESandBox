@@ -4,7 +4,7 @@
 public interface IWorkflowProcessorDebugDto : IDebugDto
 {
     /// <summary>
-    /// 工作流中所有祝祷的调试信息
+    /// 工作流中所有枢机的调试信息
     /// </summary>
     IList<ITuumProcessorDebugDto> TuumProcessorDebugDtos { get; }
 }

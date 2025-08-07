@@ -16,7 +16,7 @@ public class LuaContextBridge(TuumProcessor.TuumProcessorContent tuumContent) : 
     private TuumProcessor.TuumProcessorContent TuumContent { get; } = tuumContent;
 
     /// <summary>
-    /// 从祝祷变量池中获取一个变量。
+    /// 从枢机变量池中获取一个变量。
     /// </summary>
     /// <param name="name">变量名。</param>
     /// <param name="luaState"></param>
@@ -57,7 +57,7 @@ public class LuaContextBridge(TuumProcessor.TuumProcessorContent tuumContent) : 
     }
 
     /// <summary>
-    /// 向祝祷变量池中设置一个变量。
+    /// 向枢机变量池中设置一个变量。
     /// </summary>
     /// <param name="name">变量名。</param>
     /// <param name="value">要设置的值。</param>

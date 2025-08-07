@@ -13,7 +13,7 @@ namespace YAESandBox.Plugin.LuaScript.LuaRunner;
 /// 通用的 Lua 脚本执行器。
 /// 负责创建安全的沙箱环境、注入标准的 API 桥并执行脚本。
 /// </summary>
-/// <param name="tuumProcessorContent">当前祝祷的执行上下文，用于访问变量。</param>
+/// <param name="tuumProcessorContent">当前枢机的执行上下文，用于访问变量。</param>
 /// <param name="debugDto">用于记录日志和错误的调试对象。</param>
 public partial class LuaScriptRunner(TuumProcessorContent tuumProcessorContent, IDebugDtoWithLogs debugDto, IEnumerable<ILuaBridge> bridges)
 {

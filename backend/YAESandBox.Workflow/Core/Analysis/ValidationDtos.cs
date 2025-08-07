@@ -8,27 +8,27 @@ namespace YAESandBox.Workflow.Core.Analysis;
 public record WorkflowValidationReport
 {
     /// <summary>
-    /// 每个祝祷的校验结果。
-    /// Key是祝祷的ConfigId。
+    /// 每个枢机的校验结果。
+    /// Key是枢机的ConfigId。
     /// </summary>
     [Required]
     public Dictionary<string, TuumValidationResult> TuumResults { get; init; } = [];
 }
 
 /// <summary>
-/// 单个祝祷的校验结果。
+/// 单个枢机的校验结果。
 /// </summary>
 public record TuumValidationResult
 {
     /// <summary>
-    /// 该祝祷内每个符文的校验结果。
+    /// 该枢机内每个符文的校验结果。
     /// Key是符文的ConfigId。
     /// </summary>
     [Required]
     public Dictionary<string, RuneValidationResult> RuneResults { get; init; } = [];
 
     /// <summary>
-    /// 仅针对祝祷本身的校验信息。
+    /// 仅针对枢机本身的校验信息。
     /// </summary>
     [Required]
     public List<ValidationMessage> TuumMessages { get; init; } = [];

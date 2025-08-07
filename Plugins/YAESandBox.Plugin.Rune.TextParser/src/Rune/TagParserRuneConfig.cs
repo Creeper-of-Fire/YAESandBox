@@ -126,7 +126,7 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
         // d. 获取整个文档修改后的HTML内容
         string finalModifiedHtml = document.DocumentElement.OuterHtml;
 
-        // e. 更新调试信息和祝祷变量
+        // e. 更新调试信息和枢机变量
         this.DebugDto.ExtractedRawValues = extractedRawForDebug;
         this.DebugDto.ReplacementDetails = replacementDetails;
         this.DebugDto.FinalOutput = finalModifiedHtml;
@@ -242,7 +242,7 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
     #region 配置项
 
     /// <summary>
-    /// 指定从哪个祝祷变量中读取要解析的原始HTML/XML文本。
+    /// 指定从哪个枢机变量中读取要解析的原始HTML/XML文本。
     /// </summary>
     [Required]
     [Display(Name = "输入变量名", Description = "包含标签文本的源变量。")]
@@ -335,7 +335,7 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
     public required string ReturnFormat { get; init; }
 
     /// <summary>
-    /// 指定将提取出的结果存入哪个祝祷变量。
+    /// 指定将提取出的结果存入哪个枢机变量。
     /// </summary>
     [Required]
     [Display(Name = "输出变量名", Description = "用于存储提取结果的目标变量。")]

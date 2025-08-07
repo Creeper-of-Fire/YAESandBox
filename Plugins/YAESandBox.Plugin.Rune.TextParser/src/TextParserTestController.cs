@@ -93,7 +93,7 @@ public class TextParserTestController : ControllerBase
                 return this.BadRequest(new TestResponseDto { IsSuccess = false, ErrorMessage = "不支持的符文配置类型。" });
         }
 
-        // 2. 创建一个模拟的、临时的祝祷上下文
+        // 2. 创建一个模拟的、临时的枢机上下文
         var mockTuumContent = new TuumProcessorContent(
             // 这两个参数在本次测试中不会被用到，可以传入null或默认值
             // 但为了健壮性，我们还是创建它们

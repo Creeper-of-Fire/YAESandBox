@@ -18,7 +18,7 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 
 /// <summary>
 /// Lua 脚本符文处理器。
-/// 负责执行用户提供的 Lua 脚本，并通过一个安全桥接器与祝祷上下文交互。
+/// 负责执行用户提供的 Lua 脚本，并通过一个安全桥接器与枢机上下文交互。
 /// </summary>
 /// <param name="config">符文配置。</param>
 public partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)

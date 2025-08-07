@@ -23,7 +23,7 @@ public class WorkflowValidationService
         var report = new WorkflowValidationReport();
         var allTuumConfigs = config.Tuums.ToDictionary(t => t.ConfigId);
 
-        // 校验每个祝祷自身，并收集所有端点信息
+        // 校验每个枢机自身，并收集所有端点信息
         this.ValidateIndividualTuums(config, report);
 
         // 校验连接
@@ -39,7 +39,7 @@ public class WorkflowValidationService
     }
     
     /// <summary>
-    /// 遍历并校验每个祝祷的内部配置，包括输出映射和符文的Attribute规则。
+    /// 遍历并校验每个枢机的内部配置，包括输出映射和符文的Attribute规则。
     /// </summary>
     private void ValidateIndividualTuums(WorkflowConfig config, WorkflowValidationReport report)
     {
@@ -47,24 +47,24 @@ public class WorkflowValidationService
         {
             var tuumResult = report.TuumResults.GetOrAdd(tuum.ConfigId, () => new TuumValidationResult());
 
-            // 校验1: 祝祷的输出映射是否引用了有效的内部变量
+            // 校验1: 枢机的输出映射是否引用了有效的内部变量
             this.ValidateTuumOutputMappingSource(tuum, tuumResult);
             
             // 新增校验 1.5: 校验输入和输出映射的唯一性规则
             this.ValidateTuumMappingUniqueness(tuum, tuumResult);
 
-            // 校验 2: 祝祷内部的符文Attribute规则 (如 SingleInTuum, InFrontOf)
+            // 校验 2: 枢机内部的符文Attribute规则 (如 SingleInTuum, InFrontOf)
             this.ValidateInTuumRuneAttributeRules(tuum, tuumResult);
         }
     }
 
     /// <summary>
-    /// 校验祝祷的OutputMappings是否引用了在内部真实存在的变量。
+    /// 校验枢机的OutputMappings是否引用了在内部真实存在的变量。
     /// (此方法需要微调以适应新结构)
     /// </summary>
     private void ValidateTuumOutputMappingSource(TuumConfig tuum, TuumValidationResult tuumResult)
     {
-        // 祝祷内部，所有可用的变量名 = 外部注入的(InputMappings) + 内部产生的
+        // 枢机内部，所有可用的变量名 = 外部注入的(InputMappings) + 内部产生的
         var allProducedInTuumVars = new HashSet<string>(tuum.Runes.SelectMany(r => r.GetProducedSpec().Select(p => p.Name)));
         var allInjectedInTuumVars = tuum.InputMappings.Values.SelectMany(v => v).ToHashSet();
         var allAvailableInTuumVars = allInjectedInTuumVars.Union(allProducedInTuumVars).ToHashSet();
@@ -73,11 +73,11 @@ public class WorkflowValidationService
         {
             if (!allAvailableInTuumVars.Contains(internalVarName))
             {
-                // 注意：我们将错误附加到祝祷上，因为这是关于整个祝祷映射配置的错误
+                // 注意：我们将错误附加到枢机上，因为这是关于整个枢机映射配置的错误
                 tuumResult.TuumMessages.Add(new ValidationMessage
                 {
                     Severity = RuleSeverity.Error,
-                    Message = $"输出映射错误：源内部变量 '{internalVarName}' 在此祝祷中从未被定义或产生。",
+                    Message = $"输出映射错误：源内部变量 '{internalVarName}' 在此枢机中从未被定义或产生。",
                     RuleSource = "DataFlow"
                 });
             }
@@ -85,7 +85,7 @@ public class WorkflowValidationService
     }
 
     /// <summary>
-    /// 校验祝祷的输入和输出映射是否满足唯一性约束。
+    /// 校验枢机的输入和输出映射是否满足唯一性约束。
     /// </summary>
     private void ValidateTuumMappingUniqueness(TuumConfig tuum, TuumValidationResult tuumResult)
     {
@@ -125,7 +125,7 @@ public class WorkflowValidationService
     }
     
     /// <summary>
-    /// 校验祝祷内部的符文是否满足其Attribute定义的规则。
+    /// 校验枢机内部的符文是否满足其Attribute定义的规则。
     /// </summary>
     private void ValidateInTuumRuneAttributeRules(TuumConfig tuum, TuumValidationResult tuumResult)
     {
@@ -142,7 +142,7 @@ public class WorkflowValidationService
                     this.AddMessageToRune(tuumResult, rune.ConfigId, new ValidationMessage
                     {
                         Severity = RuleSeverity.Warning,
-                        Message = $"符文类型 '{runeType.Name}' 在此祝祷中出现了多次，但它被建议只使用一次。",
+                        Message = $"符文类型 '{runeType.Name}' 在此枢机中出现了多次，但它被建议只使用一次。",
                         RuleSource = "SingleInTuum"
                     });
                 }
@@ -154,7 +154,7 @@ public class WorkflowValidationService
     }
     
     /// <summary>
-    /// 校验单个符文在其祝祷内的相对顺序。
+    /// 校验单个符文在其枢机内的相对顺序。
     /// </summary>
     private void ValidateRelativeOrderInTuum(AbstractRuneConfig rune, List<AbstractRuneConfig> tuumRunes, int runeIndex, TuumValidationResult tuumResult)
     {
@@ -226,20 +226,20 @@ public class WorkflowValidationService
                     report.TuumResults.GetOrAdd(sourceTuum.ConfigId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
-                        Message = $"连接错误：此祝祷没有一个名为 '{conn.Source.EndpointName}' 的输出端点。",
+                        Message = $"连接错误：此枢机没有一个名为 '{conn.Source.EndpointName}' 的输出端点。",
                         RuleSource = "ConnectionValidation"
                     });
                 }
             }
             else
             {
-                // 如果源祝祷ID本身就找不到，将错误信息附加到目标祝祷上，因为这是连接的另一端。
+                // 如果源枢机ID本身就找不到，将错误信息附加到目标枢机上，因为这是连接的另一端。
                 if (allTuumConfigs.ContainsKey(conn.Target.TuumId))
                 {
                     report.TuumResults.GetOrAdd(conn.Target.TuumId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
-                        Message = $"连接错误：找不到ID为 '{conn.Source.TuumId}' 的源祝祷。",
+                        Message = $"连接错误：找不到ID为 '{conn.Source.TuumId}' 的源枢机。",
                         RuleSource = "ConnectionValidation"
                     });
                 }
@@ -254,20 +254,20 @@ public class WorkflowValidationService
                     report.TuumResults.GetOrAdd(targetTuum.ConfigId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
-                        Message = $"连接错误：此祝祷没有一个名为 '{conn.Target.EndpointName}' 的输入端点。",
+                        Message = $"连接错误：此枢机没有一个名为 '{conn.Target.EndpointName}' 的输入端点。",
                         RuleSource = "ConnectionValidation"
                     });
                 }
             }
             else
             {
-                 // 如果目标祝祷ID本身就找不到，将错误附加到源祝祷上。
+                 // 如果目标枢机ID本身就找不到，将错误附加到源枢机上。
                  if(allTuumConfigs.ContainsKey(conn.Source.TuumId))
                  {
                     report.TuumResults.GetOrAdd(conn.Source.TuumId, () => new TuumValidationResult()).TuumMessages.Add(new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
-                        Message = $"连接错误：找不到ID为 '{conn.Target.TuumId}' 的目标祝祷。",
+                        Message = $"连接错误：找不到ID为 '{conn.Target.TuumId}' 的目标枢机。",
                         RuleSource = "ConnectionValidation"
                     });
                  }

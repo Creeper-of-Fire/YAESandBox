@@ -17,7 +17,7 @@ export type WorkflowConfig = {
      */
     triggerParams: Array<string>;
     /**
-     * 一个工作流含有的祝祷（有序）
+     * 一个工作流含有的枢机（有序）
      */
     tuums: Array<TuumConfig>;
 };

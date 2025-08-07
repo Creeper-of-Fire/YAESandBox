@@ -34,7 +34,7 @@ public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config
         string script = this.Config.Script ?? "";
         this.DebugDto.ExecutedScript = script;
 
-        // 1. 从祝祷上下文中获取输入值，并健壮地转换为字符串
+        // 1. 从枢机上下文中获取输入值，并健壮地转换为字符串
         object? rawInputValue = tuumProcessorContent.GetTuumVar(this.Config.InputVariableName);
         string inputForLua = rawInputValue?.ToString() ?? string.Empty;
 
@@ -67,7 +67,7 @@ public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config
             return result; // 传播错误
         }
 
-        // 6. 将处理后的结果写回祝祷上下文
+        // 6. 将处理后的结果写回枢机上下文
         tuumProcessorContent.SetTuumVar(this.Config.OutputVariableName, finalOutput);
 
         return Task.FromResult(Result.Ok());
@@ -87,14 +87,14 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
     /// 要处理的输入变量的名称。
     /// </summary>
     [Required]
-    [Display(Name = "输入变量名", Description = "指定要从祝祷上下文中读取哪个变量作为输入。")]
+    [Display(Name = "输入变量名", Description = "指定要从枢机上下文中读取哪个变量作为输入。")]
     public required string InputVariableName { get; init; }
 
     /// <summary>
     /// 处理完成后要写入的输出变量的名称。
     /// </summary>
     [Required]
-    [Display(Name = "输出变量名", Description = "指定处理结果要写入到哪个祝祷变量中。")]
+    [Display(Name = "输出变量名", Description = "指定处理结果要写入到哪个枢机变量中。")]
     public required string OutputVariableName { get; init; }
 
     private const string DefaultScript =

@@ -12,7 +12,7 @@ using static YAESandBox.Workflow.Tuum.TuumProcessor;
 namespace YAESandBox.Workflow.Rune.ExactRune;
 
 /// <summary>
-/// 用于将祝祷变量名直接写入到 WorkflowRuntimeService.RawText。
+/// 用于将枢机变量名直接写入到 WorkflowRuntimeService.RawText。
 /// </summary>
 /// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
 /// <param name="config">符文配置。</param>
@@ -43,8 +43,8 @@ internal class SendToRawTextRuneProcessor(
 }
 
 /// <summary>
-/// 用于将祝祷变量名直接写入到 WorkflowRuntimeService.RawText 的配置。
-/// 该配置定义了需要从祝祷中提取并存储到RawText中的变量。
+/// 用于将枢机变量名直接写入到 WorkflowRuntimeService.RawText 的配置。
+/// 该配置定义了需要从枢机中提取并存储到RawText中的变量。
 /// </summary>
 [ClassLabel("😼结束")]
 internal record SendToRawTextRuneConfig : AbstractRuneConfig<SendToRawTextRuneProcessor>
@@ -59,7 +59,7 @@ internal record SendToRawTextRuneConfig : AbstractRuneConfig<SendToRawTextRunePr
     [Required]
     [Display(
         Name = "需求变量名",
-        Description = "指定需要从祝祷中提取并写入RawText的变量名称",
+        Description = "指定需要从枢机中提取并写入RawText的变量名称",
         Prompt = "请输入变量名"
     )]
     public required string RequireVariables { get; init; } = "";

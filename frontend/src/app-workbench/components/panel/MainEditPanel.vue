@@ -40,7 +40,7 @@ const selectedType = computed(() =>
     return 'rune';  // 符文类型
   }
 
-  return 'tuum';   // 祝祷类型
+  return 'tuum';   // 枢机类型
 });
 
 </script>

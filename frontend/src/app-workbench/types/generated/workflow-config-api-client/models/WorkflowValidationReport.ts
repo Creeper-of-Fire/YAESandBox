@@ -8,8 +8,8 @@ import type { TuumValidationResult } from './TuumValidationResult';
  */
 export type WorkflowValidationReport = {
     /**
-     * 每个祝祷的校验结果。
-     * Key是祝祷的ConfigId。
+     * 每个枢机的校验结果。
+     * Key是枢机的ConfigId。
      */
     tuumResults: Record<string, TuumValidationResult>;
 };

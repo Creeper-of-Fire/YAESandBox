@@ -17,7 +17,7 @@ public class WorkflowProcessor(
 
     /// <summary>
     /// 工作流的数据存储区。
-    /// Key 是一个端点（祝祷ID + 端点名），Value 是该端点产生的数据。
+    /// Key 是一个端点（枢机ID + 端点名），Value 是该端点产生的数据。
     /// 这个存储区在工作流执行期间被动态填充。
     /// </summary>
     private Dictionary<TuumConnectionEndpoint, object?> WorkflowDataStore { get; } = [];
@@ -66,7 +66,7 @@ public class WorkflowProcessor(
         // 根据显式连接构建依赖图
         foreach (var connection in this.Config.Connections)
         {
-            // 如果源或目标祝祷不存在，则跳过（校验阶段会报告此错误）
+            // 如果源或目标枢机不存在，则跳过（校验阶段会报告此错误）
             if (!nodes.TryGetValue(connection.Source.TuumId, out var sourceNode) ||
                 !nodes.TryGetValue(connection.Target.TuumId, out var targetNode))
             {
@@ -105,7 +105,7 @@ public class WorkflowProcessor(
             {
                 if (result.TryGetError(out var error))
                 {
-                    // 任何一个并行祝祷失败，则整个工作流失败
+                    // 任何一个并行枢机失败，则整个工作流失败
                     return new WorkflowExecutionResult(false, error.Message, "TuumExecutionFailed");
                 }
             }
@@ -128,14 +128,14 @@ public class WorkflowProcessor(
     }
 
     /// <summary>
-    /// 辅助方法：执行单个祝祷，包括准备输入和存储输出。
+    /// 辅助方法：执行单个枢机，包括准备输入和存储输出。
     /// </summary>
     private async Task<Result> ExecuteSingleTuumAsync(ExecutionNode node, CancellationToken cancellationToken)
     {
         var tuum = node.Tuum;
         var tuumId = tuum.TuumContent.TuumConfig.ConfigId;
 
-        // 1. 准备输入：从数据存储区为当前祝祷收集所有需要的输入数据
+        // 1. 准备输入：从数据存储区为当前枢机收集所有需要的输入数据
         var tuumInputs = new Dictionary<string, object?>();
         var connectionsToThisTuum = this.Config.Connections.Where(c => c.Target.TuumId == tuumId);
 
@@ -153,14 +153,14 @@ public class WorkflowProcessor(
             }
         }
 
-        // 2. 执行祝祷
+        // 2. 执行枢机
         var tuumResult = await tuum.ExecuteAsync(tuumInputs, cancellationToken);
         if (tuumResult.TryGetError(out var error, out var tuumOutputs))
         {
             return error;
         }
 
-        // 3. 存储输出：将祝祷的输出结果经过净化处理后，存回工作流的数据存储区
+        // 3. 存储输出：将枢机的输出结果经过净化处理后，存回工作流的数据存储区
         lock (this.DataStoreLock)
         {
             foreach (var output in tuumOutputs)

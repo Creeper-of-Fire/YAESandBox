@@ -52,8 +52,8 @@
       >
         <!-- 工作流标签页 -->
         <n-tab name="workflow" tab="工作流"/>
-        <!-- 祝祷标签页 -->
-        <n-tab name="tuum" tab="祝祷"/>
+        <!-- 枢机标签页 -->
+        <n-tab name="tuum" tab="枢机"/>
         <!-- 符文标签页 -->
         <n-tab name="rune" tab="符文"/>
       </n-tabs>
@@ -118,7 +118,7 @@
             />
           </div>
         </draggable>
-        <n-empty v-else class="empty-container" description="无全局祝祷" small/>
+        <n-empty v-else class="empty-container" description="无全局枢机" small/>
       </div>
       <div v-if="activeTab===`rune`">
         <draggable
@@ -185,7 +185,7 @@ type DraggableResourceItem<T> = {
   item: GlobalResourceItem<T>; // 原始 Record 的 value
 };
 
-const activeTab = ref<'workflow' | 'tuum' | 'rune'>('workflow'); // 默认激活“祝祷”标签页
+const activeTab = ref<'workflow' | 'tuum' | 'rune'>('workflow'); // 默认激活“枢机”标签页
 
 const emit = defineEmits<{ (e: 'start-editing', payload: { type: ConfigType; id: string }): void; }>();
 const workbenchStore = useWorkbenchStore();
@@ -267,7 +267,7 @@ const currentTabLabel = computed(() =>
     case 'workflow':
       return '工作流';
     case 'tuum':
-      return '祝祷';
+      return '枢机';
     case 'rune':
       return '符文';
     default:

@@ -180,7 +180,7 @@ async function runTest() {
   // 请求体现在会包含 operationMode 等所有字段
   const requestPayload = {
     runeConfig: formValue,
-    // 我们将测试文本单独发送，而不是放在模拟的祝祷变量中
+    // 我们将测试文本单独发送，而不是放在模拟的枢机变量中
     // 这与您原始代码的设计一致
     sampleTuum: {
       [formValue.inputVariableName]: sampleInput.value
@@ -188,15 +188,15 @@ async function runTest() {
   };
 
   // 注意：这里的API端点我猜测是 /run-test-with-tuum，如果不是请修改
-  // 这个端点应该能接收一个完整的模拟祝祷，而不是单个文本
+  // 这个端点应该能接收一个完整的模拟枢机，而不是单个文本
   // 这样更符合符文的实际运行环境
   try {
-    // API端点我将使用一个更通用的名称，它能模拟整个祝祷的上下文
+    // API端点我将使用一个更通用的名称，它能模拟整个枢机的上下文
     const response = await axios.post('/api/v1/workflows/run-rune-test', requestPayload);
     const data = response.data;
 
     if (data.isSuccess) {
-      // 从返回的祝祷中获取输出变量的值
+      // 从返回的枢机中获取输出变量的值
       testResult.value = data.tuum[formValue.outputVariableName];
     } else {
       testError.value = data.errorMessage || '未知错误';
