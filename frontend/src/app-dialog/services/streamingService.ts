@@ -5,7 +5,7 @@ import { useAuthStore } from "@/app-authentication/stores/authStore";
 // 请求体的类型
 interface StreamRequest {
     workflowConfig: WorkflowConfig;
-    triggerParams: Record<string, string>;
+    workflowInputs: Record<string, string>;
 }
 
 // SSE 事件的负载类型

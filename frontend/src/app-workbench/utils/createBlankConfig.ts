@@ -42,8 +42,9 @@ export function createBlankConfig(
             return {
                 // 工作流没有内部 configId，它是顶级容器
                 name: name,
-                triggerParams: [],
+                workflowInputs: [],
                 tuums: [],
+                connections: [],
             };
         case 'tuum':
             return {

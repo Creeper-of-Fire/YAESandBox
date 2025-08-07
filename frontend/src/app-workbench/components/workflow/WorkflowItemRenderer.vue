@@ -1,12 +1,12 @@
 ﻿<!-- src/app-workbench/components/.../WorkflowItemRenderer.vue -->
 <template>
   <div class="workflow-item-renderer">
-    <!-- 新增：工作流触发参数编辑器 -->
-    <n-card size="small" style="margin-bottom: 16px;" title="工作流触发参数">
+    <!-- 工作流入口参数编辑器 -->
+    <n-card size="small" style="margin-bottom: 16px;" title="工作流入口参数">
       <n-text depth="3" style="font-size: 12px; display: block; margin-bottom: 8px;">
         定义工作流启动时需要从外部传入的参数名称。这些参数后续可以在枢机的输入映射中使用。
       </n-text>
-      <n-dynamic-tags v-model:value="triggerParamsRef"/>
+      <n-dynamic-tags v-model:value="workflowInputsRef"/>
     </n-card>
 
 
@@ -49,9 +49,9 @@ const props = defineProps<{
   workflow: WorkflowConfig;
 }>();
 
-const triggerParamsRef = computed({
-  get: () => props.workflow?.triggerParams || [],
-  set: (value) => props.workflow.triggerParams = Array.isArray(value) ? value : []
+const workflowInputsRef = computed({
+  get: () => props.workflow?.workflowInputs || [],
+  set: (value) => props.workflow.workflowInputs = Array.isArray(value) ? value : []
 });
 
 /**
@@ -60,19 +60,25 @@ const triggerParamsRef = computed({
  */
 function getAvailableVarsForTuum(tuumIndex: number): string[]
 {
-  const triggerParamsArray = triggerParamsRef.value; // 使用计算属性
-  const availableVars = new Set<string>(triggerParamsArray);
+  // 使用修正后的计算属性
+  const availableVars = new Set<string>(workflowInputsRef.value);
 
   if (props.workflow?.tuums)
   {
+    // 遍历指定索引之前的所有枢机
     for (let i = 0; i < tuumIndex; i++)
     {
       const precedingTuum = props.workflow.tuums[i];
       if (precedingTuum?.outputMappings)
       {
-        Object.keys(precedingTuum.outputMappings).forEach(globalVar =>
+        // outputMappings 的结构是 { [localVar]: [globalVar1, globalVar2] }
+        // 因此需要遍历其值的数组，并将所有 globalVar 添加到可用集合中
+        Object.values(precedingTuum.outputMappings).flat().forEach(globalVar =>
         {
-          availableVars.add(globalVar);
+          if (globalVar)
+          { // 确保不添加空字符串
+            availableVars.add(globalVar);
+          }
         });
       }
     }

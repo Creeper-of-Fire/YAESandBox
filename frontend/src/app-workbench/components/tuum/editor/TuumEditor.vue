@@ -14,6 +14,7 @@
       :available-global-vars="tuumContext.availableGlobalVarsForTuum"
       :input-mappings="tuumContext.data.inputMappings"
       :output-mappings="tuumContext.data.outputMappings"
+      :producible-outputs="producibleTuumOutputs"
       :required-inputs="requiredTuumInputs"
       @update:input-mappings="newMappings => tuumContext.data.inputMappings = newMappings"
       @update:output-mappings="newMappings => tuumContext.data.outputMappings = newMappings"
@@ -82,6 +83,24 @@ const requiredTuumInputs = computed(() => {
   }
 
   return Array.from(requiredInputs);
+});
+
+// 计算属性：计算当前枢机内部可以产生的所有输出变量
+const producibleTuumOutputs = computed(() =>
+{
+  const producedOutputs = new Set<string>();
+  if (props.tuumContext.data.runes)
+  {
+    for (const rune of props.tuumContext.data.runes)
+    {
+      const analysisResult = runeAnalysisResults.value[rune.configId];
+      if (analysisResult?.producedVariables)
+      {
+        analysisResult.producedVariables.forEach(output => producedOutputs.add(output));
+      }
+    }
+  }
+  return Array.from(producedOutputs);
 });
 
 </script>

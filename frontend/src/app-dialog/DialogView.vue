@@ -61,14 +61,14 @@ async function handleSendMessage(userInput: string) {
       .slice(0, -1)
       .map(msg => ({ role: msg.role, content: msg.content }));
 
-  const triggerParams = {
+  const workflowInputs = {
     history: JSON.stringify(historyPrompt),
     userInput: userInput,
   };
 
   const requestBody = {
     workflowConfig: selectedWorkflow.value.config,
-    triggerParams: triggerParams,
+    workflowInputs: workflowInputs,
   };
 
   executeWorkflowStream(requestBody, {

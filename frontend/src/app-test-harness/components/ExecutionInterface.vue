@@ -46,7 +46,7 @@ const paramValues = reactive<Record<string, string>>({});
 // 1. computed 属性现在只负责计算和返回参数列表，不再有任何副作用。
 const paramsToFill = computed<string[]>(() => {
   if (props.configType === 'workflow') {
-    return (props.config as WorkflowConfig).triggerParams || [];
+    return (props.config as WorkflowConfig).workflowInputs || [];
   } else {
     const tuumConfig = props.config as TuumConfig;
     const globalVars = Object.values(tuumConfig.inputMappings || {});
@@ -88,19 +88,19 @@ async function handleExecute() {
   if (props.configType === 'workflow') {
     requestBody = {
       workflowConfig: props.config as WorkflowConfig,
-      triggerParams: paramValues
+      workflowInputs: paramValues
     };
   } else {
     const tuumConfig = props.config as TuumConfig;
-    const triggerParamsForTempWorkflow = [...new Set(Object.values(tuumConfig.inputMappings))];
+    const workflowInputsForTempWorkflow = [...new Set(Object.values(tuumConfig.inputMappings))];
     const tempWorkflow: WorkflowConfig = {
       name: `测试枢机: ${tuumConfig.name}`,
       tuums: [tuumConfig],
-      triggerParams: triggerParamsForTempWorkflow,
+      workflowInputs: workflowInputsForTempWorkflow,
     };
     requestBody = {
       workflowConfig: tempWorkflow,
-      triggerParams: paramValues
+      workflowInputs: paramValues
     };
   }
 
