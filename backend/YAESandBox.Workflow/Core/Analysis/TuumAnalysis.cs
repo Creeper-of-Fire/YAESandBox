@@ -81,7 +81,7 @@ public partial class TuumAnalysisService
             .Where(g => g.Count() > 1)
             .Select(g => g.Key);
 
-        foreach (var duplicateVar in duplicateInternalVars)
+        foreach (string duplicateVar in duplicateInternalVars)
         {
             yield return new ValidationMessage
             {
@@ -98,7 +98,7 @@ public partial class TuumAnalysisService
             .Where(g => g.Count() > 1)
             .Select(g => g.Key);
 
-        foreach (var duplicateEndpoint in duplicateExternalEndpoints)
+        foreach (string duplicateEndpoint in duplicateExternalEndpoints)
         {
             yield return new ValidationMessage
             {

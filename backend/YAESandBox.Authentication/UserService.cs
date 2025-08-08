@@ -71,4 +71,22 @@ public class UserService(IGeneralJsonStorage storage, IPasswordService passwordS
 
         return Result.Ok(user);
     }
+    
+    /// <summary>
+    /// 根据用户ID异步查找用户。
+    /// </summary>
+    /// <param name="userId">用户ID。</param>
+    /// <returns>成功时返回用户对象，失败时返回错误信息。</returns>
+    public async Task<Result<User>> GetUserByIdAsync(string userId)
+    {
+        // 这里不需要文件锁，因为我们只是在读取
+        var loadResult = await this.LoadUsersAsync();
+        if (loadResult.TryGetError(out var loadError, out var users))
+            return loadError;
+
+        if (users.TryGetValue(userId, out var user))
+            return Result.Ok(user);
+
+        return Result.Fail($"用户ID '{userId}' 未能找到。");
+    }
 }

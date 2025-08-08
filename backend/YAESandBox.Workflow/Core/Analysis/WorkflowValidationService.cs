@@ -66,7 +66,7 @@ public class WorkflowValidationService
             // 校验1: 源枢机和目标枢机是否存在
             if (!sourceTuumExists)
             {
-                AddMessageToConnection(report, conn, new ValidationMessage
+                this.AddMessageToConnection(report, conn, new ValidationMessage
                 {
                     Severity = RuleSeverity.Error,
                     Message = $"连接断开：找不到ID为 '{conn.Source.TuumId}' 的源枢机。",
@@ -76,7 +76,7 @@ public class WorkflowValidationService
 
             if (!targetTuumExists)
             {
-                AddMessageToConnection(report, conn, new ValidationMessage
+                this.AddMessageToConnection(report, conn, new ValidationMessage
                 {
                     Severity = RuleSeverity.Error,
                     Message = $"连接断开：找不到ID为 '{conn.Target.TuumId}' 的目标枢机。",
@@ -96,7 +96,7 @@ public class WorkflowValidationService
                 // 情况 2a: 源是工作流的入口
                 if (!config.WorkflowInputs.Contains(conn.Source.EndpointName))
                 {
-                    AddMessageToConnection(report, conn, new ValidationMessage
+                    this.AddMessageToConnection(report, conn, new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
                         Message = $"连接错误：源端点 '{conn.Source.EndpointName}' 不是一个有效的工作流输入。",
@@ -110,7 +110,7 @@ public class WorkflowValidationService
                 // 检查该枢机的所有输出映射的 "Value" 列表里，是否包含这个端点名
                 if (!sourceTuum.OutputMappings.Values.SelectMany(v => v).Contains(conn.Source.EndpointName))
                 {
-                    AddMessageToConnection(report, conn, new ValidationMessage
+                    this.AddMessageToConnection(report, conn, new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
                         Message = $"连接错误：源枢机 '{sourceTuum.Name}' (ID: {sourceTuum.ConfigId}) 没有一个名为 '{conn.Source.EndpointName}' 的输出端点。",
@@ -124,7 +124,7 @@ public class WorkflowValidationService
             // 检查该枢机的输入映射的 "Key" 里，是否包含这个端点名
             if (!targetTuum.InputMappings.ContainsKey(conn.Target.EndpointName))
             {
-                AddMessageToConnection(report, conn, new ValidationMessage
+                this.AddMessageToConnection(report, conn, new ValidationMessage
                 {
                     Severity = RuleSeverity.Error,
                     Message = $"连接错误：目标枢机 '{targetTuum.Name}' (ID: {targetTuum.ConfigId}) 没有一个名为 '{conn.Target.EndpointName}' 的输入端点。",
@@ -188,7 +188,7 @@ public class WorkflowValidationService
 
         foreach (string tuumId in config.Tuums.Select(t => t.ConfigId))
         {
-            if (!visited.Contains(tuumId) && HasCycle(tuumId, graph, visiting, visited, report, []))
+            if (!visited.Contains(tuumId) && this.HasCycle(tuumId, graph, visiting, visited, report, []))
             {
                 // 错误已在 HasCycle 方法内报告
             }
@@ -220,7 +220,7 @@ public class WorkflowValidationService
 
                 if (!visited.Contains(neighborId))
                 {
-                    if (HasCycle(neighborId, graph, visiting, visited, report, path))
+                    if (this.HasCycle(neighborId, graph, visiting, visited, report, path))
                     {
                         return true;
                     }

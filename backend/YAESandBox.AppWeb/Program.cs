@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using DotNetEnv;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
@@ -11,6 +12,7 @@ using YAESandBox.Authentication;
 using YAESandBox.Seed.API;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
+using YAESandBox.Depend.AspNetCore.Secret;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.API;
 using YAESandBox.Workflow.API;
@@ -91,6 +93,19 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddHttpClient();
 
+// ---- 数据保护服务 ---
+// 1. 添加数据保护服务
+builder.Services.AddDataProtection();
+//.PersistKeysToFileSystem(new DirectoryInfo(@"/path/to/keys")) // 在生产环境中配置密钥存储位置
+
+// 2. 将 SecretProtector 注册为单例
+// 它现在自己处理 IDataProtectionProvider 的依赖
+builder.Services.AddSingleton<ISecretProtector, SecretProtector>();
+
+// 3. 注册通用的数据保护服务
+builder.Services.AddSingleton<IDataProtectionService, DataProtectionService>();
+
+
 // --- SignalR ---
 builder.Services.AddSignalR()
     .AddJsonProtocol(options =>
@@ -99,7 +114,7 @@ builder.Services.AddSignalR()
     });
 
 // --- Application Services (Singleton or Scoped depending on need) ---
-builder.Services.AddSingleton<IGeneralJsonStorage, JsonFileCacheJsonStorage>(_ =>
+builder.Services.AddSingleton<IGeneralJsonRootStorage, JsonFileCacheJsonStorage>(_ =>
     new JsonFileCacheJsonStorage(builder.Configuration.GetValue<string?>("DataFiles:RootDirectory")));
 
 // --- CORS (Configure as needed, especially for development) ---
@@ -188,6 +203,7 @@ app.MapControllers(); // Map attribute-routed controllers
 allModules.ForEachModules<IProgramModuleHubRegistrar>(it => it.MapHubs(app));
 
 app.Run();
+
 namespace YAESandBox.AppWeb
 {
     // --- Records/Classes used in Program.cs ---

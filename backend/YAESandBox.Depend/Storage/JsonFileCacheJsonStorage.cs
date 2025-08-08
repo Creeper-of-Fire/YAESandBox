@@ -22,10 +22,6 @@ public partial class JsonFileCacheJsonStorage(string? dataRootPath) : JsonFileJs
             return Result.Ok<JsonNode?>(null);
 
         // 创建一个副本存入缓存，这样原始的 loadedDoc 可以被调用者安全 Dispose
-        // 即使克隆失败，也继续返回原始加载的文档，只是不缓存
-
-        // 将新加载的（或其副本）存入缓存
-        // 为了缓存一致性，最好是存入一个副本，或者原始的（如果生命周期由缓存管理）
         this.StoreFileContentInternal(subDirectories, fileName, loadedDoc.DeepClone());
         return loadResult;
     }
@@ -42,20 +38,6 @@ public partial class JsonFileCacheJsonStorage(string? dataRootPath) : JsonFileJs
         this.StoreFileContentInternal(subDirectories, fileName, jsonNode.DeepClone()); // 创建一个副本存入缓存，以避免外部修改影响缓存
         return saveResult;
     }
-
-    // /// <inheritdoc />
-    // public override async Task<Result<IEnumerable<string>>> ListFileNamesAsync(
-    //     ListFileOption? listOption = null, params string[] subDirectories)
-    // {
-    //     if (listOption is not null)
-    //         return await base.ListFileNamesAsync(listOption, subDirectories);
-    //
-    //     var directory = this.NavigateToDirectoryEntryInternal(subDirectories, false);
-    //     if (directory is not null)
-    //         return directory.Children.Values.ToList().OfType<FileCacheEntry>().Select(entity => entity.Name).ToList();
-    //
-    //     return await base.ListFileNamesAsync(listOption, subDirectories);
-    // }
 
     /// <inheritdoc />
     public override async Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories)

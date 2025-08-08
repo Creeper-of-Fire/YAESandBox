@@ -248,7 +248,7 @@ public class WorkflowProcessor(
             {
                 var outputEndpoint = new TuumConnectionEndpoint(tuumId, output.Key);
                 // 对输出值进行净化（克隆/转不可变），以保证数据隔离
-                this.WorkflowDataStore[outputEndpoint] = CloneAndSanitizeForFanOut(output.Value);
+                this.WorkflowDataStore[outputEndpoint] = this.CloneAndSanitizeForFanOut(output.Value);
             }
         }
 

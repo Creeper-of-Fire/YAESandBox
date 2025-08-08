@@ -1,4 +1,5 @@
-﻿using YAESandBox.Depend.Results;
+﻿using YAESandBox.Authentication.Storage;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Rune;
@@ -18,9 +19,10 @@ namespace YAESandBox.Workflow.Core;
 ///
 /// 不论什么情况，后端都不会对ID进行任何的修改，那是前端的工作。
 /// </summary>
-/// <param name="generalJsonStorage"></param>
-public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
+/// <param name="userStorageFactory"></param>
+public class WorkflowConfigFileService(IUserScopedStorageFactory userStorageFactory)
 {
+    private IUserScopedStorageFactory UserStorageFactory { get; } = userStorageFactory;
     private static string MakeFileName(string id) => $"{id}.json";
     private static string GetIdFromFileName(string fileName) => Path.GetFileNameWithoutExtension(fileName);
     private const string MainDirectory = "WorkflowConfigurations";
@@ -28,15 +30,14 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     private const string TuumDirectory = "GlobalTuums";
     private const string RuneDirectory = "GlobalRunes";
 
-    private ScopedJsonStorage ForWorkflow { get; } =
-        generalJsonStorage.ForConfig().CreateScope(MainDirectory).CreateScope(WorkflowDirectory);
+    private ScopeTemplate ForWorkflow { get; } =
+        ConfigRoot().CreateScope(MainDirectory).CreateScope(WorkflowDirectory);
 
-    private ScopedJsonStorage ForTuum { get; } =
-        generalJsonStorage.ForConfig().CreateScope(MainDirectory).CreateScope(TuumDirectory);
+    private ScopeTemplate ForTuum { get; } =
+        ConfigRoot().CreateScope(MainDirectory).CreateScope(TuumDirectory);
 
-    private ScopedJsonStorage ForRune { get; } =
-        generalJsonStorage.ForConfig().CreateScope(MainDirectory).CreateScope(RuneDirectory);
-
+    private ScopeTemplate ForRune { get; } =
+        ConfigRoot().CreateScope(MainDirectory).CreateScope(RuneDirectory);
 
     /// <summary>
     /// 只在全局的工作流配置中查找，不查找内联的私有部分（虽然对于工作流没有这部分，但是出于整齐的考虑还是这么写了）
@@ -45,7 +46,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="workflowId"></param>
     /// <returns></returns>
     internal async Task<Result<WorkflowConfig>> FindWorkflowConfig(string userId, string workflowId) =>
-        await FindConfig<WorkflowConfig>(this.ForWorkflow, userId, workflowId);
+        await this.FindConfig<WorkflowConfig>(this.ForWorkflow, userId, workflowId);
 
     /// <summary>
     /// 只在全局的枢机配置中查找，不查找内联的私有部分
@@ -54,7 +55,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="tuumId"></param>
     /// <returns></returns>
     internal async Task<Result<TuumConfig>> FindTuumConfig(string userId, string tuumId) =>
-        await FindConfig<TuumConfig>(this.ForTuum, userId, tuumId);
+        await this.FindConfig<TuumConfig>(this.ForTuum, userId, tuumId);
 
     /// <summary>
     /// 只在全局的符文配置中查找，不查找内联的私有部分
@@ -63,7 +64,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="runeId"></param>
     /// <returns></returns>
     internal async Task<Result<AbstractRuneConfig>> FindRuneConfig(string userId, string runeId) =>
-        await FindConfig<AbstractRuneConfig>(this.ForRune, userId, runeId);
+        await this.FindConfig<AbstractRuneConfig>(this.ForRune, userId, runeId);
 
     /// <summary>
     /// 只寻找所有的全局工作流配置，不查找内联的私有部分
@@ -71,7 +72,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="userId"></param>
     /// <returns></returns>
     public async Task<DictionaryResult<string, WorkflowConfig>> FindAllWorkflowConfig(string userId) =>
-        await FindAllConfig<WorkflowConfig>(this.ForWorkflow, userId);
+        await this.FindAllConfig<WorkflowConfig>(this.ForWorkflow, userId);
 
     /// <summary>
     /// 只寻找所有的全局枢机配置，不查找内联的私有部分
@@ -79,7 +80,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="userId"></param>
     /// <returns></returns>
     public async Task<DictionaryResult<string, TuumConfig>> FindAllTuumConfig(string userId) =>
-        await FindAllConfig<TuumConfig>(this.ForTuum, userId);
+        await this.FindAllConfig<TuumConfig>(this.ForTuum, userId);
 
     /// <summary>
     /// 只寻找所有的全局符文配置，不查找内联的私有部分
@@ -87,7 +88,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="userId"></param>
     /// <returns></returns>
     public async Task<DictionaryResult<string, AbstractRuneConfig>> FindAllRuneConfig(string userId) =>
-        await FindAllConfig<AbstractRuneConfig>(this.ForRune, userId);
+        await this.FindAllConfig<AbstractRuneConfig>(this.ForRune, userId);
 
     /// <summary>
     /// 保存工作流配置到全局
@@ -97,7 +98,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="workflowConfig"></param>
     /// <returns></returns>
     public async Task<Result> SaveWorkflowConfig(string userId, string workflowId, WorkflowConfig workflowConfig) =>
-        await SaveConfig(this.ForWorkflow, userId, workflowId, workflowConfig);
+        await this.SaveConfig(this.ForWorkflow, userId, workflowId, workflowConfig);
 
     /// <summary>
     /// 保存枢机配置到全局
@@ -107,7 +108,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="tuumConfig"></param>
     /// <returns></returns>
     public async Task<Result> SaveTuumConfig(string userId, string tuumId, TuumConfig tuumConfig) =>
-        await SaveConfig(this.ForTuum, userId, tuumId, tuumConfig);
+        await this.SaveConfig(this.ForTuum, userId, tuumId, tuumConfig);
 
     /// <summary>
     /// 保存符文配置到全局
@@ -117,7 +118,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="abstractRuneConfig"></param>
     /// <returns></returns>
     public async Task<Result> SaveRuneConfig(string userId, string runeId, AbstractRuneConfig abstractRuneConfig) =>
-        await SaveConfig(this.ForRune, userId, runeId, abstractRuneConfig);
+        await this.SaveConfig(this.ForRune, userId, runeId, abstractRuneConfig);
 
     /// <summary>
     /// 删除全局的工作流配置
@@ -126,7 +127,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="workflowId"></param>
     /// <returns></returns>
     public async Task<Result> DeleteWorkflowConfig(string userId, string workflowId) =>
-        await DeleteConfig(this.ForWorkflow, userId, workflowId);
+        await this.DeleteConfig(this.ForWorkflow, userId, workflowId);
 
     /// <summary>
     /// 删除全局的枢机配置
@@ -135,7 +136,7 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="tuumId"></param>
     /// <returns></returns>
     public async Task<Result> DeleteTuumConfig(string userId, string tuumId) =>
-        await DeleteConfig(this.ForTuum, userId, tuumId);
+        await this.DeleteConfig(this.ForTuum, userId, tuumId);
 
     /// <summary>
     /// 删除全局的符文配置
@@ -144,37 +145,73 @@ public class WorkflowConfigFileService(IGeneralJsonStorage generalJsonStorage)
     /// <param name="runeId"></param>
     /// <returns></returns>
     public async Task<Result> DeleteRuneConfig(string userId, string runeId) =>
-        await DeleteConfig(this.ForRune, userId, runeId);
+        await this.DeleteConfig(this.ForRune, userId, runeId);
 
-    private static async Task<Result<T>> FindConfig<T>(ScopedJsonStorage scopedJsonStorage, string userId, string configId)
+    private async Task<Result<T>> FindConfig<T>(ScopeTemplate template, string userId, string configId)
     {
-        var result = await scopedJsonStorage.LoadAllAsync<T>(MakeFileName(configId), userId);
-        if (result.TryGetError(out var error, out var value))
+        // a. 从工厂获取用户专属的存储实例
+        var userStorageResult = await this.UserStorageFactory.GetFinalStorageForUserAsync(userId, template);
+        if (userStorageResult.TryGetError(out var error, out var finalStorage))
+            return error;
+
+        // c. 使用最终实例进行操作
+        var result = await finalStorage.LoadAllAsync<T>(MakeFileName(configId));
+        if (result.TryGetError(out error, out var value))
             return error;
         if (value is null)
-            return NormalError.NotFound($"找不到指定的符文配置:{Path.Combine(scopedJsonStorage.WorkPath, configId)}。");
+            return NormalError.NotFound($"找不到指定的配置:{Path.Combine(finalStorage.WorkPath, configId)}.json");
 
         return Result.Ok(value);
     }
 
-    private static async Task<DictionaryResult<string, T>> FindAllConfig<T>(ScopedJsonStorage scopedJsonStorage, string userId)
+    private async Task<DictionaryResult<string, T>> FindAllConfig<T>(ScopeTemplate template, string userId)
     {
-        var result = await scopedJsonStorage.ListFileNamesAsync(null,userId);
-        if (result.TryGetError(out var error, out var allFileNames))
+        var userStorageResult = await this.UserStorageFactory.GetFinalStorageForUserAsync(userId, template);
+        if (userStorageResult.TryGetError(out var error, out var finalStorage))
             return DictionaryResult<string, T>.Fail(error);
-        Dictionary<string, Result<T>> configResults = [];
-        foreach (string id in allFileNames.Select(GetIdFromFileName))
+
+        var fileListResult = await finalStorage.ListFileNamesAsync();
+        if (fileListResult.TryGetError(out error, out var allFileNames))
+            return DictionaryResult<string, T>.Fail(error);
+
+        // 1. 为每个文件名创建一个加载任务。
+        //    这个任务会异步执行 FindConfig，并返回一个包含 ID 和结果的元组。
+        var loadTasks = allFileNames.Select(async fileName =>
         {
-            var configResult = await FindConfig<T>(scopedJsonStorage, userId, id);
-            configResults.Add(id, configResult);
-        }
+            string id = GetIdFromFileName(fileName);
+            // 注意：这里我们不再直接 await FindConfig，而是让它返回一个 Task<Result<T>>
+            var configResult = await this.FindConfig<T>(template, userId, id);
+            return (Id: id, Result: configResult);
+        }).ToList();
+
+        // 2. 使用 Task.WhenAll 并行执行所有加载任务。
+        //    这将返回一个包含所有结果元组的数组。
+        var resultsArray = await Task.WhenAll(loadTasks);
+
+        // 3. 将结果数组转换为字典。
+        var configResults = resultsArray.ToDictionary(
+            keySelector: tuple => tuple.Id,
+            elementSelector: tuple => tuple.Result
+        );
 
         return configResults;
     }
 
-    private static async Task<Result> DeleteConfig(ScopedJsonStorage scopedJsonStorage, string userId, string configId) =>
-        await scopedJsonStorage.DeleteFileAsync(MakeFileName(configId), userId);
+    private async Task<Result> DeleteConfig(ScopeTemplate template, string userId, string configId)
+    {
+        var userStorageResult = await this.UserStorageFactory.GetFinalStorageForUserAsync(userId, template);
+        if (userStorageResult.TryGetError(out var error, out var finalStorage))
+            return error;
 
-    private static async Task<Result> SaveConfig<T>(ScopedJsonStorage scopedJsonStorage, string userId, string configId, T config) =>
-        await scopedJsonStorage.SaveAllAsync(config, MakeFileName(configId), userId);
+        return await finalStorage.DeleteFileAsync(MakeFileName(configId));
+    }
+
+    private async Task<Result> SaveConfig<T>(ScopeTemplate template, string userId, string configId, T config)
+    {
+        var userStorageResult = await this.UserStorageFactory.GetFinalStorageForUserAsync(userId, template);
+        if (userStorageResult.TryGetError(out var error, out var finalStorage))
+            return error;
+
+        return await finalStorage.SaveAllAsync(config, MakeFileName(configId));
+    }
 }

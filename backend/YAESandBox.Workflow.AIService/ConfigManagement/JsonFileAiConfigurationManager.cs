@@ -1,5 +1,6 @@
 ﻿// 文件: JsonFileAiConfigurationManager.cs
 
+using YAESandBox.Authentication.Storage;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;
@@ -11,18 +12,22 @@ namespace YAESandBox.Workflow.AIService.ConfigManagement;
 /// 使用 JSON 文件持久化 AI 配置的管理器。
 /// 现在将每个用户的配置存储在其ID命名的子目录中，以实现多租户。
 /// </summary>
-public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStorage) : IAiConfigurationManager
+public class JsonFileAiConfigurationManager(IUserScopedStorageFactory userStorageFactory) : IAiConfigurationManager
 {
     private const string ConfigFileName = "ai_configurations.json"; // 默认配置文件名
-    private ScopedStorageFactory.ScopedJsonStorage ScopedJsonStorage { get; } = generalJsonStorage.ForConfig();
-    
+    private ScopeTemplate ConfigRoot { get; } = ScopedStorageFactory.ConfigRoot();
+    private IUserScopedStorageFactory UserStorageFactory { get; } = userStorageFactory;
+
     /// <summary>
     /// 从指定用户的文件异步加载配置列表。
     /// </summary>
     private async Task<Result<Dictionary<string, AiConfigurationSet>>> LoadConfigurationsFromFileAsync(string userId)
     {
-        // 将 userId 作为子目录传递，实现用户数据隔离
-        var result = await this.ScopedJsonStorage.LoadAllAsync<Dictionary<string, AiConfigurationSet>>(ConfigFileName, userId);
+        var storageResult = await this.UserStorageFactory.GetFinalStorageForUserAsync(userId, this.ConfigRoot);
+        if (storageResult.TryGetError(out var userError, out var storage))
+            return userError;
+
+        var result = await storage.LoadAllAsync<Dictionary<string, AiConfigurationSet>>(ConfigFileName, userId);
         if (result.TryGetError(out var error, out var value))
             return error;
 
@@ -31,16 +36,20 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
             // 如果用户是首次使用，为其创建默认配置
             return AiConfigurationSet.MakeDefaultDictionary();
         }
+
         return value;
     }
-    
+
     /// <summary>
     /// 将配置列表异步保存到指定用户的文件。
     /// </summary>
     private async Task<Result> SaveConfigurationsToFileAsync(string userId, Dictionary<string, AiConfigurationSet> configs)
     {
-        // 将 userId 作为子目录传递
-        return await this.ScopedJsonStorage.SaveAllAsync(configs, ConfigFileName, userId);
+        var storageResult = await this.UserStorageFactory.GetFinalStorageForUserAsync(userId, this.ConfigRoot);
+        if (storageResult.TryGetError(out var userError, out var storage))
+            return userError;
+
+        return await storage.SaveAllAsync(configs, ConfigFileName, userId);
     }
 
     /// <inheritdoc/>
@@ -78,7 +87,7 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
 
         return await this.SaveConfigurationsToFileAsync(userId, configs);
     }
-    
+
     /// <inheritdoc/>
     public async Task<Result<AiConfigurationSet>> GetConfigurationByUuidAsync(string userId, string uuid)
     {
@@ -89,10 +98,10 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
 
         if (configsResult.TryGetError(out var error, out var configs))
             return error;
-        
+
         if (configs.TryGetValue(uuid, out var config))
             return Result.Ok(config);
-        
+
         return NormalError.NotFound($"未找到UUID为 '{uuid}' 的配置。");
     }
 
@@ -100,7 +109,7 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
     public async Task<Result<IReadOnlyDictionary<string, AiConfigurationSet>>> GetAllConfigurationsAsync(string userId)
     {
         if (string.IsNullOrWhiteSpace(userId)) return NormalError.BadRequest("用户ID不能为空。");
-        
+
         var loadedConfigs = await this.LoadConfigurationsFromFileAsync(userId);
         if (loadedConfigs.TryGetError(out var error, out var value))
             return error;
@@ -108,12 +117,12 @@ public class JsonFileAiConfigurationManager(IGeneralJsonStorage generalJsonStora
         // 返回一个 IReadOnlyDictionary 以防止外部修改
         return Result.Ok<IReadOnlyDictionary<string, AiConfigurationSet>>(value);
     }
-    
+
     /// <inheritdoc />
     AiConfigurationSet? IAiConfigurationProvider.GetConfigurationSet(string userId, string aiConfigKey)
     {
         if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(aiConfigKey)) return null;
-        
+
         // .GetAwaiter().GetResult() 用于在同步方法中调用异步方法并等待结果。
         var result = this.GetConfigurationByUuidAsync(userId, aiConfigKey).GetAwaiter().GetResult();
         if (result.TryGetValue(out var value))

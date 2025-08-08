@@ -12,7 +12,7 @@ namespace YAESandBox.Depend.Storage;
 /// </summary>
 /// <param name="dataRootPath">存储文件的根路径</param>
 /// <exception cref="ArgumentNullException"><paramref name="dataRootPath"/>为空</exception>
-public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonStorage
+public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRootStorage
 {
     /// <inheritdoc />
     public string WorkPath { get; } =

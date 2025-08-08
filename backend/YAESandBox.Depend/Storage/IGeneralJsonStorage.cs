@@ -7,7 +7,7 @@ namespace YAESandBox.Depend.Storage;
 /// 通用的数据存储接口。
 /// 负责数据的底层加载和保存，不关心具体结构或内容。
 /// </summary>
-public interface IGeneralJsonStorage : IRootPathProvider
+public interface IGeneralJsonStorage:IWorkPathProvider
 {
     /// <summary>
     /// 异步加载完整的数据。
