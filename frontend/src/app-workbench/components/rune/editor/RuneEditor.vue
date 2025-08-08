@@ -90,7 +90,6 @@ import {useDebounceFn} from "@vueuse/core";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
 import type {RuneEditorContext} from "@/app-workbench/components/rune/editor/RuneEditorContext.ts";
 import {useRuneAnalysis} from "@/app-workbench/composables/useRuneAnalysis.ts";
-import {synchronizeModelWithSchema} from "@/app-workbench/utils/synchronizeModelWithSchema.ts";
 
 // --- Props ---
 const props = defineProps<{
