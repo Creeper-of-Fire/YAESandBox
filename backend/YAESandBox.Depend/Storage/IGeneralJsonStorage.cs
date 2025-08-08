@@ -10,24 +10,6 @@ namespace YAESandBox.Depend.Storage;
 public interface IGeneralJsonStorage:IWorkPathProvider
 {
     /// <summary>
-    /// 异步加载完整的数据。
-    /// 如果文件不存在，则尝试创建包含一个空 JSON 对象的默认文件。
-    /// </summary>
-    /// <param name="fileName">文件名。</param>
-    /// <param name="subDirectories">文件所在的子目录。</param>
-    /// <returns>包含数据的 JsonNode? ，如果为空则表示对应的文件没有内容，需要自行处理空值；或表示失败的 Result。</returns>
-    Task<Result<JsonNode?>> LoadJsonNodeAsync(string fileName, params string[] subDirectories);
-
-    /// <summary>
-    /// 异步保存完整的数据。
-    /// </summary>
-    /// <param name="jsonNode">要保存的数据。</param>
-    /// <param name="fileName">文件名。</param>
-    /// <param name="subDirectories">文件所在的子目录。</param>
-    /// <returns>表示操作结果的 Result。</returns>
-    Task<Result> SaveJsonNodeAsync(JsonNode? jsonNode, string fileName, params string[] subDirectories);
-
-    /// <summary>
     /// 异步保存完整的数据。
     /// 泛型模式。
     /// </summary>

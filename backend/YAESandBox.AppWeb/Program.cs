@@ -93,6 +93,13 @@ builder.Services.AddSwaggerGen(options =>
 
 builder.Services.AddHttpClient();
 
+// --- SignalR ---
+builder.Services.AddSignalR()
+    .AddJsonProtocol(options =>
+    {
+        YaeSandBoxJsonHelper.CopyFrom(options.PayloadSerializerOptions, YaeSandBoxJsonHelper.JsonSerializerOptions);
+    });
+
 // ---- 数据保护服务 ---
 // 1. 添加数据保护服务
 builder.Services.AddDataProtection();
@@ -105,17 +112,21 @@ builder.Services.AddSingleton<ISecretProtector, SecretProtector>();
 // 3. 注册通用的数据保护服务
 builder.Services.AddSingleton<IDataProtectionService, DataProtectionService>();
 
+// --- 存储服务 ---
+// 1. 将最内层的、带缓存的存储服务注册为一个具体的类型。
+//    它本身也是一个单例。
+builder.Services.AddSingleton(
+    new JsonFileCacheJsonStorage(builder.Configuration.GetValue<string?>("DataFiles:RootDirectory"))
+);
 
-// --- SignalR ---
-builder.Services.AddSignalR()
-    .AddJsonProtocol(options =>
-    {
-        YaeSandBoxJsonHelper.CopyFrom(options.PayloadSerializerOptions, YaeSandBoxJsonHelper.JsonSerializerOptions);
-    });
-
-// --- Application Services (Singleton or Scoped depending on need) ---
-builder.Services.AddSingleton<IGeneralJsonRootStorage, JsonFileCacheJsonStorage>(_ =>
-    new JsonFileCacheJsonStorage(builder.Configuration.GetValue<string?>("DataFiles:RootDirectory")));
+// 2. 注册我们的装饰器。这才是最终提供给应用程序的服务。
+//    使用工厂模式来确保正确的依赖被注入到装饰器的构造函数中。
+builder.Services.AddSingleton<IGeneralJsonRootStorage>(sp =>
+    new ProtectedJsonStorage(
+        sp.GetRequiredService<JsonFileCacheJsonStorage>(), // <-- 明确告诉容器，我要用那个具体的JsonFileCacheJsonStorage来装饰
+        sp.GetRequiredService<IDataProtectionService>()   // <-- 容器自动提供数据保护服务
+    )
+);
 
 // --- CORS (Configure as needed, especially for development) ---
 builder.Services.AddCors(options =>

@@ -10,68 +10,44 @@ namespace YAESandBox.Depend.Storage;
 public partial class JsonFileJsonStorage
 {
     /// <inheritdoc/>
-    public virtual async Task<Result<JsonNode?>> LoadJsonNodeAsync(string fileName, params string[] subDirectories)
-    {
-        var filePath = this.GetNewFilePath(fileName, subDirectories);
-        using (await this.GetLockForFile(filePath).LockAsync()) // 确保文件访问的线程安全
-        {
-            try
-            {
-                if (!File.Exists(filePath.TotalPath))
-                    return Result.Ok<JsonNode?>(null);
-
-                string json = await File.ReadAllTextAsync(filePath.TotalPath);
-
-                try
-                {
-                    if (string.IsNullOrWhiteSpace(json))
-                        return Result.Ok<JsonNode?>(null);
-
-                    // 从文件内容反序列化为 JsonNode
-                    var doc = JsonNode.Parse(json);
-                    return doc;
-                }
-                catch (JsonException ex)
-                {
-                    // 捕获 JSON 解析错误
-                    return JsonError.Error(json, $"加载配置时反序列化出错 ({filePath.TotalPath}): {ex.Message}");
-                }
-            }
-            catch (Exception ex)
-            {
-                return NormalError.Error($"加载配置时出错 ({filePath.TotalPath}): {ex.Message}");
-            }
-        }
-    }
-
-    /// <inheritdoc/>
     public virtual async Task<Result> SaveAllAsync<T>(T? needSaveObj, string fileName, params string[] subDirectories)
     {
-        var json = JsonSerializer.SerializeToNode(needSaveObj, YaeSandBoxJsonHelper.JsonSerializerOptions);
-        return await this.SaveJsonNodeAsync(json, fileName, subDirectories);
+        string jsonContent = JsonSerializer.Serialize(needSaveObj, YaeSandBoxJsonHelper.JsonSerializerOptions);
+        var filePath = this.GetNewFilePath(fileName, subDirectories);
+        using (await this.GetLockForFile(filePath).LockAsync())
+        {
+            return await this.SaveFileContentAsync(jsonContent, filePath);
+        }
     }
 
     /// <inheritdoc/>
     public virtual async Task<Result<T?>> LoadAllAsync<T>(string fileName, params string[] subDirectories)
     {
-        var jsonResult = await this.LoadJsonNodeAsync(fileName, subDirectories);
-        if (jsonResult.TryGetError(out var error, out var value))
-            return error;
-        if (value == null)
+        var filePath = this.GetNewFilePath(fileName, subDirectories);
+        string? jsonContent;
+
+        using (await this.GetLockForFile(filePath).LockAsync())
+        {
+            var loadResult = await this.LoadFileContentAsync(filePath);
+            if (loadResult.TryGetError(out var error, out string? content))
+                return error;
+            jsonContent = content;
+        }
+
+        if (string.IsNullOrWhiteSpace(jsonContent))
             return Result.Ok<T?>(default);
-        
+
         try
         {
-            var obj = value.Deserialize<T>(YaeSandBoxJsonHelper.JsonSerializerOptions);
-            if (obj is null)
-                return JsonError.Error(value, $"反序列化数据为类型 {typeof(T).Name} 时出错: 序列化结果为 null");
-            return obj;
+            var obj = JsonSerializer.Deserialize<T>(jsonContent, YaeSandBoxJsonHelper.JsonSerializerOptions);
+            return Result.Ok(obj);
         }
         catch (JsonException ex)
         {
-            return JsonError.Error(value, $"反序列化数据为类型 {typeof(T).Name} 时出错: {ex.Message}");
+            return JsonError.Error(jsonContent, $"反序列化数据为类型 {typeof(T).Name} 时出错: {ex.Message}");
         }
     }
+
 
     /// <inheritdoc />
     public virtual async Task<Result<IEnumerable<string>>> ListFileNamesAsync(
@@ -152,18 +128,6 @@ public partial class JsonFileJsonStorage
                 // 这种情况比较少见，但为了完整性可以捕获
                 return Result.Fail($"执行删除文件操作 '{filePath.TotalPath}' 时发生外部错误: {ex.Message}");
             }
-        }
-    }
-
-    /// <inheritdoc/>
-    public virtual async Task<Result> SaveJsonNodeAsync(JsonNode? jsonNode, string fileName, params string[] subDirectories)
-    {
-        if (jsonNode == null)
-            return Result.Ok();
-        var filePath = this.GetNewFilePath(fileName, subDirectories: subDirectories);
-        using (await this.GetLockForFile(filePath).LockAsync()) // 确保文件访问的线程安全
-        {
-            return await SaveAllInternalAsync(filePath, jsonNode);
         }
     }
 }

@@ -99,14 +99,6 @@ public static class ScopedStorageFactory
         private string[] ScopePrefixPathParts { get; }
 
         /// <inheritdoc />
-        public Task<Result<JsonNode?>> LoadJsonNodeAsync(string fileName, params string[] subDirectories) =>
-            this.GeneralJsonStorage.LoadJsonNodeAsync(fileName, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());
-
-        /// <inheritdoc />
-        public Task<Result> SaveJsonNodeAsync(JsonNode? jsonNode, string fileName, params string[] subDirectories) =>
-            this.GeneralJsonStorage.SaveJsonNodeAsync(jsonNode, fileName, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());
-
-        /// <inheritdoc />
         public Task<Result> SaveAllAsync<T>(T? needSaveObj, string fileName, params string[] subDirectories) =>
             this.GeneralJsonStorage.SaveAllAsync(needSaveObj, fileName, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());
 

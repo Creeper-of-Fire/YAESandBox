@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Depend.Storage;
 
@@ -257,5 +258,36 @@ public static class YaeSandBoxJsonHelper
         }
 
         return false;
+    }
+    
+    /// <summary>
+    /// 通过JSON序列化和反序列化创建一个对象的深拷贝。
+    /// 这是一种简单而有效的创建对象独立副本的方法，适用于可序列化的POCO对象。
+    /// </summary>
+    /// <typeparam name="T">要克隆的对象的类型。</typeparam>
+    /// <param name="source">源对象。</param>
+    /// <returns>源对象的一个新的深拷贝实例，如果源为null则返回null。</returns>
+    public static Result<T> DeepClonePoco<T>(T source)
+    {
+        try
+        {
+            // 1. 将源对象序列化为JSON字符串。
+            string json = JsonSerializer.Serialize(source, JsonSerializerOptions);
+
+            // 2. 将JSON字符串反序列化为一个新的对象。
+            var clone = JsonSerializer.Deserialize<T>(json, JsonSerializerOptions);
+
+            // 如果克隆结果为null（例如，对象被序列化为"null"），这是一个意外的失败。
+            if (clone is null)
+            {
+                return Result.Fail("深拷贝失败：反序列化后的结果为 null，这是一个非预期的状态。");
+            }
+
+            return Result.Ok<T>(clone);
+        }
+        catch (Exception ex) // 捕获所有可能的异常，如 JsonException, NotSupportedException 等
+        {
+            return Result.Fail($"深拷贝失败：在序列化或反序列化过程中发生错误。详情: {ex.Message}");
+        }
     }
 }

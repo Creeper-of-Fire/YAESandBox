@@ -7,42 +7,60 @@ namespace YAESandBox.Depend.Storage;
 /// <remarks>带缓存的版本</remarks>
 public partial class JsonFileCacheJsonStorage(string? dataRootPath) : JsonFileJsonStorage(dataRootPath)
 {
-    /// <inheritdoc />
-    public override async Task<Result<JsonNode?>> LoadJsonNodeAsync(string fileName, params string[] subDirectories)
+    /// <summary>
+    /// 重写文件内容加载逻辑，优先从缓存中读取。
+    /// </summary>
+    /// <param name="filePath">目标文件的路径对象。</param>
+    /// <returns>包含文件内容的 Result，如果缓存命中则来自缓存，否则来自文件系统。</returns>
+    protected override async Task<Result<string?>> LoadFileContentAsync(FilePath filePath)
     {
-        if (this.TryRetrieveFileContentInternal(subDirectories, fileName, out var jsonNode))
-            return jsonNode?.DeepClone() ?? null;
+        // 1. 尝试从缓存中获取
+        if (this.TryRetrieveFileContentFromCache(filePath, out string? cachedContent))
+        {
+            return Result.Ok(cachedContent); // 缓存命中
+        }
 
-        // 缓存未命中或克隆失败，从底层存储加载
-        var loadResult = await base.LoadJsonNodeAsync(fileName, subDirectories);
+        // 2. 缓存未命中，调用基类方法从磁盘加载
+        var loadResult = await base.LoadFileContentAsync(filePath);
 
-        if (!loadResult.TryGetValue(out var loadedDoc))
-            return loadResult;
-        if (loadedDoc == null) // 找不到键，自行处理空值
-            return Result.Ok<JsonNode?>(null);
+        // 3. 如果从磁盘加载成功，将内容存入缓存
+        if (loadResult.TryGetValue(out string? fileContent) && fileContent != null)
+        {
+            this.StoreFileContentInCache(filePath, fileContent);
+        }
 
-        // 创建一个副本存入缓存，这样原始的 loadedDoc 可以被调用者安全 Dispose
-        this.StoreFileContentInternal(subDirectories, fileName, loadedDoc.DeepClone());
         return loadResult;
     }
 
-    /// <inheritdoc />
-    public override async Task<Result> SaveJsonNodeAsync(JsonNode? jsonNode, string fileName, params string[] subDirectories)
+    /// <summary>
+    /// 重写文件内容保存逻辑，在成功写入文件后更新缓存。
+    /// </summary>
+    /// <param name="content">要写入文件的字符串内容。</param>
+    /// <param name="filePath">目标文件的路径对象。</param>
+    /// <returns>表示操作结果的 Result。</returns>
+    protected override async Task<Result> SaveFileContentAsync(string content, FilePath filePath)
     {
-        var saveResult = await base.SaveJsonNodeAsync(jsonNode, fileName, subDirectories);
-        if (saveResult.TryGetError(out var error))
-            return error;
-        if (jsonNode == null)
-            return saveResult;
+        // 1. 调用基类方法将内容写入磁盘
+        var saveResult = await base.SaveFileContentAsync(content, filePath);
 
-        this.StoreFileContentInternal(subDirectories, fileName, jsonNode.DeepClone()); // 创建一个副本存入缓存，以避免外部修改影响缓存
+        // 2. 如果写入成功，则更新缓存
+        if (saveResult.IsSuccess)
+        {
+            this.StoreFileContentInCache(filePath, content);
+        }
+
         return saveResult;
     }
 
     /// <inheritdoc />
     public override async Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories)
     {
-        this.RemoveFileFromCacheInternal(subDirectories, fileName);
+        var filePath = new FilePath(this.WorkPath, fileName, subDirectories);
+
+        // 1. 先从缓存中移除，确保缓存一致性
+        this.RemoveFileFromCache(filePath);
+        
+        // 2. 然后调用基类方法从磁盘删除
         return await base.DeleteFileAsync(fileName, subDirectories);
     }
 }

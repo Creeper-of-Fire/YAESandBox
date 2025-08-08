@@ -36,6 +36,49 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRoo
         if (!string.IsNullOrEmpty(directory) && !Directory.Exists(directory))
             Directory.CreateDirectory(directory); // 如果目录不存在，则创建它
     }
+    
+    /// <summary>
+    /// 异步地将字符串内容写入指定文件。
+    /// 该方法处理目录创建和文件写入的底层逻辑。
+    /// </summary>
+    /// <param name="content">要写入文件的字符串内容。</param>
+    /// <param name="filePath">目标文件的路径对象。</param>
+    /// <returns>表示操作结果的 Result。</returns>
+    protected virtual async Task<Result> SaveFileContentAsync(string content, FilePath filePath)
+    {
+        try
+        {
+            EnsureDirectory(filePath);
+            await File.WriteAllTextAsync(filePath.TotalPath, content);
+            return Result.Ok();
+        }
+        catch (Exception ex) // 捕获文件写入等潜在错误
+        {
+            return Result.Fail($"保存文件时出错 ({filePath.TotalPath}): {ex.Message}");
+        }
+    }
+
+    /// <summary>
+    /// 异步地从指定文件读取字符串内容。
+    /// </summary>
+    /// <param name="filePath">目标文件的路径对象。</param>
+    /// <returns>包含文件内容的 Result，如果文件不存在则内容为 null；或表示失败的 Result。</returns>
+    protected virtual async Task<Result<string?>> LoadFileContentAsync(FilePath filePath)
+    {
+        try
+        {
+            if (!File.Exists(filePath.TotalPath))
+            {
+                return Result.Ok<string?>(null); // 文件不存在，返回成功但内容为null
+            }
+
+            return await File.ReadAllTextAsync(filePath.TotalPath);
+        }
+        catch (Exception ex)
+        {
+            return Result.Fail($"加载文件时出错 ({filePath.TotalPath}): {ex.Message}");
+        }
+    }
 
     /// <summary>
     /// 异步保存完整的数据到文件。

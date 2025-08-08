@@ -1,5 +1,7 @@
 ﻿using System.Collections;
 using System.Reflection;
+using YAESandBox.Depend.Results;
+using YAESandBox.Depend.Storage;
 
 namespace YAESandBox.Depend.AspNetCore.Secret;
 
@@ -10,19 +12,21 @@ public interface IDataProtectionService
 {
     /// <summary>
     /// 深度加密对象中所有标记为 [Protected] 的属性。
+    /// 此方法不会修改原始对象，并且会处理克隆过程中可能发生的错误。
     /// </summary>
     /// <typeparam name="T">对象类型</typeparam>
     /// <param name="dataObject">要加密的对象</param>
-    /// <returns>返回同一个对象实例，但敏感字段已被加密。</returns>
-    T ProtectObject<T>(T dataObject);
+    /// <returns>一个包含新的、加密后对象实例的 Result，如果失败则包含错误信息。</returns>
+    Result<T> Protect<T>(T dataObject);
 
     /// <summary>
     /// 深度解密对象中所有标记为 [Protected] 的属性。
+    /// 此方法不会修改原始对象，并且会处理克隆过程中可能发生的错误。
     /// </summary>
     /// <typeparam name="T">对象类型</typeparam>
     /// <param name="dataObject">要解密的对象</param>
-    /// <returns>返回同一个对象实例，但敏感字段已被解密。</returns>
-    T UnprotectObject<T>(T dataObject);
+    /// <returns>一个包含新的、解密后对象实例的 Result，如果失败则包含错误信息。。</returns>
+    Result<T> Unprotect<T>(T dataObject);
 }
 
 /// <inheritdoc />
@@ -31,16 +35,24 @@ public class DataProtectionService(ISecretProtector secretProtector) : IDataProt
     private ISecretProtector SecretProtector { get; } = secretProtector;
 
     /// <inheritdoc />
-    public T ProtectObject<T>(T dataObject)
+    public Result<T> Protect<T>(T dataObject)
     {
-        ProcessObject(dataObject, (protector, value) => protector.Protect(value));
+        var cloneResult = YaeSandBoxJsonHelper.DeepClonePoco(dataObject);
+        if (cloneResult.TryGetError(out var error, out var clone))
+            return error;
+
+        this.ProcessObject(clone, (protector, value) => protector.Protect(value));
         return dataObject;
     }
 
     /// <inheritdoc />
-    public T UnprotectObject<T>(T dataObject)
+    public Result<T> Unprotect<T>(T dataObject)
     {
-        ProcessObject(dataObject, (protector, value) => protector.Unprotect(value));
+        var cloneResult = YaeSandBoxJsonHelper.DeepClonePoco(dataObject);
+        if (cloneResult.TryGetError(out var error, out var clone))
+            return error;
+
+        this.ProcessObject(clone, (protector, value) => protector.Unprotect(value));
         return dataObject;
     }
 
