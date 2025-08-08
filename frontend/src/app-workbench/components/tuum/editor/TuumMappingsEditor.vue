@@ -13,9 +13,9 @@
       </template>
 
       <!-- 1. 缺少必要输入的警告 -->
-      <n-alert v-if="missingInputs.length > 0" :show-icon="true" title="缺少必要的输入映射" type="error">
-        <p style="margin-top: 4px;">此枢机中的符文需要以下输入，但尚未配置映射来源：</p>
-        <n-tag v-for="input in missingInputs" :key="input" style="margin-right: 8px; margin-top: 4px;" type="error">
+      <n-alert v-if="missingRequiredInternalInputs.length > 0" :show-icon="true" title="缺少必要的内部输入" type="error">
+        <p style="margin-top: 4px;">此枢机需要以下内部变量，但它们既未被内部生产，也未从外部映射：</p>
+        <n-tag v-for="input in missingRequiredInternalInputs" :key="input" style="margin-right: 8px; margin-top: 4px;" type="error">
           {{ input }}
         </n-tag>
       </n-alert>
@@ -24,34 +24,22 @@
       <div class="mappings-list">
         <div v-for="row in inputMappingRows" :key="row.globalVar" class="mapping-row">
           <div class="mapping-key">
-            <n-auto-complete
-                :options="availableGlobalVarsOptions"
-                :value="row.globalVar"
-                placeholder="全局变量 (来源)"
-                @update:value="newValue => handleUpdateInputKey(row.globalVar, newValue)"
+            <VariableTag
+                :available-options="consumedEndpointOptions"
+                :name="row.globalVar"
+                :spec="consumedEndpointMap.get(row.globalVar)"
+                @update:name="newVal => handleUpdateInputKey(row.globalVar, newVal)"
             />
-            <n-tooltip v-if="duplicateInputGlobals.has(row.globalVar)">
-              <template #trigger>
-                <n-icon :component="AlertCircleIcon" class="status-icon" color="#d03050"/>
-              </template>
-              全局变量来源重复，这将导致映射冲突。
-            </n-tooltip>
           </div>
           <n-icon :component="ArrowForwardIcon" class="arrow-icon" style="transform: rotate(0)"/>
           <div class="mapping-value">
-            <n-dynamic-tags
-                :value="row.localVars"
-                @update:value="(newValues: string[]) => handleUpdateInputValues(row.globalVar, newValues)"
-            >
-              <template #input="{ submit, deactivate }">
-                <n-auto-complete
-                    :options="requiredInputsOptions"
-                    size="small"
-                    @blur="deactivate"
-                    @select="submit($event)"
-                />
-              </template>
-            </n-dynamic-tags>
+            <VariableTagSelector
+                v-model:model-value="row.localVars"
+                :available-specs="analysisResult?.internalConsumedSpecs ?? []"
+                :restrict-to-list="true"
+                placeholder="+ 添加目标"
+                @update:model-value="newValues => handleUpdateInputValues(row.globalVar, newValues)"
+            />
           </div>
           <n-button class="delete-button" text type="error" @click="deleteInputMappingRow(row.globalVar)">
             <template #icon>
@@ -78,24 +66,21 @@
       <div class="mappings-list">
         <div v-for="row in outputMappingRows" :key="row.localVar" class="mapping-row">
           <div class="mapping-key">
-            <n-auto-complete
-                :options="producibleOutputsOptions"
-                :value="row.localVar"
-                placeholder="内部变量 (来源)"
-                @update:value="newValue => handleUpdateOutputKey(row.localVar, newValue)"
+            <VariableTag
+                :available-options="internalProducedVarsOptions"
+                :name="row.localVar"
+                :spec="internalProducedSpecMap.get(row.localVar)"
+                @update:name="newVal => handleUpdateOutputKey(row.localVar, newVal)"
             />
-            <n-tooltip v-if="duplicateOutputLocals.has(row.localVar)">
-              <template #trigger>
-                <n-icon :component="AlertCircleIcon" class="status-icon" color="#d03050"/>
-              </template>
-              内部变量来源重复，这将导致映射冲突。
-            </n-tooltip>
           </div>
           <n-icon :component="ArrowForwardIcon" class="arrow-icon"/>
           <div class="mapping-value">
-            <n-dynamic-tags
-                :value="row.globalVars"
-                @update:value="(newValues: string[]) => handleUpdateOutputValues(row.localVar, newValues)"
+            <VariableTagSelector
+                v-model:model-value="row.globalVars"
+                :available-specs="analysisResult?.producedEndpoints ?? []"
+                :restrict-to-list="false"
+                placeholder="+ 添加端点"
+                @update:model-value="newValues => handleUpdateOutputValues(row.localVar, newValues)"
             />
           </div>
           <n-button class="delete-button" text type="error" @click="deleteOutputMappingRow(row.localVar)">
@@ -112,18 +97,23 @@
 
 <script lang="ts" setup>
 import {computed} from 'vue';
-import {NAlert, NAutoComplete, NButton, NCard, NDynamicTags, NEmpty, NIcon, NTag, NTooltip} from 'naive-ui';
-import {AddIcon, AlertCircleIcon, ArrowForwardIcon, DeleteIcon} from '@/utils/icons';
+import {NAlert, NButton, NCard, NEmpty, NIcon, NTag} from 'naive-ui';
+import {AddIcon, ArrowForwardIcon, DeleteIcon} from '@/utils/icons';
+import type {TuumAnalysisResult} from "@/app-workbench/types/generated/workflow-config-api-client";
+import VariableTagSelector from "@/app-workbench/components/tuum/editor/VariableTagSelector.vue";
+import VariableTag from "@/app-workbench/components/tuum/editor/VariableTag.vue";
 
 // --- 类型定义 ---
 interface InputMappingRow
 {
+  id: symbol;
   globalVar: string;
   localVars: string[];
 }
 
 interface OutputMappingRow
 {
+  id: symbol;
   localVar: string;
   globalVars: string[];
 }
@@ -132,28 +122,69 @@ interface OutputMappingRow
 const props = defineProps<{
   inputMappings: Record<string, string[]>;
   outputMappings: Record<string, string[]>;
-  requiredInputs: string[];
-  producibleOutputs: string[];
   availableGlobalVars?: string[];
+  analysisResult: TuumAnalysisResult | null;
 }>();
 
 const emit = defineEmits(['update:inputMappings', 'update:outputMappings']);
 
 // --- 计算属性 (ViewModel) ---
 const inputMappingRows = computed<InputMappingRow[]>(() =>
-    Object.entries(props.inputMappings).map(([globalVar, localVars]) => ({globalVar, localVars}))
+    Object.entries(props.inputMappings).map(([globalVar, localVars]) => ({
+      id: Symbol(),
+      globalVar,
+      localVars
+    }))
 );
+
+// 为 outputMappingRows 也添加唯一的 id
 const outputMappingRows = computed<OutputMappingRow[]>(() =>
-    Object.entries(props.outputMappings).map(([localVar, globalVars]) => ({localVar, globalVars}))
+    Object.entries(props.outputMappings).map(([localVar, globalVars]) => ({
+      id: Symbol(),
+      localVar,
+      globalVars
+    }))
 );
 
-// --- 计算属性 (用于UI和校验) ---
-const availableGlobalVarsOptions = computed(() => props.availableGlobalVars?.map(v => ({label: v, value: v})) ?? []);
-const requiredInputsOptions = computed(() => props.requiredInputs.map(v => ({label: v, value: v})));
-const producibleOutputsOptions = computed(() => props.producibleOutputs.map(v => ({label: v, value: v})));
 
-const mappedLocalInputs = computed(() => new Set(Object.values(props.inputMappings).flat()));
-const missingInputs = computed(() => props.requiredInputs.filter(req => !mappedLocalInputs.value.has(req)));
+// 为单选 VariableTag 提供补全列表的计算属性
+const consumedEndpointOptions = computed(() => props.analysisResult?.consumedEndpoints.map(s => ({label: s.name, value: s.name})) ?? []);
+const internalProducedVarsOptions = computed(() => props.analysisResult?.internalProducedSpecs.map(s => ({
+  label: s.name,
+  value: s.name
+})) ?? []);
+
+// 为 VariableTag 提供快速查找 Spec 的 Map
+function createSpecMap<T extends { name: string }>(specs: T[] | undefined): Map<string, T> {
+  const map = new Map<string, T>();
+  specs?.forEach(spec => {
+    map.set(spec.name, spec);
+  });
+  return map;
+}
+
+const consumedEndpointMap = computed(() => createSpecMap(props.analysisResult?.consumedEndpoints));
+const internalProducedSpecMap = computed(() => createSpecMap(props.analysisResult?.internalProducedSpecs));
+
+// 错误-缺失的必需内部输入: 找出那些必需但未被映射的内部变量
+const missingRequiredInternalInputs = computed(() =>
+{
+  if (!props.analysisResult) return [];
+
+  // 1. 找出所有分析出的必需内部变量 (net requirements)
+  const requiredInternalVars = new Set(
+      props.analysisResult.internalConsumedSpecs
+          .filter(spec => !spec.isOptional) // isOptional=false 意味着是净需求
+          .map(spec => spec.name)
+  );
+
+  // 2. 找出当前所有已被映射的内部变量
+  const mappedInternalVars = new Set(Object.values(props.inputMappings).flat());
+
+  // 3. 返回二者的差集
+  return [...requiredInternalVars].filter(req => !mappedInternalVars.has(req));
+});
+
 
 const duplicateInputGlobals = computed(() => findDuplicates(Object.keys(props.inputMappings)));
 const duplicateOutputLocals = computed(() => findDuplicates(Object.keys(props.outputMappings)));
@@ -193,7 +224,7 @@ function deleteInputMappingRow(globalVar: string)
 
 function handleUpdateInputKey(oldKey: string, newKey: string)
 {
-  if (oldKey === newKey) return;
+  if (oldKey === newKey || !newKey) return;
   const newMappings = {...props.inputMappings};
   // 检查新键是否已存在
   if (newKey in newMappings)
@@ -229,7 +260,7 @@ function deleteOutputMappingRow(localVar: string)
 
 function handleUpdateOutputKey(oldKey: string, newKey: string)
 {
-  if (oldKey === newKey) return;
+  if (oldKey === newKey || !newKey) return;
   const newMappings = {...props.outputMappings};
   if (newKey in newMappings)
   {
