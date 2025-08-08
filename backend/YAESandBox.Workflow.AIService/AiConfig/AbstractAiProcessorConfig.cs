@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using YAESandBox.Depend.AspNetCore.Secret;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;
@@ -9,7 +10,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig;
 /// 这个是Ai服务配置的基类，仅含绝对存在的字段。
 /// </summary>
 [JsonConverter(typeof(AbstractAiProcessorConfigConverter))]
-public abstract record AbstractAiProcessorConfig(string ConfigType)
+public abstract record AbstractAiProcessorConfig(string ConfigType):IProtectedData
 {
     /// <summary>
     /// 根据此配置创建一个具体的 AI 处理器实例。

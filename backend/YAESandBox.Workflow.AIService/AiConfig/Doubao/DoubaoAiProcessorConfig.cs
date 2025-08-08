@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
+using YAESandBox.Depend.AspNetCore.Secret;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
@@ -34,6 +35,7 @@ internal record DoubaoAiProcessorConfig() : AbstractAiProcessorConfig(nameof(Dou
         ErrorMessageResourceName = "Validation_Required",
         ErrorMessageResourceType = typeof(AiProcessorConfigResources) // 通用验证消息
     )]
+    [Protected]
     public string? ApiKey { get; init; }
 
     /// <summary>
@@ -165,7 +167,7 @@ internal record DoubaoAiProcessorConfig() : AbstractAiProcessorConfig(nameof(Dou
         ResourceType = typeof(DoubaoConfigResources)
     )]
     public IReadOnlyList<LogitBiasItemDto>? LogitBias { get; init; }
-    
+
     public record LogitBiasItemDto
     {
         [JsonPropertyName("tokenId")]

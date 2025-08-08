@@ -2,6 +2,7 @@
 
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using YAESandBox.Depend.AspNetCore.Secret;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.DeepSeek;
@@ -16,6 +17,7 @@ internal record DeepSeekAiProcessorConfig() : AbstractAiProcessorConfig("DeepSee
     [Required(ErrorMessage = "API密钥是必填项。")]
     [DataType(DataType.Password)]
     [Display(Name = "API 密钥 (API Key)", Description = "您的 DeepSeek API 密钥。")]
+    [Protected]
     public string? ApiKey { get; init; }
 
     [Required(ErrorMessage = "模型名称是必填项。")]

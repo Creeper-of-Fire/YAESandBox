@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using YAESandBox.Depend.AspNetCore.Secret;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 
@@ -7,7 +8,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig;
 /// <summary>
 /// 代表一个 AI 配置集，它包含了一组特定类型的 AI 配置。
 /// </summary>
-public class AiConfigurationSet
+public class AiConfigurationSet : IProtectedData
 {
     /// <summary>
     /// 默认的 AI 配置集名称。
