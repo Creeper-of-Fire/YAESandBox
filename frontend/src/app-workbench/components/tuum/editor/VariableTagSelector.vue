@@ -11,27 +11,22 @@
         closable
         @remove="handleRemove(index)"
         @update:name="newValue => handleUpdate(index, newValue)"
+        @create="newValue => handleCreate(index, newValue)"
     />
 
-    <!-- 2. 用于添加新 Tag 的独立 AutoComplete -->
-    <n-auto-complete
-        v-model:value="inputValue"
-        :get-show="() => availableOptionsForNewTag.length > 0"
-        :options="availableOptionsForNewTag"
-        :placeholder="placeholder"
-        class="tag-input"
-        clearable
-        size="small"
-        @select="handleAdd"
-    />
+    <!-- 2. 一个“添加”按钮 -->
+    <n-button v-if="allowAdd" size="small" dashed @click="handleAddNewTag">
+      {{ placeholder }}
+    </n-button>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {computed, type PropType, ref} from 'vue';
-import {NAutoComplete} from 'naive-ui';
+import {computed, nextTick, onBeforeUpdate, type PropType, ref} from 'vue';
 import VariableTag from './VariableTag.vue';
 import type {ConsumedSpec, ProducedSpec} from '@/app-workbench/types/generated/workflow-config-api-client';
+// 定义 VariableTag 组件实例的类型
+type VariableTagInstance = InstanceType<typeof VariableTag>;
 
 type VarSpec = ConsumedSpec | ProducedSpec;
 
@@ -63,8 +58,20 @@ const props = defineProps({
 
 const emit = defineEmits(['update:modelValue']);
 
-// 内部状态，用于绑定 AutoComplete 输入框
-const inputValue = ref('');
+// 用于存储所有 VariableTag 子组件实例的引用
+const tagRefs = ref<Record<number, VariableTagInstance>>({});
+
+// 在 v-for 中设置 ref 的标准做法
+const setTagRef = (el: any, index: number) => {
+  if (el) {
+    tagRefs.value[index] = el;
+  }
+};
+
+// 在组件更新前清空 refs，防止内存泄漏和引用错误
+onBeforeUpdate(() => {
+  tagRefs.value = {};
+});
 
 // 使用 v-model 的标准计算属性模板
 const selectedVars = computed({
@@ -80,14 +87,24 @@ const specMap = computed(() =>
   return map;
 });
 
-// 可用于添加新标签的选项（过滤掉已选的）
-const availableOptionsForNewTag = computed(() =>
-{
-  const selectedSet = new Set(selectedVars.value);
-  return props.availableSpecs
-      .filter(spec => !selectedSet.has(spec.name))
-      .map(spec => ({label: spec.name, value: spec.name}));
-});
+// 处理添加新标签的动作
+async function handleAddNewTag() {
+  // 1. 在 modelValue 的副本中添加一个空字符串作为占位符
+  const newVars = [...props.modelValue, ''];
+  emit('update:modelValue', newVars);
+
+  // 2. 等待 DOM 更新，新的 VariableTag 组件会被渲染出来
+  await nextTick();
+
+  // 3. 获取刚刚创建的新标签的 ref
+  const newTagIndex = newVars.length - 1;
+  const newTagRef = tagRefs.value[newTagIndex];
+
+  // 4. 调用子组件暴露的 startEditing 方法，使其进入编辑状态
+  if (newTagRef) {
+    await newTagRef.startEditing();
+  }
+}
 
 // 计算某个已存在的标签在编辑时可选的列表（包含它自己）
 function getAvailableOptionsForTag(currentName: string)
@@ -98,26 +115,43 @@ function getAvailableOptionsForTag(currentName: string)
       .map(spec => ({label: spec.name, value: spec.name}));
 }
 
-function handleAdd(name: string)
-{
-  if (name && !selectedVars.value.includes(name))
-  {
-    selectedVars.value = [...selectedVars.value, name];
+// 当一个由空字符串占位符创建的标签完成编辑时触发
+function handleCreate(indexToUpdate: number, newName: string) {
+  if (!newName) {
+    // 如果用户没有输入任何内容就取消了，直接移除这个占位符
+    handleRemove(indexToUpdate);
+    return;
   }
-  // 清空输入框
-  inputValue.value = '';
+
+  const newVars = [...props.modelValue];
+  // 检查新名称是否已存在（不包括当前位置，以防万一）
+  const isDuplicate = newVars.some((v, i) => i !== indexToUpdate && v === newName);
+
+  if (!isDuplicate) {
+    newVars[indexToUpdate] = newName;
+    emit('update:modelValue', newVars);
+  } else {
+    // 如果名称重复，则不作改变，直接移除占位符
+    handleRemove(indexToUpdate);
+  }
 }
 
-function handleUpdate(indexToUpdate: number, newName: string)
-{
-  const newVars = [...selectedVars.value];
-  newVars[indexToUpdate] = newName;
-  emit('update:modelValue', newVars);
+function handleUpdate(indexToUpdate: number, newName: string) {
+  const newVars = [...props.modelValue];
+  // 检查新名称是否已存在（不包括当前位置）
+  const isDuplicate = newVars.some((v, i) => i !== indexToUpdate && v === newName);
+
+  if (newName && !isDuplicate) {
+    newVars[indexToUpdate] = newName;
+    emit('update:modelValue', newVars);
+  } else {
+    // 如果新名称无效或已存在，这里我们选择移除
+    handleRemove(indexToUpdate);
+  }
 }
 
-function handleRemove(indexToRemove: number)
-{
-  const newVars = [...selectedVars.value];
+function handleRemove(indexToRemove: number) {
+  const newVars = [...props.modelValue];
   newVars.splice(indexToRemove, 1);
   emit('update:modelValue', newVars);
 }

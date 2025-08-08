@@ -1,31 +1,37 @@
-﻿<!-- src/app-workbench/components/.../VariableTag.vue -->
-<template>
+﻿<template>
   <div class="editable-variable-tag">
-    <n-auto-complete
-        v-if="isEditing"
-        ref="inputRef"
-        :options="availableOptions"
-        :value="name"
-        placeholder="输入变量名"
-        size="small"
-        @blur="handleBlur"
-        @select="handleSelect"
-        @keyup.enter="handleEnter"
-    />
-    <n-popover placement="top-start" trigger="hover">
+    <!-- Popover 保持在最外层，包裹住交互的 Tag -->
+    <n-popover :disabled="isEditing || !spec" placement="top-start" trigger="hover">
       <template #trigger>
         <n-tag
-            :closable="closable"
+            :closable="closable && !isEditing"
             :type="tagType"
             @dblclick="startEditing"
             @close.stop.prevent="onRemove"
         >
-          <span v-if="name">{{ name }}</span>
-          <span v-else style="color: #aaa;">未命名</span>
+          <!-- 核心改动：在 n-tag 内部切换编辑和显示状态 -->
+          <n-auto-complete
+              v-if="isEditing"
+              ref="inputRef"
+              v-model:value="editingValue"
+              :options="availableOptions"
+              class="seamless-editor"
+              clear-after-select
+              placeholder="输入变量名"
+              size="small"
+              @blur="handleBlur"
+              @select="handleSelect"
+              @keydown.enter.prevent="handleEnter"
+          />
+          <span v-else class="tag-text">
+            <span v-if="name">{{ name }}</span>
+            <span v-else style="color: #aaa;">未命名</span>
+          </span>
         </n-tag>
       </template>
+
       <!-- Popover 的内容：显示详细的变量定义 -->
-      <n-descriptions :column="1" bordered label-placement="top" size="small" title="变量详情">
+      <n-descriptions v-if="spec" :column="1" bordered label-placement="top" size="small" title="变量详情">
         <n-descriptions-item label="变量名">
           {{ spec.name }}
         </n-descriptions-item>
@@ -45,105 +51,140 @@
 
 <script lang="ts" setup>
 import {computed, nextTick, type PropType, ref, watch} from 'vue';
-import {type NAutoComplete, NDescriptions, NDescriptionsItem, NPopover, NTag} from 'naive-ui';
+import {NAutoComplete, NDescriptions, NDescriptionsItem, NPopover, NTag} from 'naive-ui';
 import type {ConsumedSpec, ProducedSpec} from "@/app-workbench/types/generated/workflow-config-api-client";
 
 type VarSpec = ConsumedSpec | ProducedSpec;
 
-const props = defineProps({
-  name: {
-    type: String,
-    required: true
-  },
-  // spec 是可选的，用于提供丰富的类型提示
-  spec: {
-    type: Object as PropType<VarSpec>,
-    default: null,
-  },
-  closable: {
-    type: Boolean,
-    default: false,
-  },
-  // 接收可用的补全选项
-  availableOptions: {
-    type: Array as PropType<Array<{ label: string, value: string }>>,
-    default: () => []
-  },
-  startInEditMode: {
-    type: Boolean,
-    default: false
-  }
+const props = withDefaults(defineProps<{
+  name?: string;
+  spec?: VarSpec;
+  closable?: boolean;
+  availableOptions?: Array<{ label: string, value: string }>;
+}>(), {
+  name: '',
+  spec: null,
+  closable: false,
+  availableOptions: () => [],
 });
+
+// const props = defineProps({
+//   name: {
+//     type: String,
+//     required: true
+//   },
+//   spec: {
+//     type: Object as PropType<VarSpec>,
+//     default: null,
+//   },
+//   closable: {
+//     type: Boolean,
+//     default: false,
+//   },
+//   availableOptions: {
+//     type: Array as PropType<Array<{ label: string, value: string }>>,
+//     default: () => []
+//   }
+// });
 
 const emit = defineEmits(['update:name', 'remove', 'create']);
 
 const isEditing = ref(false);
+const editingValue = ref(props.name); // 使用一个独立的 ref 来绑定输入框的值
 const inputRef = ref<InstanceType<typeof NAutoComplete> | null>(null);
 
-// 监视 startInEditMode prop，一旦为 true 就进入编辑状态
-watch(() => props.startInEditMode, (isNew) => {
-  if (isNew) {
-    startEditing();
-  }
-}, { immediate: true });
+watch(() => props.name, (newName) =>
+{
+  editingValue.value = newName;
+});
 
 async function startEditing()
 {
-  // 不允许编辑一个空的 closable 标签，这是选择器的添加按钮
+  // 不允许编辑一个空的 closable 标签（通常是“添加”按钮）
   if (props.closable && !props.name) return;
+
+  // 如果已经在编辑，则不执行任何操作
+  if (isEditing.value) return;
+
+  editingValue.value = props.name; // 同步当前值为编辑值
   isEditing.value = true;
-  // DOM 更新后，自动聚焦到输入框
   await nextTick();
   inputRef.value?.focus();
 }
 
-function finishEditing(newValue?: string) {
-  const finalValue = newValue ?? props.name;
+function finishEditing(newValue?: string)
+{
+  if (!isEditing.value) return;
 
-  // 如果是新建（原来的 name 是空的）并且有新值
-  if (props.startInEditMode && finalValue) {
+  const finalValue = (newValue ?? editingValue.value).trim();
+
+  // 如果初始 name 为空，且有了新值，则认为是创建
+  if (!props.name && finalValue)
+  {
     emit('create', finalValue);
   }
-  // 如果是编辑（原来的 name 不是空的）且值有变化
-  else if (!props.startInEditMode && finalValue !== props.name) {
+  // 如果初始 name 不为空，且值发生了变化，则认为是更新
+  else if (props.name && finalValue && finalValue !== props.name)
+  {
     emit('update:name', finalValue);
   }
 
   isEditing.value = false;
 }
 
-function handleSelect(value: string) {
+
+function handleSelect(value: string)
+{
   finishEditing(value);
 }
 
-function handleEnter(e: KeyboardEvent) {
-  finishEditing((e.target as HTMLInputElement).value);
-}
-
-function handleBlur() {
+function handleEnter()
+{
   finishEditing();
 }
 
-function onRemove() {
+function handleBlur()
+{
+  finishEditing();
+}
+
+function onRemove()
+{
   emit('remove');
 }
 
 const tagType = computed(() =>
 {
-  // 如果 spec 存在且是必需的，则为 error，否则为 success 或 default
   if (props.spec && 'isOptional' in props.spec && !props.spec.isOptional)
   {
     return 'error';
   }
-  return props.spec ? 'success' : 'default'; // 有 spec 但非必需，或 spec 不存在
+  return props.spec ? 'success' : 'default';
+});
+
+defineExpose({
+  startEditing
 });
 </script>
 
 <style scoped>
 .editable-variable-tag {
-  display: inline-block;
+  display: inline-flex; /* 使用 flex 确保内部元素正确对齐 */
+  vertical-align: middle; /* 确保标签和其他文本对齐 */
 }
+
 .n-tag {
-  cursor: pointer; /* 提示用户可以交互 */
+  cursor: pointer;
+  /* 确保标签在编辑时有足够的空间容纳输入框 */
+  min-width: 50px;
+  /* 当 tag 内容是 input 时，需要 flex 布局让 input 撑开 */
+  display: inline-flex;
+  align-items: center;
 }
+
+.tag-text {
+  /* 确保文本和输入框垂直对齐 */
+  line-height: 1;
+}
+
 </style>
