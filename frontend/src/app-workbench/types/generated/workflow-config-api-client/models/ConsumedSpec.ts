@@ -10,11 +10,11 @@ export type ConsumedSpec = {
     /**
      * 被消费的变量名
      */
-    name?: string | null;
-    def?: VarSpecDef;
+    name: string;
+    def: VarSpecDef;
     /**
      * 此变量是否可选。默认为 false。
      */
-    isOptional?: boolean;
+    isOptional: boolean;
 };
 

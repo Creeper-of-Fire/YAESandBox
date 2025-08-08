@@ -10,10 +10,10 @@ export type TuumConnectionEndpoint = {
     /**
      * 端点所属枢机的ConfigId。
      */
-    tuumId?: string | null;
+    tuumId: string;
     /**
      * 端点的名称，对应于TuumConfig中Input/Output Mappings的Value。
      */
-    endpointName?: string | null;
+    endpointName: string;
 };
 

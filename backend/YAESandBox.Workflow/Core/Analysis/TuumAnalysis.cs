@@ -1,4 +1,5 @@
-﻿using System.Reflection;
+﻿using System.ComponentModel.DataAnnotations;
+using System.Reflection;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
@@ -15,25 +16,43 @@ public record TuumAnalysisResult
     /// Tuum 对外暴露的、可被连接的【输入端点】的完整定义列表。
     /// 前端可根据此列表生成 Tuum 的输入连接点。
     /// </summary>
-    public List<ConsumedSpec> ConsumedEndpoints { get; init; } = [];
+    [Required]
+    public required List<ConsumedSpec> ConsumedEndpoints { get; init; } = [];
 
     /// <summary>
     /// Tuum 对外暴露的、可引出连接的【输出端点】的完整定义列表。
     /// 前端可根据此列表生成 Tuum 的输出连接点。
     /// </summary>
-    public List<ProducedSpec> ProducedEndpoints { get; init; } = [];
+    [Required]
+    public required List<ProducedSpec> ProducedEndpoints { get; init; } = [];
 
     /// <summary>
-    /// Tuum 内部所有被发现的变量及其最终推断出的类型定义。
-    /// Key 是内部变量名，Value 是其类型定义。
-    /// 这对于前端调试和提供智能提示非常有用。
+    /// Tuum 内部所有被【消费】的变量的聚合列表。
+    /// 这对于前端在配置输入映射时，提供可用的内部目标变量推荐列表非常有用。
     /// </summary>
-    public Dictionary<string, VarSpecDef> InternalVariableDefinitions { get; init; } = [];
+    [Required]
+    public required List<ConsumedSpec> InternalConsumedSpecs { get; init; } = [];
+
+    /// <summary>
+    /// Tuum 内部所有被【生产】的变量的聚合列表。
+    /// 这对于前端在配置输出映射时，提供可用的内部源变量推荐列表非常有用。
+    /// </summary>
+    [Required]
+    public required List<ProducedSpec> InternalProducedSpecs { get; init; } = [];
+
+    /// <summary>
+    /// Tuum 内部所有被发现的变量及其最终推断出的统一类型定义。
+    /// Key 是内部变量名，Value 是其类型定义。
+    /// 这主要用于内部校验和为外部端点确定类型。
+    /// </summary>
+    [Required]
+    public required Dictionary<string, VarSpecDef> InternalVariableDefinitions { get; init; } = [];
 
     /// <summary>
     /// 在分析过程中发现的所有错误和警告的列表。
     /// 如果此列表为空，代表 Tuum 配置健康。
     /// </summary>
+    [Required]
     public List<ValidationMessage> Messages { get; init; } = [];
 }
 
@@ -52,7 +71,7 @@ public partial class TuumAnalysisService
     {
         // 调用分析部分的逻辑
         var tuumMappingUniqueError = this.ValidateTuumMappingUniqueness(tuumConfig).ToList();
-        var (internalTypeDefs, validationTypesMessages) = this.AnalyzeVariableTypes(tuumConfig);
+        var (internalConsumed, internalProduced, internalTypeDefs, validationTypesMessages) = this.AnalyzeVariableTypes(tuumConfig);
         var dataFlowMessages = this.ValidateDataFlow(tuumConfig);
 
         var consumedEndpoints = this.DetermineConsumedEndpoints(tuumConfig, internalTypeDefs);
@@ -61,6 +80,8 @@ public partial class TuumAnalysisService
         // 聚合所有结果到扁平化的 DTO
         return new TuumAnalysisResult
         {
+            InternalConsumedSpecs = internalConsumed,
+            InternalProducedSpecs = internalProduced,
             InternalVariableDefinitions = internalTypeDefs,
             ConsumedEndpoints = consumedEndpoints,
             ProducedEndpoints = producedEndpoints,
@@ -113,9 +134,13 @@ public partial class TuumAnalysisService
     /// **分析函数 1: 类型分析**
     /// <para>职责：只关心类型。确定所有内部变量的最终类型，并报告类型冲突。</para>
     /// </summary>
-    private (Dictionary<string, VarSpecDef> TypeDefs, List<ValidationMessage> Messages) AnalyzeVariableTypes(TuumConfig config)
+    private (List<ConsumedSpec> Consumed, List<ProducedSpec> Produced,
+        Dictionary<string, VarSpecDef> TypeDefs, List<ValidationMessage>Messages)
+        AnalyzeVariableTypes(TuumConfig config)
     {
         var messages = new List<ValidationMessage>();
+        var internalConsumed = new List<ConsumedSpec>();
+        var internalProduced = new List<ProducedSpec>();
         var variableTypeAppearances = new Dictionary<string, List<VarSpecDef>>();
 
         // 步骤 1.1: 独立遍历，收集每个变量名出现过的所有类型定义。
@@ -123,12 +148,14 @@ public partial class TuumAnalysisService
         {
             foreach (var spec in rune.GetConsumedSpec())
             {
+                internalConsumed.Add(spec);
                 variableTypeAppearances.TryAdd(spec.Name, []);
                 variableTypeAppearances[spec.Name].Add(spec.Def);
             }
 
             foreach (var spec in rune.GetProducedSpec())
             {
+                internalProduced.Add(spec);
                 variableTypeAppearances.TryAdd(spec.Name, []);
                 variableTypeAppearances[spec.Name].Add(spec.Def);
             }
@@ -164,7 +191,7 @@ public partial class TuumAnalysisService
             finalTypeDefs[varName] = finalDef;
         }
 
-        return (finalTypeDefs, messages);
+        return (internalConsumed, internalProduced, finalTypeDefs, messages);
     }
 
     /// <summary>

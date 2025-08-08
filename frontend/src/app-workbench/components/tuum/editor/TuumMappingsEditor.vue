@@ -5,7 +5,9 @@
     <n-card :bordered="true" size="small" title="输入映射">
       <template #header-extra>
         <n-button dashed size="small" @click="addInputMappingRow">
-          <template #icon> <n-icon :component="AddIcon"/> </template>
+          <template #icon>
+            <n-icon :component="AddIcon"/>
+          </template>
           手动添加映射
         </n-button>
       </template>
@@ -23,19 +25,19 @@
         <div v-for="row in inputMappingRows" :key="row.globalVar" class="mapping-row">
           <div class="mapping-key">
             <n-auto-complete
-                :value="row.globalVar"
                 :options="availableGlobalVarsOptions"
+                :value="row.globalVar"
                 placeholder="全局变量 (来源)"
                 @update:value="newValue => handleUpdateInputKey(row.globalVar, newValue)"
             />
             <n-tooltip v-if="duplicateInputGlobals.has(row.globalVar)">
               <template #trigger>
-                <n-icon :component="AlertCircleIcon" color="#d03050" class="status-icon"/>
+                <n-icon :component="AlertCircleIcon" class="status-icon" color="#d03050"/>
               </template>
               全局变量来源重复，这将导致映射冲突。
             </n-tooltip>
           </div>
-          <n-icon :component="ArrowForwardIcon" class="arrow-icon"/>
+          <n-icon :component="ArrowForwardIcon" class="arrow-icon" style="transform: rotate(0)"/>
           <div class="mapping-value">
             <n-dynamic-tags
                 :value="row.localVars"
@@ -45,17 +47,19 @@
                 <n-auto-complete
                     :options="requiredInputsOptions"
                     size="small"
-                    @select="submit($event)"
                     @blur="deactivate"
+                    @select="submit($event)"
                 />
               </template>
             </n-dynamic-tags>
           </div>
-          <n-button text type="error" @click="deleteInputMappingRow(row.globalVar)" class="delete-button">
-            <template #icon> <n-icon :component="DeleteIcon"/> </template>
+          <n-button class="delete-button" text type="error" @click="deleteInputMappingRow(row.globalVar)">
+            <template #icon>
+              <n-icon :component="DeleteIcon"/>
+            </template>
           </n-button>
         </div>
-        <n-empty v-if="inputMappingRows.length === 0" description="暂无输入映射" class="empty-placeholder"/>
+        <n-empty v-if="inputMappingRows.length === 0" class="empty-placeholder" description="暂无输入映射"/>
       </div>
     </n-card>
 
@@ -63,7 +67,9 @@
     <n-card :bordered="true" size="small" style="margin-top: 16px;" title="输出映射">
       <template #header-extra>
         <n-button dashed size="small" @click="addOutputMappingRow">
-          <template #icon> <n-icon :component="AddIcon"/> </template>
+          <template #icon>
+            <n-icon :component="AddIcon"/>
+          </template>
           添加输出映射
         </n-button>
       </template>
@@ -73,46 +79,51 @@
         <div v-for="row in outputMappingRows" :key="row.localVar" class="mapping-row">
           <div class="mapping-key">
             <n-auto-complete
-                :value="row.localVar"
                 :options="producibleOutputsOptions"
+                :value="row.localVar"
                 placeholder="内部变量 (来源)"
                 @update:value="newValue => handleUpdateOutputKey(row.localVar, newValue)"
             />
             <n-tooltip v-if="duplicateOutputLocals.has(row.localVar)">
               <template #trigger>
-                <n-icon :component="AlertCircleIcon" color="#d03050" class="status-icon"/>
+                <n-icon :component="AlertCircleIcon" class="status-icon" color="#d03050"/>
               </template>
               内部变量来源重复，这将导致映射冲突。
             </n-tooltip>
           </div>
-          <n-icon :component="ArrowForwardIcon" class="arrow-icon" style="transform: rotate(0)"/>
+          <n-icon :component="ArrowForwardIcon" class="arrow-icon"/>
           <div class="mapping-value">
             <n-dynamic-tags
                 :value="row.globalVars"
                 @update:value="(newValues: string[]) => handleUpdateOutputValues(row.localVar, newValues)"
             />
           </div>
-          <n-button text type="error" @click="deleteOutputMappingRow(row.localVar)" class="delete-button">
-            <template #icon> <n-icon :component="DeleteIcon"/> </template>
+          <n-button class="delete-button" text type="error" @click="deleteOutputMappingRow(row.localVar)">
+            <template #icon>
+              <n-icon :component="DeleteIcon"/>
+            </template>
           </n-button>
         </div>
-        <n-empty v-if="outputMappingRows.length === 0" description="暂无输出映射" class="empty-placeholder"/>
+        <n-empty v-if="outputMappingRows.length === 0" class="empty-placeholder" description="暂无输出映射"/>
       </div>
     </n-card>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {computed, h} from 'vue';
+import {computed} from 'vue';
 import {NAlert, NAutoComplete, NButton, NCard, NDynamicTags, NEmpty, NIcon, NTag, NTooltip} from 'naive-ui';
 import {AddIcon, AlertCircleIcon, ArrowForwardIcon, DeleteIcon} from '@/utils/icons';
 
 // --- 类型定义 ---
-interface InputMappingRow {
+interface InputMappingRow
+{
   globalVar: string;
   localVars: string[];
 }
-interface OutputMappingRow {
+
+interface OutputMappingRow
+{
   localVar: string;
   globalVars: string[];
 }
@@ -130,10 +141,10 @@ const emit = defineEmits(['update:inputMappings', 'update:outputMappings']);
 
 // --- 计算属性 (ViewModel) ---
 const inputMappingRows = computed<InputMappingRow[]>(() =>
-    Object.entries(props.inputMappings).map(([globalVar, localVars]) => ({ globalVar, localVars }))
+    Object.entries(props.inputMappings).map(([globalVar, localVars]) => ({globalVar, localVars}))
 );
 const outputMappingRows = computed<OutputMappingRow[]>(() =>
-    Object.entries(props.outputMappings).map(([localVar, globalVars]) => ({ localVar, globalVars }))
+    Object.entries(props.outputMappings).map(([localVar, globalVars]) => ({localVar, globalVars}))
 );
 
 // --- 计算属性 (用于UI和校验) ---
@@ -147,14 +158,19 @@ const missingInputs = computed(() => props.requiredInputs.filter(req => !mappedL
 const duplicateInputGlobals = computed(() => findDuplicates(Object.keys(props.inputMappings)));
 const duplicateOutputLocals = computed(() => findDuplicates(Object.keys(props.outputMappings)));
 
-function findDuplicates(arr: string[]): Set<string> {
+function findDuplicates(arr: string[]): Set<string>
+{
   const seen = new Set<string>();
   const duplicates = new Set<string>();
-  arr.forEach(item => {
+  arr.forEach(item =>
+  {
     if (item.trim() === '') return;
-    if (seen.has(item)) {
+    if (seen.has(item))
+    {
       duplicates.add(item);
-    } else {
+    }
+    else
+    {
       seen.add(item);
     }
   });
@@ -162,22 +178,26 @@ function findDuplicates(arr: string[]): Set<string> {
 }
 
 // --- 事件处理器 (Input Mappings) ---
-function addInputMappingRow() {
-  const newMappings = { ...props.inputMappings, '': [] };
+function addInputMappingRow()
+{
+  const newMappings = {...props.inputMappings, '': []};
   emit('update:inputMappings', newMappings);
 }
 
-function deleteInputMappingRow(globalVar: string) {
-  const newMappings = { ...props.inputMappings };
+function deleteInputMappingRow(globalVar: string)
+{
+  const newMappings = {...props.inputMappings};
   delete newMappings[globalVar];
   emit('update:inputMappings', newMappings);
 }
 
-function handleUpdateInputKey(oldKey: string, newKey: string) {
+function handleUpdateInputKey(oldKey: string, newKey: string)
+{
   if (oldKey === newKey) return;
-  const newMappings = { ...props.inputMappings };
+  const newMappings = {...props.inputMappings};
   // 检查新键是否已存在
-  if (newKey in newMappings) {
+  if (newKey in newMappings)
+  {
     // 可以选择合并或提示错误，这里我们先阻止覆盖
     console.warn(`映射键 "${newKey}" 已存在。`);
     return;
@@ -187,27 +207,32 @@ function handleUpdateInputKey(oldKey: string, newKey: string) {
   emit('update:inputMappings', newMappings);
 }
 
-function handleUpdateInputValues(globalVar: string, newValues: string[]) {
-  const newMappings = { ...props.inputMappings, [globalVar]: newValues };
+function handleUpdateInputValues(globalVar: string, newValues: string[])
+{
+  const newMappings = {...props.inputMappings, [globalVar]: newValues};
   emit('update:inputMappings', newMappings);
 }
 
 // --- 事件处理器 (Output Mappings) ---
-function addOutputMappingRow() {
-  const newMappings = { ...props.outputMappings, '': [] };
+function addOutputMappingRow()
+{
+  const newMappings = {...props.outputMappings, '': []};
   emit('update:outputMappings', newMappings);
 }
 
-function deleteOutputMappingRow(localVar: string) {
-  const newMappings = { ...props.outputMappings };
+function deleteOutputMappingRow(localVar: string)
+{
+  const newMappings = {...props.outputMappings};
   delete newMappings[localVar];
   emit('update:outputMappings', newMappings);
 }
 
-function handleUpdateOutputKey(oldKey: string, newKey: string) {
+function handleUpdateOutputKey(oldKey: string, newKey: string)
+{
   if (oldKey === newKey) return;
-  const newMappings = { ...props.outputMappings };
-  if (newKey in newMappings) {
+  const newMappings = {...props.outputMappings};
+  if (newKey in newMappings)
+  {
     console.warn(`映射键 "${newKey}" 已存在。`);
     return;
   }
@@ -216,8 +241,9 @@ function handleUpdateOutputKey(oldKey: string, newKey: string) {
   emit('update:outputMappings', newMappings);
 }
 
-function handleUpdateOutputValues(localVar: string, newValues: string[]) {
-  const newMappings = { ...props.outputMappings, [localVar]: newValues };
+function handleUpdateOutputValues(localVar: string, newValues: string[])
+{
+  const newMappings = {...props.outputMappings, [localVar]: newValues};
   emit('update:outputMappings', newMappings);
 }
 </script>

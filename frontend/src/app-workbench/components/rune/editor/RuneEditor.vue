@@ -1,62 +1,13 @@
-<!-- src/app-workbench/components/.../RuneEditor.vue -->
 <template>
   <div class="editor-target-renderer">
     <div v-if="rune && selectedRuneSchema">
-      <n-flex align="center" justify="space-between" style="margin-bottom: 16px;">
+      <!-- 头部信息 -->
+      <n-flex align="center" justify="space-between" style="margin-bottom: 12px;">
         <div>
-          <n-h4>
+          <n-h4 style="margin-bottom: 4px;">
             配置符文: {{ rune.name }}
-            <n-popover
-                v-if="hasConsumedVariables || hasProducedVariables"
-                :show="isPopoverVisible"
-                :style="{maxWidth: '400px'}"
-                :trigger="'manual'"
-                placement="right-start"
-                @clickoutside="handleClickOutside"
-            >
-              <template #trigger>
-                <n-button
-                    :focusable="false"
-                    :type="isPopoverPinned ? 'info' : 'default'"
-                    circle
-                    style="margin-left: 8px;"
-                    text
-                    @mouseenter="handleMouseEnter"
-                    @mouseleave="handleMouseLeave"
-                    @click.stop="handleTriggerClick"
-                >
-                  <template #icon>
-                    <n-icon>
-                      <InfoIcon/>
-                    </n-icon>
-                  </template>
-                </n-button>
-              </template>
-
-              <!-- 给 Popover 的内容根元素也绑定上相同的事件监听器 -->
-              <div
-                  @mouseenter="handleMouseEnter"
-                  @mouseleave="handleMouseLeave"
-              >
-
-                <n-flex size="small" vertical>
-                  <div v-if="runeAnalysisResult &&hasConsumedVariables">
-                    <strong>输入变量:</strong>
-                    <n-flex style="margin-top: 4px;">
-                      <n-tag v-for="variable in runeAnalysisResult.consumedVariables" :key="variable">{{ variable }}</n-tag>
-                    </n-flex>
-                  </div>
-                  <div v-if="runeAnalysisResult &&hasProducedVariables">
-                    <strong>输出变量:</strong>
-                    <n-flex style="margin-top: 4px;">
-                      <n-tag v-for="variable in runeAnalysisResult.producedVariables" :key="variable">{{ variable }}</n-tag>
-                    </n-flex>
-                  </div>
-                </n-flex>
-              </div>
-            </n-popover>
           </n-h4>
-          <n-p depth="3" style="margin-top: -8px;">
+          <n-p depth="3" style="margin: 0;">
             符文类型: {{ runeTypeLabel }}
           </n-p>
         </div>
@@ -65,6 +16,32 @@
         </n-form-item>
       </n-flex>
 
+      <!-- 新的变量显示区 -->
+      <n-blockquote
+          v-if="hasConsumedVariables || hasProducedVariables"
+          class="variable-display-box"
+      >
+        <n-flex vertical size="small">
+          <div v-if="runeAnalysisResult && hasConsumedVariables">
+            <strong>输入变量:</strong>
+            <n-flex :wrap="true" style="margin-top: 4px;">
+              <n-tag v-for="variable in runeAnalysisResult.consumedVariables" :key="variable" type="info">
+                {{ variable }}
+              </n-tag>
+            </n-flex>
+          </div>
+          <div v-if="runeAnalysisResult && hasProducedVariables">
+            <strong>输出变量:</strong>
+            <n-flex :wrap="true" style="margin-top: 4px;">
+              <n-tag v-for="variable in runeAnalysisResult.producedVariables" :key="variable" type="success">
+                {{ variable }}
+              </n-tag>
+            </n-flex>
+          </div>
+        </n-flex>
+      </n-blockquote>
+
+      <!-- 动态表单渲染器 -->
       <DynamicFormRenderer
           :key="rune.configId"
           :model-value="rune"
@@ -82,12 +59,12 @@
 
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
-import {NEmpty, NH4, NP, NSpin} from 'naive-ui';
+// 移除了 Popover 相关的组件和图标
+import {NEmpty, NH4, NP, NSpin, NFlex, NFormItem, NSwitch, NBlockquote, NTag} from 'naive-ui';
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import type {AbstractRuneConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import DynamicFormRenderer from "@/app-workbench/features/schema-viewer/DynamicFormRenderer.vue";
 import {useDebounceFn} from "@vueuse/core";
-import {InfoIcon} from "naive-ui/lib/_internal/icons";
 import type {RuneEditorContext} from "@/app-workbench/components/rune/editor/RuneEditorContext.ts";
 import {useRuneAnalysis} from "@/app-workbench/composables/useRuneAnalysis.ts";
 
@@ -96,70 +73,11 @@ const props = defineProps<{
   runeContext: RuneEditorContext;
 }>();
 
-// --- 状态 ---
-const isPopoverVisible = ref(false); // 总开关
-const isPopoverPinned = ref(false);  // 固定状态
 
-let hideTimer: number | null = null; // 延迟隐藏定时器
+// --- 移除了所有 Popover 相关的状态和事件处理函数 ---
+// isPopoverVisible, isPopoverPinned, hideTimer, handleMouseEnter, etc. 都已删除
 
-// 核心函数：当鼠标进入任何一个“安全区域”（按钮或浮层）时调用
-function handleMouseEnter()
-{
-  if (hideTimer)
-  {
-    clearTimeout(hideTimer);
-    hideTimer = null;
-  }
-  isPopoverVisible.value = true;
-}
 
-// 核心函数：当鼠标离开任何一个“安全区域”时调用
-function handleMouseLeave()
-{
-  // 如果已经被用户点击固定，则什么都不做
-  if (isPopoverPinned.value)
-  {
-    return;
-  }
-  // 启动一个延迟隐藏
-  hideTimer = window.setTimeout(() =>
-  {
-    isPopoverVisible.value = false;
-  }, 200);
-}
-
-function handleTriggerClick()
-{
-  // 清除任何可能存在的隐藏定时器，确保点击后不会意外关闭
-  if (hideTimer)
-  {
-    clearTimeout(hideTimer);
-    hideTimer = null;
-  }
-
-  // 点击的作用只有一个：将 Popover 的状态设置为“已固定”
-  // 如果它已经是固定的，则这次点击不执行任何状态变更。
-  if (!isPopoverPinned.value)
-  {
-    isPopoverPinned.value = true;
-  }
-
-  // 确保 Popover 在点击后是可见的
-  isPopoverVisible.value = true;
-}
-
-function handleClickOutside()
-{
-  // 只有在固定的情况下，点击外部才生效
-  if (isPopoverPinned.value)
-  {
-    hideTimer = window.setTimeout(() =>
-    {
-      isPopoverPinned.value = false;
-      isPopoverVisible.value = false;
-    }, 100);
-  }
-}
 const rune = computed(() =>
 {
   return props.runeContext.data;
@@ -190,8 +108,6 @@ const runeTypeLabel = computed(() =>
   const metadata = workbenchStore.runeMetadata[runeType];
   return metadata?.classLabel || runeType;
 });
-
-// --- selectedRune 的计算属性被移除，因为我们直接使用 props.rune ---
 
 // 计算属性：根据选中的符文类型，从 store 中获取对应的 schema
 const selectedRuneSchema = computed(() =>
@@ -232,5 +148,14 @@ const handleFormUpdate = useDebounceFn(handleFormUpdateRaw, 300);
   border-top: none; /* 移除上边框，与上面的符文项更好地融合 */
   border-radius: 0 0 4px 4px; /* 只保留下方的圆角 */
   box-sizing: border-box;
+}
+
+/* 新增的变量显示区样式 */
+.variable-display-box {
+  padding: 12px;
+  margin-bottom: 16px;
+  max-height: 140px; /* 设置一个最大高度 */
+  overflow-y: auto;   /* 当内容超出时，显示垂直滚动条 */
+  background-color: #fafafc; /* 使用一个柔和的背景色以示区别 */
 }
 </style>

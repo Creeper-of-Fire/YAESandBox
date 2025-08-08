@@ -55,7 +55,7 @@ public record TuumConfig
     /// 会将它的数据同时提供给枢机内部的 "initial_query" 和 "log_entry" 两个变量。
     /// </example>
     [Required]
-    public Dictionary<string, List<string>> InputMappings { get; init; } = [];
+    public Dictionary<string, HashSet<string>> InputMappings { get; init; } = [];
 
     /// <summary>
     /// 定义了此枢机的【内部变量】如何驱动【输出端点】。
@@ -73,15 +73,5 @@ public record TuumConfig
     /// 将会同时流向名为 "final_greeting" 和 "summary_output" 的两个外部输出端点。
     /// </example>
     [Required]
-    public Dictionary<string, List<string>> OutputMappings { get; init; } = [];
+    public Dictionary<string, HashSet<string>> OutputMappings { get; init; } = [];
 }
-
-/// <summary>
-/// 定义一个 Tuum 的输入端点。
-/// </summary>
-public record TuumInputEndpoint(ConsumedSpec EndpointSpec, List<string> MappedInternalVars);
-
-/// <summary>
-/// 定义一个 Tuum 的输出端点。
-/// </summary>
-public record TuumOutputEndpoint(ProducedSpec EndpointSpec, List<string> MappedInternalVars);

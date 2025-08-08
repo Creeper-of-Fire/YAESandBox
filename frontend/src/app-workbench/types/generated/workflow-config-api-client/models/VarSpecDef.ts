@@ -10,7 +10,7 @@ export type VarSpecDef = {
     /**
      * 变量的类型基础名称/定义的别名
      */
-    typeName?: string | null;
+    typeName: string;
     /**
      * 对该类型的全局描述
      */

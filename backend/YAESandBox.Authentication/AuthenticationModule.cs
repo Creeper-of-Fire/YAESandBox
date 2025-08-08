@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using YAESandBox.Authentication.Storage;
 using YAESandBox.Depend.AspNetCore;
 
 // 使用你新的命名空间
@@ -15,7 +16,7 @@ namespace YAESandBox.Authentication;
 /// <summary>
 /// 注册认证和授权相关的服务到 Program.cs
 /// </summary>
-public class AuthenticationModule : IProgramModuleMvcConfigurator,IProgramModuleSwaggerUiOptionsConfigurator
+public class AuthenticationModule : IProgramModuleMvcConfigurator, IProgramModuleSwaggerUiOptionsConfigurator
 {
     internal const string AuthenticationGroupName = "v1-authentication";
 
@@ -55,6 +56,8 @@ public class AuthenticationModule : IProgramModuleMvcConfigurator,IProgramModule
         // --- 2. 注册自定义的用户和密码服务 ---
         services.AddSingleton<IPasswordService, PasswordService>();
         services.AddSingleton<UserService>();
+        // --- 2.1 注册用户数据存储服务
+        services.AddSingleton<IUserScopedStorageFactory, UserScopedStorageFactory>();
 
         // --- 3. 让 Swagger UI 支持 JWT ---
         // 注意：这里只配置Swagger的 "SecurityDefinition", 具体的端点文档在各自模块中定义

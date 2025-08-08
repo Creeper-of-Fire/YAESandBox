@@ -10,7 +10,7 @@ export type ProducedSpec = {
     /**
      * 被生产的变量名
      */
-    name?: string | null;
-    def?: VarSpecDef;
+    name: string;
+    def: VarSpecDef;
 };
 

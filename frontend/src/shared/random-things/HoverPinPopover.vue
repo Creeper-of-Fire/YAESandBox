@@ -1,161 +1,140 @@
 ﻿<template>
-  <div class="editor-target-renderer">
-    <div v-if="rune && selectedRuneSchema">
-      <!-- 头部信息 -->
-      <n-flex align="center" justify="space-between" style="margin-bottom: 12px;">
-        <div>
-          <n-h4 style="margin-bottom: 4px;">
-            配置符文: {{ rune.name }}
-          </n-h4>
-          <n-p depth="3" style="margin: 0;">
-            符文类型: {{ runeTypeLabel }}
-          </n-p>
-        </div>
-        <n-form-item label="启用此符文" label-placement="left" style="margin-bottom: 0;">
-          <n-switch v-model:value="rune.enabled"/>
-        </n-form-item>
-      </n-flex>
-
-      <!-- 新的变量显示区 -->
-      <n-blockquote
-          v-if="hasConsumedVariables || hasProducedVariables"
-          class="variable-display-box"
+  <n-popover
+      :show="isPopoverVisible"
+      :style="{maxWidth: '400px'}"
+      :trigger="'manual'"
+      placement="right-start"
+      @clickoutside="handleClickOutside"
+  >
+    <template #trigger>
+      <!-- 触发器容器，绑定所有交互事件 -->
+      <div
+          @mouseenter="handleMouseEnter"
+          @mouseleave="handleMouseLeave"
+          @click.stop="handleTriggerClick"
       >
-        <n-flex vertical size="small">
-          <div v-if="runeAnalysisResult && hasConsumedVariables">
-            <strong>输入变量:</strong>
-            <n-flex :wrap="true" style="margin-top: 4px;">
-              <n-tag v-for="variable in runeAnalysisResult.consumedVariables" :key="variable" type="info">
-                {{ variable }}
-              </n-tag>
-            </n-flex>
-          </div>
-          <div v-if="runeAnalysisResult && hasProducedVariables">
-            <strong>输出变量:</strong>
-            <n-flex :wrap="true" style="margin-top: 4px;">
-              <n-tag v-for="variable in runeAnalysisResult.producedVariables" :key="variable" type="success">
-                {{ variable }}
-              </n-tag>
-            </n-flex>
-          </div>
-        </n-flex>
-      </n-blockquote>
+        <!-- 使用作用域插槽，将内部状态 'isPinned' 暴露给父组件 -->
+        <slot :is-pinned="isPopoverPinned" name="trigger"></slot>
+      </div>
+    </template>
 
-      <!-- 动态表单渲染器 -->
-      <DynamicFormRenderer
-          :key="rune.configId"
-          :model-value="rune"
-          :schema="selectedRuneSchema"
-          @update:model-value="handleFormUpdate"
-      />
-
+    <!-- 内容容器，同样绑定悬停事件以创建“安全区域” -->
+    <div
+        @mouseenter="handleMouseEnter"
+        @mouseleave="handleMouseLeave"
+    >
+      <!-- 默认插槽，用于填充 Popover 的内容 -->
+      <slot></slot>
     </div>
-    <!-- 初始加载或未选中时的状态 -->
-    <n-spin v-else-if="isLoadingSchema" description="正在加载符文配置模板..."/>
-    <!-- 这个空状态理论上不会再显示，因为组件只在被选中时渲染 -->
-    <n-empty v-else description="符文数据或模板未提供"/>
-  </div>
+  </n-popover>
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from 'vue';
-// 移除了 Popover 相关的组件和图标
-import {NEmpty, NH4, NP, NSpin, NFlex, NFormItem, NSwitch, NBlockquote, NTag} from 'naive-ui';
-import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
-import type {AbstractRuneConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
-import DynamicFormRenderer from "@/app-workbench/features/schema-viewer/DynamicFormRenderer.vue";
-import {useDebounceFn} from "@vueuse/core";
-import type {RuneEditorContext} from "@/app-workbench/components/rune/editor/RuneEditorContext.ts";
-import {useRuneAnalysis} from "@/app-workbench/composables/useRuneAnalysis.ts";
+import {ref} from 'vue';
+import {NPopover} from 'naive-ui';
 
-// --- Props ---
-const props = defineProps<{
-  runeContext: RuneEditorContext;
-}>();
+// --- 状态定义 ---
 
+// 控制 Popover 是否可见的最终开关
+const isPopoverVisible = ref(false);
 
-// --- 移除了所有 Popover 相关的状态和事件处理函数 ---
-// isPopoverVisible, isPopoverPinned, hideTimer, handleMouseEnter, etc. 都已删除
+// 标记 Popover 是否被用户点击“固定”
+const isPopoverPinned = ref(false);
+
+// 用于延迟隐藏 Popover 的定时器ID
+let hideTimer: number | null = null;
 
 
-const rune = computed(() =>
-{
-  return props.runeContext.data;
-})
-
-const {
-  analysisResult: runeAnalysisResult,
-  hasConsumedVariables,
-  hasProducedVariables
-} = useRuneAnalysis(
-    computed(() => rune.value),
-    computed(() => rune.value.configId),
-    ref(null)
-);
-
-const workbenchStore = useWorkbenchStore();
-
-const runeSchemas = computed(() => workbenchStore.runeSchemasAsync.state)
-const isLoadingSchema = computed(() => workbenchStore.runeSchemasAsync.isLoading);
+// --- 事件处理函数 ---
 
 /**
- * 计算属性，用于获取符文类型的显示标签。
+ * 当鼠标进入任何一个“安全区域”（触发器或浮层内容）时调用。
+ * 主要作用是：
+ * 1. 如果有计划中的隐藏任务，则取消它。
+ * 2. 确保浮层是可见的。
  */
-const runeTypeLabel = computed(() =>
+function handleMouseEnter()
 {
-  if (!rune.value) return '';
-  const runeType = rune.value.runeType;
-  const metadata = workbenchStore.runeMetadata[runeType];
-  return metadata?.classLabel || runeType;
-});
-
-// 计算属性：根据选中的符文类型，从 store 中获取对应的 schema
-const selectedRuneSchema = computed(() =>
-{
-  // 直接使用 props.rune 来获取 schema-viewer
-  if (!rune.value || !runeSchemas.value) return null;
-  return runeSchemas.value[rune.value.runeType] || null;
-});
-
-/**
- * 当表单数据变化时，直接更新传入的符文对象。
- * @param updatedRuneData - 从 DynamicFormRenderer 返回的完整、更新后的符文对象。
- */
-function handleFormUpdateRaw(updatedRuneData: AbstractRuneConfig)
-{
-  if (rune.value)
+  if (hideTimer)
   {
-    // Object.assign 会直接修改 props.rune 的属性，
-    // 由于它是父组件状态树的一部分，Vue 的响应式系统会检测到变化。
-    Object.assign(rune.value, updatedRuneData);
+    clearTimeout(hideTimer);
+    hideTimer = null;
   }
-  else
+  isPopoverVisible.value = true;
+}
+
+/**
+ * 当鼠标离开任何一个“安全区域”时调用。
+ * 如果浮层未被固定，则启动一个短暂的延迟后隐藏它。
+ * 这种延迟可以防止鼠标在触发器和浮层之间快速移动时意外关闭。
+ */
+function handleMouseLeave()
+{
+  // 如果已经被用户点击固定，则什么都不做
+  if (isPopoverPinned.value)
   {
-    console.error("更新失败：无法在当前会话中找到选中的符文。");
+    return;
+  }
+  // 启动一个延迟隐藏
+  hideTimer = window.setTimeout(() =>
+  {
+    isPopoverVisible.value = false;
+  }, 200);
+}
+
+/**
+ * 当用户点击触发器时调用。
+ * 主要作用是切换“固定”状态。
+ */
+function handleTriggerClick()
+{
+  // 1. 清除任何可能存在的隐藏定时器，确保点击后不会意外关闭
+  if (hideTimer)
+  {
+    clearTimeout(hideTimer);
+    hideTimer = null;
+  }
+
+  // 2. 切换固定状态
+  isPopoverPinned.value = !isPopoverPinned.value;
+
+  // 3. 确保 Popover 在点击后是可见的。如果取消固定，则它将遵循悬停逻辑。
+  isPopoverVisible.value = true;
+}
+
+/**
+ * 当用户点击 Popover 外部区域时调用 (由 n-popover 自身提供)。
+ * 只有在浮层被“固定”时，此操作才有效，用于取消固定状态。
+ */
+function handleClickOutside()
+{
+  // 只有在固定的情况下，点击外部才生效
+  if (isPopoverPinned.value)
+  {
+    // 使用一个非常短的延迟来避免一些事件冲突
+    hideTimer = window.setTimeout(() =>
+    {
+      isPopoverPinned.value = false;
+      isPopoverVisible.value = false;
+    }, 100);
   }
 }
 
-// 创建一个防抖版本的更新函数，延迟 300 毫秒执行
-const handleFormUpdate = useDebounceFn(handleFormUpdateRaw, 300);
+/**
+ 使用方法：
+ <template>
+ <HoverPinPopover>
+ <!-- 触发器插槽，可以根据 isPinned 状态改变样式 -->
+ <template #trigger="{ isPinned }">
+ <n-button :type="isPinned ? 'primary' : 'default'">
+ {{ isPinned ? '已固定' : '悬停或点击我' }}
+ </n-button>
+ </template>
+
+ <!-- 默认插槽，放置浮层内容 -->
+ <p>这里是浮层里的详细信息。</p>
+ <p>鼠标可以自由地移动到这里而不会关闭我。</p>
+ </HoverPinPopover>
+ </template>
+ */
 </script>
-
-<style scoped>
-.editor-target-renderer {
-  /* 从卡片样式改为更融合的背景 */
-  background-color: #fdfdfd;
-  padding: 16px; /* 调整内边距 */
-  border: 1px solid #f0f0f0;
-  border-top: none; /* 移除上边框，与上面的符文项更好地融合 */
-  border-radius: 0 0 4px 4px; /* 只保留下方的圆角 */
-  box-sizing: border-box;
-}
-
-/* 新增的变量显示区样式 */
-.variable-display-box {
-  padding: 12px;
-  margin-bottom: 16px;
-  max-height: 140px; /* 设置一个最大高度 */
-  overflow-y: auto;   /* 当内容超出时，显示垂直滚动条 */
-  background-color: #fafafc; /* 使用一个柔和的背景色以示区别 */
-}
-</style>

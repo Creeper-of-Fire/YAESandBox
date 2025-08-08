@@ -3,7 +3,7 @@ using YAESandBox.Depend.Storage;
 
 namespace YAESandBox.Authentication;
 
-public class UserService(IGeneralJsonStorage storage, IPasswordService passwordService)
+public class UserService(IGeneralJsonRootStorage storage, IPasswordService passwordService)
 {
     private const string UserFileName = "users.json";
 
