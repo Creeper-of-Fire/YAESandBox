@@ -12,7 +12,6 @@
     </template>
     <TuumMappingsEditor
         :analysis-result="analysisResult"
-        :available-global-vars="tuumContext.availableGlobalVarsForTuum"
         :input-mappings="tuumContext.data.inputMappings"
         :output-mappings="tuumContext.data.outputMappings"
         @update:input-mappings="newMappings => tuumContext.data.inputMappings = newMappings"
