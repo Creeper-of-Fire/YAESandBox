@@ -71,5 +71,7 @@ public class WorkflowConfigModule :
         typeof(SendToRawTextRuneConfig),
         typeof(PromptGenerationRuneConfig),
         typeof(AiRuneConfig),
+        typeof(HistoryAppendRuneConfig),
+        typeof(StaticVariableRuneConfig),
     ];
 }
