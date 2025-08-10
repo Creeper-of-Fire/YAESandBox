@@ -28,6 +28,9 @@
       <Compile Update="Module\ExactModule\LuaRunner\LuaScriptRunner.LuaDateTimeBridge.cs">
         <DependentUpon>LuaScriptRunner.cs</DependentUpon>
       </Compile>
+      <Compile Update="Rune\ExactRune\ScriptParser.cs">
+        <DependentUpon>StaticVariableRune.cs</DependentUpon>
+      </Compile>
     </ItemGroup>
     
     <ItemGroup>

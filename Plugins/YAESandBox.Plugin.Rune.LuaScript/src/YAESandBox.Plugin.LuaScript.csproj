@@ -65,7 +65,16 @@
         <!-- 执行复制 -->
         <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(PluginDestination)" SkipUnchangedFiles="true" />
 
-        <!-- 5. 专门处理 wwwroot -->
+        <!-- 5. 专门处理 runtimes 文件夹 -->
+        <ItemGroup>
+            <!-- 找到输出目录下的 runtimes 文件夹里的所有文件 -->
+            <RuntimeFilesToCopy Include="$(OutputPath)runtimes\**\*.*" />
+        </ItemGroup>
+        <Copy SourceFiles="@(RuntimeFilesToCopy)"
+              DestinationFiles="@(RuntimeFilesToCopy -> '$(PluginDestination)\runtimes\%(RecursiveDir)%(Filename)%(Extension)')"
+              SkipUnchangedFiles="true" />
+        
+        <!-- 6. 专门处理 wwwroot -->
         <ItemGroup>
             <WwwRootFiles Include="wwwroot\**\*.*" />
         </ItemGroup>

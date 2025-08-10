@@ -1,5 +1,6 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
+using System.Runtime.Loader;
 using DotNetEnv;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.FileProviders;
@@ -124,7 +125,7 @@ builder.Services.AddSingleton(
 builder.Services.AddSingleton<IGeneralJsonRootStorage>(sp =>
     new ProtectedJsonStorage(
         sp.GetRequiredService<JsonFileCacheJsonStorage>(), // <-- 明确告诉容器，我要用那个具体的JsonFileCacheJsonStorage来装饰
-        sp.GetRequiredService<IDataProtectionService>()   // <-- 容器自动提供数据保护服务
+        sp.GetRequiredService<IDataProtectionService>() // <-- 容器自动提供数据保护服务
     )
 );
 
@@ -236,6 +237,10 @@ namespace YAESandBox.AppWeb
 
     internal static class ApplicationModules
     {
+        // 一个静态字典来持有我们创建的所有插件加载上下文
+        private static readonly Dictionary<string, PluginAssemblyLoadContext> PluginLoadContexts = new();
+        private static bool _isResolvingEventHooked = false;
+        
         /// <summary>
         /// 发现并加载所有模块，包括内置模块和来自插件目录的动态模块。
         /// </summary>
@@ -244,6 +249,14 @@ namespace YAESandBox.AppWeb
         public static (IReadOnlyList<IProgramModule> Modules, IReadOnlyList<Assembly> PluginAssemblies)
             DiscoverAndLoadAllModules(IPluginDiscoveryService pluginDiscoveryService)
         {
+            // 2. 【新增】在第一次加载时，挂载我们的“救援”事件处理器
+            if (!_isResolvingEventHooked)
+            {
+                AssemblyLoadContext.Default.Resolving += ResolvePluginDependency;
+                _isResolvingEventHooked = true;
+                Console.WriteLine("[插件加载器] 已挂载默认上下文的程序集解析事件。");
+            }
+            
             // 1. 定义内置的核心模块列表
             var coreModules = CoreModules;
 
@@ -252,50 +265,101 @@ namespace YAESandBox.AppWeb
 
             // 2. 从发现服务获取所有插件
             var discoveredPlugins = pluginDiscoveryService.DiscoverPlugins();
-
-            // 3. 遍历发现的插件并加载模块
+            
+            // 1. 遍历每个插件目录
             foreach (var plugin in discoveredPlugins)
             {
-                bool foundModuleInPlugin = false;
-                foreach (string dllPath in plugin.DllPaths)
+                // 2. 【核心】在目录中查找所有作为“入口点”的DLL。
+                //    判断标准：该DLL拥有一个同名的 .deps.json 文件。
+                var entryPointDlls = plugin.DllPaths
+                    .Where(dllPath => File.Exists(Path.ChangeExtension(dllPath, ".deps.json")))
+                    .ToList();
+
+                if (entryPointDlls.Count == 0)
+                {
+                    if (plugin.DllPaths.Count > 0)
+                        Console.WriteLine($"[插件加载器] 警告: 插件 '{plugin.Name}' 目录中存在DLL，但未找到任何带有 .deps.json 的入口点程序集。");
+                    continue;
+                }
+
+                // 3. 为每一个找到的入口点DLL创建一个独立的加载上下文
+                foreach (var entryPointDllPath in entryPointDlls)
                 {
                     try
                     {
-                        // 4. 加载程序集。这会让 .NET 运行时知晓这个程序集的存在，
-                        //    并能在后续需要时自动解析其依赖 (如果依赖也在同一目录)。
-                        var assembly = Assembly.LoadFrom(dllPath);
+                        Console.WriteLine($"[插件加载器] 发现入口点: {Path.GetFileName(entryPointDllPath)} in plugin '{plugin.Name}'");
+
+                        // 4. 创建独立的、可回收的加载上下文，并使用入口点自己的路径来初始化解析器。
+                        var loadContext = new PluginAssemblyLoadContext(entryPointDllPath);
+                        
+                        // 将创建的上下文存入我们的静态字典中
+                        PluginLoadContexts[entryPointDllPath] = loadContext;
+
+                        // 5. 使用上下文加载入口点程序集。
+                        //    上下文会自动处理此程序集后续请求的所有托管和非托管依赖。
+                        var assembly =
+                            loadContext.LoadFromAssemblyName(new AssemblyName(Path.GetFileNameWithoutExtension(entryPointDllPath)));
+
                         loadedPluginAssemblies.Add(assembly);
 
-                        // 5. 在当前加载的程序集中查找所有 IProgramModule 的实现
+                        // 6. 在刚刚加载的入口点程序集中查找模块实现
                         var moduleTypes = assembly.GetTypes()
-                            .Where(t => typeof(IProgramModule).IsAssignableFrom(t) && t is { IsInterface: false, IsAbstract: false });
+                            .Where(t => typeof(IProgramModule).IsAssignableFrom(t) && !t.IsInterface && !t.IsAbstract);
 
+                        bool foundModuleInAssembly = false;
                         foreach (var type in moduleTypes)
                         {
-                            // 7. 实例化并添加到插件模块列表
                             if (Activator.CreateInstance(type) is not IProgramModule pluginModuleInstance)
                                 continue;
+
                             pluginModules.Add(pluginModuleInstance);
-                            Console.WriteLine($"[插件加载器] 成功加载模块 '{type.Name}' (来自插件: {plugin.Name})");
-                            foundModuleInPlugin = true;
+                            Console.WriteLine($"[插件加载器] -> 成功加载模块 '{type.FullName}'");
+                            foundModuleInAssembly = true;
                         }
+
+                        if (!foundModuleInAssembly)
+                            Console.WriteLine($"[插件加载器] -> 入口点 '{Path.GetFileName(entryPointDllPath)}' 中未发现 IProgramModule 实现。");
                     }
                     catch (Exception ex)
                     {
-                        Console.WriteLine($"[插件加载器] 错误: 加载插件 {plugin.Name} 失败. {ex.Message}");
-                        if (ex is BadImageFormatException)
-                            Console.WriteLine("[插件加载器] >>>> 提示: 该文件可能不是一个有效的 .NET 程序集，或者目标框架与主程序不兼容。");
+                        Console.WriteLine($"[插件加载器] 严重错误: 加载入口点 '{Path.GetFileName(entryPointDllPath)}' 失败. {ex}");
                     }
                 }
-
-                if (!foundModuleInPlugin)
-                    Console.WriteLine($"[插件加载器] 警告: 插件 '{plugin.Name}' 中虽然找到了 DLL 文件，但未能发现任何 IProgramModule 的实现。");
             }
 
             // 8. 合并内置模块和插件模块
             var allModules = coreModules.Concat(pluginModules).Distinct().ToList();
             AllModules = allModules;
             return (allModules, loadedPluginAssemblies.Distinct().ToList());
+        }
+        
+        /// <summary>
+        /// 当默认的 AssemblyLoadContext 无法解析程序集时，此方法将被调用。
+        /// 它会轮询我们所有的插件上下文，看看是否有任何一个可以提供所需的程序集。
+        /// </summary>
+        private static Assembly? ResolvePluginDependency(AssemblyLoadContext defaultContext, AssemblyName assemblyName)
+        {
+            Console.WriteLine($"[依赖解析] 默认上下文无法找到 '{assemblyName.FullName}'。正在询问插件上下文...");
+
+            // 遍历我们为插件创建的所有加载上下文
+            foreach (var context in PluginLoadContexts.Values)
+            {
+                try
+                {
+                    // 尝试让每个插件上下文使用其自己的解析逻辑来加载这个程序集
+                    // 这会触发我们重写的 Load(AssemblyName) 方法
+                    var assembly = context.LoadFromAssemblyName(assemblyName);
+                    Console.WriteLine($"[依赖解析] -> 成功！插件上下文 '{context.Name}' 提供了 '{assemblyName.Name}'。");
+                    return assembly;
+                }
+                catch (Exception)
+                {
+                    // 如果一个上下文找不到它，这很正常，它会抛出异常。我们忽略它，继续尝试下一个。
+                }
+            }
+
+            Console.WriteLine($"[依赖解析] -> 没有任何插件上下文能够提供 '{assemblyName.Name}'。");
+            return null; // 返回 null，表示我们也无能为力
         }
 
         private static IReadOnlyList<IProgramModule> CoreModules { get; } =
