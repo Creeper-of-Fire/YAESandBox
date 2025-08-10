@@ -1,7 +1,7 @@
 ﻿<!-- src/app-workbench/components/.../MainEditPanel.vue -->
 <template>
   <n-empty v-if="!selectedConfig" description="无激活的编辑会话" style="margin-top: 20%;"/>
-  <div v-else>
+  <div v-else style="overflow: auto;">
     <n-scrollbar>
       <div v-if="selectedType ==='tuum'" class="main-content-wrapper">
         <TuumEditor
@@ -46,5 +46,4 @@ const selectedType = computed(() =>
 </script>
 
 <style scoped>
-
 </style>

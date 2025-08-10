@@ -1,5 +1,5 @@
 ﻿// frontend/src/app-workbench/composables/useTuumAnalysis.ts
-import {ref, type Ref, watch} from "vue";
+import {onMounted, ref, type Ref, watch} from "vue";
 import type {TuumAnalysisResult, TuumConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import {useTuumAnalysisStore} from "@/app-workbench/stores/useTuumAnalysisStore";
 import {useDebounceFn} from "@vueuse/core";
@@ -51,8 +51,10 @@ export function useTuumAnalysis(tuum: Ref<TuumConfig | null>)
         await debouncedExecuteAnalysis(newTuum);
     }, {
         deep: true,       // 深度监听，因为 TuumConfig 是一个复杂的对象
-        immediate: true   // 立即执行一次，以在组件挂载时获取初始分析结果
+        immediate: false
     });
+
+    onMounted(async () => await executeAnalysis(tuum.value));
 
     return {
         /**

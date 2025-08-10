@@ -64,7 +64,7 @@ const internalValue = ref(props.modelValue ?? '');
 const isLoading = ref(true); // 默认加载中
 const loadingText = ref('正在加载编辑器核心...');
 const error = ref<string | null>(null);
-const editorHeight = ref(props.height || '400px');
+const editorHeight = ref(props.height || '600px');
 const editorContainerRef = ref<HTMLElement | null>(null);
 const editorTheme = computed(() => props.theme || 'vs-dark');
 

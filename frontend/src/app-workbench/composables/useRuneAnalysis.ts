@@ -78,11 +78,12 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: 
     }
 
     // 同时监听符文和其上下文的变化
-    watch([rune, tuumContext], async ([newRune, newContext]) => {
+    watch([rune, tuumContext], async ([newRune, newContext]) =>
+    {
         await debouncedExecuteAnalysis(newRune, newContext)
-    }, {immediate: true, deep: true}); // immediate:true 确保挂载时执行
+    }, {immediate: false, deep: true});
 
-    // onMounted(async () => await executeAnalysis(rune.value));
+    onMounted(async () => await executeAnalysis(rune.value, tuumContext.value));
 
     return {
         analysisResult,
