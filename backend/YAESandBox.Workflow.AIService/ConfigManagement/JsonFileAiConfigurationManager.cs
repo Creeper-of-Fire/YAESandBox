@@ -27,7 +27,7 @@ public class JsonFileAiConfigurationManager(IUserScopedStorageFactory userStorag
         if (storageResult.TryGetError(out var userError, out var storage))
             return userError;
 
-        var result = await storage.LoadAllAsync<Dictionary<string, AiConfigurationSet>>(ConfigFileName, userId);
+        var result = await storage.LoadAllAsync<Dictionary<string, AiConfigurationSet>>(ConfigFileName);
         if (result.TryGetError(out var error, out var value))
             return error;
 
@@ -49,7 +49,7 @@ public class JsonFileAiConfigurationManager(IUserScopedStorageFactory userStorag
         if (storageResult.TryGetError(out var userError, out var storage))
             return userError;
 
-        return await storage.SaveAllAsync(configs, ConfigFileName, userId);
+        return await storage.SaveAllAsync(configs, ConfigFileName);
     }
 
     /// <inheritdoc/>

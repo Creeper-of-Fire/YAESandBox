@@ -22,7 +22,7 @@ public interface IMasterAiService
     /// </summary>
     /// <param name="userId"></param>
     /// <returns></returns>
-    SubAiService ToSubAiService(string userId) => new SubAiService(this, userId);
+    SubAiService ToSubAiService(string userId) => new(this, userId);
 }
 
 /// <summary>
