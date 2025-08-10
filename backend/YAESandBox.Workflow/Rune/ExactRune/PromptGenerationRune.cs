@@ -47,16 +47,46 @@ internal partial class PromptGenerationRuneProcessor(
         string substitutedContent = this.SubstitutePlaceholdersAsync(this.Config.Template, tuumProcessorContent);
         this.DebugDto.FinalPromptContent = substitutedContent;
 
-        var prompt = new RoledPromptDto
+        var newPrompt = new RoledPromptDto
         {
             Role = PromptRoleTypeExtension.ToPromptRoleType(this.Config.RoleType),
             Content = substitutedContent,
             Name = this.Config.PromptNameInAiModel ?? string.Empty
         };
-        this.DebugDto.GeneratedPrompt = prompt;
+        this.DebugDto.GeneratedPrompt = newPrompt;
 
         var prompts = (tuumProcessorContent.GetTuumVar<ImmutableList<RoledPromptDto>>(this.Config.PromptsName) ?? []).ToList();
-        prompts.Add(prompt);
+
+        // 检查是否可以追加到上一个提示词
+        var lastPrompt = prompts.LastOrDefault();
+
+        // 条件：列表不为空，且最后一个提示词的角色和名称与新提示词完全相同
+        if (lastPrompt == null ||
+            lastPrompt.Role != newPrompt.Role ||
+            lastPrompt.Name != newPrompt.Name)
+        {
+            // 执行添加模式
+            this.DebugDto.IsAppendMode = false;
+            prompts.Add(newPrompt);
+        }
+        else
+        {
+            // 执行追加模式
+            this.DebugDto.IsAppendMode = true;
+
+            // 创建一个新的 RoledPromptDto 以替换最后一个元素，内容是合并后的
+            // 这比直接修改 lastPrompt.Content 更安全，特别是当 RoledPromptDto 是 record 或 struct 时
+            var updatedLastPrompt = new RoledPromptDto
+            {
+                Role = lastPrompt.Role,
+                Name = lastPrompt.Name,
+                Content = $"{lastPrompt.Content}\n{newPrompt.Content}" // 使用换行符分隔
+            };
+
+            // 替换列表中的最后一个元素
+            prompts[^1] = updatedLastPrompt;
+        }
+
         tuumProcessorContent.SetTuumVar(this.Config.PromptsName, prompts);
 
         return Task.FromResult(Result.Ok());
@@ -148,6 +178,11 @@ internal partial class PromptGenerationRuneProcessor(
         /// 经过占位符替换后的最终提示词内容。
         /// </summary>
         public string FinalPromptContent { get; internal set; } = string.Empty;
+        
+        /// <summary>
+        /// 指示最终操作是追加内容到上一个提示词 (true) 还是添加一个新的提示词项 (false)。
+        /// </summary>
+        public bool IsAppendMode { get; internal set; }
 
         /// <summary>
         /// 记录已解析并成功替换的占位符及其值。
@@ -239,6 +274,15 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
         Prompt = "例如：'DeepSeek' 或 'はちみ'"
     )]
     public string? PromptNameInAiModel { get; init; }
+
+    /// <summary>
+    /// 指示最终操作是追加内容到上一个提示词 (true) 还是添加一个新的提示词项 (false)。
+    /// </summary>
+    [Display(
+        Name = "追加模式",
+        Description = "指示最终操作是追加内容到上一个提示词 (true) 还是添加一个新的提示词项 (false)。\n仅当本提示词和上一个提示词的角色、角色名相同时。"
+    )]
+    public bool IsAppendMode { get; init; }
 
     /// <summary>
     /// 提示词模板，支持 `[[占位符]]` 替换。
