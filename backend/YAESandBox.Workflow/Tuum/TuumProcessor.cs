@@ -84,8 +84,12 @@ public class TuumProcessor(
 
             try
             {
-                // 将 C# 对象序列化成 JSON 字符串
-                string json = JsonSerializer.Serialize(tryGetValue);
+                string json;
+                if (tryGetValue is string stringTryGetValue)
+                    json = stringTryGetValue;
+                else
+                    // 将 C# 对象序列化成 JSON 字符串
+                    json = JsonSerializer.Serialize(tryGetValue);
 
                 var result = JsonSerializer.Deserialize<T>(json, YaeSandBoxJsonHelper.JsonSerializerOptions);
 
@@ -119,7 +123,7 @@ public class TuumProcessor(
     /// </summary>
     internal IEnumerable<string> OutputEndpoints { get; } = config.OutputMappings.Values.SelectMany(v => v).Distinct();
 
-    private List<IProcessorWithDebugDto<IRuneProcessorDebugDto>> Runes { get; } =
+    private List<IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto>> Runes { get; } =
         config.Runes.Select(rune => rune.ToRuneProcessor(workflowRuntimeService)).ToList();
 
     /// <summary>
@@ -149,8 +153,10 @@ public class TuumProcessor(
         // 2. 依次执行所有符文
         foreach (var rune in this.Runes)
         {
+            if (!rune.Config.Enabled)
+                continue;
             // (仅处理INormalRune，未来可扩展)
-            if (rune is INormalRune normalRune)
+            if (rune is INormalRune<AbstractRuneConfig, IRuneProcessorDebugDto> normalRune)
             {
                 var result = await normalRune.ExecuteAsync(this.TuumContent, cancellationToken);
                 if (result.TryGetError(out var error))

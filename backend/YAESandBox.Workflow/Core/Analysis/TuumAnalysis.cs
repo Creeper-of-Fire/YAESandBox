@@ -77,20 +77,20 @@ public partial class TuumAnalysisService
         var inputTypeValidationMessages = this.AnalyzeInputTypes(tuumConfig, internalTypeDefs);
 
         // 步骤 2: 进行纯粹的内部需求分析。这是最关键的一步，它不考虑外部输入。
-        var internalRequirements = this.AnalyzeInternalRequirements(tuumConfig.Runes);
+        var internalRequirements = this.AnalyzeInternalRequirements(tuumConfig.GetEnableRunes().ToList());
 
         // 步骤 3: 使用步骤 2 的结果进行完整的数据流校验。
         var dataFlowMessages = this.ValidateDataFlow(tuumConfig, internalRequirements);
 
         // 步骤 4: 聚合内部 Spec 定义
-        var internalConsumedSpecs = tuumConfig.Runes
+        var internalConsumedSpecs = tuumConfig.GetEnableRunes()
             .SelectMany(r => r.GetConsumedSpec())
             .GroupBy(s => s.Name)
             .Select(g => g.First()) // 去重
             .Select(spec => spec with { IsOptional = !internalRequirements.GetValueOrDefault(spec.Name, false) })
             .ToList();
 
-        var internalProducedSpecs = tuumConfig.Runes
+        var internalProducedSpecs = tuumConfig.GetEnableRunes()
             .SelectMany(r => r.GetProducedSpec())
             .GroupBy(s => s.Name)
             .Select(g => g.First()) // 去重
@@ -111,6 +111,7 @@ public partial class TuumAnalysisService
             Messages = [..tuumMappingUniqueMessages, ..typeValidationMessages, ..inputTypeValidationMessages, ..dataFlowMessages],
         };
     }
+
 
     /// <summary>
     /// **分析函数 0: 基础映射校验**
@@ -149,7 +150,7 @@ public partial class TuumAnalysisService
         var variableTypeAppearances = new Dictionary<string, List<VarSpecDef>>();
 
         // 步骤 1.1: 独立遍历，收集每个变量名出现过的所有类型定义。
-        foreach (var rune in config.Runes)
+        foreach (var rune in config.GetEnableRunes())
         {
             foreach (var spec in rune.GetConsumedSpec())
             {
@@ -307,7 +308,7 @@ public partial class TuumAnalysisService
 
         // 步骤 3.4: 检查冗余和无效映射
         var allConsumedVars = internalRequirements.Keys.ToHashSet();
-        var allProducedVars = config.Runes.SelectMany(r => r.GetProducedSpec()).Select(s => s.Name).ToHashSet();
+        var allProducedVars = config.GetEnableRunes().SelectMany(r => r.GetProducedSpec()).Select(s => s.Name).ToHashSet();
         var allOutputMappingSources = config.OutputMappings.Keys.ToHashSet();
 
         // [Warning: 冗余输入映射]
@@ -397,5 +398,13 @@ public partial class TuumAnalysisService
         }
 
         return producedEndpoints;
+    }
+}
+
+file static class TuumExpanded
+{
+    internal static IEnumerable<AbstractRuneConfig> GetEnableRunes(this TuumConfig tuum)
+    {
+        return tuum.Runes.Where(rune => rune.Enabled);
     }
 }
