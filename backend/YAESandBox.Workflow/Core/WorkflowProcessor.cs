@@ -62,7 +62,7 @@ public class WorkflowProcessor(
 
         List<WorkflowConnection> effectiveConnections;
         // 如果连接未定义，则尝试自动连接
-        if (this.Config.Connections is null)
+        if (this.Config.Connections is null || this.Config.Connections.Count == 0)
         {
             var autoConnectResult = this.TryAutoConnect();
             if (autoConnectResult.TryGetError(out var error, out var generatedConnections))

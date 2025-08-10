@@ -11,6 +11,7 @@ using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Plugin.LuaScript.Rune.LuaScriptRuneProcessor;
+using static YAESandBox.Plugin.LuaScript.Rune.LuaStringProcessorRuneProcessor;
 
 namespace YAESandBox.Plugin.LuaScript.Rune;
 
@@ -19,9 +20,10 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 /// 专注于接收一个字符串，通过 Lua 脚本处理，并输出一个字符串。
 /// </summary>
 public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config)
-    : IProcessorWithDebugDto<LuaStringProcessorRuneProcessor.LuaStringProcessorRuneDebugDto>, INormalRune
+    : INormalRune<LuaStringProcessorRuneConfig, LuaStringProcessorRuneDebugDto>
 {
-    private LuaStringProcessorRuneConfig Config { get; } = config;
+    /// <inheritdoc />
+    public LuaStringProcessorRuneConfig Config { get; } = config;
 
     /// <inheritdoc />
     public LuaStringProcessorRuneDebugDto DebugDto { get; } = new();
@@ -47,9 +49,9 @@ public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config
 
         // 4. 使用构建器创建一个不含 "ctx" 桥的精简版 Lua 运行器
         var runner = new LuaRunnerBuilder(tuumProcessorContent, this.DebugDto)
+            .AddBridge(new LuaJsonBridge())
             .AddBridge(new LuaRegexBridge())
             .AddBridge(new LuaDateTimeBridge())
-            // 注意：我们没有添加 LuaContextBridge
             .Build();
 
         // 5. 执行脚本，并通过 preExecutionSetup 注入我们的全局变量和函数
@@ -124,14 +126,14 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
     )]
     [DefaultValue(DefaultScript)]
     public string? Script { get; init; } = DefaultScript;
-    
+
     /// <inheritdoc />
     protected override LuaStringProcessorRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this);
 
-    
+
     // TODO 增加脚本的变量映射功能，否则就全是`Any?`了
     // 目前强制所有的脚本输入/输出都为 Any，且不能为空
-    
+
     /// <inheritdoc />
     public override List<ConsumedSpec> GetConsumedSpec() => [new(this.InputVariableName, CoreVarDefs.Any) { IsOptional = false }];
 

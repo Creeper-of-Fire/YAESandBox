@@ -1,4 +1,5 @@
 ﻿using YAESandBox.Depend.Results;
+using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 namespace YAESandBox.Workflow.Rune;
@@ -6,7 +7,10 @@ namespace YAESandBox.Workflow.Rune;
 /// <summary>
 /// 普通的符文
 /// </summary>
-public interface INormalRune
+/// <typeparam name="TConfig"></typeparam>
+/// <typeparam name="TDebug"></typeparam>
+public interface INormalRune<out TConfig, out TDebug> : IRuneProcessor<TConfig, TDebug>
+    where TConfig : AbstractRuneConfig where TDebug : IRuneProcessorDebugDto
 {
     /// <summary>
     /// 启动枢机流程

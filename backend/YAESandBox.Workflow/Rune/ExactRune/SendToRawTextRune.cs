@@ -16,13 +16,13 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// </summary>
 /// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
 /// <param name="config">符文配置。</param>
-internal class SendToRawTextRuneProcessor(
-    WorkflowRuntimeService workflowRuntimeService,
-    SendToRawTextRuneConfig config)
-    : IProcessorWithDebugDto<SendToRawTextRuneProcessorDebugDto>, INormalRune
+internal class SendToRawTextRuneProcessor(WorkflowRuntimeService workflowRuntimeService, SendToRawTextRuneConfig config)
+    : INormalRune<SendToRawTextRuneConfig, SendToRawTextRuneProcessorDebugDto>
 {
     private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-    private SendToRawTextRuneConfig Config { get; } = config;
+
+    /// <inheritdoc />
+    public SendToRawTextRuneConfig Config { get; } = config;
 
     // 这个临时符文非常简单，可能不需要复杂的Debug DTO，
     // 但为了接口一致性，可以提供一个最小化的实现或直接返回 null。

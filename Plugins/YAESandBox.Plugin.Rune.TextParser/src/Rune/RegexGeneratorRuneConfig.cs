@@ -9,6 +9,7 @@ using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;
+using static YAESandBox.Plugin.TextParser.Rune.RegexGeneratorRuneProcessor;
 
 namespace YAESandBox.Plugin.TextParser.Rune;
 
@@ -16,9 +17,10 @@ namespace YAESandBox.Plugin.TextParser.Rune;
 /// “正则生成”符文的运行时处理器。
 /// </summary>
 public class RegexGeneratorRuneProcessor(RegexGeneratorRuneConfig config)
-    : IProcessorWithDebugDto<RegexGeneratorRuneProcessor.RegexGeneratorDebugDto>, INormalRune
+    : INormalRune<RegexGeneratorRuneConfig, RegexGeneratorDebugDto>
 {
-    private RegexGeneratorRuneConfig Config { get; } = config;
+    /// <inheritdoc />
+    public RegexGeneratorRuneConfig Config { get; } = config;
 
     /// <inheritdoc />
     public RegexGeneratorDebugDto DebugDto { get; } = new();
@@ -109,7 +111,7 @@ public class RegexGeneratorRuneProcessor(RegexGeneratorRuneConfig config)
         // 1. 创建一个 Regex 实例。这是使用带 count 的 Replace 方法的正确途径。
         //    我们可以在构造函数中同时指定选项和超时。
         var regex = new Regex(this.Config.Pattern, options, TimeSpan.FromSeconds(5));
-        
+
         // 2. 为了调试，先计算总共能匹配多少个。
         this.DebugDto.FoundMatchCount = regex.Count(inputText);
 
@@ -119,7 +121,7 @@ public class RegexGeneratorRuneProcessor(RegexGeneratorRuneConfig config)
             this.DebugDto.ProcessedMatchCount = Math.Min(this.DebugDto.FoundMatchCount, this.Config.MaxMatches);
             return regex.Replace(inputText, this.Config.OutputTemplate, this.Config.MaxMatches);
         }
-        
+
         // 4. 否则，调用不带 count 的重载来替换所有匹配项。
         this.DebugDto.ProcessedMatchCount = this.DebugDto.FoundMatchCount;
         return regex.Replace(inputText, this.Config.OutputTemplate);

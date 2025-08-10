@@ -1,4 +1,6 @@
-﻿namespace YAESandBox.Workflow.DebugDto;
+﻿using YAESandBox.Workflow.Rune;
+
+namespace YAESandBox.Workflow.DebugDto;
 
 /// <summary>
 /// 一种携带了DebugDTO的类型
@@ -11,3 +13,4 @@ public interface IProcessorWithDebugDto<out T> where T : IDebugDto
     /// </summary>
     T DebugDto { get; }
 }
+

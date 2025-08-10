@@ -10,6 +10,7 @@ using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.VarSpec;
+using static YAESandBox.Plugin.LuaScript.Rune.LuaScriptRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
@@ -22,9 +23,10 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 /// </summary>
 /// <param name="config">符文配置。</param>
 public partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
-    : IProcessorWithDebugDto<LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto>, INormalRune
+    : INormalRune<LuaScriptRuneConfig, LuaScriptRuneProcessorDebugDto>
 {
-    private LuaScriptRuneConfig Config { get; } = config;
+    /// <inheritdoc />
+    public LuaScriptRuneConfig Config { get; } = config;
 
     /// <inheritdoc />
     public LuaScriptRuneProcessorDebugDto DebugDto { get; } = new();
@@ -39,6 +41,7 @@ public partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
 
         // 创建并使用通用的 Lua 脚本执行器
         var runner = new LuaRunnerBuilder(tuumProcessorContent, this.DebugDto)
+            .AddBridge(new LuaJsonBridge())
             .AddBridge(new LuaContextBridge(tuumProcessorContent)) // 添加 ctx 功能
             .AddBridge(new LuaRegexBridge()) // 添加 regex 功能
             .AddBridge(new LuaDateTimeBridge()) // 添加 datetime 功能

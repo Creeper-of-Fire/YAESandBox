@@ -20,13 +20,13 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// </summary>
 /// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
 /// <param name="config">符文配置。</param>
-internal partial class PromptGenerationRuneProcessor(
-    WorkflowRuntimeService workflowRuntimeService,
-    PromptGenerationRuneConfig config)
-    : IProcessorWithDebugDto<PromptGenerationRuneProcessorDebugDto>, INormalRune
+internal partial class PromptGenerationRuneProcessor(WorkflowRuntimeService workflowRuntimeService, PromptGenerationRuneConfig config)
+    : INormalRune<PromptGenerationRuneConfig, PromptGenerationRuneProcessorDebugDto>
 {
     private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-    private PromptGenerationRuneConfig Config { get; init; } = config;
+
+    /// <inheritdoc />
+    public PromptGenerationRuneConfig Config { get; init; } = config;
 
     /// <inheritdoc />
     public PromptGenerationRuneProcessorDebugDto DebugDto { get; init; } = new()
@@ -57,34 +57,73 @@ internal partial class PromptGenerationRuneProcessor(
 
         var prompts = (tuumProcessorContent.GetTuumVar<ImmutableList<RoledPromptDto>>(this.Config.PromptsName) ?? []).ToList();
 
-        // 检查是否可以追加到上一个提示词
-        var lastPrompt = prompts.LastOrDefault();
+        if (prompts.Count == 0)
+        {
+            // 如果列表为空，直接添加新提示词
+            this.DebugDto.FinalAction = "在一个空列表中添加第一个提示词。";
+            prompts.Add(newPrompt);
+            tuumProcessorContent.SetTuumVar(this.Config.PromptsName, prompts);
+
+            return Task.FromResult(Result.Ok());
+        }
+
+        // 计算目标索引
+        // 0 = 最后一个, 1 = 倒数第二个, etc.
+        int targetIndex = prompts.Count - 1 - this.Config.InsertionDepth;
+        // 如果计算出的索引小于0（即深度超过了列表长度），则定位到第一个元素
+        if (targetIndex < 0)
+            targetIndex = 0;
+        this.DebugDto.TargetIndex = targetIndex;
+
+        var targetPrompt = prompts[targetIndex];
 
         // 条件：列表不为空，且最后一个提示词的角色和名称与新提示词完全相同
-        if (lastPrompt == null ||
-            lastPrompt.Role != newPrompt.Role ||
-            lastPrompt.Name != newPrompt.Name)
-        {
-            // 执行添加模式
-            this.DebugDto.IsAppendMode = false;
-            prompts.Add(newPrompt);
-        }
-        else
+        if (this.Config.IsAppendMode &&
+            targetPrompt.Role == newPrompt.Role &&
+            targetPrompt.Name == newPrompt.Name)
         {
             // 执行追加模式
             this.DebugDto.IsAppendMode = true;
 
+
             // 创建一个新的 RoledPromptDto 以替换最后一个元素，内容是合并后的
             // 这比直接修改 lastPrompt.Content 更安全，特别是当 RoledPromptDto 是 record 或 struct 时
-            var updatedLastPrompt = new RoledPromptDto
+            string finalContent;
+            if (this.Config.InsertionPosition == nameof(InsertionPositionEnum.After))
             {
-                Role = lastPrompt.Role,
-                Name = lastPrompt.Name,
-                Content = $"{lastPrompt.Content}\n{newPrompt.Content}" // 使用换行符分隔
+                this.DebugDto.FinalAction = $"为目标索引为 {targetIndex} 的提示词添加后置内容。";
+                finalContent = $"{targetPrompt.Content}\n{newPrompt.Content}";
+            }
+            else
+            {
+                this.DebugDto.FinalAction = $"为目标索引为 {targetIndex} 的提示词添加前置内容。";
+                finalContent = $"{newPrompt.Content}\n{targetPrompt.Content}";
+            }
+
+            var updatedTargetPrompt = new RoledPromptDto
+            {
+                Role = targetPrompt.Role,
+                Name = targetPrompt.Name,
+                Content = finalContent,
             };
 
-            // 替换列表中的最后一个元素
-            prompts[^1] = updatedLastPrompt;
+            prompts[targetIndex] = updatedTargetPrompt;
+        }
+        else
+        {
+            // 执行插入模式
+            this.DebugDto.IsAppendMode = false;
+            if (this.Config.InsertionPosition == nameof(InsertionPositionEnum.After))
+            {
+                this.DebugDto.FinalAction = $"在目标索引为 {targetIndex} 的提示词之后插入新提示词。";
+                // 如果目标是最后一个元素，Insert(index + 1) 等同于 Add()
+                prompts.Insert(targetIndex + 1, newPrompt);
+            }
+            else
+            {
+                this.DebugDto.FinalAction = $"在目标索引为 {targetIndex} 的提示词之前插入新提示词。";
+                prompts.Insert(targetIndex, newPrompt);
+            }
         }
 
         tuumProcessorContent.SetTuumVar(this.Config.PromptsName, prompts);
@@ -175,10 +214,20 @@ internal partial class PromptGenerationRuneProcessor(
         public string? ConfiguredPromptName { get; internal set; }
 
         /// <summary>
+        /// 计算出的目标操作索引。仅当列表不为空时有效。
+        /// </summary>
+        public int? TargetIndex { get; internal set; }
+
+        /// <summary>
+        /// 描述最终执行的操作的字符串。
+        /// </summary>
+        public string FinalAction { get; internal set; } = string.Empty;
+
+        /// <summary>
         /// 经过占位符替换后的最终提示词内容。
         /// </summary>
         public string FinalPromptContent { get; internal set; } = string.Empty;
-        
+
         /// <summary>
         /// 指示最终操作是追加内容到上一个提示词 (true) 还是添加一个新的提示词项 (false)。
         /// </summary>
@@ -248,10 +297,14 @@ internal partial record PromptGenerationRuneConfig
 internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGenerationRuneProcessor>
 {
     /// <summary>
-    /// 输出的提示词列表变量的名称（若存在则在列表中添加，若不存在则创建）。
+    /// 使用的提示词列表变量的名称（若存在则在列表中添加，若不存在则创建）。
     /// </summary>
     [Required]
     [DefaultValue(AiRuneConfig.PromptsDefaultName)]
+    [Display(
+        Name = "提示词列表变量名",
+        Description = "使用的提示词列表变量的名称（若存在则在列表中添加，若不存在则创建）。"
+    )]
     public string PromptsName { get; init; } = AiRuneConfig.PromptsDefaultName;
 
     /// <summary>
@@ -276,13 +329,38 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
     public string? PromptNameInAiModel { get; init; }
 
     /// <summary>
+    /// 提示词插入的深度。0代表在列表末尾操作，1代表在倒数第二个提示词附近操作，以此类推。如果深度超出范围，则定位到列表的第一个提示词。
+    /// </summary>
+    [Required]
+    [DefaultValue(0)]
+    [Display(
+        Name = "插入深度",
+        Description = "0=在列表末尾操作，1=在倒数第二个提示词附近操作，以此类推。如果深度超出范围，则定位到列表的第一个提示词。"
+    )]
+    public int InsertionDepth { get; init; } = 0;
+
+    /// <summary>
+    /// 决定新提示词是插入到目标提示词之前还是之后。
+    /// </summary>
+    [Required]
+    [DefaultValue(nameof(InsertionPositionEnum.After))]
+    [Display(
+        Name = "插入位置",
+        Description = "决定新提示词是插入到目标提示词之前还是之后。"
+    )]
+    [StringOptions([nameof(InsertionPositionEnum.Before), nameof(InsertionPositionEnum.After)], ["之前", "之后"])]
+    public string InsertionPosition { get; init; } = nameof(InsertionPositionEnum.After);
+
+    /// <summary>
     /// 指示最终操作是追加内容到上一个提示词 (true) 还是添加一个新的提示词项 (false)。
     /// </summary>
+    [Required]
     [Display(
         Name = "追加模式",
         Description = "指示最终操作是追加内容到上一个提示词 (true) 还是添加一个新的提示词项 (false)。\n仅当本提示词和上一个提示词的角色、角色名相同时。"
     )]
-    public bool IsAppendMode { get; init; }
+    [DefaultValue(true)]
+    public bool IsAppendMode { get; init; } = true;
 
     /// <summary>
     /// 提示词模板，支持 `[[占位符]]` 替换。
@@ -302,4 +380,10 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
     /// <inheritdoc />
     protected override PromptGenerationRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
         new(workflowRuntimeService, this);
+}
+
+file enum InsertionPositionEnum
+{
+    Before,
+    After
 }

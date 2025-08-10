@@ -20,8 +20,11 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// <param name="onChunkReceivedScript"></param>
 /// <param name="config"></param>
 internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfig config)
-    : IProcessorWithDebugDto<AiRuneProcessorDebugDto>, INormalRune
+    : INormalRune<AiRuneConfig, AiRuneProcessorDebugDto>
 {
+    /// <inheritdoc />
+    public AiRuneConfig Config { get; } = config;
+
     /// <inheritdoc />
     public AiRuneProcessorDebugDto DebugDto { get; } = new();
 
@@ -32,8 +35,8 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
     }
 
     // TODO 这里是回调函数，应该由脚本完成
+
     private Action<string> OnChunkReceivedScript { get; } = onChunkReceivedScript;
-    private AiRuneConfig Config { get; } = config;
 
     /// <summary>
     /// AI符文的运行
@@ -135,6 +138,10 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     /// </summary>
     [Required]
     [DefaultValue(PromptsDefaultName)]
+    [Display(
+        Name = "提示词列表变量名",
+        Description = "输入的提示词列表变量的名称。"
+    )]
     public string PromptsName { get; init; } = PromptsDefaultName;
 
     /// <summary>
@@ -142,6 +149,10 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     /// </summary>
     [Required]
     [DefaultValue(AiOutputDefaultName)]
+    [Display(
+        Name = "AI输出变量名",
+        Description = "输出的AI输出变量的名称。"
+    )]
     public string AiOutputName { get; init; } = AiOutputDefaultName;
 
     /// <summary>

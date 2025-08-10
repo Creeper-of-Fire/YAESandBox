@@ -50,7 +50,7 @@ public abstract record AbstractRuneConfig
     /// </summary>
     /// <param name="workflowRuntimeService"></param>
     /// <returns></returns>
-    internal abstract IProcessorWithDebugDto<IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService);
+    internal abstract IRuneProcessor<AbstractRuneConfig,IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService);
 
     /// <summary>
     /// 获得符文的输入变量
@@ -67,7 +67,7 @@ public abstract record AbstractRuneConfig
 
 /// <inheritdoc />
 public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
-    where T : IProcessorWithDebugDto<IRuneProcessorDebugDto>
+    where T : IRuneProcessor<AbstractRuneConfig,IRuneProcessorDebugDto>
 {
     /// <inheritdoc />
     public override string Name { get; init; } = string.Empty;
@@ -81,7 +81,7 @@ public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
     /// <inheritdoc/>
     public override string RuneType { get; init; } = nameof(T);
 
-    internal override IProcessorWithDebugDto<IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService) =>
+    internal override IRuneProcessor<AbstractRuneConfig,IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService) =>
         this.ToCurrentRune(workflowRuntimeService);
 
     /// <summary>
