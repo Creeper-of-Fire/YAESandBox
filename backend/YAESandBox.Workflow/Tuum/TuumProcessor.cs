@@ -132,19 +132,18 @@ public class TuumProcessor(
         IReadOnlyDictionary<string, object?> inputs, CancellationToken cancellationToken = default)
     {
         // 1. 根据输入端点的数据，填充枢机的内部变量池
-        // 遍历输入映射: "外部端点名" -> [ "内部变量名1", "内部变量名2", ... ]
-        foreach ((string endpointName, var internalNames) in this.Config.InputMappings)
+        // 遍历新的输入映射: "内部变量名" -> "外部端点名"
+        // 这个循环的每一次迭代都只处理一个内部变量和它的唯一数据源。
+        foreach ((string internalName, string endpointName) in this.Config.InputMappings)
         {
-            // 从工作流提供的输入中获取该端点的值
+            // 从工作流提供的总输入中，为当前内部变量查找其数据源 (外部端点) 的值。
+            // 如果上游没有提供数据，endpointValue 将为 null。
+            // 校验阶段应确保所有必要的输入都已被连接，以避免此处出现非预期的 null。
             inputs.TryGetValue(endpointName, out object? endpointValue);
 
-            // 将这个值赋给所有映射到的内部变量 (Fan-in)
-            foreach (string internalName in internalNames)
-            {
-                // 如果上游没有提供数据，则内部变量为 null。
-                // 校验阶段应确保所有必要的输入都被连接。
-                this.TuumContent.SetTuumVar(internalName, endpointValue);
-            }
+            // 直接将获取到的值赋给对应的内部变量。
+            // 逻辑非常清晰：一个内部变量，一个赋值操作。
+            this.TuumContent.SetTuumVar(internalName, endpointValue);
         }
 
         // 2. 依次执行所有符文

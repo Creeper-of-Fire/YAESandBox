@@ -25,11 +25,11 @@ export type TuumConfig = {
      */
     runes: Array<AbstractRuneConfig>;
     /**
-     * 定义了此枢机可被连接的【输入端点】及其驱动的内部变量。
-     * Key: 外部输入端点的名称 (供外部连接使用)。
-     * Value: 由该输入端点提供数据的内部变量名列表 (供符文消费)。
+     * 定义了内部变量所需数据的来源，即从哪个外部输入端点获取。
+     * 此结构以“内部需求”为起点，描述了“我这个变量，需要的数据从哪里来”。
+     * 这种设计更符合用户配置时的直观逻辑。
      */
-    inputMappings: Record<string, Array<string>>;
+    inputMappings: Record<string, string>;
     /**
      * 定义了此枢机的【内部变量】如何驱动【输出端点】。
      * Key: 提供数据的枢机内部变量名 (由符文产生)。

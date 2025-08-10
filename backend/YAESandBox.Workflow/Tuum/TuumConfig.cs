@@ -40,22 +40,29 @@ public record TuumConfig
     public List<AbstractRuneConfig> Runes { get; init; } = [];
 
     /// <summary>
-    /// 定义了此枢机可被连接的【输入端点】及其驱动的内部变量。
-    /// Key: 外部输入端点的名称 (供外部连接使用)。
-    /// Value: 由该输入端点提供数据的内部变量名列表 (供符文消费)。
+    /// 定义了内部变量所需数据的来源，即从哪个外部输入端点获取。
+    /// 此结构以“内部需求”为起点，描述了“我这个变量，需要的数据从哪里来”。
+    /// 这种设计更符合用户配置时的直观逻辑。
     /// </summary>
     /// <remarks>
-    /// 校验规则：
-    /// 1. Key (外部输入端点名) 在此字典中必须唯一。
-    /// 2. 一个内部变量名在所有 Value 列表中总共只能出现一次，以保证每个内部变量只有一个数据源。
+    /// 核心特性与校验规则：
+    /// 1. Key (内部变量名) 在字典中必须唯一。这天然地保证了每个内部变量只有一个数据源。
+    /// 2. 多个不同的内部变量 (Key) 可以映射到同一个外部输入端点 (Value)，从而实现数据复用。
+    /// 3. 【校验】当多个内部变量映射到同一个外部端点时，它们的类型必须相互兼容。
     /// </remarks>
     /// <example>
-    /// "customer_question": [ "initial_query", "log_entry" ]
-    /// 这意味着，一个名为 "customer_question" 的外部输入端点，
-    /// 会将它的数据同时提供给枢机内部的 "initial_query" 和 "log_entry" 两个变量。
+    /// 假设配置为:
+    /// {
+    ///   "initial_query": "customer_question",
+    ///   "log_entry": "customer_question"
+    /// }
+    /// 这意味着：
+    /// - 内部变量 "initial_query" 的数据来源于外部端点 "customer_question"。
+    /// - 内部变量 "log_entry" 的数据也来源于外部端点 "customer_question"。
+    /// 系统会自动创建一个名为 "customer_question" 的外部输入端点。
     /// </example>
     [Required]
-    public Dictionary<string, HashSet<string>> InputMappings { get; init; } = [];
+    public Dictionary<string, string> InputMappings { get; init; } = [];
 
     /// <summary>
     /// 定义了此枢机的【内部变量】如何驱动【输出端点】。

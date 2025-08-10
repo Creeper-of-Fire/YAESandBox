@@ -50,7 +50,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, nextTick, type PropType, ref, watch} from 'vue';
+import {computed, nextTick, ref, watch} from 'vue';
 import {NAutoComplete, NDescriptions, NDescriptionsItem, NPopover, NTag} from 'naive-ui';
 import type {ConsumedSpec, ProducedSpec} from "@/app-workbench/types/generated/workflow-config-api-client";
 
@@ -58,7 +58,7 @@ type VarSpec = ConsumedSpec | ProducedSpec;
 
 const props = withDefaults(defineProps<{
   name?: string;
-  spec?: VarSpec;
+  spec?: VarSpec | null;
   closable?: boolean;
   availableOptions?: Array<{ label: string, value: string }>;
 }>(), {

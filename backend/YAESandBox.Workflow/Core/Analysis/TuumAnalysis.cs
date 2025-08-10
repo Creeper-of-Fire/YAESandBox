@@ -71,15 +71,18 @@ public partial class TuumAnalysisService
     {
         // 步骤 0: 执行独立的校验和分析
         var tuumMappingUniqueMessages = this.ValidateTuumMappingUniqueness(tuumConfig).ToList();
-        var (internalTypeDefs, typeValidationMessages) = this.AnalyzeVariableTypes(tuumConfig);
 
-        // 步骤 1: 进行纯粹的内部需求分析。这是最关键的一步，它不考虑外部输入。
+        // 步骤 1: 确定所有内部变量的类型定义
+        var (internalTypeDefs, typeValidationMessages) = this.AnalyzeVariableTypes(tuumConfig);
+        var inputTypeValidationMessages = this.AnalyzeInputTypes(tuumConfig, internalTypeDefs);
+
+        // 步骤 2: 进行纯粹的内部需求分析。这是最关键的一步，它不考虑外部输入。
         var internalRequirements = this.AnalyzeInternalRequirements(tuumConfig.Runes);
 
-        // 步骤 2: 使用步骤 1 的结果进行完整的数据流校验。
+        // 步骤 3: 使用步骤 2 的结果进行完整的数据流校验。
         var dataFlowMessages = this.ValidateDataFlow(tuumConfig, internalRequirements);
 
-        // 步骤 3: 聚合内部 Spec 定义
+        // 步骤 4: 聚合内部 Spec 定义
         var internalConsumedSpecs = tuumConfig.Runes
             .SelectMany(r => r.GetConsumedSpec())
             .GroupBy(s => s.Name)
@@ -105,7 +108,7 @@ public partial class TuumAnalysisService
             InternalVariableDefinitions = internalTypeDefs,
             ConsumedEndpoints = consumedEndpoints,
             ProducedEndpoints = producedEndpoints,
-            Messages = [..tuumMappingUniqueMessages, ..typeValidationMessages, ..dataFlowMessages],
+            Messages = [..tuumMappingUniqueMessages, ..typeValidationMessages, ..inputTypeValidationMessages, ..dataFlowMessages],
         };
     }
 
@@ -115,24 +118,9 @@ public partial class TuumAnalysisService
     /// </summary>
     private IEnumerable<ValidationMessage> ValidateTuumMappingUniqueness(TuumConfig tuum)
     {
-        // 校验规则1：一个内部变量只能有一个数据源 (在所有InputMappings的Value列表中唯一)
-        var allTargetInternalVars = tuum.InputMappings.Values.SelectMany(v => v);
-        var duplicateInternalVars = allTargetInternalVars
-            .GroupBy(v => v)
-            .Where(g => g.Count() > 1)
-            .Select(g => g.Key);
+        // 输入的唯一性已经被满足。
 
-        foreach (string duplicateVar in duplicateInternalVars)
-        {
-            yield return new ValidationMessage
-            {
-                Severity = RuleSeverity.Error,
-                Message = $"输入映射冲突：内部变量 '{duplicateVar}' 被多个外部输入端点驱动，它只能有一个数据源。",
-                RuleSource = "MappingUniqueness"
-            };
-        }
-
-        // 校验规则2：一个外部输出端点只能被一个内部变量驱动 (在所有OutputMappings的Value列表中唯一)
+        // 输出校验规则：一个外部输出端点只能被一个内部变量驱动 (在所有OutputMappings的Value列表中唯一)
         var allTargetExternalEndpoints = tuum.OutputMappings.Values.SelectMany(v => v);
         var duplicateExternalEndpoints = allTargetExternalEndpoints
             .GroupBy(e => e)
@@ -149,6 +137,7 @@ public partial class TuumAnalysisService
             };
         }
     }
+
 
     /// <summary>
     /// **分析函数 1: 类型分析**
@@ -208,6 +197,35 @@ public partial class TuumAnalysisService
         return (finalTypeDefs, messages);
     }
 
+    // 检查映射到同一个外部输入端点的内部变量，其类型是否兼容。
+    private IEnumerable<ValidationMessage> AnalyzeInputTypes(TuumConfig config, IReadOnlyDictionary<string, VarSpecDef> typeDefs)
+    {
+        var endpointTypeConflicts = config.InputMappings
+            .GroupBy(kvp => kvp.Value) // 按外部端点名 (Value) 分组
+            .Select(group => new
+            {
+                EndpointName = group.Key,
+                // 获取该组内所有内部变量的最终推断类型
+                InternalVarTypes = group
+                    .Select(kvp => typeDefs.GetValueOrDefault(kvp.Key, CoreVarDefs.Any))
+                    .Where(def => def.TypeName != CoreVarDefs.Any.TypeName)
+                    .Distinct()
+                    .ToList()
+            })
+            .Where(g => g.InternalVarTypes.Count > 1); // 找出存在多个具体类型的分组
+
+        foreach (var conflict in endpointTypeConflicts)
+        {
+            yield return new ValidationMessage
+            {
+                Severity = RuleSeverity.Error,
+                Message =
+                    $"输入映射冲突：外部端点 '{conflict.EndpointName}' 同时驱动了多个类型不兼容的内部变量。发现了类型: {string.Join(", ", conflict.InternalVarTypes.Select(t => t.TypeName))}",
+                RuleSource = "TypeCompatibility"
+            };
+        }
+    }
+
     /// <summary>
     /// **分析函数 2: 纯粹的内部需求分析**
     /// <para>职责：只关心内部数据流。通过严格按顺序遍历符文，确定在没有外部输入的情况下，哪些变量是真正的“净需求”。</para>
@@ -227,7 +245,7 @@ public partial class TuumAnalysisService
             foreach (var spec in rune.GetConsumedSpec())
             {
                 allConsumedVars.Add(spec.Name);
-                
+
                 // 如果一个变量是必需的，并且在当前时间点还没有被内部任何【前置】符文提供，
                 // 那么它就是一个净需求。
                 if (!spec.IsOptional && !providedInternally.Contains(spec.Name))
@@ -238,7 +256,7 @@ public partial class TuumAnalysisService
                     netRequirements.Add(spec.Name);
                 }
             }
-            
+
             // 步骤 2.2: 然后，更新当前符文的生产，供【后续】符文使用
             foreach (var spec in rune.GetProducedSpec())
             {
@@ -272,7 +290,7 @@ public partial class TuumAnalysisService
             .ToHashSet();
 
         // 步骤 3.2: 获取所有由外部输入提供的变量
-        var providedByExternalInputs = config.InputMappings.Values.SelectMany(v => v).ToHashSet();
+        var providedByExternalInputs = config.InputMappings.Keys.ToHashSet();
 
         // 步骤 3.3: 检查必需输入是否被外部满足
         var unfulfilledVars = finalRequiredVars.Except(providedByExternalInputs);
@@ -288,19 +306,21 @@ public partial class TuumAnalysisService
         }
 
         // 步骤 3.4: 检查冗余和无效映射
-        var allConsumedVars = config.Runes.SelectMany(r => r.GetConsumedSpec()).Select(s => s.Name).ToHashSet();
+        var allConsumedVars = internalRequirements.Keys.ToHashSet();
         var allProducedVars = config.Runes.SelectMany(r => r.GetProducedSpec()).Select(s => s.Name).ToHashSet();
         var allOutputMappingSources = config.OutputMappings.Keys.ToHashSet();
 
         // [Warning: 冗余输入映射]
-        foreach (string internalVar in config.InputMappings.Values.SelectMany(v => v))
+        // 遍历所有被外部提供的内部变量
+        foreach (string internalVar in providedByExternalInputs)
         {
+            // 如果这个变量从未被任何符文消费，也未被用于任何输出的源头，则为冗余。
             if (!allConsumedVars.Contains(internalVar) && !allOutputMappingSources.Contains(internalVar))
             {
                 messages.Add(new ValidationMessage
                 {
                     Severity = RuleSeverity.Warning,
-                    Message = $"冗余的输入映射：由外部提供的内部变量 '{internalVar}' 在此枢机中从未被任何符文消费，也未被用于输出。",
+                    Message = $"冗余的输入映射：内部变量 '{internalVar}' 从外部接收了数据，但从未被任何符文消费，也未被用于输出。",
                     RuleSource = "DataFlow"
                 });
             }
@@ -331,15 +351,23 @@ public partial class TuumAnalysisService
     private List<ConsumedSpec> DetermineConsumedEndpoints(TuumConfig config, IReadOnlyDictionary<string, VarSpecDef> typeDefs,
         IReadOnlyDictionary<string, bool> internalRequirements)
     {
-        var consumedEndpoints = new List<ConsumedSpec>();
-        foreach ((string endpointName, var internalVars) in config.InputMappings)
-        {
-            // 确定此端点的可选性：只要它供给的任何一个内部变量是净需求，那么这个端点就是必需的。
-            bool isOptional = !internalVars.Any(varName => internalRequirements.GetValueOrDefault(varName, false));
+        // 按外部端点名称分组，以生成唯一的端点定义
+        var endpointsGrouped = config.InputMappings
+            .GroupBy(kvp => kvp.Value); // Key: 外部端点名, Value: IEnumerable of KeyValuePairs
 
-            // 确定类型
+        var consumedEndpoints = new List<ConsumedSpec>();
+        foreach (var group in endpointsGrouped)
+        {
+            string endpointName = group.Key;
+            var internalVarsInGroup = group.Select(kvp => kvp.Key).ToHashSet();
+
+            // 确定此端点的可选性：只要它供给的任何一个内部变量是净需求，那么这个端点就是必需的。
+            bool isOptional = !internalVarsInGroup.Any(varName => internalRequirements.GetValueOrDefault(varName, false));
+
+            // 确定类型：使用组内第一个内部变量的类型作为代表。
+            // (类型兼容性已在 AnalyzeVariableTypes 中校验，这里可以安全地取第一个)
             var endpointDef = CoreVarDefs.Any;
-            if (internalVars.FirstOrDefault() is { } firstVar && typeDefs.TryGetValue(firstVar, out var def))
+            if (internalVarsInGroup.FirstOrDefault() is { } firstVar && typeDefs.TryGetValue(firstVar, out var def))
             {
                 endpointDef = def;
             }
