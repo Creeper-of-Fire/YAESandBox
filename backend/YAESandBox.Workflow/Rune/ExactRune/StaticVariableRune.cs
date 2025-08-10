@@ -86,7 +86,7 @@ internal partial record StaticVariableRuneConfig
             .Select(kvp => new ProducedSpec(kvp.Key, CoreVarDefs.String))
             .DistinctBy(p => p.Name)
             .ToList();
-            
+
         return specs;
     }
 }
@@ -105,8 +105,22 @@ internal partial record StaticVariableRuneConfig : AbstractRuneConfig<StaticVari
     [DataType(DataType.MultilineText)]
     [Display(
         Name = "变量定义脚本",
-        Description = "每行定义一个变量。使用 '变量名 = \"值\"' 或用三引号定义多行字符串 '变量名 = \"\"\"多行值\"\"\"'。使用 '#' 开头的行将被视为注释。",
-        Prompt = "示例：\n# 单行变量\ncharacter_name = \"爱丽丝\"\n\n# 多行变量\nstory_prompt = \"\"\"\n请基于以下设定创作：\n- 世界观：赛博朋克\n- 主题：记忆与身份\n\"\"\""
+        Description = "定义变量。变量名支持中文。使用 '变量名 = \"值\"' 或用三引号定义多行字符串 '变量名 = \"\"\"多行值\"\"\"'。以 '#' 开头的行将被视为注释（多行变量中的除外）。",
+        Prompt =
+            """"
+            示例：
+            # 支持中文变量名
+            角色名 = "小清姬"
+
+            # 多行变量，其中'#'开头也不会被视作注释
+            saying = """
+            ### 个性：
+            #### 喜欢的东西：
+            “诚实”，这词汇是多么的美妙啊。我相信这是人创造的最完美的言语。
+            #### 讨厌的东西：
+            “谎言”，多么令人厌恶的词汇啊。最为糟糕的词汇，是我最讨厌的东西。
+            """
+            """"
     )]
     [DefaultValue("")]
     public required string ScriptContent { get; init; } = "";
