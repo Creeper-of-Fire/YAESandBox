@@ -36,9 +36,9 @@
       >
         <!-- Key 输入 -->
         <n-auto-complete
-            v-model:value="item.key"
+            v-model:value="item.internalName"
             :get-show="() => true"
-            :options="getFilteredAndSortedOptions(item.key, keyOptionsWithMeta)"
+            :options="getFilteredAndSortedOptions(item.internalName, keyOptionsWithMeta)"
             :placeholder="keyHeader"
             :render-label="renderAutocompleteOption"
             blur-after-select
@@ -46,12 +46,12 @@
             clearable>
           <template #suffix>
             <VarSpecTag
-                v-if="findSelectedOption(item.key, keyOptionsWithMeta)"
-                :is-optional="getSpecTagProps(findSelectedOption(item.key, keyOptionsWithMeta)!.meta).isOptional"
+                v-if="findSelectedOption(item.internalName, keyOptionsWithMeta)"
+                :is-optional="getSpecTagProps(findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta).isOptional"
                 :size="'small'"
-                :spec-def="findSelectedOption(item.key, keyOptionsWithMeta)!.meta.def"
-                :tag-type="getSpecTagProps(findSelectedOption(item.key, keyOptionsWithMeta)!.meta).tagType"
-                :var-name="findSelectedOption(item.key, keyOptionsWithMeta)!.meta.name"
+                :spec-def="findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta.def"
+                :tag-type="getSpecTagProps(findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta).tagType"
+                :var-name="findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta.name"
             />
           </template>
         </n-auto-complete>
@@ -61,8 +61,8 @@
 
         <!-- Value 输入 -->
         <n-auto-complete
-            v-model:value="item.value"
-            :options="getFilteredAndSortedOptions(item.value, valueOptionsWithMeta)"
+            v-model:value="item.endpointName"
+            :options="getFilteredAndSortedOptions(item.endpointName, valueOptionsWithMeta)"
             :placeholder="valueHeader"
             :render-label="renderAutocompleteOption"
             blur-after-select
@@ -70,12 +70,12 @@
             clearable>
           <template #suffix>
             <VarSpecTag
-                v-if="findSelectedOption(item.value, valueOptionsWithMeta)"
-                :is-optional="getSpecTagProps(findSelectedOption(item.value, valueOptionsWithMeta)!.meta).isOptional"
+                v-if="findSelectedOption(item.endpointName, valueOptionsWithMeta)"
+                :is-optional="getSpecTagProps(findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta).isOptional"
                 :size="'small'"
-                :spec-def="findSelectedOption(item.value, valueOptionsWithMeta)!.meta.def"
-                :tag-type="getSpecTagProps(findSelectedOption(item.value, valueOptionsWithMeta)!.meta).tagType"
-                :var-name="findSelectedOption(item.value, valueOptionsWithMeta)!.meta.name"
+                :spec-def="findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta.def"
+                :tag-type="getSpecTagProps(findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta).tagType"
+                :var-name="findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta.name"
             />
           </template>
         </n-auto-complete>
@@ -96,12 +96,17 @@
 <script lang="ts" setup>
 import {computed, h, ref, type VNodeChild, watch} from 'vue';
 import {NAutoComplete, NButton, NCard, NEmpty, NFlex, NIcon, NSpace, NText} from 'naive-ui';
-import type {ConsumedSpec, ProducedSpec} from "@/app-workbench/types/generated/workflow-config-api-client";
+import type {
+  ConsumedSpec,
+  ProducedSpec,
+  TuumInputMapping,
+  TuumOutputMapping
+} from "@/app-workbench/types/generated/workflow-config-api-client";
 import {AddIcon, ArrowForwardIcon, TrashIcon} from '@/utils/icons.ts';
 import VarSpecTag from "@/app-workbench/components/share/VarSpecTag.vue";
 
 // --- 类型定义 ---
-type MappingItem = { key: string; value: string };
+type MappingItem = TuumOutputMapping | TuumInputMapping;
 type SpecOption = ConsumedSpec | ProducedSpec; // 你的变量定义类型
 
 const props = defineProps<{
@@ -136,7 +141,7 @@ const localItems = ref<MappingItem[]>([]);
 // --- 方法 ---
 const addMapping = () =>
 {
-  localItems.value.push({key: '', value: ''});
+  localItems.value.push({internalName: '', endpointName: ''});
 };
 
 const removeMapping = (index: number) =>
@@ -158,7 +163,11 @@ watch(() => props.items, (newVal) =>
 // 监听内部状态的变化来通知父组件
 watch(localItems, (newVal) =>
 {
-  emit('update:items', newVal);
+  // 简单比较，避免不必要的更新和光标跳动
+  if (JSON.stringify(newVal) !== JSON.stringify(props.items))
+  {
+    emit('update:items', newVal);
+  }
 }, {deep: true});
 
 // --- 自动补全选项渲染 ---

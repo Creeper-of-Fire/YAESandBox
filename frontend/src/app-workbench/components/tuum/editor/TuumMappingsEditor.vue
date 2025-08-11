@@ -133,38 +133,22 @@ const addAllRequiredInputs = () =>
 const computedInputItems = computed({
   get()
   {
-    return props.inputMappings.map(mapping => ({
-      key: mapping.internalName,
-      value: mapping.endpointName,
-    }));
+    return props.inputMappings
   },
   set(items)
   {
-    const newList = items
-        .map(item => ({
-          internalName: item.key || '',
-          endpointName: item.value || '',
-        }));
-    emit('update:input-mappings', newList);
+    emit('update:input-mappings', items);
   }
 });
 
 const computedOutputItems = computed({
   get()
   {
-    return props.outputMappings.map(mapping => ({
-      key: mapping.internalName,
-      value: mapping.endpointName,
-    }));
+    return props.outputMappings
   },
   set(items)
   {
-    const newList = items
-        .map(item => ({
-          internalName: item.key || '',
-          endpointName: item.value || '',
-        }));
-    emit('update:output-mappings', newList);
+    emit('update:output-mappings', items);
   }
 });
 </script>

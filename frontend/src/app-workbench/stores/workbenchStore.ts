@@ -13,9 +13,8 @@ import type {
 import {RuneConfigService, TuumConfigService, WorkflowConfigService,} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {useAsyncState} from "@vueuse/core";
 import type {GlobalResourceItem} from "@/types/ui.ts";
-import {cloneDeep} from "lodash-es";
+import {cloneDeep, isEqual} from "lodash-es";
 import {type DynamicAsset, loadAndRegisterPlugins} from "@/app-workbench/features/schema-viewer/plugin-loader.ts";
-import {preprocessSchemaForWidgets} from "@/app-workbench/features/schema-viewer/preprocessSchema.ts";
 
 // 导出类型
 export type WorkbenchStore = ReturnType<typeof useWorkbenchStore>;
@@ -163,7 +162,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * 存储所有符文类型的 Schema
      * Key 是符文的 runeType, Value 是对应的 JSON Schema
      */
-    const runeSchemasAsync =  reactive(useAsyncState(
+    const runeSchemasAsync = reactive(useAsyncState(
         async () =>
         {
             console.log("正在获取符文Schema和动态资源...");
@@ -240,13 +239,16 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     // 方法现在接收 globalId
     const _getDraftData = (globalId: string): ConfigObject | null => drafts.value[globalId]?.data ?? null;
 
-    // 所有 UI State 相关的方法 (_getUiState, _setSelectedItemInDraft, _toggleTuumExpansionInDraft) 已被彻底移除。
-
     const _isDirty = (globalId: string): boolean =>
     {
         const draft = drafts.value[globalId];
         if (!draft) return false;
-        return JSON.stringify(draft.data) !== draft.originalState;
+        // 1. 将原始状态的字符串解析回对象
+        const originalData = JSON.parse(draft.originalState);
+
+        // 2. 使用 isEqual进行深度比较
+        const isDirty = !isEqual(draft.data, originalData);
+        return isDirty;
     };
 
     const _updateDraftData = (globalId: string, updatedData: Partial<ConfigObject>) =>
@@ -276,14 +278,14 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                     workflowId: globalId,
                     requestBody: draft.data as WorkflowConfig
                 });
-                refreshPromise =() =>  globalWorkflowsAsync.execute();
+                refreshPromise = () => globalWorkflowsAsync.execute();
                 break;
             case 'tuum':
                 savePromise = TuumConfigService.putApiV1WorkflowsConfigsGlobalTuums({
                     tuumId: globalId,
                     requestBody: draft.data as TuumConfig
                 });
-                refreshPromise =() =>  globalTuumsAsync.execute();
+                refreshPromise = () => globalTuumsAsync.execute();
                 break;
             case 'rune':
                 savePromise = RuneConfigService.putApiV1WorkflowsConfigsGlobalRunes({
@@ -335,29 +337,33 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * @param id - 全局配置的ID
      * @returns 如果成功，返回 true；否则返回 false。
      */
-    async function deleteGlobalConfig(type: ConfigType, id: string): Promise<boolean> {
+    async function deleteGlobalConfig(type: ConfigType, id: string): Promise<boolean>
+    {
         let deletePromise: Promise<any>;
 
-        switch (type) {
+        switch (type)
+        {
             case 'workflow':
-                deletePromise = WorkflowConfigService.deleteApiV1WorkflowsConfigsGlobalWorkflows({ workflowId: id });
+                deletePromise = WorkflowConfigService.deleteApiV1WorkflowsConfigsGlobalWorkflows({workflowId: id});
                 break;
             case 'tuum':
-                deletePromise = TuumConfigService.deleteApiV1WorkflowsConfigsGlobalTuums({ tuumId: id });
+                deletePromise = TuumConfigService.deleteApiV1WorkflowsConfigsGlobalTuums({tuumId: id});
                 break;
             case 'rune':
-                deletePromise = RuneConfigService.deleteApiV1WorkflowsConfigsGlobalRunes({ runeId: id });
+                deletePromise = RuneConfigService.deleteApiV1WorkflowsConfigsGlobalRunes({runeId: id});
                 break;
             default:
                 console.error('删除失败：未知的配置类型。');
                 return false;
         }
 
-        try {
+        try
+        {
             await deletePromise;
 
             // 从对应的全局资源状态中移除
-            switch (type) {
+            switch (type)
+            {
                 case 'workflow':
                     if (globalWorkflowsAsync.state[id]) delete globalWorkflowsAsync.state[id];
                     break;
@@ -370,12 +376,14 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             }
 
             // 如果这个项正在被编辑（存在于草稿中），也一并移除草稿
-            if (drafts.value[id]) {
+            if (drafts.value[id])
+            {
                 delete drafts.value[id];
             }
 
             return true;
-        } catch (error) {
+        } catch (error)
+        {
             console.error(`删除 ${type} (ID: ${id}) 时发生错误:`, error);
             // 这里可以向上抛出错误，让调用方处理 message 提示
             throw error;
