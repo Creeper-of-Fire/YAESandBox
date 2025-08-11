@@ -12,26 +12,15 @@
     </template>
     <TuumMappingsEditor
         :analysis-result="analysisResult"
-        :input-mappings="tuumContext.data.inputMappings"
-        :output-mappings="tuumContext.data.outputMappings"
-        @update:input-mappings="newMappings => tuumContext.data.inputMappings = newMappings"
-        @update:output-mappings="newMappings => tuumContext.data.outputMappings = newMappings"
+        :input-mappings="inputMappings"
+        :output-mappings="outputMappings"
+        @update:input-mappings="newMappings => inputMappings = newMappings"
+        @update:output-mappings="newMappings => outputMappings = newMappings"
     />
-    <n-alert
-        v-if="!isInWorkflowContext"
-        :show-icon="true"
-        style="margin: 12px 0;"
-        title="独立编辑模式"
-        type="warning"
-    >
-      当前可自由配置输入/输出映射，但完整映射验证和上下文变量建议仅在关联工作流中可用。
-      保存前请仔细检查映射配置的正确性。
-    </n-alert>
   </n-card>
 </template>
 
 <script lang="ts" setup>
-import {NAlert} from "naive-ui";
 import TuumMappingsEditor from "@/app-workbench/components/tuum/editor/TuumMappingsEditor.vue";
 import {computed} from "vue";
 import type {TuumEditorContext} from "@/app-workbench/components/tuum/editor/TuumEditorContext.ts";
@@ -41,14 +30,33 @@ const props = defineProps<{
   tuumContext: TuumEditorContext;
 }>();
 
+const inputMappings = computed({
+  get()
+  {
+    return props.tuumContext.data.inputMappingsList
+  },
+  set(newValue)
+  {
+    props.tuumContext.data.inputMappingsList = newValue
+  }
+});
+const outputMappings = computed({
+  get()
+  {
+    return props.tuumContext.data.outputMappingsList
+  },
+  set(newValue)
+  {
+    props.tuumContext.data.outputMappingsList = newValue
+  }
+});
+
 // --- 使用新的 useTuumAnalysis Composable ---
 const {analysisResult} = useTuumAnalysis(
     // 将整个枢机配置数据作为响应式 Ref 传入
     computed(() => props.tuumContext.data)
 );
 
-// 计算属性，判断当前是否处于有上下文的环境中
-const isInWorkflowContext = computed(() => props.tuumContext.availableGlobalVarsForTuum !== undefined);
 </script>
 
 <style scoped>

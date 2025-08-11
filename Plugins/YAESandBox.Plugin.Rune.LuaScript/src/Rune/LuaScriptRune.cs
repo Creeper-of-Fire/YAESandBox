@@ -99,8 +99,9 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
             "  log.info('生日的年份是: ' .. birthday_obj.year)\n" +
             "end\n"
     )]
+    [Required(AllowEmptyStrings = true)]
     [DefaultValue("")]
-    public string? Script { get; init; } = "";
+    public string Script { get; init; } = "";
 
     /// <inheritdoc />
     protected override LuaScriptRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this);

@@ -21,6 +21,8 @@ export type { TuumAnalysisResult } from './models/TuumAnalysisResult';
 export type { TuumConfig } from './models/TuumConfig';
 export type { TuumConfigJsonResultDto } from './models/TuumConfigJsonResultDto';
 export type { TuumConnectionEndpoint } from './models/TuumConnectionEndpoint';
+export type { TuumInputMapping } from './models/TuumInputMapping';
+export type { TuumOutputMapping } from './models/TuumOutputMapping';
 export type { ValidationMessage } from './models/ValidationMessage';
 export type { VarSpecDef } from './models/VarSpecDef';
 export type { WorkflowConfig } from './models/WorkflowConfig';

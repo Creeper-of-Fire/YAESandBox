@@ -113,10 +113,10 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
                 popoverTitle: '添加新枢机',
                 popoverContentType: 'input',
                 popoverInitialValue: '新枢机',
-                handler: ({name}) =>
+                handler: async ({name}) =>
                 {
                     if (!name) return;
-                    const newTuum = createBlankConfig('tuum', name);
+                    const newTuum = await createBlankConfig('tuum', name);
                     item.tuums.push(newTuum);
                     message.success('已添加新枢机');
                 },
@@ -135,10 +135,10 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
                 popoverSelectOptions: runeTypeOptions.value,
                 popoverSelectPlaceholder: '请选择符文类型',
                 popoverDefaultNameGenerator: runeDefaultNameGenerator,
-                handler: ({name, type}) =>
+                handler: async ({name, type}) =>
                 {
                     if (!name || !type) return;
-                    const newRune = createBlankConfig('rune', name, {runeType: type});
+                    const newRune = await createBlankConfig('rune', name, {runeType: type});
                     item.runes.push(newRune);
                     message.success('已添加新符文');
                 },

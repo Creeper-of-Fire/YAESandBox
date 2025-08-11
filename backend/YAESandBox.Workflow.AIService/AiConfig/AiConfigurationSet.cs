@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.AspNetCore.Secret;
+using YAESandBox.Depend.AspNetCore.Secret.Mark;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 

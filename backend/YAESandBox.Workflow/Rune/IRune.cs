@@ -1,6 +1,6 @@
-﻿using YAESandBox.Workflow.Rune;
+﻿using YAESandBox.Workflow.DebugDto;
 
-namespace YAESandBox.Workflow.DebugDto;
+namespace YAESandBox.Workflow.Rune;
 
 /// <summary>
 /// 代表一个通用的符文

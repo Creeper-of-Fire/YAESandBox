@@ -126,13 +126,6 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     internal const string PromptsDefaultName = "Prompts";
     internal const string AiOutputDefaultName = "AiOutput";
 
-    /// <inheritdoc />
-    [Required]
-    [ReadOnly(true)]
-    [HiddenInForm(true)]
-    [Display(Name = "配置名称", Description = "符文的配置名称，用于在界面上显示。")]
-    public override string Name { get; init; } = string.Empty;
-
     /// <summary>
     /// 输入的提示词列表变量的名称
     /// </summary>

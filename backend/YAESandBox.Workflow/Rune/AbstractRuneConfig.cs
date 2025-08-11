@@ -18,7 +18,7 @@ public abstract record AbstractRuneConfig
     /// <summary>
     /// 名字
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [HiddenInForm(true)]
     [Display(Name = "配置名称", Description = "符文的配置名称，用于在界面上显示。")]
     public abstract string Name { get; init; }

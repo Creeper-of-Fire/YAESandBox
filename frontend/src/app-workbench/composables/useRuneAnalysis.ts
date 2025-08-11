@@ -3,7 +3,6 @@ import type {AbstractRuneConfig, RuneAnalysisResult, TuumConfig} from "@/app-wor
 import {useRuneAnalysisStore} from "@/app-workbench/stores/useRuneAnalysisStore.ts";
 import {useDebounceFn} from "@vueuse/core";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
-import {synchronizeModelWithSchema} from "../utils/synchronizeModelWithSchema.ts";
 
 /**
  * 一个 Vue Composable，用于对符文（Rune）配置进行实时分析。
@@ -38,26 +37,12 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: 
                 return;
             }
 
-            // --- 核心修改 ---
-            // 1. 确保 Schema 已加载
-            if (!workbenchStore.runeSchemasAsync.isReady)
-            {
-                // execute() 是幂等的，如果已在加载中，它会返回现有的 Promise
-                await workbenchStore.runeSchemasAsync.execute();
-            }
-            const schemas = workbenchStore.runeSchemasAsync.state;
-            const schema = schemas[newRune.runeType];
-
-            // 2. 创建一个用于分析的“宽容版”副本
-            const tolerantRune = synchronizeModelWithSchema(newRune, schema);
-
-
             // 3. 使用这个副本进行分析
-            if (tolerantRune)
+            if (newRune)
             {
                 analysisResult.value = await runeAnalysisStore.analyzeRune(
-                    tolerantRune,
-                    tolerantRune.configId,
+                    newRune,
+                    newRune.configId,
                     context
                 ) || null;
                 if (!analysisResult.value)

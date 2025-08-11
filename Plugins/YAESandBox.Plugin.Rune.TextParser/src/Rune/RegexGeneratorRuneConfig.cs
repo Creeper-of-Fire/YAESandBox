@@ -203,7 +203,7 @@ public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRunePr
     /// 为每个匹配项生成输出的模板。
     /// 使用 ${name} 引用命名捕获组，或 $1, $2 引用数字捕获组。
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [DataType(DataType.MultilineText)]
     [Display(Name = "输出模板", Description = "为每个匹配项生成文本的模板。")]
     [DefaultValue("- 角色名: ${name}, 年龄: ${age}岁。")]

@@ -1,4 +1,4 @@
-﻿namespace YAESandBox.Depend.AspNetCore.Secret;
+﻿namespace YAESandBox.Depend.AspNetCore.Secret.Mark;
 
 /// <summary>
 /// 标记接口，表示该对象的实例可能包含需要数据保护的敏感信息。

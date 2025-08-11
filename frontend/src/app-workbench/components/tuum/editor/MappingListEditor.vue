@@ -118,8 +118,20 @@ const emit = defineEmits<{
   (e: 'update:items', value: MappingItem[]): void;
 }>();
 
-// --- 内部状态 ---
 const localItems = ref<MappingItem[]>([]);
+
+// --- 内部状态 ---
+// const localItems = computed({
+//       get()
+//       {
+//         return props.items;
+//       },
+//       set(value)
+//       {
+//         emit('update:items', value);
+//       }
+//     }
+// );
 
 // --- 方法 ---
 const addMapping = () =>
@@ -132,7 +144,7 @@ const removeMapping = (index: number) =>
   localItems.value.splice(index, 1);
 };
 
-// --- 同步与发射 ---
+// // // --- 同步与发射 ---
 // 监听 props.items 的变化来更新内部状态
 watch(() => props.items, (newVal) =>
 {

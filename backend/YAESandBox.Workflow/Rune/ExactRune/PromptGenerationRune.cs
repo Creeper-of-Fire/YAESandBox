@@ -366,7 +366,7 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
     /// 提示词模板，支持 `[[占位符]]` 替换。
     /// 例如："你好，`[[playerName]]`！今天是`[[worldInfo]]`。"
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [DataType(DataType.MultilineText)]
     [Display(
         Name = "提示词模板",

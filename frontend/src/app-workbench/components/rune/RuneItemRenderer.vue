@@ -6,6 +6,7 @@
       :is-selected="isSelected"
       is-draggable
       @click="updateSelectedConfig"
+      @dblclick="handleDoubleClick"
   >
     <template #content>
       <!--      <span v-if="runeClassLabel" class="rune-alias">{{ runeClassLabel }}</span>-->
@@ -42,20 +43,56 @@
         </div>
       </n-popover>
 
+      <!-- 折叠按钮，仅当为 TuumRune 时显示 -->
+      <n-button v-if="hasInnerTuum" :focusable="false" text @click.stop="toggleExpansion">
+        <template #icon>
+          <n-icon :component="isExpanded ? KeyboardArrowUpIcon : KeyboardArrowDownIcon"/>
+        </template>
+      </n-button>
+
       <!-- "更多" 操作的下拉菜单 -->
       <ConfigItemActionsMenu :actions="itemActions"/>
     </template>
+
+    <!-- 新增：下方内容插槽，用于渲染内部符文列表 -->
+    <template v-if="hasInnerTuum" #content-below>
+      <n-collapse-transition :show="isExpanded">
+        <div class="inner-rune-list-container">
+          <draggable
+              v-if="innerTuum?.runes"
+              v-model="innerTuum.runes"
+              :animation="150"
+              :group="{ name: 'runes-group', put: ['runes-group'] }"
+              class="rune-draggable-area"
+              ghost-class="workbench-ghost-item"
+              handle=".drag-handle"
+              item-key="configId"
+          >
+            <div v-for="runeItem in innerTuum.runes" :key="runeItem.configId" class="rune-item-wrapper">
+              <!-- 递归渲染 RuneItemRenderer！ -->
+              <RuneItemRenderer
+                  :parent-tuum="innerTuum"
+                  :rune="runeItem"
+              />
+            </div>
+          </draggable>
+          <n-empty v-else description="拖拽符文到此处" small/>
+        </div>
+      </n-collapse-transition>
+    </template>
+
   </ConfigItemBase>
 </template>
 
 <script lang="ts" setup>
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue';
+import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {AbstractRuneConfig, TuumConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
-import {computed, inject, toRef} from "vue";
+import {computed, inject, ref, toRef} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
 import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
-import {FindInPageIcon} from "@/utils/icons.ts";
+import {FindInPageIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@/utils/icons.ts';
 import {useRuneAnalysis} from "@/app-workbench/composables/useRuneAnalysis.ts";
 import {useConfigItemActions} from "@/app-workbench/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemActionsMenu.vue";
@@ -165,6 +202,52 @@ const ruleDescriptions = computed(() =>
   return descriptions;
 });
 
+
+// --- InnerTuum部分 ---
+
+// 1. **约定检测**：检查此符文是否为 TuumRune
+const hasInnerTuum = computed(() => 'innerTuum' in props.rune && !!(props.rune as any).innerTuum);
+const innerTuum = computed(() => hasInnerTuum.value ? (props.rune as any).innerTuum as TuumConfig : null);
+
+// 2. 状态：控制内部列表的展开/折叠
+const isExpanded = ref(true);
+
+// 3. 方法：处理双击和按钮点击事件
+function handleDoubleClick()
+{
+  if (hasInnerTuum.value)
+  {
+    isExpanded.value = !isExpanded.value;
+  }
+}
+
+function toggleExpansion()
+{
+  if (hasInnerTuum.value)
+  {
+    isExpanded.value = !isExpanded.value;
+  }
+}
+
 </script>
 
-<!-- 这个组件不需要自己的 style 标签，因为它只是 ConfigItemBase 的一个薄封装，样式由 ConfigItemBase 提供 -->
+<style scoped>
+/* 增加内部符文列表的样式，借鉴 TuumItemRenderer */
+.inner-rune-list-container {
+  border-radius: 4px;
+  margin-top: 8px;
+  padding: 8px;
+  background-color: #f7f9fa; /* 使用稍微不同的背景色以作区分 */
+  border: 1px dashed #dcdfe6;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.rune-draggable-area {
+  min-height: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+</style>

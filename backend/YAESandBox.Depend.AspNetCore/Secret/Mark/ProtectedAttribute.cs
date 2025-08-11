@@ -1,4 +1,4 @@
-﻿namespace YAESandBox.Depend.AspNetCore.Secret;
+﻿namespace YAESandBox.Depend.AspNetCore.Secret.Mark;
 
 /// <summary>
 /// 将属性标记为受保护的数据。

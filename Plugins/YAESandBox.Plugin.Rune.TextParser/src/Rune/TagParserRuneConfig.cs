@@ -273,7 +273,7 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
     /// <summary>
     /// 一个标准的CSS选择器，用于定位目标元素。
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [DataType(DataType.MultilineText)]
     [Display(Name = "CSS 选择器", Description = "使用CSS选择器语法来定位一个或多个元素。")]
     [DefaultValue("div.item")]

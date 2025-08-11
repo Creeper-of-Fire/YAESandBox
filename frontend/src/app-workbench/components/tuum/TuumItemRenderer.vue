@@ -27,7 +27,7 @@
         </n-button>
 
         <!-- 枢机的操作按钮 -->
-        <ConfigItemActionsMenu :actions="itemActions" />
+        <ConfigItemActionsMenu :actions="itemActions"/>
       </template>
       <template #content-below>
         <!-- 使用本地的 isExpanded 状态 -->
@@ -45,8 +45,8 @@
             >
               <div v-for="runeItem in tuum.runes" :key="runeItem.configId" class="rune-item-wrapper">
                 <RuneItemRenderer
-                    :rune="runeItem"
                     :parent-tuum="tuum"
+                    :rune="runeItem"
                 />
               </div>
             </draggable>
@@ -60,13 +60,12 @@
 
 <script lang="ts" setup>
 import {NButton, NCollapseTransition, NEmpty, NIcon} from 'naive-ui';
-import {EllipsisHorizontalIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@/utils/icons.ts';
+import {KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@/utils/icons.ts';
 import {VueDraggable as draggable} from 'vue-draggable-plus';
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue'; // 导入基础组件
 import RuneItemRenderer from '@/app-workbench/components/rune/RuneItemRenderer.vue'; // 导入符文渲染器
 import type {TuumConfig, WorkflowConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {computed, inject, ref, toRef} from "vue";
-import ColorHash from "color-hash";
 import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 import {useConfigItemActions} from "@/app-workbench/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemActionsMenu.vue";
@@ -77,8 +76,6 @@ const props = withDefaults(defineProps<{
   parentWorkflow: WorkflowConfig | null;
   isCollapsible?: boolean; // 是否可折叠
   isDraggable?: boolean;   // 枢机自身是否可拖拽
-  // 从父级(Workflow)传入此枢机可用的全局变量，为空代表不进行检测
-  availableGlobalVarsForTuum?: string[];
 }>(), {
   isCollapsible: true, // 默认为 true，保持原有行为
   isDraggable: true,   // 默认为 true，保持原有行为
@@ -95,7 +92,7 @@ const selectedConfig = selectedConfigItem?.data;
 
 function updateSelectedConfig()
 {
-  selectedConfigItem?.update({data: props.tuum, availableGlobalVarsForTuum: props.availableGlobalVarsForTuum});
+  selectedConfigItem?.update({data: props.tuum});
 }
 
 const isSelected = computed(() =>

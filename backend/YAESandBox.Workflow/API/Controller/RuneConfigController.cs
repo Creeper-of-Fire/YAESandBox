@@ -1,4 +1,7 @@
+using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -7,6 +10,7 @@ using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema;
+using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Rune;
@@ -242,4 +246,88 @@ public class RuneConfigController(
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteGlobalRuneConfig(string runeId) =>
         await this.WorkflowConfigFileService.DeleteRuneConfig(this.UserId, runeId).ToActionResultAsync();
+
+
+    /// <summary>
+    /// 根据符文类型名，权威地创建一个新的、包含所有默认值的符文配置实例。
+    /// 此端点是前端新建任何符文的【唯一】入口，它解决了默认值（包括[DefaultValue]特性）覆盖的核心问题。
+    /// </summary>
+    /// <param name="runeTypeName">符文的类型名称，例如 "StaticVariableRuneConfig"。</param>
+    /// <returns>一个强类型的、已填好所有默认值的全新符文配置对象。</returns>
+    /// <response code="200">成功返回了默认配置的实例。</response>
+    /// <response code="404">未找到指定的符文类型。</response>
+    /// <response code="500">在实例化或处理默认值时发生内部错误。</response>
+    [HttpGet("new-rune/{runeTypeName}")]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(AbstractRuneConfig), StatusCodes.Status200OK)] // 返回类型已更新
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+    public ActionResult<AbstractRuneConfig> GetNewRuneConfig(string runeTypeName)
+    {
+        var runeType = RuneConfigTypeResolver.FindRuneConfigType(runeTypeName);
+        if (runeType is null)
+        {
+            return this.NotFound($"未找到名为 '{runeTypeName}' 的符文类型。");
+        }
+
+        var jsonOptions = YaeSandBoxJsonHelper.JsonSerializerOptions;
+
+        try
+        {
+            // --- 步骤 1: 建立 C# 初始化器设置的默认值 ---
+            // 创建基础实例以捕获属性初始化器 (例如: `... = true;`)。
+            object baseInstance = Activator.CreateInstance(runeType)
+                                  ?? throw new InvalidOperationException($"无法创建类型 '{runeType.FullName}' 的实例。");
+
+            // 将基础实例序列化为 JSON，然后解析为 JsonDocument。这是我们健壮的、只读的数据源。
+            using JsonDocument baseDoc = JsonSerializer.SerializeToDocument(baseInstance, jsonOptions);
+
+            // --- 步骤 2: 建立 [DefaultValue] 特性定义的覆盖值 ---
+            // 这个字典将持有我们的最高优先级默认值。
+            var defaultValueOverrides = new Dictionary<string, object?>();
+            var properties = runeType.GetProperties(BindingFlags.Public | BindingFlags.Instance);
+            foreach (var prop in properties)
+            {
+                var defaultValueAttr = prop.GetCustomAttribute<DefaultValueAttribute>();
+                // 我们只关心特性中实际存在的值
+                if (defaultValueAttr?.Value is not null)
+                {
+                    // 获取属性在 JSON 中应有的名称（例如，遵循 camelCase 策略）
+                    string jsonPropertyName = jsonOptions.PropertyNamingPolicy?.ConvertName(prop.Name) ?? prop.Name;
+                    defaultValueOverrides[jsonPropertyName] = defaultValueAttr.Value;
+                }
+            }
+
+            // --- 步骤 3: 融合两种来源的默认值 ---
+            // 我们在一个新的可变字典中构建最终的 JSON 属性集合。
+            // 首先填入优先级最高的 [DefaultValue] 覆盖值。
+            var finalJsonProperties = new Dictionary<string, object?>(defaultValueOverrides);
+
+            // 然后，遍历基础实例的 JSON 属性。
+            // 如果某个属性没有被 [DefaultValue] 覆盖，我们就从基础实例中添加它。
+            // `TryAdd` 方法完美地实现了这个逻辑。
+            foreach (var jsonProperty in baseDoc.RootElement.EnumerateObject())
+            {
+                // 从 JsonDocument 中获取的值必须被 Clone，因为 JsonDocument 将在 using 块结束时被销毁。
+                finalJsonProperties.TryAdd(jsonProperty.Name, jsonProperty.Value.Clone());
+            }
+
+            // --- 步骤 4: 将最终的属性集合反序列化为强类型对象 ---
+            // 将我们精心融合的字典重新序列化为完美的 JSON 字符串。
+            string finalJson = JsonSerializer.Serialize(finalJsonProperties, jsonOptions);
+
+            // 将这个完美的 JSON 反序列化回具体的符文类型。这是通往最终胜利的最后一步。
+            if (JsonSerializer.Deserialize(finalJson, runeType, jsonOptions) is not AbstractRuneConfig finalInstance)
+            {
+                throw new JsonException($"在将最终合并的 JSON 反序列化回类型 '{runeType.FullName}' 时失败。");
+            }
+
+            return this.Ok(finalInstance);
+        }
+        catch (Exception ex)
+        {
+            return this.StatusCode(StatusCodes.Status500InternalServerError,
+                $"为类型 '{runeTypeName}' 创建新实例时发生错误: {ex.Message}");
+        }
+    }
 }

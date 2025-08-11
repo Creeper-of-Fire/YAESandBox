@@ -121,4 +121,30 @@ export class RuneConfigService {
             },
         });
     }
+    /**
+     * 根据符文类型名，权威地创建一个新的、包含所有默认值的符文配置实例。
+     * 此端点是前端新建任何符文的【唯一】入口，它解决了默认值（包括[DefaultValue]特性）覆盖的核心问题。
+     * @returns AbstractRuneConfig 成功返回了默认配置的实例。
+     * @throws ApiError
+     */
+    public static getApiV1WorkflowsConfigsGlobalRunesNewRune({
+        runeTypeName,
+    }: {
+        /**
+         * 符文的类型名称，例如 "StaticVariableRuneConfig"。
+         */
+        runeTypeName: string,
+    }): CancelablePromise<AbstractRuneConfig> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/workflows-configs/global-runes/new-rune/{runeTypeName}',
+            path: {
+                'runeTypeName': runeTypeName,
+            },
+            errors: {
+                404: `未找到指定的符文类型。`,
+                500: `在实例化或处理默认值时发生内部错误。`,
+            },
+        });
+    }
 }

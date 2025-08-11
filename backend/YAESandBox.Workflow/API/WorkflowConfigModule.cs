@@ -73,5 +73,6 @@ public class WorkflowConfigModule :
         typeof(AiRuneConfig),
         typeof(HistoryAppendRuneConfig),
         typeof(StaticVariableRuneConfig),
+        typeof(TuumRuneConfig),
     ];
 }

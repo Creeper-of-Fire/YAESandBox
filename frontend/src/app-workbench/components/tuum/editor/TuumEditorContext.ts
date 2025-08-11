@@ -8,10 +8,4 @@ export interface TuumEditorContext
 {
     /** 当前选中的枢机配置数据（核心业务数据） */
     data: TuumConfig;
-
-    /**
-     * 可选：工作流上下文中的可用全局变量列表
-     * @description 用于枢机输入/输出映射的校验逻辑，当存在此属性时表示处于工作流编辑上下文环境
-     */
-    availableGlobalVarsForTuum?: string[];
 }

@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.AspNetCore.Secret;
+using YAESandBox.Depend.AspNetCore.Secret.Mark;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;

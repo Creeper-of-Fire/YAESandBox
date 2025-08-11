@@ -21,7 +21,7 @@
           v-if="hasConsumedVariables || hasProducedVariables"
           class="variable-display-box"
       >
-        <n-flex vertical size="small">
+        <n-flex size="small" vertical>
           <div v-if="runeAnalysisResult && hasConsumedVariables">
             <strong>输入变量:</strong>
             <n-flex :wrap="true" style="margin-top: 4px;">
@@ -49,6 +49,15 @@
           @update:model-value="handleFormUpdate"
       />
 
+      <div v-if="hasInnerTuum && innerTuum && innerTuumContext" class="inner-tuum-editor-wrapper">
+        <n-divider/>
+        <n-h3>子枢机流程编辑器</n-h3>
+        <TuumEditor
+            :key="innerTuum.configId"
+            :tuum-context="innerTuumContext"
+        />
+      </div>
+
     </div>
     <!-- 初始加载或未选中时的状态 -->
     <n-spin v-else-if="isLoadingSchema" description="正在加载符文配置模板..."/>
@@ -60,13 +69,15 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 // 移除了 Popover 相关的组件和图标
-import {NEmpty, NH4, NP, NSpin, NFlex, NFormItem, NSwitch, NBlockquote, NTag} from 'naive-ui';
+import {NBlockquote, NEmpty, NFlex, NFormItem, NH4, NP, NSpin, NSwitch, NTag} from 'naive-ui';
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
-import type {AbstractRuneConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
+import type {AbstractRuneConfig, TuumConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import DynamicFormRenderer from "@/app-workbench/features/schema-viewer/DynamicFormRenderer.vue";
 import {useDebounceFn} from "@vueuse/core";
 import type {RuneEditorContext} from "@/app-workbench/components/rune/editor/RuneEditorContext.ts";
 import {useRuneAnalysis} from "@/app-workbench/composables/useRuneAnalysis.ts";
+import TuumEditor from "@/app-workbench/components/tuum/editor/TuumEditor.vue";
+import type {TuumEditorContext} from "@/app-workbench/components/tuum/editor/TuumEditorContext.ts";
 
 // --- Props ---
 const props = defineProps<{
@@ -74,8 +85,24 @@ const props = defineProps<{
 }>();
 
 
-// --- 移除了所有 Popover 相关的状态和事件处理函数 ---
-// isPopoverVisible, isPopoverPinned, hideTimer, handleMouseEnter, etc. 都已删除
+// 检查是否存在 innerTuum 属性
+const hasInnerTuum = computed(() => 'innerTuum' in props.runeContext.data && !!props.runeContext.data.innerTuum);
+
+const innerTuum = computed(() =>
+{
+  return hasInnerTuum.value ? (props.runeContext.data as any).innerTuum as TuumConfig : null;
+});
+
+// 为内部的 TuumEditor 构建上下文
+const innerTuumContext = computed((): TuumEditorContext | null =>
+{
+  if (!innerTuum.value) return null;
+
+  return {
+    // 内部枢机的配置数据
+    data: innerTuum.value,
+  };
+});
 
 
 const rune = computed(() =>
@@ -155,7 +182,7 @@ const handleFormUpdate = useDebounceFn(handleFormUpdateRaw, 300);
   padding: 12px;
   margin-bottom: 16px;
   max-height: 140px; /* 设置一个最大高度 */
-  overflow-y: auto;   /* 当内容超出时，显示垂直滚动条 */
+  overflow-y: auto; /* 当内容超出时，显示垂直滚动条 */
   background-color: #fafafc; /* 使用一个柔和的背景色以示区别 */
 }
 </style>

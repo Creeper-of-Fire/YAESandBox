@@ -1,4 +1,7 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
+using System.Text.Json.Serialization;
+using NJsonSchema.Annotations;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.VarSpec;
@@ -13,8 +16,9 @@ public record TuumConfig
     /// <summary>
     /// 名字
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [HiddenInForm(true)]
+    [DefaultValue("")]
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
@@ -22,6 +26,7 @@ public record TuumConfig
     /// </summary>
     [Required]
     [HiddenInForm(true)]
+    [DefaultValue(true)]
     public bool Enabled { get; init; } = true;
 
     /// <summary>
@@ -29,7 +34,8 @@ public record TuumConfig
     /// </summary>
     [Required]
     [HiddenInForm(true)]
-    public required string ConfigId { get; init; }
+    [DefaultValue("BlankGuid")]
+    public required string ConfigId { get; init; } = "BlankGuid";
 
     /// <summary>
     /// 按顺序执行的符文列表。
@@ -61,11 +67,18 @@ public record TuumConfig
     /// - 内部变量 "log_entry" 的数据也来源于外部端点 "customer_question"。
     /// 系统会自动创建一个名为 "customer_question" 的外部输入端点。
     /// </example>
-    [Required]
-    public Dictionary<string, string> InputMappings { get; init; } = [];
+    [JsonIgnore]
+    [JsonSchemaIgnore]
+    public Dictionary<string, string> InputMappings =>
+        InputMappingsList.GroupBy(m => m.InternalName) // 1. 按内部变量名分组
+            .ToDictionary(
+                g => g.Key, // 2. Key 是内部变量名
+                g => g.Last().EndpointName // 3. Value 是该组中【最后一条】映射的外部端点名
+            );
 
     /// <summary>
     /// 定义了此枢机的【内部变量】如何驱动【输出端点】。
+    /// 这里封装了所有的复杂性，将扁平列表转换回后端逻辑所需的一对多结构。
     /// Key: 提供数据的枢机内部变量名 (由符文产生)。
     /// Value: 由该内部变量驱动的外部输出端点名称列表。
     /// </summary>
@@ -79,6 +92,55 @@ public record TuumConfig
     /// 这定义了内部变量 "rune_A_raw_text" 的数据，
     /// 将会同时流向名为 "final_greeting" 和 "summary_output" 的两个外部输出端点。
     /// </example>
+    [JsonIgnore]
+    [JsonSchemaIgnore]
+    public Dictionary<string, HashSet<string>> OutputMappings =>
+        OutputMappingsList
+            .GroupBy(m => m.InternalName) // 1. 按内部变量名分组
+            .ToDictionary(
+                group => group.Key, // 2. Key 是内部变量名
+                group => group.Select(m => m.EndpointName).ToHashSet() // 3. Value 是该组所有外部端点的集合
+            );
+
+    /// <summary>
+    /// 定义内部变量数据来源的列表。这是持久化和与前端交互的主要字段。
+    /// </summary>
     [Required]
-    public Dictionary<string, HashSet<string>> OutputMappings { get; init; } = [];
+    [HiddenInForm(true)]
+    public List<TuumInputMapping> InputMappingsList { get; init; } = [];
+
+    /// <summary>
+    /// 定义内部变量如何驱动输出端点的列表。这是持久化和与前端交互的主要字段。
+    /// </summary>
+    [Required]
+    [HiddenInForm(true)]
+    public List<TuumOutputMapping> OutputMappingsList { get; init; } = [];
+}
+
+/// <summary>
+/// 表示一个从外部端点到内部变量的输入映射。
+/// </summary>
+public record TuumInputMapping
+{
+    /// <summary>枢机内部的变量名。</summary>
+    [Required(AllowEmptyStrings = true)]
+    public string InternalName { get; init; } = string.Empty;
+
+    /// <summary>提供数据的外部端点名。</summary>
+    [Required(AllowEmptyStrings = true)]
+    public string EndpointName { get; init; } = string.Empty;
+}
+
+/// <summary>
+/// 表示一个从内部变量到一个外部端点的输出映射。
+/// </summary>
+public record TuumOutputMapping
+{
+    /// <summary>提供数据的内部变量名。</summary>
+    [Required(AllowEmptyStrings = true)]
+    public string InternalName { get; init; } = string.Empty;
+
+    /// <summary>由该变量驱动的外部端点名。</summary>
+    [Required(AllowEmptyStrings = true)]
+    public string EndpointName { get; init; } = string.Empty;
 }

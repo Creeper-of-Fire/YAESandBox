@@ -354,10 +354,10 @@ async function handleCreateNew(payload: { name?: string, type?: string })
   {
     const blankConfig =
         resourceType === 'rune'
-            ? createBlankConfig('rune', name, {runeType: runeType!})
+            ? await createBlankConfig('rune', name, {runeType: runeType!})
             : resourceType === 'workflow'
-                ? createBlankConfig('workflow', name)
-                : createBlankConfig('tuum', name);
+                ? await createBlankConfig('workflow', name)
+                : await createBlankConfig('tuum', name);
 
     await workbenchStore.createGlobalConfig(blankConfig);
     message.success(`成功创建全局${currentTabLabel.value}“${name}”！`);

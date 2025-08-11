@@ -125,7 +125,8 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
         Description = "在此编写 Lua 脚本。使用 `input_string` 获取输入，使用 `set_output(result)` 设置输出。"
     )]
     [DefaultValue(DefaultScript)]
-    public string? Script { get; init; } = DefaultScript;
+    [Required(AllowEmptyStrings = true)]
+    public string Script { get; init; } = DefaultScript;
 
     /// <inheritdoc />
     protected override LuaStringProcessorRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this);

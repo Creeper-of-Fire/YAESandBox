@@ -101,7 +101,7 @@ internal partial record StaticVariableRuneConfig : AbstractRuneConfig<StaticVari
     /// <summary>
     /// 定义变量的脚本内容。
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [DataType(DataType.MultilineText)]
     [Display(
         Name = "变量定义脚本",

@@ -25,7 +25,6 @@
         <!-- 在工作流列表里，使用默认行为的 TuumItemRenderer -->
         <div :key="tuumItem.configId" class="tuum-item-container">
           <TuumItemRenderer
-              :available-global-vars-for-tuum="getAvailableVarsForTuum(index)"
               :parent-workflow="workflow"
               :tuum="tuumItem"
           />
@@ -53,39 +52,6 @@ const workflowInputsRef = computed({
   get: () => props.workflow?.workflowInputs || [],
   set: (value) => props.workflow.workflowInputs = Array.isArray(value) ? value : []
 });
-
-/**
- * 计算在指定索引的枢机开始执行前，所有可用的全局变量。
- * @param tuumIndex - 枢机在工作流中的索引。
- */
-function getAvailableVarsForTuum(tuumIndex: number): string[]
-{
-  // 使用修正后的计算属性
-  const availableVars = new Set<string>(workflowInputsRef.value);
-
-  if (props.workflow?.tuums)
-  {
-    // 遍历指定索引之前的所有枢机
-    for (let i = 0; i < tuumIndex; i++)
-    {
-      const precedingTuum = props.workflow.tuums[i];
-      if (precedingTuum?.outputMappings)
-      {
-        // outputMappings 的结构是 { [localVar]: [globalVar1, globalVar2] }
-        // 因此需要遍历其值的数组，并将所有 globalVar 添加到可用集合中
-        Object.values(precedingTuum.outputMappings).flat().forEach(globalVar =>
-        {
-          if (globalVar)
-          { // 确保不添加空字符串
-            availableVars.add(globalVar);
-          }
-        });
-      }
-    }
-  }
-
-  return Array.from(availableVars);
-}
 
 </script>
 
