@@ -28,8 +28,8 @@
             <template v-for="action in actions" :key="action.key">
               <!-- 渲染需要 Popover 的动作 (如重命名、添加) -->
               <InlineInputPopover v-if="action.renderType === 'popover'"
-                  :action = "action"
-                  @confirm="payload => action.handler?.(payload)"
+                                  :action="action"
+                                  @confirm="payload => action.handler?.(payload)"
               >
                 <n-button
                     :disabled="action.disabled"
@@ -115,13 +115,9 @@
 
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
-import {NH4, NIcon, useDialog, useMessage} from 'naive-ui';
+import {NH4, NIcon, useDialog, useMessage, useThemeVars} from 'naive-ui';
 import type {ConfigType, EditSession} from "@/app-workbench/services/EditSession.ts";
-import type {
-  AbstractRuneConfig,
-  TuumConfig,
-  WorkflowConfig
-} from "@/app-workbench/types/generated/workflow-config-api-client";
+import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "@/app-workbench/components/workflow/WorkflowItemRenderer.vue";
 import {AddBoxIcon, SwapHorizIcon} from '@/utils/icons';
@@ -313,6 +309,8 @@ const currentConfigName = computed(() =>
   if (props.session.type === 'rune' && runeData.value) return `符文: ${runeData.value.name}`;
   return '未知';
 });
+
+const themeVars = useThemeVars();
 </script>
 
 <style scoped>
@@ -351,10 +349,10 @@ const currentConfigName = computed(() =>
   display: flex;
   justify-content: center;
   align-items: center;
-  border: 2px dashed #dcdfe6;
+  border: 2px dashed v-bind('themeVars.borderColor');
   border-radius: 8px;
   box-sizing: border-box;
-  background-color: #fafafc;
+  background-color: v-bind('themeVars.hoverColor');
   padding: 20px;
 }
 
@@ -367,7 +365,7 @@ const currentConfigName = computed(() =>
   flex-direction: column;
   align-items: center;
   gap: 16px; /* 图标和文字的间距 */
-  color: #c0c4cc; /* 图标的颜色，比较柔和 */
+  color: v-bind('themeVars.textColor3'); /* 图标的颜色，比较柔和 */
   text-align: center;
   pointer-events: none; /* 防止它干扰拖拽事件 */
 }
@@ -375,13 +373,13 @@ const currentConfigName = computed(() =>
 .custom-empty-state .description {
   font-size: 16px; /* 加大字体 */
   font-weight: 500;
-  color: #a8abb2; /* 文字的颜色 */
+  color: v-bind('themeVars.textColor2'); /* 文字的颜色 */
   max-width: 220px; /* 控制文字宽度，使其在必要时换行 */
   line-height: 1.5;
 }
 
 .sidebar-description {
-  color: #888;
+  color: v-bind('themeVars.textColor2');
   font-size: 13px;
   margin-top: 8px;
   margin-bottom: 16px;
@@ -393,8 +391,8 @@ const currentConfigName = computed(() =>
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(32, 128, 240, 0.15);
-  border: 2px dashed #2080f0;
+  background-color: v-bind('themeVars.primaryColorSuppl');
+  border: 2px dashed v-bind('themeVars.primaryColor');
   border-radius: 6px;
   z-index: 10;
   display: flex;
@@ -405,7 +403,7 @@ const currentConfigName = computed(() =>
 
 .drop-overlay-content {
   text-align: center;
-  color: #2080f0;
+  color: v-bind('themeVars.primaryColor');
   font-weight: 500;
   pointer-events: none;
 }

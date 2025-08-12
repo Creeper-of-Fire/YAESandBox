@@ -69,7 +69,7 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 // 移除了 Popover 相关的组件和图标
-import {NBlockquote, NEmpty, NFlex, NFormItem, NH4, NP, NSpin, NSwitch, NTag} from 'naive-ui';
+import {NBlockquote, NEmpty, NFlex, NFormItem, NH4, NP, NSpin, NSwitch, NTag, useThemeVars} from 'naive-ui';
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import type {AbstractRuneConfig, TuumConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import DynamicFormRenderer from "@/app-workbench/features/schema-viewer/DynamicFormRenderer.vue";
@@ -164,14 +164,16 @@ function handleFormUpdateRaw(updatedRuneData: AbstractRuneConfig)
 
 // 创建一个防抖版本的更新函数，延迟 300 毫秒执行
 const handleFormUpdate = useDebounceFn(handleFormUpdateRaw, 300);
+
+const themeVars = useThemeVars();
 </script>
 
 <style scoped>
 .editor-target-renderer {
   /* 从卡片样式改为更融合的背景 */
-  background-color: #fdfdfd;
+  background-color: v-bind('themeVars.cardColor');
   padding: 16px; /* 调整内边距 */
-  border: 1px solid #f0f0f0;
+  border: 1px solid v-bind('themeVars.borderColor');
   border-top: none; /* 移除上边框，与上面的符文项更好地融合 */
   border-radius: 0 0 4px 4px; /* 只保留下方的圆角 */
   box-sizing: border-box;
@@ -183,6 +185,6 @@ const handleFormUpdate = useDebounceFn(handleFormUpdateRaw, 300);
   margin-bottom: 16px;
   max-height: 140px; /* 设置一个最大高度 */
   overflow-y: auto; /* 当内容超出时，显示垂直滚动条 */
-  background-color: #fafafc; /* 使用一个柔和的背景色以示区别 */
+  background-color: v-bind('themeVars.actionColor'); /* 使用一个柔和的背景色以示区别 */
 }
 </style>

@@ -100,7 +100,5 @@ async function handleSendMessage(userInput: string) {
   flex-direction: column;
   height: 100%;
   width: 100%;
-  /* 微调：背景色改为浅灰，让聊天气泡更突出 */
-  background: #f7f7f7;
 }
 </style>

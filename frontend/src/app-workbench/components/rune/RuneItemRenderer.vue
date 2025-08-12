@@ -9,14 +9,13 @@
       @dblclick="handleDoubleClick"
   >
     <template #content>
-      <!--      <span v-if="runeClassLabel" class="rune-alias">{{ runeClassLabel }}</span>-->
       <span class="rune-name">{{ rune.name }}</span>
     </template>
 
     <template #actions>
       <n-popover v-if="rulesForThisRune" trigger="hover">
         <template #trigger>
-          <n-icon :color="normalIconColor" :component="InfoIcon" style="margin-left: 8px;"/>
+          <n-icon :color="normalIconColor" :component="InfoIcon"/>
         </template>
         <!-- 动态生成提示内容 -->
         <n-ul>
@@ -27,7 +26,7 @@
           :disabled="!showAnalysisPopover"
           trigger="hover">
         <template #trigger>
-          <n-icon :color="analysisIconColor" :component="FindInPageIcon" style="margin-left: 8px;"/>
+          <n-icon :color="analysisIconColor" :component="FindInPageIcon"/>
         </template>
         <div v-if="hasConsumedVariables&&runeAnalysisResult">
           <n-h4>输入:</n-h4>
@@ -53,57 +52,47 @@
       <!-- "更多" 操作的下拉菜单 -->
       <ConfigItemActionsMenu :actions="itemActions"/>
     </template>
-
-    <!-- 新增：下方内容插槽，用于渲染内部符文列表 -->
-    <template v-if="hasInnerTuum" #content-below>
-      <n-collapse-transition :show="isExpanded">
-        <div class="inner-rune-list-container">
-          <draggable
-              v-if="innerTuum?.runes"
-              v-model="innerTuum.runes"
-              :animation="150"
-              :group="{ name: 'runes-group', put: ['runes-group'] }"
-              class="rune-draggable-area"
-              ghost-class="workbench-ghost-item"
-              handle=".drag-handle"
-              item-key="configId"
-          >
-            <div v-for="runeItem in innerTuum.runes" :key="runeItem.configId" class="rune-item-wrapper">
-              <!-- 递归渲染 RuneItemRenderer！ -->
-              <RuneItemRenderer
-                  :parent-tuum="innerTuum"
-                  :rune="runeItem"
-              />
-            </div>
-          </draggable>
-          <n-empty v-else description="拖拽符文到此处" small/>
-        </div>
-      </n-collapse-transition>
-    </template>
-
   </ConfigItemBase>
+
+  <!-- 当存在 innerTuum 时，复用 CollapsibleConfigList -->
+  <n-collapse-transition v-if="hasInnerTuum" :show="isExpanded">
+    <CollapsibleConfigList
+        v-if="innerTuum"
+        v-model:items="innerTuum.runes"
+        empty-description="拖拽符文到此处"
+        group-name="runes-group"
+    >
+      <template #item="{ element: runeItem }">
+        <!-- 递归渲染 RuneItemRenderer，并传递禁用状态 -->
+        <RuneItemRenderer
+            :parent-tuum="innerTuum"
+            :rune="runeItem"
+        />
+      </template>
+    </CollapsibleConfigList>
+  </n-collapse-transition>
 </template>
 
 <script lang="ts" setup>
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue';
-import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {AbstractRuneConfig, TuumConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
-import {computed, inject, ref, toRef} from "vue";
+import {computed, inject, provide, ref, toRef} from "vue";
 import {useWorkbenchStore} from "@/app-workbench/stores/workbenchStore.ts";
 import {InfoIcon} from "naive-ui/lib/_internal/icons";
-import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
+import {IsParentDisabledKey, SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 import {FindInPageIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@/utils/icons.ts';
 import {useRuneAnalysis} from "@/app-workbench/composables/useRuneAnalysis.ts";
 import {useConfigItemActions} from "@/app-workbench/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemActionsMenu.vue";
 import {useThemeVars} from "naive-ui";
+import CollapsibleConfigList from "@/app-workbench/components/share/renderer/CollapsibleConfigList.vue";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
   rune: AbstractRuneConfig;
   parentTuum: TuumConfig | null;
+  isParentDisabled?: boolean;
 }>();
-
 
 const {
   analysisResult: runeAnalysisResult,
@@ -229,25 +218,19 @@ function toggleExpansion()
   }
 }
 
+// 1. 注入来自父容器（Tuum 或另一个 Rune）的禁用状态
+// 提供一个 ref(false) 作为默认值，用于顶层符文或在上下文中找不到提供者的情况
+const isParentDisabled = inject(IsParentDisabledKey, ref(false));
+
+// 2. 计算出此符文最终的有效禁用状态
+const isEffectivelyDisabled = computed(() =>
+{
+  // 自身的禁用状态 OR 父容器的禁用状态
+  return !props.rune.enabled || isParentDisabled.value;
+});
+
+// 3. (关键的递归步骤) 为自己的后代提供其自身的“有效禁用状态”
+// 这样，禁用链就可以无限传递下去
+provide(IsParentDisabledKey, isEffectivelyDisabled);
+
 </script>
-
-<style scoped>
-/* 增加内部符文列表的样式，借鉴 TuumItemRenderer */
-.inner-rune-list-container {
-  border-radius: 4px;
-  margin-top: 8px;
-  padding: 8px;
-  background-color: #f7f9fa; /* 使用稍微不同的背景色以作区分 */
-  border: 1px dashed #dcdfe6;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.rune-draggable-area {
-  min-height: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-</style>

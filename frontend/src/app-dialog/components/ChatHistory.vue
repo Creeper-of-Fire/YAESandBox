@@ -110,7 +110,6 @@ watch(() => props.history.length, async () => {
   align-self: flex-start;
 }
 .role-assistant .message-bubble {
-  background-color: #ffffff;
   color: #333;
   border: 1px solid #e8e8e8;
   /* 小技巧：调整一个角的弧度，模拟微信气泡的尾巴 */

@@ -535,6 +535,4 @@ function promptDelete(type: ConfigType, id: string, name: string) {
   gap: 8px; /* 列表项之间的间距 */
   padding-top: 8px; /* 列表顶部留出一些空间 */
 }
-
 </style>
-<!-- END OF FILE -->

@@ -107,6 +107,5 @@ function handlePopoverConfirm(payload: { name?: string; type?: string })
   /* 确保按钮在 item 右侧 */
   display: flex;
   align-items: center;
-  padding: 0 8px;
 }
 </style>

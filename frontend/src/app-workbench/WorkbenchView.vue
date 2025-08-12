@@ -89,7 +89,7 @@
 
 <script lang="ts" setup>
 import {onBeforeUnmount, onMounted, provide, ref} from 'vue';
-import {NButton, NH3, NSwitch, useDialog, useMessage} from 'naive-ui';
+import {NButton, NH3, NSwitch, useDialog, useMessage, useThemeVars} from 'naive-ui';
 import {SaveIcon} from '@/utils/icons';
 import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore';
 import {type ConfigType, type EditSession} from '@/app-workbench/services/EditSession';
@@ -103,7 +103,6 @@ import {type SelectedConfigItem, SelectedConfigItemKey} from "@/app-workbench/ut
 import type {AbstractRuneConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import type {TuumEditorContext} from "@/app-workbench/components/tuum/editor/TuumEditorContext.ts";
 import type {RuneEditorContext} from "@/app-workbench/components/rune/editor/RuneEditorContext.ts";
-import {synchronizeModelWithSchema} from "@/app-workbench/utils/synchronizeModelWithSchema.ts";
 
 defineOptions({
   name: 'WorkbenchView'
@@ -318,6 +317,8 @@ onBeforeUnmount(() =>
 {
   window.removeEventListener('beforeunload', beforeUnloadHandler);
 });
+
+const themeVars = useThemeVars();
 </script>
 
 <style scoped>
@@ -336,7 +337,7 @@ onBeforeUnmount(() =>
 
 .workbench-header {
   padding: 10px 24px;
-  border-bottom: 1px solid #e8e8e8;
+  border-bottom: 1px solid v-bind('themeVars.borderColor');
   display: flex;
   justify-content: space-between;
   align-items: center;

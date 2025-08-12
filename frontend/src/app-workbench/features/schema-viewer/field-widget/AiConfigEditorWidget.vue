@@ -222,18 +222,11 @@ const handleDisableAiConfig = () => {
 </script>
 
 <style scoped>
-.n-card {
-  background-color: #fcfdff;
-  border: 1px solid #f0f3f5;
-  margin-top: 4px;
-}
-
 /* 为嵌入的面板添加一个容器样式，使其看起来更融合 */
 .embedded-panel-container {
   margin-top: 16px;
   padding: 16px;
   border: 1px solid #e0e0e6;
   border-radius: 8px;
-  background-color: #fafafc;
 }
 </style>

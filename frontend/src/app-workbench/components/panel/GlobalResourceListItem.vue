@@ -10,7 +10,7 @@
     <span class="item-name">
         {{ item.data.name }}
       <!-- 如果变脏，显示一个小星号 -->
-        <span v-if="isDirty" style="color: #f0a020;">*</span>
+        <span v-if="isDirty">*</span>
     </span>
 
     <!-- 将 text 按钮替换为更显眼的 secondary 图标按钮 -->
@@ -32,8 +32,8 @@
       编辑 “{{ item.data.name }}”
     </n-popover>
   </div>
-  <div v-else class="resource-item-damaged"
-       ref="listItemRef"
+  <div v-else ref="listItemRef"
+       class="resource-item-damaged"
        @contextmenu.prevent="$emit('contextmenu', { type, id, name: id, isDamaged: true, event: $event })"
   >
     <n-icon :component="LinkOffIcon" color="#d03050"/>
@@ -65,8 +65,8 @@
 </template>
 
 <script lang="ts" setup>
-import {NButton, NIcon} from 'naive-ui';
-import { onLongPress } from '@vueuse/core'
+import {NButton, NIcon, useThemeVars} from 'naive-ui';
+import {onLongPress} from '@vueuse/core'
 import {EditIcon, FindInPageIcon, LinkOffIcon} from '@/utils/icons';
 import type {ConfigObject, ConfigType} from '@/app-workbench/services/EditSession';
 import type {GlobalResourceItem} from '@/types/ui';
@@ -94,7 +94,8 @@ const listItemRef = ref<HTMLElement | null>(null);
 
 onLongPress( // <-- 2. 修正钩子名称
     listItemRef,
-    (event: PointerEvent) => {
+    (event: PointerEvent) =>
+    {
       // 长按触发时，总是发出 contextmenu 事件
       // 我们在事件的 payload 中携带了所有必要的信息
       emit('contextmenu', {
@@ -105,9 +106,10 @@ onLongPress( // <-- 2. 修正钩子名称
         event: event,
       });
     },
-    { delay: 500 }
+    {delay: 500}
 );
 
+const themeVars = useThemeVars();
 </script>
 
 <style scoped>
@@ -122,7 +124,7 @@ onLongPress( // <-- 2. 修正钩子名称
 }
 
 .resource-item.is-dirty {
-  background-color: #f0a0201a; /* 浅橙黄色背景 */
+  background-color: v-bind('themeVars.warningColorSuppl');
 }
 
 .resource-item.is-dirty .item-name {
@@ -130,7 +132,7 @@ onLongPress( // <-- 2. 修正钩子名称
 }
 
 .resource-item:hover {
-  background-color: #f0f2f5; /* 悬停背景色 */
+  background-color: v-bind('themeVars.hoverColor'); /* 悬停背景色 */
 }
 
 /* 让名称和按钮之间的空间更大，避免误触 */
@@ -149,7 +151,7 @@ onLongPress( // <-- 2. 修正钩子名称
   padding: 6px 8px; /* 同样增加垂直内边距 */
   border-radius: 4px;
   cursor: default; /* 损坏项不可直接编辑，光标为默认 */
-  color: #d03050; /* 错误红色 */
+  color: v-bind('themeVars.errorColor'); /* 错误红色 */
 }
 
 .damaged-text {

@@ -1,0 +1,130 @@
+﻿<template>
+  <DayNightToggle
+      ref="dayNightToggleRef"
+      v-model="isCurrentlyDark"
+      :size="1.5"
+      @click="handleToggleClick"
+      @contextmenu.prevent="handleContextMenu"
+  />
+  <n-dropdown
+      :on-clickoutside="onClickOutside"
+      :options="themeOptions"
+      :show="showDropdownRef"
+      :x="xRef"
+      :y="yRef"
+      placement="bottom-start"
+      trigger="manual"
+  >
+  </n-dropdown>
+</template>
+<script lang="ts" setup>
+import DayNightToggle from "@/shared/DayNightToggle.vue";
+import {onMounted, type VNode} from "vue";
+import {type ComponentPublicInstance, computed, h, inject, nextTick, ref, shallowRef} from "vue";
+import {IsDarkThemeKey} from "@/utils/injectKeys.ts";
+import {onLongPress} from "@vueuse/core";
+import {NSwitch} from "naive-ui";
+
+const dayNightToggleRef = shallowRef<ComponentPublicInstance | null>(null)
+
+const isCurrentlyDark = inject(IsDarkThemeKey, ref(false));
+const props = defineProps<{
+  themeMode: 'light' | 'dark' | 'system';
+}>();
+const emit = defineEmits<{
+  (e: 'update:themeMode', value: 'light' | 'dark' | 'system'): void;
+}>();
+
+const longPressed = ref(false);
+
+// 这是切换“跟随系统”模式的核心逻辑
+const toggleSystemMode = () =>
+{
+  let newMode: 'light' | 'dark' | 'system';
+  if (props.themeMode === 'system')
+  {
+    // 如果当前是“跟随系统”，则关闭它
+    // 新模式将固定为当前正在显示的主题
+    newMode = isCurrentlyDark.value ? 'dark' : 'light';
+  }
+  else
+  {
+    // 如果当前是明确模式，则开启“跟随系统”
+    newMode = 'system';
+  }
+  emit('update:themeMode', newMode);
+  // 切换后关闭下拉菜单
+  showDropdownRef.value = false;
+};
+
+const showDropdownRef = ref(false);
+const xRef = ref(0);
+const yRef = ref(0);
+
+const handleContextMenu = (e: MouseEvent) =>
+{
+  longPressed.value = true;
+  showDropdownRef.value = false
+  nextTick().then(() =>
+  {
+    showDropdownRef.value = true
+    xRef.value = e.clientX
+    yRef.value = e.clientY
+  })
+}
+
+// 将 onLongPress 的初始化移入 onMounted 钩子
+onMounted(() => {
+    onLongPress(dayNightToggleRef, handleContextMenu, { delay: 500 });
+});
+
+const onClickOutside = () =>
+{
+  showDropdownRef.value = false
+}
+
+const themeOptions = computed(() => [
+  {
+    key: 'system-toggle-render',
+    type: 'render', // 指定类型为 render，这样 naive-ui 不会处理它的点击事件
+    render: (): VNode =>
+        h(
+            'div',
+            {
+              // 让整个 div 区域都可点击，提升用户体验
+              style: 'display: flex; align-items: center; justify-content: space-between; min-width: 120px; cursor: pointer; padding: 6px 12px;',
+              onClick: toggleSystemMode, // 点击整行时触发切换
+            },
+            [
+              h('span', '跟随系统'),
+              h(NSwitch, {
+                value: props.themeMode === 'system',
+              }),
+            ]
+        ),
+  },
+]);
+
+const handleToggleClick = () =>
+{
+  if (longPressed.value)
+  {
+    longPressed.value = false; // 消费并重置标志位
+    return; // 阻止单击事件逻辑
+  }
+
+  let newMode: 'light' | 'dark' | 'system';
+  // 如果当前是跟随系统模式，点击后应该切换到明确的模式
+  if (props.themeMode === 'system')
+  {
+    // 如果当前显示为暗色，则切换到亮色模式，反之亦然
+    newMode = isCurrentlyDark.value ? 'light' : 'dark';
+  }
+  else
+  {
+    // 如果已经是明确模式，则在亮/暗之间切换
+    newMode = props.themeMode === 'light' ? 'dark' : 'light';
+  }
+  emit('update:themeMode', newMode);
+}
+</script>

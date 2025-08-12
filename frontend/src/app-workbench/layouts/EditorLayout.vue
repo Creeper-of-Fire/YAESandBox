@@ -41,6 +41,8 @@
 
 <script lang="ts" setup>
 
+import {useThemeVars} from "naive-ui";
+
 const props = defineProps({
   isGlobalPanelVisible: {
     type: Boolean,
@@ -60,6 +62,7 @@ const props = defineProps({
   },
 });
 
+const themeVars = useThemeVars();
 </script>
 
 <style scoped>
@@ -71,9 +74,9 @@ const props = defineProps({
 
 /* 左侧上下分割面板容器 */
 .left-panels {
-  width: 350px;
+  width: 450px;
   height: 100%;
-  border-right: 1px solid #e8e8e8; /* 保留原右侧边框 */
+  border-right: 1px solid v-bind('themeVars.borderColor'); /* 保留原右侧边框 */
 }
 
 .panel {

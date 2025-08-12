@@ -208,13 +208,11 @@ const rightPanelGridSpan = computed(() => (isMobile.value ? 1 : 6));
   flex-grow: 1; /* 占据所有可用空间 */
   overflow-y: auto; /* 面板内容可滚动 */
   padding: 10px; /* 给面板内容一些内边距 */
-  background-color: #f8f8f9; /* 侧边栏背景色 */
 }
 
 
 /* 中间内容区特定样式 */
 .center-content-area {
-  background-color: #ffffff; /* 中间背景色 */
 }
 
 .center-content-wrapper {
@@ -236,7 +234,6 @@ const rightPanelGridSpan = computed(() => (isMobile.value ? 1 : 6));
   flex-grow: 1;
   min-height: 0; /* 重要，用于 flex 布局计算 */
   overflow: hidden; /* 由内部内容（如 DynamicScroller）处理滚动 */
-  /* background-color: #f0f2f5; */ /* 内容区背景色 */
 }
 
 /* 侧边栏区域特定样式 */

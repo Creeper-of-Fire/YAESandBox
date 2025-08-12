@@ -1,0 +1,173 @@
+﻿<template>
+  <div class="app-shell">
+    <header class="app-header">
+      <!--
+        美化后的导航栏：
+        - 使用 n-space 来提供合适的间距。
+        - 使用 router-link 的 custom 属性，将导航功能赋予 n-button。
+        - v-slot="{ navigate, isActive }" 获取路由状态。
+        - @click="navigate" 将按钮的点击事件绑定到路由跳转。
+        - :type="isActive ? 'primary' : 'default'" 根据路由是否激活来改变按钮样式，提供视觉反馈。
+      -->
+      <n-space class="navigation-controls">
+        <router-link v-slot="{ navigate, isActive }" custom to="/workbench">
+          <n-button
+              :ghost="!isActive"
+              :type="isActive ? 'primary' : 'default'"
+              strong
+              @click="navigate"
+          >
+            编辑器
+          </n-button>
+        </router-link>
+        <router-link v-slot="{ navigate, isActive }" custom to="/test">
+          <n-button
+              :ghost="!isActive"
+              :type="isActive ? 'primary' : 'default'"
+              strong
+              @click="navigate"
+          >
+            测试台
+          </n-button>
+        </router-link>
+        <router-link v-slot="{ navigate, isActive }" custom to="/dialog">
+          <n-button
+              :ghost="!isActive"
+              :type="isActive ? 'primary' : 'default'"
+              strong
+              @click="navigate"
+          >
+            聊天
+          </n-button>
+        </router-link>
+      </n-space>
+
+      <!-- 用户状态和登出按钮 -->
+      <n-space align="center" class="user-controls">
+        <DayNightToggleWithDropDown v-model:themeMode="themeMode"/>
+        <span v-if="authStore.isAuthenticated">
+          欢迎, {{ authStore.user?.username }}
+        </span>
+        <n-button v-if="authStore.isAuthenticated" ghost type="error" @click="handleLogout">
+          登出
+        </n-button>
+      </n-space>
+    </header>
+
+    <main class="app-main-content">
+      <!--
+        修复后的 router-view：
+        - 从 v-slot 中额外获取 route 对象。
+        - 为 <component> 绑定了唯一的 :key="route.path"。
+        - 当路由从 /game 切换到 /workbench 时, key 会发生变化，
+          Vue 会强制销毁旧组件、创建新组件，从而避免白屏问题。
+      -->
+      <router-view v-slot="{ Component, route }">
+        <!--                transition 调了半天还是不舒服，扔了得了，美化是没完没了的-->
+        <!--                <transition name="fade" mode="in-out">-->
+        <keep-alive>
+          <component :is="Component" :key="route.path"/>
+        </keep-alive>
+        <!--                </transition>-->
+      </router-view>
+    </main>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import {useThemeVars} from "naive-ui";
+import {useAuthStore} from "@/app-authentication/stores/authStore.ts";
+import {computed, defineModel, provide} from "vue";
+import axiosInstance from "@/utils/axiosInstance.ts";
+import DayNightToggleWithDropDown from "@/shared/DayNightToggleWithDropDown.vue";
+// import GlobalErrorDisplay from '@/components/GlobalErrorDisplay.vue';
+// import AppWideNotifications from '@/components/AppWideNotifications.vue';
+
+const themeMode = defineModel<'light' | 'dark' | 'system'>({default: 'system'});
+
+const authStore = useAuthStore();
+const themeVars = useThemeVars();
+
+
+// const connectionStore = useConnectionStore();
+
+// onMounted(async () =>
+// {
+//   console.log("App [onMounted]: 应用启动，初始化连接...");
+//   await connectionStore.connectSignalR();
+//   if (connectionStore.connectionError)
+//   {
+//     console.error("App [onMounted]: SignalR 初始连接失败。", connectionStore.connectionError);
+//     // 这里可以触发一个全局错误状态
+//   }
+// });
+//
+// onUnmounted(() =>
+// {
+//   console.log("App [onUnmounted]: 应用关闭。");
+//   // connectionStore.disconnectSignalR(); // 如果有断开方法
+// });
+
+// axios，给第三方组件使用，提供鉴权服务
+provide('axios', axiosInstance);
+
+const handleLogout = () =>
+{
+  authStore.logout();
+};
+
+const backgroundColor = computed(() => themeVars.value.baseColor);
+const cardColor = computed(() => themeVars.value.cardColor);
+const borderColor = computed(() => themeVars.value.borderColor);
+const textColor = computed(() => themeVars.value.textColor1);
+</script>
+
+<style>
+/* 整体应用布局 */
+.app-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  width: 100vw;
+  background-color: v-bind(backgroundColor);
+  color: v-bind(textColor);
+}
+
+/* 头部样式 */
+.app-header {
+  display: flex;
+  align-items: center;
+  padding: 1px 1px;
+  justify-content: space-between;
+  flex-shrink: 0; /* 防止头部被压缩 */
+  border-bottom: 1px solid v-bind(borderColor);
+  background-color: v-bind(cardColor);
+}
+
+.navigation-controls {
+  margin-left: 20px;
+}
+
+/* 主内容区域样式 */
+.app-main-content {
+  flex-grow: 1; /* 占据剩余所有空间 */
+  overflow-y: auto; /* 如果内容超长，则内部滚动 */
+  box-sizing: border-box;
+}
+
+.user-controls {
+  margin-right: 20px;
+}
+
+/* 定义淡入淡出过渡效果 */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.1s ease, transform 0.1s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+  transform: translateY(5px);
+}
+</style>

@@ -144,7 +144,6 @@ const currentMainComponent = computed(() =>
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: 9999 !important;
-  background-color: rgba(255, 255, 255, 0.7);
   padding: 20px;
   border-radius: 8px;
 }

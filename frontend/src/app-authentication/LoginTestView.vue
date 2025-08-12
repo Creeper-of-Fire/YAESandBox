@@ -76,7 +76,6 @@ const handleSubmit = async () => {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #f0f2f5;
 }
 .auth-card {
   width: 450px;
@@ -89,6 +88,5 @@ const handleSubmit = async () => {
 }
 .footer-info {
   text-align: center;
-  color: #999;
 }
 </style>

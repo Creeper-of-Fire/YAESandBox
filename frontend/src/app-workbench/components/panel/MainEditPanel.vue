@@ -44,6 +44,3 @@ const selectedType = computed(() =>
 });
 
 </script>
-
-<style scoped>
-</style>

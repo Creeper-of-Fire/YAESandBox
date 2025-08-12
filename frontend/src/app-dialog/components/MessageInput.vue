@@ -92,7 +92,6 @@ function handleKeyDown(event: KeyboardEvent) {
   gap: 8px;
   padding: 12px 16px;
   border-top: 1px solid #e8e8e8;
-  background-color: #fff;
 }
 
 .input-area {

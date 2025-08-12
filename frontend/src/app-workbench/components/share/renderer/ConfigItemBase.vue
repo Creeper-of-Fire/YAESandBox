@@ -1,7 +1,7 @@
 <!-- src/app-workbench/components/.../ConfigItemBase.vue -->
 <template>
   <div
-      :class="{ 'is-selected': isSelected , 'is-disabled': !enabled }"
+      :class="{ 'is-selected': isSelected , 'is-disabled': !enabled || isParentDisabled }"
       class="config-item-base"
       @click="$emit('click')"
       @dblclick="$emit('dblclick')"
@@ -16,16 +16,6 @@
       </n-icon>
     </div>
 
-    <div class="enable-switch-wrapper" @click.stop>
-      <n-switch
-          :round="false"
-          :value="enabled"
-          size="small"
-          @update:value="(newValue:boolean) => $emit('update:enabled', newValue)"
-      >
-      </n-switch>
-    </div>
-
     <!-- 主内容区插槽 -->
     <div class="item-content-wrapper">
       <slot name="content"></slot>
@@ -35,16 +25,28 @@
       <!-- 动作插槽：可用于放置编辑按钮、删除按钮、更多操作菜单等 -->
       <slot name="actions"></slot>
     </div>
+
+    <div class="enable-switch-wrapper" @click.stop>
+      <n-switch
+          :round="false"
+          :value="enabled"
+          class="compact-switch"
+          size="small"
+          @update:value="(newValue:boolean) => $emit('update:enabled', newValue)"
+      >
+      </n-switch>
+    </div>
+
   </div>
-  <!-- 内容插槽：用于在条目下方展开额外内容，例如枢机的子符文列表 -->
-  <slot name="content-below"></slot>
 </template>
 
 <script lang="ts" setup>
-import {NIcon} from 'naive-ui';
+import {NIcon, useThemeVars} from 'naive-ui';
 import {DragHandleOutlined} from '@/utils/icons.ts';
-import {computed} from "vue";
+import {computed, inject, ref} from "vue";
 import ColorHash from "color-hash";
+import {IsParentDisabledKey} from "@/app-workbench/utils/injectKeys.ts";
+import {IsDarkThemeKey} from "@/utils/injectKeys.ts";
 
 // 定义组件的 props
 const props = defineProps<{
@@ -55,14 +57,59 @@ const props = defineProps<{
   enabled: boolean;
 }>();
 
-const colorHash = new ColorHash({
-  lightness: [0.7, 0.75, 0.8],
-  saturation: [0.7, 0.8, 0.9],
-  hash: 'bkdr'
+const isParentDisabled = inject(IsParentDisabledKey, ref(false));
+
+const themeVars = useThemeVars();
+
+const isDarkTheme = inject(IsDarkThemeKey, ref(undefined));
+
+/**
+ * 判断当前是否为深色模式的正确方法。
+ * 我们通过检查一个基础背景色（如 cardColor）的亮度来判断。
+ * 这里简单地假设 #fff 系列为浅色，其他为深色。
+ * 一个更鲁棒的方法是计算颜色的亮度，但对于 Naive UI 的默认主题，
+ * 检查第一个字符是否为 #f 就足够了。
+ */
+const isDarkMode = computed(() =>
+{
+  if (isDarkTheme.value !== undefined)
+    return isDarkTheme.value;
+  // themeVars.value.cardColor 在浅色模式下通常是 '#ffffff'，深色模式是 '#18181c'
+  // 我们可以简单地检查颜色值。一个简单的技巧是检查它是否“亮”。
+  // 这里我们用一个简化的方法：如果颜色不是以 '#ff' 开头，就认为是深色。
+  // 在实践中，这对于默认主题是足够可靠的。
+  const color = themeVars.value.cardColor.toLowerCase();
+  return !color.startsWith('#fff');
 });
+
+// 创建一个响应式的 ColorHash 实例
+// 这个计算属性会在主题变化时重新运行，返回一个为新主题配置好的新实例
+const colorHashInstance = computed(() =>
+{
+
+  if (isDarkMode.value)
+  {
+    // 深色模式配置：颜色更亮、饱和度稍低，以在深色背景上更柔和
+    return new ColorHash({
+      lightness: [0.70, 0.75, 0.80],
+      saturation: [0.45, 0.55, 0.65], // 降低饱和度避免刺眼
+      hash: 'bkdr'
+    });
+  }
+  else
+  {
+    // 浅色模式配置：颜色更深、饱和度更高，以在浅色背景上更突出
+    return new ColorHash({
+      lightness: [0.50, 0.55, 0.60], // 降低亮度使其变深
+      saturation: [0.65, 0.75, 0.85], // 保持或增加饱和度
+      hash: 'bkdr'
+    });
+  }
+});
+
 const highlightColor = computed(() =>
 {
-  return colorHash.hex(props.highlightColorCalculator);
+  return colorHashInstance.value.hex(props.highlightColorCalculator);
 });
 
 // 定义组件触发的事件
@@ -72,13 +119,21 @@ defineEmits(['click', 'dblclick', 'update:enabled']);
  * 计算属性，用于处理选中状态下的边框颜色。
  * 如果 highlightColor 存在，则使用它，否则回退到默认的蓝色主题色。
  */
-const finalHighlightColor = computed(() => highlightColor.value || '#2080f0');
+const finalHighlightColor = computed(() => highlightColor.value || themeVars.value.primaryColor);
 
 /**
  * 计算属性，用于拖拽区域的背景色
  * 如果没有提供 highlightColor，则使用一个柔和的灰色作为默认值
  */
-const handleBgColor = computed(() => highlightColor.value ? `${highlightColor.value}33` : '#f7f9fa');
+const handleBgColor = computed(() => highlightColor.value ? `${highlightColor.value}33` : themeVars.value.actionColor);
+
+// 使用 CSS 变量将主题色暴露给 <style> 块
+const borderColor = computed(() => themeVars.value.borderColor);
+const cardColor = computed(() => themeVars.value.cardColor);
+const baseColor = computed(() => themeVars.value.baseColor);
+const textColorDisabled = computed(() => themeVars.value.textColorDisabled);
+const actionColor = computed(() => themeVars.value.actionColor);
+const primaryColor = computed(() => themeVars.value.primaryColor);
 </script>
 
 <style scoped>
@@ -87,35 +142,31 @@ const handleBgColor = computed(() => highlightColor.value ? `${highlightColor.va
   display: flex;
   align-items: stretch;
   padding: 0;
-  background-color: #fff;
+  background-color: v-bind(cardColor);
   border-radius: 4px;
-  border: 1px solid #e0e0e6;
+  border: 1px solid v-bind(borderColor);
   cursor: pointer;
   position: relative; /* 用于内部元素定位 */
   /* 增加左边框过渡效果 */
-  transition: border-color 0.2s, box-shadow 0.2s;
-
+  transition: border-color 0.2s, box-shadow 0.2s, opacity 0.3s, background-color 0.3s;
   border-left: 4px solid v-bind(highlightColor);
-}
-
-/* 当有高亮颜色时，应用颜色到左边框 */
-.config-item-base.has-highlight {
-  /* 使用 CSS 变量来设置颜色 */
-  border-left-color: v-bind(highlightColor);
 }
 
 /* 禁用状态的样式 */
 .config-item-base.is-disabled {
-  opacity: 0.6;
-  background-color: #f9f9f9;
+  opacity: 0.5;
 }
 
 /* 开关的包裹容器样式 */
 .enable-switch-wrapper {
   display: flex;
   align-items: center;
-  padding: 0 8px;
-  background-color: #fdfdfd;
+  border-left: 1px solid v-bind(borderColor);
+}
+
+/* 缩小开关的样式 */
+.compact-switch {
+  transform: scale(0.6);
 }
 
 /* 选中状态的样式 */
@@ -146,13 +197,12 @@ const handleBgColor = computed(() => highlightColor.value ? `${highlightColor.va
 
 /* 内容包装器样式 */
 .item-content-wrapper {
-
   flex-grow: 1; /* 占据所有可用空间 */
   min-width: 0; /* 配合 flex-grow:1 避免内容溢出 */
   display: flex;
   gap: 6px; /* 为内部元素提供间距 */
   /* 在左侧增加内边距，与拖拽柄隔开 */
-  padding: 6px 8px;
+  padding: 4px 8px;
 }
 
 /* 动作区域样式 */
@@ -161,6 +211,7 @@ const handleBgColor = computed(() => highlightColor.value ? `${highlightColor.va
   align-items: center;
   margin-left: auto;
   flex-shrink: 0;
-  padding: 6px 8px; /* 给予和内容区对称的内边距 */
+  padding: 0 6px; /* 给予和内容区对称的内边距 */
+  gap: 6px;
 }
 </style>

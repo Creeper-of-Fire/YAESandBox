@@ -14,7 +14,6 @@
       <template #content>
         <div class="tuum-header-content">
           <span>{{ tuum.name }}</span>
-          <!-- 可以考虑在这里添加一个枢机类型或图标 -->
         </div>
       </template>
 
@@ -29,46 +28,41 @@
         <!-- 枢机的操作按钮 -->
         <ConfigItemActionsMenu :actions="itemActions"/>
       </template>
-      <template #content-below>
-        <!-- 使用本地的 isExpanded 状态 -->
-        <n-collapse-transition :show="isExpanded">
-          <div class="rune-list-container">
-            <draggable
-                v-if="tuum.runes"
-                v-model="tuum.runes"
-                :animation="150"
-                :group="{ name: 'runes-group', put: ['runes-group'] }"
-                class="rune-draggable-area"
-                ghost-class="workbench-ghost-item"
-                handle=".drag-handle"
-                item-key="configId"
-            >
-              <div v-for="runeItem in tuum.runes" :key="runeItem.configId" class="rune-item-wrapper">
-                <RuneItemRenderer
-                    :parent-tuum="tuum"
-                    :rune="runeItem"
-                />
-              </div>
-            </draggable>
-            <n-empty v-else description="拖拽符文到此处" small/>
-          </div>
-        </n-collapse-transition>
-      </template>
     </ConfigItemBase>
+
+    <!-- 使用本地的 isExpanded 状态 -->
+    <n-collapse-transition :show="isExpanded">
+      <div class="rune-list-container">
+        <!-- 使用新的可复用列表组件 -->
+        <CollapsibleConfigList
+            v-model:items="tuum.runes"
+            empty-description="拖拽符文到此处"
+            group-name="runes-group"
+        >
+          <!-- 通过作用域插槽定义如何渲染每一项 -->
+          <template #item="{ element: runeItem }">
+            <RuneItemRenderer
+                :parent-tuum="tuum"
+                :rune="runeItem"
+            />
+          </template>
+        </CollapsibleConfigList>
+      </div>
+    </n-collapse-transition>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {NButton, NCollapseTransition, NEmpty, NIcon} from 'naive-ui';
+import {NButton, NCollapseTransition, NIcon, useThemeVars} from 'naive-ui';
 import {KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@/utils/icons.ts';
-import {VueDraggable as draggable} from 'vue-draggable-plus';
 import ConfigItemBase from '@/app-workbench/components/share/renderer/ConfigItemBase.vue'; // 导入基础组件
 import RuneItemRenderer from '@/app-workbench/components/rune/RuneItemRenderer.vue'; // 导入符文渲染器
 import type {TuumConfig, WorkflowConfig} from '@/app-workbench/types/generated/workflow-config-api-client';
-import {computed, inject, ref, toRef} from "vue";
-import {SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
+import {computed, inject, provide, ref, toRef} from "vue";
+import {IsParentDisabledKey, SelectedConfigItemKey} from "@/app-workbench/utils/injectKeys.ts";
 import {useConfigItemActions} from "@/app-workbench/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "@/app-workbench/components/share/ConfigItemActionsMenu.vue";
+import CollapsibleConfigList from "@/app-workbench/components/share/renderer/CollapsibleConfigList.vue";
 
 // 定义组件的 props
 const props = withDefaults(defineProps<{
@@ -135,25 +129,19 @@ function toggleExpansion()
   }
 }
 
+// 提供当前 Tuum 的禁用状态
+const isItselfDisabled = computed(() => !props.tuum.enabled);
+provide(IsParentDisabledKey, isItselfDisabled);
 
-// // 监听器也需要判断上下文
-// // TODO 因为循环观测的问题，先删掉
-// watch(() => props.tuum.runes, (newRunes, oldRunes) =>
-// {
-//   // 只有在有上下文的情况下，才执行智能协调
-//   if (isInWorkflowContext.value)
-//   {
-//     console.log('在工作流上下文中，符文列表已变化，需要同步输入/输出映射！');
-//     // TODO: 实现智能协调算法
-//   }
-// }, {deep: true});
+const themeVars = useThemeVars();
+const wrapperBackgroundColor = computed(() => themeVars.value.tableHeaderColor);
+const wrapperBorderColor = computed(() => themeVars.value.borderColor);
 </script>
 
 <style scoped>
 /* 样式保持不变 */
 .tuum-item-wrapper {
-  background-color: #f7f9fa; /* 浅灰色背景 */
-  border: 1px solid #eef2f5; /* 浅边框 */
+  background-color: v-bind(wrapperBackgroundColor);
   border-radius: 6px;
   overflow: hidden; /* 确保 ConfigItemBase 的圆角和拖拽柄正确显示 */
 }
@@ -161,35 +149,5 @@ function toggleExpansion()
 .tuum-header-content {
   display: flex;
   align-items: center;
-  /* 可以添加更多样式来美化枢机标题 */
-}
-
-/* 符文列表的容器样式 */
-.rune-list-container {
-  border-radius: 4px;
-  margin-top: 8px;
-  padding: 8px;
-  background-color: #fff;
-  border: 1px dashed #dcdfe6; /* 虚线边框，表示可拖入 */
-  display: flex;
-  flex-direction: column;
-  gap: 6px; /* 符文之间的间距 */
-}
-
-.rune-item-wrapper {
-  /* 可以为每个符文项的包裹 div 添加一些样式，如果需要的话 */
-}
-
-/* 符文列表为空时的占位符样式 */
-.rune-empty-placeholder {
-  padding: 10px; /* 增加内边距使其更显眼 */
-}
-
-/* 符文拖拽区域的最小高度，确保即使没有符文时也能作为拖拽目标 */
-.rune-draggable-area {
-  min-height: 40px;
-  display: flex;
-  flex-direction: column;
-  gap: 6px; /* 确保拖拽项之间也有间距 */
 }
 </style>

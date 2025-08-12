@@ -11,37 +11,28 @@
 
 
     <!-- 工作流的枢机列表 (可拖拽排序，接受来自全局资源的枢机) -->
-    <draggable
-        v-if="workflow.tuums && workflow.tuums.length > 0"
-        v-model="workflow.tuums"
-        :animation="150"
-        :group="{ name: 'tuums-group', put: ['tuums-group'] }"
-        class="workflow-tuum-list-container"
-        ghost-class="workbench-ghost-item"
-        handle=".drag-handle"
-        item-key="configId"
+    <CollapsibleConfigList
+        v-model:items="workflow.tuums"
+        empty-description="拖拽枢机到此处"
+        group-name="tuums-group"
+        class="workflow-tuum-list"
     >
-      <div v-for="(tuumItem, index) in workflow.tuums" :key="tuumItem.configId" class="tuum-item">
+      <template #item="{ element: tuumItem }">
         <!-- 在工作流列表里，使用默认行为的 TuumItemRenderer -->
-        <div :key="tuumItem.configId" class="tuum-item-container">
-          <TuumItemRenderer
-              :parent-workflow="workflow"
-              :tuum="tuumItem"
-          />
-        </div>
-      </div>
-    </draggable>
-    <!-- 工作流枢机列表为空时的提示 -->
-    <n-empty v-else class="workflow-tuum-empty-placeholder" description="拖拽枢机到此处" small/>
+        <TuumItemRenderer
+            :parent-workflow="workflow"
+            :tuum="tuumItem"
+        />
+      </template>
+    </CollapsibleConfigList>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {NEmpty} from 'naive-ui';
-import {VueDraggable as draggable} from 'vue-draggable-plus';
 import type {WorkflowConfig} from "@/app-workbench/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
-import { computed } from 'vue';
+import {computed} from 'vue';
+import CollapsibleConfigList from "@/app-workbench/components/share/renderer/CollapsibleConfigList.vue";
 
 // 定义组件的 Props
 const props = defineProps<{
@@ -56,29 +47,7 @@ const workflowInputsRef = computed({
 </script>
 
 <style scoped>
-/* 工作流中的枢机列表容器样式 */
-.workflow-tuum-list-container {
-  display: flex;
-  flex-direction: column;
-  gap: 16px; /* 枢机之间的间距 */
-  min-height: 50px;
-  border: 1px dashed #dcdfe6;
-  border-radius: 6px;
-  padding: 8px;
-  background-color: #fcfcfc;
-}
-
-/* 单个枢机项在列表中的容器 */
-.tuum-item-container {
-  height: 100%;
-  /* 未来可以添加样式 */
-}
-
-/* 工作流枢机列表为空时的占位符样式 */
-.workflow-tuum-empty-placeholder {
-  padding: 20px;
-  border: 1px dashed #dcdfe6;
-  border-radius: 6px;
-  background-color: #fcfcfc;
+.workflow-tuum-list {
+  margin-left: 0;
 }
 </style>

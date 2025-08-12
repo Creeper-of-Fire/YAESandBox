@@ -12,3 +12,9 @@ export interface SelectedConfigItem
 }
 
 export const SelectedConfigItemKey: InjectionKey<SelectedConfigItem> = Symbol('selectedConfigItem'); // 提供一个函数来更新
+
+/**
+ * 用于在配置项组件树中传播父容器禁用状态的 InjectionKey。
+ * 它提供的是一个 Ref<boolean>，确保响应性。
+ */
+export const IsParentDisabledKey: InjectionKey<Ref<boolean>> = Symbol('IsParentDisabledKey');

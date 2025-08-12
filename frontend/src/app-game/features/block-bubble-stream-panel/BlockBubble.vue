@@ -264,7 +264,6 @@ const deleteThisBlock = () =>
   border-radius: 8px;
   padding: 15px;
   margin-bottom: 15px;
-  background-color: #fff;
   transition: background-color 0.3s ease, border-color 0.3s ease;
   position: relative;
 }
