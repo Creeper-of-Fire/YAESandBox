@@ -152,9 +152,13 @@ function handleFormUpdateRaw(updatedRuneData: AbstractRuneConfig)
 {
   if (rune.value)
   {
+    const newData = updatedRuneData as any;
+    delete newData['innerTuum'];
+    // innerTuum的表单有问题，所以不更新它。
+
     // Object.assign 会直接修改 props.rune 的属性，
     // 由于它是父组件状态树的一部分，Vue 的响应式系统会检测到变化。
-    Object.assign(rune.value, updatedRuneData);
+    Object.assign(rune.value, newData);
   }
   else
   {
