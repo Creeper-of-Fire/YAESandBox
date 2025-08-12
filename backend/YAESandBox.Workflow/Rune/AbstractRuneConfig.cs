@@ -70,6 +70,13 @@ public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
     where T : IRuneProcessor<AbstractRuneConfig,IRuneProcessorDebugDto>
 {
     /// <inheritdoc />
+    protected AbstractRuneConfig()
+    {
+        // 3. 在构造函数中，使用 this.GetType() 来获取实际的派生类类型名
+        this.RuneType = this.GetType().Name;
+    }
+    
+    /// <inheritdoc />
     public override string Name { get; init; } = string.Empty;
 
     /// <inheritdoc />
@@ -79,7 +86,7 @@ public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
     public override string ConfigId { get; init; } = string.Empty;
 
     /// <inheritdoc/>
-    public override string RuneType { get; init; } = nameof(T);
+    public sealed override string RuneType { get; init; } = typeof(T).Name;
 
     internal override IRuneProcessor<AbstractRuneConfig,IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService) =>
         this.ToCurrentRune(workflowRuntimeService);
