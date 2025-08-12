@@ -9,6 +9,13 @@
       @dblclick="handleDoubleClick"
   >
     <template #content>
+      <!-- 折叠按钮，仅当为 TuumRune 时显示 -->
+      <n-button v-if="hasInnerTuum" :focusable="false" text @click.stop="toggleExpansion">
+        <template #icon>
+          <n-icon :component="isExpanded ? KeyboardArrowUpIcon : KeyboardArrowDownIcon"/>
+        </template>
+      </n-button>
+
       <span class="rune-name">{{ rune.name }}</span>
     </template>
 
@@ -41,13 +48,6 @@
           </n-ul>
         </div>
       </n-popover>
-
-      <!-- 折叠按钮，仅当为 TuumRune 时显示 -->
-      <n-button v-if="hasInnerTuum" :focusable="false" text @click.stop="toggleExpansion">
-        <template #icon>
-          <n-icon :component="isExpanded ? KeyboardArrowUpIcon : KeyboardArrowDownIcon"/>
-        </template>
-      </n-button>
 
       <!-- "更多" 操作的下拉菜单 -->
       <ConfigItemActionsMenu :actions="itemActions"/>

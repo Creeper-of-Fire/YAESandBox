@@ -4,7 +4,7 @@
       :class="{ 'is-selected': isSelected , 'is-disabled': !enabled || isParentDisabled }"
       class="config-item-base"
       @click="$emit('click')"
-      @dblclick="$emit('dblclick')"
+      @dblclick.prevent="$emit('dblclick')"
   >
     <!-- 拖拽把手 -->
     <div v-if="isDraggable"
@@ -144,12 +144,14 @@ const primaryColor = computed(() => themeVars.value.primaryColor);
   padding: 0;
   background-color: v-bind(cardColor);
   border-radius: 4px;
+  margin: 2px;
+  margin-bottom: 0;
   border: 1px solid v-bind(borderColor);
   cursor: pointer;
   position: relative; /* 用于内部元素定位 */
   /* 增加左边框过渡效果 */
   transition: border-color 0.2s, box-shadow 0.2s, opacity 0.3s, background-color 0.3s;
-  border-left: 4px solid v-bind(highlightColor);
+  border-left: 3px solid v-bind(highlightColor);
 }
 
 /* 禁用状态的样式 */

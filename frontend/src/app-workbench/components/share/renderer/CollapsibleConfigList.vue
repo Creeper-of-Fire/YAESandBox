@@ -54,25 +54,44 @@ const listDisabledBorderColor = computed(() => themeVars.value.borderColor);
 
 <style scoped>
 .collapsible-config-list {
-  border-radius: 4px;
-  padding: 6px 2px 6px 12px;
+  user-select: none;
+  border-radius: 4px 4px 4px 4px;
+  border: 1px dashed v-bind(listBorderColor);
   background-color: v-bind(listBackgroundColor);
-  border-right: 1px dashed v-bind(listBorderColor);
-  border-bottom: 1px dashed v-bind(listBorderColor);
-  border-left: 1px dashed v-bind(listBorderColor);
   display: flex;
   flex-direction: column;
   transition: background-color 0.3s, border-color 0.3s;
 }
 
+/* 选择所有作为其他列表后代的列表 */
+.collapsible-config-list .collapsible-config-list {
+  /* 同样的样式覆盖 */
+  border-radius: 0 0 0 0;
+  border-right: none;
+  border-top: none;
+  border-bottom: none;
+  border-left: none;
+  margin-left: 0;
+  padding-top: 4px;
+  padding-bottom: 4px;
+  padding-left: 10px;
+}
+
+/* 选择所有作为其他列表后代的后代的列表 */
+.collapsible-config-list .collapsible-config-list .collapsible-config-list {
+  border-bottom-left-radius: 4px;
+  border-left: 1px dashed v-bind(listBorderColor);
+  border-bottom: 1px dashed v-bind(listBorderColor);
+}
+
 .draggable-area {
   display: flex;
   flex-direction: column;
-  gap: 4px;
 }
 
 .empty-zone {
   border: 1px solid v-bind(listBorderColor);
+  margin: 4px;
 }
 
 /* 列表禁用时的样式 */
