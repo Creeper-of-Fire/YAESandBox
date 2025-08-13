@@ -14,7 +14,7 @@ type DeepAstNode = TextNode | DeepTagNode;
 
 // 正则表达式用于解析属性字符串
 // 支持：key="value" key='value' key=value key
-const attributeRegex = /([a-zA-Z0-9_-]+)(?:=(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/g;
+const attributeRegex = /([\p{L}\p{N}_-]+)(?:=(?:"([^"]*)"|'([^']*)'|([^\s>]+)))?/gu;
 
 function parseAttributes(attrString: string): Record<string, any>
 {
@@ -38,7 +38,7 @@ function parseAttributes(attrString: string): Record<string, any>
 function _recursiveParse(rawContent: string): DeepAstNode[]
 {
     // 正则表达式用于查找所有标签（开标签、闭标签）
-    const tagRegex = /<(\/)?([a-zA-Z0-9_-]+)([^>]*)>/g;
+    const tagRegex = /<(\/)?([\p{L}\p{N}_-]+)([^>]*)>/gu;
 
     const root: DeepTagNode = {type: 'tag', tagName: 'root', attributes: {}, children: []};
     const stack: DeepTagNode[] = [root];
