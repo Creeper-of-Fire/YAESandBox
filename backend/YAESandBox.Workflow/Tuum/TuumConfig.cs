@@ -69,7 +69,7 @@ public record TuumConfig
     [JsonIgnore]
     [JsonSchemaIgnore]
     public Dictionary<string, string> InputMappings =>
-        InputMappingsList.GroupBy(m => m.InternalName) // 1. 按内部变量名分组
+        this.InputMappingsList.GroupBy(m => m.InternalName) // 1. 按内部变量名分组
             .ToDictionary(
                 g => g.Key, // 2. Key 是内部变量名
                 g => g.Last().EndpointName // 3. Value 是该组中【最后一条】映射的外部端点名
@@ -94,7 +94,7 @@ public record TuumConfig
     [JsonIgnore]
     [JsonSchemaIgnore]
     public Dictionary<string, HashSet<string>> OutputMappings =>
-        OutputMappingsList
+        this.OutputMappingsList
             .GroupBy(m => m.InternalName) // 1. 按内部变量名分组
             .ToDictionary(
                 group => group.Key, // 2. Key 是内部变量名

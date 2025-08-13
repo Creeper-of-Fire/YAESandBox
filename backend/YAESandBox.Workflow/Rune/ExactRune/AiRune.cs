@@ -17,26 +17,34 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// <summary>
 /// Ai调用符文，Ai的配置保存在外部的Tuum，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiRuneConfig"/>里面。
 /// </summary>
-/// <param name="onChunkReceivedScript"></param>
 /// <param name="config"></param>
-internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfig config)
+/// <param name="workflowRuntimeService"></param>
+internal class AiRuneProcessor(AiRuneConfig config, WorkflowRuntimeService workflowRuntimeService)
     : INormalRune<AiRuneConfig, AiRuneProcessorDebugDto>
 {
     /// <inheritdoc />
     public AiRuneConfig Config { get; } = config;
+
+    private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
 
     /// <inheritdoc />
     public AiRuneProcessorDebugDto DebugDto { get; } = new();
 
     internal class AiRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
-        public IList<RoledPromptDto> Prompts { get; init; } = [];
+        public IList<RoledPromptDto> Prompts { get; set; } = [];
         public int TokenUsage { get; set; } = 0;
+
+        /// <summary>
+        /// 记录最终的完整响应
+        /// </summary>
+        public string? FinalResponse { get; set; }
+
+        /// <summary>
+        /// 记录发射了多少次流式事件
+        /// </summary>
+        public int StreamingEventsSent { get; set; }
     }
-
-    // TODO 这里是回调函数，应该由脚本完成
-
-    private Action<string> OnChunkReceivedScript { get; } = onChunkReceivedScript;
 
     /// <summary>
     /// AI符文的运行
@@ -57,12 +65,11 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
     }
 
 
-    private static async Task<Result> PrepareAndExecuteAiRune(
-        TuumProcessorContent tuumProcessorContent,
-        AiRuneProcessor aiRune,
+    /// <inheritdoc />
+    public async Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent,
         CancellationToken cancellationToken = default)
     {
-        var aiConfig = aiRune.Config.AiConfiguration;
+        var aiConfig = this.Config.AiConfiguration;
         var workflowRuntimeService = tuumProcessorContent.WorkflowRuntimeService;
 
         if (aiConfig.SelectedAiRuneType == null || aiConfig.AiProcessorConfigUuid == null)
@@ -74,49 +81,76 @@ internal class AiRuneProcessor(Action<string> onChunkReceivedScript, AiRuneConfi
         if (aiProcessor == null)
             return NormalError.Conflict($"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiRuneType}");
 
-        var prompt = tuumProcessorContent.GetTuumVar<List<RoledPromptDto>>(aiRune.Config.PromptsName) ?? [];
-        var result = await aiRune.ExecuteAsync(aiProcessor,
-            prompt,
-            aiConfig.IsStream,
-            cancellationToken);
-        if (result.TryGetError(out var error, out string? value))
+        var prompts = tuumProcessorContent.GetTuumVar<List<RoledPromptDto>>(this.Config.PromptsName) ?? [];
+        this.DebugDto.Prompts = prompts;
+
+        var executionResult = aiConfig.IsStream
+            ? await this.ExecuteStreamAsync(aiProcessor, prompts, cancellationToken)
+            : await this.ExecuteNonStreamAsync(aiProcessor, prompts, cancellationToken);
+
+        if (executionResult.TryGetError(out var error, out string? fullResponse))
             return error;
 
-        tuumProcessorContent.SetTuumVar(aiRune.Config.AiOutputName, value);
+        this.DebugDto.FinalResponse = fullResponse;
+        tuumProcessorContent.SetTuumVar(this.Config.AiOutputName, fullResponse);
         return Result.Ok();
     }
 
     private async Task<Result<string>> ExecuteStreamAsync
         (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken = default)
     {
-        string fullAiReturn = "";
-        var result = await aiProcessor.StreamRequestAsync(prompts, new StreamRequestCallBack
+        var responseBuilder = new System.Text.StringBuilder();
+        var callBack = new StreamRequestCallBack
         {
-            OnChunkReceived = chunk =>
+            OnChunkReceivedAsync = async chunk =>
             {
-                fullAiReturn += chunk;
-                this.OnChunkReceivedScript(chunk);
-            }
-        }, cancellationToken);
+                // 1. 内部状态累积
+                responseBuilder.Append(chunk);
+
+                object dataToSend = this.Config.StreamingMode == nameof(UpdateMode.Incremental)
+                    ? chunk
+                    : responseBuilder.ToString();
+
+                var payload = new EmitPayload(this.Config.StreamingTargetAddress ?? string.Empty, dataToSend,
+                    Enum.TryParse<UpdateMode>(this.Config.StreamingMode, out var updateMode) ? updateMode : UpdateMode.Incremental);
+
+                var emitterResult =
+                    await this.WorkflowRuntimeService.CallbackAsync<IWorkflowEventEmitter>(it => it.EmitAsync(payload, cancellationToken));
+                if (emitterResult.TryGetError(out var emitterError))
+                    return emitterError;
+                this.DebugDto.StreamingEventsSent++;
+                return Result.Ok();
+            },
+            TokenUsage = tokenCount => { this.DebugDto.TokenUsage = tokenCount; }
+        };
+
+        var result = await aiProcessor.StreamRequestAsync(prompts, callBack, cancellationToken);
         if (result.TryGetError(out var error))
             return error;
-        return fullAiReturn;
+        return responseBuilder.ToString();
     }
 
     private async Task<Result<string>> ExecuteNonStreamAsync
         (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken = default)
     {
-        var result = await aiProcessor.NonStreamRequestAsync(prompts, cancellationToken: cancellationToken);
-        if (result.TryGetError(out var error, out string? value))
-            return error;
-        this.OnChunkReceivedScript(value);
-        return value;
-    }
+        string finalResponse = "";
 
-    /// <inheritdoc />
-    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent,
-        CancellationToken cancellationToken = default) =>
-        PrepareAndExecuteAiRune(tuumProcessorContent, this, cancellationToken);
+        // 准备回调对象
+        var callBack = new NonStreamRequestCallBack
+        {
+            OnFinalResponseReceivedAsync = response =>
+            {
+                finalResponse = response;
+                return Task.FromResult(Result.Ok());
+            },
+            TokenUsage = tokenCount => { this.DebugDto.TokenUsage = tokenCount; }
+        };
+
+        var result = await aiProcessor.NonStreamRequestAsync(prompts, callBack, cancellationToken: cancellationToken);
+        if (result.TryGetError(out var error))
+            return error;
+        return finalResponse;
+    }
 }
 
 [Behind(typeof(PromptGenerationRuneConfig))]
@@ -158,6 +192,27 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
         IsStream = false
     };
 
+    /// <summary>
+    /// (可空) AI的流式输出块将实时发送到该地址。
+    /// </summary>
+    [Display(
+        Name = "流式输出地址 (可空)",
+        Description = "指定一个逻辑地址，例如 'ui.chat_window'。AI在流式响应时，会把数据块实时发送到这里。对于地址的解析是外部自行实现的。如果为空，则发送至某种意义上的根目录。"
+    )]
+    [DefaultValue("")]
+    public string? StreamingTargetAddress { get; init; } = string.Empty;
+
+    /// <summary>
+    /// 当启用流式输出时，决定发送到外部的数据是增量还是全量。
+    /// </summary>
+    [Required]
+    [DefaultValue(nameof(UpdateMode.Incremental))]
+    [Display(
+        Name = "流式更新模式",
+        Description = "增量模式只发送新数据块，性能好；全快照模式每次都发送完整内容，UI逻辑更简单。"
+    )]
+    [StringOptions([nameof(UpdateMode.Incremental), nameof(UpdateMode.FullSnapshot)], ["增量", "全快照"])]
+    public string StreamingMode { get; init; } = nameof(UpdateMode.Incremental);
 
     /// <inheritdoc />
     public override List<ConsumedSpec> GetConsumedSpec() => [new(this.PromptsName, CoreVarDefs.PromptList)];
@@ -165,8 +220,7 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     /// <inheritdoc />
     public override List<ProducedSpec> GetProducedSpec() => [new(this.AiOutputName, CoreVarDefs.String)];
 
-    protected override AiRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
-        new(s => { _ = workflowRuntimeService.Callback<IWorkflowCallbackDisplayUpdate>(it => it.DisplayUpdateAsync(s)); }, this);
+    protected override AiRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this, workflowRuntimeService);
 }
 
 /// <summary>

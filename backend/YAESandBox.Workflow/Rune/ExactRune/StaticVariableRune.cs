@@ -35,12 +35,12 @@ internal partial class StaticVariableRuneProcessor(WorkflowRuntimeService workfl
     public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
         // 所有复杂的解析逻辑都委托给了状态机解析器
-        var parsedVariables = ScriptParser.Parse(Config.ScriptContent);
+        var parsedVariables = ScriptParser.Parse(this.Config.ScriptContent);
 
         foreach (var variable in parsedVariables)
         {
             tuumProcessorContent.SetTuumVar(variable.Key, variable.Value);
-            DebugDto.DefinedVariables[variable.Key] = variable.Value;
+            this.DebugDto.DefinedVariables[variable.Key] = variable.Value;
         }
 
         return Task.FromResult(Result.Ok());

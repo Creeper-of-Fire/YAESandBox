@@ -44,9 +44,11 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
 
                 var choice = chunk.Choices[0];
 
-                // 使用通用格式化工具处理响应，一行代码搞定内容提取和回调
-                AiResponseFormatter.FormatAndInvoke(choice.Delta, requestCallBack);
-
+                // 使用通用格式化工具处理响应
+                var callBackResult = await AiResponseFormatter.FormatAndInvoke(choice.Delta, requestCallBack);
+                if (callBackResult.TryGetError(out var error))
+                    return error;
+                
                 if (!string.IsNullOrEmpty(choice.FinishReason))
                 {
                     // 流已结束，可以根据需要处理 'stop', 'length' 等原因
@@ -66,9 +68,9 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
         }
     }
 
-    public async Task<Result<string>> NonStreamRequestAsync(
+    public async Task<Result> NonStreamRequestAsync(
         IEnumerable<RoledPromptDto> prompts,
-        NonStreamRequestCallBack? requestCallBack,
+        NonStreamRequestCallBack requestCallBack,
         CancellationToken cancellationToken)
     {
         try
@@ -87,8 +89,8 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
 
             // 同样使用通用格式化工具，一次性获取完整内容
             string finalContent = AiResponseFormatter.GetFormattedContent(message);
-
-            return Result.Ok(finalContent);
+            
+            return await requestCallBack.OnFinalResponseReceivedAsync(finalContent);
         }
         catch (HttpRequestException ex)
         {

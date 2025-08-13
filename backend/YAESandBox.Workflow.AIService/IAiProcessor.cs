@@ -2,6 +2,8 @@
 
 namespace YAESandBox.Workflow.AIService;
 
+// TODO 之后可能要为了function call等情况进行重构，目前保持简单。
+
 /// <summary>
 /// 单个的AI处理流程，这是有状态的，因此不能被复用。
 /// </summary>
@@ -29,10 +31,10 @@ public interface IAiProcessor
     /// <param name="prompts">完整的提示词</param>
     /// <param name="requestCallBack">可用的回调函数</param>
     /// <param name="cancellationToken">用于取消操作</param>
-    /// <returns>包含最终响应</returns>
-    Task<Result<string>> NonStreamRequestAsync(
+    /// <returns>只返回执行过程中的错误，成功时不包含任何数据。</returns>
+    Task<Result> NonStreamRequestAsync(
         IEnumerable<RoledPromptDto> prompts,
-        NonStreamRequestCallBack? requestCallBack = null,
+        NonStreamRequestCallBack requestCallBack,
         CancellationToken cancellationToken = default);
 }
 
@@ -55,13 +57,15 @@ public record StreamRequestCallBack : BaseRequestCallBack
     /// 当接收到新的数据块时调用的回调函数。
     /// !! 只传递新的数据块 (string chunk) !!
     /// </summary>
-    public required Action<string> OnChunkReceived { get; init; }
+    public required Func<string,Task<Result>> OnChunkReceivedAsync { get; init; }
 }
 
 /// <inheritdoc />
 /// <remarks>用于非流式</remarks>
 public record NonStreamRequestCallBack : BaseRequestCallBack
 {
-    // 目前这里为空，只继承了 TokenUsage
-    // 未来如果非流式有其他特定回调，可以加在这里
+    /// <summary>
+    /// 当接收到完整的、最终的响应时调用的回调函数。
+    /// </summary>
+    public required Func<string,Task<Result>> OnFinalResponseReceivedAsync { get; init; }
 }

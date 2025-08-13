@@ -68,7 +68,7 @@ public class WorkflowConfigModule :
     /// <inheritdoc />
     public IReadOnlyList<Type> RuneConfigTypes { get; } =
     [
-        typeof(SendToRawTextRuneConfig),
+        typeof(EmitEventRuneConfig),
         typeof(PromptGenerationRuneConfig),
         typeof(AiRuneConfig),
         typeof(HistoryAppendRuneConfig),

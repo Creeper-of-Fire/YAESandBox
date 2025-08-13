@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Authentication;
 using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.AiConfig;
 using YAESandBox.Workflow.AIService.ConfigManagement;
@@ -123,9 +124,56 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         var httpClient = this.HttpClientFactory.CreateClient();
 
         var dependencies = new AiProcessorDependencies(httpClient);
+        
+        // 1. 创建一个 TaskCompletionSource<Result<string>>。
+        //    它是一个"承诺"，承诺未来会有一个 Result<string> 类型的最终结果。
+        var tcs = new TaskCompletionSource<Result<string>>();
 
-        return await testAiDto.ConfigJson.ToAiProcessor(dependencies)
-            .NonStreamRequestAsync((List<RoledPromptDto>) [RoledPromptDto.System(testAiDto.TestText)]).ToActionResultAsync();
+        try
+        {
+            // 2. 从 DTO 创建 AI 处理器实例
+            var aiProcessor = testAiDto.ConfigJson.ToAiProcessor(dependencies);
+
+            // 3. 准备回调对象，将结果设置到 TaskCompletionSource
+            var callBack = new NonStreamRequestCallBack
+            {
+                // 当收到最终响应时，我们兑现承诺，设置 TaskCompletionSource 的结果
+                OnFinalResponseReceivedAsync = response =>
+                {
+                    tcs.TrySetResult(Result.Ok(response));
+                    return Task.FromResult(Result.Ok());
+                }
+            };
+
+            // 4. 发起非流式请求。这个调用现在只返回 Task<Result> 用于传递执行错误。
+            var executionResult = await aiProcessor.NonStreamRequestAsync(
+                [RoledPromptDto.System(testAiDto.TestText)], // 使用C# 12集合表达式简化
+                callBack
+            );
+
+            // 5. 检查执行过程本身是否出错 (比如网络问题、认证失败等)
+            if (executionResult.TryGetError(out var error))
+            {
+                // 如果AI处理器执行失败，我们也让 TaskCompletionSource 带着这个失败结果完成。
+                tcs.TrySetResult(error);
+            }
+        
+            // 如果执行成功，此时 OnFinalResponseReceived 回调应该已经被触发，
+            // tcs.Task 也应该已经完成了。
+
+        }
+        catch (Exception ex)
+        {
+            // 捕获创建或执行过程中的任何同步/异步异常
+            tcs.TrySetResult(Result.Fail($"测试AI配置时发生意外错误: {ex.Message}"));
+        }
+
+        // 6. 等待 TaskCompletionSource 的 Task 完成，并获取其结果
+        //    这个 await 会一直等到 tcs.TrySetResult() 被调用。
+        var finalResult = await tcs.Task;
+
+        // 7. 将最终的 Result<string> 转换为 ActionResult
+        return finalResult.ToActionResult();
     }
 
     /// <summary>

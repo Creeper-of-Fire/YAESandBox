@@ -49,7 +49,9 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
 
                 var choice = chunk.Choices[0];
 
-                AiResponseFormatter.FormatAndInvoke(choice.Delta, requestCallBack);
+                var callBackResult = await AiResponseFormatter.FormatAndInvoke(choice.Delta, requestCallBack);
+                if (callBackResult.TryGetError(out var error))
+                    return error;
 
                 if (!string.IsNullOrEmpty(choice.FinishReason))
                 {
@@ -69,9 +71,9 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
         }
     }
 
-    public async Task<Result<string>> NonStreamRequestAsync(
+    public async Task<Result> NonStreamRequestAsync(
         IEnumerable<RoledPromptDto> prompts,
-        NonStreamRequestCallBack? requestCallBack,
+        NonStreamRequestCallBack requestCallBack,
         CancellationToken cancellationToken)
     {
         try
@@ -90,7 +92,7 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
             var message = response.Choices[0].Message;
             string finalContent = AiResponseFormatter.GetFormattedContent(message);
 
-            return Result.Ok(finalContent);
+            return await requestCallBack.OnFinalResponseReceivedAsync(finalContent);
         }
         catch (HttpRequestException ex)
         {
@@ -117,7 +119,7 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
             ? new DeepSeekStreamOptions(IncludeUsage: this.Config.StreamOptionsIncludeUsage.Value)
             : null;
 
-        var request =  new DeepSeekChatRequest(
+        var request = new DeepSeekChatRequest(
             Model: this.Config.ModelName,
             Messages: prompts.Select(p => p.ToDeepSeekMessage()).ToList(),
             Stream: stream,

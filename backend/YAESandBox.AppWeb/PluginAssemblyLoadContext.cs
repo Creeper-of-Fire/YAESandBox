@@ -19,7 +19,7 @@ public class PluginAssemblyLoadContext : AssemblyLoadContext
     {
         // AssemblyDependencyResolver 是 .NET Core 提供的神奇工具，
         // 它会读取插件的 .deps.json 文件来智能地解析依赖关系。
-        _resolver = new AssemblyDependencyResolver(pluginPath);
+        this._resolver = new AssemblyDependencyResolver(pluginPath);
     }
 
     /// <summary>
@@ -29,11 +29,11 @@ public class PluginAssemblyLoadContext : AssemblyLoadContext
     protected override Assembly? Load(AssemblyName assemblyName)
     {
         // 尝试使用解析器从插件目录中找到托管程序集。
-        string? assemblyPath = _resolver.ResolveAssemblyToPath(assemblyName);
+        string? assemblyPath = this._resolver.ResolveAssemblyToPath(assemblyName);
         if (assemblyPath != null)
         {
             // 如果找到，就从该路径加载。
-            return LoadFromAssemblyPath(assemblyPath);
+            return this.LoadFromAssemblyPath(assemblyPath);
         }
 
         // 如果在插件目录中找不到，则返回 null，
@@ -48,11 +48,11 @@ public class PluginAssemblyLoadContext : AssemblyLoadContext
     protected override IntPtr LoadUnmanagedDll(string unmanagedDllName)
     {
         // 尝试使用解析器从插件目录（包括 runtimes 文件夹）中找到非托管库。
-        string? libraryPath = _resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
+        string? libraryPath = this._resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
         if (libraryPath != null)
         {
             // 如果找到，就加载它并返回其句柄。
-            return LoadUnmanagedDllFromPath(libraryPath);
+            return this.LoadUnmanagedDllFromPath(libraryPath);
         }
         
         // 如果找不到，返回 IntPtr.Zero，

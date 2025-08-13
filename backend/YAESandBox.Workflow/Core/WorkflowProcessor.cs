@@ -7,6 +7,12 @@ using YAESandBox.Workflow.Utility;
 
 namespace YAESandBox.Workflow.Core;
 
+/// <summary>
+/// 工作流的运行时。
+/// </summary>
+/// <param name="runtimeService"></param>
+/// <param name="config"></param>
+/// <param name="workflowInputs"></param>
 public class WorkflowProcessor(
     WorkflowRuntimeService runtimeService,
     WorkflowConfig config,

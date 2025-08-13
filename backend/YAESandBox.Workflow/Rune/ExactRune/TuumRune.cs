@@ -46,12 +46,12 @@ internal class TuumRuneProcessor(WorkflowRuntimeService workflowRuntimeService, 
     public async Task<Result> ExecuteAsync(TuumProcessorContent outerTuumContent, CancellationToken cancellationToken = default)
     {
         // 1. 创建内部枢机的运行时处理器
-        var innerTuumProcessor = Config.InnerTuum.ToTuumProcessor(workflowRuntimeService);
+        var innerTuumProcessor = this.Config.InnerTuum.ToTuumProcessor(workflowRuntimeService);
 
         // 2. 准备内部枢机的输入
         // 枢机符文所消费的变量，就是其内部枢机的输入端点。
         var innerTuumInputs = new Dictionary<string, object?>();
-        foreach (var consumedSpec in Config.GetConsumedSpec())
+        foreach (var consumedSpec in this.Config.GetConsumedSpec())
         {
             // 从外部枢机的变量池中，为内部枢机的输入端点获取数据。
             innerTuumInputs[consumedSpec.Name] = outerTuumContent.GetTuumVar(consumedSpec.Name);
@@ -112,7 +112,7 @@ internal record TuumRuneConfig : AbstractRuneConfig<TuumRuneProcessor>, IHasInne
     public override List<ConsumedSpec> GetConsumedSpec()
     {
         // TuumRune 的输入变量，就是其内部 Tuum 的输入端点。
-        return AnalysisResult.ConsumedEndpoints;
+        return this.AnalysisResult.ConsumedEndpoints;
     }
 
     /// <summary>
@@ -122,7 +122,7 @@ internal record TuumRuneConfig : AbstractRuneConfig<TuumRuneProcessor>, IHasInne
     public override List<ProducedSpec> GetProducedSpec()
     {
         // TuumRune 的输出变量，就是其内部 Tuum 的输出端点。
-        return AnalysisResult.ProducedEndpoints;
+        return this.AnalysisResult.ProducedEndpoints;
     }
 
     /// <inheritdoc />

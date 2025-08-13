@@ -1,4 +1,6 @@
-﻿namespace YAESandBox.Workflow.AIService.Shared;
+﻿using YAESandBox.Depend.Results;
+
+namespace YAESandBox.Workflow.AIService.Shared;
 
 /// <summary>
 /// 一个静态工具类，用于格式化实现了 IAiResponseMessagePart 接口的AI响应。
@@ -11,19 +13,18 @@ public static class AiResponseFormatter
     /// </summary>
     /// <param name="part">AI响应的一部分，如流式delta。必须实现IAiResponseMessagePart接口。</param>
     /// <param name="callback">用于接收格式化后文本块的回调函数。</param>
-    public static void FormatAndInvoke(IAiResponseMessagePart? part, StreamRequestCallBack callback)
+    public static async Task<Result> FormatAndInvoke(IAiResponseMessagePart? part, StreamRequestCallBack callback)
     {
         if (part is null)
-        {
-            return;
-        }
+            return Result.Ok();
 
-        string? combinedText = GetFormattedContent(part);
+        string combinedText = GetFormattedContent(part);
 
         if (!string.IsNullOrEmpty(combinedText))
         {
-            callback.OnChunkReceived(combinedText);
+            return await callback.OnChunkReceivedAsync(combinedText);
         }
+        return Result.Ok();
     }
 
     /// <summary>
@@ -35,9 +36,7 @@ public static class AiResponseFormatter
     public static string GetFormattedContent(IAiResponseMessagePart? part)
     {
         if (part is null)
-        {
             return string.Empty;
-        }
 
         // 使用 StringBuilder 以获得更好的性能，特别是在多次拼接字符串时。
         var sb = new System.Text.StringBuilder();
