@@ -10,18 +10,12 @@ async function callApi<T>(fn: () => Promise<T>, options?: { successMessage?: str
 {
     try
     {
-        const result = await fn();
-        if (options?.successMessage)
-        {
-            useMessage().success(options.successMessage);
-        }
-        return result;
+        return await fn();
     } catch (error: any)
     {
         const detail = error.body?.detail || error.message || '未知错误';
-        useMessage().error(`${options?.errorMessagePrefix || '操作失败'}: ${detail}`);
         console.error("API Error:", error);
-        return undefined;
+        throw new Error(detail);
     }
 }
 

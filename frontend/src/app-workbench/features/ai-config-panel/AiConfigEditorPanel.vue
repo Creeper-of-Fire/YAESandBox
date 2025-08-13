@@ -89,6 +89,7 @@ import {useAiConfigurationStore} from "@/app-workbench/features/ai-config-panel/
 import {useAiConfigSchemaStore} from "@/app-workbench/features/ai-config-panel/aiConfigSchemaStore";
 import AiConfigTester from "@/app-workbench/features/ai-config-panel/AiConfigTester.vue";
 import DynamicFormRenderer, {type DynamicFormRendererInstance} from "@/app-workbench/features/schema-viewer/DynamicFormRenderer.vue";
+import {isEquivalent} from "@/utils/comparison.ts";
 
 // --- Stores and Utils ---
 const message = useMessage();
@@ -263,7 +264,7 @@ function handleRemoveCurrentAiConfig()
 
 function checkFormChange()
 {
-  formChanged.value = !isEqual(originalDataForCompare.value, formDataCopy.value);
+  formChanged.value = !isEquivalent(originalDataForCompare.value, formDataCopy.value);
 }
 
 // --- Watchers for State Transitions ---

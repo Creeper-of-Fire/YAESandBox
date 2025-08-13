@@ -13,8 +13,9 @@ import type {
 import {RuneConfigService, TuumConfigService, WorkflowConfigService,} from '@/app-workbench/types/generated/workflow-config-api-client';
 import {useAsyncState} from "@vueuse/core";
 import type {GlobalResourceItem} from "@/types/ui.ts";
-import {cloneDeep, isEqual} from "lodash-es";
+import {cloneDeep, isEqualWith, isObject} from "lodash-es";
 import {type DynamicAsset, loadAndRegisterPlugins} from "@/app-workbench/features/schema-viewer/plugin-loader.ts";
+import {isEquivalent} from "@/utils/comparison.ts";
 
 // 导出类型
 export type WorkbenchStore = ReturnType<typeof useWorkbenchStore>;
@@ -247,7 +248,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         const originalData = JSON.parse(draft.originalState);
 
         // 2. 使用 isEqual进行深度比较
-        const isDirty = !isEqual(draft.data, originalData);
+        const isDirty =  !isEquivalent(draft.data, originalData);
+
         return isDirty;
     };
 
