@@ -50,7 +50,8 @@ public abstract record AbstractRuneConfig
     /// </summary>
     /// <param name="workflowRuntimeService"></param>
     /// <returns></returns>
-    internal abstract IRuneProcessor<AbstractRuneConfig,IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService);
+    internal abstract IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto> ToRuneProcessor(
+        WorkflowRuntimeService workflowRuntimeService);
 
     /// <summary>
     /// 获得符文的输入变量
@@ -67,7 +68,7 @@ public abstract record AbstractRuneConfig
 
 /// <inheritdoc />
 public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
-    where T : IRuneProcessor<AbstractRuneConfig,IRuneProcessorDebugDto>
+    where T : IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto>
 {
     /// <inheritdoc />
     protected AbstractRuneConfig()
@@ -75,7 +76,7 @@ public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
         // 3. 在构造函数中，使用 this.GetType() 来获取实际的派生类类型名
         this.RuneType = this.GetType().Name;
     }
-    
+
     /// <inheritdoc />
     public override string Name { get; init; } = string.Empty;
 
@@ -83,12 +84,13 @@ public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
     public override bool Enabled { get; init; } = true;
 
     /// <inheritdoc/>
-    public override string ConfigId { get; init; } = string.Empty;
+    public override string ConfigId { get; init; } = Guid.NewGuid().ToString();
 
     /// <inheritdoc/>
-    public sealed override string RuneType { get; init; } = typeof(T).Name;
+    public sealed override string RuneType { get; init; }
 
-    internal override IRuneProcessor<AbstractRuneConfig,IRuneProcessorDebugDto> ToRuneProcessor(WorkflowRuntimeService workflowRuntimeService) =>
+    internal override IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto> ToRuneProcessor(
+        WorkflowRuntimeService workflowRuntimeService) =>
         this.ToCurrentRune(workflowRuntimeService);
 
     /// <summary>

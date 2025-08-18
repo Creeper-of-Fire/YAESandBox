@@ -49,7 +49,7 @@ public class RegexGeneratorRuneProcessor(RegexGeneratorRuneConfig config)
 
             string finalOutput;
             // 根据操作模式选择不同的逻辑分支
-            if (this.Config.OperationMode == RegexOperationMode.Generate)
+            if (this.Config.OperationMode == nameof(RegexOperationMode.Generate))
             {
                 // --- 生成模式 ---
                 finalOutput = this.HandleGenerateMode(inputText, regexOptions);
@@ -169,14 +169,12 @@ public class RegexGeneratorRuneProcessor(RegexGeneratorRuneConfig config)
 [RenderWithVueComponent("RegexGeneratorEditor")]
 public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRuneProcessor>
 {
-    #region 配置项
-
     /// <summary>
     /// 指定从哪个枢机变量中读取源文本。
     /// </summary>
     [Required]
     [Display(Name = "输入变量名", Description = "包含源文本的变量。")]
-    public required string InputVariableName { get; init; }
+    public string InputVariableName { get; init; } = string.Empty;
 
     /// <summary>
     /// 定义此符文是“生成”新内容还是“替换”原文内容。
@@ -187,8 +185,8 @@ public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRunePr
         [nameof(RegexOperationMode.Replace), nameof(RegexOperationMode.Generate)],
         ["替换", "生成"]
     )]
-    [DefaultValue(RegexOperationMode.Replace)]
-    public RegexOperationMode OperationMode { get; init; } = RegexOperationMode.Generate;
+    [DefaultValue(nameof(RegexOperationMode.Replace))]
+    public string OperationMode { get; init; } = nameof(RegexOperationMode.Replace);
 
     /// <summary>
     /// 用于查找匹配项的 .NET 正则表达式，支持命名捕获组。
@@ -197,7 +195,7 @@ public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRunePr
     [DataType(DataType.MultilineText)]
     [Display(Name = "正则表达式", Description = ".NET 正则表达式，用于查找所有匹配项。")]
     [DefaultValue(@"姓名：(?<name>\S+)\s+年龄：(?<age>\d+)")]
-    public required string Pattern { get; init; }
+    public string Pattern { get; init; } = string.Empty;
 
     /// <summary>
     /// 为每个匹配项生成输出的模板。
@@ -207,7 +205,7 @@ public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRunePr
     [DataType(DataType.MultilineText)]
     [Display(Name = "输出模板", Description = "为每个匹配项生成文本的模板。")]
     [DefaultValue("- 角色名: ${name}, 年龄: ${age}岁。")]
-    public required string OutputTemplate { get; init; }
+    public string OutputTemplate { get; init; } = string.Empty;
 
     // --- 新增的高级选项 ---
     [Display(Name = "忽略大小写 (i)", Description = "执行不区分大小写的匹配。")]
@@ -238,9 +236,7 @@ public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRunePr
     /// </summary>
     [Required]
     [Display(Name = "输出变量名", Description = "用于存储最终生成文本的目标变量。")]
-    public required string OutputVariableName { get; init; }
-
-    #endregion
+    public string OutputVariableName { get; init; } = string.Empty;
 
     #region 静态分析与转换
 

@@ -236,5 +236,5 @@ public record RuneAiConfig
 
     /// <summary>是否为流式传输</summary>
     [Required]
-    public required bool IsStream { get; init; } = false;
+    public bool IsStream { get; init; } = false;
 }

@@ -123,7 +123,7 @@ internal partial record StaticVariableRuneConfig : AbstractRuneConfig<StaticVari
             """"
     )]
     [DefaultValue("")]
-    public required string ScriptContent { get; init; } = "";
+    public string ScriptContent { get; init; } = string.Empty;
 
     /// <inheritdoc />
     protected override StaticVariableRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>

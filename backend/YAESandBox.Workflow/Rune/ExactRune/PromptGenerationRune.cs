@@ -315,8 +315,19 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
         Name = "提示词角色类型",
         Description = "选择此提示词在对话历史中扮演的角色。"
     )]
-    [StringOptions(["System", "User", "Assistant"], ["系统", "用户", "AI助手"])]
-    public required string RoleType { get; init; }
+    [StringOptions(
+        [
+            nameof(PromptRoleType.System),
+            nameof(PromptRoleType.User),
+            nameof(PromptRoleType.Assistant)
+        ],
+        [
+            "系统",
+            "用户",
+            "AI助手"
+        ]
+    )]
+    public string RoleType { get; init; } = nameof(PromptRoleType.System);
 
     /// <summary>
     /// 在某些AI模型中，可以为提示词角色指定一个名称 (例如，Claude中的User/Assistant名称)。
@@ -374,7 +385,7 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
         Prompt = "例如：'你好，`[[playerName]]`！今天是`[[worldInfo]]`。'"
     )]
     [DefaultValue("")]
-    public required string Template { get; init; } = "";
+    public string Template { get; init; } = "";
 
 
     /// <inheritdoc />

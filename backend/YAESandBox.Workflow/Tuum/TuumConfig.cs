@@ -34,7 +34,7 @@ public record TuumConfig
     /// </summary>
     [Required]
     [HiddenInForm(true)]
-    public required string ConfigId { get; init; } = Guid.NewGuid().ToString();
+    public string ConfigId { get; init; } = Guid.NewGuid().ToString();
 
     /// <summary>
     /// 按顺序执行的符文列表。

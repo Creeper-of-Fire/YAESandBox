@@ -30,13 +30,14 @@ public class TextParserTestController : ControllerBase
         /// 而我们的自定义JsonConverter会正确地将其反序列化为具体的Config类型。
         /// </summary>
         [Required]
-        public required AbstractRuneConfig RuneConfig { get; init; }
+        // ReSharper disable once NullableWarningSuppressionIsUsed
+        public AbstractRuneConfig RuneConfig { get; init; } = null!;
 
         /// <summary>
         /// 用户在前端测试文本框中输入的示例文本。
         /// </summary>
         [Required]
-        public required string SampleInputText { get; init; }
+        public string SampleInputText { get; init; } = string.Empty;
     }
 
     /// <summary>
