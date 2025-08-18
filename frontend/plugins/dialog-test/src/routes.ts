@@ -2,12 +2,12 @@
 
 export const routes: RouteRecordRaw[] = [
     {
-        path: '/dialog',
+        path: '/dialog-test',
         name: 'DialogView',
         // 使用动态导入进行懒加载
         component: () => import('./DialogView.vue'),
         meta: {
-            title: '对话测试台',
+            title: '对话测试',
             requiresAuth: true
         }
     },

@@ -3,7 +3,7 @@ import TestHarnessView from './TestHarnessView.vue';
 
 export const routes: RouteRecordRaw[] = [
     {
-        path: '/test',
+        path: '/dialog-test',
         name: 'TestHarness',
         component: TestHarnessView,
         meta: {

@@ -15,12 +15,11 @@
     "vue": "^3.0.0"
   },
   "dependencies": {
-    "@yaesandbox-frontend/core-services": "workspace:*",
-    "@yaesandbox-frontend/shared-ui": "workspace:*",
-
     "@guolao/vue-monaco-editor": "^1.5.5",
     "@lljj/vue3-form-naive": "^1.19.1",
     "@vueuse/core": "^13.6.0",
+    "@yaesandbox-frontend/core-services": "workspace:*",
+    "@yaesandbox-frontend/shared-ui": "workspace:*",
     "axios": "^1.11.0",
     "color-hash": "^2.0.2",
     "form-data": "^4.0.4",
@@ -34,6 +33,7 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@types/color-hash": "^2.0.0",
     "@types/lodash-es": "^4.17.12"
   }
 }

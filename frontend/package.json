@@ -6,9 +6,9 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm --filter @yaesandbox-frontend/shell dev",
-    "build": "pnpm --filter \"./**\" build",
     "preview": "pnpm --filter @yaesandbox-frontend/shell preview",
-    "checkTsc": "pnpm --filter \"./**\" checkTsc",
+    "build": "pnpm --no-bail --filter \"./**\" build",
+    "checkTsc": "pnpm --no-bail --filter \"./**\" checkTsc",
     "install:all": "pnpm install",
     "generate:licenses": "pnpm-licenses generate-disclaimer --prod --output-file=./apps/shell/public/THIRD_PARTY_LICENSES.txt",
     "check:licenses": "node ./scripts/check-licenses.mjs",

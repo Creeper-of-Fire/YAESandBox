@@ -5,13 +5,15 @@ import type { PluginModule } from '@yaesandbox-frontend/core-services';
 // --- 开发时：静态导入所有插件 ---
 // 这种方式能提供最好的开发体验
 import workbenchPlugin from '@yaesandbox-frontend/plugin-workbench';
+import dialogTestPlugin from '@yaesandbox-frontend/plugin-dialog-test';
 // import gamePlugin from '@yaesandbox-frontend/plugin-game';
-// import testHarnessPlugin from '@yaesandbox-frontend/plugin-test-harness';
+// import testHarnessPlugin from '@yaesandbox-frontend/plugin-dialog-test-harness';
 // import dialogPlugin from '@yaesandbox-frontend/plugin-dialog';
 
 // 将所有静态导入的插件放入一个数组
 const localPlugins: PluginModule[] = [
     workbenchPlugin,
+    dialogTestPlugin,
     // gamePlugin,
     // testHarnessPlugin,
     // dialogPlugin,

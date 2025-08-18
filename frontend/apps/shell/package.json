@@ -27,6 +27,7 @@
   },
   "devDependencies": {
     "@yaesandbox-frontend/plugin-workbench": "workspace:*",
+    "@yaesandbox-frontend/plugin-dialog-test": "workspace:*",
 
     "rollup-plugin-visualizer": "^6.0.3",
     "@types/lodash-es": "^4.17.12"

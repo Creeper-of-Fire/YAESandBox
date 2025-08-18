@@ -64,7 +64,6 @@ app.provide('loadedPlugins', loadedPluginMetas);
 
 app.use(router)
 app.use(naiveForVueForm)
-app.use(VueVirtualScroller)
 app.use(createPinia())
 
 

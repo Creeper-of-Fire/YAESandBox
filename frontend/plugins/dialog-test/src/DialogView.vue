@@ -17,12 +17,12 @@ import {useMessage} from 'naive-ui';
 import {v4 as uuidv4} from 'uuid';
 
 import type {WorkflowConfig} from '@yaesandbox-frontend/plugin-workbench/src/types/generated/workflow-config-api-client';
-import type {ChatMessage, Prompt} from '@/app-dialog/types';
-import {executeWorkflowStream} from '@/app-dialog/services/streamingService';
+import type {ChatMessage, Prompt} from '@/types';
+import {executeWorkflowStream} from '@/services/streamingService';
 
-import DialogWorkflowSelector from '@/app-dialog/components/DialogWorkflowSelector.vue';
-import ChatHistory from '@/app-dialog/components/ChatHistory.vue';
-import MessageInput from '@/app-dialog/components/MessageInput.vue';
+import DialogWorkflowSelector from '@/components/DialogWorkflowSelector.vue';
+import ChatHistory from '@/components/ChatHistory.vue';
+import MessageInput from '@/components/MessageInput.vue';
 import {TokenResolverKey} from "@yaesandbox-frontend/core-services/injectKeys";
 
 const message = useMessage();

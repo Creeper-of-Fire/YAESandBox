@@ -95,7 +95,7 @@ const props = defineProps<{
   aiModelType: string | null;    // AI 模型类型
 }>();
 
-const defaultTestText = '只回答“test”';
+const defaultTestText = '只回答“dialog-test”';
 
 // --- 内部状态 ---
 const message = useMessage(); // Naive UI 的消息提示工具
