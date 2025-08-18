@@ -1,0 +1,32 @@
+// /tsconfig.base.json
+{
+  "extends": "@vue/tsconfig/tsconfig.dom.json",
+  "compilerOptions": {
+    // --- 核心编译选项 ---
+    "target": "ESNext",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "lib": ["ESNext", "DOM", "DOM.Iterable"],
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+
+    // --- Monorepo 最佳实践 ---
+    "composite": true,       // 启用项目引用功能
+    "declaration": true,     // 为每个包生成 .d.ts 文件
+    "declarationMap": true,  // 生成 .d.ts.map 文件，方便 IDE 跳转到源码
+    "sourceMap": true,       // 生成 sourcemap
+
+    // --- 严格性与代码质量 ---
+    "strict": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "noUncheckedSideEffectImports": true,
+    "forceConsistentCasingInFileNames": true,
+
+    // --- 注意：baseUrl 和 paths 会在每个子包中单独定义 ---
+  },
+  "exclude": ["node_modules", "dist"] // 全局排除
+}

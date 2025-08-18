@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 /stats.html
 /pnpm-lock.yaml
+auto-imports.d.ts
+components.d.ts

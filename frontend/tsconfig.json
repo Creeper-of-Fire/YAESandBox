@@ -1,11 +1,21 @@
+// /tsconfig.json
 {
-  "files": [],
+  "files": [], // 根目录本身不包含任何文件
   "references": [
-    {
-      "path": "./tsconfig.app.json"
-    },
-    {
-      "path": "./tsconfig.node.json"
-    }
+    { "path": "./tsconfig.node.json" },
+
+    // --- 引用 Apps ---
+    { "path": "./apps/shell" },
+
+    // --- 引用 Plugins ---
+    { "path": "./plugins/workbench" },
+    { "path": "./plugins/test-harness" },
+    { "path": "./plugins/game" },
+    { "path": "./plugins/dialog" },
+
+    // --- 引用 Packages ---
+    { "path": "./packages/core-services" },
+    { "path": "./packages/shared-components" },
+    { "path": "./packages/shared-utils" },
   ]
 }

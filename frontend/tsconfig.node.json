@@ -1,26 +1,16 @@
+// /tsconfig.node.json
 {
+  // 继承我们为 Node.js 环境创建的基础配置
+  "extends": "./tsconfig.node.base.json",
+
   "compilerOptions": {
-    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo",
-    "target": "ES2022",
-    "lib": [
-      "ES2023"
-    ],
-    "module": "ESNext",
-    "skipLibCheck": true,
-    /* Bundler mode */
-    "moduleResolution": "bundler",
-    "allowImportingTsExtensions": true,
-    "isolatedModules": true,
-    "moduleDetection": "force",
-    "noEmit": true,
-    /* Linting */
-    "strict": true,
-    "noUnusedLocals": false,
-    "noUnusedParameters": false,
-    "noFallthroughCasesInSwitch": true,
-    "noUncheckedSideEffectImports": true
+    // 为这个特定的 tsconfig 项目设置一个临时的构建信息文件
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.node.tsbuildinfo"
   },
+
+  // 告诉 TypeScript 这个配置文件负责检查哪些文件
   "include": [
-    "vite.config.ts"
+    "vite.config.shared.ts",
+    // 如果未来有其他根目录的配置文件，比如 vitest.config.ts，也加在这里
   ]
 }

@@ -1,0 +1,16 @@
+﻿// /tsconfig.node.base.json
+{
+  "extends": "./tsconfig.base.json", // 继承基础配置
+  "compilerOptions": {
+    // 覆盖或添加 Node.js 特有的配置
+    "composite": false, // Node 配置文件本身不需要是 composite
+    "declaration": false,
+    "declarationMap": false,
+    "sourceMap": false,
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "types": ["node"],
+    "allowImportingTsExtensions": true,
+    "noEmit": true
+  }
+}

@@ -1,0 +1,4 @@
+﻿packages:
+  - 'apps/*'
+  - 'plugins/*'
+  - 'packages/*'
