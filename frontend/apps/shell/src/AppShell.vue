@@ -84,8 +84,6 @@ const themeVars = useThemeVars();
 
 const userName = computed(() =>
 {
-  console.log("userName", authStore.user?.username);
-  debugger
   return authStore.user?.username;
 })
 
