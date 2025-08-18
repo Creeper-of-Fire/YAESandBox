@@ -199,7 +199,7 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Aut
                 await this.Response.WriteAsync($"data: {payload}\n\n", cancellationToken);
                 await this.Response.Body.FlushAsync(cancellationToken);
 
-                if (message.Type == "done" || message.Type == "error")
+                if (message.Type is "done" or "error")
                 {
                     break;
                 }
