@@ -1,0 +1,26 @@
+{
+  "name": "@yaesandbox-frontend/shared-ui",
+  "private": true,
+  "license": "MIT",
+  "version": "1.0.0",
+  "description": "YAESandBox的共享UI",
+  "main": "src/index.ts",
+  "scripts": {
+    "checkTsc": "vue-tsc -b --declaration"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./icons": "./src/utils/icons.ts",
+    "./content-renderer": "./src/shared/content-renderer/index.ts"
+  },
+  "peerDependencies": {
+    "naive-ui": "^2.0.0",
+    "pinia": "^3.0.0",
+    "vue": "^3.0.0"
+  },
+  "dependencies": {
+    "@vicons/ionicons5": "^0.13.0",
+    "@vicons/material": "^0.13.0",
+    "vue": "^3.0.0"
+  }
+}

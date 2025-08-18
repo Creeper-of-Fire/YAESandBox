@@ -1,10 +1,6 @@
-// /apps/shell/tsconfig.json
 {
   "extends": "../../tsconfig.base.json", // 继承根目录的基础配置
   "compilerOptions": {
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "Bundler",
     // --- 包的特定配置 ---
     "baseUrl": ".", // baseUrl 必须在这里定义
     "paths": {
@@ -20,9 +16,8 @@
   "references": [
     // 如果 shell 依赖其他 monorepo 内的包，在这里引用
     // 这能让 VS Code/WebStorm 立即知道它们之间的关系
-//    { "path": "../../packages/core-services" },
-//    { "path": "../../packages/shared-ui" },
-//    { "path": "../../plugins/workbench" }
+//    { "path": "../packages/core-services" },
+//    { "path": "../plugins/workbench" }
     // ... etc
   ]
 }

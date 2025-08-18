@@ -1,0 +1,28 @@
+{
+  "name": "@yaesandbox-frontend/core-services",
+  "private": true,
+  "license": "MIT",
+  "version": "1.0.0",
+  "description": "YAESandBox的核心服务",
+  "main": "src/index.ts",
+  "scripts": {
+    "checkTsc": "vue-tsc -b --declaration"
+  },
+  "peerDependencies": {
+    "naive-ui": "^2.0.0",
+    "pinia": "^3.0.0",
+    "vue": "^3.0.0",
+    "lodash-es": "^4.17.21"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./injectKeys": "./src/utils/injectKeys.ts"
+  },
+  "dependencies": {
+    "vue": "^3.0.0",
+    "lodash-es": "^4.17.21"
+  },
+  "devDependencies": {
+    "vue-router": "^4.5.1"
+  }
+}

@@ -15,7 +15,7 @@
 
     // --- 引用 Packages ---
     { "path": "./packages/core-services" },
-    { "path": "./packages/shared-components" },
+    { "path": "./packages/shared-ui"},
     { "path": "./packages/shared-utils" },
   ]
 }

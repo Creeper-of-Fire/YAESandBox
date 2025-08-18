@@ -1,47 +1,53 @@
 ﻿// src/app-authentication/authStore.ts
 import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
-import {
-    type AuthResponse,
-    AuthService,
-    type LoginRequest,
-    type RegisterRequest
-} from '@/app-authentication/types/generated/authentication-api-client';
+import {AuthService, type LoginRequest, type RegisterRequest} from '@/app-authentication/types/generated/authentication-api-client';
 import {useStorage} from "@vueuse/core";
+import router from "@/router/routerIndex.ts";
+
+const serializer = {
+    read: (v: any) => v ? JSON.parse(v) : null,
+    write: (v: any) => JSON.stringify(v),
+}
 
 export const useAuthStore = defineStore('authentication', () =>
 {
     // --- State ---
-    const token = useStorage<string | null>('authToken', null);
-    const user = useStorage<Pick<AuthResponse, 'userId' | 'username'> | null>('authUser', null);
+    const token = useStorage<string | null>('authToken', null, localStorage);
+    const user = useStorage<{ userId: string, username: string } | null>('authUser', null, localStorage, {serializer});
     const authError = ref<string | null>(null);
+    const userName = computed(() => user.value?.username || '');
 
     // --- Getters ---
-    const isAuthenticated = computed(() => !!token.value);
+    const isAuthenticated = computed(() => !!token.value && !!user.value);
 
     // --- Actions ---
-
     /**
      * 登录
      * @param credentials - 用户名和密码
      */
-    async function login(credentials: LoginRequest): Promise<boolean> {
+    async function login(credentials: LoginRequest): Promise<boolean>
+    {
         authError.value = null;
-        try {
-            const response = await AuthService.postApiV1AuthLogin({ requestBody: credentials });
+        try
+        {
+            const response = await AuthService.postApiV1AuthLogin({requestBody: credentials});
 
             // 登录成功
             token.value = response.token!;
-            user.value = { userId: response.userId, username: response.username };
+            user.value = {userId: response.userId!, username: response.username!};
 
-            // --- 优雅的改动 ---
-            // 检查路由中是否有 'redirect' 参数，实现登录后跳转回原页面的功能
-            const urlParams = new URLSearchParams(window.location.search);
-             // 默认重定向到根目录
-            window.location.href = urlParams.get('redirect') || '/'; // 跳转并刷新
+            // // --- 优雅的改动 ---
+            // // 检查路由中是否有 'redirect' 参数，实现登录后跳转回原页面的功能
+            // const urlParams = new URLSearchParams(window.location.search);
+            // // 默认重定向到根目录
+            // window.location.href = urlParams.get('redirect') || '/'; // 跳转并刷新
+            const redirectPath = router.currentRoute.value.query.redirect as string || '/';
+            await router.push(redirectPath);
 
             return true; // 返回成功
-        } catch (error: any) {
+        } catch (error: any)
+        {
             console.error("Login failed:", error);
             authError.value = error.body?.message || error.message || '登录失败，请检查用户名或密码。';
             logout(false);
@@ -90,6 +96,7 @@ export const useAuthStore = defineStore('authentication', () =>
     return {
         token,
         user,
+        userName,
         isAuthenticated,
         authError,
         login,

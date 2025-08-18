@@ -1,4 +1,4 @@
-﻿import {type BuildOptions, mergeConfig, type PluginOption, type UserConfig} from 'vite';
+import {type BuildOptions, mergeConfig, type PluginOption, type ResolvedConfig, type ResolveOptions, type UserConfig} from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import AutoImport from 'unplugin-auto-import/vite';

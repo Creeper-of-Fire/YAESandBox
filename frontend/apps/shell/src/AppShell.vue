@@ -1,43 +1,21 @@
 ﻿<template>
   <div class="app-shell">
     <header class="app-header">
-      <!--
-        美化后的导航栏：
-        - 使用 n-space 来提供合适的间距。
-        - 使用 router-link 的 custom 属性，将导航功能赋予 n-button。
-        - v-slot="{ navigate, isActive }" 获取路由状态。
-        - @click="navigate" 将按钮的点击事件绑定到路由跳转。
-        - :type="isActive ? 'primary' : 'default'" 根据路由是否激活来改变按钮样式，提供视觉反馈。
-      -->
       <n-space class="navigation-controls">
-        <router-link v-slot="{ navigate, isActive }" custom to="/workbench">
+        <router-link
+            v-for="link in navLinks"
+            :key="link.to"
+            v-slot="{ navigate, isActive }"
+            :to="link.to"
+            custom
+        >
           <n-button
               :ghost="!isActive"
               :type="isActive ? 'primary' : 'default'"
               strong
               @click="navigate"
           >
-            编辑器
-          </n-button>
-        </router-link>
-        <router-link v-slot="{ navigate, isActive }" custom to="/test">
-          <n-button
-              :ghost="!isActive"
-              :type="isActive ? 'primary' : 'default'"
-              strong
-              @click="navigate"
-          >
-            测试台
-          </n-button>
-        </router-link>
-        <router-link v-slot="{ navigate, isActive }" custom to="/dialog">
-          <n-button
-              :ghost="!isActive"
-              :type="isActive ? 'primary' : 'default'"
-              strong
-              @click="navigate"
-          >
-            聊天
+            {{ link.label }}
           </n-button>
         </router-link>
       </n-space>
@@ -46,7 +24,7 @@
       <n-space align="center" class="user-controls">
         <DayNightToggleWithDropDown v-model:themeMode="themeMode"/>
         <span v-if="authStore.isAuthenticated">
-          欢迎, {{ authStore.user?.username }}
+          欢迎, {{ userName }}
         </span>
         <n-button v-if="authStore.isAuthenticated" ghost type="error" @click="handleLogout">
           登出
@@ -77,16 +55,39 @@
 <script lang="ts" setup>
 import {useThemeVars} from "naive-ui";
 import {useAuthStore} from "@/app-authentication/stores/authStore.ts";
-import {computed, defineModel, provide} from "vue";
+import {computed, inject, provide} from "vue";
 import axiosInstance from "@/utils/axiosInstance.ts";
-import DayNightToggleWithDropDown from "@/shared/DayNightToggleWithDropDown.vue";
+import DayNightToggleWithDropDown from "@/component/DayNightToggleWithDropDown.vue";
+import type {PluginModule} from "@yaesandbox-frontend/core-services";
 // import GlobalErrorDisplay from '@/components/GlobalErrorDisplay.vue';
 // import AppWideNotifications from '@/components/AppWideNotifications.vue';
+
+// 注入由 main.ts 提供的插件元数据
+const loadedPlugins = inject<PluginModule['meta'][]>('loadedPlugins', []);
+
+// 计算出需要显示在导航栏的插件，并排序
+const navLinks = computed(() =>
+{
+  return loadedPlugins
+      .filter(meta => meta.navEntry) // 只选择有 navEntry 的插件
+      .sort((a, b) => (a.navEntry!.order ?? 99) - (b.navEntry!.order ?? 99)) // 排序
+      .map(meta => ({
+        to: `/${meta.name}`, // 约定路由路径和插件名一致
+        label: meta.navEntry!.label,
+      }));
+});
 
 const themeMode = defineModel<'light' | 'dark' | 'system'>({default: 'system'});
 
 const authStore = useAuthStore();
 const themeVars = useThemeVars();
+
+const userName = computed(() =>
+{
+  console.log("userName", authStore.user?.username);
+  debugger
+  return authStore.user?.username;
+})
 
 
 // const connectionStore = useConnectionStore();
