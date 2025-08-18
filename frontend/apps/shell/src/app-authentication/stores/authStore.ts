@@ -7,13 +7,13 @@ import {
     type LoginRequest,
     type RegisterRequest
 } from '@/app-authentication/types/generated/authentication-api-client';
+import {useStorage} from "@vueuse/core";
 
 export const useAuthStore = defineStore('authentication', () =>
 {
     // --- State ---
-    // 从 localStorage 初始化 token，这样刷新页面就不会丢失登录状态
-    const token = ref<string | null>(localStorage.getItem('authToken'));
-    const user = ref<Pick<AuthResponse, 'userId' | 'username'> | null>(JSON.parse(localStorage.getItem('authUser') || 'null'));
+    const token = useStorage<string | null>('authToken', null);
+    const user = useStorage<Pick<AuthResponse, 'userId' | 'username'> | null>('authUser', null);
     const authError = ref<string | null>(null);
 
     // --- Getters ---
@@ -33,8 +33,6 @@ export const useAuthStore = defineStore('authentication', () =>
             // 登录成功
             token.value = response.token!;
             user.value = { userId: response.userId, username: response.username };
-            localStorage.setItem('authToken', token.value);
-            localStorage.setItem('authUser', JSON.stringify(user.value));
 
             // --- 优雅的改动 ---
             // 检查路由中是否有 'redirect' 参数，实现登录后跳转回原页面的功能
@@ -62,13 +60,13 @@ export const useAuthStore = defineStore('authentication', () =>
         try
         {
             const successMessage = await AuthService.postApiV1AuthRegister({requestBody: credentials});
-            console.log('Registration successful:', successMessage);
+            console.log('注册成功:', successMessage);
             // 可以在这里用全局 message 提示用户注册成功
             // message.success(successMessage || '注册成功！现在可以登录了。');
             return true; // 表示成功
         } catch (error: any)
         {
-            console.error("Registration failed:", error);
+            console.error("注册失败:", error);
             authError.value = error.body || error.message || '注册失败，用户名可能已被占用。';
             return false; // 表示失败
         }
@@ -82,8 +80,6 @@ export const useAuthStore = defineStore('authentication', () =>
     {
         token.value = null;
         user.value = null;
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('authUser');
 
         if (redirect)
         {
