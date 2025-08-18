@@ -7,9 +7,9 @@
  */
 export type DynamicComponentAsset = {
     /**
-     * 插件的唯一名称，用于构建URL和识别。
+     * 插件的唯一ID，用于构建URL和识别。
      */
-    pluginName: string;
+    pluginId: string;
     /**
      * 组件类型："Vue" 或 "WebComponent"。
      */

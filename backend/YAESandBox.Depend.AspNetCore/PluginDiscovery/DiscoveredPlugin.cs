@@ -19,11 +19,6 @@ public record DiscoveredPlugin
     /// 插件目录中所有 DLL 文件的完整路径列表。
     /// </summary>
     public IReadOnlyList<string> DllPaths { get; init; } = [];
-
-    /// <summary>
-    /// 插件的 wwwroot 目录的完整路径。如果不存在，则为 null。
-    /// </summary>
-    public string? WwwRootPath { get; init; }
 }
 
 /// <summary>

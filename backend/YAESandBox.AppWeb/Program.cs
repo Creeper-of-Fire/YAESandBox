@@ -63,6 +63,10 @@ var mvcBuilder = builder.Services.AddControllers()
 // 我们将手动告诉它去哪里找控制器。
 mvcBuilder.PartManager.ApplicationParts.Clear();
 
+// 将 allModules 列表封装到 ModuleProvider 中，并将其注册为单例服务。
+// 这样，应用程序的任何部分都可以通过注入 IModuleProvider 来访问所有模块。
+builder.Services.AddSingleton<IModuleProvider>(new ModuleProvider(allModules));
+
 // 循环配置 MVC 部件
 allModules.ForEachModules<IProgramModuleMvcConfigurator>(it => it.ConfigureMvc(mvcBuilder));
 
@@ -150,28 +154,13 @@ allModules.ForEachModules<IProgramModuleWithInitialization>(it =>
     it.Initialize(new ModuleInitializationContext(allModules, pluginAssemblies)));
 
 builder.Services.AddSingleton<IPluginDiscoveryService>(pluginDiscoveryService);
-builder.Services.AddSingleton<IPluginAssetService, PluginAssetService>();
 
 var app = builder.Build();
 
 // 配置中间件
 // =================== 统一插件静态文件挂载 ===================
-var discoveryService = app.Services.GetRequiredService<IPluginDiscoveryService>();
-var discoveredPlugins = discoveryService.DiscoverPlugins();
-
-foreach (var plugin in discoveredPlugins)
-{
-    if (plugin.WwwRootPath is null)
-        continue;
-    // 约定：所有插件的静态资源都通过 /plugins/{PluginName} 访问
-    app.UseStaticFiles(new StaticFileOptions
-    {
-        FileProvider = new PhysicalFileProvider(plugin.WwwRootPath),
-        RequestPath = $"/plugins/{plugin.Name}"
-    });
-
-    Console.WriteLine($"[静态文件服务] 已为插件 '{plugin.Name}' 挂载 wwwroot: '{plugin.WwwRootPath}' -> '/plugins/{plugin.Name}'");
-}
+allModules.ForEachModules<IProgramModuleStaticAssetConfigurator>(it => 
+    it.ConfigureStaticAssets(app, app.Environment));
 // =========================================================
 
 allModules.ForEachModules<IProgramModuleAppConfigurator>(it => it.ConfigureApp(app));
@@ -283,7 +272,7 @@ namespace YAESandBox.AppWeb
                 }
 
                 // 3. 为每一个找到的入口点DLL创建一个独立的加载上下文
-                foreach (var entryPointDllPath in entryPointDlls)
+                foreach (string entryPointDllPath in entryPointDlls)
                 {
                     try
                     {

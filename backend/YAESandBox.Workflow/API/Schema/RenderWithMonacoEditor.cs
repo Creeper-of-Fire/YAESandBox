@@ -1,6 +1,7 @@
 ﻿using Namotion.Reflection;
 using NJsonSchema.Generation;
 using YAESandBox.Depend;
+using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Workflow.Utility;
 
@@ -20,7 +21,7 @@ namespace YAESandBox.Workflow.API.Schema;
 /// </para>
 /// <para>
 /// 在运行时，系统会自动将 `plugin://` 前缀的路径解析为完整的、可公开访问的 URL。
-/// 它会查找定义此特性的符文配置类所在的插件，并构建出类似 `/plugins/{PluginName}/monaco-lua-service.js` 的最终路径。
+/// 它会查找定义此特性的符文配置类所在的插件，并构建出类似 `/plugins/{PluginId}/monaco-lua-service.js` 的最终路径。
 /// 这使得路径声明与插件的具体名称解耦，更加健壮和可移植。
 /// </para>
 /// <para>
@@ -42,7 +43,7 @@ public class RenderWithMonacoEditorAttribute(string language) : Attribute
     /// <example>"plugin://my-config.js"</example>
     /// </summary>
     public string? SimpleConfigUrl { get; set; }
-    
+
     /// <summary>
     /// (可选) 指向语言服务器的 Web Worker 脚本 URL。
     /// 如果提供了此项，将启用完整的 LSP 支持。
@@ -50,16 +51,19 @@ public class RenderWithMonacoEditorAttribute(string language) : Attribute
     /// <example>"plugin://language-servers/lua-worker.js"</example>
     /// </summary>
     public string? LanguageServerWorkerUrl { get; set; }
-}
 
+    /// <summary>
+    /// 所属的符文类型，用于提供 `plugin://` 目录的地址。
+    /// </summary>
+    public Type? RuneType { get; set; }
+}
 
 /// <summary>
 /// 处理 [RenderWithMonacoEditor] 特性，为 Schema 添加 'x-monaco-editor' 指令，
 /// 并能动态解析插件内部的资源路径。
 /// </summary>
-internal class MonacoEditorRendererSchemaProcessor(IPluginDiscoveryService pluginDiscoveryService) : ISchemaProcessor
+internal class MonacoEditorRendererSchemaProcessor : ISchemaProcessor
 {
-    private readonly IPluginDiscoveryService _pluginDiscoveryService = pluginDiscoveryService;
     private const string PluginScheme = "plugin://";
 
     /// <inheritdoc />
@@ -69,10 +73,13 @@ internal class MonacoEditorRendererSchemaProcessor(IPluginDiscoveryService plugi
         if (attribute is null)
             return;
 
+        // 通常 context.ContextualType.Type 是属性对应的类型，并不能作为模块类型
+        Type ownerType = attribute.RuneType ?? context.ContextualType.Type;
+
         // 解析 URL
-        string? resolvedSimpleConfigUrl = this.ResolvePluginUrl(attribute.SimpleConfigUrl, context.ContextualType.Type);
-        string? resolvedWorkerUrl = this.ResolvePluginUrl(attribute.LanguageServerWorkerUrl, context.ContextualType.Type);
-        
+        string? resolvedSimpleConfigUrl = this.ResolvePluginUrl(attribute.SimpleConfigUrl, ownerType);
+        string? resolvedWorkerUrl = this.ResolvePluginUrl(attribute.LanguageServerWorkerUrl, ownerType);
+
         context.Schema.ExtensionData ??= new Dictionary<string, object?>();
         context.Schema.ExtensionData["x-monaco-editor"] = new
         {
@@ -88,9 +95,7 @@ internal class MonacoEditorRendererSchemaProcessor(IPluginDiscoveryService plugi
     private string? ResolvePluginUrl(string? templateUrl, Type ownerType)
     {
         if (string.IsNullOrEmpty(templateUrl))
-        {
             return null;
-        }
 
         // 如果 URL 不是以 plugin:// 开头，直接返回原样
         if (!templateUrl.StartsWith(PluginScheme, StringComparison.OrdinalIgnoreCase))
@@ -103,26 +108,11 @@ internal class MonacoEditorRendererSchemaProcessor(IPluginDiscoveryService plugi
 
         // 1. 查找此类型是由哪个模块提供的
         var providerModule = RuneConfigTypeResolver.GetProviderModuleForType(ownerType);
-        if (providerModule is null)
-        {
-            // 如果找不到提供者（可能是内置符文），则无法解析路径，记录警告并返回 null
-            Log.Warning($"[SchemaProcessor] 警告: 无法解析路径 '{templateUrl}'，因为类型 '{ownerType.Name}' 没有找到对应的插件提供者。");
-            return null;
-        }
+        if (providerModule is not null)
+            return $"{providerModule.ToRequestPath()}/{relativePath}";
 
-        // 2. 从模块的类型信息中推断出程序集名称，这通常就是插件名
-        // 这是一个合理的约定：插件的主模块类在主 DLL 中。
-        string? pluginAssemblyName = providerModule.GetType().Assembly.GetName().Name;
-
-        // 3. 在已发现的插件中查找同名插件
-        var plugin = this._pluginDiscoveryService.DiscoverPlugins().FirstOrDefault(p =>
-            string.Equals(p.Name, pluginAssemblyName, StringComparison.OrdinalIgnoreCase));
-
-        // 4. 构建最终的公开 URL
-        if (plugin is not null)
-            return $"/plugins/{plugin.Name}/{relativePath}";
-
-        Log.Warning($"[SchemaProcessor] 警告: 无法解析路径 '{templateUrl}'，因为找不到名为 '{pluginAssemblyName}' 的已发现插件。");
+        // 如果找不到提供者，则无法解析路径，记录警告并返回 null
+        Log.Warning($"[SchemaProcessor] 警告: 无法解析路径 '{templateUrl}'，因为类型 '{ownerType.Name}' 没有找到对应的插件提供者。");
         return null;
     }
 }

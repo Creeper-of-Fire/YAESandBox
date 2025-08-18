@@ -31,7 +31,7 @@ public static class SseStreamProcessor
                 continue; // 跳过SSE中的空行 (用于保持连接)
             }
 
-            if (!line.StartsWith(SseDataPrefix, StringComparison.Ordinal)) 
+            if (!line.StartsWith(SseDataPrefix, StringComparison.OrdinalIgnoreCase)) 
                 continue;
 
             string jsonData = line[SseDataPrefix.Length..].Trim();

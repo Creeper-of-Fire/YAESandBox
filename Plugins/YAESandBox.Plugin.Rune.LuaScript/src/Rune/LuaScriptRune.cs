@@ -86,7 +86,9 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
     /// 使用 `ctx.set('var_name', value)` 设置变量。
     /// </summary>
     [DataType(DataType.MultilineText)]
-    [RenderWithMonacoEditor("lua", SimpleConfigUrl = "plugin://lua-main/monaco-lua-service-main.js")]
+    [RenderWithMonacoEditor("lua",
+        RuneType = typeof(LuaScriptRuneConfig),
+        SimpleConfigUrl = "plugin://lua-main/monaco-lua-service-main.js")]
     [Display(
         Name = "Lua 脚本",
         Description = "在此处编写 Lua 脚本。使用 ctx.get('变量名') 获取输入，使用 ctx.set('变量名', 值) 设置输出。",

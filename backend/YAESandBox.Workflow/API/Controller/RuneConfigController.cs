@@ -31,10 +31,10 @@ namespace YAESandBox.Workflow.API.Controller;
 public record DynamicComponentAsset
 {
     /// <summary>
-    /// 插件的唯一名称，用于构建URL和识别。
+    /// 插件的唯一ID，用于构建URL和识别。
     /// </summary>
     [Required]
-    public required string PluginName { get; init; }
+    public required string PluginId { get; init; }
 
     /// <summary>
     /// 组件类型："Vue" 或 "WebComponent"。
@@ -77,57 +77,61 @@ public record RuneSchemasResponse
 /// 提供工作流相关配置（工作流、枢机、符文）的全局管理和Schema信息。
 /// </summary>
 /// <param name="workflowConfigFileService">工作流配置文件服务。</param>
-/// <param name="pluginAssetService">插件资源发现服务。</param>
-/// <param name="pluginDiscoveryService">插件总发现服务。</param>
+/// <param name="moduleProvider">加载的所有模块。</param>
 [ApiController]
 [Route("api/v1/workflows-configs/global-runes")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
 public class RuneConfigController(
     WorkflowConfigFileService workflowConfigFileService,
-    IPluginAssetService pluginAssetService,
-    IPluginDiscoveryService pluginDiscoveryService)
+    IModuleProvider moduleProvider)
     : AuthenticatedApiControllerBase
 {
     private WorkflowConfigFileService WorkflowConfigFileService { get; } = workflowConfigFileService;
-    private IPluginAssetService PluginAssetService { get; } = pluginAssetService;
-    private IPluginDiscoveryService PluginDiscoveryService { get; } = pluginDiscoveryService;
+    private IModuleProvider ModuleProvider { get; } = moduleProvider;
 
     private List<DynamicComponentAsset> DiscoverDynamicAssets()
     {
         var assets = new List<DynamicComponentAsset>();
-        var allPlugins = this.PluginAssetService.GetAllPlugins();
+        var allModules = this.ModuleProvider.AllModules;
+        var allPlugins = allModules.OfType<IYaeSandBoxPlugin>();
 
         foreach (var plugin in allPlugins)
         {
-            // 现在，我们遵循的是工作流模块内部的约定
-            // "vue-bundle.js" 和 "web-bundle.js" 是工作流系统与插件生态间的一种契约。
-            // 这种约定是允许的，因为它属于模块自身领域的知识。
+            // 3. 直接通过插件的 Assembly 位置来推断 wwwroot 路径
+            var assemblyLocation = plugin.GetType().Assembly.Location;
+            if (string.IsNullOrEmpty(assemblyLocation)) continue;
+
+            var pluginRootPath = Path.GetDirectoryName(assemblyLocation);
+            if (pluginRootPath == null) continue;
+
+            var wwwRootPath = Path.Combine(pluginRootPath, "wwwroot");
+            if (!Directory.Exists(wwwRootPath)) continue;
+
+            // 4. 定义检查文件和生成 URL 的本地函数，逻辑更清晰
+            bool HasAsset(string fileName) => System.IO.File.Exists(Path.Combine(wwwRootPath, fileName));
+            string GetAssetUrl(string fileName) => $"{plugin.ToRequestPath()}/{fileName}";
 
             // 检查 Vue 组件包 (约定)
-            if (plugin.HasAsset("vue-bundle.js"))
+            if (HasAsset("vue-bundle.js"))
             {
                 assets.Add(new DynamicComponentAsset
                 {
-                    PluginName = plugin.Name,
+                    PluginId = plugin.Metadata.Id,
                     ComponentType = "Vue",
-                    ScriptUrl = plugin.GetAssetUrl("vue-bundle.js"),
-                    StyleUrl = plugin.HasAsset("vue-bundle.css")
-                        ? plugin.GetAssetUrl("vue-bundle.css")
-                        : null
+                    ScriptUrl = GetAssetUrl("vue-bundle.js"),
+                    StyleUrl = HasAsset("vue-bundle.css") ? GetAssetUrl("vue-bundle.css") : null
                 });
             }
 
             // 检查 WebComponent 组件包 (约定)
-            if (plugin.HasAsset("web-bundle.js"))
+            if (HasAsset("web-bundle.js"))
             {
                 assets.Add(new DynamicComponentAsset
                 {
-                    PluginName = plugin.Name,
+                    PluginId = plugin.Metadata.Id,
                     ComponentType = "WebComponent",
-                    ScriptUrl = plugin.GetAssetUrl("web-bundle.js"),
-                    StyleUrl = plugin.HasAsset("web-bundle.css")
-                        ? plugin.GetAssetUrl("web-bundle.css")
-                        : null
+                    ScriptUrl = GetAssetUrl("web-bundle.js"),
+                    StyleUrl = HasAsset("web-bundle.css") ? GetAssetUrl("web-bundle.css") : null
                 });
             }
         }
@@ -158,7 +162,7 @@ public class RuneConfigController(
                     settings.SchemaProcessors.Add(new RuneRuleAttributeProcessor());
                     settings.SchemaProcessors.Add(new VueComponentRendererSchemaProcessor());
                     settings.SchemaProcessors.Add(new WebComponentRendererSchemaProcessor());
-                    settings.SchemaProcessors.Add(new MonacoEditorRendererSchemaProcessor(this.PluginDiscoveryService));
+                    settings.SchemaProcessors.Add(new MonacoEditorRendererSchemaProcessor());
                 });
 
                 var value = JsonNode.Parse(schemaJson);

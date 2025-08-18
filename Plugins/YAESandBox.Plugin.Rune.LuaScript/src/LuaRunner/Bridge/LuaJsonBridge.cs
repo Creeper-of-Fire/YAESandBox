@@ -71,7 +71,7 @@ public class LuaJsonBridge : ILuaBridge
         // 资源名称的格式是 [默认命名空间].[文件夹路径].[文件名]
         // 我们通过查找以 ".fileName" 结尾的资源来定位它，这样更可靠。
         string? resourceName = assembly.GetManifestResourceNames()
-            .SingleOrDefault(str => str.EndsWith("." + fileName, StringComparison.Ordinal));
+            .SingleOrDefault(str => str.EndsWith("." + fileName, StringComparison.OrdinalIgnoreCase));
 
         if (string.IsNullOrEmpty(resourceName))
         {

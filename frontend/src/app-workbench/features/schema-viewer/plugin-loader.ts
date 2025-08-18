@@ -3,7 +3,7 @@
 // --- 类型定义 ---
 export interface DynamicAsset
 {
-    pluginName: string;
+    pluginId: string;
     componentType: 'Vue' | 'WebComponent';
     scriptUrl: string;
     styleUrl?: string;
@@ -107,12 +107,12 @@ async function doLoadAndRegister(assets: DynamicAsset[]): Promise<void>
     {
         if (asset.componentType !== 'Vue') continue;
 
-        const libraryName = asset.pluginName.replaceAll('.', '_');
+        const libraryName = asset.pluginId.replaceAll('.', '_');
         const pluginLib = (window as any)[libraryName];
 
         if (!pluginLib)
         {
-            console.warn(`插件库 '${libraryName}' (来自 ${asset.pluginName}) 加载后未在 window 上找到。`);
+            console.warn(`插件库 '${libraryName}' (来自 ${asset.pluginId}) 加载后未在 window 上找到。`);
             continue;
         }
 

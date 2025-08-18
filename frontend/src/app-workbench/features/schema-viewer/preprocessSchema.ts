@@ -416,6 +416,7 @@ function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<stri
         processedProps['ui:options'].language = monacoConfig.language;
         processedProps['ui:options'].simpleConfigUrl = monacoConfig.simpleConfigUrl;
         processedProps['ui:options'].languageServerWorkerUrl = monacoConfig.languageServerWorkerUrl;
+        debugger
 
         // 4. (可选) 删除自定义指令，保持最终 schema 干净
         delete processedProps['x-monaco-editor'];

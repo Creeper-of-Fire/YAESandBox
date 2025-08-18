@@ -33,13 +33,12 @@ public class DefaultPluginDiscoveryService : IPluginDiscoveryService
             {
                 plugins.AddRange(Directory.GetDirectories(pluginsRootPath)
                     .Select(pluginDir => new { pluginDir, pluginDirInfo = new DirectoryInfo(pluginDir) })
-                    .Select(it => new { self = it, wwwRootPath = Path.Combine(it.pluginDir, "wwwroot") })
+                    .Select(it => new { self = it })
                     .Select(it => new DiscoveredPlugin
                     {
                         Name = it.self.pluginDirInfo.Name,
                         PhysicalPath = it.self.pluginDir,
                         DllPaths = Directory.GetFiles(it.self.pluginDir, "*.dll", SearchOption.TopDirectoryOnly),
-                        WwwRootPath = Directory.Exists(it.wwwRootPath) ? it.wwwRootPath : null
                     }));
             }
 

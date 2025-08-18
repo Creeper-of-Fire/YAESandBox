@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Swashbuckle.AspNetCore.SwaggerGen;
@@ -105,6 +106,19 @@ public interface IProgramModuleWithInitialization : IProgramModule
     /// </summary>
     /// <param name="context">包含了初始化所需信息的上下文对象。</param>
     void Initialize(ModuleInitializationContext context);
+}
+
+/// <summary>
+/// 实现此接口的模块可以配置自己的静态文件服务。
+/// </summary>
+public interface IProgramModuleStaticAssetConfigurator : IProgramModule
+{
+    /// <summary>
+    /// 配置模块的静态文件。
+    /// </summary>
+    /// <param name="app">应用程序构建器，用于注册中间件。</param>
+    /// <param name="environment">Web 主机环境，用于获取内容根路径等信息。</param>
+    void ConfigureStaticAssets(IApplicationBuilder app, IWebHostEnvironment environment);
 }
 
 /// <summary>

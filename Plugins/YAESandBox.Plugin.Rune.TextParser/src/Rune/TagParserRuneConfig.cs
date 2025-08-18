@@ -148,7 +148,7 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
     {
         // 使用 ${match} 占位符生成最终要替换成的内容
         string replacementContent =
-            this.Config.ReplacementTemplate.Replace("${match}", matchedValue ?? string.Empty, StringComparison.Ordinal);
+            this.Config.ReplacementTemplate.Replace("${match}", matchedValue ?? string.Empty, StringComparison.OrdinalIgnoreCase);
 
         // 根据内容目标（MatchContentMode）执行不同的替换策略
         switch (this.Config.MatchContentMode)

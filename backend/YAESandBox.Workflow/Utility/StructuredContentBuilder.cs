@@ -128,7 +128,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
             return current;
         }
 
-        foreach (var segment in path.Split('.', StringSplitOptions.RemoveEmptyEntries))
+        foreach (string segment in path.Split('.', StringSplitOptions.RemoveEmptyEntries))
         {
             XElement? next = current.Elements().FirstOrDefault(element => element.Name == segment);
             if (next == null)

@@ -7,6 +7,7 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
     </PropertyGroup>
 
     <!-- 确保 Swashbuckle CLI 可以找到 Program.cs 中的启动类 -->
@@ -39,7 +40,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <Folder Include="wwwroot\"/>
         <Content Update="Plugins\**\wwwroot\**" CopyToOutputDirectory="PreserveNewest"/>
     </ItemGroup>
 

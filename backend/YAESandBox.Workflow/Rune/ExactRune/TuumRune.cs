@@ -71,7 +71,7 @@ internal class TuumRuneProcessor(WorkflowRuntimeService workflowRuntimeService, 
 
         // 4. 处理内部枢机的输出
         // 内部枢机的输出端点，就是枢机符文生产的变量。
-        foreach (var (outputEndpointName, outputValue) in innerTuumOutputs)
+        foreach ((string outputEndpointName, object? outputValue) in innerTuumOutputs)
         {
             // 将内部枢机的输出，设置到外部枢机的变量池中。
             outerTuumContent.SetTuumVar(outputEndpointName, outputValue);
