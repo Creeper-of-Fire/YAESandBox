@@ -28,9 +28,8 @@
         <!-- 公共 API (来自 SeedModule) -->
         <SwaggerDocToGenerate Include="v1-public" Visible="false">
             <JsonFileName>public-api.swagger.json</JsonFileName>
-            <TsOutputModuleDir>app-game</TsOutputModuleDir>
             <TsOutputSubDir>public-api-client</TsOutputSubDir>
-            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend'))</TsClientRoot>
+            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend/plugins/seed/src'))</TsClientRoot>
         </SwaggerDocToGenerate>
     </ItemGroup>
 

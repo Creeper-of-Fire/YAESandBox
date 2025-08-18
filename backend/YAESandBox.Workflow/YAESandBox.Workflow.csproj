@@ -43,9 +43,8 @@
         <!-- 工作流服务配置 API (来自 WorkflowConfigModule) -->
         <SwaggerDocToGenerate Include="v1-workflow-config" Visible="false">
             <JsonFileName>workflow-config-api.swagger.json</JsonFileName>
-            <TsOutputModuleDir>app-workbench</TsOutputModuleDir>
             <TsOutputSubDir>workflow-config-api-client</TsOutputSubDir>
-            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend'))</TsClientRoot>
+            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend/plugins/workbench/src'))</TsClientRoot>
         </SwaggerDocToGenerate>
     </ItemGroup>
 

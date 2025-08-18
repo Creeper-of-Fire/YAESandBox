@@ -27,9 +27,8 @@
         <!-- 授权模块 -->
         <SwaggerDocToGenerate Include="v1-authentication" Visible="false">
             <JsonFileName>authentication-api.swagger.json</JsonFileName>
-            <TsOutputModuleDir>app-authentication</TsOutputModuleDir>
             <TsOutputSubDir>authentication-api-client</TsOutputSubDir>
-            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend'))</TsClientRoot>
+            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend/apps/shell/src/app-authentication'))</TsClientRoot>
         </SwaggerDocToGenerate>
     </ItemGroup>
 </Project>

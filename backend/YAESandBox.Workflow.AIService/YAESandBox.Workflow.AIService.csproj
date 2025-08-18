@@ -60,9 +60,8 @@
         <!-- AI 服务配置 API (来自 AiServiceConfigModule) -->
         <SwaggerDocToGenerate Include="v1-ai-config" Visible="false">
             <JsonFileName>ai-config-api.swagger.json</JsonFileName>
-            <TsOutputModuleDir>app-workbench</TsOutputModuleDir>
             <TsOutputSubDir>ai-config-api-client</TsOutputSubDir>
-            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend'))</TsClientRoot>
+            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend/plugins/workbench/src'))</TsClientRoot>
         </SwaggerDocToGenerate>
     </ItemGroup>
 

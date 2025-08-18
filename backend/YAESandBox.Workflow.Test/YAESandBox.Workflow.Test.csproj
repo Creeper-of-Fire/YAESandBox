@@ -25,9 +25,8 @@
         <!-- 工作流测试服务 -->
         <SwaggerDocToGenerate Include="v1-workflow-test" Visible="false">
             <JsonFileName>workflow-test-api.swagger.json</JsonFileName>
-            <TsOutputModuleDir>app-test-harness</TsOutputModuleDir>
             <TsOutputSubDir>workflow-test-api-client</TsOutputSubDir>
-            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend'))</TsClientRoot>
+            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend/plugins/test/src'))</TsClientRoot>
         </SwaggerDocToGenerate>
     </ItemGroup>
 </Project>

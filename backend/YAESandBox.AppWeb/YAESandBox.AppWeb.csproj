@@ -96,7 +96,7 @@
         <!-- 步骤 2b: 循环生成所有的 TypeScript 客户端 -->
         <!-- 注意：这里的 WorkingDirectory 是从每个文档定义中动态获取的 TsClientRoot！ -->
         <Message Text="[AppWeb] 正在生成 TS Client for '%(_AllSwaggerDocs.Identity)' to '%(_AllSwaggerDocs.TsClientRoot)'..." Importance="normal"/>
-        <Exec Command="npx openapi-typescript-codegen --input $(JsonOutputBaseDir)/%(_AllSwaggerDocs.JsonFileName) --output %(_AllSwaggerDocs.TsClientRoot)/src/%(_AllSwaggerDocs.TsOutputModuleDir)/types/generated/%(_AllSwaggerDocs.TsOutputSubDir) --client axios --useOptions"
+        <Exec Command="npx openapi-typescript-codegen --input $(JsonOutputBaseDir)/%(_AllSwaggerDocs.JsonFileName) --output %(_AllSwaggerDocs.TsClientRoot)/types/generated/%(_AllSwaggerDocs.TsOutputSubDir) --client axios --useOptions"
               WorkingDirectory="%(_AllSwaggerDocs.TsClientRoot)"
               ContinueOnError="false"/>
 
