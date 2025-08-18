@@ -1,30 +1,40 @@
-﻿import { fetchEventSource } from '@microsoft/fetch-event-source';
-import type { WorkflowConfig } from "@/app-workbench/types/generated/workflow-config-api-client";
-import { useAuthStore } from "@/app-authentication/stores/authStore";
+﻿import {fetchEventSource} from '@microsoft/fetch-event-source';
+import type {WorkflowConfig} from "@yaesandbox-frontend/plugin-workbench/src/types/generated/workflow-config-api-client";
+import type {ApiRequestOptions} from "@yaesandbox-frontend/core-services/injectKeys";
 
 // 请求体的类型
-interface StreamRequest {
+interface StreamRequest
+{
     workflowConfig: WorkflowConfig;
     workflowInputs: Record<string, string>;
 }
 
 // SSE 事件的负载类型
-interface StreamEventPayload {
+interface StreamEventPayload
+{
     type: 'data' | 'error' | 'done';
     content?: string;
 }
 
 // 回调函数的接口
-interface StreamCallbacks {
+interface StreamCallbacks
+{
     onMessage: (content: string) => void;
     onError: (error: Error) => void;
     onClose: () => void;
 }
 
 // 封装的流式请求函数
-export function executeWorkflowStream(requestBody: StreamRequest, callbacks: StreamCallbacks) {
-    const authStore = useAuthStore();
-    const token = authStore.token;
+export async function executeWorkflowStream(
+    requestBody: StreamRequest,
+    callbacks: StreamCallbacks,
+    tokenResolver: (options: ApiRequestOptions) => Promise<string>
+)
+{
+    const authToken = await tokenResolver({
+        method: 'POST',
+        url: '/api/v1/workflow-execution/execute-stream',
+    });
 
     const ctrl = new AbortController();
 
@@ -34,8 +44,9 @@ export function executeWorkflowStream(requestBody: StreamRequest, callbacks: Str
         'Accept': 'text/event-stream',
     };
 
-    if (token) {
-        headers['Authorization'] = `Bearer ${token}`;
+    if (authToken)
+    {
+        headers['Authorization'] = `Bearer ${authToken}`;
     }
 
     fetchEventSource('/api/v1/workflow-execution/execute-stream', {
@@ -44,17 +55,21 @@ export function executeWorkflowStream(requestBody: StreamRequest, callbacks: Str
         body: JSON.stringify(requestBody),
         signal: ctrl.signal,
 
-        async onopen(response) {
-            if (response.ok && response.headers.get('content-type') === 'text/event-stream') {
+        async onopen(response)
+        {
+            if (response.ok && response.headers.get('content-type') === 'text/event-stream')
+            {
                 return; // 连接成功
             }
             throw new Error(`Failed to connect. Status: ${response.status} ${response.statusText}`);
         },
 
-        onmessage(event) {
+        onmessage(event)
+        {
             const payload: StreamEventPayload = JSON.parse(event.data);
 
-            switch (payload.type) {
+            switch (payload.type)
+            {
                 case 'data':
                     callbacks.onMessage(payload.content || '');
                     break;
@@ -69,12 +84,14 @@ export function executeWorkflowStream(requestBody: StreamRequest, callbacks: Str
             }
         },
 
-        onclose() {
+        onclose()
+        {
             // 这个回调在连接被任何一方关闭时都会触发
             console.log('Stream connection closed.');
         },
 
-        onerror(err) {
+        onerror(err)
+        {
             // 这个回调处理网络层面的错误或 onopen 抛出的异常
             callbacks.onError(err);
             throw err; // 抛出错误以停止重连

@@ -3,29 +3,6 @@
   <component name="JavaScriptLibraryMappings">
     <file url="file://$PROJECT_DIR$/../Plugins/YAESandBox.Plugin.Rune.TextParser/src/frontend" libraries="{.../frontend/node_modules}" />
     <file url="file://$PROJECT_DIR$/../frontend" libraries="{.../frontend/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/acorn@8.15.0/node_modules/acorn" libraries="{.../acorn/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/is-docker@3.0.0/node_modules/is-docker" libraries="{.../is-docker/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/is-wsl@2.2.0/node_modules/is-docker" libraries="{.../is-docker/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/is-wsl@2.2.0/node_modules/is-wsl" libraries="{.../is-wsl/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/is-wsl@3.1.0/node_modules/is-inside-container" libraries="{.../is-inside-container/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/is-wsl@3.1.0/node_modules/is-wsl" libraries="{.../is-wsl/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/mlly@1.7.4/node_modules/acorn" libraries="{.../acorn/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/mlly@1.7.4/node_modules/mlly" libraries="{.../mlly/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/nanoid@3.3.11/node_modules/nanoid" libraries="{.../nanoid/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/nanoid@5.1.5/node_modules/nanoid" libraries="{.../nanoid/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/open@10.2.0/node_modules/is-inside-container" libraries="{.../is-inside-container/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/open@10.2.0/node_modules/open" libraries="{.../open/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/open@8.4.2/node_modules/is-docker" libraries="{.../is-docker/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/open@8.4.2/node_modules/is-wsl" libraries="{.../is-wsl/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/open@8.4.2/node_modules/open" libraries="{.../open/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/postcss@8.5.6/node_modules/nanoid" libraries="{.../nanoid/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/semver@6.3.1/node_modules/semver" libraries="{.../semver/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/semver@7.7.2/node_modules/semver" libraries="{.../semver/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/unimport@5.2.0/node_modules/acorn" libraries="{.../acorn/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/unimport@5.2.0/node_modules/mlly" libraries="{.../mlly/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/unimport@5.2.0/node_modules/unplugin" libraries="{.../unplugin/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/unplugin@2.3.6/node_modules/unplugin" libraries="{.../unplugin/node_modules}" />
-    <file url="file://$PROJECT_DIR$/../frontend/node_modules/.pnpm/wsl-utils@0.1.0/node_modules/is-wsl" libraries="{.../is-wsl/node_modules}" />
     <file url="PROJECT" libraries="{microsoft-signalr}" />
   </component>
 </project>

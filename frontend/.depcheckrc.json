@@ -1,0 +1,8 @@
+{
+  "ignores": [
+    "vite"
+  ],
+  "ignore-patterns": [
+    "tsconfig.json"
+  ]
+}

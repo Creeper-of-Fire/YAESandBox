@@ -27,7 +27,7 @@ import { ref } from 'vue';
 import WorkflowSelector from './components/WorkflowSelector.vue';
 import TuumSelector from './components/TuumSelector.vue';
 import ExecutionInterface from './components/ExecutionInterface.vue';
-import type { WorkflowResourceItem, TuumResourceItem } from '@/app-workbench/stores/workbenchStore';
+import type { WorkflowResourceItem, TuumResourceItem } from '@yaesandbox-frontend/plugin-workbench/src/stores/workbenchStore';
 import { NEmpty, NTabs, NTabPane } from 'naive-ui';
 
 type SelectedItem = {

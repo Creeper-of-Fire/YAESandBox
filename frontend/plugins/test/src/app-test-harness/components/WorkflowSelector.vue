@@ -19,12 +19,12 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, h, onMounted, ref, watch} from 'vue';
-import {useWorkbenchStore} from '@/app-workbench/stores/workbenchStore.ts';
+import {computed, h, onMounted, ref} from 'vue';
+import {useWorkbenchStore} from '@yaesandbox-frontend/plugin-workbench/src/stores/workbenchStore.ts';
 import type {MenuOption} from 'naive-ui';
 import {NAlert, NButton, NH4, NIcon, NMenu, NSpin} from 'naive-ui';
-import {WorkflowIcon} from '@/utils/icons.ts';
-import type {WorkflowConfig} from "@/app-workbench/types/generated/workflow-config-api-client"; // 假设你有一个工作流图标
+import {WorkflowIcon} from '@yaesandbox-frontend/shared-ui/icons';
+import type {WorkflowConfig} from "@yaesandbox-frontend/plugin-workbench/src/types/generated/workflow-config-api-client"; // 假设你有一个工作流图标
 
 const workbenchStore = useWorkbenchStore();
 const workflowsAsync = workbenchStore.globalWorkflowsAsync;
@@ -53,7 +53,7 @@ const menuOptions = computed<MenuOption[]>(() =>
       .map(([id, item]) => ({
         label: item.data.name, // 无需再用 '!' 断言
         key: id,
-        icon: () => h(NIcon, { component: WorkflowIcon })
+        icon: () => h(NIcon, {component: WorkflowIcon})
       }));
 });
 

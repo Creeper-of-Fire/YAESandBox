@@ -12,7 +12,7 @@
     "install:all": "pnpm install",
     "generate:licenses": "pnpm-licenses generate-disclaimer --prod --output-file=./apps/shell/public/THIRD_PARTY_LICENSES.txt",
     "check:licenses": "node ./scripts/check-licenses.mjs",
-    "check:deps": "pnpm -r exec depcheck"
+    "check:deps": "node ./scripts/check-deps.mjs"
   },
   "devDependencies": {
     "@quantco/pnpm-licenses": "^2.2.1",
@@ -22,8 +22,6 @@
     "@vue/devtools": "^8.0.0",
     "@vue/tsconfig": "^0.7.0",
     "depcheck": "^1.4.7",
-    "openapi-typescript-codegen": "^0.29.0",
-    "rollup-plugin-visualizer": "^6.0.3",
     "typescript": "~5.9.2",
     "unplugin-auto-import": "^20.0.0",
     "unplugin-vue-components": "^28.8.0",

@@ -30,8 +30,8 @@
 <script setup lang="ts">
 import {ref, reactive, computed, watch} from 'vue';
 import { NScrollbar, NInput, NButton, NForm, NFormItem, NEmpty, NH5, NCard, NAlert, useMessage } from 'naive-ui';
-import type { WorkflowConfig, TuumConfig } from '@/app-workbench/types/generated/workflow-config-api-client';
-import {type WorkflowExecutionResult, WorkflowExecutionService} from "@/app-test-harness/types/generated/workflow-test-api-client";
+import type { WorkflowConfig, TuumConfig } from '@yaesandbox-frontend/plugin-workbench/src/types/generated/workflow-config-api-client';
+import {type WorkflowExecutionResult, WorkflowExecutionService} from "@/types/generated/workflow-test-api-client";
 
 const props = defineProps<{
   config: WorkflowConfig | TuumConfig;
@@ -49,7 +49,7 @@ const paramsToFill = computed<string[]>(() => {
     return (props.config as WorkflowConfig).workflowInputs || [];
   } else {
     const tuumConfig = props.config as TuumConfig;
-    const globalVars = Object.keys(tuumConfig.inputMappings || {});
+    const globalVars = Object.keys(tuumConfig.inputMappingsList || {});
     return [...new Set(globalVars)];
   }
 });
@@ -93,7 +93,7 @@ async function handleExecute() {
     };
   } else {
     const tuumConfig = props.config as TuumConfig;
-    const workflowInputsForTempWorkflow = [...new Set(Object.keys(tuumConfig.inputMappings))];
+    const workflowInputsForTempWorkflow = [...new Set(Object.keys(tuumConfig.inputMappingsList))];
     const tempWorkflow: WorkflowConfig = {
       name: `测试枢机: ${tuumConfig.name}`,
       tuums: [tuumConfig],
