@@ -8,6 +8,11 @@
     "noEmit": true
   },
   "references": [
+    // --- 根目录的.ts ---
+    {
+      "path": "./tsconfig.node.json"
+    },
+
     // --- 引用 Apps ---
     {
       "path": "./apps/shell"
