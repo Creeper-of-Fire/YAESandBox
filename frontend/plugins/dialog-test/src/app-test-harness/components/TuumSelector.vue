@@ -20,11 +20,11 @@
 
 <script lang="ts" setup>
 import {computed, h, onMounted, ref} from 'vue';
-import {useWorkbenchStore} from '@yaesandbox-frontend/plugin-workbench/src/stores/workbenchStore';
+import {useWorkbenchStore} from '@yaesandbox-frontend/plugin-workbench/stores/workbenchStore';
 import type {MenuOption} from 'naive-ui';
 import {NAlert, NButton, NH4, NIcon, NMenu, NSpin} from 'naive-ui';
 import {TuumIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import type {TuumConfig} from "@yaesandbox-frontend/plugin-workbench/src/types/generated/workflow-config-api-client";
+import type {TuumConfig} from "@yaesandbox-frontend/plugin-workbench/types/generated/workflow-config-api-client";
 
 const workbenchStore = useWorkbenchStore();
 const tuumsAsync = workbenchStore.globalTuumsAsync;

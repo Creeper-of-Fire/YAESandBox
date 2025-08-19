@@ -19,10 +19,10 @@
 
 <script lang="ts" setup>
 import {computed, onMounted, ref} from 'vue';
-import {useWorkbenchStore} from '@yaesandbox-frontend/plugin-workbench/src/stores/workbenchStore';
+import {useWorkbenchStore} from '@yaesandbox-frontend/plugin-workbench/stores/workbenchStore';
 import type {SelectOption} from 'naive-ui';
 import {NAlert, NButton, NH5, NSelect} from 'naive-ui';
-import type {WorkflowConfig} from "@yaesandbox-frontend/plugin-workbench/src/types/generated/workflow-config-api-client";
+import type {WorkflowConfig} from "@yaesandbox-frontend/plugin-workbench/types/generated/workflow-config-api-client";
 
 const emit = defineEmits(['workflow-selected']);
 

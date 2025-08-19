@@ -1,5 +1,5 @@
 ﻿import {fetchEventSource} from '@microsoft/fetch-event-source';
-import type {WorkflowConfig} from "@yaesandbox-frontend/plugin-workbench/src/types/generated/workflow-config-api-client";
+import type {WorkflowConfig} from "@yaesandbox-frontend/plugin-workbench/types/generated/workflow-config-api-client";
 import type {ApiRequestOptions} from "@yaesandbox-frontend/core-services/injectKeys";
 
 // 请求体的类型

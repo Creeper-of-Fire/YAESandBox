@@ -10,7 +10,7 @@ import {useAsyncState} from "@vueuse/core";
 import type {GlobalResourceItem} from "@yaesandbox-frontend/core-services";
 import {isEquivalent} from "@yaesandbox-frontend/core-services";
 import {cloneDeep} from "lodash-es";
-import {type DynamicAsset, loadAndRegisterPlugins} from "#/features/schema-viewer/plugin-loader.ts";
+import {type DynamicAsset, loadAndRegisterPlugins} from "#/features/schema-viewer/plugin-loader";
 
 // 导出类型
 export type WorkbenchStore = ReturnType<typeof useWorkbenchStore>;

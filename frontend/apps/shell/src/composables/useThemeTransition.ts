@@ -1,4 +1,4 @@
-﻿import {onScopeDispose, type Ref, ref, watch} from 'vue';
+﻿import {onScopeDispose, type Ref, ref, type UnwrapRef, watch} from 'vue';
 import {type GlobalTheme} from 'naive-ui';
 import {cloneDeep} from 'lodash-es';
 import type {BuiltInGlobalTheme} from "naive-ui/lib/themes/interface";
@@ -295,7 +295,7 @@ export function useThemeTransition(
     finalThemeName: Readonly<Ref<'light' | 'dark'>>,
     themes: { light: BuiltInGlobalTheme, dark: BuiltInGlobalTheme },
     duration = 1000 // 过渡持续时间 (ms)
-)
+): { transitioningTheme: Ref<UnwrapRef<GlobalTheme>, UnwrapRef<GlobalTheme> | GlobalTheme> }
 {
     // 初始状态直接使用目标主题，避免闪烁
     const transitioningTheme = ref<GlobalTheme>(themes[finalThemeName.value]);

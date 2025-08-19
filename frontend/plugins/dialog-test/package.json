@@ -5,12 +5,18 @@
   "version": "1.0.0",
   "description": "工作流临时测试插件",
   "main": "src/index.ts",
+  "module": "src/index.ts",
+  "type": "module",
   "imports": {
     "#/*": "./src/*"
   },
   "scripts": {
-    "build": "vue-tsc -b && vite build",
-    "checkTsc": "vue-tsc -b"
+    "build": "pnpm vue-tsc -b && vite build",
+    "checkTsc": "pnpm vue-tsc -b"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
   },
   "peerDependencies": {
     "naive-ui": "^2.0.0",

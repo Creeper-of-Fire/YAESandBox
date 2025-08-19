@@ -10,10 +10,10 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -b && vite build",
+    "build": "vue-tsc -noEmit && vite build",
     "preview": "vite preview",
     "buildAndPreview": "vue-tsc -b && vite build && vite preview",
-    "checkTsc": "vue-tsc -b"
+    "checkTsc": "vue-tsc -noEmit"
   },
   "dependencies": {
     "@yaesandbox-frontend/core-services": "workspace:*",

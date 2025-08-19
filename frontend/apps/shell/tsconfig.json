@@ -14,5 +14,9 @@
     "declaration": true,
     "declarationMap": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "references": [
+    { "path": "../../plugins/workbench" },
+    { "path": "../../plugins/dialog-test" }
+  ]
 }
