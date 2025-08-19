@@ -84,6 +84,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
     /// 脚本可以通过全局变量 `ctx` 与工作流交互，
     /// 使用 `ctx.get('var_name')` 获取变量，
     /// 使用 `ctx.set('var_name', value)` 设置变量。
+    /// 可以通过在前一行添加 `-- @type TypeName Description...` 的注释来为变量指定类型和描述。
     /// </summary>
     [DataType(DataType.MultilineText)]
     [RenderWithMonacoEditor("lua",
@@ -91,15 +92,19 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
         SimpleConfigUrl = "plugin://lua-main/monaco-lua-service-main.js")]
     [Display(
         Name = "Lua 脚本",
-        Description = "在此处编写 Lua 脚本。使用 ctx.get('变量名') 获取输入，使用 ctx.set('变量名', 值) 设置输出。",
+        Description = "在此处编写 Lua 脚本。使用 ctx.get('变量名') 获取输入，使用 ctx.set('变量名', 值) 设置输出。可以在 get/set 的上一行使用 -- @type 类型名 [可选的描述信息] 来指定变量类型。",
         Prompt =
-            "-- 示例:\nlog.info('脚本开始执行')\n\n" +
-            "-- 获取当前 UTC 时间并格式化\nlocal now_utc = datetime.utcnow()\nctx.set('currentTime', now_utc:format('yyyy-MM-dd HH:mm:ss'))\n\n" +
-            "-- 时间计算\nlocal tomorrow = now_utc:add_days(1)\nlog.info('明天的日期是: ' .. tomorrow:format('yyyy-MM-dd'))\n\n" +
-            "-- 解析字符串\nlocal my_birthday_str = '1990-05-20'\n" +
-            "local birthday_obj = datetime.parse(my_birthday_str, 'yyyy-MM-dd')\nif birthday_obj then\n" +
-            "  log.info('生日的年份是: ' .. birthday_obj.year)\n" +
-            "end\n"
+            "-- 示例: 使用类型注解和描述\n\n" +
+            "-- @type string 用户的唯一标识符\n" +
+            "local user_id = ctx.get('input_user_id')\n\n" +
+            "log.info('正在处理用户: ' .. user_id)\n\n" +
+            "-- @type: number 计算得出的最终分数\n" +
+            "local score = 100\n" +
+            "ctx.set('final_score', score)\n\n" +
+            "-- @type boolean 指示操作是否成功\n" +
+            "ctx.set('is_success', true)\n\n" +
+            "-- 没有类型注解的变量将被视为 any 类型\n" +
+            "ctx.set('untyped_output', { key = 'value' })\n"
     )]
     [Required(AllowEmptyStrings = true)]
     [DefaultValue("")]
@@ -111,11 +116,17 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
     // --- 变量静态分析 ---
 
     // 正则表达式用于匹配 ctx.get('...') 或 ctx.get("...")
-    [GeneratedRegex(@"ctx\.get\s*\(\s*['""]([^'""]+)['""]\s*\)", RegexOptions.Multiline)]
+    // Group 1: (可选) 类型名称 (e.g., 'string')
+    // Group 2: (可选) 描述信息
+    // Group 3: 变量名称
+    [GeneratedRegex(@"(?:--\s*@type[:]?(?:\s*(\S+))(?:\s+(.*?))?\s*\r?\n)?\s*ctx\.get\s*\(\s*['""]([^'""]+)['""]\s*\)", RegexOptions.Multiline)]
     private static partial Regex ConsumedVariableRegex();
 
     // 正则表达式用于匹配 ctx.set('...') 或 ctx.set("...")
-    [GeneratedRegex(@"ctx\.set\s*\(\s*['""]([^'""]+)['""]\s*,", RegexOptions.Multiline)]
+    // Group 1: (可选) 类型名称 (e.g., 'string')
+    // Group 2: (可选) 描述信息
+    // Group 3: 变量名称
+    [GeneratedRegex(@"(?:--\s*@type[:]?(?:\s*(\S+))(?:\s+(.*?))?\s*\r?\n)?\s*ctx\.set\s*\(\s*['""]([^'""]+)['""]\s*,", RegexOptions.Multiline)]
     private static partial Regex ProducedVariableRegex();
 
 
@@ -130,9 +141,35 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
         }
 
         return ConsumedVariableRegex().Matches(this.Script)
-            .Select(match => match.Groups[1].Value)
-            .Distinct()
-            .Select(name => new ConsumedSpec(name, CoreVarDefs.Any) { IsOptional = false })
+            .Select(match => new
+            {
+                TypeName = match.Groups[1].Value,
+                Description = match.Groups[2].Value.Trim(),
+                VarName = match.Groups[3].Value
+            })
+            .GroupBy(v => v.VarName) // 按变量名分组，以处理同一变量的多次 get
+            .Select(group =>
+            {
+                var varName = group.Key;
+                // 优先使用第一个找到的带有类型注解的条目
+                var bestAnnotation = group.FirstOrDefault(g => !string.IsNullOrWhiteSpace(g.TypeName));
+
+                var typeName = bestAnnotation?.TypeName;
+                var description = bestAnnotation?.Description;
+
+                VarSpecDef varDef;
+                if (string.IsNullOrWhiteSpace(typeName))
+                {
+                    varDef = CoreVarDefs.Any; // 如果没有注解，则默认为 Any 类型
+                }
+                else
+                {
+                    var finalDescription = string.IsNullOrWhiteSpace(description) ? null : description;
+                    varDef = new VarSpecDef(typeName, finalDescription);
+                }
+
+                return new ConsumedSpec(varName, varDef) { IsOptional = false };
+            })
             .ToList();
     }
 
@@ -147,9 +184,35 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
         }
 
         return ProducedVariableRegex().Matches(this.Script)
-            .Select(match => match.Groups[1].Value)
-            .Distinct()
-            .Select(name => new ProducedSpec(name, CoreVarDefs.Any))
+            .Select(match => new
+            {
+                TypeName = match.Groups[1].Value,
+                Description = match.Groups[2].Value.Trim(),
+                VarName = match.Groups[3].Value
+            })
+            .GroupBy(v => v.VarName) // 按变量名分组，以处理同一变量的多次 set
+            .Select(group =>
+            {
+                var varName = group.Key;
+                // 优先使用第一个找到的带有类型注解的条目
+                var bestAnnotation = group.FirstOrDefault(g => !string.IsNullOrWhiteSpace(g.TypeName));
+
+                var typeName = bestAnnotation?.TypeName;
+                var description = bestAnnotation?.Description;
+
+                VarSpecDef varDef;
+                if (string.IsNullOrWhiteSpace(typeName))
+                {
+                    varDef = CoreVarDefs.Any; // 如果没有注解，则默认为 Any 类型
+                }
+                else
+                {
+                    var finalDescription = string.IsNullOrWhiteSpace(description) ? null : description;
+                    varDef = new VarSpecDef(typeName, finalDescription);
+                }
+
+                return new ProducedSpec(varName, varDef);
+            })
             .ToList();
     }
 }

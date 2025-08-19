@@ -133,13 +133,9 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
     /// <inheritdoc />
     protected override LuaStringProcessorRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this);
 
-
-    // TODO 增加脚本的变量映射功能，否则就全是`Any?`了
-    // 目前强制所有的脚本输入/输出都为 Any，且不能为空
+    /// <inheritdoc />
+    public override List<ConsumedSpec> GetConsumedSpec() => [new(this.InputVariableName, CoreVarDefs.String) { IsOptional = false }];
 
     /// <inheritdoc />
-    public override List<ConsumedSpec> GetConsumedSpec() => [new(this.InputVariableName, CoreVarDefs.Any) { IsOptional = false }];
-
-    /// <inheritdoc />
-    public override List<ProducedSpec> GetProducedSpec() => [new(this.OutputVariableName, CoreVarDefs.Any)];
+    public override List<ProducedSpec> GetProducedSpec() => [new(this.OutputVariableName, CoreVarDefs.String)];
 }
