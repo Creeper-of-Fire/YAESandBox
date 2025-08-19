@@ -76,14 +76,25 @@ app.use(createPinia())
  */
 const tokenResolver = async (options: ApiRequestOptions): Promise<string> =>
 {
-    // 在函数内部调用 useAuthStore()
-    // 这样可以确保每次 API 请求时，我们都能拿到最新的、已激活的 store 实例
+    // 在函数内部调用 useAuthStore
     const authStore = useAuthStore();
-    // console.log('Resolving token for request:', options.url); // 用于调试
-    return authStore.token ?? ''; // 关键：如果 token 是 null/undefined，则返回 ''
+
+    // 如果 token 本身就不存在，直接返回空字符串
+    if (!authStore.token) {
+        return '';
+    }
+
+    // 检查 token 是否即将过期 (例如，在 60 秒内)
+    if (authStore.isTokenExpiring(60)) {
+        console.debug('Token 即将/已经过期，准备进行刷新。');
+        // 调用刷新逻辑
+        await authStore.refreshAccessToken();
+    }
+
+    // 返回当前（可能已刷新）的 token
+    return authStore.token ?? '';
 };
 app.provide(TokenResolverKey, tokenResolver);
-AuthApiClient.TOKEN = tokenResolver;
 
 installBuiltinComponents();
 

@@ -16,11 +16,12 @@
     "checkTsc": "vue-tsc -noEmit"
   },
   "dependencies": {
+    "@vueuse/core": "^13.6.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
-    "@vueuse/core": "^13.6.0",
     "axios": "^1.11.0",
     "form-data": "^4.0.4",
+    "jwt-decode": "^4.0.0",
     "lodash-es": "^4.17.21",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
@@ -29,9 +30,9 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
-    "@yaesandbox-frontend/plugin-workbench": "workspace:*",
+    "@types/lodash-es": "^4.17.12",
     "@yaesandbox-frontend/plugin-dialog-test": "workspace:*",
-    "rollup-plugin-visualizer": "^6.0.3",
-    "@types/lodash-es": "^4.17.12"
+    "@yaesandbox-frontend/plugin-workbench": "workspace:*",
+    "rollup-plugin-visualizer": "^6.0.3"
   }
 }

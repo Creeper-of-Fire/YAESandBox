@@ -1,14 +1,19 @@
 ﻿import axios from 'axios';
 import { useAuthStore } from '#/app-authentication/stores/authStore';
 
-// 1. 创建一个 axios 实例
-const axiosInstance = axios.create({
-    // 从环境变量中读取 API 基础 URL，与 OpenAPI 客户端保持一致
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:7018',
-    headers: {
-        'Content-Type': 'application/json',
-    },
-});
+// // 1. 创建一个 axios 实例
+// const axiosInstance = axios.create({
+//     // 从环境变量中读取 API 基础 URL，与 OpenAPI 客户端保持一致
+//     baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:7018',
+//     headers: {
+//         'Content-Type': 'application/json',
+//     },
+// });
+const axionsDefault = axios.defaults;
+axionsDefault.headers['Content-Type'] = 'application/json';
+axionsDefault.baseURL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:7018';
+
+const axiosInstance = axios;
 
 // 2. 添加请求拦截器 (这是关键)
 axiosInstance.interceptors.request.use(

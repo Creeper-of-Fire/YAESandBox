@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { AuthResponse } from '../models/AuthResponse';
 import type { LoginRequest } from '../models/LoginRequest';
+import type { RefreshTokenRequest } from '../models/RefreshTokenRequest';
 import type { RegisterRequest } from '../models/RegisterRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -40,6 +41,25 @@ export class AuthService {
         return __request(OpenAPI, {
             method: 'POST',
             url: '/api/v1/auth/login',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                401: `Unauthorized`,
+            },
+        });
+    }
+    /**
+     * @returns AuthResponse OK
+     * @throws ApiError
+     */
+    public static postApiV1AuthRefresh({
+        requestBody,
+    }: {
+        requestBody?: RefreshTokenRequest,
+    }): CancelablePromise<AuthResponse> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/v1/auth/refresh',
             body: requestBody,
             mediaType: 'application/json',
             errors: {

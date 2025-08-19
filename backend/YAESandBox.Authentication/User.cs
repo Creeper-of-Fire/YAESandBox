@@ -24,4 +24,14 @@ public record User
     /// </summary>
     [Required]
     public required string PasswordHash { get; init; }
+    
+    /// <summary>
+    /// 刷新令牌，用于刷新访问令牌。可为空，因为用户可能从未登录过。
+    /// </summary>
+    public string? RefreshToken { get; set; }
+    
+    /// <summary>
+    /// 刷新令牌过期时间，用于验证刷新令牌有效性。可为空，因为用户可能从未登录过。
+    /// </summary>
+    public DateTime? RefreshTokenExpiryTime { get; set; }
 }

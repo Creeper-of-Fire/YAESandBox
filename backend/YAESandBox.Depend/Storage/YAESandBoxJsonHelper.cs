@@ -71,7 +71,7 @@ public static class YaeSandBoxJsonHelper
             else
             {
                 // 对于引用类型，默认值是 null
-                isOldValueDefault = (oldValue == null);
+                isOldValueDefault = oldValue == null;
             }
 
             // 4. 如果 oldOptions 的属性值是默认值，那么我们才从 newOptions 复制

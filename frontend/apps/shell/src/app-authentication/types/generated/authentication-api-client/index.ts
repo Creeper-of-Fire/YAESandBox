@@ -9,6 +9,7 @@ export type { OpenAPIConfig } from './core/OpenAPI';
 
 export type { AuthResponse } from './models/AuthResponse';
 export type { LoginRequest } from './models/LoginRequest';
+export type { RefreshTokenRequest } from './models/RefreshTokenRequest';
 export type { RegisterRequest } from './models/RegisterRequest';
 
 export { AuthService } from './services/AuthService';

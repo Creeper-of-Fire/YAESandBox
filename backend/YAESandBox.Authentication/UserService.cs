@@ -89,4 +89,67 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
 
         return Result.Fail($"用户ID '{userId}' 未能找到。");
     }
+    
+    /// <summary>
+    /// 为指定用户保存刷新令牌及其过期时间。
+    /// </summary>
+    /// <param name="userId">用户ID。</param>
+    /// <param name="refreshToken">新的刷新令牌。</param>
+    /// <param name="expiryTime">新的过期时间。</param>
+    /// <returns>操作成功或失败的结果。</returns>
+    public async Task<Result> SaveRefreshTokenAsync(string userId, string refreshToken, DateTime expiryTime)
+    {
+        await FileLock.WaitAsync();
+        try
+        {
+            var loadResult = await this.LoadUsersAsync();
+            if (loadResult.TryGetError(out var loadError, out var users))
+                return loadError;
+
+            if (!users.TryGetValue(userId, out var user))
+            {
+                return Result.Fail($"用户ID '{userId}' 未能找到。");
+            }
+
+            // 更新用户信息
+            user.RefreshToken = refreshToken;
+            user.RefreshTokenExpiryTime = expiryTime;
+
+            var saveResult = await storage.SaveAllAsync(users, UserFileName);
+            if (saveResult.TryGetError(out var saveError))
+                return saveError;
+            
+            return Result.Ok();
+        }
+        finally
+        {
+            FileLock.Release();
+        }
+    }
+    
+    /// <summary>
+    /// 根据刷新令牌异步查找用户。
+    /// 这个方法封装了查找用户的具体实现（当前是遍历 JSON 文件）。
+    /// </summary>
+    /// <param name="refreshToken">用于查找的刷新令牌。</param>
+    /// <returns>成功时返回匹配的用户对象，否则返回错误信息。</returns>
+    public async Task<Result<User>> GetUserByRefreshTokenAsync(string refreshToken)
+    {
+        // 读取操作，不需要文件锁
+        var loadResult = await this.LoadUsersAsync();
+        if (loadResult.TryGetError(out var loadError, out var users))
+        {
+            return loadError;
+        }
+
+        // 遍历所有用户，查找匹配的刷新令牌
+        var user = users.Values.FirstOrDefault(u => u.RefreshToken == refreshToken);
+
+        if (user != null)
+        {
+            return Result.Ok(user);
+        }
+
+        return Result.Fail("无效的刷新令牌。");
+    }
 }

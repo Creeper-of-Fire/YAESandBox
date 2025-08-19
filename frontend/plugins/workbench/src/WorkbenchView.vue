@@ -103,13 +103,10 @@ import {type SelectedConfigItem, SelectedConfigItemKey} from "#/utils/injectKeys
 import type {AbstractRuneConfig} from "#/types/generated/workflow-config-api-client";
 import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
 import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
-import {configureApiClients} from "#/apiConfig.ts";
 
 defineOptions({
   name: 'WorkbenchView'
 });
-
-configureApiClients();
 
 const selectedConfig = ref<TuumEditorContext | RuneEditorContext | null>(null);
 
