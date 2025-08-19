@@ -1,9 +1,9 @@
 ﻿// src/app-authentication/authStore.ts
 import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
-import {AuthService, type LoginRequest, type RegisterRequest} from '@/app-authentication/types/generated/authentication-api-client';
+import {AuthService, type LoginRequest, type RegisterRequest} from '#/app-authentication/types/generated/authentication-api-client';
 import {useStorage} from "@vueuse/core";
-import router from "@/router/routerIndex.ts";
+import router from "#/router/routerIndex.ts";
 
 const serializer = {
     read: (v: any) => v ? JSON.parse(v) : null,

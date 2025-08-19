@@ -168,15 +168,15 @@
 <script lang="ts" setup>
 import {computed, h, nextTick, onMounted, reactive, ref} from 'vue';
 import {type DropdownOption, NAlert, NButton, NEmpty, NFlex, NH4, NIcon, NSpin, NTab, NTabs, useDialog, useMessage} from 'naive-ui';
-import {deepCloneWithNewIds, useWorkbenchStore} from '@/stores/workbenchStore';
-import type {ConfigObject, ConfigType} from "@/services/EditSession";
+import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore';
+import type {ConfigObject, ConfigType} from "#/services/EditSession";
 import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {GlobalResourceItem} from "@yaesandbox-frontend/core-services";
 import GlobalResourceListItem from './GlobalResourceListItem.vue';
-import HeaderAndBodyLayout from "@/layouts/HeaderAndBodyLayout.vue";
-import {createBlankConfig} from "@/utils/createBlankConfig.ts";
-import InlineInputPopover from "@/components/share/InlineInputPopover.vue";
-import type {EnhancedAction} from "@/composables/useConfigItemActions.ts";
+import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
+import {createBlankConfig} from "#/utils/createBlankConfig.ts";
+import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
+import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
 import {AddIcon, EditIcon, TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
 
 // 定义我们转换后给 draggable 用的数组项的类型

@@ -2,11 +2,11 @@
 import type {
     DisplayUpdateDto,
     BlockUpdateSignalDto,
-} from '@/app-game/types/generated/public-api-client';
-import {BlockStatusCode, BlockDataFields, StreamStatus, UpdateMode} from '@/app-game/types/generated/public-api-client'; // 引入 Enum
+} from '#/app-game/types/generated/public-api-client';
+import {BlockStatusCode, BlockDataFields, StreamStatus, UpdateMode} from '#/app-game/types/generated/public-api-client'; // 引入 Enum
 import {useTopologyStore} from './topologyStore.ts';
 import {useBlockContentStore} from './blockContentStore.ts';
-import {eventBus} from "@/app-game/services/eventBus.ts";
+import {eventBus} from "#/app-game/services/eventBus.ts";
 
 interface BlockStatusState
 {

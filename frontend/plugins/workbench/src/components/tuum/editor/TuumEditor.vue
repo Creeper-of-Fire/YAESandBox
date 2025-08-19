@@ -21,10 +21,10 @@
 </template>
 
 <script lang="ts" setup>
-import TuumMappingsEditor from "@/components/tuum/editor/TuumMappingsEditor.vue";
+import TuumMappingsEditor from "#/components/tuum/editor/TuumMappingsEditor.vue";
 import {computed} from "vue";
-import type {TuumEditorContext} from "@/components/tuum/editor/TuumEditorContext.ts";
-import {useTuumAnalysis} from "@/composables/useTuumAnalysis.ts";
+import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
+import {useTuumAnalysis} from "#/composables/useTuumAnalysis.ts";
 
 const props = defineProps<{
   tuumContext: TuumEditorContext;

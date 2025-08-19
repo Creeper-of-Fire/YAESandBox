@@ -1,5 +1,5 @@
 ﻿import type { RouteRecordRaw } from 'vue-router';
-import WorkbenchView from '@/WorkbenchView.vue';
+import WorkbenchView from '#/WorkbenchView.vue';
 
 export const routes: RouteRecordRaw[] = [
     {

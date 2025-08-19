@@ -2,8 +2,8 @@
 
 // 定义选中项的类型
 import type {InjectionKey, Ref} from "vue";
-import type {TuumEditorContext} from "@/components/tuum/editor/TuumEditorContext.ts";
-import type {RuneEditorContext} from "@/components/rune/editor/RuneEditorContext.ts";
+import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
+import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
 
 export interface SelectedConfigItem
 {

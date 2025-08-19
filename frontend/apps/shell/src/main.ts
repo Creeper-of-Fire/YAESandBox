@@ -32,10 +32,10 @@ import {installBuiltinComponents} from "@yaesandbox-frontend/shared-ui/content-r
 // --- 将 Token 注入到所有 API 请求中 ---
 // 必须在 Pinia 安装之后，才能使用 useAuthStore
 // 导入所有需要认证的 API 客户端的 OpenAPI 对象
-import {OpenAPI as AuthApiClient} from '@/app-authentication/types/generated/authentication-api-client'
-import {useAuthStore} from "@/app-authentication/stores/authStore.ts"
+import {OpenAPI as AuthApiClient} from '#/app-authentication/types/generated/authentication-api-client'
+import {useAuthStore} from "#/app-authentication/stores/authStore.ts"
 import {type ApiRequestOptions, TokenResolverKey} from '@yaesandbox-frontend/core-services/injectKeys';
-import {loadPlugins} from "@/plugins/pluginLoader.ts";
+import {loadPlugins} from "#/plugins/pluginLoader.ts";
 // 创建一个专门给 vue-form 用的 naive-ui 实例
 const naiveForVueForm = create({
     components: [

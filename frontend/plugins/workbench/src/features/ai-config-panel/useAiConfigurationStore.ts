@@ -3,7 +3,7 @@ import {computed, reactive, ref} from 'vue';
 import {useMessage} from 'naive-ui';
 import {v4 as uuidv4} from 'uuid'; // 用于在客户端生成UUID
 import {cloneDeep} from 'lodash-es';
-import {type AiConfigurationSet, AiConfigurationsService} from '@/types/generated/ai-config-api-client';
+import {type AiConfigurationSet, AiConfigurationsService} from '#/types/generated/ai-config-api-client';
 
 // 这是一个独立的工具函数，用于调用API并处理通用逻辑
 async function callApi<T>(fn: () => Promise<T>, options?: { successMessage?: string, errorMessagePrefix?: string }): Promise<T | undefined>

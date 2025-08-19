@@ -84,11 +84,11 @@ import {computed, h, nextTick, onMounted, ref, watch} from 'vue';
 import {NButton, NCard, NEmpty, NFlex, NFormItem, NInput, NPopconfirm, NSelect, NSpin, useDialog, useMessage} from 'naive-ui';
 import {storeToRefs} from 'pinia';
 import {cloneDeep, isEqual} from 'lodash-es';
-import type {AbstractAiProcessorConfig} from '@/types/generated/ai-config-api-client';
-import {useAiConfigurationStore} from "@/features/ai-config-panel/useAiConfigurationStore";
-import {useAiConfigSchemaStore} from "@/features/ai-config-panel/aiConfigSchemaStore";
-import AiConfigTester from "@/features/ai-config-panel/AiConfigTester.vue";
-import DynamicFormRenderer, {type DynamicFormRendererInstance} from "@/features/schema-viewer/DynamicFormRenderer.vue";
+import type {AbstractAiProcessorConfig} from '#/types/generated/ai-config-api-client';
+import {useAiConfigurationStore} from "#/features/ai-config-panel/useAiConfigurationStore";
+import {useAiConfigSchemaStore} from "#/features/ai-config-panel/aiConfigSchemaStore";
+import AiConfigTester from "#/features/ai-config-panel/AiConfigTester.vue";
+import DynamicFormRenderer, {type DynamicFormRendererInstance} from "#/features/schema-viewer/DynamicFormRenderer.vue";
 import {isEquivalent} from "@yaesandbox-frontend/core-services";
 
 // --- Stores and Utils ---

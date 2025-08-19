@@ -31,7 +31,7 @@
 import {ref, reactive, computed, watch} from 'vue';
 import { NScrollbar, NInput, NButton, NForm, NFormItem, NEmpty, NH5, NCard, NAlert, useMessage } from 'naive-ui';
 import type { WorkflowConfig, TuumConfig } from '@yaesandbox-frontend/plugin-workbench/src/types/generated/workflow-config-api-client';
-import {type WorkflowExecutionResult, WorkflowExecutionService} from "@/types/generated/workflow-test-api-client";
+import {type WorkflowExecutionResult, WorkflowExecutionService} from "#/types/generated/workflow-test-api-client";
 
 const props = defineProps<{
   config: WorkflowConfig | TuumConfig;

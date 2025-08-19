@@ -29,10 +29,10 @@
 </template>
 
 <script lang="ts" setup>
-import type {WorkflowConfig} from "@/types/generated/workflow-config-api-client";
+import type {WorkflowConfig} from "#/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import {computed} from 'vue';
-import CollapsibleConfigList from "@/components/share/renderer/CollapsibleConfigList.vue";
+import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
 
 // 定义组件的 Props
 const props = defineProps<{

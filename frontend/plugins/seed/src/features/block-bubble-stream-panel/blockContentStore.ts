@@ -1,6 +1,6 @@
 ﻿import {defineStore} from 'pinia';
-import type {BlockDetailDto, UpdateBlockDetailsDto} from '@/app-game/types/generated/public-api-client';
-import {BlocksService, BlockStatusCode} from '@/app-game/types/generated/public-api-client'; // 引入用于检查状态
+import type {BlockDetailDto, UpdateBlockDetailsDto} from '#/app-game/types/generated/public-api-client';
+import {BlocksService, BlockStatusCode} from '#/app-game/types/generated/public-api-client'; // 引入用于检查状态
 import {useBlockStatusStore} from './blockStatusStore.ts';
 import {useTopologyStore} from './topologyStore.ts';
 

@@ -1,10 +1,10 @@
 ﻿// composables/useMicroWorkflow.ts
 import {ref, onMounted, onBeforeUnmount, readonly} from 'vue';
 import {v4 as uuidv4} from 'uuid';
-import {eventBus} from '@/app-game/services/eventBus.ts';
-import {signalrService} from '@/app-game/services/signalrService.ts'; // 用于触发
-import type {TriggerMicroWorkflowRequestDto} from '@/app-game/types/generated/public-api-client';
-import {StreamStatus} from '@/app-game/types/generated/public-api-client'
+import {eventBus} from '#/app-game/services/eventBus.ts';
+import {signalrService} from '#/app-game/services/signalrService.ts'; // 用于触发
+import type {TriggerMicroWorkflowRequestDto} from '#/app-game/types/generated/public-api-client';
+import {StreamStatus} from '#/app-game/types/generated/public-api-client'
 
 interface MicroWorkflowResult
 {

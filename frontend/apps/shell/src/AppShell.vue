@@ -54,13 +54,13 @@
 
 <script lang="ts" setup>
 import {useThemeVars} from "naive-ui";
-import {useAuthStore} from "@/app-authentication/stores/authStore.ts";
+import {useAuthStore} from "#/app-authentication/stores/authStore.ts";
 import {computed, inject, provide} from "vue";
-import axiosInstance from "@/utils/axiosInstance.ts";
-import DayNightToggleWithDropDown from "@/component/DayNightToggleWithDropDown.vue";
+import axiosInstance from "#/utils/axiosInstance.ts";
+import DayNightToggleWithDropDown from "#/component/DayNightToggleWithDropDown.vue";
 import type {PluginModule} from "@yaesandbox-frontend/core-services";
-// import GlobalErrorDisplay from '@/components/GlobalErrorDisplay.vue';
-// import AppWideNotifications from '@/components/AppWideNotifications.vue';
+// import GlobalErrorDisplay from '#/components/GlobalErrorDisplay.vue';
+// import AppWideNotifications from '#/components/AppWideNotifications.vue';
 
 // 注入由 main.ts 提供的插件元数据
 const loadedPlugins = inject<PluginModule['meta'][]>('loadedPlugins', []);

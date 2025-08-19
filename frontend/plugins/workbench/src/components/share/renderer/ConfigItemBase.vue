@@ -45,7 +45,7 @@ import {NIcon, useThemeVars} from 'naive-ui';
 import {DragHandleOutlined} from '@yaesandbox-frontend/shared-ui/icons';
 import {computed, inject, ref} from "vue";
 import ColorHash from "color-hash";
-import {IsParentDisabledKey} from "@/utils/injectKeys.ts";
+import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
 
 // 定义组件的 props

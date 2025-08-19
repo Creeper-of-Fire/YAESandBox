@@ -26,9 +26,9 @@
 <script generic="T extends AbstractRuneConfig | TuumConfig" lang="ts" setup>
 import {VueDraggable as draggable} from 'vue-draggable-plus';
 import {NEmpty, useThemeVars} from 'naive-ui';
-import type {AbstractRuneConfig, TuumConfig} from '@/types/generated/workflow-config-api-client';
+import type {AbstractRuneConfig, TuumConfig} from '#/types/generated/workflow-config-api-client';
 import {computed, inject, ref} from "vue";
-import {IsParentDisabledKey} from "@/utils/injectKeys.ts";
+import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 
 const props = withDefaults(defineProps<{
   items: T[];

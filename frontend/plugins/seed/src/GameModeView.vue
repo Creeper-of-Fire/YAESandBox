@@ -49,13 +49,13 @@ import {NSpin} from 'naive-ui';
 import {useMediaQuery} from '@vueuse/core'; // 推荐使用 @vueuse/core
 
 // 导入 Stores
-import {useBlockStatusStore} from '@/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
-import {useUiStore} from '@/app-game/stores/gameUiStore.ts';
+import {useBlockStatusStore} from '#/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
+import {useUiStore} from '#/app-game/stores/gameUiStore.ts';
 
 // 导入子组件
-import AppToolbar from '@/app-game/components/AppToolbar.vue';
-import ThreeColumnLayout from "@/app-game/components/layouts/ThreeColumnLayout.vue";
-import BlockBubbleStream from "@/app-game/features/block-bubble-stream-panel/BlockBubbleStream.vue";
+import AppToolbar from '#/app-game/components/AppToolbar.vue';
+import ThreeColumnLayout from "#/app-game/components/layouts/ThreeColumnLayout.vue";
+import BlockBubbleStream from "#/app-game/features/block-bubble-stream-panel/BlockBubbleStream.vue";
 
 defineOptions({
   name: 'GameModeView'

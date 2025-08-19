@@ -1,12 +1,12 @@
 ﻿// 文件路径: src/app-workbench/utils/createBlankConfig.ts
 import {v4 as uuidv4} from 'uuid';
-import type {ConfigObject, ConfigType,} from '@/services/EditSession';
+import type {ConfigObject, ConfigType,} from '#/services/EditSession';
 import {
     type AbstractRuneConfig,
     RuneConfigService,
     type TuumConfig,
     type WorkflowConfig
-} from "@/types/generated/workflow-config-api-client";
+} from "#/types/generated/workflow-config-api-client";
 
 // noinspection JSCommentMatchesSignature
 /**

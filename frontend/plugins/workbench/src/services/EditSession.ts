@@ -5,8 +5,8 @@ import type {
     AbstractRuneConfig,
     TuumConfig,
     WorkflowConfig,
-} from '@/types/generated/workflow-config-api-client';
-import {type SaveResult, useWorkbenchStore} from '@/stores/workbenchStore.ts';
+} from '#/types/generated/workflow-config-api-client';
+import {type SaveResult, useWorkbenchStore} from '#/stores/workbenchStore.ts';
 
 // 定义了可编辑配置的类型别名，方便在整个应用中重用。
 export type ConfigType = 'workflow' | 'tuum' | 'rune';

@@ -1,4 +1,4 @@
-import {type BuildOptions, mergeConfig, type PluginOption, type ResolvedConfig, type ResolveOptions, type UserConfig} from 'vite';
+import {type BuildOptions, mergeConfig, type PluginOption, type UserConfig} from 'vite';
 import vue from '@vitejs/plugin-vue';
 import path from 'path';
 import AutoImport from 'unplugin-auto-import/vite';
@@ -53,13 +53,7 @@ export function createMonorepoViteConfig(options: MonorepoViteConfigOptions): Us
                 ],
             }),
             ...plugins,
-        ],
-        resolve: {
-            alias: {
-                // 让每个包的 '@' 都指向自己的 'src' 目录
-                '@': path.resolve(packageDir, './src'),
-            },
-        },
+        ]
     };
 
     // 2. 根据类型定义特定配置

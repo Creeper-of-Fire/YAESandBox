@@ -3,7 +3,7 @@ import {computed, ref} from 'vue';
 import {
     AiConfigSchemasService,
     type AiConfigTypeWithSchemaDto
-} from '@/types/generated/ai-config-api-client';
+} from '#/types/generated/ai-config-api-client';
 
 export const useAiConfigSchemaStore = defineStore('aiConfigSchema', () => {
     // --- State ---

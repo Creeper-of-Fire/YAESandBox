@@ -1,10 +1,10 @@
 ﻿// 文件路径: src/app-workbench/composables/useConfigItemActions.ts
 import {type Component, computed, type Ref} from 'vue';
 import {type SelectOption, useMessage} from 'naive-ui';
-import type {ConfigObject} from '@/services/EditSession';
-import {useWorkbenchStore} from '@/stores/workbenchStore';
+import type {ConfigObject} from '#/services/EditSession';
+import {useWorkbenchStore} from '#/stores/workbenchStore';
 import {AddIcon, EditIcon, SaveIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import {createBlankConfig} from "@/utils/createBlankConfig.ts";
+import {createBlankConfig} from "#/utils/createBlankConfig.ts";
 
 /**
  * @description useConfigItemActions 的输入参数类型

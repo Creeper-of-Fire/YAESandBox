@@ -18,7 +18,7 @@
   </n-dropdown>
 </template>
 <script lang="ts" setup>
-import DayNightToggle from "@/component/DayNightToggle.vue";
+import DayNightToggle from "#/component/DayNightToggle.vue";
 import {type ComponentPublicInstance, computed, h, inject, nextTick, onMounted, ref, shallowRef, type VNode} from "vue";
 import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
 import {onLongPress} from "@vueuse/core";

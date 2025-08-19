@@ -1,181 +1,7 @@
 // --- 自定义 Vite 插件，用于重写导入路径 ---
-import {defineConfig, mergeConfig, Plugin} from 'vite';
+import {defineConfig, mergeConfig} from 'vite';
 import {visualizer} from "rollup-plugin-visualizer";
 import {createMonorepoViteConfig} from "../../vite.config.shared";
-import fs from 'fs';
-import path from 'path';
-
-// 使用一个缓存来避免重复的文件系统查找，提升性能
-const packageJsonCache = new Map<string, { path: string, content: any } | null>();
-
-// 辅助函数：向上查找 package.json (你的实现很好，无需改动)
-function findPackageJson(startDir: string): { path: string, content: any } | null
-{
-    let dir = startDir;
-    // 确保我们从一个绝对路径开始
-    if (!path.isAbsolute(dir))
-    {
-        console.warn(`[plugin-resolver] findPackageJson received a relative path: ${dir}. This should not happen.`);
-        return null;
-    }
-    // 防止无限循环到根目录之外
-    if (!path.isAbsolute(dir))
-    {
-        dir = path.resolve(dir);
-    }
-    while (dir !== path.dirname(dir)) {
-        const cacheKey = dir;
-        if (packageJsonCache.has(cacheKey)) {
-            return packageJsonCache.get(cacheKey)!;
-        }
-        const filePath = path.join(dir, 'package.json');
-        if (fs.existsSync(filePath)) {
-            try {
-                const content = JSON.parse(fs.readFileSync(filePath, 'utf8'));
-                const result = { path: filePath, content: content };
-                packageJsonCache.set(cacheKey, result);
-                return result;
-            } catch (e) {
-                packageJsonCache.set(cacheKey, null);
-                return null;
-            }
-        }
-        dir = path.dirname(dir);
-    }
-    packageJsonCache.set(startDir, null);
-    return null;
-}
-
-/**
- * 这是一个更健壮、更正确的 Vite 插件，用于在 Monorepo 中解析插件内部的 '@/' 别名。
- * 它使用 `resolveId` 钩子，在 Vite 解析模块的第一时间介入。
- */
-function resolvePluginImportsPlugin(): Plugin
-{
-    let projectRoot: string;
-    let rootPackageName: string | undefined;
-
-    return {
-        name: 'vite-plugin-resolve-plugin-imports',
-        enforce: 'pre',
-
-        configResolved(config)
-        {
-            projectRoot = config.root; // 保存项目根目录
-            const rootPackageInfo = findPackageJson(projectRoot);
-            if (rootPackageInfo)
-            {
-                rootPackageName = rootPackageInfo.content.name;
-            }
-        },
-
-        // 我们放弃 resolveId，改用 transform
-        transform(code, id)
-        {
-            // id 是正在被转换的文件的绝对路径
-            // 只处理 JS/TS/Vue 文件，排除虚拟模块和非代码文件
-            if (!/\.(js|ts|vue|jsx|tsx)$/.test(id) || id.includes('node_modules/.vite'))
-            {
-                return null;
-            }
-
-            const importerPackageInfo = findPackageJson(path.dirname(id));
-
-            if (!importerPackageInfo || !importerPackageInfo.content.name)
-            {
-                return null;
-            }
-
-            const importerPackageName = importerPackageInfo.content.name;
-
-            // 如果是主应用自己的文件，或者文件内容里没有'@/'，我们不做任何事
-            if (importerPackageName === rootPackageName || !code.includes('@/'))
-            {
-                return null;
-            }
-
-            // 【核心逻辑】
-            // 这是插件的文件，我们需要把里面的 '@/' 替换掉
-            const packageRootDir = path.dirname(importerPackageInfo.path);
-            const packageSrcDir = path.resolve(packageRootDir, 'src');
-
-            const currentFileDir = path.dirname(id);
-
-            // 计算从当前文件到其所在包的 src 目录的相对路径
-            const relativePathToSrc = path.relative(currentFileDir, packageSrcDir);
-
-            // 将路径统一为 POSIX 风格 (斜杠 /)
-            const replacement = path.normalize(relativePathToSrc).replace(/\\/g, '/');
-
-            // console.log(`[transform] Transforming ${id.replace(projectRoot, '')}`);
-            // console.log(`  - Found in package: ${importerPackageName}`);
-            // console.log(`  - Replacing '@/' with '${replacement}'`);
-
-            // 使用一个安全的正则表达式来替换，只替换导入路径中的 '@/'
-            // from '@/...' or import('@/...')
-            const newCode = code.replace(/(from\s+['"]|import\s*\(\s*['"])@\//g, `$1${replacement}/`);
-
-            return {
-                code: newCode,
-                // 如果你有 sourcemaps，需要设置 map: null 来确保 sourcemap 链正确
-                map: null
-            };
-        },
-
-        async resolveId(source, importer, options)
-        {
-            // 1. 只处理 '@/' 开头的导入
-            if (!source.startsWith('@/'))
-            {
-                return null;
-            }
-
-            // 2. importer 必须存在，才能确定上下文
-            if (!importer)
-            {
-                return null;
-            }
-
-            const absoluteImporter = path.isAbsolute(importer)
-                ? importer
-                : path.resolve(projectRoot, importer);
-
-            // 【修复二】移除对 'node_modules' 的判断，因为它在 monorepo 中是合法的
-
-            // 3. 找到 importer 文件所属的包
-            const importerPackageInfo = findPackageJson(path.dirname(absoluteImporter));
-
-            if (!importerPackageInfo)
-            {
-                return null;
-            }
-
-            const importerPackageName = importerPackageInfo.content.name;
-
-            // 4. 如果是主应用自己引用，则不处理，交由 Vite 的 alias 配置处理
-            if (importerPackageName === rootPackageName)
-            {
-                return null;
-            }
-
-            // 5. 【修复一：核心逻辑】
-            // 如果导入方是一个插件，我们构建一个新的目标路径，然后让 Vite 自己去解析
-            const packageRootDir = path.dirname(importerPackageInfo.path);
-            const relativePath = source.substring(2); // 移除 '@/'
-            const newSource = path.resolve(packageRootDir, 'src', relativePath);
-
-            // console.log(`[plugin-resolver] Remapping '${source}' to '${newSource}' for importer in '${importerPackageName}'`);
-
-            // 调用 this.resolve，让 Vite 继续解析这个已经没有别名的、更明确的路径
-            // skipSelf: true 确保不会再次触发我们自己的这个 resolveId 钩子，防止死循环
-            const resolution = await this.resolve(newSource, importer, {...options, skipSelf: true});
-
-            // 如果 Vite 能解析到（找到了 .vue, .ts 等），就返回它的结果
-            // 否则返回 null，让其他插件或默认行为继续
-            return resolution;
-        }
-    };
-}
 
 export default defineConfig(({command, mode}) =>
 {
@@ -184,8 +10,6 @@ export default defineConfig(({command, mode}) =>
         packageDir: __dirname,
         type: 'app',
         plugins: [
-            resolvePluginImportsPlugin(),
-
             // 将 visualizer 添加到插件列表的末尾
             // 通常建议放到末尾，以确保它能分析到所有其他插件处理后的最终结果
             visualizer({
@@ -262,7 +86,8 @@ export default defineConfig(({command, mode}) =>
                     // rewrite: (path) => path.replace(/^\/plugins/, '/plugins'), // 如果路径需要重写，但这里通常不需要
                 },
             }
-        }
+        },
+        resolve: {}
     });
     return mergeConfig(baseAppConfig, shellSpecificConfig);
 });

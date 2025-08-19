@@ -30,7 +30,7 @@ import {computed, h, ref} from 'vue';
 import {type DropdownOption, NButton, NDropdown, NIcon, useDialog} from 'naive-ui';
 import InlineInputPopover from './InlineInputPopover.vue';
 import {EllipsisHorizontalIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import type {EnhancedAction} from "@/composables/useConfigItemActions.ts";
+import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
 
 // 接口定义（保持不变，它依然是我们强大的数据模型）
 

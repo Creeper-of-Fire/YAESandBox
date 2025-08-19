@@ -116,14 +116,14 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NH4, NIcon, useDialog, useMessage, useThemeVars} from 'naive-ui';
-import type {ConfigType, EditSession} from "@/services/EditSession.ts";
-import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "@/types/generated/workflow-config-api-client";
+import type {ConfigType, EditSession} from "#/services/EditSession.ts";
+import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "#/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
-import WorkflowItemRenderer from "@/components/workflow/WorkflowItemRenderer.vue";
+import WorkflowItemRenderer from "#/components/workflow/WorkflowItemRenderer.vue";
 import {AddBoxIcon, SwapHorizIcon,CloseIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import HeaderAndBodyLayout from "@/layouts/HeaderAndBodyLayout.vue";
-import {useConfigItemActions} from "@/composables/useConfigItemActions.ts";
-import InlineInputPopover from "@/components/share/InlineInputPopover.vue";
+import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
+import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
+import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 
 const props = defineProps<{
   session: EditSession | null;

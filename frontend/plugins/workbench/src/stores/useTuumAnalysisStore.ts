@@ -1,8 +1,8 @@
 ﻿// frontend/src/app-workbench/stores/useTuumAnalysisStore.ts
 import {defineStore} from 'pinia';
 import {ref} from 'vue';
-import type {TuumConfig, TuumAnalysisResult} from '@/types/generated/workflow-config-api-client';
-import {WorkflowAnalysisService} from '@/types/generated/workflow-config-api-client';
+import type {TuumConfig, TuumAnalysisResult} from '#/types/generated/workflow-config-api-client';
+import {WorkflowAnalysisService} from '#/types/generated/workflow-config-api-client';
 
 /**
  * @internal

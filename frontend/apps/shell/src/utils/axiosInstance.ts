@@ -1,5 +1,5 @@
 ﻿import axios from 'axios';
-import { useAuthStore } from '@/app-authentication/stores/authStore';
+import { useAuthStore } from '#/app-authentication/stores/authStore';
 
 // 1. 创建一个 axios 实例
 const axiosInstance = axios.create({

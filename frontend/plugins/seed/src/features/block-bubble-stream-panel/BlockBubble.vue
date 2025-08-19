@@ -94,13 +94,13 @@
 <script setup lang="ts">
 import {computed, onMounted} from 'vue';
 import {v4 as uuidv4} from 'uuid';
-import {useTopologyStore} from '@/app-game/features/block-bubble-stream-panel/topologyStore.ts';
-import {useBlockContentStore} from '@/app-game/features/block-bubble-stream-panel/blockContentStore.ts';
-import {useBlockStatusStore} from '@/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
-import {BlockStatusCode, type ConflictDetectedDto} from '@/app-game/types/generated/public-api-client'; // 引入 Enum
-import type {ProcessedBlockNode} from '@/app-game/features/block-bubble-stream-panel/topologyStore.ts'; // 引入处理后的节点类型
-import {signalrService} from '@/app-game/services/signalrService.ts'; // <--- 导入 signalrService
-import {BlockManagementService} from '@/app-game/types/generated/public-api-client'; // <--- 导入用于删除的 REST API Service
+import {useTopologyStore} from '#/app-game/features/block-bubble-stream-panel/topologyStore.ts';
+import {useBlockContentStore} from '#/app-game/features/block-bubble-stream-panel/blockContentStore.ts';
+import {useBlockStatusStore} from '#/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
+import {BlockStatusCode, type ConflictDetectedDto} from '#/app-game/types/generated/public-api-client'; // 引入 Enum
+import type {ProcessedBlockNode} from '#/app-game/features/block-bubble-stream-panel/topologyStore.ts'; // 引入处理后的节点类型
+import {signalrService} from '#/app-game/services/signalrService.ts'; // <--- 导入 signalrService
+import {BlockManagementService} from '#/app-game/types/generated/public-api-client'; // <--- 导入用于删除的 REST API Service
 
 const props = defineProps<{
   blockId: string;

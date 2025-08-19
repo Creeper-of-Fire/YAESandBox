@@ -1,5 +1,5 @@
 ﻿import type { App } from 'vue';
-import router from '@/router/routerIndex'; // 导入主应用的 router 实例
+import router from '#/router/routerIndex'; // 导入主应用的 router 实例
 import type { PluginModule } from '@yaesandbox-frontend/core-services';
 
 // --- 开发时：静态导入所有插件 ---

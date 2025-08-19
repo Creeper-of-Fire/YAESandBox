@@ -1,21 +1,33 @@
 // /tsconfig.json
 {
-  "files": [], // 根目录本身不包含任何文件
+  "extends": "./tsconfig.base.json",
+  "files": [],
+  // 根目录本身不包含任何文件
+  "include": [],
+  "compilerOptions": {
+    "noEmit": true
+  },
   "references": [
-    { "path": "./tsconfig.node.json" },
-
     // --- 引用 Apps ---
-    { "path": "./apps/shell" },
-
+    {
+      "path": "./apps/shell"
+    },
     // --- 引用 Plugins ---
-    { "path": "./plugins/workbench" },
-    { "path": "./plugins/test-harness" },
-    { "path": "./plugins/game" },
-    { "path": "./plugins/dialog" },
-
+    {
+      "path": "./plugins/workbench"
+    },
+    {
+      "path": "./plugins/seed"
+    },
+    {
+      "path": "./plugins/dialog-test"
+    },
     // --- 引用 Packages ---
-    { "path": "./packages/core-services" },
-    { "path": "./packages/shared-ui"},
-    { "path": "./packages/shared-utils" },
+    {
+      "path": "./packages/core-services"
+    },
+    {
+      "path": "./packages/shared-ui"
+    }
   ]
 }

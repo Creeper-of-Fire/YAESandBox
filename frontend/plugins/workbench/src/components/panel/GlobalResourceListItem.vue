@@ -68,10 +68,10 @@
 import {NButton, NIcon, useThemeVars} from 'naive-ui';
 import {onLongPress} from '@vueuse/core'
 import {EditIcon, FindInPageIcon, LinkOffIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import type {ConfigObject, ConfigType} from '@/services/EditSession';
+import type {ConfigObject, ConfigType} from '#/services/EditSession';
 import type {GlobalResourceItem} from '@yaesandbox-frontend/core-services';
 import {computed, ref} from "vue";
-import {useWorkbenchStore} from "@/stores/workbenchStore.ts";
+import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 
 const props = defineProps<{
   id: string; // 原始 Record 的 key (资源的唯一ID)

@@ -52,8 +52,8 @@
 import {type Component, computed, ref, type StyleValue} from 'vue';
 import {NAlert, NEmpty, NSpin} from 'naive-ui';
 import VueForm from '@lljj/vue3-form-naive';
-import {preprocessSchemaForWidgets} from "@/features/schema-viewer/preprocessSchema.ts";
-import CustomFieldRenderer from "@/features/schema-viewer/CustomFieldRenderer.vue"; // 确认此库的准确导入名称和方式
+import {preprocessSchemaForWidgets} from "#/features/schema-viewer/preprocessSchema.ts";
+import CustomFieldRenderer from "#/features/schema-viewer/CustomFieldRenderer.vue"; // 确认此库的准确导入名称和方式
 
 // ----------- Props -----------
 const props = defineProps({

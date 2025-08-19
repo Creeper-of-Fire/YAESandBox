@@ -1,5 +1,5 @@
 ﻿import {defineStore} from 'pinia';
-import {BlocksService, type BlockTopologyNodeDto} from '@/app-game/types/generated/public-api-client';
+import {BlocksService, type BlockTopologyNodeDto} from '#/app-game/types/generated/public-api-client';
 import {useBlockContentStore} from './blockContentStore.ts'; // Needed for checking node existence during rebuild
 
 // 内部处理后的节点结构，包含父子引用

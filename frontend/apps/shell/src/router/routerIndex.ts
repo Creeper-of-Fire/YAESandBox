@@ -4,11 +4,11 @@ import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router';
 
 // 1. 导入共享的/核心的视图组件 (如果直接在主路由中定义)
 // 假设这是游戏模式的入口视图
-// import NotFoundView from '@/views/NotFoundView.vue'; // 404页面示例
+// import NotFoundView from '#/views/NotFoundView.vue'; // 404页面示例
 // 2. 导入特性符文暴露的路由配置
 //    每个特性符文内部可以有一个 routes.ts 文件，导出该特性相关的子路由数组
-import {routes as authRoutes} from '@/app-authentication/routes.ts';
-import {useAuthStore} from "@/app-authentication/stores/authStore.ts";
+import {routes as authRoutes} from '#/app-authentication/routes.ts';
+import {useAuthStore} from "#/app-authentication/stores/authStore.ts";
 
 // 3. 定义主路由规则 (顶层路由)
 const shellRoutes: RouteRecordRaw[] = [

@@ -1,10 +1,10 @@
 ﻿// src/services/signalrService.ts
 import * as signalR from "@microsoft/signalr";
 // 用于获取 BASE URL
-import {useBlockStatusStore} from '@/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
-import {useConnectionStore} from '@/app-game/stores/connectionStore.ts';
+import {useBlockStatusStore} from '#/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
+import {useConnectionStore} from '#/app-game/stores/connectionStore.ts';
 // import { useTopologyStore } from '../stores/topologyStore';
-import {useBlockContentStore} from '@/app-game/features/block-bubble-stream-panel/blockContentStore.ts';
+import {useBlockContentStore} from '#/app-game/features/block-bubble-stream-panel/blockContentStore.ts';
 import {eventBus} from './eventBus.ts'; // 导入事件总线
 import type {
     BlockStatusUpdateDto,
@@ -15,9 +15,9 @@ import type {
     TriggerMainWorkflowRequestDto,
     TriggerMicroWorkflowRequestDto,
     // Enums for event data payload
-} from "@/app-game/types/generated/public-api-client";
+} from "#/app-game/types/generated/public-api-client";
 
-import {StreamStatus, UpdateMode} from "@/app-game/types/generated/public-api-client";
+import {StreamStatus, UpdateMode} from "#/app-game/types/generated/public-api-client";
 
 
 // SignalR Hub 的相对路径

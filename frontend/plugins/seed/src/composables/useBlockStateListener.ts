@@ -1,7 +1,7 @@
 ﻿// composables/useBlockStateListener.ts
 import {ref, watchEffect, onBeforeUnmount, readonly} from 'vue';
 import type {Ref} from 'vue';
-import {eventBus} from '@/app-game/services/eventBus.ts';
+import {eventBus} from '#/app-game/services/eventBus.ts';
 
 // 可以定义事件负载的类型，如果事件总线发送了数据的话
 // type WorldStateChangeEvent = { changedEntityIds?: string[] };

@@ -1,7 +1,7 @@
 ﻿// frontend/src/app-workbench/composables/useTuumAnalysis.ts
 import {onMounted, ref, type Ref, watch} from "vue";
-import type {TuumAnalysisResult, TuumConfig} from "@/types/generated/workflow-config-api-client";
-import {useTuumAnalysisStore} from "@/stores/useTuumAnalysisStore";
+import type {TuumAnalysisResult, TuumConfig} from "#/types/generated/workflow-config-api-client";
+import {useTuumAnalysisStore} from "#/stores/useTuumAnalysisStore";
 import {useDebounceFn} from "@vueuse/core";
 
 /**

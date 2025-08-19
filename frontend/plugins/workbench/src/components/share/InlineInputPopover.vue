@@ -62,7 +62,7 @@
 import {computed, nextTick, ref, watch} from 'vue';
 import type {InputInst} from 'naive-ui';
 import {NAlert, NButton, NFlex, NFormItem, NH5, NInput, NPopover, NSelect} from 'naive-ui';
-import type {EnhancedAction} from "@/composables/useConfigItemActions.ts";
+import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
 
 const props = withDefaults(defineProps<{
       action?: EnhancedAction;

@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAuthStore } from '@/app-authentication/stores/authStore';
+import { useAuthStore } from '#/app-authentication/stores/authStore';
 import { NCard, NForm, NFormItemRow, NInput, NButton, NAlert, NTag, useMessage } from 'naive-ui';
 
 const username = ref('');

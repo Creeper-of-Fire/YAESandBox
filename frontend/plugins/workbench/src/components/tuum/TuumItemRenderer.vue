@@ -52,14 +52,14 @@
 <script lang="ts" setup>
 import {NButton, NCollapseTransition, NIcon, useThemeVars} from 'naive-ui';
 import {KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import ConfigItemBase from '@/components/share/renderer/ConfigItemBase.vue'; // 导入基础组件
-import RuneItemRenderer from '@/components/rune/RuneItemRenderer.vue'; // 导入符文渲染器
-import type {TuumConfig, WorkflowConfig} from '@/types/generated/workflow-config-api-client';
+import ConfigItemBase from '#/components/share/renderer/ConfigItemBase.vue'; // 导入基础组件
+import RuneItemRenderer from '#/components/rune/RuneItemRenderer.vue'; // 导入符文渲染器
+import type {TuumConfig, WorkflowConfig} from '#/types/generated/workflow-config-api-client';
 import {computed, inject, provide, ref, toRef} from "vue";
-import {IsParentDisabledKey, SelectedConfigItemKey} from "@/utils/injectKeys.ts";
-import {useConfigItemActions} from "@/composables/useConfigItemActions.ts";
-import ConfigItemActionsMenu from "@/components/share/ConfigItemActionsMenu.vue";
-import CollapsibleConfigList from "@/components/share/renderer/CollapsibleConfigList.vue";
+import {IsParentDisabledKey, SelectedConfigItemKey} from "#/utils/injectKeys.ts";
+import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
+import ConfigItemActionsMenu from "#/components/share/ConfigItemActionsMenu.vue";
+import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
 
 // 定义组件的 props
 const props = withDefaults(defineProps<{

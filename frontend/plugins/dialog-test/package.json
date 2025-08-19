@@ -5,6 +5,9 @@
   "version": "1.0.0",
   "description": "工作流临时测试插件",
   "main": "src/index.ts",
+  "imports": {
+    "#/*": "./src/*"
+  },
   "scripts": {
     "build": "vue-tsc -b && vite build",
     "checkTsc": "vue-tsc -b"

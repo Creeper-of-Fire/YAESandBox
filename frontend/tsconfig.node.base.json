@@ -8,7 +8,7 @@
     "declarationMap": false,
     "sourceMap": false,
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "Bundler",
     "types": ["node"],
     "allowImportingTsExtensions": true,
     "noEmit": true

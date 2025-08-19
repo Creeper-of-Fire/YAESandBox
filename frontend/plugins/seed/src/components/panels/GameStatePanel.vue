@@ -19,9 +19,9 @@
 <script setup lang="ts">
 import {computed} from 'vue';
 import {NH4, NText, NDivider, NEmpty, NIcon} from 'naive-ui';
-import {useTopologyStore} from '@/app-game/features/block-bubble-stream-panel/topologyStore.ts';
-import {useBlockStateListener} from '@/app-game/composables/useBlockStateListener.ts';
-import {GameControllerIcon} from "@/utils/icons.ts";
+import {useTopologyStore} from '#/app-game/features/block-bubble-stream-panel/topologyStore.ts';
+import {useBlockStateListener} from '#/app-game/composables/useBlockStateListener.ts';
+import {GameControllerIcon} from "#/utils/icons.ts";
 
 const topologyStore = useTopologyStore();
 

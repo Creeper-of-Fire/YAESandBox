@@ -18,12 +18,12 @@
 </template>
 
 <script lang="ts" setup>
-import RuneEditor from "@/components/rune/editor/RuneEditor.vue";
+import RuneEditor from "#/components/rune/editor/RuneEditor.vue";
 import {computed, inject} from "vue";
-import {SelectedConfigItemKey} from "@/utils/injectKeys.ts";
-import TuumEditor from "@/components/tuum/editor/TuumEditor.vue";
-import type {TuumEditorContext} from "@/components/tuum/editor/TuumEditorContext.ts";
-import type {RuneEditorContext} from "@/components/rune/editor/RuneEditorContext.ts";
+import {SelectedConfigItemKey} from "#/utils/injectKeys.ts";
+import TuumEditor from "#/components/tuum/editor/TuumEditor.vue";
+import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
+import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
 
 const selectedConfigItem = inject(SelectedConfigItemKey);
 const selectedConfig = computed(() =>

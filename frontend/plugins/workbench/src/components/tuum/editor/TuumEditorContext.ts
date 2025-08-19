@@ -1,4 +1,4 @@
-﻿import type {TuumConfig} from "@/types/generated/workflow-config-api-client";
+﻿import type {TuumConfig} from "#/types/generated/workflow-config-api-client";
 
 /**
  * 枢机配置编辑上下文类型

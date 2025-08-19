@@ -28,7 +28,7 @@
 
 <script lang="ts" setup>
 import {NFlex, NPopover, NSpace, NTag, NText} from 'naive-ui';
-import type {VarSpecDef} from "@/types/generated/workflow-config-api-client";
+import type {VarSpecDef} from "#/types/generated/workflow-config-api-client";
 
 type TagType = 'default' | 'success' | 'warning' | 'error' | 'info';
 

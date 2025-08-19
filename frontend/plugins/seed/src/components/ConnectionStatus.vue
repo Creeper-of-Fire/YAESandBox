@@ -18,7 +18,7 @@
 
 <script setup lang="ts">
 import {computed} from 'vue';
-import {useConnectionStore} from '@/app-game/stores/connectionStore.ts';
+import {useConnectionStore} from '#/app-game/stores/connectionStore.ts';
 import {NTooltip, useNotification} from 'naive-ui'; // 引入 useNotification
 
 const connectionStore = useConnectionStore();

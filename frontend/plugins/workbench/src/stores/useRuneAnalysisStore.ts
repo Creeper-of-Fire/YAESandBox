@@ -5,8 +5,8 @@ import type {
     RuneAnalysisRequest,
     RuneAnalysisResult,
     TuumConfig
-} from '@/types/generated/workflow-config-api-client';
-import {WorkflowAnalysisService} from '@/types/generated/workflow-config-api-client';
+} from '#/types/generated/workflow-config-api-client';
+import {WorkflowAnalysisService} from '#/types/generated/workflow-config-api-client';
 
 interface RuneAnalysisCache
 {

@@ -74,17 +74,17 @@
 </template>
 
 <script lang="ts" setup>
-import ConfigItemBase from '@/components/share/renderer/ConfigItemBase.vue';
-import type {AbstractRuneConfig, TuumConfig} from '@/types/generated/workflow-config-api-client';
+import ConfigItemBase from '#/components/share/renderer/ConfigItemBase.vue';
+import type {AbstractRuneConfig, TuumConfig} from '#/types/generated/workflow-config-api-client';
 import {computed, inject, provide, ref, toRef} from "vue";
-import {useWorkbenchStore} from "@/stores/workbenchStore.ts";
-import {IsParentDisabledKey, SelectedConfigItemKey} from "@/utils/injectKeys.ts";
+import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
+import {IsParentDisabledKey, SelectedConfigItemKey} from "#/utils/injectKeys.ts";
 import {FindInPageIcon,InfoIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import {useRuneAnalysis} from "@/composables/useRuneAnalysis.ts";
-import {useConfigItemActions} from "@/composables/useConfigItemActions.ts";
-import ConfigItemActionsMenu from "@/components/share/ConfigItemActionsMenu.vue";
+import {useRuneAnalysis} from "#/composables/useRuneAnalysis.ts";
+import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
+import ConfigItemActionsMenu from "#/components/share/ConfigItemActionsMenu.vue";
 import {useThemeVars} from "naive-ui";
-import CollapsibleConfigList from "@/components/share/renderer/CollapsibleConfigList.vue";
+import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
 
 // 定义 Props 和 Emits
 const props = defineProps<{

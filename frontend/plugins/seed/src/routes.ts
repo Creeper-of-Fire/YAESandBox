@@ -1,5 +1,5 @@
 ﻿import type {RouteRecordRaw} from 'vue-router';
-import GameModeView from "@/app-game/GameModeView.vue";
+import GameModeView from "#/app-game/GameModeView.vue";
 
 export const routes: RouteRecordRaw[] = [
     {

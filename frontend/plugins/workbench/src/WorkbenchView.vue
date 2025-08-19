@@ -91,19 +91,19 @@
 import {onBeforeUnmount, onMounted, provide, ref} from 'vue';
 import {NButton, NH3, NSwitch, useDialog, useMessage, useThemeVars} from 'naive-ui';
 import {SaveIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import {useWorkbenchStore} from '@/stores/workbenchStore';
-import {type ConfigType, type EditSession} from '@/services/EditSession';
+import {useWorkbenchStore} from '#/stores/workbenchStore';
+import {type ConfigType, type EditSession} from '#/services/EditSession';
 
-import EditorLayout from '@/layouts/EditorLayout.vue';
-import GlobalResourcePanel from '@/components/panel/GlobalResourcePanel.vue';
-import WorkbenchSidebar from '@/components/panel/WorkbenchSidebar.vue';
-import AiConfigEditorPanel from "@/features/ai-config-panel/AiConfigEditorPanel.vue";
-import MainEditPanel from "@/components/panel/MainEditPanel.vue";
-import {type SelectedConfigItem, SelectedConfigItemKey} from "@/utils/injectKeys.ts";
-import type {AbstractRuneConfig} from "@/types/generated/workflow-config-api-client";
-import type {TuumEditorContext} from "@/components/tuum/editor/TuumEditorContext.ts";
-import type {RuneEditorContext} from "@/components/rune/editor/RuneEditorContext.ts";
-import {configureApiClients} from "@/apiConfig.ts";
+import EditorLayout from '#/layouts/EditorLayout.vue';
+import GlobalResourcePanel from '#/components/panel/GlobalResourcePanel.vue';
+import WorkbenchSidebar from '#/components/panel/WorkbenchSidebar.vue';
+import AiConfigEditorPanel from "#/features/ai-config-panel/AiConfigEditorPanel.vue";
+import MainEditPanel from "#/components/panel/MainEditPanel.vue";
+import {type SelectedConfigItem, SelectedConfigItemKey} from "#/utils/injectKeys.ts";
+import type {AbstractRuneConfig} from "#/types/generated/workflow-config-api-client";
+import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
+import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
+import {configureApiClients} from "#/apiConfig.ts";
 
 defineOptions({
   name: 'WorkbenchView'

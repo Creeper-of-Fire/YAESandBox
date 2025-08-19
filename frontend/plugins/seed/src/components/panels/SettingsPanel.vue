@@ -34,8 +34,8 @@
 
 <script setup lang="ts">
 import {NH4, NDivider, NEmpty, NIcon, NH5, NForm, NFormItem, NInput} from 'naive-ui';
-import {SettingsIcon} from '@/utils/icons';
-import {useUiStore} from '@/app-game/stores/gameUiStore.ts'; // 引入 UI Store 修改面板宽度
+import {SettingsIcon} from '#/utils/icons';
+import {useUiStore} from '#/app-game/stores/gameUiStore.ts'; // 引入 UI Store 修改面板宽度
 
 const uiStore = useUiStore();
 

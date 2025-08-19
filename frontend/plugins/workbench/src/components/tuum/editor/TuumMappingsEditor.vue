@@ -75,7 +75,7 @@ import type {
   TuumAnalysisResult,
   TuumInputMapping,
   TuumOutputMapping
-} from "@/types/generated/workflow-config-api-client";
+} from "#/types/generated/workflow-config-api-client";
 
 // --- 类型定义 ---
 type InputMappings = Array<TuumInputMapping>;

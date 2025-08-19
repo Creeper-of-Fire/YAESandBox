@@ -70,14 +70,14 @@
 import {computed, ref} from 'vue';
 // 移除了 Popover 相关的组件和图标
 import {NBlockquote, NEmpty, NFlex, NFormItem, NH4, NP, NSpin, NSwitch, NTag, useThemeVars} from 'naive-ui';
-import {useWorkbenchStore} from "@/stores/workbenchStore.ts";
-import type {AbstractRuneConfig, TuumConfig} from "@/types/generated/workflow-config-api-client";
-import DynamicFormRenderer from "@/features/schema-viewer/DynamicFormRenderer.vue";
+import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
+import type {AbstractRuneConfig, TuumConfig} from "#/types/generated/workflow-config-api-client";
+import DynamicFormRenderer from "#/features/schema-viewer/DynamicFormRenderer.vue";
 import {useDebounceFn} from "@vueuse/core";
-import type {RuneEditorContext} from "@/components/rune/editor/RuneEditorContext.ts";
-import {useRuneAnalysis} from "@/composables/useRuneAnalysis.ts";
-import TuumEditor from "@/components/tuum/editor/TuumEditor.vue";
-import type {TuumEditorContext} from "@/components/tuum/editor/TuumEditorContext.ts";
+import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
+import {useRuneAnalysis} from "#/composables/useRuneAnalysis.ts";
+import TuumEditor from "#/components/tuum/editor/TuumEditor.vue";
+import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
 
 // --- Props ---
 const props = defineProps<{

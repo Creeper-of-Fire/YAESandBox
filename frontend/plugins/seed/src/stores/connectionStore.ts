@@ -1,13 +1,13 @@
 ﻿// src/stores/connectionStore.ts
 import {defineStore} from 'pinia';
 import {ref} from 'vue';
-import {signalrService} from '@/app-game/services/signalrService.ts'; // 导入 signalrService 来调用 start/stop
-import {OpenAPI} from '@/app-game/types/generated/public-api-client'; // 用于获取 BASE URL
+import {signalrService} from '#/app-game/services/signalrService.ts'; // 导入 signalrService 来调用 start/stop
+import {OpenAPI} from '#/app-game/types/generated/public-api-client'; // 用于获取 BASE URL
 
 // 引入其他需要触发初始化的 Store
-import {useTopologyStore} from '@/app-game/features/block-bubble-stream-panel/topologyStore.ts';
-import {useBlockContentStore} from '@/app-game/features/block-bubble-stream-panel/blockContentStore.ts';
-import {useBlockStatusStore} from '@/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
+import {useTopologyStore} from '#/app-game/features/block-bubble-stream-panel/topologyStore.ts';
+import {useBlockContentStore} from '#/app-game/features/block-bubble-stream-panel/blockContentStore.ts';
+import {useBlockStatusStore} from '#/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
 
 export const useConnectionStore = defineStore('connection', () =>
 {

@@ -70,11 +70,11 @@
 <script setup lang="ts">
 import {ref, defineAsyncComponent, markRaw, type Component} from 'vue'; // 引入 Component 类型
 import {NSpace, NButton, NDivider, NIcon, NTooltip} from 'naive-ui';
-import { ListIcon, SettingsIcon } from '@/utils/icons';
-import {useUiStore} from '@/app-game/stores/gameUiStore.ts';
-import {usePersistenceStore} from '@/app-game/features/block-bubble-stream-panel/persistenceStore.ts';
+import { ListIcon, SettingsIcon } from '#/utils/icons';
+import {useUiStore} from '#/app-game/stores/gameUiStore.ts';
+import {usePersistenceStore} from '#/app-game/features/block-bubble-stream-panel/persistenceStore.ts';
 import ConnectionStatus from './ConnectionStatus.vue';
-import {GameControllerIcon} from "@/utils/icons.ts";
+import {GameControllerIcon} from "#/utils/icons.ts";
 
 // --- Store ---
 const uiStore = useUiStore();
@@ -85,9 +85,9 @@ const loadInputRef = ref<HTMLInputElement | null>(null);
 
 // --- 导入面板组件引用 ---
 // 使用 markRaw 告诉 Vue 这些不需要深度响应式处理
-const EntityListPanel = markRaw(defineAsyncComponent(() => import('@/app-game/components/panels/EntityListPanel.vue')));
-const GameStatePanel = markRaw(defineAsyncComponent(() => import('@/app-game/components/panels/GameStatePanel.vue')));
-const SettingsPanel = markRaw(defineAsyncComponent(() => import('@/app-game/components/panels/SettingsPanel.vue')));
+const EntityListPanel = markRaw(defineAsyncComponent(() => import('#/app-game/components/panels/EntityListPanel.vue')));
+const GameStatePanel = markRaw(defineAsyncComponent(() => import('#/app-game/components/panels/GameStatePanel.vue')));
+const SettingsPanel = markRaw(defineAsyncComponent(() => import('#/app-game/components/panels/SettingsPanel.vue')));
 // ... 其他面板
 
 // --- Toolbar 方法 ---

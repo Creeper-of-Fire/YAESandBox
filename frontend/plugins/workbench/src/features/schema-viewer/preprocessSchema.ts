@@ -1,20 +1,20 @@
 ﻿import {cloneDeep} from "lodash-es";
 import {type Component, defineAsyncComponent, markRaw} from "vue";
-import {getVuePluginComponent} from "@/features/schema-viewer/plugin-loader.ts";
-import WebComponentWrapper from "@/features/schema-viewer/WebComponentWrapper.vue";
-import MonacoEditorWidget from "@/features/schema-viewer/field-widget/MonacoEditorWidget.vue";
+import {getVuePluginComponent} from "#/features/schema-viewer/plugin-loader.ts";
+import WebComponentWrapper from "#/features/schema-viewer/WebComponentWrapper.vue";
+import MonacoEditorWidget from "#/features/schema-viewer/field-widget/MonacoEditorWidget.vue";
 
 // =================================================================
 // 1. 动态组件定义
 // 使用 markRaw 和 defineAsyncComponent 是处理动态组件的最佳实践，
 // 它可以防止 Vue 对组件对象进行不必要的响应式代理，从而提高性能。
 // =================================================================
-const MyCustomStringAutoComplete = markRaw(defineAsyncComponent(() => import('@/features/schema-viewer/field-widget/MyCustomStringAutoComplete.vue')));
-const SliderWithInputWidget = markRaw(defineAsyncComponent(() => import('@/features/schema-viewer/field-widget/SliderWithInputWidget.vue')));
+const MyCustomStringAutoComplete = markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/MyCustomStringAutoComplete.vue')));
+const SliderWithInputWidget = markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/SliderWithInputWidget.vue')));
 // --- 主应用内建的、通过键名引用的自定义组件 ---
 // 这是我们为 RenderWithMainAppComponent 设计的注册表
 const MAIN_APP_WIDGETS: Record<string, Component> = {
-    'AiConfigEditorWidget': markRaw(defineAsyncComponent(() => import('@/features/schema-viewer/field-widget/AiConfigEditorWidget.vue')))
+    'AiConfigEditorWidget': markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/AiConfigEditorWidget.vue')))
     // 未来可以添加更多内建组件...
 };
 

@@ -5,6 +5,9 @@
   "version": "1.0.0",
   "description": "YAESandBox的共享UI",
   "main": "src/index.ts",
+  "imports": {
+    "#/*": "./src/*"
+  },
   "scripts": {
     "checkTsc": "vue-tsc -b --declaration"
   },

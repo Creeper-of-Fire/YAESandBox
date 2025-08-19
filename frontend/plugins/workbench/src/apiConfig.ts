@@ -1,7 +1,7 @@
 ﻿import {inject} from 'vue';
 import {TokenResolverKey} from '@yaesandbox-frontend/core-services/injectKeys';
-import {OpenAPI as WorkflowApiClient} from '@/types/generated/workflow-config-api-client';
-import {OpenAPI as AiConfigApiClient} from '@/types/generated/ai-config-api-client';
+import {OpenAPI as WorkflowApiClient} from '#/types/generated/workflow-config-api-client';
+import {OpenAPI as AiConfigApiClient} from '#/types/generated/ai-config-api-client';
 
 export function configureApiClients()
 {

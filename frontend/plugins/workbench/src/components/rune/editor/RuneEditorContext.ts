@@ -1,4 +1,4 @@
-﻿import type {AbstractRuneConfig} from "@/types/generated/workflow-config-api-client";
+﻿import type {AbstractRuneConfig} from "#/types/generated/workflow-config-api-client";
 
 /**
  * 符文配置编辑上下文类型

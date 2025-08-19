@@ -39,12 +39,12 @@ import {DynamicScroller, DynamicScrollerItem} from 'vue-virtual-scroller';
 import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'; // 确保样式被引入
 
 // 导入子组件
-import BlockBubble from '@/app-game/features/block-bubble-stream-panel/BlockBubble.vue';
+import BlockBubble from '#/app-game/features/block-bubble-stream-panel/BlockBubble.vue';
 
 // 导入 Stores
-import {useTopologyStore} from '@/app-game/features/block-bubble-stream-panel/topologyStore.ts';
-import {useBlockContentStore} from '@/app-game/features/block-bubble-stream-panel/blockContentStore.ts';
-import {useBlockStatusStore} from '@/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
+import {useTopologyStore} from '#/app-game/features/block-bubble-stream-panel/topologyStore.ts';
+import {useBlockContentStore} from '#/app-game/features/block-bubble-stream-panel/blockContentStore.ts';
+import {useBlockStatusStore} from '#/app-game/features/block-bubble-stream-panel/blockStatusStore.ts';
 
 // --- Store 实例 ---
 const topologyStore = useTopologyStore();

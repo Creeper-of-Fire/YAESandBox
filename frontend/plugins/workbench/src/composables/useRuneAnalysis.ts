@@ -1,8 +1,8 @@
 ﻿import {computed, onMounted, ref, type Ref, watch} from "vue";
-import type {AbstractRuneConfig, RuneAnalysisResult, TuumConfig} from "@/types/generated/workflow-config-api-client";
-import {useRuneAnalysisStore} from "@/stores/useRuneAnalysisStore.ts";
+import type {AbstractRuneConfig, RuneAnalysisResult, TuumConfig} from "#/types/generated/workflow-config-api-client";
+import {useRuneAnalysisStore} from "#/stores/useRuneAnalysisStore.ts";
 import {useDebounceFn} from "@vueuse/core";
-import {useWorkbenchStore} from "@/stores/workbenchStore.ts";
+import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 
 /**
  * 一个 Vue Composable，用于对符文（Rune）配置进行实时分析。

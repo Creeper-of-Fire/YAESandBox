@@ -141,11 +141,11 @@ import {AddIcon, DeleteIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon, Setting
 import {storeToRefs} from 'pinia';
 
 // --- 组件导入 ---
-import AiConfigEditorPanel from '@/features/ai-config-panel/AiConfigEditorPanel.vue';
+import AiConfigEditorPanel from '#/features/ai-config-panel/AiConfigEditorPanel.vue';
 // --- Pinia Stores ---
-import {useAiConfigurationStore} from '@/features/ai-config-panel/useAiConfigurationStore';
-import {useAiConfigSchemaStore} from '@/features/ai-config-panel/aiConfigSchemaStore';
-import type {AiConfigurationSet} from "@/types/generated/ai-config-api-client";
+import {useAiConfigurationStore} from '#/features/ai-config-panel/useAiConfigurationStore';
+import {useAiConfigSchemaStore} from '#/features/ai-config-panel/aiConfigSchemaStore';
+import type {AiConfigurationSet} from "#/types/generated/ai-config-api-client";
 
 // --- 数据模型定义 ---
 interface AiRuneSpecificConfig

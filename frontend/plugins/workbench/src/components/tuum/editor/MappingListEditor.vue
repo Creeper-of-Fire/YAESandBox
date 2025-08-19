@@ -101,9 +101,9 @@ import type {
   ProducedSpec,
   TuumInputMapping,
   TuumOutputMapping
-} from "@/types/generated/workflow-config-api-client";
+} from "#/types/generated/workflow-config-api-client";
 import {AddIcon, ArrowForwardIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import VarSpecTag from "@/components/share/VarSpecTag.vue";
+import VarSpecTag from "#/components/share/VarSpecTag.vue";
 
 // --- 类型定义 ---
 type MappingItem = TuumOutputMapping | TuumInputMapping;

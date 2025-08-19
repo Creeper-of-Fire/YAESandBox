@@ -44,8 +44,8 @@
 
 <script setup lang="ts">
 import { ref } from 'vue';
-import { useAuthStore } from '@/app-authentication/stores/authStore';
 import { NCard, NForm, NFormItemRow, NInput, NButton, NAlert, useMessage } from 'naive-ui';
+import {useAuthStore} from "#/app-authentication/stores/authStore.ts";
 
 const isLoginMode = ref(true);
 const username = ref('');
