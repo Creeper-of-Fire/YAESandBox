@@ -11,7 +11,6 @@
 
     <ItemGroup>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
-        <ProjectReference Include="..\YAESandBox.Seed.Workflow.CoreModules\YAESandBox.Seed.Workflow.CoreModules.csproj" />
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
    

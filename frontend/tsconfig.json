@@ -22,9 +22,6 @@
       "path": "./plugins/workbench"
     },
     {
-      "path": "./plugins/seed"
-    },
-    {
       "path": "./plugins/dialog-test"
     },
     // --- 引用 Packages ---

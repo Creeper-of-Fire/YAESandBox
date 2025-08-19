@@ -12,7 +12,7 @@ using Controller;
 /// <summary>
 /// 用于测试工作流执行功能的模块。
 /// </summary>
-public class WorkflowTestModule : IProgramModule, IProgramModuleSwaggerUiOptionsConfigurator, IProgramModuleMvcConfigurator
+public class WorkflowTestModule : IProgramModuleSwaggerUiOptionsConfigurator, IProgramModuleMvcConfigurator
 {
     /// <summary>
     /// Api文档的GroupName

@@ -10,7 +10,6 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.AppWeb;
 using YAESandBox.Authentication;
-using YAESandBox.Seed.API;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.AspNetCore.Secret;
@@ -159,7 +158,7 @@ var app = builder.Build();
 
 // 配置中间件
 // =================== 统一插件静态文件挂载 ===================
-allModules.ForEachModules<IProgramModuleStaticAssetConfigurator>(it => 
+allModules.ForEachModules<IProgramModuleStaticAssetConfigurator>(it =>
     it.ConfigureStaticAssets(app, app.Environment));
 // =========================================================
 
@@ -229,7 +228,7 @@ namespace YAESandBox.AppWeb
         // 一个静态字典来持有我们创建的所有插件加载上下文
         private static readonly Dictionary<string, PluginAssemblyLoadContext> PluginLoadContexts = new();
         private static bool _isResolvingEventHooked = false;
-        
+
         /// <summary>
         /// 发现并加载所有模块，包括内置模块和来自插件目录的动态模块。
         /// </summary>
@@ -245,7 +244,7 @@ namespace YAESandBox.AppWeb
                 _isResolvingEventHooked = true;
                 Console.WriteLine("[插件加载器] 已挂载默认上下文的程序集解析事件。");
             }
-            
+
             // 1. 定义内置的核心模块列表
             var coreModules = CoreModules;
 
@@ -254,7 +253,7 @@ namespace YAESandBox.AppWeb
 
             // 2. 从发现服务获取所有插件
             var discoveredPlugins = pluginDiscoveryService.DiscoverPlugins();
-            
+
             // 1. 遍历每个插件目录
             foreach (var plugin in discoveredPlugins)
             {
@@ -280,7 +279,7 @@ namespace YAESandBox.AppWeb
 
                         // 4. 创建独立的、可回收的加载上下文，并使用入口点自己的路径来初始化解析器。
                         var loadContext = new PluginAssemblyLoadContext(entryPointDllPath);
-                        
+
                         // 将创建的上下文存入我们的静态字典中
                         PluginLoadContexts[entryPointDllPath] = loadContext;
 
@@ -321,7 +320,7 @@ namespace YAESandBox.AppWeb
             AllModules = allModules;
             return (allModules, loadedPluginAssemblies.Distinct().ToList());
         }
-        
+
         /// <summary>
         /// 当默认的 AssemblyLoadContext 无法解析程序集时，此方法将被调用。
         /// 它会轮询我们所有的插件上下文，看看是否有任何一个可以提供所需的程序集。
@@ -353,7 +352,6 @@ namespace YAESandBox.AppWeb
 
         private static IReadOnlyList<IProgramModule> CoreModules { get; } =
         [
-            new SeedModule(),
             new AiServiceConfigModule(),
             new WorkflowConfigModule(),
             new WorkflowTestModule(),

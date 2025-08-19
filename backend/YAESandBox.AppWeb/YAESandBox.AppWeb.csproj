@@ -28,11 +28,6 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.Seed.API\YAESandBox.Seed.API.csproj"/>
-        <ProjectReference Include="..\YAESandBox.Seed.DTOs\YAESandBox.Seed.DTOs.csproj"/>
-        <ProjectReference Include="..\YAESandBox.Seed.Services\YAESandBox.Seed.Services.csproj"/>
-        <ProjectReference Include="..\YAESandBox.Seed.Block\YAESandBox.Seed.Block.csproj"/>
-        <ProjectReference Include="..\YAESandBox.Seed\YAESandBox.Seed.csproj"/>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.Test\YAESandBox.Workflow.Test.csproj"/>
