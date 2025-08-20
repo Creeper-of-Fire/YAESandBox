@@ -35,7 +35,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import {computed, onUnmounted, ref, watch} from 'vue';
+import {computed, onDeactivated, onUnmounted, ref, watch} from 'vue';
 import {type MonacoEditor, VueMonacoEditor} from '@guolao/vue-monaco-editor';
 import {NAlert, NSpin} from 'naive-ui';
 import {useDebounceFn} from '@vueuse/core';
@@ -211,7 +211,6 @@ function handleResizeStart(startEvent: MouseEvent)
 <style scoped>
 .monaco-editor-container {
   position: relative;
-  width: 100%;
   border: 1px solid #333; /* 可以根据你的主题调整 */
   border-radius: 4px;
   text-align: left; /* 确保编辑器内容左对齐 */
@@ -254,6 +253,7 @@ function handleResizeStart(startEvent: MouseEvent)
   opacity: 0.5;
   transition: opacity 0.2s;
 }
+
 .resize-handle:hover {
   opacity: 1;
 }

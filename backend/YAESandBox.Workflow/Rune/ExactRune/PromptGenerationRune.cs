@@ -296,6 +296,9 @@ internal partial record PromptGenerationRuneConfig
 [ClassLabel("✍️提示词")]
 internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGenerationRuneProcessor>
 {
+    private const string RoleGroupName = "提示词角色";
+    private const string InsertGroupName = "插入";
+
     /// <summary>
     /// 使用的提示词列表变量的名称（若存在则在列表中添加，若不存在则创建）。
     /// </summary>
@@ -311,8 +314,9 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
     /// 生成的提示词的角色类型 (System, User, Assistant)。
     /// </summary>
     [Required]
+    [InlineGroup(RoleGroupName)]
     [Display(
-        Name = "提示词角色类型",
+        Name = "角色类型",
         Description = "选择此提示词在对话历史中扮演的角色。"
     )]
     [StringOptions(
@@ -333,10 +337,11 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
     /// 在某些AI模型中，可以为提示词角色指定一个名称 (例如，Claude中的User/Assistant名称)。
     /// </summary>
     [Display(
-        Name = "提示词角色名",
+        Name = "角色名",
         Description = "为提示词角色指定一个具体名称，可以让某些模型更好的区分不同的用户或助手，对于部分高级模型有用。",
         Prompt = "例如：'DeepSeek' 或 'はちみ'"
     )]
+    [InlineGroup(RoleGroupName)]
     public string? PromptNameInAiModel { get; init; }
 
     /// <summary>
@@ -344,6 +349,7 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
     /// </summary>
     [Required]
     [DefaultValue(0)]
+    [InlineGroup(InsertGroupName)]
     [Display(
         Name = "插入深度",
         Description = "0=在列表末尾操作，1=在倒数第二个提示词附近操作，以此类推。如果深度超出范围，则定位到列表的第一个提示词。"
@@ -359,6 +365,7 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
         Name = "插入位置",
         Description = "决定新提示词是插入到目标提示词之前还是之后。"
     )]
+    [InlineGroup(InsertGroupName)]
     [StringOptions([nameof(InsertionPositionEnum.Before), nameof(InsertionPositionEnum.After)], ["之前", "之后"])]
     public string InsertionPosition { get; init; } = nameof(InsertionPositionEnum.After);
 
@@ -370,6 +377,7 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
         Name = "追加模式",
         Description = "指示最终操作是追加内容到上一个提示词 (true) 还是添加一个新的提示词项 (false)。\n仅当本提示词和上一个提示词的角色、角色名相同时。"
     )]
+    [InlineGroup(InsertGroupName)]
     [DefaultValue(true)]
     public bool IsAppendMode { get; init; } = true;
 

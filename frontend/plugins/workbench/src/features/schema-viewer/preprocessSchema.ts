@@ -3,452 +3,326 @@ import {type Component, defineAsyncComponent, markRaw} from "vue";
 import {getVuePluginComponent} from "#/features/schema-viewer/plugin-loader.ts";
 import WebComponentWrapper from "#/features/schema-viewer/WebComponentWrapper.vue";
 import MonacoEditorWidget from "#/features/schema-viewer/field-widget/MonacoEditorWidget.vue";
+import MyCustomStringAutoComplete from "#/features/schema-viewer/field-widget/MyCustomStringAutoComplete.vue";
+import SliderWithInputWidget from "#/features/schema-viewer/field-widget/SliderWithInputWidget.vue";
+import {NAutoComplete, NCheckbox, NInput, NInputNumber, NSelect, NSwitch} from "naive-ui";
+import RadioGroupWidget from "#/features/schema-viewer/field-widget/RadioGroupWidget.vue";
 
 // =================================================================
-// 1. 动态组件定义
-// 使用 markRaw 和 defineAsyncComponent 是处理动态组件的最佳实践，
-// 它可以防止 Vue 对组件对象进行不必要的响应式代理，从而提高性能。
+// 1. 组件注册表
 // =================================================================
-const MyCustomStringAutoComplete = markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/MyCustomStringAutoComplete.vue')));
-const SliderWithInputWidget = markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/SliderWithInputWidget.vue')));
-// --- 主应用内建的、通过键名引用的自定义组件 ---
-// 这是我们为 RenderWithMainAppComponent 设计的注册表
+
+// 主应用内建的、通过键名引用的自定义组件
 const MAIN_APP_WIDGETS: Record<string, Component> = {
     'AiConfigEditorWidget': markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/AiConfigEditorWidget.vue')))
-    // 未来可以添加更多内建组件...
+    // ... 其他内建组件
 };
 
-type SchemaType = 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array' | 'null';
+// 将字符串标识符映射到实际的组件
+const COMPONENT_MAP: Record<string, Component> = {
+    // Naive UI 标准组件的别名
+    // 使用 .then(m => m.NComponent) 是因为 naive-ui 的具名导出需要这样处理
+    'Input': markRaw(NInput),
+    'InputNumber': markRaw(NInputNumber),
+    'Select': markRaw(NSelect),
+    'Switch': markRaw(NSwitch),
+    'Checkbox': markRaw(NCheckbox),
+    'AutoComplete': markRaw(NAutoComplete),
+
+    // 自定义 Widget 组件
+    'SliderWithInputWidget': markRaw(SliderWithInputWidget),
+    'MyCustomStringAutoComplete': markRaw(MyCustomStringAutoComplete),
+    'MonacoEditorWidget': markRaw(MonacoEditorWidget),
+    'WebComponentWrapper': markRaw(WebComponentWrapper),
+    'RadioGroupWidget': markRaw(RadioGroupWidget),
+
+    // 插件和内建组件
+    ...MAIN_APP_WIDGETS,
+};
 
 // =================================================================
 // 2. 类型定义
-// 为 JSON Schema 及其 UI 扩展属性定义严谨的类型接口
 // =================================================================
+
+// JSON Schema 字段的类型接口 (保持与原始文件一致)
 interface FieldProps
 {
-    // 标准 JSON Schema 字段
-    type?: SchemaType | SchemaType[];
+    type?: string | string[];
     title?: string;
     description?: string;
-    default?: unknown;
-
-    // 数字相关
-    maximum?: number;
-    minimum?: number;
-    multipleOf?: number;
-
-    // 枚举相关
-    enum?: unknown[];
-    enumNames?: string[];
-    'x-enumNames'?: string[]; // 兼容 x- 前缀
-
-    // 结构相关
-    oneOf?: (FieldProps | { $ref: string })[];
+    default?: any;
     properties?: Record<string, FieldProps>;
-    definitions?: Record<string, FieldProps>;
     items?: FieldProps | FieldProps[];
+    required?: string[];
+    enum?: any[];
+    enumNames?: string[];
+    'x-enumNames'?: string[];
+    minimum?: number;
+    maximum?: number;
 
-    // UI 扩展字段 (非标准)
-    'ui:widget'?: string | Component;
-    'ui:custom-renderer-property'?: Component;
-    'ui:hidden'?: boolean;
-    'ui:options'?: {
-        isEditableSelectOptions?: boolean;
-        [key: string]: unknown;
-    };
-    'ui:enumOptions'?: { label: string; value: unknown }[];
-
-    // 允许其他任何未定义的属性
-    [key: string]: unknown;
+    // ... 其他 JSON Schema 属性
+    [key: string]: any;
 }
 
-/**
- * 检查一个字段是否为指定的目标类型，正确处理 type 为字符串或数组的情况。
- * @param field - 要检查的字段 Schema。
- * @param targetType - 目标类型，如 'array', 'object', 'number' 等。
- * @returns - 如果字段是目标类型，则返回 true，否则返回 false。
- */
-function isFieldType(field: FieldProps, targetType: 'string' | 'number' | 'integer' | 'boolean' | 'object' | 'array'): boolean
+// 转换后输出的视图模型接口
+export interface FormFieldViewModel
 {
-    const fieldType = field.type;
-    if (typeof fieldType === 'string')
-    {
-        return fieldType === targetType;
-    }
-    if (Array.isArray(fieldType))
-    {
-        // 只要数组中包含目标类型即可，忽略 'null' 等其他类型
-        return fieldType.includes(targetType);
-    }
-    return false;
+    name: string; // 字段的唯一标识，用于 vee-validate
+    label: string;
+    description?: string;
+    component: string; // 组件在 COMPONENT_MAP 中的键名
+    props: Record<string, any>; // 传递给组件的 props
+    rules: string[]; // vee-validate 的校验规则数组
+    initialValue?: any;
+    inlineGroup?: string;
+    type: string;
+    // 未来可扩展布局和依赖关系
+    // layout?: { inline?: boolean; group?: string };
+    // dependsOn?: { field: string; value: any };
 }
 
 // =================================================================
-// 3. 导出主函数 (入口)
+// 3. 主转换函数
 // =================================================================
-/**
- * 预处理整个 JSON Schema，递归地为其属性注入 UI Widget 并修复结构问题。
- * @param originalSchema - 从后端获取的原始 JSON Schema 对象。
- * @returns - 处理后、可供 UI 框架使用的 Schema 对象。
- */
-export function preprocessSchemaForWidgets(originalSchema: Record<string, any>): FieldProps
+
+export function preprocessSchemaForVeeValidate(
+    originalSchema: Record<string, any>
+): { fields: FormFieldViewModel[], componentMap: Record<string, Component> }
 {
-    if (typeof originalSchema !== 'object' || originalSchema === null || Array.isArray(originalSchema))
+    if (typeof originalSchema !== 'object' || originalSchema === null)
     {
-        return {};
+        return {fields: [], componentMap: COMPONENT_MAP};
     }
     const schema = cloneDeep(originalSchema as FieldProps);
+    const fields = processNode(schema, '', []);
 
-    // ================= 优先检查类级别的组件渲染器 =================
-    // 这是我们的“快速通道”，如果检测到，就直接处理并返回，不再进行深度递归。
-    const classVueComponent = schema['x-vue-component-class'] as string;
-    if (classVueComponent)
-    {
-        const component = getVuePluginComponent(classVueComponent);
-        if (component)
-        {
-            // 注入我们自己约定的、vue-form不认识的属性
-            schema['ui:whole-component-renderer'] = component;
-            // 清理掉原始指令
-            delete schema['x-vue-component-class'];
-            // 直接返回，跳过后续所有递归处理
-            return schema;
-        }
-        else
-        {
-            console.warn(`[preprocessSchema] 未找到类级别插件组件: "${classVueComponent}"`);
-        }
-    }
-    // =====================================================================
-
-    recursivePreprocess(schema, schema.definitions || {});
-    return schema;
+    return {fields, componentMap: COMPONENT_MAP};
 }
 
 // =================================================================
-// 4. 真正一视同仁的递归处理函数
+// 4. 递归处理函数
 // =================================================================
-/**
- * 内部递归函数，对任何 Schema 节点执行相同的处理流程。
- * @param schemaNode - 当前正在处理的任何 Schema 节点。
- * @param definitions - 顶层的 definitions 集合，用于在整个递归过程中解析 $ref。
- */
-function recursivePreprocess(schemaNode: FieldProps, definitions: Record<string, FieldProps>): void
+
+function processNode(
+    node: FieldProps,
+    path: string,
+    requiredFields: string[]
+): FormFieldViewModel[]
 {
-    // =================================================================
-    // 处理包含 'null' 的 type 数组。
-    // 在处理任何节点之前，先清理其 type 属性，这可以简化后续的类型判断逻辑。
-    // =================================================================
-    if (Array.isArray(schemaNode.type))
+    // --- 处理 hidden 字段 ---
+    if (node['ui:hidden'] === true)
     {
-        const nonNullTypes = schemaNode.type.filter(t => t !== 'null');
-        if (nonNullTypes.length === 1)
-        {
-            // 如果移除 'null' 后只剩一种类型，则将 type 从数组简化为字符串。
-            // 例如: ['string', 'null'] -> 'string'
-            schemaNode.type = nonNullTypes[0];
-        }
-        else
-        {
-            // 否则，更新为不含 'null' 的数组。
-            // 例如: ['string', 'number', 'null'] -> ['string', 'number']
-            // 如果原数组只有 ['null']，则会变为空数组 []，该字段将无类型。
-            schemaNode.type = nonNullTypes;
-        }
+        return []; // 如果字段被标记为隐藏，则不生成任何视图模型，直接返回空数组
     }
 
-    // 步骤 1: 首先处理当前节点自身的元数据转换（oneOf, widget 等）。
-    // 这确保了在检查子节点之前，父节点的信息是最终的。
-    // preprocessSingleField 的逻辑是正确的，它返回了一个我们想要的扁平化对象。
-    const processedNode = preprocessSingleField(cloneDeep(schemaNode), definitions);
-
-    // =================================================================
-    // 步骤 2: 替换 schemaNode 的内容，而不是合并。
-    // 这可以确保像 oneOf 这样的属性被彻底从原始 schemaNode 中移除。
-    // =================================================================
-    // 2.1 先清空当前节点的所有键
-    Object.keys(schemaNode).forEach(key => delete (schemaNode as Record<string, any>)[key]);
-    // 2.2 再将新节点的所有属性复制过来
-    Object.assign(schemaNode, processedNode);
-
-    // 步骤 3: 处理 definitions (如果当前节点有的话)
-    // 确保在处理 properties/items 之前，所有 definitions 已被处理。
-    if (schemaNode.definitions)
+    // 类级别组件渲染器: 如果存在，则将整个对象视为单个字段
+    const classVueComponent = node['x-vue-component-class'] as string;
+    if (classVueComponent && getVuePluginComponent(classVueComponent))
     {
-        for (const defName in schemaNode.definitions)
-        {
-            recursivePreprocess(schemaNode.definitions[defName], definitions);
-        }
+        const componentName = `plugin:${classVueComponent}`;
+        COMPONENT_MAP[componentName] = getVuePluginComponent(classVueComponent)!;
+        return [createFieldViewModel(node, path, requiredFields, componentName)];
     }
 
-    // 步骤 4: 处理 properties (如果当前节点是对象)
-    if (schemaNode.properties)
+    const customRendererKey = node['x-custom-renderer-property'] as string;
+    if (customRendererKey && MAIN_APP_WIDGETS[customRendererKey])
     {
-        for (const fieldName in schemaNode.properties)
-        {
-            recursivePreprocess(schemaNode.properties[fieldName], definitions);
-        }
+        return [createFieldViewModel(node, path, requiredFields, customRendererKey)];
     }
 
-    // 步骤 5: 处理 items (如果当前节点是数组)
-    // 这是修复问题的核心所在，它对任何数组类型的节点都生效。
-    if (isFieldType(schemaNode, 'array') && schemaNode.items && !Array.isArray(schemaNode.items) && typeof schemaNode.items === 'object')
+    // 根据类型处理
+    const type = getPrimaryType(node.type);
+    switch (type)
     {
-        const itemSchema = schemaNode.items;
+        case 'object':
+            if (node.properties)
+            {
+                const required = node.required || [];
+                // 1. 决定属性的遍历顺序
+                //    - 如果存在 'ui:order' 数组，就使用它
+                //    - 否则，回退到使用 Object.keys 的默认顺序
+                const propertyKeys: string[] = node['ui:order'] && Array.isArray(node['ui:order'])
+                    ? node['ui:order']
+                    : Object.keys(node.properties);
 
-        // --- 关键修复逻辑：一视同仁地处理所有数组和其 items ---
-        // 比较当前节点（父数组）和其 items 的描述，如果重复则删除 items 的。
-        if (itemSchema.title && itemSchema.title === schemaNode.title)
-        {
-            delete itemSchema.title;
-        }
-        if (itemSchema.description && itemSchema.description === schemaNode.description)
-        {
-            delete itemSchema.description;
-        }
+                // 2. 使用我们确定的顺序来遍历属性
+                return propertyKeys.flatMap(key =>
+                {
+                    const propNode = node.properties![key];
+                    // 安全检查：如果 ui:order 中的 key 在 properties 中不存在，则跳过
+                    if (!propNode) {
+                        return [];
+                    }
 
-        // 清理完毕后，对 items 节点本身进行递归处理。
-        recursivePreprocess(itemSchema, definitions);
-    }
-
-    // =================================================================
-    // 步骤 6: 最终custom-renderer-property分类和转换逻辑
-    // 在所有子节点都处理完毕后，对当前节点进行最终决策。
-    // =================================================================
-    if (schemaNode['ui:custom-renderer-property'])
-    {
-        if (isFieldType(schemaNode, 'object'))
-        {
-            // 这是对象级自定义组件
-            // 1. 保留 ui:custom-renderer-property 给我们的 CustomFieldRenderer 使用
-            // 2. 添加 ui:hidden: true，告诉 vue3-form-naive 不要渲染这个对象
-            if (!schemaNode['ui:options'])
-                schemaNode['ui:options'] = {};
-            schemaNode['ui:hidden'] = true;
-        }
-        else
-        {
-            // 这是字段级自定义组件
-            // 1. 将自定义组件赋给官方的 ui:widget
-            schemaNode['ui:widget'] = schemaNode['ui:custom-renderer-property'];
-            // 2. 清理掉我们的中间属性
-            delete schemaNode['ui:custom-renderer-property'];
-        }
+                    const newPath = path ? `${path}.${key}` : key;
+                    return processNode(propNode, newPath, required);
+                });
+            }
+            return [];
+        case 'array':
+            // vee-validate 使用 useFieldArray 处理数组，这里暂时简化
+            // 可以创建一个自定义组件来管理数组项的增删
+            console.warn(`Array type at path "${path}" is not fully supported in this simplified conversion.`);
+            return [];
+        default:
+            // 基本类型 (string, number, boolean)
+            return [createFieldViewModel(node, path, requiredFields)];
     }
 }
 
+// =================================================================
+// 5. ViewModel 创建辅助函数
+// =================================================================
 
-// =================================================================
-// 5. 单个字段处理函数 (无递归)
-// =================================================================
-/**
- * 预处理【单个字段】的 Schema 属性，主要负责 oneOf 扁平化和 widget 注入。
- * 这个函数不进行递归，只处理当前层级的字段，实现关注点分离。
- * @param fieldProps - 原始字段属性对象。
- * @param definitions - 顶层的 definitions 对象，用于解析 $ref。
- * @returns - 处理后的字段属性对象。
- */
-function preprocessSingleField(fieldProps: FieldProps, definitions?: Record<string, FieldProps>): FieldProps
+function createFieldViewModel(
+    node: FieldProps,
+    name: string,
+    parentRequired: string[],
+    overrideComponent?: string
+): FormFieldViewModel
 {
-    // 对传入的对象进行操作，因为上层函数会用 Object.assign 合并
-    let processedProps = fieldProps;
+    const {component, props} = determineComponentAndProps(node);
+    const rules = determineValidationRules(node, name, parentRequired);
+    const fieldName = name.split('.').pop()!;
+    const type = getPrimaryType(node.type); // 获取字段类型
 
-    // === oneOf 扁平化逻辑 ===
-    if (Array.isArray(processedProps.oneOf) && processedProps.oneOf.length === 1)
+    let initialValue = node.default;
+
+    return {
+        name,
+        label: node.title || fieldName,
+        description: node.description,
+        component: overrideComponent || component,
+        props,
+        rules,
+        initialValue,
+        inlineGroup: node['ui:inlineGroup'] as string | undefined,
+        type: type,
+    };
+}
+
+function getPrimaryType(type: string | string[] | undefined): string
+{
+    if (Array.isArray(type))
     {
-        let singleOption = processedProps.oneOf[0];
+        return type.find(t => t !== 'null') || 'string';
+    }
+    return type || 'string';
+}
 
-        if (singleOption && typeof singleOption === 'object' && '$ref' in singleOption && typeof singleOption.$ref === 'string' && definitions)
-        {
-            const refPath = singleOption.$ref.split('/');
-            const defName = refPath[refPath.length - 1];
-            if (defName && definitions[defName])
-            {
-                // 注意：definitions 里的项可能已经被预处理过了
-                singleOption = definitions[defName];
-            }
-        }
+function determineComponentAndProps(node: FieldProps): { component: string; props: Record<string, any> }
+{
+    const props: Record<string, any> = {placeholder: node.description || ''};
+    let component = 'Input'; // 默认组件
 
-        if (singleOption && typeof singleOption === 'object' && !Array.isArray(singleOption))
-        {
-            const originalDescription = processedProps.description;
-            // 合并时，processedProps 的属性优先级更高，会覆盖 singleOption 的同名属性
-            processedProps = {...singleOption, ...processedProps};
-            // 如果合并后 description 丢失了，则恢复原始的
-            if (originalDescription && !processedProps.description)
-            {
-                processedProps.description = originalDescription;
-            }
-        }
-        delete processedProps.oneOf;
+    // 插件或WebComponent
+    const vuePlugin = node['x-vue-component-property'] as string;
+    if (vuePlugin && getVuePluginComponent(vuePlugin))
+    {
+        const componentName = `plugin:${vuePlugin}`;
+        COMPONENT_MAP[componentName] = getVuePluginComponent(vuePlugin)!;
+        return {component: componentName, props};
+    }
+    const webComponent = node['x-web-component-property'] as string;
+    if (webComponent)
+    {
+        props.tagName = webComponent;
+        return {component: 'WebComponentWrapper', props};
+    }
+    const monacoConfig = node['x-monaco-editor'] as any;
+    if (monacoConfig)
+    {
+        Object.assign(props, monacoConfig);
+        return {component: 'MonacoEditorWidget', props};
     }
 
-    // === Widget 注入逻辑 ===
-    // 确保 ui:options 存在
-    if (!processedProps['ui:options'])
+    // 根据类型和属性决定组件
+    const type = getPrimaryType(node.type);
+
+    if (node.enum)
     {
-        processedProps['ui:options'] = {};
-    }
+        // 定义一个阈值，少于等于这个数量的选项将使用 RadioGroup
+        const RADIO_GROUP_THRESHOLD = 4;
 
-    // 规则 1: 数字类型
-    // 使用 isFieldType 辅助函数进行健壮的数字类型检查。
-    const isNumeric = isFieldType(processedProps, 'number') || isFieldType(processedProps, 'integer');
-    if (isNumeric && !processedProps['ui:widget'])
-    {
-        if (typeof processedProps.maximum === 'number' && typeof processedProps.minimum === 'number')
-        {
-            processedProps['ui:widget'] = SliderWithInputWidget;
-            const options = processedProps['ui:options'];
-            options.tuum = processedProps.multipleOf;
-            options.default = processedProps.default;
-            options.max = processedProps.maximum;
-            options.min = processedProps.minimum;
-            if (processedProps.type !== 'integer')
-            {
-                delete processedProps.multipleOf;
-            }
-        }
-        else
-        {
-            processedProps['ui:widget'] = 'InputNumberWidget';
-            processedProps['ui:options'].showButton = false;
-        }
-    }
-
-    // 规则 2: 枚举类型
-    const enumValues = processedProps.enum;
-    const enumNames = processedProps.enumNames || processedProps['x-enumNames'];
-
-    if (Array.isArray(enumValues) && Array.isArray(enumNames))
-    {
-        if (processedProps['ui:options']?.isEditableSelectOptions === true)
-        {
-            if (!processedProps['ui:widget'])
-            {
-                processedProps['ui:widget'] = MyCustomStringAutoComplete;
-            }
-            // 使用后删除该标记
-            delete processedProps['ui:options'].isEditableSelectOptions;
-        }
-        else if (!processedProps['ui:widget'])
-        {
-            processedProps['ui:widget'] = 'RadioWidget';
-        }
-
-        processedProps['ui:enumOptions'] = enumValues.map((value, index) => ({
-            label: (enumNames[index] as string) ?? String(value),
-            value
+        const enumNames = node.enumNames || node['x-enumNames'] || node.enum;
+        props.options = node.enum.map((value, index) => ({
+            label: String(enumNames[index]),
+            value: value
         }));
+        props.clearable = true;
 
-        delete processedProps.enum;
-        delete processedProps.enumNames;
-        delete processedProps['x-enumNames'];
+        if (
+            Array.isArray(node.enum) &&
+            node.enum.length <= RADIO_GROUP_THRESHOLD &&
+            // 确保 isEditableSelectOptions 优先级更高
+            !node['ui:options']?.isEditableSelectOptions
+        ) {
+            component = 'RadioGroupWidget';
+        } else {
+            component = node['ui:options']?.isEditableSelectOptions ? 'MyCustomStringAutoComplete' : 'Select';
+        }
+        return {component, props};
     }
 
-    // 规则 3: DataType 类型
-    if (processedProps.dataType === 'multilineText')
+    switch (type)
     {
-        // 只有在没有被手动指定 widget 时，我们才注入配置
-        if (!processedProps['ui:widget'])
-        {
-            // 不再是: processedProps['ui:widget'] = 'textarea';
-            // 而是，为默认的 InputWidget 注入配置参数
-            processedProps['ui:options'].type = 'textarea';
-
-            // 我们可以提供一些更友好的默认值，比如自动调整高度
-            if (processedProps['ui:options'].autosize === undefined)
+        case 'number':
+        case 'integer':
+            if (typeof node.minimum === 'number' && typeof node.maximum === 'number')
             {
-                processedProps['ui:options'].autosize = {
-                    minRows: 3
-                };
+                props.min = node.minimum;
+                props.max = node.maximum;
+                props.step = node.multipleOf || 1;
+                component = 'SliderWithInputWidget';
             }
-            // TODO 之后可能采用 NInput的count-graphemes来实现token自动计算/估算？
-        }
-
-        // 处理完毕后，删除这个自定义的、非标准的属性，保持最终 schema 的干净
-        delete processedProps.dataType;
+            else
+            {
+                component = 'InputNumber';
+            }
+            break;
+        case 'boolean':
+            component = 'Switch';
+            break;
+        case 'string':
+            if (node.dataType === 'multilineText')
+            {
+                // Naive UI Input 的多行模式
+                props.type = 'textarea';
+                props.autosize = {minRows: 3}; // 提供一个合理的默认值
+                component = 'Input';
+            }
+            else
+            {
+                component = 'Input';
+            }
+            break;
     }
 
-    // === 动态组件注入逻辑 ===
-    const vueComponentName = processedProps['x-vue-component-property'] as string;
-    const wcTagName = processedProps['x-web-component-property'] as string;
+    return {component, props};
+}
 
-    // 优先使用 Vue 组件
-    if (vueComponentName)
+function determineValidationRules(node: FieldProps, name: string, parentRequired: string[]): string[]
+{
+    const rules: string[] = [];
+    const fieldName = name.split('.').pop()!;
+    if (parentRequired.includes(fieldName))
     {
-        const component = getVuePluginComponent(vueComponentName);
-        if (component)
-        {
-            processedProps['ui:custom-renderer-property'] = component;
-        }
-        else
-        {
-            console.warn(`未找到名为 "${vueComponentName}" 的Vue插件组件。`);
-        }
+        rules.push('required');
     }
-    // 其次使用 Web Component
-    else if (wcTagName)
+
+    const type = getPrimaryType(node.type);
+    if (type === 'number' || type === 'integer')
     {
-        processedProps['ui:custom-renderer-property'] = WebComponentWrapper;
-        processedProps['ui:options'] ??= {};
-        processedProps['ui:options'].tagName = wcTagName;
+        rules.push('numeric');
+        if (node.minimum !== undefined)
+            rules.push(`min_value:${node.minimum}`);
+        if (node.maximum !== undefined)
+            rules.push(`max_value:${node.maximum}`);
     }
-
-    // monaco-editor 处理
-    const monacoConfig = processedProps['x-monaco-editor'] as {
-        language: string;
-        simpleConfigUrl: string;
-        languageServerWorkerUrl: string
-    } | undefined;
-    if (monacoConfig && monacoConfig.language)
+    if (node.format === 'email')
     {
-        // 1. 设置 ui:custom-renderer-property 为我们的 MonacoEditorWidget 组件
-        processedProps['ui:custom-renderer-property'] = MonacoEditorWidget;
-
-        // 2. 确保 ui:options 存在
-        if (!processedProps['ui:options'])
-        {
-            processedProps['ui:options'] = {};
-        }
-
-        // 3. 将 monacoConfig 的内容作为 props 传递给 ui:options
-        // vue3-form-naive 会将 ui:options 的所有键值对作为 props 传递给自定义 widget
-        processedProps['ui:options'].language = monacoConfig.language;
-        processedProps['ui:options'].simpleConfigUrl = monacoConfig.simpleConfigUrl;
-        processedProps['ui:options'].languageServerWorkerUrl = monacoConfig.languageServerWorkerUrl;
-
-        // 4. (可选) 删除自定义指令，保持最终 schema 干净
-        delete processedProps['x-monaco-editor'];
+        rules.push('email');
     }
-
-    // === 主应用内建组件注入逻辑 ===
-    const customRendererKey = processedProps['x-custom-renderer-property'] as string;
-    if (customRendererKey)
-    {
-        const component = MAIN_APP_WIDGETS[customRendererKey];
-        if (component)
-        {
-            // ui:widget 不支持 type:object
-            // 错误的方式：processedProps['ui:widget'] = component;
-            // 正确的方式：使用我们自己的、不会被表单库解释的属性
-            processedProps['ui:custom-renderer-property'] = component;
-            processedProps['ui:hidden'] = true;
-            delete processedProps['oneOf']
-        }
-        else
-        {
-            console.warn(`未在主应用中找到键名为 "${customRendererKey}" 的自定义渲染组件。`);
-        }
-
-        // 确保 x-custom-renderer-property 指令被清理掉，但我们新的 ui:custom-renderer-property 属性被保留
-        delete processedProps['x-custom-renderer-property'];
-    }
-
-    // 清理空的 ui:options
-    if (processedProps['ui:options'] && Object.keys(processedProps['ui:options']).length === 0)
-    {
-        delete processedProps['ui:options'];
-    }
-
-    return processedProps;
+    // ... 可以添加更多规则映射
+    return rules;
 }

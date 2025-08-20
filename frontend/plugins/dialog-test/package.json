@@ -19,9 +19,9 @@
     "./*": "./src/*"
   },
   "peerDependencies": {
-    "naive-ui": "^2.0.0",
-    "pinia": "^3.0.0",
-    "vue": "^3.0.0"
+    "naive-ui": "^2.42.0",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.18"
   },
   "dependencies": {
     "@yaesandbox-frontend/core-services": "workspace:*",
@@ -29,13 +29,13 @@
     "@microsoft/fetch-event-source": "^2.0.1",
     "axios": "^1.11.0",
     "form-data": "^4.0.4",
-    "naive-ui": "^2.42.0",
-    "pinia": "^3.0.3",
     "uuid": "^11.1.0",
-    "vue": "^3.5.18",
     "vue-router": "^4.5.1",
     "@yaesandbox-frontend/plugin-workbench": "workspace:*"
   },
   "devDependencies": {
+    "vue": "^3.5.18",
+    "pinia": "^3.0.3",
+    "naive-ui": "^2.42.0"
   }
 }

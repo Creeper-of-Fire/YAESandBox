@@ -294,7 +294,7 @@ function useTransitionDisabler()
 export function useThemeTransition(
     finalThemeName: Readonly<Ref<'light' | 'dark'>>,
     themes: { light: BuiltInGlobalTheme, dark: BuiltInGlobalTheme },
-    duration = 1000 // 过渡持续时间 (ms)
+    duration = 300 // 过渡持续时间 (ms)
 ): { transitioningTheme: Ref<UnwrapRef<GlobalTheme>, UnwrapRef<GlobalTheme> | GlobalTheme> }
 {
     // 初始状态直接使用目标主题，避免闪烁

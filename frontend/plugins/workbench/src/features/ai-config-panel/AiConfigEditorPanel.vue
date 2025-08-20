@@ -83,7 +83,7 @@
 import {computed, h, nextTick, onMounted, ref, watch} from 'vue';
 import {NButton, NCard, NEmpty, NFlex, NFormItem, NInput, NPopconfirm, NSelect, NSpin, useDialog, useMessage} from 'naive-ui';
 import {storeToRefs} from 'pinia';
-import {cloneDeep, isEqual} from 'lodash-es';
+import {cloneDeep} from 'lodash-es';
 import type {AbstractAiProcessorConfig} from '#/types/generated/ai-config-api-client';
 import {useAiConfigurationStore} from "#/features/ai-config-panel/useAiConfigurationStore";
 import {useAiConfigSchemaStore} from "#/features/ai-config-panel/aiConfigSchemaStore";
@@ -130,16 +130,27 @@ onMounted(async () =>
 // --- UI Actions (calling store actions) ---
 async function handleSave()
 {
-  if (!currentConfigSet.value || !selectedUuid.value) return;
+  if (!currentConfigSet.value || !selectedUuid.value || !dynamicFormRendererRef.value) return;
 
-  try
+  const validationResult = await dynamicFormRendererRef.value.validate();
+
+  if (!validationResult.valid)
   {
-    await dynamicFormRendererRef.value?.validate();
-  } catch (errors)
-  {
-    message.error('表单校验失败，请检查字段。');
-    return;
+    // 如果校验结果的 valid 标志为 false
+    message.error('表单校验失败，请检查所有字段是否填写正确。');
+
+    // 可以在这里做得更精细，比如滚动到第一个错误字段
+    const firstErrorField = Object.keys(validationResult.errors)[0];
+    if (firstErrorField)
+    {
+      const el = document.getElementById(firstErrorField);
+      el?.focus(); // 尝试聚焦到第一个错误的输入框
+      el?.scrollIntoView({behavior: 'smooth', block: 'center'});
+    }
+
+    return; // 中断保存流程
   }
+  // 如果代码能执行到这里，说明校验已通过
 
   // 构造最新的配置集数据
   const updatedSet = cloneDeep(currentConfigSet.value);
@@ -313,13 +324,3 @@ watch(selectedAiRuneType, async (newType) =>
 });
 
 </script>
-
-<style scoped>
-.n-card {
-  margin-bottom: 20px;
-}
-
-.n-form-item {
-  margin-bottom: 0;
-}
-</style>

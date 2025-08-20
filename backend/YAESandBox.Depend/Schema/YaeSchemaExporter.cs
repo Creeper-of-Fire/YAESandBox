@@ -16,6 +16,7 @@ public static class YaeSchemaExporter
     private static void ConfigureDefaultOptions(YaeSchemaOptions options)
     {
         options.SchemaProcessors.AddRange([
+            new InheritanceOrderProcessor(), 
             new DisplayAttributeProcessor(),
             new ClassLabelProcessor(),
             new CustomObjectWidgetRendererSchemaProcessor(),
@@ -23,7 +24,8 @@ public static class YaeSchemaExporter
             new DataTypeProcessor(),
             new RangeProcessor(),
             new StringOptionsProcessor(),
-            new ComplexDefaultValueProcessor()
+            new ComplexDefaultValueProcessor(),
+            new InlineGroupProcessor(),
         ]);
 
         options.PostProcessSchema = BuildUiOrder;
@@ -81,63 +83,118 @@ public static class YaeSchemaExporter
         return schemaObj;
     }
 
-     /// <summary>
-    /// 对根 Schema 进行后处理，根据属性上暂存的 "x-temp-ui-order" 元数据，
+    /// <summary>
+    /// 对根 Schema 进行后处理，根据属性上暂存的元数据，
     /// 生成 "ui:order" 数组来控制前端表单的字段排序。
+    /// 排序规则:
+    /// 1. 按显式指定的 Order (来自 DisplayAttribute 等) 升序。
+    /// 2. 按继承深度升序（父类属性在前）。
+    /// 3. 按原始声明顺序升序（作为稳定排序的保障）。
     /// </summary>
     /// <param name="rootSchemaNode">要处理的根 Schema 节点。</param>
     private static void BuildUiOrder(JsonNode rootSchemaNode)
     {
-        // 确保我们正在处理的是一个对象类型的 Schema
-        if (rootSchemaNode is not JsonObject rootSchema)
-        {
-            return;
-        }
-
-        // 尝试获取 "properties" 节点，如果不存在或不是一个对象，则无需排序
-        if (!rootSchema.TryGetPropertyValue("properties", out var propertiesNode) || propertiesNode is not JsonObject properties)
-        {
-            return;
-        }
-
-        // 如果没有任何属性，也无需排序
-        if (properties.Count == 0)
+        if (rootSchemaNode is not JsonObject rootSchema ||
+            !rootSchema.TryGetPropertyValue("properties", out var propertiesNode) ||
+            propertiesNode is not JsonObject properties ||
+            properties.Count == 0)
         {
             return;
         }
 
         int originalIndex = 0;
         var propertiesWithOrderInfo = properties
-            .Select(propKvp => new
+            .Select(propKvp =>
             {
-                Name = propKvp.Key,
-                Order = propKvp.Value is JsonObject propSchema &&
-                        propSchema.TryGetPropertyValue("x-temp-ui-order", out var orderNode) &&
-                        orderNode is JsonValue orderVal &&
-                        orderVal.TryGetValue(out int orderInt)
-                    ? orderInt
-                    : int.MaxValue, // 没有显式 order 的属性排在最后
-                OriginalIndex = originalIndex++, // 记录原始迭代顺序，用于稳定排序
-                PropertySchema = propKvp.Value as JsonObject
+                var propSchema = propKvp.Value as JsonObject;
+                
+                // 提取显式 Order
+                int order = int.MaxValue;
+                if (propSchema != null &&
+                    propSchema.TryGetPropertyValue("x-temp-ui-order", out var orderNode) &&
+                    orderNode is JsonValue orderVal &&
+                    orderVal.TryGetValue(out int orderInt))
+                {
+                    order = orderInt;
+                }
+
+                // 提取继承深度
+                int depth = 0; // 默认深度为0
+                if (propSchema != null &&
+                    propSchema.TryGetPropertyValue("x-temp-inheritance-depth", out var depthNode) &&
+                    depthNode is JsonValue depthVal &&
+                    depthVal.TryGetValue(out int depthInt))
+                {
+                    depth = depthInt;
+                }
+
+                return new
+                {
+                    Name = propKvp.Key,
+                    Order = order,
+                    InheritanceDepth = depth,
+                    OriginalIndex = originalIndex++,
+                    PropertySchema = propSchema
+                };
             })
             .ToList();
 
-        // 核心排序逻辑：首先按显式指定的 Order 升序，然后按原始顺序升序
+        // 核心排序逻辑：显式Order -> 继承深度(父类在前) -> 原始顺序
         var orderedProperties = propertiesWithOrderInfo
             .OrderBy(p => p.Order)
+            .ThenBy(p => p.InheritanceDepth) // 深度越小，越是基类，排在越前面
             .ThenBy(p => p.OriginalIndex)
             .ToList();
 
         // 创建一个包含有序属性名的 JsonArray
         var uiOrderList = orderedProperties.Select(p => p.Name).ToJsonArray();
-        
+
         // 将 "ui:order" 数组添加到根 Schema 中
         rootSchema["ui:order"] = uiOrderList;
 
-        // 清理所有属性上临时的 "x-temp-ui-order" 元数据
+        // 清理所有属性上临时的元数据
         foreach (var prop in orderedProperties)
         {
             prop.PropertySchema?.Remove("x-temp-ui-order");
+            prop.PropertySchema?.Remove("x-temp-inheritance-depth");
         }
+    }
+}
+
+/// <summary>
+/// 一个 Schema 处理器，用于计算属性的继承深度并将其作为临时元数据添加到 Schema 中。
+/// 这个深度信息稍后会被 BuildUiOrder 方法用来确保基类属性排在派生类属性之前。
+/// </summary>
+internal class InheritanceOrderProcessor : IYaeSchemaProcessor
+{
+    public void Process(JsonSchemaExporterContext context, JsonObject schema)
+    {
+        // 此处理器仅对属性有效
+        if (context.PropertyInfo is null)
+        {
+            return;
+        }
+
+        // 获取属性的声明类型
+        var declaringType = context.PropertyInfo.DeclaringType;
+
+        // 计算并存储继承深度
+        var depth = GetTypeInheritanceDepth(declaringType);
+        schema["x-temp-inheritance-depth"] = depth;
+    }
+
+    /// <summary>
+    /// 计算一个类型在继承链中的深度。`object` 的深度为 0。
+    /// </summary>
+    private static int GetTypeInheritanceDepth(Type type)
+    {
+        int depth = 0;
+        var current = type;
+        while (current.BaseType != null)
+        {
+            depth++;
+            current = current.BaseType;
+        }
+        return depth;
     }
 }

@@ -37,7 +37,9 @@ export function createMonorepoViteConfig(options: MonorepoViteConfigOptions): Us
             vue(),
             VitePluginVueDevTools(),
             Components({
-                resolvers: [NaiveUiResolver()],
+                resolvers: [
+                    NaiveUiResolver()
+                ],
             }),
             AutoImport({
                 imports: [
