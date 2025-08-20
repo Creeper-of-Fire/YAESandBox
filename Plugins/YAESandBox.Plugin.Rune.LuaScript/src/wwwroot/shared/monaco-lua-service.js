@@ -71,6 +71,27 @@ function deepMerge(...objects) {
 }
 
 /**
+ * 将 API 定义中的 kind 字符串映射到 Monaco 的 CompletionItemKind 枚举值。
+ * @param {string | undefined} kindString - 从 JSON 读取的 kind 字符串, 例如 "Variable"。
+ * @param {import('monaco-editor')} monaco - Monaco 实例。
+ * @returns {monaco.languages.CompletionItemKind} - Monaco 的枚举值。
+ */
+function mapKindStringToMonacoKind(kindString, monaco) {
+    const mapping = {
+        'Method': monaco.languages.CompletionItemKind.Method,
+        'Function': monaco.languages.CompletionItemKind.Function,
+        'Variable': monaco.languages.CompletionItemKind.Variable,
+        'Property': monaco.languages.CompletionItemKind.Property,
+        'Constant': monaco.languages.CompletionItemKind.Constant,
+        'Module': monaco.languages.CompletionItemKind.Module,
+        'Keyword': monaco.languages.CompletionItemKind.Keyword,
+    };
+
+    // 如果找不到匹配项，提供一个安全的回退值
+    return mapping[kindString] || monaco.languages.CompletionItemKind.Function;
+}
+
+/**
  * 核心功能：加载并合并所有 API 定义。
  * 它首先加载清单文件，然后根据清单并行加载所有独立的 API JSON 文件，
  * 最后将它们【深度合并】成一个单一的 API 数据对象。
@@ -219,9 +240,9 @@ export async function configure(monaco, manifestUrl)
 
                 const suggestions = apiObject.methods.map(method => ({
                     label: method.name,
-                    kind: monaco.languages.CompletionItemKind.Method,
+                    kind: mapKindStringToMonacoKind(method.kind, monaco),
                     documentation: {value: method.documentation, isTrusted: true},
-                    insertText: method.insertText,
+                    insertText: method.insertText ?? method.name,
                     insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,
                     range: replacementRange,
                 }));
@@ -246,7 +267,7 @@ export async function configure(monaco, manifestUrl)
             {
                 globalSuggestions = apiData.global.methods.map(method => ({
                     label: method.name,
-                    kind: monaco.languages.CompletionItemKind.Function,
+                    kind: mapKindStringToMonacoKind(method.kind, monaco),
                     documentation: {value: method.documentation, isTrusted: true},
                     insertText: method.insertText,
                     insertTextRules: monaco.languages.CompletionItemInsertTextRule.InsertAsSnippet,

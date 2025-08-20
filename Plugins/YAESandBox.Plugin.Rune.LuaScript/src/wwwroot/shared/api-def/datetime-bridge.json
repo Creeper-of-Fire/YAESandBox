@@ -6,18 +6,21 @@
         "name": "utcnow",
         "signature": "datetime.utcnow(): DateTimeObject",
         "documentation": "获取当前的 UTC (协调世界时) 时间，并返回一个 DateTimeObject。\n\n**返回的对象拥有以下属性和方法:**\n- **属性:** `.year`, `.month`, `.day`, `.hour`, `.minute`, `.second`, `.millisecond`, `.day_of_week`, `.day_of_year`\n- **方法:** `.format(fmt)`, `.add_days(n)`, `.add_hours(n)`, 等。\n\n**示例:**\n```lua\nlocal now = datetime.utcnow()\nlog.info('Current year: ' .. now.year)\nctx.set('iso_time', now:format('o'))\n```",
+        "kind": "Function",
         "insertText": "utcnow()"
       },
       {
         "name": "now",
         "signature": "datetime.now(): DateTimeObject",
         "documentation": "获取当前服务器的本地时间，并返回一个 DateTimeObject。**注意:** 为避免时区问题，推荐在大多数场景下使用 `utcnow()`。",
+        "kind": "Function",
         "insertText": "now()"
       },
       {
         "name": "parse",
         "signature": "datetime.parse(dateString: string, format?: string): DateTimeObject | nil",
         "documentation": "将字符串解析为 DateTimeObject。\n- 如果 `format` 省略，会尝试解析标准 ISO 8601 格式。\n- 如果提供了 `format`，则会按指定的 .NET 格式字符串进行解析。\n- 如果解析失败，返回 `nil`。\n\n**.NET 格式化参考:**\n- `yyyy`: 四位年份\n- `MM`: 月份 (01-12)\n- `dd`: 日期 (01-31)\n- `HH`: 24小时制小时 (00-23)\n- `mm`: 分钟 (00-59)\n- `ss`: 秒 (00-59)\n\n**示例:**\n```lua\n-- ISO 解析\nlocal event_time = datetime.parse('2024-01-01T12:00:00Z')\n\n-- 自定义格式解析\nlocal log_time = datetime.parse('2024/01/01 14:30', 'yyyy/MM/dd HH:mm')\nif log_time then\n  log.info('Log hour: ' .. log_time.hour)\nend\n```",
+        "kind": "Function",
         "insertText": "parse('${1:dateString}', '${2:format}')"
       }
     ]
