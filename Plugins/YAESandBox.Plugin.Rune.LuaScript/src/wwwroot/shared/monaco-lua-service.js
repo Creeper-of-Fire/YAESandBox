@@ -15,6 +15,7 @@
 import luaparse from 'https://esm.sh/luaparse@0.3.1';
 import prettier from 'https://esm.sh/prettier@3.2.5/standalone';
 import prettierPluginLua from 'https://esm.sh/@prettier/plugin-lua';
+import * as registry from './api-registry.js';
 
 /**
  * 防抖函数。
@@ -39,38 +40,6 @@ function debounce(func, wait)
 }
 
 /**
- * 深度合并两个或多个对象。
- * 对于数组，它会连接它们并去重。对于对象，它会递归地合并它们的属性。
- * @param {...Object} objects - 要合并的对象。
- * @returns {Object} - 合并后的新对象。
- */
-function deepMerge(...objects) {
-    const isObject = obj => obj && typeof obj === 'object';
-
-    return objects.reduce((prev, obj) => {
-        Object.keys(obj).forEach(key => {
-            const pVal = prev[key];
-            const oVal = obj[key];
-
-            if (Array.isArray(pVal) && Array.isArray(oVal)) {
-                // 合并数组并基于 'name' 属性去重
-                const combined = [...pVal, ...oVal];
-                const unique = Array.from(new Map(combined.map(item => [item.name, item])).values());
-                prev[key] = unique;
-            } else if (isObject(pVal) && isObject(oVal)) {
-                // 递归合并对象
-                prev[key] = deepMerge(pVal, oVal);
-            } else {
-                // 否则直接赋值
-                prev[key] = oVal;
-            }
-        });
-
-        return prev;
-    }, {});
-}
-
-/**
  * 将 API 定义中的 kind 字符串映射到 Monaco 的 CompletionItemKind 枚举值。
  * @param {string | undefined} kindString - 从 JSON 读取的 kind 字符串, 例如 "Variable"。
  * @param {import('monaco-editor')} monaco - Monaco 实例。
@@ -91,66 +60,27 @@ function mapKindStringToMonacoKind(kindString, monaco) {
     return mapping[kindString] || monaco.languages.CompletionItemKind.Function;
 }
 
-/**
- * 核心功能：加载并合并所有 API 定义。
- * 它首先加载清单文件，然后根据清单并行加载所有独立的 API JSON 文件，
- * 最后将它们【深度合并】成一个单一的 API 数据对象。
- * @param {string} manifestUrl - 指向 api-manifest.json 的 URL。
- * @returns {Promise<Object>} - 一个解析为合并后 API 数据对象的 Promise。
- */
-async function loadAndMergeApis(manifestUrl)
+// =======================================================================================
+// 全局配置标志位
+// IMPORTANT / 重要事项:
+//
+// This is a globally unique ID to prevent the configuration from running more than once.
+// If you are copying this code for your own plugin, PLEASE generate a NEW UUID.
+// Do not reuse this one, to avoid conflicts with other plugins.
+//
+// 这是一个全局唯一的ID，用于防止配置逻辑重复运行。
+// 如果您正在为自己的插件复制此代码，请务必生成一个新的UUID。
+// 不要重复使用此ID，以避免与其他插件发生冲突。
+//
+const CONFIGURED_FLAG_UUID = '__LUA_SERVICE_CONFIGURED_FLAG_06bb2299-8b25-4f19-901c-f678223ff2bd';
+// =======================================================================================
+
+// 将 configureGlobalLuaProviders 函数导出
+export async function configureGlobalLuaProviders(monaco)
 {
-    console.log('[Lua Service] 开始加载 API 清单...');
-    try
-    {
-        const manifestResponse = await fetch(manifestUrl);
-        if (!manifestResponse.ok)
-        {
-            throw new Error(`无法加载清单文件: ${manifestResponse.statusText}`);
-        }
-        const manifest = await manifestResponse.json();
-
-        // 创建一个包含所有 API 文件 fetch 操作的 Promise 数组
-        const fetchPromises = manifest.apiFiles.map(filePath =>
-        {
-            // 使用 `new URL()` 来正确解析相对路径
-            const apiUrl = new URL(filePath, manifestUrl).href;
-            console.log(`[Lua Service] 发现 API 定义: ${apiUrl}`);
-            return fetch(apiUrl).then(res =>
-            {
-                if (!res.ok) throw new Error(`加载 ${apiUrl} 失败`);
-                return res.json();
-            });
-        });
-
-        // 并行等待所有 API 文件加载完成
-        const apis = await Promise.all(fetchPromises);
-
-        const mergedApiData = deepMerge({}, ...apis);
-
-        console.log('[Lua Service] 所有 API 定义已成功加载并合并!');
-        return mergedApiData;
-
-    } catch (error)
-    {
-        console.error('[Lua Service] 加载 API 数据时发生严重错误:', error);
-        // 在出错时返回一个空对象，让编辑器仍然可以工作，只是没有智能提示。
-        return {};
+    if (monaco[CONFIGURED_FLAG_UUID]) {
+        return; // 确保只配置一次
     }
-}
-
-// 将 configure 函数导出，并接收 manifestUrl
-export async function configure(monaco, manifestUrl)
-{
-    // --- 1. 加载所有 API 定义 ---
-    const apiData = await loadAndMergeApis(manifestUrl);
-
-    // 如果 apiData 为空，说明加载失败，后续的提供者将无法工作。
-    if (Object.keys(apiData).length === 0)
-    {
-        console.warn("[Lua Service] API 数据为空，智能提示和悬停功能将不可用。");
-    }
-
 
     /**
      * Lua 语言的关键字列表。
@@ -208,8 +138,15 @@ export async function configure(monaco, manifestUrl)
 
     // --- 2. 注册动态自动补全提供者 ---
     monaco.languages.registerCompletionItemProvider('lua', {
-        triggerCharacters: ['.'], provideCompletionItems: (model, position) =>
+        triggerCharacters: ['.'], 
+        provideCompletionItems: (model, position) =>
         {
+            const contextId = model.__my_context_id; // 直接获取 contextId
+            if (!contextId) {
+                return { suggestions: [] }; // 如果上下文未设置，不提供任何补全
+            }
+            const apiData = registry.get(contextId); // 从注册中心获取正确的 API 数据
+            
             const lineContent = model.getLineContent(position.lineNumber);
             const textBeforeCursor = lineContent.substring(0, position.column - 1);
 
@@ -292,6 +229,12 @@ export async function configure(monaco, manifestUrl)
     monaco.languages.registerHoverProvider('lua', {
         provideHover: (model, position) =>
         {
+            const contextId = model.__my_context_id; // 直接获取 contextId
+            if (!contextId) {
+                return null;
+            }
+            const apiData = registry.get(contextId); // 从注册中心获取正确的 API 数据
+            
             const wordInfo = model.getWordAtPosition(position);
             if (!wordInfo)
             {
@@ -418,6 +361,20 @@ export async function configure(monaco, manifestUrl)
     {
         const code = model.getValue();
         const markers = [];
+        
+        const contextId = model.__my_context_id; // 直接获取 contextId
+        if (!contextId) {
+            // 如果上下文 ID 尚未设置，则清除此模型的所有标记并中止。
+            // 这是解决竞态条件的关键。
+            monaco.editor.setModelMarkers(model, owner, []);
+            return;
+        }
+        const apiData = registry.get(contextId); // 从注册中心获取正确的 API 数据
+        if (!apiData || Object.keys(apiData).length === 0) {
+            // 如果找到了 contextId 但注册表中没有数据 (可能正在加载)，也暂时不报错
+            monaco.editor.setModelMarkers(model, owner, markers);
+            return;
+        }
 
         try
         {
@@ -650,23 +607,56 @@ export async function configure(monaco, manifestUrl)
     };
     const debouncedValidate = debounce(validate, 200); // 创建防抖版的验证函数
 
-    // 为所有已存在的 lua 模型和未来创建的 lua 模型应用验证逻辑
-    monaco.editor.getModels().forEach(model =>
-    {
-        if (model.getLanguageId() === 'lua')
-        {
-            // 首次加载时验证一次
-            validate(model);
-            // 监听内容变化，进行防抖验证
-            model.onDidChangeContent(() => debouncedValidate(model));
+    /**
+     * 为指定的 Monaco 模型设置智能验证逻辑。
+     * 它通过 Object.defineProperty 拦截对 `__my_context_id` 的赋值操作，
+     * 当该值被设置时，立即触发一次验证。
+     * @param {import('monaco-editor').editor.ITextModel} model
+     */
+    const setupModelIntelligence = (model) => {
+        // 防止对同一个 model 重复定义
+        const descriptor = Object.getOwnPropertyDescriptor(model, '__my_context_id');
+        if (descriptor && !descriptor.writable) { // 如果属性已存在且不可写, 通常意味着我们的 getter/setter 已设置
+            return;
+        }
+
+        let _contextId = model.__my_context_id; // 捕获可能已存在的初始值
+
+        // 使用 getter/setter 重新定义 __my_context_id
+        Object.defineProperty(model, '__my_context_id', {
+            configurable: true,
+            enumerable: true,
+            get() {
+                return _contextId;
+            },
+            set(newValue) {
+                const oldValue = _contextId;
+                _contextId = newValue;
+                // 当上下文 ID 被有效设置或更改时，立即触发一次验证
+                if (newValue && newValue !== oldValue) {
+                    validate(model); // 使用非防抖版本以获得即时反馈
+                }
+            }
+        });
+
+        // 绑定标准的 onDidChangeContent 事件，用于用户输入时的验证
+        model.onDidChangeContent(() => debouncedValidate(model));
+
+        // 首次设置时，也运行一次验证（如果 contextId 已有值）
+        validate(model);
+    };
+
+    // 为所有已存在和未来创建的 lua 模型应用此智能设置
+    monaco.editor.getModels().forEach(model => {
+        if (model.getLanguageId() === 'lua') {
+            setupModelIntelligence(model);
         }
     });
-    monaco.editor.onDidCreateModel(model =>
-    {
-        if (model.getLanguageId() === 'lua')
-        {
-            validate(model);
-            model.onDidChangeContent(() => debouncedValidate(model));
+    monaco.editor.onDidCreateModel(model => {
+        if (model.getLanguageId() === 'lua') {
+            setupModelIntelligence(model);
         }
     });
+
+    monaco[CONFIGURED_FLAG_UUID] = true;
 }

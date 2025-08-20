@@ -35,7 +35,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import {computed, onDeactivated, onUnmounted, ref, watch} from 'vue';
+import {computed, onUnmounted, ref, watch} from 'vue';
 import {type MonacoEditor, VueMonacoEditor} from '@guolao/vue-monaco-editor';
 import {NAlert, NSpin} from 'naive-ui';
 import {useDebounceFn} from '@vueuse/core';
@@ -119,7 +119,7 @@ async function handleEditorMount(editor: any, monaco: MonacoEditor)
     else if (props.simpleConfigUrl)
     {
       loadingText.value = '正在加载语言配置...';
-      await applySimpleConfig(monaco);
+      await applySimpleConfig(monaco, editor);
     }
   } catch (err: any)
   {
@@ -145,14 +145,25 @@ async function startLanguageServer(monaco: MonacoEditor, model: any)
 }
 
 /**
- * 加载并应用简单的配置
+ * 加载并应用简单的配置 (插件化系统)
  */
-async function applySimpleConfig(monaco: MonacoEditor)
+async function applySimpleConfig(monaco: MonacoEditor, editor: any)
 {
-  const serviceRune = await import(/* @vite-ignore */ props.simpleConfigUrl!);
-  if (serviceRune.default && typeof serviceRune.default.configure === 'function')
+  // 为当前编辑器模型注入上下文 ID
+  // 我们使用 simpleConfigUrl 本身作为唯一的上下文 ID
+  const model = editor.getModel();
+  if (model)
   {
-    serviceRune.default.configure(monaco);
+    model.__my_context_id = props.simpleConfigUrl!;
+  }
+
+  // 步骤 3: 动态导入并执行插件的配置函数
+  // 这与您最初的函数实现非常相似，但现在它服务于我们的新架构
+  const serviceModule = await import(/* @vite-ignore */ props.simpleConfigUrl!);
+  if (serviceModule.default && typeof serviceModule.default.configure === 'function')
+  {
+    // 调用插件的 configure()，它会去 API 注册中心注册自己的 API
+    await serviceModule.default.configure(monaco);
   }
 }
 
