@@ -29,7 +29,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
 
         internal override void Serialize(StringBuilder sb)
         {
-            sb.Append(Content);
+            sb.Append(this.Content);
         }
     }
 
@@ -44,13 +44,13 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
 
         internal override void Serialize(StringBuilder sb)
         {
-            sb.Append('<').Append(Name).Append('>');
-            foreach (var child in Children)
+            sb.Append('<').Append(this.Name).Append('>');
+            foreach (var child in this.Children)
             {
                 child.Serialize(sb);
             }
 
-            sb.Append("</").Append(Name).Append('>');
+            sb.Append("</").Append(this.Name).Append('>');
         }
     }
 
@@ -84,7 +84,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
     /// </summary>
     public void SetRawContent(string path, string content, UpdateMode mode = UpdateMode.Incremental)
     {
-        var targetNode = FindOrCreateElementByPath(path);
+        var targetNode = this.FindOrCreateElementByPath(path);
 
         if (mode == UpdateMode.FullSnapshot)
         {
@@ -121,7 +121,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
         if (mode == UpdateMode.FullSnapshot)
         {
             // 快照模式下，清空目标节点的所有内容
-            var targetNode = FindOrCreateElementByPath(basePath);
+            var targetNode = this.FindOrCreateElementByPath(basePath);
             targetNode.Children.Clear();
         }
 

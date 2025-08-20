@@ -21,7 +21,7 @@ public abstract record AbstractRuneConfig
     [Required(AllowEmptyStrings = true)]
     [HiddenInForm(true)]
     [Display(Name = "配置名称", Description = "符文的配置名称，用于在界面上显示。")]
-    public abstract string Name { get; init; }
+    public virtual string Name { get; init; } = string.Empty;
 
     /// <summary>
     /// 是否被启用，默认为True
@@ -29,14 +29,14 @@ public abstract record AbstractRuneConfig
     [Required]
     [DefaultValue(true)]
     [HiddenInForm(true)]
-    public abstract bool Enabled { get; init; }
+    public virtual bool Enabled { get; init; } = true;
 
     /// <summary>
     /// 唯一的 ID，在拷贝时也需要更新
     /// </summary>
     [Required]
     [HiddenInForm(true)]
-    public abstract string ConfigId { get; init; }
+    public virtual string ConfigId { get; init; } = Guid.NewGuid().ToString();
 
     /// <summary>
     /// 符文的类型
@@ -73,18 +73,8 @@ public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
     /// <inheritdoc />
     protected AbstractRuneConfig()
     {
-        // 3. 在构造函数中，使用 this.GetType() 来获取实际的派生类类型名
         this.RuneType = this.GetType().Name;
     }
-
-    /// <inheritdoc />
-    public override string Name { get; init; } = string.Empty;
-
-    /// <inheritdoc />
-    public override bool Enabled { get; init; } = true;
-
-    /// <inheritdoc/>
-    public override string ConfigId { get; init; } = Guid.NewGuid().ToString();
 
     /// <inheritdoc/>
     public sealed override string RuneType { get; init; }

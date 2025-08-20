@@ -1,8 +1,8 @@
-﻿using Namotion.Reflection;
-using NJsonSchema.Generation;
+﻿using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
 using YAESandBox.Depend;
 using YAESandBox.Depend.AspNetCore;
-using YAESandBox.Depend.AspNetCore.PluginDiscovery;
+using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.Utility;
 
 namespace YAESandBox.Workflow.API.Schema;
@@ -51,43 +51,15 @@ public class RenderWithMonacoEditorAttribute(string language) : Attribute
     /// <example>"plugin://language-servers/lua-worker.js"</example>
     /// </summary>
     public string? LanguageServerWorkerUrl { get; set; }
-
-    /// <summary>
-    /// 所属的符文类型，用于提供 `plugin://` 目录的地址。
-    /// </summary>
-    public Type? RuneType { get; set; }
 }
 
 /// <summary>
 /// 处理 [RenderWithMonacoEditor] 特性，为 Schema 添加 'x-monaco-editor' 指令，
 /// 并能动态解析插件内部的资源路径。
 /// </summary>
-internal class MonacoEditorRendererSchemaProcessor : ISchemaProcessor
+internal class MonacoEditorRendererSchemaProcessor : YaePropertyAttributeProcessor<RenderWithMonacoEditorAttribute>
 {
     private const string PluginScheme = "plugin://";
-
-    /// <inheritdoc />
-    public void Process(SchemaProcessorContext context)
-    {
-        var attribute = context.ContextualType.GetContextAttribute<RenderWithMonacoEditorAttribute>(true);
-        if (attribute is null)
-            return;
-
-        // 通常 context.ContextualType.Type 是属性对应的类型，并不能作为模块类型
-        Type ownerType = attribute.RuneType ?? context.ContextualType.Type;
-
-        // 解析 URL
-        string? resolvedSimpleConfigUrl = this.ResolvePluginUrl(attribute.SimpleConfigUrl, ownerType);
-        string? resolvedWorkerUrl = this.ResolvePluginUrl(attribute.LanguageServerWorkerUrl, ownerType);
-
-        context.Schema.ExtensionData ??= new Dictionary<string, object?>();
-        context.Schema.ExtensionData["x-monaco-editor"] = new
-        {
-            language = attribute.Language,
-            simpleConfigUrl = resolvedSimpleConfigUrl,
-            languageServerWorkerUrl = resolvedWorkerUrl,
-        };
-    }
 
     /// <summary>
     /// 解析包含 plugin:// 协议的 URL。
@@ -114,5 +86,24 @@ internal class MonacoEditorRendererSchemaProcessor : ISchemaProcessor
         // 如果找不到提供者，则无法解析路径，记录警告并返回 null
         Log.Warning($"[SchemaProcessor] 警告: 无法解析路径 '{templateUrl}'，因为类型 '{ownerType.Name}' 没有找到对应的插件提供者。");
         return null;
+    }
+
+    /// <inheritdoc />
+    protected override void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema,
+        RenderWithMonacoEditorAttribute attribute)
+    {
+        // 通常 context.ContextualType.Type 是属性对应的类型，并不能作为模块类型
+        var ownerType = context.PropertyInfo?.DeclaringType ?? context.TypeInfo.Type;
+
+        // 解析 URL
+        string? resolvedSimpleConfigUrl = this.ResolvePluginUrl(attribute.SimpleConfigUrl, ownerType);
+        string? resolvedWorkerUrl = this.ResolvePluginUrl(attribute.LanguageServerWorkerUrl, ownerType);
+
+        schema["x-monaco-editor"] = new JsonObject
+        {
+            ["language"] = attribute.Language,
+            ["simpleConfigUrl"] = resolvedSimpleConfigUrl,
+            ["languageServerWorkerUrl"] = resolvedWorkerUrl,
+        };
     }
 }

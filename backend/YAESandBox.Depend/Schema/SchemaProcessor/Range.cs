@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Namotion.Reflection;
-using NJsonSchema;
-using NJsonSchema.Generation;
+using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
 
 namespace YAESandBox.Depend.Schema.SchemaProcessor;
 
@@ -86,7 +85,7 @@ public class CustomRangeAttribute : Attribute
 /// 处理带有 [Range] 的属性，
 /// 为其生成枚举和/或指向自定义自动完成 Widget 的配置。
 /// </summary>
-internal class RangeProcessor : ISchemaProcessor
+internal class RangeProcessor : IYaeSchemaProcessor
 {
     /// <summary>
     /// 如果计算得到的 MultipleOf 大于它，则设置为它
@@ -99,38 +98,81 @@ internal class RangeProcessor : ISchemaProcessor
     private const decimal MinStepNumber = 100;
 
     /// <inheritdoc/>
-    public void Process(SchemaProcessorContext context)
+    public void Process(JsonSchemaExporterContext context, JsonObject schema)
     {
-        var rangeAttribute = context.ContextualType.GetContextAttribute<RangeAttribute>(true);
-        var customRangeAttribute = context.ContextualType.GetContextAttribute<CustomRangeAttribute>(true);
-        context.Schema.ExtensionData ??= new Dictionary<string, object?>();
+        // 这是一个属性级别的处理器
+        if (context.PropertyInfo is null)
+            return;
 
-        if (rangeAttribute == null && customRangeAttribute == null) return;
-        if (customRangeAttribute?.Step != null)
-            context.Schema.MultipleOf = Convert.ToDecimal(customRangeAttribute.Step);
+        var rangeAttribute = context.PropertyInfo.AttributeProvider.GetCustomAttribute<RangeAttribute>(inherit: true);
+        var customRangeAttribute = context.PropertyInfo.AttributeProvider.GetCustomAttribute<CustomRangeAttribute>(inherit: true);
+
+        if (rangeAttribute == null && customRangeAttribute == null)
+            return;
+
+        // 优先使用 CustomRangeAttribute 的值，因为它更具体
+        decimal? minimum = null;
+        if (customRangeAttribute?.Minimum is not null)
+            minimum = Convert.ToDecimal(customRangeAttribute.Minimum);
+        else if (rangeAttribute?.Minimum is not null)
+            minimum = Convert.ToDecimal(rangeAttribute.Minimum);
 
         decimal? maximum = null;
-        decimal? minimum = null;
-        if (rangeAttribute != null)
-        {
-            maximum = Convert.ToDecimal(rangeAttribute.Maximum);
-            minimum = Convert.ToDecimal(rangeAttribute.Minimum);
-        }
-
-        if (customRangeAttribute?.Maximum != null)
-        {
+        if (customRangeAttribute?.Maximum is not null)
             maximum = Convert.ToDecimal(customRangeAttribute.Maximum);
-            context.Schema.ExtensionData["maximum"] = maximum;
-        }
+        else if (rangeAttribute?.Maximum is not null)
+            maximum = Convert.ToDecimal(rangeAttribute.Maximum);
 
-        if (customRangeAttribute?.Minimum != null)
+        decimal? step = null;
+        if (customRangeAttribute?.Step is not null)
+            step = Convert.ToDecimal(customRangeAttribute.Step);
+
+        // 将解析出的值写入 Schema
+        if (minimum.HasValue)
+            schema["minimum"] = minimum.Value;
+
+        if (maximum.HasValue)
+            schema["maximum"] = maximum.Value;
+
+        // 如果明确指定了 step，则使用它作为 multipleOf
+        if (step.HasValue)
+            schema["multipleOf"] = step.Value;
+
+        // 否则，如果提供了范围，则根据旧逻辑计算一个默认的步长，以支持UI滑块
+        else if (minimum.HasValue && maximum.HasValue &&
+                 (SchemaTypeContains(schema.TryGetPropertyValue("type", out var typeNode) ? typeNode : null, "number") ||
+                  SchemaTypeContains(schema.TryGetPropertyValue("type", out typeNode) ? typeNode : null, "integer")))
         {
-            minimum = Convert.ToDecimal(customRangeAttribute.Minimum);
-            context.Schema.ExtensionData["minimum"] = minimum;
+            decimal calculatedStep = (maximum.Value - minimum.Value) / MinStepNumber;
+            // 确保计算出的步长不会无穷小
+            if (calculatedStep > 0)
+            {
+                schema["multipleOf"] = Math.Min(calculatedStep, DefaultMultipleOf);
+            }
+        }
+    }
+
+    // 辅助函数，用于检查 Schema 类型是否包含指定的类型
+    private static bool SchemaTypeContains(JsonNode? typeNode, string expectedType)
+    {
+        if (typeNode is null)
+        {
+            return false;
         }
 
-        if (context.Schema.Type != JsonObjectType.Number || maximum == null || minimum == null) return;
-        decimal step = (maximum.Value - minimum.Value) / MinStepNumber;
-        context.Schema.MultipleOf = decimal.Min(step, DefaultMultipleOf);
+        // 情况1：type 是一个单一的字符串值
+        if (typeNode is JsonValue value && value.TryGetValue(out string? typeString))
+        {
+            return typeString == expectedType;
+        }
+
+        // 情况2：type 是一个类型数组
+        if (typeNode is JsonArray array)
+        {
+            // 检查数组中是否包含我们期望的类型
+            return array.Any(node => node is JsonValue v && v.TryGetValue(out string? t) && t == expectedType);
+        }
+
+        return false;
     }
 }

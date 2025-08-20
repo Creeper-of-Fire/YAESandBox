@@ -1,4 +1,7 @@
-﻿namespace YAESandBox.Depend.Schema.SchemaProcessor;
+﻿using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
+
+namespace YAESandBox.Depend.Schema.SchemaProcessor;
 
 /// <summary>
 /// 给Class一个别名
@@ -12,13 +15,9 @@ public class ClassLabelAttribute(string label) : Attribute
     public string Label { get; } = label;
 }
 
-internal class ClassLabelProcessor() : NormalActionProcessor(context =>
+internal class ClassLabelProcessor : YaeTypeAttributeProcessor<ClassLabelAttribute>
 {
-    var typeInfo = context.ContextualType;
-
-    object[] attrs = typeInfo.GetCustomAttributes(true);
-    if (attrs.OfType<ClassLabelAttribute>().FirstOrDefault() is not { } classLabelAttribute) return;
-
-    context.Schema.ExtensionData ??= new Dictionary<string, object?>();
-    context.Schema.ExtensionData["x-classLabel"] = classLabelAttribute.Label;
-});
+    /// <inheritdoc />
+    protected override void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, ClassLabelAttribute attribute) =>
+        schema["x-classLabel"] = attribute.Label;
+}

@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using NJsonSchema.Annotations;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.API.Schema;
@@ -93,7 +92,6 @@ internal record TuumRuneConfig : AbstractRuneConfig<TuumRuneProcessor>, IHasInne
     [Required]
     [HiddenInForm(true)]
     [Display(Name = "子枢机配置", Description = "点击以配置此符文内部封装的子枢机流程。")]
-    [JsonSchemaIgnore]
     [RenderAsCustomObjectWidget("")]
     public TuumConfig InnerTuum { get; init; } = new()
     {

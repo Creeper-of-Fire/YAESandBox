@@ -1,6 +1,4 @@
-﻿// AiConfigSchemasController.cs
-
-using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http;
@@ -63,7 +61,7 @@ public class AiConfigSchemasController : AuthenticatedApiControllerBase
                     }
 
                     // 2. 生成并解析该类型的 JSON Schema
-                    string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(type);
+                    string schemaJson = YaeSchemaExporter.GenerateSchemaJson(type);
                     var schemaNode = JsonNode.Parse(schemaJson); // 解析为 JsonNode 以便正确序列化为 JSON 对象
 
                     // 3. 组合成 DTO

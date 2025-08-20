@@ -1,6 +1,5 @@
-﻿using Namotion.Reflection;
-using NJsonSchema;
-using NJsonSchema.Generation;
+﻿using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
 
 namespace YAESandBox.Depend.Schema.SchemaProcessor;
 
@@ -21,29 +20,34 @@ public class RenderAsCustomObjectWidgetAttribute(string widgetKey) : Attribute
 /// <summary>
 /// 处理 [RenderAsCustomObjectWidget] 特性。
 /// 1. 将 schema 的类型强制设为 'object'。
-/// 2. **移除所有内部属性定义（properties, oneOf, allOf 等），使其成为不透明对象。**
+/// 2. **移除所有内部属性定义（properties, $ref 等），使其成为不透明对象。**
 /// 3. 添加 'x-custom-renderer-property' 指令，以便前端查找组件。
 /// </summary>
-internal class CustomObjectWidgetRendererSchemaProcessor : ISchemaProcessor
+internal class CustomObjectWidgetRendererSchemaProcessor : YaePropertyAttributeProcessor<RenderAsCustomObjectWidgetAttribute>
 {
-    public void Process(SchemaProcessorContext context)
+    protected override void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, RenderAsCustomObjectWidgetAttribute attribute)
     {
-        var attribute = context.ContextualType.GetContextAttribute<RenderAsCustomObjectWidgetAttribute>(true);
-        if (attribute == null) return;
+        // 步骤 1: 确保类型是 'object'
+        // Exporter 默认会为复杂类型生成 "type": "object"，但我们最好还是确保一下
+        schema["type"] = "object";
 
-        var schema = context.Schema;
+        // 步骤 2: 使其成为不透明对象。
+        // 这是关键！我们不再需要清理 NJsonSchema 的各种特定属性，
+        // 而是直接移除通用的、可能导致前端展开的 JSON Schema 关键字。
+        schema.Remove("properties");
+        schema.Remove("patternProperties");
+        schema.Remove("allOf");
+        schema.Remove("anyOf");
+        schema.Remove("oneOf");
+        schema.Remove("$ref"); // 特别重要！移除可能存在的引用，强制内联为一个不透明对象
 
-        // 步骤 1 & 2: 使其成为不透明对象
-        schema.Type = JsonObjectType.Object;
-        schema.Properties.Clear();
-        schema.PatternProperties.Clear();
-        schema.AllOf.Clear();
-        schema.AnyOf.Clear();
-        schema.OneOf.Clear();
-        // 清理其他可能导致展开的元数据
-        schema.ExtensionData ??= new Dictionary<string, object?>();
+        // 你甚至可以更激进一点，创建一个全新的 JsonObject 来替换它，
+        // 确保绝对干净，但这通常不是必需的。
+        // 例如：
+        // schema.Clear();
+        // schema["type"] = "object";
 
         // 步骤 3: 注入前端指令
-        schema.ExtensionData["x-custom-renderer-property"] = attribute.WidgetKey;
+        schema["x-custom-renderer-property"] = attribute.WidgetKey;
     }
 }

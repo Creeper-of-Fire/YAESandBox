@@ -1,4 +1,7 @@
-﻿ namespace YAESandBox.Depend.Schema.SchemaProcessor;
+﻿using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
+
+namespace YAESandBox.Depend.Schema.SchemaProcessor;
 
 /// <summary>
 /// 在Schema中隐藏
@@ -15,7 +18,12 @@ public class HiddenInFormAttribute(bool isHidden) : Attribute
 /// <summary>
 /// 检查有无隐藏标签
 /// </summary>
-internal class HiddenInFormProcessor() : NormalAttributeProcessor<HiddenInFormAttribute>("ui:hidden", attribute => attribute.IsHidden);
+internal class HiddenInFormProcessor : YaePropertyAttributeProcessor<HiddenInFormAttribute>
+{
+    /// <inheritdoc />
+    protected override void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, HiddenInFormAttribute attribute) =>
+        schema["ui:hidden"] = attribute.IsHidden;
+}
 
 // /// <summary>
 // /// 隐藏标题和描述
@@ -27,7 +35,6 @@ internal class HiddenInFormProcessor() : NormalAttributeProcessor<HiddenInFormAt
 //     if (attribute.IsHiddenDescription)
 //         extentData["ui:description"] = "";
 // });
-
 
 
 // /// <summary>

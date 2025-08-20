@@ -5,6 +5,7 @@ using System.Text.Encodings.Web;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using System.Text.Json.Serialization.Metadata;
 using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Depend.Storage;
@@ -25,6 +26,8 @@ public static class YaeSandBoxJsonHelper
         Converters = { new JsonStringEnumConverter() },
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        
+        TypeInfoResolver = new DefaultJsonTypeInfoResolver()
     };
 
     /// <summary>

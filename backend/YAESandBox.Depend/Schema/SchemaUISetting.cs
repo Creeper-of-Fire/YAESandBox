@@ -1,5 +1,4 @@
 ﻿using System.Text.Json.Serialization;
-using NJsonSchema;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Depend.Storage;
 
@@ -30,36 +29,36 @@ public record SchemaUiSetting
     public Dictionary<string, object?> ExtensionData { get; set; } = [];
 }
 
-internal static class SchemaUiSettingHelper
-{
-    /// <summary>
-    /// 安全地获取或创建属性 Schema 的 ui:options 扩展数据字典。
-    /// </summary>
-    /// <param name="schema">属性的 JsonSchema 对象。</param>
-    /// <returns>一个<see cref="SchemaUiSetting"/>，用于存储 ui:options。</returns>
-    internal static SchemaUiSetting GetOrCreateUiOptions(this JsonSchema schema)
-    {
-        schema.ExtensionData ??= new Dictionary<string, object?>();
-
-        if (schema.ExtensionData.TryGetValue(UiOptionsKey, out object? opt) && opt is SchemaUiSetting existingUiOptions)
-            return existingUiOptions;
-
-        var newUiOptions = new SchemaUiSetting();
-        schema.ExtensionData[UiOptionsKey] = newUiOptions;
-        return newUiOptions;
-    }
-
-    private const string UiOptionsKey = "ui:options";
-
-    /// <summary>
-    /// 重新把SchemaUISetting处理为普通格式
-    /// </summary>
-    public static void ProcessUiOption(this JsonSchema schema)
-    {
-        schema.ExtensionData ??= new Dictionary<string, object?>();
-        if (schema.ExtensionData.TryGetValue(UiOptionsKey, out object? opt) && opt is SchemaUiSetting existingUiOptions)
-        {
-            schema.ExtensionData[UiOptionsKey] = YaeSandBoxJsonHelper.ToDictionaryWithJsonPropertyNames(existingUiOptions);
-        }
-    }
-}
+// internal static class SchemaUiSettingHelper
+// {
+//     /// <summary>
+//     /// 安全地获取或创建属性 Schema 的 ui:options 扩展数据字典。
+//     /// </summary>
+//     /// <param name="schema">属性的 JsonSchema 对象。</param>
+//     /// <returns>一个<see cref="SchemaUiSetting"/>，用于存储 ui:options。</returns>
+//     internal static SchemaUiSetting GetOrCreateUiOptions(this JsonSchema schema)
+//     {
+//         schema.ExtensionData ??= new Dictionary<string, object?>();
+//
+//         if (schema.ExtensionData.TryGetValue(UiOptionsKey, out object? opt) && opt is SchemaUiSetting existingUiOptions)
+//             return existingUiOptions;
+//
+//         var newUiOptions = new SchemaUiSetting();
+//         schema.ExtensionData[UiOptionsKey] = newUiOptions;
+//         return newUiOptions;
+//     }
+//
+//     private const string UiOptionsKey = "ui:options";
+//
+//     /// <summary>
+//     /// 重新把SchemaUISetting处理为普通格式
+//     /// </summary>
+//     public static void ProcessUiOption(this JsonSchema schema)
+//     {
+//         schema.ExtensionData ??= new Dictionary<string, object?>();
+//         if (schema.ExtensionData.TryGetValue(UiOptionsKey, out object? opt) && opt is SchemaUiSetting existingUiOptions)
+//         {
+//             schema.ExtensionData[UiOptionsKey] = YaeSandBoxJsonHelper.ToDictionaryWithJsonPropertyNames(existingUiOptions);
+//         }
+//     }
+// }

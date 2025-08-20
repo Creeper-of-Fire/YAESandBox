@@ -1,10 +1,8 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using NJsonSchema.Annotations;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.Rune;
-using YAESandBox.Workflow.VarSpec;
 
 namespace YAESandBox.Workflow.Tuum;
 
@@ -67,7 +65,6 @@ public record TuumConfig
     /// 系统会自动创建一个名为 "customer_question" 的外部输入端点。
     /// </example>
     [JsonIgnore]
-    [JsonSchemaIgnore]
     public Dictionary<string, string> InputMappings =>
         this.InputMappingsList.GroupBy(m => m.InternalName) // 1. 按内部变量名分组
             .ToDictionary(
@@ -92,7 +89,6 @@ public record TuumConfig
     /// 将会同时流向名为 "final_greeting" 和 "summary_output" 的两个外部输出端点。
     /// </example>
     [JsonIgnore]
-    [JsonSchemaIgnore]
     public Dictionary<string, HashSet<string>> OutputMappings =>
         this.OutputMappingsList
             .GroupBy(m => m.InternalName) // 1. 按内部变量名分组

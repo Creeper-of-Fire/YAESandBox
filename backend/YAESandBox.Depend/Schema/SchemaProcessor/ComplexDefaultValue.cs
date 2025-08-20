@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
 using YAESandBox.Depend.Storage;
 
 namespace YAESandBox.Depend.Schema.SchemaProcessor;
@@ -17,14 +18,16 @@ public class ComplexDefaultValueAttribute(Type providerType) : Attribute
     public Type ProviderType { get; } = providerType;
 }
 
-internal class ComplexDefaultValueProcessor() : NormalAttributeProcessor<ComplexDefaultValueAttribute>((extensionData, attribute) =>
+internal class ComplexDefaultValueProcessor : YaePropertyAttributeProcessor<ComplexDefaultValueAttribute>
 {
-    object defaultValue = Activator.CreateInstance(attribute.ProviderType) ?? throw new InvalidOperationException();
-    // 1. 将 C# 对象序列化为 JSON 字符串
-    string jsonDefault = JsonSerializer.Serialize(defaultValue, YaeSandBoxJsonHelper.JsonSerializerOptions);
-    // 将 JSON 字符串反序列化为一个普通的 Dictionary<string, object>
-    // 这会创建一个“干净”的对象，不包含任何循环引用或父节点链接。
-    var plainObjectDefault = JsonSerializer.Deserialize<Dictionary<string, object?>>(jsonDefault, YaeSandBoxJsonHelper.JsonSerializerOptions);
+    /// <inheritdoc />
+    protected override void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, ComplexDefaultValueAttribute attribute)
+    {
+        object defaultValue = Activator.CreateInstance(attribute.ProviderType) ?? throw new InvalidOperationException();
+        
+        var defaultNode = JsonSerializer.SerializeToNode(defaultValue, YaeSandBoxJsonHelper.JsonSerializerOptions);
 
-    extensionData["default"] = plainObjectDefault;
-});
+        if (defaultNode is not null) 
+            schema["default"] = defaultNode;
+    }
+}

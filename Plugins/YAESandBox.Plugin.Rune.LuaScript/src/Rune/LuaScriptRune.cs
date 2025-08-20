@@ -87,9 +87,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
     /// 可以通过在前一行添加 `-- @type TypeName Description...` 的注释来为变量指定类型和描述。
     /// </summary>
     [DataType(DataType.MultilineText)]
-    [RenderWithMonacoEditor("lua",
-        RuneType = typeof(LuaScriptRuneConfig),
-        SimpleConfigUrl = "plugin://lua-main/monaco-lua-service-main.js")]
+    [RenderWithMonacoEditor("lua", SimpleConfigUrl = "plugin://lua-main/monaco-lua-service-main.js")]
     [Display(
         Name = "Lua 脚本",
         Description = "在此处编写 Lua 脚本。使用 ctx.get('变量名') 获取输入，使用 ctx.set('变量名', 值) 设置输出。可以在 get/set 的上一行使用 -- @type 类型名 [可选的描述信息] 来指定变量类型。",

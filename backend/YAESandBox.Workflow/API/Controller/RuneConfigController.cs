@@ -157,7 +157,7 @@ public class RuneConfigController(
         {
             try
             {
-                string schemaJson = VueFormSchemaGenerator.GenerateSchemaJson(type, settings =>
+                string schemaJson = YaeSchemaExporter.GenerateSchemaJson(type, settings =>
                 {
                     settings.SchemaProcessors.Add(new RuneRuleAttributeProcessor());
                     settings.SchemaProcessors.Add(new VueComponentRendererSchemaProcessor());

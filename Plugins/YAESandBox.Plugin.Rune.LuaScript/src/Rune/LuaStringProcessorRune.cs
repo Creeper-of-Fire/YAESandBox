@@ -119,9 +119,7 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
     /// 并通过全局函数 `set_output(value)` 设置输出。
     /// </summary>
     [DataType(DataType.MultilineText)]
-    [RenderWithMonacoEditor("lua",
-        RuneType = typeof(LuaScriptRuneConfig),
-        SimpleConfigUrl = "plugin://lua-string/monaco-lua-service-string.js")]
+    [RenderWithMonacoEditor("lua", SimpleConfigUrl = "plugin://lua-string/monaco-lua-service-string.js")]
     [Display(
         Name = "Lua 处理脚本",
         Description = "在此编写 Lua 脚本。使用 `input_string` 获取输入，使用 `set_output(result)` 设置输出。"

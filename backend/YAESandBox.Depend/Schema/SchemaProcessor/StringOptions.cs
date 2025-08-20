@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
-using Namotion.Reflection;
-using NJsonSchema;
-using NJsonSchema.Generation;
+using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
 
 namespace YAESandBox.Depend.Schema.SchemaProcessor;
 
@@ -58,81 +57,60 @@ public class StringOptionsAttribute() : Attribute
 }
 
 /// <summary>
-/// 处理带有 [StringOptionsAttribute] 的属性，
-/// 为其生成枚举和/或指向自定义自动完成 Widget 的配置。
+/// 处理带有 [StringOptions] 的属性，为其生成 enum, enumNames, default, 
+/// 以及指向自定义自动完成 Widget 的 ui:options 配置。
 /// </summary>
-internal class StringOptionsProcessor : ISchemaProcessor
+internal class StringOptionsProcessor : YaePropertyAttributeProcessor<StringOptionsAttribute>
 {
-    /// <inheritdoc/>
-    public void Process(SchemaProcessorContext context)
+    protected override void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, StringOptionsAttribute attribute)
     {
-        // 获取属性上的 StringOptionsAttribute
-        // context.ContextualAttributes 包含与当前类型/成员关联的所有特性
-        var optionsAttribute = context.ContextualType.GetContextAttribute<StringOptionsAttribute>(true);
+        // Exporter 会根据属性类型生成 "type": "string"。我们不需要再像旧代码那样去强制设置它。
+        // 这是新系统的一个优点，Schema 的基础类型总是正确的。
 
-        if (optionsAttribute == null ||
-            context.Schema.Type.HasFlag(JsonObjectType.Object) ||
-            context.Schema.Type.HasFlag(JsonObjectType.Array))
+        // 1. 处理静态选项
+        if (attribute.Options.Any())
         {
-            return;
-        }
+            // 使用 JsonArray 来创建 enum 和 enumNames
+            var enumValues = attribute.Options.Select(o =>o.Value).ToJsonArray();
+            var enumLabels = attribute.Options.Select(o => o.Label).ToJsonArray();
 
-        // 确认属性是字符串类型，如果不是，则此 Processor 不适用或发出警告
-        // NJsonSchema 通常会根据 C# 属性类型正确设置 context.Schema.Type
-        // 这里我们假设它已经是 string 或将要是 string
-        if (!context.Schema.Type.HasFlag(JsonObjectType.String) && !context.Schema.Type.HasFlag(JsonObjectType.Null)) // 允许可空字符串
-        {
-            // 可以选择记录一个警告，或者如果类型绝对应该是 string，则强制设置
-            // Console.WriteLine($"警告: StringOptionsAttribute 应用于非字符串类型属性 '{context.PropertyInfo?.Name}'。Schema 类型: {context.Schema.Type}");
-            // 为了确保，我们强制它为 string，因为 StringOptionsAttribute 暗示了这一点。
-            context.Schema.Type = JsonObjectType.String;
-            if (context.ContextualType.IsNullableType) // 如果原始C#类型是可空的 string?
+            schema["enum"] = enumValues;
+
+            // JSON Schema 标准中没有 "enumNames"，这是一个 UI 库的扩展。
+            // vue-json-schema-form 使用它。我们直接写入。
+            schema["enumNames"] = enumLabels;
+
+            // 2. 处理默认值
+            // 检查属性上是否已经有 DefaultValueAttribute
+            var defaultAttribute = context.PropertyInfo?.AttributeProvider.GetCustomAttribute<DefaultValueAttribute>();
+            if (defaultAttribute is null)
             {
-                context.Schema.Type |= JsonObjectType.Null;
+                // 如果没有显式的默认值，就使用选项中的第一个作为默认值
+                schema["default"] = attribute.Options.First().Value;
             }
         }
 
-        context.Schema.ExtensionData ??= new Dictionary<string, object?>();
-
-        // 1. 处理静态选项 (作为 Schema 的 enum/enumNames)
-        // 这些选项将由自定义 Widget 读取作为初始/静态建议
-        if (optionsAttribute.Options.Length > 0)
+        // 3. 处理 ui:options
+        // 只有当需要传递动态加载端点或可编辑标志时，才创建 ui:options
+        if (attribute.IsEditableSelectOptions || !string.IsNullOrWhiteSpace(attribute.OptionsProviderEndpoint))
         {
-            context.Schema.Enumeration.Clear(); // 清除可能由 NJsonSchema 默认生成的（例如，如果属性是C# enum）
-            foreach (string val in optionsAttribute.Options.Select(o => o.Value))
-                context.Schema.Enumeration.Add(val);
+            var uiOptions = schema["ui:options"];
+            if (uiOptions is null)
+            {
+                uiOptions = new JsonObject();
+                schema["ui:options"] = uiOptions;
+            }
 
-            // **** 关键修正：确保生成 "enumNames" ****
-            context.Schema.EnumerationNames.Clear(); // 清理 NJsonSchema 可能已填充的 EnumerationNames
+            if (attribute.IsEditableSelectOptions)
+            {
+                // 注意：这里的键名需要与你前端的 SchemaUiSetting 记录类中的 JsonPropertyName 匹配
+                uiOptions["isEditableSelectOptions"] = true;
+            }
 
-            // 直接将标签列表添加到 ExtensionData["enumNames"]，这是最可靠的方式
-            // 以确保最终 JSON 中是 "enumNames" 而不是 "x-enumNames" 或其他。
-            context.Schema.ExtensionData["enumNames"] = optionsAttribute.Options.Select(o => o.Label).ToList();
-
-            var defaultAttribute = context.ContextualType.GetContextAttribute<DefaultValueAttribute>(true);
-            if (defaultAttribute == null)
-                context.Schema.ExtensionData["default"] = optionsAttribute.Options.First().Value;
+            if (!string.IsNullOrWhiteSpace(attribute.OptionsProviderEndpoint))
+            {
+                uiOptions["optionsProviderEndpoint"] = attribute.OptionsProviderEndpoint;
+            }
         }
-
-        // // 2. 指定使用自定义的自动完成 Widget
-        // if (attribute.isEditableSelectOptions)
-        //     context.Schema.ExtensionData["ui:widget"] = "MyCustomStringAutoComplete"; // 前端自定义组件的名称
-        // else
-        //     context.Schema.ExtensionData["ui:widget"] = "RadioWidget";
-
-        var uiOptions = context.Schema.GetOrCreateUiOptions();
-
-        if (optionsAttribute.IsEditableSelectOptions)
-            uiOptions.IsEditableSelectOptions = true;
-
-        // 3. 如果有 optionsProviderEndpoint，则将其传递给 Widget
-        if (!string.IsNullOrWhiteSpace(optionsAttribute.OptionsProviderEndpoint))
-            uiOptions.OptionsProviderEndpoint = optionsAttribute.OptionsProviderEndpoint;
-
-        // 备注: isEditableSelectOptions 属性目前没有直接用于改变 Schema 生成逻辑，
-        // 因为我们选择的 MyCustomStringAutoComplete Widget 本身就是可编辑的。
-        // 如果需要，可以将 attribute.isEditableSelectOptions 的值也通过 uiOptions 传递给 Widget。
-        // var uiOpt = SchemaProcessorHelper.GetOrCreateUiOptions(context.Schema);
-        // uiOpt["isEditableFlagForWidget"] = attribute.isEditableSelectOptions;
     }
 }

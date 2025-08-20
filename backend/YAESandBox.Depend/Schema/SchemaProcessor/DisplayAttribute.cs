@@ -1,46 +1,46 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Namotion.Reflection;
-using NJsonSchema.Generation;
+using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
 
 namespace YAESandBox.Depend.Schema.SchemaProcessor;
 
 /// <summary>
 /// 处理 [DisplayAttribute] 为 Schema 添加 title, description, placeholder, 和排序信息。
 /// </summary>
-internal class DisplayAttributeProcessor : ISchemaProcessor
+internal class DisplayAttributeProcessor : YaeGeneralAttributeProcessor<DisplayAttribute>
 {
     /// <inheritdoc/>
-    public void Process(SchemaProcessorContext context)
+    protected override void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, DisplayAttribute attribute)
     {
-        if (context.ContextualType.GetContextAttribute<DisplayAttribute>(true) is not { } displayAttribute)
-            return;
+        // .NET 9 Exporter 不会自动处理 DisplayAttribute，所以我们需要自己添加。
+        // 这给了我们更大的控制权。
+
 
         // NJsonSchema 通常会处理 Name -> title 和 Description -> description
         // 但我们可以确保或覆盖（如果需要）
-        string? name = displayAttribute.GetName(); // 支持本地化资源
-        if (!string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(context.Schema.Title))
+        string? name = attribute.GetName(); // 支持本地化资源
+        if (!string.IsNullOrWhiteSpace(name))
         {
-            context.Schema.Title = name;
+            schema["title"] = name;
         }
 
-        string? description = displayAttribute.GetDescription(); // 支持本地化资源
-        if (!string.IsNullOrWhiteSpace(description) && string.IsNullOrWhiteSpace(context.Schema.Description))
+        string? description = attribute.GetDescription(); // 支持本地化资源
+        if (!string.IsNullOrWhiteSpace(description))
         {
-            context.Schema.Description = description;
+            schema["description"] = description;
         }
 
-        string? prompt = displayAttribute.GetPrompt(); // 支持本地化资源 (placeholder)
-        context.Schema.ExtensionData ??= new Dictionary<string, object?>();
+        string? prompt = attribute.GetPrompt(); // 支持本地化资源 (placeholder)
         if (!string.IsNullOrWhiteSpace(prompt))
         {
-            context.Schema.ExtensionData["ui:placeholder"] = prompt;
+            schema["ui:placeholder"] = prompt;
         }
 
-        int? order = displayAttribute.GetOrder();
+        int? order = attribute.GetOrder();
         if (order.HasValue)
         {
             // 暂存排序值，供后续全局 ui:order 构建
-            context.Schema.ExtensionData["x-temp-ui-order"] = order.Value;
+            schema["x-temp-ui-order"] = order.Value;
         }
     }
 }

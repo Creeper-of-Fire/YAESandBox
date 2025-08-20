@@ -1,50 +1,92 @@
-﻿using Namotion.Reflection;
-using NJsonSchema;
-using NJsonSchema.Generation;
+﻿using System.Reflection;
+using System.Text.Json.Nodes;
+using System.Text.Json.Schema;
 
 namespace YAESandBox.Depend.Schema.SchemaProcessor;
 
 /// <summary>
-/// 通用
+/// 一个抽象基类，用于简化处理【仅应用于属性】的 Attribute。
 /// </summary>
-public class NormalActionProcessor(Action<SchemaProcessorContext> action) : ISchemaProcessor
+/// <typeparam name="T">要查找和处理的 Attribute 类型，该 Attribute 应标记在属性上。</typeparam>
+public abstract class YaePropertyAttributeProcessor<T> : IYaeSchemaProcessor where T : Attribute
 {
-    /// <inheritdoc/>
-    public void Process(SchemaProcessorContext context) => action(context);
+    /// <inheritdoc />
+    public void Process(JsonSchemaExporterContext context, JsonObject schema)
+    {
+        // 如果当前上下文不是属性，则直接跳过。
+        var attribute = context.PropertyInfo?.AttributeProvider?.GetCustomAttribute<T>(inherit: true);
+
+        if (attribute != null)
+        {
+            this.ProcessAttribute(context, schema, attribute);
+        }
+    }
+
+    /// <summary>
+    /// 用于处理属性的 Attribute。
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="schema"></param>
+    /// <param name="attribute"></param>
+    protected abstract void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, T attribute);
 }
 
 /// <summary>
-/// 通用，检测Attribute并且在<see cref="SchemaProcessorContext.Schema"/> 中的 <see cref="JsonSchema.ExtensionData"/>中添加键
+/// 一个抽象基类，用于简化处理【仅应用于类型（类、接口、记录）】的 Attribute。
 /// </summary>
-/// <param name="action">执行的动作</param>
-/// <remarks><see cref="AttributeExtensions.GetContextAttribute{T}"/>的inherit设置为了true</remarks>
-/// <typeparam name="T">检测的Attribute的类型</typeparam>
-public class NormalAttributeProcessor<T>(Action<SchemaProcessorContext, T> action) : NormalActionProcessor(context =>
+/// <typeparam name="T">要查找和处理的 Attribute 类型，该 Attribute 应标记在类型上。</typeparam>
+public abstract class YaeTypeAttributeProcessor<T> : IYaeSchemaProcessor where T : Attribute
 {
-    var attribute = context.ContextualType.GetContextAttribute<T>(true);
-    if (attribute == null) return;
-    action(context, attribute);
-})
-    where T : Attribute
+    /// <inheritdoc />
+    public void Process(JsonSchemaExporterContext context, JsonObject schema)
+    {
+        // 如果当前上下文是属性，则直接跳过。
+        // 我们只关心根类型或嵌套类型的定义。
+        if (context.PropertyInfo is not null)
+            return;
+
+        var attribute = context.TypeInfo.Type.GetCustomAttribute<T>(inherit: true);
+
+        if (attribute is not null)
+        {
+            this.ProcessAttribute(context, schema, attribute);
+        }
+    }
+
+    /// <summary>
+    /// 用于处理类型的 Attribute。
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="schema"></param>
+    /// <param name="attribute"></param>
+    protected abstract void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, T attribute);
+}
+
+/// <summary>
+/// 对于类型/接口等和属性都同等进行处理的 Attribute
+/// </summary>
+/// <typeparam name="T"></typeparam>
+public abstract class YaeGeneralAttributeProcessor<T> : IYaeSchemaProcessor where T : Attribute
 {
-    /// <inheritdoc cref="NormalAttributeProcessor{T}"/>
-    /// <param name="extensionKey">新建的键名</param>
-    /// <param name="setExtensionValue">通过Attribute的参数配置<see cref="JsonSchema.ExtensionData"/>中对应<paramref name="extensionKey"/>的值</param>
-    public NormalAttributeProcessor(string extensionKey, Func<T, object> setExtensionValue) : this((context, attribute) =>
+    /// <inheritdoc />
+    public void Process(JsonSchemaExporterContext context, JsonObject schema)
     {
-        context.Schema.ExtensionData ??= new Dictionary<string, object?>();
-        context.Schema.ExtensionData[extensionKey] = setExtensionValue(attribute);
-    }) { }
+        var attributeProvider = context.PropertyInfo?.AttributeProvider ?? context.TypeInfo.Type;
 
-    /// <inheritdoc cref="NormalAttributeProcessor{T}"/>
-    /// <param name="action">检测Attribute并且在<see cref="SchemaProcessorContext.Schema"/> 中的 <see cref="JsonSchema.ExtensionData"/>中添加键</param>
-    public NormalAttributeProcessor(Action<IDictionary<string, object?>, T> action) : this((context, attribute) =>
-    {
-        context.Schema.ExtensionData ??= new Dictionary<string, object?>();
-        action(context.Schema.ExtensionData, attribute);
-    }) { }
+        // 正确使用 GetCustomAttributes，并用 OfType 和 FirstOrDefault 来筛选
+        var attribute = attributeProvider.GetCustomAttribute<T>(inherit: true);
 
-    /// <inheritdoc cref="NormalAttributeProcessor{T}"/>
-    /// <param name="action">检测Attribute并且执行无上下文的简单动作</param>
-    public NormalAttributeProcessor(Action<T> action) : this((SchemaProcessorContext context, T attribute) => { action(attribute); }) { }
+        if (attribute is not null)
+        {
+            this.ProcessAttribute(context, schema, attribute);
+        }
+    }
+
+    /// <summary>
+    /// 处理属性或类型上的 Attribute
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="schema"></param>
+    /// <param name="attribute"></param>
+    protected abstract void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, T attribute);
 }
