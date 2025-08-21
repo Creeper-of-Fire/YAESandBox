@@ -1,5 +1,7 @@
 ﻿using System.Text;
+using System.Text.Json;
 using System.Text.RegularExpressions;
+using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Core.Abstractions;
 
 namespace YAESandBox.Workflow.Utility;
@@ -192,8 +194,10 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
                 nextElement = new ElementNode(segment);
                 current.Children.Add(nextElement);
             }
+
             current = nextElement;
         }
+
         return current;
     }
 
@@ -214,4 +218,81 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
 
     [GeneratedRegex(@"<([\p{L}\p{N}_-]+)>(.*?)</\1>", RegexOptions.Singleline)]
     private static partial Regex TagParseRegex();
+
+
+    /// <summary>
+    /// 将内部内容序列化为 JSON 字符串。
+    /// </summary>
+    /// <returns>JSON 字符串。</returns>
+    public string ToJson()
+    {
+        // 从根节点的子节点开始构建 JsonDocument
+        var rootJsonObject = new Dictionary<string, object?>();
+
+        // 分组处理子节点，这样同名的节点可以被转换成数组
+        var groupedChildren = this.Root.Children
+            .OfType<ElementNode>()
+            .GroupBy(node => node.Name);
+
+        foreach (var group in groupedChildren)
+        {
+            var items = group.Select(this.ConvertNodeToObject).ToList();
+            if (items.Count > 1)
+            {
+                // 如果有多个同名节点，则序列化为数组
+                rootJsonObject[group.Key] = items;
+            }
+            else
+            {
+                // 否则，序列化为单个对象
+                rootJsonObject[group.Key] = items.FirstOrDefault();
+            }
+        }
+
+        return JsonSerializer.Serialize(rootJsonObject, YaeSandBoxJsonHelper.JsonSerializerOptions);
+    }
+
+    /// <summary>
+    /// 递归地将一个 ElementNode 转换为可序列化为 JSON 的对象 (Dictionary or string)。
+    /// </summary>
+    private object ConvertNodeToObject(ElementNode element)
+    {
+        // 规则1：如果节点只包含一个 TextNode，则直接返回值
+        if (element.Children is [TextNode singleTextNode])
+        {
+            return singleTextNode.Content.ToString();
+        }
+
+        var jsonObject = new Dictionary<string, object?>();
+
+        // 规则2：处理所有子节点
+        var groupedChildren = element.Children
+            .OfType<ElementNode>()
+            .GroupBy(node => node.Name);
+
+        foreach (var group in groupedChildren)
+        {
+            var items = group.Select(this.ConvertNodeToObject).ToList();
+            if (items.Count > 1)
+            {
+                // 规则3：多个同名子节点，转换为数组
+                jsonObject[group.Key] = items;
+            }
+            else
+            {
+                // 单个子节点，直接赋值
+                jsonObject[group.Key] = items.FirstOrDefault();
+            }
+        }
+
+        // 处理紧邻的文本内容（不常见，但为了完整性）
+        string directText = string.Concat(element.Children.OfType<TextNode>().Select(tn => tn.Content.ToString()));
+        if (!string.IsNullOrWhiteSpace(directText))
+        {
+            // 如果一个元素既有子元素又有文本，可以将文本放在一个特殊的键下
+            jsonObject["_text"] = directText.Trim();
+        }
+
+        return jsonObject;
+    }
 }

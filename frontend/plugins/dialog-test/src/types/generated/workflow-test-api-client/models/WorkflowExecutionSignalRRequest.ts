@@ -2,6 +2,7 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
+import type { StreamOutputFormat } from './StreamOutputFormat';
 import type { WorkflowConfig } from './WorkflowConfig';
 /**
  * 用于 SignalR 触发的工作流执行请求的 DTO。
@@ -18,5 +19,6 @@ export type WorkflowExecutionSignalRRequest = {
      * 服务器将通过此 ID 将流式结果推送给正确的客户端。
      */
     connectionId: string;
+    outputFormat: StreamOutputFormat;
 };
 

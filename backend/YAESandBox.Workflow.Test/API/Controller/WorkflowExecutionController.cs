@@ -40,6 +40,22 @@ file class EmitterCallback(
 }
 
 /// <summary>
+/// 定义流式输出的格式。
+/// </summary>
+public enum StreamOutputFormat
+{
+    /// <summary>
+    /// 输出自定义的类 XML 格式。
+    /// </summary>
+    Xml,
+
+    /// <summary>
+    /// 输出标准 JSON 格式。
+    /// </summary>
+    Json
+}
+
+/// <summary>
 /// 提供工作流执行和测试的功能。
 /// </summary>
 [ApiController]
@@ -52,67 +68,6 @@ public class WorkflowExecutionController(
 {
     private IMasterAiService MasterAiService { get; } = masterAiService;
     private IHubContext<WorkflowHub> WorkflowHubContext { get; } = workflowHubContext;
-
-    /// <summary>
-    /// 执行一个工作流并返回最终结果（以结构化文本形式）。
-    /// </summary>
-    /// <remarks>
-    /// 这是一个简化的同步执行端点。它会捕获所有发射的事件，
-    /// 在内存中构建一个结构化的XML响应，并最终返回完整的XML字符串。
-    /// </remarks>
-    [HttpPost("execute")]
-    [Produces("application/json")] // 依然返回JSON，但内容是包含XML的WorkflowExecutionResult
-    [ProducesResponseType(typeof(WorkflowExecutionResult), StatusCodes.Status200OK)]
-    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<WorkflowExecutionResult>> ExecuteWorkflow(
-        [FromBody] WorkflowExecutionRequest request,
-        CancellationToken cancellationToken)
-    {
-        // 1. 使用 StructuredContentBuilder 来捕获所有事件
-        var contentBuilder = new StructuredContentBuilder("response");
-
-        // 2. 创建新的 EmitterCallback
-        var callback = new EmitterCallback(
-            onEmitAsync: payload =>
-            {
-                // 将所有事件都路由到 StructuredContentBuilder
-                // 我们假设所有发射的数据都是字符串或可以转换为字符串
-                try
-                {
-                    contentBuilder.SetContent(payload.Address, payload.Data?.ToString() ?? "", payload.Mode);
-                }
-                catch (Exception e)
-                {
-                    return Task.FromResult(Result.Fail(e.Message).ToResult());
-                }
-
-                return Task.FromResult(Result.Ok());
-            }
-        );
-
-        // 使用 Mock 的数据访问层
-        var mockDataAccess = new MockWorkflowDataAccess();
-
-        var processor = request.WorkflowConfig.ToWorkflowProcessor(
-            request.WorkflowInputs,
-            this.MasterAiService.ToSubAiService(this.UserId),
-            mockDataAccess,
-            callback
-        );
-
-        var result = await processor.ExecuteWorkflowAsync(cancellationToken);
-
-        // 如果工作流本身执行失败，直接返回错误
-        if (!result.IsSuccess)
-        {
-            return this.Ok(result);
-        }
-
-        // 3. 将最终构建的结构化文本作为结果返回
-        // 我们在成功结果的 ErrorMessage 字段里返回文本（这是一个临时的做法，符合旧逻辑）
-        return this.Ok(new WorkflowExecutionResult(true, contentBuilder.ToString(), null));
-    }
-
 
     /// <summary>
     /// 通过 SignalR 异步触发一个工作流执行，并流式推送结果。
@@ -139,8 +94,15 @@ public class WorkflowExecutionController(
                 // a. 更新内存中的XML树
                 contentBuilder.SetContent(payload.Address, payload.Data?.ToString() ?? "", payload.Mode);
 
-                // b. 将更新后的完整XML字符串通过SignalR发送给特定的客户端
-                var message = new StreamMessage("data", contentBuilder.ToString());
+                // b. 根据请求的格式选择序列化方法
+                string serializedContent = request.OutputFormat switch
+                {
+                    StreamOutputFormat.Json => contentBuilder.ToJson(),
+                    _ => contentBuilder.ToString() // 默认为 XML
+                };
+
+                // c. 将更新后的完整XML字符串通过SignalR发送给特定的客户端
+                var message = new StreamMessage("data", serializedContent);
                 await this.WorkflowHubContext.Clients.Client(request.ConnectionId)
                     .SendAsync("ReceiveWorkflowUpdate", message, cancellationToken);
 
@@ -217,4 +179,11 @@ public record WorkflowExecutionSignalRRequest : WorkflowExecutionRequest
     /// </summary>
     [Required]
     public required string ConnectionId { get; init; }
+
+    /// <summary>
+    /// 指定期望的流式输出格式。
+    /// 默认为 Xml。(实际均为字符串)
+    /// </summary>
+    [Required]
+    public StreamOutputFormat OutputFormat { get; init; } = StreamOutputFormat.Xml;
 }
