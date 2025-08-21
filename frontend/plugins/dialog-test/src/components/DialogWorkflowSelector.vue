@@ -12,33 +12,43 @@
     />
     <n-alert v-if="workflowsError" style="margin-top: 8px;" title="加载工作流失败" type="error">
       {{ workflowsError.message }}
-      <n-button size="small" @click="workflowsAsync.execute(0)">重试</n-button>
+      <n-button size="small" @click="workflowExecute()">重试</n-button>
     </n-alert>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, ref} from 'vue';
-import {useWorkbenchStore} from '@yaesandbox-frontend/plugin-workbench/stores/workbenchStore';
+import {computed, inject, onMounted, ref} from 'vue';
 import type {SelectOption} from 'naive-ui';
 import {NAlert, NButton, NH5, NSelect} from 'naive-ui';
+import {WorkflowConfigProviderKey} from "@yaesandbox-frontend/core-services/injectKeys";
 
 const emit = defineEmits(['workflow-selected']);
 
-const workbenchStore = useWorkbenchStore();
-const workflowsAsync = workbenchStore.globalWorkflowsAsync;
-const workflowsIsLoading = computed(() => workflowsAsync.isLoading);
-const workflowsError = computed(() => workflowsAsync.error as any);
-const workflows = computed(() => workflowsAsync.state);
+const workflowConfigProvider = inject(WorkflowConfigProviderKey);
+if (!workflowConfigProvider)
+{
+  // 如果在没有提供者的上下文中使用此组件，可以进行优雅降级或抛出错误
+  throw new Error("[inject]workflowConfigProvider未提供");
+}
+const {
+  state: workflows,
+  isLoading: workflowsIsLoading,
+  isReady: workflowsIsReady,
+  error: workflowsError,
+  execute: workflowExecute
+} = workflowConfigProvider;
 
 const selectedKey = ref<string | null>(null);
 
 const selectOptions = computed<SelectOption[]>(() =>
 {
   if (!workflows.value) return [];
-  return Object.entries(workflows.value).reduce((acc, [id, item]) => {
+  return Object.entries(workflows.value).reduce((acc, [id, item]) =>
+  {
     // 使用简单的类型守卫
-    if (item?.isSuccess) {
+    if (item?.isSuccess)
+    {
       // 在这个 if 代码块内部, TypeScript 知道 item 的类型是:
       // { isSuccess: true; data: WorkflowConfig; }
       // 同样，可以直接使用 item.data，因为它满足 RawWorkflowConfig 的结构
@@ -63,9 +73,9 @@ function handleSelect(key: string)
 
 onMounted(() =>
 {
-  if (!workflowsAsync.isReady && !workflowsAsync.isLoading)
+  if (!workflowsIsReady && !workflowsIsLoading)
   {
-    workflowsAsync.execute();
+    workflowExecute();
   }
 });
 

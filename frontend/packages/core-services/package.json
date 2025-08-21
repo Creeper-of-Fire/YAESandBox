@@ -19,11 +19,13 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./composables": "./src/composables.ts",
     "./types": "./src/types/index.ts",
     "./injectKeys": "./src/utils/injectKeys.ts"
   },
   "dependencies": {
     "@microsoft/signalr": "^9.0.6",
+    "@vueuse/core": "^13.7.0",
     "axios": "^1.11.0"
   },
   "devDependencies": {

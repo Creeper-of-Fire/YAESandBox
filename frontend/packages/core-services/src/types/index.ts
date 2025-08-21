@@ -1,2 +1,2 @@
 ﻿export * from './ui'
-export * from './rawWorkflow'
+export {type WorkflowConfig} from './generated/workflow-test-api-client/index.ts'

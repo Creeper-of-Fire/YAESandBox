@@ -1,5 +1,6 @@
 ﻿import type {App} from 'vue';
 import type {RouteRecordRaw} from 'vue-router';
+import type {Pinia} from "pinia";
 
 /**
  * 定义一个标准前端插件模块应该导出的内容
@@ -10,7 +11,7 @@ export interface PluginModule
      * Vue 插件对象，必须包含一个 install 方法
      */
     plugin: {
-        install: (app: App) => void;
+        install: (app: App, pinia: Pinia) => void;
     };
     /**
      * 插件提供的路由数组

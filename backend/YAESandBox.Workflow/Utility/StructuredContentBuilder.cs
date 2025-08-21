@@ -249,9 +249,13 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
     /// <returns>JSON 字符串。</returns>
     public string ToJson()
     {
-        // ToJson 的逻辑现在完全委托给 ConvertNodeToObject，从根节点开始
-        // 这样可以正确处理所有情况，包括根节点下的混合内容
+        // ToJson 的逻辑完全委托给 ConvertNodeToObject，从根节点开始
         object representation = this.ConvertNodeToObject(this.Root);
+        // 如果根节点本身就是个空对象，我们返回一个空JSON对象字符串
+        if (representation is Dictionary<string, object> { Count: 0 })
+        {
+            return "{}";
+        }
         return JsonSerializer.Serialize(representation, YaeSandBoxJsonHelper.JsonSerializerOptions);
     }
 
@@ -261,10 +265,55 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
     /// </summary>
     private object ConvertNodeToObject(ElementNode element)
     {
-        var jsonObject = new Dictionary<string, object?>();
         var childElements = element.Children.OfType<ElementNode>().ToList();
         var textNodes = element.Children.OfType<TextNode>().ToList();
 
+        // --- 数组检测逻辑 START ---
+        // 检查此节点是否应序列化为 JSON 数组。
+        // 条件：1. 必须有子元素。 2. 不能有任何有效的文本节点（即非纯空白）。
+        if (childElements.Any() && textNodes.All(tn => string.IsNullOrWhiteSpace(tn.Content.ToString())))
+        {
+            var indexedChildren = new SortedDictionary<int, ElementNode>();
+            bool allChildrenAreIntKeys = true;
+            
+            // 尝试将所有子元素名称解析为非负整数索引
+            foreach (var child in childElements)
+            {
+                if (int.TryParse(child.Name, out var index) && index >= 0 && !indexedChildren.ContainsKey(index))
+                {
+                    indexedChildren.Add(index, child);
+                }
+                else
+                {
+                    // 如果任何一个子元素名称不是有效的、唯一的非负整数，则它不能是数组。
+                    allChildrenAreIntKeys = false;
+                    break;
+                }
+            }
+
+            // 仅当所有子节点都是有效的整数键时，才继续检查序列
+            if (allChildrenAreIntKeys && indexedChildren.Any())
+            {
+                int firstKey = indexedChildren.Keys.First();
+
+                // 规则：我们只接受从 0 或 1 开始的序列作为数组。
+                if (firstKey is 0 or 1)
+                {
+                    int expectedKey = firstKey;
+                    bool isSequential = indexedChildren.Keys.All(key => key == expectedKey++);
+
+                    if (isSequential)
+                    {
+                        // 确认是数组！按索引顺序递归转换子节点，并返回一个列表。
+                        return indexedChildren.Values.Select(this.ConvertNodeToObject).ToList();
+                    }
+                }
+            }
+        }
+        // --- 数组检测逻辑 END ---
+        
+        var jsonObject = new Dictionary<string, object?>();
+        
         // 1. 优先处理所有子元素
         if (childElements.Any())
         {

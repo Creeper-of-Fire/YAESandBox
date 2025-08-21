@@ -45,9 +45,9 @@ import {h} from 'vue';
 import {RouterLink, useRoute} from 'vue-router';
 import {NIcon, NLayout, NLayoutSider, NMenu, NMessageProvider, useThemeVars} from 'naive-ui';
 import {BagIcon, EarthIcon, GameIcon, HomeIcon, PeopleIcon, StorefrontIcon} from '#/utils/icon.ts';
-import {useStorage} from "@vueuse/core";
+import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 
-const collapsed = useStorage('yaesandbox-plugin-era-lite:mainLayout:collapsed', false);
+const collapsed = useScopedStorage('collapsed', false);
 
 const route = useRoute();
 
@@ -81,6 +81,9 @@ const menuOptions = [
   },
 ];
 
+defineOptions({
+  name: 'era-lite:MainLayout',
+})
 const themeVars = useThemeVars();
 </script>
 

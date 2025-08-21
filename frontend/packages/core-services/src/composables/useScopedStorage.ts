@@ -2,7 +2,7 @@
 import type {RemovableRef, StorageLike, UseStorageOptions} from '@vueuse/core';
 import {useStorage} from '@vueuse/core';
 import {getCurrentInstance, inject} from 'vue';
-import {PluginUniqueNameKey} from "@yaesandbox-frontend/core-services/injectKeys";
+import {PluginUniqueNameKey} from "#/utils/injectKeys.ts";
 
 /**
  * 获取当前组件的作用域标识符。
@@ -59,6 +59,7 @@ function getComponentScope(): string | null
  * @param localKey - 在当前作用域内的局部 key。
  * @param initialValue - 初始值。
  * @param storage - (可选) 存储引擎，默认使用 localStorage。
+ * @param componentScopeRewrite - 手动指定组件作用域，优先级高于自动获取。
  * @param options - (可选) 传递给 useStorage 的选项。
  * @returns RemovableRef<T>
  */
@@ -66,6 +67,7 @@ export function useScopedStorage<T>(
     localKey: string,
     initialValue: T,
     storage?: StorageLike | undefined,
+    componentScopeRewrite?: string | undefined,
     options?: UseStorageOptions<T>
 ): RemovableRef<T>
 {
@@ -75,7 +77,7 @@ export function useScopedStorage<T>(
     const pluginId = inject(PluginUniqueNameKey, null);
 
     // 2. 尝试获取组件作用域
-    const componentScope = getComponentScope();
+    const componentScope = componentScopeRewrite || getComponentScope();
 
     // 3. 回退到路由作用域
     const routeScope = (route.name?.toString() || route.path).replace(/\//g, '_');

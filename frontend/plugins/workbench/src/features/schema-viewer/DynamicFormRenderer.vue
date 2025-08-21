@@ -49,7 +49,7 @@
     </VeeForm>
   </n-spin>
 </template>
-
+<!-- TODO 这堆响应式有bug，但是目前先不管 -->
 <script lang="ts" setup>
 import {type Component, computed, nextTick, ref, shallowRef, watch} from 'vue';
 import {configure, defineRule, Field, type FieldSlotProps, Form as VeeForm} from 'vee-validate';

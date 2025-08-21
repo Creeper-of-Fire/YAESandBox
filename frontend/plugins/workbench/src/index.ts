@@ -1,14 +1,38 @@
 ﻿import type {App} from 'vue';
 import type {PluginModule} from '@yaesandbox-frontend/core-services';
-import {routes} from './routes'; // 导入你已有的 routes.ts
+import {routes} from './routes';
+import {useWorkflowConfigProviderStore} from "#/stores/workflowConfigProviderStore.ts";
+import {type IWorkflowConfigProvider, WorkflowConfigProviderKey} from "@yaesandbox-frontend/core-services/injectKeys";
+import {type Pinia, storeToRefs} from "pinia";
 
 const WorkbenchPluginModule: PluginModule = {
     // Vue 插件对象
     plugin: {
-        install: (app: App) =>
+        install: (app: App, pinia: Pinia) =>
         {
             console.log('Workbench plugin installed.');
-            // 可以在这里注册工作台内部的全局组件等
+            // 实例化我们的数据提供者 store
+            // 1. 在 setup 上下文之外使用 store，需要先传入 pinia 实例
+            const workflowConfigStore = useWorkflowConfigProviderStore(pinia);
+
+            // 2. 使用 storeToRefs 从 store 中提取 getters，它们会变成响应式的 ref。
+            //    Getters (computed) 会被转换为 Ref<T>，这与 ComputedRef<T> 是兼容的。
+            const { state, isLoading, isReady, error } = storeToRefs(workflowConfigStore);
+
+            // 3. 从 store 实例中直接获取 actions (方法)
+            const { execute } = workflowConfigStore;
+
+            // 4. 创建一个完全符合 IWorkflowConfigProvider 接口的普通对象
+            const workflowProvider: IWorkflowConfigProvider = {
+                state,
+                isLoading,
+                isReady,
+                error,
+                execute,
+            };
+
+            // 使用定义的 InjectionKey 将其提供给所有后代组件
+            app.provide(WorkflowConfigProviderKey, workflowProvider);
         }
     },
     // 插件的路由

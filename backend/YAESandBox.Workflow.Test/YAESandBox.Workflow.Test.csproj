@@ -25,7 +25,7 @@
         <SwaggerDocToGenerate Include="v1-workflow-test" Visible="false">
             <JsonFileName>workflow-test-api.swagger.json</JsonFileName>
             <TsOutputSubDir>workflow-test-api-client</TsOutputSubDir>
-            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend/plugins/dialog-test/src'))</TsClientRoot>
+            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend/packages/core-services/src'))</TsClientRoot>
         </SwaggerDocToGenerate>
     </ItemGroup>
 </Project>

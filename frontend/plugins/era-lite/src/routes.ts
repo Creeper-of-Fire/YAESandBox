@@ -6,19 +6,22 @@ export const routes: RouteRecordRaw[] = [
         path: '/era-lite',
         // 动态导入我们的主布局组件
         component: () => import('./layouts/MainLayout.vue'),
-        // 当用户访问 /era-lite 时，自动重定向到主菜单页面
-        redirect: { name: 'Home' },
 
         // --- 子路由：所有页面都在 MainLayout 的 <router-view> 中显示 ---
         children: [
             {
                 // 路径为空，匹配 /era-lite
-                path: 'home', // 明确路径为 home, 完整路径 /era-lite/home
+                path: '', // 使其成为 /era-lite 的默认子路由
                 name: 'Home', // 必须与 MainLayout.vue 中的 key 匹配
                 component: () => import('./views/HomeView.vue'),
                 meta: {
                     title: '主菜单',
                 }
+            },
+            {
+                // 为 'home' 路径添加一个别名
+                path: 'home',
+                redirect: { name: 'Home' },
             },
             {
                 path: 'characters', // 完整路径 /era-lite/characters

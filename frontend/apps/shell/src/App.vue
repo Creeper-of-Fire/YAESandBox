@@ -20,7 +20,7 @@ import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
 import {usePreferredDark} from "@vueuse/core";
 import {useThemeTransition} from "#/composables/useThemeTransition.ts";
 import {darkTheme, lightTheme} from "naive-ui";
-import {useScopedStorage} from "@yaesandbox-frontend/shared-utils/composables/useScopedStorage.ts";
+import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 
 // --- 状态管理和计算 ---
 const themeMode = useScopedStorage<'light' | 'dark' | 'system'>('theme-mode', 'system');
@@ -44,4 +44,8 @@ const {transitioningTheme} = useThemeTransition(finalThemeName, {light: lightThe
 // --- 状态提供 ---
 // 使用 IsDarkThemeKey 将计算出的 isDark 状态提供给所有后代组件
 provide(IsDarkThemeKey, isDark);
+
+defineOptions({
+  name: 'app-shell:AppMain',
+})
 </script>

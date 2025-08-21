@@ -10,6 +10,7 @@ import eraLitePlugin from '@yaesandbox-frontend/plugin-era-lite';
 import PluginProvider from "#/component/PluginProvider.vue";
 import {PluginUniqueNameKey} from "@yaesandbox-frontend/core-services/injectKeys";
 import type {RouteComponent} from "vue-router";
+import type {Pinia} from "pinia";
 // import gamePlugin from '@yaesandbox-frontend/plugin-game';
 // import testHarnessPlugin from '@yaesandbox-frontend/plugin-dialog-test-harness';
 // import dialogPlugin from '@yaesandbox-frontend/plugin-dialog';
@@ -57,8 +58,9 @@ function wrapComponentWithProvider(component: RawRouteComponent, pluginUniqueNam
 /**
  * 加载并安装所有已发现的插件
  * @param app Vue 应用实例
+ * @param pinia Pinia
  */
-export async function loadPlugins(app: App)
+export async function loadPlugins(app: App, pinia: Pinia)
 {
     console.log('加载插件中...');
 
@@ -73,7 +75,7 @@ export async function loadPlugins(app: App)
         try
         {
             // 1. 安装 Vue 插件 (执行其 install 方法)
-            app.use(pluginModule.plugin);
+            app.use(pluginModule.plugin, pinia);
 
             // 从元数据中读取持久化的 uniqueName
             const pluginUniqueName = pluginModule.meta.uniqueName;

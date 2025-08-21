@@ -1,6 +1,6 @@
 // src/main.ts
 import * as Vue from 'vue';
-import {createApp, provide} from 'vue';
+import {createApp} from 'vue';
 import {createPinia} from 'pinia';
 import App from './App.vue';
 // 通用字体
@@ -17,19 +17,19 @@ import {installBuiltinComponents} from "@yaesandbox-frontend/shared-ui/content-r
 // 必须在 Pinia 安装之后，才能使用 useAuthStore
 // 导入所有需要认证的 API 客户端的 OpenAPI 对象
 import {useAuthStore} from "#/app-authentication/stores/authStore.ts"
-import {type ApiRequestOptions, PluginUniqueNameKey, TokenResolverKey} from '@yaesandbox-frontend/core-services/injectKeys';
+import {type ApiRequestOptions, TokenResolverKey} from '@yaesandbox-frontend/core-services/injectKeys';
 import {loadPlugins} from "#/plugins/pluginLoader.ts";
 import axiosInstance from "#/utils/axiosInstance.ts";
 
 const app = createApp(App);
+const pinia = createPinia();
+app.use(pinia)
 
 // 调用插件加载器
-const loadedPluginMetas = await loadPlugins(app);
+const loadedPluginMetas = await loadPlugins(app, pinia);
 // 将插件元数据 provide 给整个应用，以便 App.vue 生成导航
 app.provide('loadedPlugins', loadedPluginMetas);
-
 app.use(router)
-app.use(createPinia())
 
 // 定义一个函数，用于从 store 中获取 token
 /**
