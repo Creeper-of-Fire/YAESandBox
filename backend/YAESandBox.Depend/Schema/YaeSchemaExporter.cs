@@ -179,7 +179,7 @@ internal class InheritanceOrderProcessor : IYaeSchemaProcessor
         var declaringType = context.PropertyInfo.DeclaringType;
 
         // 计算并存储继承深度
-        var depth = GetTypeInheritanceDepth(declaringType);
+        int depth = GetTypeInheritanceDepth(declaringType);
         schema["x-temp-inheritance-depth"] = depth;
     }
 

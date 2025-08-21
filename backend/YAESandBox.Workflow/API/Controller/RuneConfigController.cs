@@ -98,13 +98,13 @@ public class RuneConfigController(
         foreach (var plugin in allPlugins)
         {
             // 3. 直接通过插件的 Assembly 位置来推断 wwwroot 路径
-            var assemblyLocation = plugin.GetType().Assembly.Location;
+            string assemblyLocation = plugin.GetType().Assembly.Location;
             if (string.IsNullOrEmpty(assemblyLocation)) continue;
 
-            var pluginRootPath = Path.GetDirectoryName(assemblyLocation);
+            string? pluginRootPath = Path.GetDirectoryName(assemblyLocation);
             if (pluginRootPath == null) continue;
 
-            var wwwRootPath = Path.Combine(pluginRootPath, "wwwroot");
+            string wwwRootPath = Path.Combine(pluginRootPath, "wwwroot");
             if (!Directory.Exists(wwwRootPath)) continue;
 
             // 4. 定义检查文件和生成 URL 的本地函数，逻辑更清晰

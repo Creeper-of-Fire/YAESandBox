@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.AIService.Shared;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Abstractions;
@@ -34,36 +36,14 @@ internal class AiRuneProcessor(AiRuneConfig config, WorkflowRuntimeService workf
     {
         public IList<RoledPromptDto> Prompts { get; set; } = [];
         public int TokenUsage { get; set; } = 0;
-
-        /// <summary>
-        /// 记录最终的完整响应
-        /// </summary>
-        public string? FinalResponse { get; set; }
+        public string? FinalReasoning { get; set; }
+        public string? FinalContent { get; set; }
 
         /// <summary>
         /// 记录发射了多少次流式事件
         /// </summary>
         public int StreamingEventsSent { get; set; }
     }
-
-    /// <summary>
-    /// AI符文的运行
-    /// </summary>
-    /// <param name="aiProcessor">从AI配置中实例化的运行时对象</param>
-    /// <param name="prompts">提示词</param>
-    /// <param name="isStream">是否流式</param>
-    /// <param name="cancellationToken">取消令牌</param>
-    /// <returns>返回AI最终组装完成的输出</returns>
-    public Task<Result<string>> ExecuteAsync
-        (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, bool isStream, CancellationToken cancellationToken = default)
-    {
-        return isStream switch
-        {
-            true => this.ExecuteStreamAsync(aiProcessor, prompts, cancellationToken),
-            false => this.ExecuteNonStreamAsync(aiProcessor, prompts, cancellationToken)
-        };
-    }
-
 
     /// <inheritdoc />
     public async Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent,
@@ -88,36 +68,73 @@ internal class AiRuneProcessor(AiRuneConfig config, WorkflowRuntimeService workf
             ? await this.ExecuteStreamAsync(aiProcessor, prompts, cancellationToken)
             : await this.ExecuteNonStreamAsync(aiProcessor, prompts, cancellationToken);
 
-        if (executionResult.TryGetError(out var error, out string? fullResponse))
+        if (executionResult.TryGetError(out var error, out var fullResponse))
             return error;
 
-        this.DebugDto.FinalResponse = fullResponse;
-        tuumProcessorContent.SetTuumVar(this.Config.AiOutputName, fullResponse);
+        return this.ProcessFinalResult(tuumProcessorContent, fullResponse.finalReasoning, fullResponse.finalContent);
+    }
+
+    /// <summary>
+    /// 根据配置，将最终的 Reasoning 和 Content 写入 Tuum 变量中。
+    /// </summary>
+    private Result ProcessFinalResult(TuumProcessorContent tuumProcessorContent, string finalReasoning, string finalContent)
+    {
+        this.DebugDto.FinalReasoning = finalReasoning;
+        this.DebugDto.FinalContent = finalContent;
+
+        // 1. 如果配置了，则写入独立的思维过程变量
+        if (!string.IsNullOrEmpty(this.Config.ReasoningOutputName))
+        {
+            tuumProcessorContent.SetTuumVar(this.Config.ReasoningOutputName, finalReasoning);
+        }
+
+        // 2. 根据配置的格式，决定写入主输出变量的内容
+        string finalOutputValue = this.Config.FinalOutputFormat switch
+        {
+            nameof(AiOutputFormat.ContentWithThinkTag) =>
+                new AiStructuredChunk(finalReasoning, finalContent).ToLegacyThinkString(),
+            _ => finalContent // 默认 DoubleOutput
+        };
+
+        tuumProcessorContent.SetTuumVar(this.Config.AiOutputName, finalOutputValue);
+
         return Result.Ok();
     }
 
-    private async Task<Result<string>> ExecuteStreamAsync
-        (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken = default)
+    private async Task<Result<(string finalReasoning, string finalContent)>> ExecuteStreamAsync
+        (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken)
     {
-        var responseBuilder = new System.Text.StringBuilder();
+        StringBuilder reasoningBuilder = new();
+        StringBuilder contentBuilder = new();
+
         var callBack = new StreamRequestCallBack
         {
             OnChunkReceivedAsync = async chunk =>
             {
-                // 1. 内部状态累积
-                responseBuilder.Append(chunk);
+                // 1. 累积内部状态
+                if (!string.IsNullOrEmpty(chunk.Reasoning))
+                    reasoningBuilder.Append(chunk.Reasoning);
+                if (!string.IsNullOrEmpty(chunk.Content))
+                    contentBuilder.Append(chunk.Content);
 
-                object dataToSend = this.Config.StreamingMode == nameof(UpdateMode.Incremental)
-                    ? chunk
-                    : responseBuilder.ToString();
+                if (chunk.IsEmpty())
+                    return Result.Ok();
 
-                var payload = new EmitPayload(this.Config.StreamingTargetAddress ?? string.Empty, dataToSend,
-                    Enum.TryParse<UpdateMode>(this.Config.StreamingMode, out var updateMode) ? updateMode : UpdateMode.Incremental);
+                Result emitResult;
+                if (this.Config.FinalOutputFormat == nameof(AiOutputFormat.ContentWithThinkTag))
+                {
+                    // 策略A: 合并发射
+                    emitResult = await this.EmitMergedStreamChunkAsync(chunk, reasoningBuilder, contentBuilder, cancellationToken);
+                }
+                else // 默认为 DoubleOutput
+                {
+                    // 策略B: 双重发射
+                    emitResult = await this.EmitDoubleStreamChunkAsync(chunk, reasoningBuilder, contentBuilder, cancellationToken);
+                }
 
-                var emitterResult =
-                    await this.WorkflowRuntimeService.CallbackAsync<IWorkflowEventEmitter>(it => it.EmitAsync(payload, cancellationToken));
-                if (emitterResult.TryGetError(out var emitterError))
-                    return emitterError;
+                if (emitResult.TryGetError(out var emitError))
+                    return emitError;
+
                 this.DebugDto.StreamingEventsSent++;
                 return Result.Ok();
             },
@@ -125,31 +142,105 @@ internal class AiRuneProcessor(AiRuneConfig config, WorkflowRuntimeService workf
         };
 
         var result = await aiProcessor.StreamRequestAsync(prompts, callBack, cancellationToken);
-        if (result.TryGetError(out var error))
-            return error;
-        return responseBuilder.ToString();
+
+        if (result.TryGetError(out var requestError))
+            return requestError;
+
+        // 流式结束后，处理最终状态
+        return (reasoningBuilder.ToString(), contentBuilder.ToString());
     }
 
-    private async Task<Result<string>> ExecuteNonStreamAsync
-        (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken = default)
+    /// <summary>
+    /// 实现“双重”发射逻辑：分开 thinking 和 content。
+    /// </summary>
+    private async Task<Result> EmitDoubleStreamChunkAsync(
+        AiStructuredChunk chunk,
+        StringBuilder reasoningBuilder,
+        StringBuilder contentBuilder,
+        CancellationToken cancellationToken)
     {
-        string finalResponse = "";
+        var payloadMode = Enum.TryParse<UpdateMode>(this.Config.StreamingMode, out var mode) ? mode : UpdateMode.Incremental;
 
-        // 准备回调对象
+        // 1. 发射思维过程 (如果有)
+        if (!string.IsNullOrEmpty(chunk.Reasoning))
+        {
+            string thinkAddress = $"{this.Config.StreamingTargetAddress ?? string.Empty}.think";
+
+            object reasoningDataToSend = this.Config.StreamingMode == nameof(UpdateMode.Incremental)
+                ? chunk.Reasoning
+                : reasoningBuilder.ToString();
+
+            var thinkPayload = new EmitPayload(thinkAddress, reasoningDataToSend, payloadMode);
+            var result = await this.WorkflowRuntimeService.CallbackAsync<IWorkflowEventEmitter>(it =>
+                it.EmitAsync(thinkPayload, cancellationToken));
+            if (result.TryGetError(out var error)) return error;
+        }
+
+        // 2. 发射主内容 (如果有)
+        if (!string.IsNullOrEmpty(chunk.Content))
+        {
+            object dataToSend = this.Config.StreamingMode == nameof(UpdateMode.Incremental)
+                ? chunk.Content
+                : contentBuilder.ToString();
+
+            var payload = new EmitPayload(this.Config.StreamingTargetAddress ?? string.Empty, dataToSend, payloadMode);
+            var result = await this.WorkflowRuntimeService.CallbackAsync<IWorkflowEventEmitter>(it =>
+                it.EmitAsync(payload, cancellationToken));
+            if (result.TryGetError(out var error)) return error;
+        }
+
+        return Result.Ok();
+    }
+
+    /// <summary>
+    /// 实现“合并”发射逻辑：发送包含 think 标签的组合字符串。
+    /// </summary>
+    private async Task<Result> EmitMergedStreamChunkAsync(
+        AiStructuredChunk chunk,
+        StringBuilder reasoningBuilder,
+        StringBuilder contentBuilder,
+        CancellationToken cancellationToken)
+    {
+        // 1. 决定要发送的数据
+        object dataToSend = this.Config.StreamingMode == nameof(UpdateMode.Incremental)
+            // 增量模式：只发送当前 chunk 转换后的字符串
+            ? chunk.ToLegacyThinkString()
+            // 全快照模式：使用实时的 reasoningBuilder 和 contentBuilder 来构建完整的当前状态
+            : new AiStructuredChunk(reasoningBuilder.ToString(), contentBuilder.ToString()).ToLegacyThinkString();
+
+        // 2. 创建并发送 payload
+        var payload = new EmitPayload(this.Config.StreamingTargetAddress ?? string.Empty, dataToSend,
+            Enum.TryParse<UpdateMode>(this.Config.StreamingMode, out var mode) ? mode : UpdateMode.Incremental);
+
+        var emitResult = await this.WorkflowRuntimeService.CallbackAsync<IWorkflowEventEmitter>(it =>
+            it.EmitAsync(payload, cancellationToken));
+
+        return emitResult;
+    }
+
+    private async Task<Result<(string finalReasoning, string finalContent)>> ExecuteNonStreamAsync
+        (IAiProcessor aiProcessor, IEnumerable<RoledPromptDto> prompts, CancellationToken cancellationToken)
+    {
+        string reasoning = string.Empty;
+        string content = string.Empty;
+
         var callBack = new NonStreamRequestCallBack
         {
-            OnFinalResponseReceivedAsync = response =>
+            OnFinalResponseReceivedAsync = finalResponse =>
             {
-                finalResponse = response;
+                reasoning = finalResponse.Reasoning ?? string.Empty;
+                content = finalResponse.Content ?? string.Empty;
                 return Task.FromResult(Result.Ok());
             },
             TokenUsage = tokenCount => { this.DebugDto.TokenUsage = tokenCount; }
         };
+        var result = await aiProcessor.NonStreamRequestAsync(prompts, callBack, cancellationToken);
 
-        var result = await aiProcessor.NonStreamRequestAsync(prompts, callBack, cancellationToken: cancellationToken);
         if (result.TryGetError(out var error))
             return error;
-        return finalResponse;
+
+        // 非流式结束后，处理最终状态
+        return (reasoning, content);
     }
 }
 
@@ -183,6 +274,16 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     public string AiOutputName { get; init; } = AiOutputDefaultName;
 
     /// <summary>
+    /// (可选) 用于存储AI思维过程的变量名。
+    /// 如果为空，思维过程将被丢弃（除非在流式模式下发送）。
+    /// </summary>
+    [Display(
+        Name = "思维过程变量名 (可选)",
+        Description = "指定一个变量名来存储AI的思维过程（<think>标签内的内容）。如果留空，这部分内容在最终输出时会被忽略。"
+    )]
+    public string? ReasoningOutputName { get; init; }
+
+    /// <summary>
     /// AI 服务配置。
     /// </summary>
     [RenderAsCustomObjectWidget("AiConfigEditorWidget")]
@@ -197,10 +298,32 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     /// </summary>
     [Display(
         Name = "流式输出地址 (可空)",
-        Description = "指定一个逻辑地址，例如 'ui.chat_window'。AI在流式响应时，会把数据块实时发送到这里。对于地址的解析是外部自行实现的。如果为空，则发送至某种意义上的根目录。"
+        Description =
+            "指定一个逻辑地址，例如 'ui.chat_window'。\n" +
+            "AI在流式响应时，会把数据块实时发送到这里。对于地址的解析是外部自行实现的。\n" +
+            "如果为空，则发送至某种意义上的根目录。\n" +
+            "AI的思维过程会被发送到当前地址下的`think`子路径。"
     )]
     [DefaultValue("")]
     public string? StreamingTargetAddress { get; init; } = string.Empty;
+
+    /// <summary>
+    /// 定义内容变量的输出格式。
+    /// </summary>
+    [Required]
+    [DefaultValue(nameof(AiOutputFormat.DoubleOutput))]
+    [Display(
+        Name = "内容格式",
+        Description =
+            "决定写入AI输出变量名和发射流式内容的格式。\n" +
+            "'双重'则分开发送两者（流式的思维过程会被发送到流式输出地址下的`think`子路径）；\n" +
+            "'合并'则发送包含<think>标签的组合字符串。"
+    )]
+    [StringOptions(
+        [nameof(AiOutputFormat.DoubleOutput), nameof(AiOutputFormat.ContentWithThinkTag)],
+        ["双重", "合并"]
+    )]
+    public string FinalOutputFormat { get; init; } = nameof(AiOutputFormat.DoubleOutput);
 
     /// <summary>
     /// 当启用流式输出时，决定发送到外部的数据是增量还是全量。
@@ -218,7 +341,16 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     public override List<ConsumedSpec> GetConsumedSpec() => [new(this.PromptsName, CoreVarDefs.PromptList)];
 
     /// <inheritdoc />
-    public override List<ProducedSpec> GetProducedSpec() => [new(this.AiOutputName, CoreVarDefs.String)];
+    public override List<ProducedSpec> GetProducedSpec()
+    {
+        var produced = new List<ProducedSpec> { new(this.AiOutputName, CoreVarDefs.String) };
+        if (!string.IsNullOrEmpty(this.ReasoningOutputName))
+        {
+            produced.Add(new ProducedSpec(this.ReasoningOutputName, CoreVarDefs.String));
+        }
+
+        return produced;
+    }
 
     protected override AiRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this, workflowRuntimeService);
 }
@@ -237,4 +369,20 @@ public record RuneAiConfig
     /// <summary>是否为流式传输</summary>
     [Required]
     public bool IsStream { get; init; } = false;
+}
+
+/// <summary>
+/// 定义 AI 最终输出的格式。
+/// </summary>
+public enum AiOutputFormat
+{
+    /// <summary>
+    /// 分别输出两者。
+    /// </summary>
+    DoubleOutput,
+
+    /// <summary>
+    /// 将两者合并输出。
+    /// </summary>
+    ContentWithThinkTag
 }

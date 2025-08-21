@@ -55,7 +55,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (string.IsNullOrWhiteSpace(uuid))
             return this.BadRequest("UUID 不能为空。");
 
-        return await this.ConfigurationManager.GetConfigurationByUuidAsync(this.UserId,uuid).ToActionResultAsync();
+        return await this.ConfigurationManager.GetConfigurationByUuidAsync(this.UserId, uuid).ToActionResultAsync();
     }
 
     /// <summary>
@@ -82,13 +82,14 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
 
         if (result.TryGetError(out var error, out var upsertType))
         {
-            return this.Get500ErrorResult(error); 
+            return this.Get500ErrorResult(error);
         }
 
         return upsertType == UpsertResultType.Created
             ? this.CreatedAtAction(nameof(this.GetConfigurationByUuid), new { uuid = uuid }, config)
             : this.NoContent();
     }
+
     /// <summary>
     /// 根据 UUID 删除一个 AI 配置集。
     /// </summary>
@@ -106,7 +107,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (string.IsNullOrWhiteSpace(uuid))
             return this.BadRequest("UUID 不能为空。");
 
-        return await this.ConfigurationManager.DeleteConfigurationAsync(this.UserId,uuid).ToActionResultAsync();
+        return await this.ConfigurationManager.DeleteConfigurationAsync(this.UserId, uuid).ToActionResultAsync();
     }
 
     /// <summary>
@@ -124,7 +125,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         var httpClient = this.HttpClientFactory.CreateClient();
 
         var dependencies = new AiProcessorDependencies(httpClient);
-        
+
         // 1. 创建一个 TaskCompletionSource<Result<string>>。
         //    它是一个"承诺"，承诺未来会有一个 Result<string> 类型的最终结果。
         var tcs = new TaskCompletionSource<Result<string>>();
@@ -140,7 +141,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
                 // 当收到最终响应时，我们兑现承诺，设置 TaskCompletionSource 的结果
                 OnFinalResponseReceivedAsync = response =>
                 {
-                    tcs.TrySetResult(Result.Ok(response));
+                    tcs.TrySetResult(Result.Ok(response.ToLegacyThinkString()));
                     return Task.FromResult(Result.Ok());
                 }
             };
@@ -157,10 +158,9 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
                 // 如果AI处理器执行失败，我们也让 TaskCompletionSource 带着这个失败结果完成。
                 tcs.TrySetResult(error);
             }
-        
+
             // 如果执行成功，此时 OnFinalResponseReceived 回调应该已经被触发，
             // tcs.Task 也应该已经完成了。
-
         }
         catch (Exception ex)
         {

@@ -146,7 +146,7 @@ public class AuthController(UserService userService, IConfiguration configuratio
         string token = this.GenerateJwtToken(user);
 
         // 生成并保存 Refresh Token
-        var refreshToken = this.GenerateRefreshToken();
+        string refreshToken = this.GenerateRefreshToken();
         var refreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays);
         var result = await this.UserService.SaveRefreshTokenAsync(user.Id, refreshToken, refreshTokenExpiry);
         if (result.TryGetError(out var saveError))
@@ -185,8 +185,8 @@ public class AuthController(UserService userService, IConfiguration configuratio
         }
 
         // 3. 生成新的 Access Token 和 Refresh Token
-        var newAccessToken = this.GenerateJwtToken(user);
-        var newRefreshToken = this.GenerateRefreshToken();
+        string newAccessToken = this.GenerateJwtToken(user);
+        string newRefreshToken = this.GenerateRefreshToken();
         var newRefreshTokenExpiry = DateTime.UtcNow.AddDays(RefreshTokenExpiryDays);
 
         // 4. 更新用户的 Refresh Token
@@ -250,7 +250,7 @@ public class AuthController(UserService userService, IConfiguration configuratio
     private string GenerateRefreshToken()
     {
         // 创建一个足够长的字节数组来保证随机性
-        var randomNumber = new byte[64];
+        byte[] randomNumber = new byte[64];
 
         // 使用加密服务提供程序 (CSP) 生成高质量的随机数
         using var rng = RandomNumberGenerator.Create();

@@ -1,4 +1,5 @@
 ﻿using YAESandBox.Depend.Results;
+using YAESandBox.Workflow.AIService.Shared;
 
 namespace YAESandBox.Workflow.AIService;
 
@@ -57,7 +58,7 @@ public record StreamRequestCallBack : BaseRequestCallBack
     /// 当接收到新的数据块时调用的回调函数。
     /// !! 只传递新的数据块 (string chunk) !!
     /// </summary>
-    public required Func<string,Task<Result>> OnChunkReceivedAsync { get; init; }
+    public required Func<AiStructuredChunk,Task<Result>> OnChunkReceivedAsync { get; init; }
 }
 
 /// <inheritdoc />
@@ -67,5 +68,5 @@ public record NonStreamRequestCallBack : BaseRequestCallBack
     /// <summary>
     /// 当接收到完整的、最终的响应时调用的回调函数。
     /// </summary>
-    public required Func<string,Task<Result>> OnFinalResponseReceivedAsync { get; init; }
+    public required Func<AiStructuredChunk,Task<Result>> OnFinalResponseReceivedAsync { get; init; }
 }

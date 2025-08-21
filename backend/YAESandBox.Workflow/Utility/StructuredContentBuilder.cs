@@ -90,12 +90,35 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
 
         if (mode == UpdateMode.FullSnapshot)
         {
-            // 快照模式：清空所有子节点，然后只添加一个包含新内容的文本节点。
-            targetNode.Children.Clear();
-            if (!string.IsNullOrEmpty(content))
+            // 快照模式：
+            if (string.IsNullOrEmpty(content))
             {
-                targetNode.Children.Add(new TextNode(new StringBuilder(content)));
+                // 如果新内容为空，则意图是清除所有文本。
+                targetNode.Children.RemoveAll(child => child is TextNode);
+                return;
             }
+            
+            // 寻找第一个文本节点。
+            var firstTextNode = targetNode.Children.OfType<TextNode>().FirstOrDefault();
+
+            TextNode primaryTextNode;
+            if (firstTextNode != null)
+            {
+                // a. 如果找到了，更新其内容。它成为我们的“主”文本节点。
+                firstTextNode.Content.Clear().Append(content);
+                primaryTextNode = firstTextNode;
+            }
+            else
+            {
+                // b. 如果没找到，在列表开头插入一个新的文本节点。
+                primaryTextNode = new TextNode(new StringBuilder(content));
+                targetNode.Children.Insert(0, primaryTextNode);
+            }
+
+            // c. 移除所有其他的文本节点，确保主文本节点是唯一的。
+            //    我们使用引用比较 (object.ReferenceEquals) 来确保不会移除我们刚刚更新或创建的节点。
+            targetNode.Children.RemoveAll(child =>
+                child is TextNode && !ReferenceEquals(child, primaryTextNode));
         }
         else // Incremental
         {
@@ -226,73 +249,63 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
     /// <returns>JSON 字符串。</returns>
     public string ToJson()
     {
-        // 从根节点的子节点开始构建 JsonDocument
-        var rootJsonObject = new Dictionary<string, object?>();
-
-        // 分组处理子节点，这样同名的节点可以被转换成数组
-        var groupedChildren = this.Root.Children
-            .OfType<ElementNode>()
-            .GroupBy(node => node.Name);
-
-        foreach (var group in groupedChildren)
-        {
-            var items = group.Select(this.ConvertNodeToObject).ToList();
-            if (items.Count > 1)
-            {
-                // 如果有多个同名节点，则序列化为数组
-                rootJsonObject[group.Key] = items;
-            }
-            else
-            {
-                // 否则，序列化为单个对象
-                rootJsonObject[group.Key] = items.FirstOrDefault();
-            }
-        }
-
-        return JsonSerializer.Serialize(rootJsonObject, YaeSandBoxJsonHelper.JsonSerializerOptions);
+        // ToJson 的逻辑现在完全委托给 ConvertNodeToObject，从根节点开始
+        // 这样可以正确处理所有情况，包括根节点下的混合内容
+        object representation = this.ConvertNodeToObject(this.Root);
+        return JsonSerializer.Serialize(representation, YaeSandBoxJsonHelper.JsonSerializerOptions);
     }
 
     /// <summary>
-    /// 递归地将一个 ElementNode 转换为可序列化为 JSON 的对象 (Dictionary or string)。
+    /// 递归地将一个节点转换为可序列化为 JSON 的对象 (Dictionary, List, or string)。
+    /// 这个版本修复了文本节点丢失的问题，并使逻辑更健壮。
     /// </summary>
     private object ConvertNodeToObject(ElementNode element)
     {
-        // 规则1：如果节点只包含一个 TextNode，则直接返回值
-        if (element.Children is [TextNode singleTextNode])
-        {
-            return singleTextNode.Content.ToString();
-        }
-
         var jsonObject = new Dictionary<string, object?>();
+        var childElements = element.Children.OfType<ElementNode>().ToList();
+        var textNodes = element.Children.OfType<TextNode>().ToList();
 
-        // 规则2：处理所有子节点
-        var groupedChildren = element.Children
-            .OfType<ElementNode>()
-            .GroupBy(node => node.Name);
-
-        foreach (var group in groupedChildren)
+        // 1. 优先处理所有子元素
+        if (childElements.Any())
         {
-            var items = group.Select(this.ConvertNodeToObject).ToList();
-            if (items.Count > 1)
+            var groupedChildren = childElements.GroupBy(node => node.Name);
+
+            foreach (var group in groupedChildren)
             {
-                // 规则3：多个同名子节点，转换为数组
-                jsonObject[group.Key] = items;
-            }
-            else
-            {
-                // 单个子节点，直接赋值
-                jsonObject[group.Key] = items.FirstOrDefault();
+                var items = group.Select(this.ConvertNodeToObject).ToList();
+                if (items.Count > 1)
+                {
+                    // 规则：多个同名子节点，转换为数组
+                    jsonObject[group.Key] = items;
+                }
+                else
+                {
+                    // 单个子节点，直接赋值
+                    jsonObject[group.Key] = items.FirstOrDefault();
+                }
             }
         }
 
-        // 处理紧邻的文本内容（不常见，但为了完整性）
-        string directText = string.Concat(element.Children.OfType<TextNode>().Select(tn => tn.Content.ToString()));
-        if (!string.IsNullOrWhiteSpace(directText))
+        // 2. 处理所有文本内容
+        string directText = string.Concat(textNodes.Select(tn => tn.Content.ToString())).Trim();
+
+        // 3. 根据内容决定最终返回类型
+        if (!jsonObject.Any() && !string.IsNullOrEmpty(directText))
         {
-            // 如果一个元素既有子元素又有文本，可以将文本放在一个特殊的键下
-            jsonObject["_text"] = directText.Trim();
+            // 情况 A: 节点只包含文本，例如 <thought>text</thought>
+            // 这是最关键的修正，确保返回纯字符串而不是对象。
+            return directText;
         }
 
+        if (jsonObject.Any() && !string.IsNullOrEmpty(directText))
+        {
+            // 情况 B: 混合内容，例如 <message>Hello<user>AI</user></message>
+            // 将文本内容存放到一个特殊键 "_text" 中。
+            jsonObject["_text"] = directText;
+        }
+
+        // 情况 C: 节点只包含子元素，或为空节点。
+        // 例如 <data><item>1</item></data> 或 <empty/>
         return jsonObject;
     }
 }

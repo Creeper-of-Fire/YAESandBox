@@ -148,12 +148,12 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
             .GroupBy(v => v.VarName) // 按变量名分组，以处理同一变量的多次 get
             .Select(group =>
             {
-                var varName = group.Key;
+                string varName = group.Key;
                 // 优先使用第一个找到的带有类型注解的条目
                 var bestAnnotation = group.FirstOrDefault(g => !string.IsNullOrWhiteSpace(g.TypeName));
 
-                var typeName = bestAnnotation?.TypeName;
-                var description = bestAnnotation?.Description;
+                string? typeName = bestAnnotation?.TypeName;
+                string? description = bestAnnotation?.Description;
 
                 VarSpecDef varDef;
                 if (string.IsNullOrWhiteSpace(typeName))
@@ -162,7 +162,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
                 }
                 else
                 {
-                    var finalDescription = string.IsNullOrWhiteSpace(description) ? null : description;
+                    string? finalDescription = string.IsNullOrWhiteSpace(description) ? null : description;
                     varDef = new VarSpecDef(typeName, finalDescription);
                 }
 
@@ -191,12 +191,12 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
             .GroupBy(v => v.VarName) // 按变量名分组，以处理同一变量的多次 set
             .Select(group =>
             {
-                var varName = group.Key;
+                string varName = group.Key;
                 // 优先使用第一个找到的带有类型注解的条目
                 var bestAnnotation = group.FirstOrDefault(g => !string.IsNullOrWhiteSpace(g.TypeName));
 
-                var typeName = bestAnnotation?.TypeName;
-                var description = bestAnnotation?.Description;
+                string? typeName = bestAnnotation?.TypeName;
+                string? description = bestAnnotation?.Description;
 
                 VarSpecDef varDef;
                 if (string.IsNullOrWhiteSpace(typeName))
@@ -205,7 +205,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
                 }
                 else
                 {
-                    var finalDescription = string.IsNullOrWhiteSpace(description) ? null : description;
+                    string? finalDescription = string.IsNullOrWhiteSpace(description) ? null : description;
                     varDef = new VarSpecDef(typeName, finalDescription);
                 }
 

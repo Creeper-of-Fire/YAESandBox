@@ -92,7 +92,7 @@ public class WorkflowExecutionController(
             onEmitAsync: async payload =>
             {
                 // a. 更新内存中的XML树
-                contentBuilder.SetContent(payload.Address, payload.Data?.ToString() ?? "", payload.Mode);
+                contentBuilder.SetContent(payload.Address, payload.Data?.ToString() ?? "", payload.Mode, mergeTags: false);
 
                 // b. 根据请求的格式选择序列化方法
                 string serializedContent = request.OutputFormat switch

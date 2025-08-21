@@ -88,7 +88,7 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
             var message = response.Choices[0].Message;
 
             // 同样使用通用格式化工具，一次性获取完整内容
-            string finalContent = AiResponseFormatter.GetFormattedContent(message);
+            var finalContent = AiResponseFormatter.GetFormattedContent(message);
             
             return await requestCallBack.OnFinalResponseReceivedAsync(finalContent);
         }

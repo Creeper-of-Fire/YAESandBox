@@ -90,7 +90,7 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
             }
 
             var message = response.Choices[0].Message;
-            string finalContent = AiResponseFormatter.GetFormattedContent(message);
+            var finalContent = AiResponseFormatter.GetFormattedContent(message);
 
             return await requestCallBack.OnFinalResponseReceivedAsync(finalContent);
         }
