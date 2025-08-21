@@ -1,7 +1,7 @@
 ﻿<template>
   <div class="app-shell">
     <header class="app-header">
-      <n-space class="navigation-controls">
+      <n-flex class="navigation-controls">
         <router-link
             v-for="link in navLinks"
             :key="link.to"
@@ -18,10 +18,10 @@
             {{ link.label }}
           </n-button>
         </router-link>
-      </n-space>
+      </n-flex>
 
       <!-- 用户状态和登出按钮 -->
-      <n-space align="center" class="user-controls">
+      <n-flex align="center" class="user-controls">
         <DayNightToggleWithDropDown v-model:themeMode="themeMode"/>
         <span v-if="authStore.isAuthenticated">
           欢迎, {{ userName }}
@@ -29,7 +29,7 @@
         <n-button v-if="authStore.isAuthenticated" ghost type="error" @click="handleLogout">
           登出
         </n-button>
-      </n-space>
+      </n-flex>
     </header>
 
     <main class="app-main-content">

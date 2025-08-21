@@ -11,7 +11,7 @@
       <template #header>
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span>AI 服务配置</span>
-          <n-space align="center">
+          <n-flex align="center">
             <!-- 启用/禁用按钮 -->
             <n-popover v-if="!config" trigger="hover">
               <template #trigger>
@@ -55,7 +55,7 @@
               </template>
               {{ isExpanded ? '收起配置' : '展开配置' }}
             </n-popover>
-          </n-space>
+          </n-flex>
         </div>
       </template>
 

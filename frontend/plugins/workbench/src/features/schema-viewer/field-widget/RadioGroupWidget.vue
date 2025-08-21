@@ -1,6 +1,6 @@
 ﻿<template>
   <n-radio-group v-model:value="model" name="radiogroup">
-    <n-space>
+    <n-flex>
       <n-radio
           v-for="option in options"
           :key="option.value.toString()"
@@ -8,12 +8,12 @@
       >
         {{ option.label }}
       </n-radio>
-    </n-space>
+    </n-flex>
   </n-radio-group>
 </template>
 
 <script lang="ts" setup>
-import {NRadio, NRadioGroup, NSpace} from 'naive-ui';
+import {NRadio, NRadioGroup, NFlex} from 'naive-ui';
 import {useVModel} from "@vueuse/core";
 
 interface RadioOption

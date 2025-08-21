@@ -1,8 +1,8 @@
 ﻿<!-- src/app-workbench/components/tuum/editor/TuumMappingsEditor.vue -->
 <template>
-  <n-space :size="16" vertical>
+  <n-flex :size="16" vertical>
     <!-- 输入映射 -->
-    <n-space vertical>
+    <n-flex vertical>
       <!-- ✨ 智能提示与快捷操作区域 ✨ -->
       <n-alert
           v-if="analysisResult"
@@ -51,7 +51,7 @@
           title="输入映射"
           value-header="外部端点 (提供者)"
       />
-    </n-space>
+    </n-flex>
 
     <!-- 输出映射 -->
     <MappingListEditor
@@ -63,12 +63,12 @@
         title="输出映射"
         value-header="外部端点 (输出名)"
     />
-  </n-space>
+  </n-flex>
 </template>
 
 <script lang="ts" setup>
 import {computed} from 'vue';
-import {NSpace} from 'naive-ui';
+import {NFlex} from 'naive-ui';
 import MappingListEditor from './MappingListEditor.vue';
 import type {
   ConsumedSpec,

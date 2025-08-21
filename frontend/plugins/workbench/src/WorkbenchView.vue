@@ -27,7 +27,7 @@
       </div>
 
       <!-- 右侧的全局操作按钮 -->
-      <n-space class="header-right-controls">
+      <n-flex class="header-right-controls">
         <n-button
             :disabled="!workbenchStore.hasDirtyDrafts" :loading="isSavingAll" secondary
             strong
@@ -40,7 +40,7 @@
           全部保存
         </n-button>
         <n-button @click="showAiConfigModal = true">全局AI配置</n-button>
-      </n-space>
+      </n-flex>
     </div>
 
     <!-- 2. 编辑器核心布局 -->
@@ -328,6 +328,7 @@ const themeVars = useThemeVars();
   flex-direction: column;
   height: 100%;
   overflow: hidden;
+  box-sizing: border-box;
 }
 
 /* 确保编辑器布局占据剩余空间 */

@@ -2,11 +2,11 @@
   <div> <!-- 根元素，用于包裹按钮和 Modal -->
     <!-- 触发测试模态框的按钮 -->
     <n-button
-        type="info"
-        secondary
-        @click="handleOpenTestModal"
         :disabled="!formDataCopy || !aiModelType"
+        secondary
         title="点击测试当前选中的 AI 模型配置"
+        type="info"
+        @click="handleOpenTestModal"
     >
       测试当前模型
     </n-button>
@@ -14,18 +14,18 @@
     <!-- 测试模态框 -->
     <n-modal
         v-model:show="showTestModal"
-        :mask-closable="false"
-        preset="card"
-        title="注意：测试对象为当前编辑中的数据。"
-        style="width: 600px; max-width: 90vw;"
         :bordered="true"
-        size="huge"
-        role="dialog"
+        :mask-closable="false"
         aria-modal="true"
+        preset="card"
+        role="dialog"
+        size="huge"
+        style="width: 600px; max-width: 90vw;"
+        title="注意：测试对象为当前编辑中的数据。"
         @after-leave="resetModalState"
     >
       <n-spin :show="isLoading" description="正在请求 AI 服务...">
-        <n-alert type="info" :show-icon="false" style="margin-bottom: 16px;">
+        <n-alert :show-icon="false" style="margin-bottom: 16px;" type="info">
           当前测试对象：配置集 "{{ configSetName }}" 中的 "{{ aiModelType }}" 模型。
         </n-alert>
 
@@ -33,21 +33,21 @@
           <!-- 测试文本输入区域 -->
           <n-form-item label="输入测试文本">
             <n-input
-                type="textarea"
                 v-model:value="testText"
-                placeholder="在此输入你想发送给 AI 进行测试的内容..."
                 :autosize="{ minRows: 5, maxRows: 15 }"
                 :disabled="isLoading"
+                placeholder="在此输入你想发送给 AI 进行测试的内容..."
+                type="textarea"
             />
           </n-form-item>
 
           <!-- 执行测试按钮 -->
           <n-button
+              :disabled="!testText.trim() || isLoading || !formDataCopy || !aiModelType"
+              :loading="isLoading"
+              block
               type="primary"
               @click="runTest"
-              :loading="isLoading"
-              :disabled="!testText.trim() || isLoading || !formDataCopy || !aiModelType"
-              block
           >
             执行测试
           </n-button>
@@ -56,16 +56,16 @@
           <div v-if="testResult || errorMessage" style="margin-top: 20px;">
             <n-h4>测试结果:</n-h4>
             <!-- 错误信息展示 -->
-            <n-alert v-if="errorMessage" title="测试失败" type="error" closable @close="errorMessage = null">
+            <n-alert v-if="errorMessage" closable title="测试失败" type="error" @close="errorMessage = null">
               {{ errorMessage }}
             </n-alert>
             <!-- 成功结果展示 -->
-            <n-card v-if="testResult && !errorMessage" size="small" embedded>
+            <n-card v-if="testResult && !errorMessage" embedded size="small">
               <!-- 使用 pre-wrap 来允许换行 -->
               <n-text style="white-space: pre-wrap;">{{ testResult }}</n-text>
             </n-card>
             <!-- 清除结果按钮 -->
-            <n-button tertiary size="small" @click="clearResult" style="margin-top: 8px;" v-if="testResult || errorMessage">
+            <n-button v-if="testResult || errorMessage" size="small" style="margin-top: 8px;" tertiary @click="clearResult">
               清除当前结果
             </n-button>
           </div>
@@ -81,11 +81,11 @@
   </div>
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import {ref} from 'vue';
 import {NAlert, NButton, NCard, NEmpty, NFlex, NFormItem, NH4, NInput, NModal, NSpin, NText, useMessage,} from 'naive-ui';
-import {AiConfigurationsService} from '#/types/generated/ai-config-api-client';
 import type {AbstractAiProcessorConfig} from "#/types/generated/ai-config-api-client";
+import {AiConfigurationsService} from '#/types/generated/ai-config-api-client';
 
 // --- 组件 Props ---
 // 和之前一样，从父组件接收这些参数

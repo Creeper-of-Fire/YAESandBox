@@ -22,9 +22,9 @@
         </n-h4>
 
 
-        <n-space class="action-bar" justify="space-between">
+        <n-flex class="action-bar" justify="space-between">
           <!-- 左侧：动态生成的上下文操作 -->
-          <n-space>
+          <n-flex>
             <template v-for="action in actions" :key="action.key">
               <!-- 渲染需要 Popover 的动作 (如重命名、添加) -->
               <InlineInputPopover v-if="action.renderType === 'popover'"
@@ -52,12 +52,12 @@
                 {{ action.label }}
               </n-button>
             </template>
-          </n-space>
-          <n-space>
+          </n-flex>
+          <n-flex>
             <n-button :disabled="!isDirty" secondary size="small" strong type="error" @click="handleDiscard">放弃</n-button>
             <n-button :disabled="!isDirty" secondary size="small" strong type="success" @click="handleSave">保存</n-button>
-          </n-space>
-        </n-space>
+          </n-flex>
+        </n-flex>
         <!-- 分割线，让布局更清晰 -->
         <n-divider style="margin-top: 12px; margin-bottom: 12px;"/>
       </template>

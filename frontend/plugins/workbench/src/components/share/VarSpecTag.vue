@@ -11,7 +11,7 @@
     </template>
 
     <!-- 浮动卡片: 显示详细信息 -->
-    <n-space vertical>
+    <n-flex vertical>
       <n-text strong>变量名：{{ varName }}</n-text>
       <n-text>类型: {{ specDef.typeName }}</n-text>
 
@@ -22,12 +22,12 @@
       </n-text>
 
       <n-text depth="3">描述: {{ specDef.description || '无' }}</n-text>
-    </n-space>
+    </n-flex>
   </n-popover>
 </template>
 
 <script lang="ts" setup>
-import {NFlex, NPopover, NSpace, NTag, NText} from 'naive-ui';
+import {NFlex, NPopover, NTag, NText} from 'naive-ui';
 import type {VarSpecDef} from "#/types/generated/workflow-config-api-client";
 
 type TagType = 'default' | 'success' | 'warning' | 'error' | 'info';

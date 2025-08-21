@@ -7,8 +7,10 @@ import App from './App.vue';
 import 'vfonts/Lato.css'
 // 等宽字体
 import 'vfonts/FiraCode.css'
-import router from './router/routerIndex.ts'
 import './styles/draggable.css';
+import './styles/global.css'
+
+import router from './router/routerIndex.ts'
 import {installBuiltinComponents} from "@yaesandbox-frontend/shared-ui/content-renderer";
 // 导入 ApiRequestOptions 类型，我们可以从任何一个客户端导入，因为它们是相同的
 // --- 将 Token 注入到所有 API 请求中 ---

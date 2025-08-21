@@ -186,7 +186,7 @@ onUnmounted(() =>
   width: 180em;
   height: 70em;
   display: inline-block;
-  vertical-align: middle; /* 方便在 n-space 中对齐 */
+  vertical-align: middle; /* 方便在 n-flex 中对齐 */
   transform: translate3d(0, 0, 0);
   cursor: pointer;
 }

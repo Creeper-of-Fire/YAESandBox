@@ -17,7 +17,7 @@
       {{ description }}
     </n-text>
 
-    <n-space v-if="localItems.length > 0" vertical>
+    <n-flex v-if="localItems.length > 0" vertical>
       <!-- 表头 -->
       <n-flex class="header-row" justify="space-between">
         <n-text class="col-key">{{ keyHeader }}</n-text>
@@ -87,7 +87,7 @@
           </template>
         </n-button>
       </n-flex>
-    </n-space>
+    </n-flex>
 
     <n-empty v-else description="暂无映射，请点击右上角添加"/>
   </n-card>
@@ -95,13 +95,8 @@
 
 <script lang="ts" setup>
 import {computed, h, ref, type VNodeChild, watch} from 'vue';
-import {NAutoComplete, NButton, NCard, NEmpty, NFlex, NIcon, NSpace, NText} from 'naive-ui';
-import type {
-  ConsumedSpec,
-  ProducedSpec,
-  TuumInputMapping,
-  TuumOutputMapping
-} from "#/types/generated/workflow-config-api-client";
+import {NAutoComplete, NButton, NCard, NEmpty, NFlex, NIcon, NText} from 'naive-ui';
+import type {ConsumedSpec, ProducedSpec, TuumInputMapping, TuumOutputMapping} from "#/types/generated/workflow-config-api-client";
 import {AddIcon, ArrowForwardIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import VarSpecTag from "#/components/share/VarSpecTag.vue";
 

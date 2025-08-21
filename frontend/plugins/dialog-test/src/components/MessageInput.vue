@@ -19,7 +19,7 @@
       </n-button>
     </div>
     <div class="input-settings">
-      <n-space align="center" size="small">
+      <n-flex align="center" size="small">
         <n-tooltip trigger="hover">
           <template #trigger>
             <n-switch v-model:value="sendWithEnter" />
@@ -27,14 +27,14 @@
           {{ sendWithEnter ? '当前: Enter 发送消息' : '当前: Shift+Enter 发送消息' }}
         </n-tooltip>
         <label>使用 Enter 键发送</label>
-      </n-space>
+      </n-flex>
     </div>
   </div>
 </template>
 
 <script lang="ts" setup>
 import { ref, computed } from 'vue';
-import { NInput, NButton, NSwitch, NSpace, NTooltip } from 'naive-ui';
+import { NInput, NButton, NSwitch, NFlex, NTooltip } from 'naive-ui';
 
 const props = defineProps<{
   loading: boolean;

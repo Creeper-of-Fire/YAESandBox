@@ -17,12 +17,13 @@
 import AppShell from "#/AppShell.vue";
 import {computed, provide} from "vue";
 import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
-import {usePreferredDark, useStorage} from "@vueuse/core";
+import {usePreferredDark} from "@vueuse/core";
 import {useThemeTransition} from "#/composables/useThemeTransition.ts";
 import {darkTheme, lightTheme} from "naive-ui";
+import {useScopedStorage} from "@yaesandbox-frontend/shared-utils/composables/useScopedStorage.ts";
 
 // --- 状态管理和计算 ---
-const themeMode = useStorage<'light' | 'dark' | 'system'>('theme-mode', 'system');
+const themeMode = useScopedStorage<'light' | 'dark' | 'system'>('theme-mode', 'system');
 const isSystemDark = usePreferredDark();
 
 const finalThemeName = computed<'light' | 'dark'>(() =>
