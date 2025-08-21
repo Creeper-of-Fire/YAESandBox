@@ -16,12 +16,14 @@ const serializer = {
     write: (v: any) => JSON.stringify(v),
 }
 
-export const useAuthStore = defineStore('authentication', () =>
+const STORAGE_KEY = 'app-shell-authentication';
+
+export const useAuthStore = defineStore(STORAGE_KEY, () =>
 {
     // --- State ---
-    const token = useStorage<string | null>('authToken', null, localStorage);
-    const refreshToken = useStorage<string | null>('authRefreshToken', null, localStorage);
-    const user = useStorage<{ userId: string, username: string } | null>('authUser', null, localStorage, {serializer});
+    const token = useStorage<string | null>(`${STORAGE_KEY}-authToken`, null, localStorage);
+    const refreshToken = useStorage<string | null>(`${STORAGE_KEY}-authRefreshToken`, null, localStorage);
+    const user = useStorage<{ userId: string, username: string } | null>(`${STORAGE_KEY}-authUser`, null, localStorage, {serializer});
     const authError = ref<string | null>(null);
     const userName = computed(() => user.value?.username || '');
 

@@ -17,5 +17,6 @@ export type { WorkflowConfig } from './models/WorkflowConfig';
 export type { WorkflowConnection } from './models/WorkflowConnection';
 export type { WorkflowExecutionRequest } from './models/WorkflowExecutionRequest';
 export type { WorkflowExecutionResult } from './models/WorkflowExecutionResult';
+export type { WorkflowExecutionSignalRRequest } from './models/WorkflowExecutionSignalRRequest';
 
 export { WorkflowExecutionService } from './services/WorkflowExecutionService';
