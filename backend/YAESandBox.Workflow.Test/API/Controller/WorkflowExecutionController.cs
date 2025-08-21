@@ -6,11 +6,13 @@ using System.Threading.Channels;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Workflow.Utility;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.SignalR;
 using YAESandBox.Authentication;
 using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Abstractions;
+using YAESandBox.Workflow.Test.API.GameHub;
 
 namespace YAESandBox.Workflow.Test.API.Controller;
 
@@ -43,9 +45,13 @@ file class EmitterCallback(
 [ApiController]
 [Route("api/v1/workflow-execution")]
 [ApiExplorerSettings(GroupName = WorkflowTestModule.WorkflowTestGroupName)]
-public class WorkflowExecutionController(IMasterAiService masterAiService) : AuthenticatedApiControllerBase
+public class WorkflowExecutionController(
+    IMasterAiService masterAiService,
+    IHubContext<WorkflowHub> workflowHubContext
+) : AuthenticatedApiControllerBase
 {
     private IMasterAiService MasterAiService { get; } = masterAiService;
+    private IHubContext<WorkflowHub> WorkflowHubContext { get; } = workflowHubContext;
 
     /// <summary>
     /// 执行一个工作流并返回最终结果（以结构化文本形式）。
@@ -109,45 +115,41 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Aut
 
 
     /// <summary>
-    /// 以流式方式执行工作流，并通过 Server-Sent Events 返回结构化结果。
+    /// 通过 SignalR 异步触发一个工作流执行，并流式推送结果。
     /// </summary>
     /// <remarks>
-    /// 此端点使用我们新的事件系统。工作流中的 "EmitEventRune" 会触发事件，
-    /// 此处会将这些事件实时地构建成一个XML结构，并将每次更新后的完整XML通过SSE推送给前端。
+    /// 此端点会立即返回202 Accepted状态，表示任务已接受。
+    /// 实际的工作流在后台执行，并通过与请求中 `ConnectionId` 关联的 SignalR 连接推送事件。
+    /// 客户端需要先建立SignalR连接，获取`ConnectionId`，然后调用此API。
     /// </remarks>
-    [HttpPost("execute-stream")]
-    [Produces("text/event-stream")]
-    public async Task ExecuteWorkflowStream(
-        [FromBody] WorkflowExecutionRequest request,
+    [HttpPost("execute-signalr")]
+    [ProducesResponseType(StatusCodes.Status202Accepted)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
+    public IActionResult ExecuteWorkflowSignalR(
+        [FromBody] WorkflowExecutionSignalRRequest request,
         CancellationToken cancellationToken)
     {
-        // 1. 设置响应头
-        this.Response.Headers.Append("Content-Type", "text/event-stream");
-        this.Response.Headers.Append("Cache-Control", "no-cache");
-        this.Response.Headers.Append("Connection", "keep-alive");
-
-        // 2. 创建 Channel 和 StructuredContentBuilder
-        var channel = Channel.CreateUnbounded<StreamMessage>();
+        // 1. StructuredContentBuilder 用于在内存中聚合状态
         var contentBuilder = new StructuredContentBuilder("response");
 
-        // 3. 定义新的 EmitterCallback
+        // 2. 定义新的 EmitterCallback，它将通过 SignalR Hub 发送消息
         var callback = new EmitterCallback(
             onEmitAsync: async payload =>
             {
-                // a. 使用 StructuredContentBuilder 更新内存中的XML树
+                // a. 更新内存中的XML树
                 contentBuilder.SetContent(payload.Address, payload.Data?.ToString() ?? "", payload.Mode);
 
-                // b. 将更新后的完整XML字符串写入 Channel
+                // b. 将更新后的完整XML字符串通过SignalR发送给特定的客户端
                 var message = new StreamMessage("data", contentBuilder.ToString());
-                await channel.Writer.WriteAsync(message, cancellationToken);
+                await this.WorkflowHubContext.Clients.Client(request.ConnectionId)
+                    .SendAsync("ReceiveWorkflowUpdate", message, cancellationToken);
 
                 return Result.Ok();
-            },
-            onCompleteAsync: () => Task.FromResult(Result.Ok())
+            }
         );
 
-        // 4. 在后台任务中启动工作流执行
-        _ = Task.Run(async () =>
+        // 3. 在后台任务中启动工作流执行 (与SSE版本类似，但通信方式不同)
+        _ = Task.Run<Task>(async () =>
         {
             try
             {
@@ -160,60 +162,30 @@ public class WorkflowExecutionController(IMasterAiService masterAiService) : Aut
                 );
                 var result = await processor.ExecuteWorkflowAsync(cancellationToken);
 
-                // 根据工作流执行结果发送最终消息
-                if (result.IsSuccess)
-                {
-                    // a. 如果成功，发送 'done' 消息
-                    var doneMessage = new StreamMessage("done", "Workflow completed successfully.");
-                    await channel.Writer.WriteAsync(doneMessage, cancellationToken);
-                }
-                else
-                {
-                    // b. 如果是业务逻辑上的失败（例如，输入验证失败），发送 'error' 消息
-                    var errorMessage = new StreamMessage("error", result.ErrorMessage);
-                    await channel.Writer.WriteAsync(errorMessage, cancellationToken);
-                }
+                var finalMessage = result.IsSuccess
+                    ? new StreamMessage("done", "Workflow completed successfully.")
+                    : new StreamMessage("error", result.ErrorMessage);
+
+                await this.WorkflowHubContext.Clients.Client(request.ConnectionId)
+                    .SendAsync("ReceiveWorkflowUpdate", finalMessage, cancellationToken);
             }
             catch (Exception ex)
             {
+                // 捕获意外异常
                 var exceptionMessage = new StreamMessage("error", $"[Backend Error] {ex.Message}");
-                await channel.Writer.WriteAsync(exceptionMessage, cancellationToken);
-            }
-            finally
-            {
-                channel.Writer.Complete();
+                // 确保即使在取消的情况下也尝试通知客户端
+                await this.WorkflowHubContext.Clients.Client(request.ConnectionId)
+                    .SendAsync("ReceiveWorkflowUpdate", exceptionMessage, CancellationToken.None);
             }
         }, cancellationToken);
 
-
-        // 5. 在主线程中消费 Channel 的数据并写入响应流
-        try
-        {
-            await foreach (var message in channel.Reader.ReadAllAsync(cancellationToken))
-            {
-                string payload = JsonSerializer.Serialize(message, new JsonSerializerOptions
-                {
-                    Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
-                await this.Response.WriteAsync($"data: {payload}\n\n", cancellationToken);
-                await this.Response.Body.FlushAsync(cancellationToken);
-
-                if (message.Type is "done" or "error")
-                {
-                    break;
-                }
-            }
-        }
-        catch (OperationCanceledException)
-        {
-            // 客户端断开连接
-        }
+        // 4. 立即返回，表示请求已被接受并在后台处理
+        return this.Accepted();
     }
 }
 
 // 定义 Channel 中传递的消息结构
-file record StreamMessage(string Type, string? Content);
+internal record StreamMessage(string Type, string? Content);
 
 /// <summary>
 /// 工作流执行请求的 DTO。
@@ -232,4 +204,17 @@ public record WorkflowExecutionRequest
     /// </summary>
     [Required]
     public required Dictionary<string, string> WorkflowInputs { get; init; }
+}
+
+/// <summary>
+/// 用于 SignalR 触发的工作流执行请求的 DTO。
+/// </summary>
+public record WorkflowExecutionSignalRRequest : WorkflowExecutionRequest
+{
+    /// <summary>
+    /// 客户端的 SignalR 连接 ID。
+    /// 服务器将通过此 ID 将流式结果推送给正确的客户端。
+    /// </summary>
+    [Required]
+    public required string ConnectionId { get; init; }
 }

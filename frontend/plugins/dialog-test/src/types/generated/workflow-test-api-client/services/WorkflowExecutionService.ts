@@ -4,6 +4,7 @@
 /* eslint-disable */
 import type { WorkflowExecutionRequest } from '../models/WorkflowExecutionRequest';
 import type { WorkflowExecutionResult } from '../models/WorkflowExecutionResult';
+import type { WorkflowExecutionSignalRRequest } from '../models/WorkflowExecutionSignalRRequest';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
@@ -31,22 +32,26 @@ export class WorkflowExecutionService {
         });
     }
     /**
-     * 以流式方式执行工作流，并通过 Server-Sent Events 返回结构化结果。
-     * 此端点使用我们新的事件系统。工作流中的 "EmitEventRune" 会触发事件，
-     * 此处会将这些事件实时地构建成一个XML结构，并将每次更新后的完整XML通过SSE推送给前端。
-     * @returns any OK
+     * 通过 SignalR 异步触发一个工作流执行，并流式推送结果。
+     * 此端点会立即返回202 Accepted状态，表示任务已接受。
+     * 实际的工作流在后台执行，并通过与请求中 `ConnectionId` 关联的 SignalR 连接推送事件。
+     * 客户端需要先建立SignalR连接，获取`ConnectionId`，然后调用此API。
+     * @returns any Accepted
      * @throws ApiError
      */
-    public static postApiV1WorkflowExecutionExecuteStream({
+    public static postApiV1WorkflowExecutionExecuteSignalr({
         requestBody,
     }: {
-        requestBody?: WorkflowExecutionRequest,
+        requestBody?: WorkflowExecutionSignalRRequest,
     }): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'POST',
-            url: '/api/v1/workflow-execution/execute-stream',
+            url: '/api/v1/workflow-execution/execute-signalr',
             body: requestBody,
             mediaType: 'application/json',
+            errors: {
+                400: `Bad Request`,
+            },
         });
     }
 }

@@ -132,23 +132,6 @@ builder.Services.AddSingleton<IGeneralJsonRootStorage>(sp =>
     )
 );
 
-// --- CORS (Configure as needed, especially for development) ---
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy("AllowAll", policy =>
-    {
-        policy.AllowAnyOrigin()
-            .AllowAnyMethod()
-            .AllowAnyHeader();
-        // If using SignalR with credentials, adjust AllowAnyOrigin and add AllowCredentials()
-        // policy.WithOrigins("http://localhost:xxxx") // Your frontend URL
-        //       .AllowAnyMethod()
-        //       .AllowAnyHeader()
-        //       .AllowCredentials();
-    });
-});
-
-
 allModules.ForEachModules<IProgramModuleWithInitialization>(it =>
     it.Initialize(new ModuleInitializationContext(allModules, pluginAssemblies)));
 

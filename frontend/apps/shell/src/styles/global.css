@@ -1,0 +1,9 @@
+/*
+  让所有元素的盒子模型都更符合直觉。
+*/
+html {
+    box-sizing: border-box;
+}
+*, *:before, *:after {
+    box-sizing: inherit;
+}

@@ -26,7 +26,7 @@ public static class YaeSandBoxJsonHelper
         Converters = { new JsonStringEnumConverter() },
         PropertyNameCaseInsensitive = true,
         PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-        
+
         TypeInfoResolver = new DefaultJsonTypeInfoResolver()
     };
 
@@ -45,8 +45,9 @@ public static class YaeSandBoxJsonHelper
         foreach (var prop in properties)
         {
             // 1. 跳过集合属性，它们将单独处理
-            if (prop.Name == nameof(JsonSerializerOptions.Converters) ||
-                prop.Name == nameof(JsonSerializerOptions.TypeInfoResolverChain))
+            if (prop.Name is nameof(JsonSerializerOptions.Converters)
+                or nameof(JsonSerializerOptions.TypeInfoResolverChain)
+                or nameof(JsonSerializerOptions.TypeInfoResolver))
             {
                 continue;
             }
@@ -262,7 +263,7 @@ public static class YaeSandBoxJsonHelper
 
         return false;
     }
-    
+
     /// <summary>
     /// 通过JSON序列化和反序列化创建一个对象的深拷贝。
     /// 这是一种简单而有效的创建对象独立副本的方法，适用于可序列化的POCO对象。

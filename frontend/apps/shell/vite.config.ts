@@ -85,6 +85,13 @@ export default defineConfig(({command, mode}) =>
                     // secure: false,
                     // rewrite: (path) => path.replace(/^\/plugins/, '/plugins'), // 如果路径需要重写，但这里通常不需要
                 },
+                // 代理所有 /hubs 开头的请求 (用于 SignalR)
+                '/hubs': {
+                    target: 'http://localhost:7018', // <--- 替换成你的后端地址!
+                    changeOrigin: true, // 必须设置为 true
+                    ws: true, // <--- SignalR 必须启用 WebSocket 代理
+                    // secure: false, // 如果你的后端是 https 且证书是自签名的，需要这个
+                }
             }
         },
         resolve: {}

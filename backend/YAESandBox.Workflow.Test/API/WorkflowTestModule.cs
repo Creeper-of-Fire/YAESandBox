@@ -1,4 +1,6 @@
-﻿using YAESandBox.Workflow.Core.Abstractions;
+﻿using Microsoft.AspNetCore.Routing;
+using YAESandBox.Workflow.Core.Abstractions;
+using YAESandBox.Workflow.Test.API.GameHub;
 
 namespace YAESandBox.Workflow.Test.API;
 
@@ -12,7 +14,7 @@ using Controller;
 /// <summary>
 /// 用于测试工作流执行功能的模块。
 /// </summary>
-public class WorkflowTestModule : IProgramModuleSwaggerUiOptionsConfigurator, IProgramModuleMvcConfigurator
+public class WorkflowTestModule : IProgramModuleSwaggerUiOptionsConfigurator, IProgramModuleMvcConfigurator, IProgramModuleHubRegistrar
 {
     /// <summary>
     /// Api文档的GroupName
@@ -48,5 +50,11 @@ public class WorkflowTestModule : IProgramModuleSwaggerUiOptionsConfigurator, IP
 
         // 注册模拟的 IWorkflowDataAccess
         service.AddSingleton<IWorkflowDataAccess, MockWorkflowDataAccess>();
+    }
+
+    /// <inheritdoc />
+    public void MapHubs(IEndpointRouteBuilder endpoints)
+    {
+        endpoints.MapHub<WorkflowHub>("/hubs/game-era-test");
     }
 }
