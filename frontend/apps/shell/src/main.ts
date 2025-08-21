@@ -1,6 +1,6 @@
 // src/main.ts
 import * as Vue from 'vue';
-import {createApp} from 'vue';
+import {createApp, provide} from 'vue';
 import {createPinia} from 'pinia';
 import App from './App.vue';
 // 通用字体
@@ -17,7 +17,7 @@ import {installBuiltinComponents} from "@yaesandbox-frontend/shared-ui/content-r
 // 必须在 Pinia 安装之后，才能使用 useAuthStore
 // 导入所有需要认证的 API 客户端的 OpenAPI 对象
 import {useAuthStore} from "#/app-authentication/stores/authStore.ts"
-import {type ApiRequestOptions, TokenResolverKey} from '@yaesandbox-frontend/core-services/injectKeys';
+import {type ApiRequestOptions, PluginUniqueNameKey, TokenResolverKey} from '@yaesandbox-frontend/core-services/injectKeys';
 import {loadPlugins} from "#/plugins/pluginLoader.ts";
 import axiosInstance from "#/utils/axiosInstance.ts";
 

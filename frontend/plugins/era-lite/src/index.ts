@@ -15,6 +15,7 @@ const EraLitePluginModule: PluginModule = {
     // 插件的元数据
     meta: {
         name: 'era-lite',
+        uniqueName:'era-lite-A3F83C56-1D0E-4E10-97C4-C069C968AC39',
         navEntry: {
             label: 'era测试',
             order: 1

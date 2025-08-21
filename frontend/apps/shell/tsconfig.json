@@ -17,6 +17,7 @@
   "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
   "references": [
     { "path": "../../plugins/workbench" },
-    { "path": "../../plugins/dialog-test" }
+    { "path": "../../plugins/dialog-test" },
+    { "path": "../../plugins/era-lite" }
   ]
 }

@@ -15,6 +15,7 @@ const DialogTestPluginModule: PluginModule = {
     // 插件的元数据
     meta: {
         name: 'dialog-test',
+        uniqueName: "dialog_test_03E211F8-54B7-4661-BAF3-145E2570885C",
         navEntry: {
             label: '对话测试',
             order: 1

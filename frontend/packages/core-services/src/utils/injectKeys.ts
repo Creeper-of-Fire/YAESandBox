@@ -32,3 +32,5 @@ export type TokenResolver = (options: ApiRequestOptions) => Promise<string>;
  * 用于在整个应用中注入 TokenResolver 的 InjectionKey。
  */
 export const TokenResolverKey: InjectionKey<TokenResolver> = Symbol('TokenResolver');
+
+export const PluginUniqueNameKey: InjectionKey<string> = Symbol('PluginUniqueNameKey');
