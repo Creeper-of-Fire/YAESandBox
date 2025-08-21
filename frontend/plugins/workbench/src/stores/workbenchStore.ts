@@ -7,7 +7,7 @@ import {type ConfigObject, type ConfigType, EditSession,} from '#/services/EditS
 import type {AbstractRuneConfig, RuneSchemasResponse, TuumConfig, WorkflowConfig,} from "#/types/generated/workflow-config-api-client";
 import {RuneConfigService, TuumConfigService, WorkflowConfigService,} from "#/types/generated/workflow-config-api-client";
 import {useAsyncState} from "@vueuse/core";
-import type {GlobalResourceItem} from "@yaesandbox-frontend/core-services";
+import type {GlobalResourceItem, RawWorkflowConfig} from "@yaesandbox-frontend/core-services/types";
 import {isEquivalent} from "@yaesandbox-frontend/core-services";
 import {cloneDeep} from "lodash-es";
 import {type DynamicAsset, loadAndRegisterPlugins} from "#/features/schema-viewer/plugin-loader";
@@ -126,6 +126,8 @@ interface Draft
     data: ConfigObject;
     originalState: string;
 }
+
+export type RawWorkflowResourceItem = GlobalResourceItem<RawWorkflowConfig>;
 
 export const useWorkbenchStore = defineStore('workbench', () =>
 {

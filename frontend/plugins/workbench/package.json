@@ -44,6 +44,7 @@
   "devDependencies": {
     "@types/color-hash": "^2.0.0",
     "@types/lodash-es": "^4.17.12",
+    "@vue/reactivity": "^3.5.19",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.18"

@@ -22,7 +22,6 @@ import {computed, onMounted, ref} from 'vue';
 import {useWorkbenchStore} from '@yaesandbox-frontend/plugin-workbench/stores/workbenchStore';
 import type {SelectOption} from 'naive-ui';
 import {NAlert, NButton, NH5, NSelect} from 'naive-ui';
-import type {WorkflowConfig} from "@yaesandbox-frontend/plugin-workbench/types/generated/workflow-config-api-client";
 
 const emit = defineEmits(['workflow-selected']);
 
@@ -34,17 +33,22 @@ const workflows = computed(() => workflowsAsync.state);
 
 const selectedKey = ref<string | null>(null);
 
-type SuccessWorkflowResourceItem = { isSuccess: true; data: WorkflowConfig };
-
 const selectOptions = computed<SelectOption[]>(() =>
 {
   if (!workflows.value) return [];
-  return Object.entries(workflows.value)
-      .filter((entry): entry is [string, SuccessWorkflowResourceItem] => entry[1]?.isSuccess === true)
-      .map(([id, item]) => ({
+  return Object.entries(workflows.value).reduce((acc, [id, item]) => {
+    // 使用简单的类型守卫
+    if (item?.isSuccess) {
+      // 在这个 if 代码块内部, TypeScript 知道 item 的类型是:
+      // { isSuccess: true; data: WorkflowConfig; }
+      // 同样，可以直接使用 item.data，因为它满足 RawWorkflowConfig 的结构
+      acc.push({
         label: item.data.name,
         value: id,
-      }));
+      });
+    }
+    return acc;
+  }, [] as SelectOption[]);
 });
 
 function handleSelect(key: string)

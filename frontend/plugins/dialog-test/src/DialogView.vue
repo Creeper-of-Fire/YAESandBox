@@ -16,9 +16,9 @@ import {inject, ref} from 'vue';
 import {useMessage} from 'naive-ui';
 import {v4 as uuidv4} from 'uuid';
 
-import type {WorkflowConfig} from '@yaesandbox-frontend/plugin-workbench/types/generated/workflow-config-api-client';
+import type {RawWorkflowConfig} from '@yaesandbox-frontend/core-services/types';
 import type {ChatMessage, Prompt} from '#/types';
-import {executeWorkflowStream} from '#/services/streamingService';
+import {executeWorkflowStream} from '@yaesandbox-frontend/core-services';
 
 import DialogWorkflowSelector from '#/components/DialogWorkflowSelector.vue';
 import ChatHistory from '#/components/ChatHistory.vue';
@@ -28,9 +28,9 @@ import {TokenResolverKey} from "@yaesandbox-frontend/core-services/injectKeys";
 const message = useMessage();
 const isLoading = ref(false);
 const chatHistory = ref<ChatMessage[]>([]);
-const selectedWorkflow = ref<{ id: string; config: WorkflowConfig } | null>(null);
+const selectedWorkflow = ref<{ id: string; config: RawWorkflowConfig } | null>(null);
 
-function handleWorkflowSelected(payload: { id: string; config: WorkflowConfig })
+function handleWorkflowSelected(payload: { id: string; config: RawWorkflowConfig })
 {
   selectedWorkflow.value = payload;
   chatHistory.value = [];

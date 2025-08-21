@@ -69,7 +69,7 @@ import {NButton, NIcon, useThemeVars} from 'naive-ui';
 import {onLongPress} from '@vueuse/core'
 import {EditIcon, FindInPageIcon, LinkOffIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import type {ConfigObject, ConfigType} from '#/services/EditSession';
-import type {GlobalResourceItem} from '@yaesandbox-frontend/core-services';
+import type {GlobalResourceItem} from '@yaesandbox-frontend/core-services/types';
 import {computed, ref} from "vue";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 

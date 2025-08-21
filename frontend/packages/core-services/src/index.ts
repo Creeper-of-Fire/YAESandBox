@@ -1,3 +1,3 @@
-﻿export * from './types/ui'
-export {isEquivalent} from './utils/comparison'
+﻿export {isEquivalent} from './utils/comparison'
 export {type PluginModule} from './plugin'
+export * from './services/workflowService'

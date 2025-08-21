@@ -19,14 +19,16 @@
   },
   "exports": {
     ".": "./src/index.ts",
+    "./types": "./src/types/index.ts",
     "./injectKeys": "./src/utils/injectKeys.ts"
   },
   "dependencies": {
+    "@microsoft/signalr": "^9.0.6",
     "axios": "^1.11.0"
   },
   "devDependencies": {
-    "vue-router": "^4.5.1",
     "lodash-es": "^4.17.21",
-    "vue": "^3.5.18"
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1"
   }
 }

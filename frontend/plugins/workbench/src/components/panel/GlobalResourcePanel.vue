@@ -171,7 +171,7 @@ import {type DropdownOption, NAlert, NButton, NEmpty, NFlex, NH4, NIcon, NSpin, 
 import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore';
 import type {ConfigObject, ConfigType} from "#/services/EditSession";
 import {VueDraggable as draggable} from "vue-draggable-plus";
-import type {GlobalResourceItem} from "@yaesandbox-frontend/core-services";
+import type {GlobalResourceItem} from "@yaesandbox-frontend/core-services/types";
 import GlobalResourceListItem from './GlobalResourceListItem.vue';
 import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
 import {createBlankConfig} from "#/utils/createBlankConfig.ts";
