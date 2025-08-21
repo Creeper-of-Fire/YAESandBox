@@ -6,6 +6,7 @@ import type { PluginModule } from '@yaesandbox-frontend/core-services';
 // 这种方式能提供最好的开发体验
 import workbenchPlugin from '@yaesandbox-frontend/plugin-workbench';
 import dialogTestPlugin from '@yaesandbox-frontend/plugin-dialog-test';
+import eraLitePlugin from '@yaesandbox-frontend/plugin-era-lite';
 // import gamePlugin from '@yaesandbox-frontend/plugin-game';
 // import testHarnessPlugin from '@yaesandbox-frontend/plugin-dialog-test-harness';
 // import dialogPlugin from '@yaesandbox-frontend/plugin-dialog';
@@ -14,6 +15,7 @@ import dialogTestPlugin from '@yaesandbox-frontend/plugin-dialog-test';
 const localPlugins: PluginModule[] = [
     workbenchPlugin,
     dialogTestPlugin,
+    eraLitePlugin,
     // gamePlugin,
     // testHarnessPlugin,
     // dialogPlugin,

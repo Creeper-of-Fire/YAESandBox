@@ -19,6 +19,7 @@
     "@vueuse/core": "^13.6.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
+    "@yaesandbox-frontend/shared-utils": "workspace:*",
     "axios": "^1.11.0",
     "form-data": "^4.0.4",
     "jwt-decode": "^4.0.0",
@@ -33,6 +34,7 @@
     "@types/lodash-es": "^4.17.12",
     "@yaesandbox-frontend/plugin-dialog-test": "workspace:*",
     "@yaesandbox-frontend/plugin-workbench": "workspace:*",
+    "@yaesandbox-frontend/plugin-era-lite": "workspace:*",
     "rollup-plugin-visualizer": "^6.0.3"
   }
 }

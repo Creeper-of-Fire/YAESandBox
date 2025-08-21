@@ -1,9 +1,9 @@
 {
-  "name": "@yaesandbox-frontend/plugin-dialog-test",
+  "name": "@yaesandbox-frontend/plugin-era-lite",
   "private": true,
   "license": "MIT",
   "version": "1.0.0",
-  "description": "工作流临时测试插件",
+  "description": "一个轻量级的测试用era游戏插件",
   "main": "src/index.ts",
   "module": "src/index.ts",
   "type": "module",
@@ -24,16 +24,20 @@
     "vue": "^3.5.18"
   },
   "dependencies": {
-    "@microsoft/signalr": "^9.0.6",
+    "@vicons/ionicons5": "^0.13.0",
+    "@vueuse/core": "^13.6.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
-    "@yaesandbox-frontend/plugin-workbench": "workspace:*",
+    "@yaesandbox-frontend/shared-utils": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
     "axios": "^1.11.0",
     "form-data": "^4.0.4",
+    "localforage": "^1.10.0",
+    "nanoid": "^5.1.5",
     "uuid": "^11.1.0",
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
+    "@yaesandbox-frontend/plugin-workbench": "workspace:*",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.18"

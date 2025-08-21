@@ -24,12 +24,18 @@
     {
       "path": "./plugins/dialog-test"
     },
+    {
+      "path": "./plugins/era-lite"
+    },
     // --- 引用 Packages ---
     {
       "path": "./packages/core-services"
     },
     {
       "path": "./packages/shared-ui"
+    },
+    {
+      "path": "./packages/shared-utils"
     }
   ]
 }
