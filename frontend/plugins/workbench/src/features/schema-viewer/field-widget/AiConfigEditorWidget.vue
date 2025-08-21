@@ -146,6 +146,7 @@ import AiConfigEditorPanel from '#/features/ai-config-panel/AiConfigEditorPanel.
 import {useAiConfigurationStore} from '#/features/ai-config-panel/useAiConfigurationStore';
 import {useAiConfigSchemaStore} from '#/features/ai-config-panel/aiConfigSchemaStore';
 import type {AiConfigurationSet} from "#/types/generated/ai-config-api-client";
+import {useVModel} from "@vueuse/core";
 
 // --- 数据模型定义 ---
 interface AiRuneSpecificConfig
@@ -178,13 +179,7 @@ const {
 } = storeToRefs(configStore);
 
 // --- v-model 代理 ---
-const config = computed({
-  get: () => props.modelValue,
-  set: (newValue) =>
-  {
-    emit('update:modelValue', newValue);
-  }
-});
+const config = useVModel(props, 'modelValue', emit);
 
 onMounted(() =>
 {

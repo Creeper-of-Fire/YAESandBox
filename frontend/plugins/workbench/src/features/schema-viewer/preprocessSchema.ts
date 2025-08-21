@@ -117,11 +117,21 @@ function processNode(
 
     // 类级别组件渲染器: 如果存在，则将整个对象视为单个字段
     const classVueComponent = node['x-vue-component-class'] as string;
-    if (classVueComponent && getVuePluginComponent(classVueComponent))
+    if (classVueComponent)
     {
         const componentName = `plugin:${classVueComponent}`;
         COMPONENT_MAP[componentName] = getVuePluginComponent(classVueComponent)!;
         return [createFieldViewModel(node, path, requiredFields, componentName)];
+    }
+
+    const classWebComponent = node['x-web-component-class'] as string;
+    if (classWebComponent)
+    {
+        // 对于类级别的 Web Component，我们创建一个使用 WebComponentWrapper 的视图模型
+        const vm = createFieldViewModel(node, path, requiredFields, 'WebComponentWrapper');
+        // 将 Web Component 的标签名作为 prop 传递
+        vm.props.tagName = classWebComponent;
+        return [vm];
     }
 
     const customRendererKey = node['x-custom-renderer-property'] as string;

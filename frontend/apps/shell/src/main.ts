@@ -17,6 +17,7 @@ import {installBuiltinComponents} from "@yaesandbox-frontend/shared-ui/content-r
 import {useAuthStore} from "#/app-authentication/stores/authStore.ts"
 import {type ApiRequestOptions, TokenResolverKey} from '@yaesandbox-frontend/core-services/injectKeys';
 import {loadPlugins} from "#/plugins/pluginLoader.ts";
+import axiosInstance from "#/utils/axiosInstance.ts";
 
 const app = createApp(App);
 
@@ -58,6 +59,8 @@ const tokenResolver = async (options: ApiRequestOptions): Promise<string> =>
     return authStore.token ?? '';
 };
 app.provide(TokenResolverKey, tokenResolver);
+// axios，给第三方组件使用，提供鉴权服务
+app.provide('axios', axiosInstance);
 
 installBuiltinComponents();
 

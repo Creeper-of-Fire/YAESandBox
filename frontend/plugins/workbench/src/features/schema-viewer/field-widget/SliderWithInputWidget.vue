@@ -1,38 +1,36 @@
 ﻿// SliderWithInputWidget.vue
 <template>
-  <n-flex align="center" :wrap="false" style="width: 100%;">
+  <n-flex :wrap="false" align="center" style="width: 100%;">
     <!-- 滑块 -->
     <div style="flex-grow: 1; min-width: 100px; margin-right: 16px;"> <!-- 包裹滑块，控制其伸缩 -->
       <n-slider
-          :value="internalValue ?? undefined"
-          :min="props.min ?? 0"
-          :max="props.max ?? 100"
-          :tuum="props.tuum ?? 1"
+          v-model:value="model"
           :disabled="props.disabled || props.readonly"
-          @update:value="handleSliderChange"
           :format-tooltip="(value: number) => value.toString()"
+          :max="props.max ?? 100"
+          :min="props.min ?? 0"
+          :tuum="props.tuum ?? 1"
           style="width: 100%; margin-right: 16px;"
       />
     </div>
 
     <!-- 数字输入框 -->
     <n-input-number
-        :value="internalValue"
-        :min="props.min"
-        :max="props.max"
-        :placeholder="props.placeholder ?? undefined"
-        :tuum="props.tuum ?? 1"
+        v-model:value="model"
         :disabled="props.disabled || props.readonly"
-        @update:value="handleInputNumberChange"
+        :max="props.max"
+        :min="props.min"
+        :placeholder="props.placeholder ?? undefined"
         :show-button="disabled"
+        :tuum="props.tuum ?? 1"
         style="width: 100px; flex-shrink: 0; margin-left: auto;"
     />
   </n-flex>
 </template>
 
-<script setup lang="ts">
-import {ref, watch} from 'vue';
+<script lang="ts" setup>
 import {NInputNumber, NSlider} from 'naive-ui';
+import {useVModel} from "@vueuse/core";
 
 // 接收 vue-json-schema-viewer-form 传递的标准 props
 const props = defineProps<{
@@ -48,51 +46,12 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits(['update:modelValue']);
-// const attrs = useAttrs(); // 如果 ui:options 是通过 attrs 传递，则需要它
 
-const internalValue = ref<number | null | undefined>(props.modelValue);
-
-// // 从 props.options 中提取约束信息
-// const constraints = computed(() => ({
-//   minimum: props.min,
-//   maximum: props.max,
-//   tuum: props.tuum,
-//   default: props.default,
-// }));
-
-watch(() => props.modelValue, (newValue) =>
-{
-  // 如果外部值变化，更新内部值
-  internalValue.value = newValue;
-}, {deep: false}); // 数字类型不需要 deep watch
-
-
-const handleInputNumberChange = (value: number | null) =>
-{
-  // NInputNumber 返回 null 如果清空输入框
-  // 我们需要根据 schema-viewer 的 type 来决定是否允许 null
-  let finalValue: number | null | undefined; // NInputNumber 清空是 null
-
-  // 如果 schema-viewer 允许 null，并且 NInputNumber 给了 null，则 emit null
-  finalValue = value ?? null;
-
-  internalValue.value = finalValue; // 更新内部状态
-  emit('update:modelValue', finalValue); // 通知 vue-form 数据变化
-};
-
-const handleSliderChange = (value: number) =>
-{
-  internalValue.value = value; // 更新内部状态
-  emit('update:modelValue', value); // 通知 vue-form 数据变化
-};
-
-
-// 如果初始 modelValue 是 undefined 且 schema-viewer 有 default 且不是 nullable，设为 default
-// 考虑到 vue-form 应该会处理 default，这里可能不需要，但作为防御性可以加上
-// onMounted(() => {
-//   if (props.modelValue === undefined && props.schema-viewer.default !== undefined && !isNullable.value) {
-//     handleInputNumberChange(props.schema-viewer.default);
-//   }
-// });
+const model = useVModel(props, 'modelValue', emit, {
+  passive: true, // 仅在 modelValue 存在时才进行双向绑定
+  // 如果父组件没有提供 modelValue，可以提供一个默认值，
+  // 比如 props.default 或者 null
+  defaultValue: props.default ?? null,
+});
 
 </script>

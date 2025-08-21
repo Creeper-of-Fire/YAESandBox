@@ -6,6 +6,11 @@ import VitePluginVueDevTools from "vite-plugin-vue-devtools";
 
 // https://vite.dev/config/
 export default defineConfig({
+    define: {
+        // 将 `process.env.NODE_ENV` 替换为 'production' 的字符串表示
+        // 这会让所有依赖库中的开发模式代码被 tree-shaking 掉
+        'process.env.NODE_ENV': JSON.stringify('production'),
+    },
     plugins: [
         vue(),
         VitePluginVueDevTools(),
@@ -26,7 +31,7 @@ export default defineConfig({
             // 入口文件，它会导出我们所有的组件
             entry: path.resolve(__dirname, 'src/main.ts'),
             // 库的名字，主程序可以通过这个名字访问
-            name: 'YAESandBox_Plugin_Rune_TextParser',
+            name: 'YAESandBox_Plugin_TextParser',
             // 输出格式为 iife (立即执行函数)，适合通过 <script> 标签加载
             formats: ['iife'],
             // 输出的文件名

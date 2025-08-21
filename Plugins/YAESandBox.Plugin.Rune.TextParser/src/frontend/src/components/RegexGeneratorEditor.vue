@@ -1,32 +1,32 @@
 ﻿<template>
   <div class="editor-container">
-    <NForm label-placement="left" label-width="auto" :style="{ maxWidth: '800px' }" :model="formValue">
+    <NForm :model="formValue" :style="{ maxWidth: '800px' }" label-placement="left" label-width="auto">
       <NFormItem label="输入变量名" path="inputVariableName">
-        <NInput v-model:value="formValue.inputVariableName" @update:value="updateModel"/>
+        <NInput v-model:value="formValue.inputVariableName"/>
       </NFormItem>
       <NFormItem label="操作模式" path="operationMode">
-        <NSelect v-model:value="formValue.operationMode" @update:value="updateModel" :options="operationModeOptions"/>
+        <NSelect v-model:value="formValue.operationMode" :options="operationModeOptions"/>
       </NFormItem>
       <NFormItem label="正则表达式" path="pattern">
-        <NInput v-model:value="formValue.pattern" @update:value="updateModel" type="textarea"
-                placeholder="例如：姓名：(?<name>\S+)\s+年龄：(?<age>\d+)" :autosize="{ minRows: 2 }"/>
+        <NInput v-model:value="formValue.pattern" :autosize="{ minRows: 2 }"
+                placeholder="例如：姓名：(?<name>\S+)\s+年龄：(?<age>\d+)" type="textarea"/>
       </NFormItem>
 
       <!-- 高级正则选项 -->
       <NFormItem label="高级选项">
         <NGrid :cols="3" :x-gap="12">
           <NFormItemGi>
-            <NCheckbox v-model:checked="formValue.ignoreCase" @update:checked="updateModel">
+            <NCheckbox v-model:checked="formValue.ignoreCase">
               忽略大小写 (i)
             </NCheckbox>
           </NFormItemGi>
           <NFormItemGi>
-            <NCheckbox v-model:checked="formValue.multiline" @update:checked="updateModel">
+            <NCheckbox v-model:checked="formValue.multiline">
               多行模式 (m)
             </NCheckbox>
           </NFormItemGi>
           <NFormItemGi>
-            <NCheckbox v-model:checked="formValue.dotall" @update:checked="updateModel">
+            <NCheckbox v-model:checked="formValue.dotall">
               点号匹配所有 (s)
             </NCheckbox>
           </NFormItemGi>
@@ -34,22 +34,22 @@
       </NFormItem>
 
       <NFormItem label="输出模板" path="outputTemplate">
-        <NInput v-model:value="formValue.outputTemplate" @update:value="updateModel" type="textarea"
-                placeholder="使用 ${name} 或 $1 引用捕获组" :autosize="{ minRows: 2 }"/>
+        <NInput v-model:value="formValue.outputTemplate" :autosize="{ minRows: 2 }"
+                placeholder="使用 ${name} 或 $1 引用捕获组" type="textarea"/>
       </NFormItem>
 
       <!-- 最大处理次数 -->
       <NFormItem label="最大处理次数" path="maxMatches">
-        <NInputNumber v-model:value="formValue.maxMatches" @update:value="updateModel" :min="0"/>
+        <NInputNumber v-model:value="formValue.maxMatches" :min="0"/>
         <template #feedback>设置为 0 表示不限制次数。</template>
       </NFormItem>
 
       <NFormItem v-if="formValue.operationMode === 'Generate'" label="连接符" path="joinSeparator">
-        <NInput v-model:value="formValue.joinSeparator" @update:value="updateModel"
+        <NInput v-model:value="formValue.joinSeparator"
                 placeholder="用于拼接多个匹配结果的分隔符"/>
       </NFormItem>
       <NFormItem label="输出变量名" path="outputVariableName">
-        <NInput v-model:value="formValue.outputVariableName" @update:value="updateModel"/>
+        <NInput v-model:value="formValue.outputVariableName"/>
       </NFormItem>
     </NForm>
 
@@ -57,14 +57,14 @@
 
     <div class="test-section">
       <NFormItem label="测试输入文本">
-        <NInput type="textarea" v-model:value="sampleInput"
-                placeholder="在此处粘贴用于测试的源文本..." :autosize="{ minRows: 5, maxRows: 15 }"/>
+        <NInput v-model:value="sampleInput" :autosize="{ minRows: 5, maxRows: 15 }"
+                placeholder="在此处粘贴用于测试的源文本..." type="textarea"/>
       </NFormItem>
-      <NButton @click="runTest" :loading="isLoading" type="primary">执行测试</NButton>
+      <NButton :loading="isLoading" type="primary" @click="runTest">执行测试</NButton>
 
       <NCollapseTransition :show="!!testResult || !!testError">
         <div class="result-section">
-          <NAlert v-if="testError" title="测试失败" type="error" :style="{ marginTop: '16px' }">
+          <NAlert v-if="testError" :style="{ marginTop: '16px' }" title="测试失败" type="error">
             <pre>{{ testError }}</pre>
           </NAlert>
           <div v-if="testResult !== null" :style="{ marginTop: '16px' }">
@@ -79,19 +79,31 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import {ref, computed, inject, watch, reactive} from 'vue';
-import {
-  NForm, NFormItem, NInput, NButton, NDivider, NCode, NAlert, NSelect, NCollapseTransition,
-  NCheckbox, NInputNumber, NGrid, NFormItemGi
-} from 'naive-ui';
+<script lang="ts" setup>
+import {computed, inject, ref} from 'vue';
 import type {SelectOption} from 'naive-ui';
+import {
+  NAlert,
+  NButton,
+  NCheckbox,
+  NCode,
+  NCollapseTransition,
+  NDivider,
+  NForm,
+  NFormItem,
+  NFormItemGi,
+  NGrid,
+  NInput,
+  NInputNumber,
+  NSelect
+} from 'naive-ui';
+import {useVModel} from "@vueuse/core";
 
 const props = defineProps<{ modelValue: any; }>();
 const emit = defineEmits(['update:modelValue']);
 const axios = inject('axios') as any;
 
-const formValue = reactive({
+const createDefaultValue = () => ({
   inputVariableName: 'inputText',
   outputVariableName: 'outputText',
   operationMode: 'Generate',
@@ -102,18 +114,14 @@ const formValue = reactive({
   multiline: false,
   dotall: false,
   maxMatches: 0,
-  ...props.modelValue
 });
 
-watch(() => props.modelValue, (newValue) =>
-{
-  Object.assign(formValue, newValue);
-}, {deep: true});
+const formValue = useVModel(props, 'modelValue', emit, {
+  passive: true, // 仅在 modelValue 存在时才进行双向绑定
+  defaultValue: createDefaultValue(), // 如果 modelValue 是 undefined，则使用这个默认值
+  deep: true, // 对对象进行深度监听和响应
+});
 
-const updateModel = () =>
-{
-  emit('update:modelValue', {...formValue});
-};
 
 const operationModeOptions: SelectOption[] = [
   {label: '生成 (根据匹配项构建新文本)', value: 'Generate'},
@@ -121,9 +129,7 @@ const operationModeOptions: SelectOption[] = [
 ];
 
 const sampleInput = ref(
-    `第一个人，姓名：爱丽丝。
-第二个人，姓名：Bob。
-第三个人，姓名：查理。`
+    `第一个人，姓名：爱丽丝。\n第二个人，姓名：Bob。\n第三个人，姓名：查理。`
 );
 const testResult = ref<string | null>(null);
 const testError = ref('');
@@ -131,6 +137,13 @@ const testDebugInfo = ref<any>(null);
 const isLoading = ref(false);
 
 const formattedDebugInfo = computed(() => testDebugInfo.value ? JSON.stringify(testDebugInfo.value, null, 2) : '');
+
+type TestResponseDto = {
+  isSuccess: boolean;
+  result: string;
+  errorMessage: string;
+  debugInfo: any;
+}
 
 async function runTest()
 {
@@ -140,18 +153,19 @@ async function runTest()
   testDebugInfo.value = null;
 
   const requestPayload = {
-    runeConfig: formValue,
-    sampleTuum: {[formValue.inputVariableName]: sampleInput.value}
+    runeConfig: formValue.value,
+    SampleInputText: sampleInput.value
   };
 
   try
   {
-    const response = await axios.post('/api/v1/workflows/run-rune-test', requestPayload);
+    const response: { data: TestResponseDto } = await axios.post('/api/v1/plugins/text-parser/run-test', requestPayload);
     const data = response.data;
     if (data.isSuccess)
     {
-      testResult.value = data.tuum[formValue.outputVariableName];
-    } else
+      testResult.value = data.result;
+    }
+    else
     {
       testError.value = data.errorMessage || '未知错误';
     }

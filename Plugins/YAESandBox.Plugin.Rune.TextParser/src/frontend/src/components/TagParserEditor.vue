@@ -1,68 +1,69 @@
 ﻿<template>
   <div class="editor-container">
     <!-- 1. 表单字段，通过 v-model 绑定到 formValue -->
-    <NForm
+    <n-form
+        :model="formValue"
+        :style="{ maxWidth: '800px' }"
         label-placement="left"
         label-width="auto"
-        :style="{ maxWidth: '800px' }"
-        :model="formValue"
     >
       <!-- 通用配置 -->
       <NFormItem label="输入变量名" path="inputVariableName">
-        <NInput v-model:value="formValue.inputVariableName" @update:value="updateModel"/>
-      </NFormItem>
-
-      <NFormItem label="操作模式" path="operationMode">
-        <NSelect v-model:value="formValue.operationMode" @update:value="updateModel" :options="operationModeOptions"/>
+        <NInput v-model:value="formValue.inputVariableName"/>
       </NFormItem>
 
       <NFormItem label="CSS 选择器" path="selector">
-        <NInput v-model:value="formValue.selector" @update:value="updateModel" type="textarea" :autosize="{ minRows: 2 }"/>
+        <NInput v-model:value="formValue.selector" :autosize="{ minRows: 2 }" type="textarea"/>
       </NFormItem>
 
       <NFormItem label="内容目标" path="matchContentMode">
-        <NSelect v-model:value="formValue.matchContentMode" @update:value="updateModel" :options="matchContentModeOptions"/>
+        <NSelect v-model:value="formValue.matchContentMode" :options="matchContentModeOptions"/>
       </NFormItem>
 
       <!-- 条件渲染：当内容目标为“属性值”时显示 -->
       <NFormItem v-if="formValue.matchContentMode === 'Attribute'" label="属性名" path="attributeName">
-        <NInput v-model:value="formValue.attributeName" @update:value="updateModel" placeholder="例如：src, href, data-id"/>
+        <NInput v-model:value="formValue.attributeName" placeholder="例如：src, href, data-id"/>
+      </NFormItem>
+
+      <NFormItem label="操作模式" path="operationMode">
+        <NSelect v-model:value="formValue.operationMode" :options="operationModeOptions"/>
       </NFormItem>
 
       <!-- 条件渲染：替换模式专属 -->
       <div v-if="formValue.operationMode === 'Replace'">
         <NFormItem label="替换模板" path="replacementTemplate">
-          <NInput v-model:value="formValue.replacementTemplate" @update:value="updateModel" type="textarea" :autosize="{ minRows: 2 }" placeholder="使用 ${match} 代表匹配到的原始内容"/>
+          <NInput v-model:value="formValue.replacementTemplate" :autosize="{ minRows: 2 }" placeholder="使用 ${match} 代表匹配到的原始内容"
+                  type="textarea"/>
         </NFormItem>
       </div>
 
       <!-- 条件渲染：提取模式专属 -->
       <div v-if="formValue.operationMode === 'Extract'">
         <NFormItem label="输出格式" path="returnFormat">
-          <NSelect v-model:value="formValue.returnFormat" @update:value="updateModel" :options="returnFormatOptions"/>
+          <NSelect v-model:value="formValue.returnFormat" :options="returnFormatOptions"/>
         </NFormItem>
       </div>
 
       <NFormItem label="输出变量名" path="outputVariableName">
-        <NInput v-model:value="formValue.outputVariableName" @update:value="updateModel"/>
+        <NInput v-model:value="formValue.outputVariableName"/>
       </NFormItem>
 
-    </NForm>
+    </n-form>
 
     <NDivider/>
 
     <!-- 2. 测试区域 -->
     <div class="test-section">
       <NFormItem label="测试输入文本">
-        <NInput type="textarea" v-model:value="sampleInput" placeholder="在此处粘贴带标签的示例文本，例如HTML代码..."
-                :autosize="{ minRows: 5, maxRows: 15 }"/>
+        <NInput v-model:value="sampleInput" :autosize="{ minRows: 5, maxRows: 15 }" placeholder="在此处粘贴带标签的示例文本，例如HTML代码..."
+                type="textarea"/>
       </NFormItem>
-      <NButton @click="runTest" :loading="isLoading" type="primary">执行测试</NButton>
+      <NButton :loading="isLoading" type="primary" @click="runTest">执行测试</NButton>
 
       <!-- 3. 测试结果显示 -->
       <NCollapseTransition :show="!!testResult || !!testError">
         <div class="result-section">
-          <NAlert v-if="testError" title="测试失败" type="error" :style="{ marginTop: '16px' }">
+          <NAlert v-if="testError" :style="{ marginTop: '16px' }" title="测试失败" type="error">
             <pre>{{ testError }}</pre>
           </NAlert>
           <div v-if="testResult !== null" :style="{ marginTop: '16px' }">
@@ -77,12 +78,11 @@
   </div>
 </template>
 
-<script setup lang="ts">
-import {ref, computed, inject, watch, reactive} from 'vue';
-import {
-  NForm, NFormItem, NInput, NButton, NDivider, NCode, NAlert, NSelect, NCollapseTransition
-} from 'naive-ui';
+<script lang="ts" setup>
+import {computed, inject, ref} from 'vue';
 import type {SelectOption} from 'naive-ui';
+import {NAlert, NButton, NCode, NCollapseTransition, NDivider, NForm, NFormItem, NInput, NSelect} from 'naive-ui';
+import {useVModel} from "@vueuse/core";
 
 // Vue Form Generator 会通过 props 传入 modelValue
 const props = defineProps<{
@@ -95,30 +95,27 @@ const emit = defineEmits(['update:modelValue']);
 // 使用 inject 获取主程序提供的 axios 实例
 const axios = inject('axios') as any;
 
-// 为了避免直接修改props，我们创建一个响应式的本地副本
-// 并设置合理的默认值，防止 props.modelValue 缺少某些属性时出错
-const formValue = reactive({
+// 定义默认值，以便在 props.modelValue 未提供时使用
+const createDefaultValue = () => ({
   inputVariableName: '',
   outputVariableName: '',
-  operationMode: 'Extract', // 默认为提取模式
+  operationMode: 'Extract',
   selector: 'div.item',
   matchContentMode: 'TextContent',
   attributeName: '',
   replacementTemplate: '<span>已替换: ${match}</span>',
   returnFormat: 'First',
-  ...props.modelValue // 使用传入的 modelValue 覆盖默认值
 });
 
-
-// 监听外部变化，同步到本地
-watch(() => props.modelValue, (newValue) => {
-  Object.assign(formValue, newValue);
-}, {deep: true});
-
-// 每次本地表单更新时，通知父组件
-const updateModel = () => {
-  emit('update:modelValue', {...formValue});
-};
+// 使用 useVModel 创建一个可写的、与父组件同步的 ref
+// 当你修改 formValue.value.xxx 时，它会自动 emit('update:modelValue', ...)
+// 当 props.modelValue 变化时，formValue.value 会自动更新
+// passive: true 和 defaultValue 确保了即使 props.modelValue 是 undefined，组件也能正常工作
+const formValue = useVModel(props, 'modelValue', emit, {
+  passive: true, // 仅在 modelValue 存在时才进行双向绑定
+  defaultValue: createDefaultValue(), // 如果 modelValue 是 undefined，则使用这个默认值
+  deep: true, // 对对象进行深度监听和响应
+});
 
 const operationModeOptions: SelectOption[] = [
   {label: '提取内容', value: 'Extract'},
@@ -141,7 +138,7 @@ const returnFormatOptions: SelectOption[] = [
 
 // 提供一个更适合测试替换功能的示例文本
 const sampleInput = ref(
-    `<div class="product">
+    `<div name="product">
   <h3>产品A</h3>
   <p class="price">价格: ￥99</p>
   <a href="/product/a" class="link">查看详情</a>
@@ -151,24 +148,34 @@ const sampleInput = ref(
   <p class="price">价格: ￥199</p>
   <a href="/product/b" class="link">查看详情</a>
 </div>`);
-const testResult = ref<any>(null);
+const testResult = ref<string | string[] | null>(null);
 const testError = ref('');
 const testDebugInfo = ref<any>(null);
 const isLoading = ref(false);
 
-const formattedResult = computed(() => {
+const formattedResult = computed(() =>
+{
   if (testResult.value === null) return '';
   // 如果结果是对象或数组（例如提取模式下的列表），则格式化为JSON
-  if (typeof testResult.value === 'object') {
+  if (typeof testResult.value === 'object')
+  {
     return JSON.stringify(testResult.value, null, 2);
   }
   // 否则直接作为字符串返回（例如替换模式下的HTML）
   return String(testResult.value);
 });
 const formattedDebugInfo = computed(() => testDebugInfo.value ? JSON.stringify(testDebugInfo.value, null, 2) : '');
+type TestResponseDto = {
+  isSuccess: boolean;
+  result: string | string[];
+  errorMessage: string;
+  debugInfo: any;
+}
 
-async function runTest() {
-  if (!axios) {
+async function runTest()
+{
+  if (!axios)
+  {
     testError.value = "错误：未能获取到 axios 实例。";
     return;
   }
@@ -177,36 +184,34 @@ async function runTest() {
   testError.value = '';
   testDebugInfo.value = null;
 
-  // 请求体现在会包含 operationMode 等所有字段
   const requestPayload = {
-    runeConfig: formValue,
-    // 我们将测试文本单独发送，而不是放在模拟的枢机变量中
-    // 这与您原始代码的设计一致
-    sampleTuum: {
-      [formValue.inputVariableName]: sampleInput.value
-    }
+    runeConfig: formValue.value,
+    SampleInputText: sampleInput.value
   };
 
-  // 注意：这里的API端点我猜测是 /run-test-with-tuum，如果不是请修改
-  // 这个端点应该能接收一个完整的模拟枢机，而不是单个文本
-  // 这样更符合符文的实际运行环境
-  try {
+  try
+  {
     // API端点我将使用一个更通用的名称，它能模拟整个枢机的上下文
-    const response = await axios.post('/api/v1/workflows/run-rune-test', requestPayload);
+    const response: { data: TestResponseDto } = await axios.post('/api/v1/plugins/text-parser/run-test', requestPayload);
     const data = response.data;
 
-    if (data.isSuccess) {
+    if (data.isSuccess)
+    {
       // 从返回的枢机中获取输出变量的值
-      testResult.value = data.tuum[formValue.outputVariableName];
-    } else {
+      testResult.value = data.result;
+    }
+    else
+    {
       testError.value = data.errorMessage || '未知错误';
     }
     // 调试信息直接从返回结果获取
     testDebugInfo.value = data.debugInfo;
 
-  } catch (error: any) {
+  } catch (error: any)
+  {
     testError.value = error.response?.data?.detail || error.response?.data?.title || error.message || '请求失败';
-  } finally {
+  } finally
+  {
     isLoading.value = false;
   }
 }

@@ -13,7 +13,7 @@ namespace YAESandBox.Plugin.TextParser;
 /// 这个Controller不会出现在Swagger文档中。
 /// </summary>
 [ApiController]
-[Route("api/v1/plugins/text-parser/test-parser")]
+[Route("api/v1/plugins/text-parser")]
 [ApiExplorerSettings(IgnoreApi = true)] // 关键：不在Swagger中显示此API
 public class TextParserTestController : ControllerBase
 {

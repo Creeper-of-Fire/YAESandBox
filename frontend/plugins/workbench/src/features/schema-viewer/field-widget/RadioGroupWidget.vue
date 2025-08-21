@@ -13,10 +13,11 @@
 </template>
 
 <script lang="ts" setup>
-import { computed } from 'vue';
-import { NRadioGroup, NRadio, NSpace } from 'naive-ui';
+import {NRadio, NRadioGroup, NSpace} from 'naive-ui';
+import {useVModel} from "@vueuse/core";
 
-interface RadioOption {
+interface RadioOption
+{
   label: string;
   value: string | number | boolean;
 }
@@ -28,11 +29,5 @@ const props = defineProps<{
 
 const emit = defineEmits(['update:modelValue']);
 
-// 使用 computed 属性代理 v-model
-const model = computed({
-  get: () => props.modelValue,
-  set: (value) => {
-    emit('update:modelValue', value);
-  }
-});
+const model = useVModel(props, 'modelValue', emit);
 </script>

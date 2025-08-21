@@ -55,8 +55,7 @@
 <script lang="ts" setup>
 import {useThemeVars} from "naive-ui";
 import {useAuthStore} from "#/app-authentication/stores/authStore.ts";
-import {computed, inject, provide} from "vue";
-import axiosInstance from "#/utils/axiosInstance.ts";
+import {computed, inject} from "vue";
 import DayNightToggleWithDropDown from "#/component/DayNightToggleWithDropDown.vue";
 import type {PluginModule} from "@yaesandbox-frontend/core-services";
 // import GlobalErrorDisplay from '#/components/GlobalErrorDisplay.vue';
@@ -106,9 +105,6 @@ const userName = computed(() =>
 //   console.log("App [onUnmounted]: 应用关闭。");
 //   // connectionStore.disconnectSignalR(); // 如果有断开方法
 // });
-
-// axios，给第三方组件使用，提供鉴权服务
-provide('axios', axiosInstance);
 
 const handleLogout = () =>
 {
