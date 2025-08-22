@@ -3,7 +3,8 @@
       ref="dayNightToggleRef"
       v-model="isCurrentlyDark"
       :size="1.5"
-      @click="handleToggleClick"
+      :duration="1000"
+      @click="handleToggleClick($event)"
       @contextmenu.prevent="handleContextMenu"
   />
   <n-dropdown
@@ -32,6 +33,7 @@ const props = defineProps<{
 }>();
 const emit = defineEmits<{
   (e: 'update:themeMode', value: 'light' | 'dark' | 'system'): void;
+  (e: 'toggle', event: MouseEvent): void;
 }>();
 
 const longPressed = ref(false);
@@ -72,7 +74,6 @@ const handleContextMenu = (e: MouseEvent) =>
   })
 }
 
-// 将 onLongPress 的初始化移入 onMounted 钩子
 onMounted(() =>
 {
   onLongPress(dayNightToggleRef, handleContextMenu, {delay: 500});
@@ -105,7 +106,7 @@ const themeOptions = computed(() => [
   },
 ]);
 
-const handleToggleClick = () =>
+const handleToggleClick = (event: MouseEvent) =>
 {
   if (longPressed.value)
   {
@@ -126,5 +127,8 @@ const handleToggleClick = () =>
     newMode = props.themeMode === 'light' ? 'dark' : 'light';
   }
   emit('update:themeMode', newMode);
+
+  // 在更新 v-model 的同时，发出带有 MouseEvent 的 toggle 事件
+  emit('toggle', event);
 }
 </script>

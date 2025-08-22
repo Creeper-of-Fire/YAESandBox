@@ -1,7 +1,9 @@
 ﻿<template>
   <div
       :class="{ 'dark-mode-active': modelValue }"
-      :style="{ fontSize: (size / 3).toFixed(2) + 'px' }"
+      :style="
+        { fontSize: (size / 3).toFixed(2) + 'px' }
+      "
       class="toggle-container"
       title="切换主题"
   >
@@ -73,7 +75,7 @@
 </template>
 
 <script lang="ts" setup>
-import { nextTick, onBeforeUpdate, onMounted, onUnmounted, ref} from 'vue';
+import {computed, nextTick, onBeforeUpdate, onMounted, onUnmounted, ref} from 'vue';
 
 /**
  * 原始项目信息与许可证
@@ -98,7 +100,7 @@ import { nextTick, onBeforeUpdate, onMounted, onUnmounted, ref} from 'vue';
  * OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
  */
 
-defineProps({
+const props=defineProps({
   size: {
     type: Number,
     default: 3,
@@ -107,7 +109,15 @@ defineProps({
     type: Boolean,
     default: false,
   },
+  duration: {
+    type: Number,
+    default: 700, // 默认动画时长 700ms
+  },
 });
+
+// 创建一个计算属性，将毫秒转换为 CSS 的秒单位
+const mainDurationCSS = computed(() => `${props.duration / 1000}s`);
+const fastDurationCSS = computed(() => `${(props.duration * 0.7) / 1000}s`);
 
 // --- 云朵随机飘动效果的实现 ---
 // 1. 创建普通的空数组来存储 DOM 元素引用
@@ -178,7 +188,7 @@ onUnmounted(() =>
 * {
   margin: 0;
   padding: 0;
-  transition: 0.7s;
+  transition: v-bind(fastDurationCSS);
 }
 
 .toggle-container {
@@ -199,7 +209,7 @@ onUnmounted(() =>
   border-radius: 100em;
   box-shadow: inset 0 0 5em 3em rgba(0, 0, 0, 0.5);
   overflow: hidden;
-  transition: 0.7s cubic-bezier(0, 0.5, 1, 1);
+  transition: v-bind(fastDurationCSS) cubic-bezier(0, 0.5, 1, 1);
 }
 
 .main-button {
@@ -211,7 +221,7 @@ onUnmounted(() =>
   box-shadow: 3em 3em 5em rgba(0, 0, 0, 0.5),
   inset -3em -5em 3em -3em rgba(0, 0, 0, 0.5),
   inset 4em 5em 2em -2em rgba(255, 230, 80, 1);
-  transition: 1s cubic-bezier(0.56, 1.35, 0.52, 1);
+  transition: v-bind(mainDurationCSS) cubic-bezier(0.56, 1.35, 0.52, 1);
 }
 
 .moon {
@@ -247,7 +257,7 @@ onUnmounted(() =>
 .daytime-backgrond {
   position: absolute;
   border-radius: 50%;
-  transition: 1s cubic-bezier(0.56, 1.35, 0.52, 1);
+  transition: v-bind(mainDurationCSS) cubic-bezier(0.56, 1.35, 0.52, 1);
 }
 
 .daytime-backgrond:nth-of-type(1) {
@@ -279,7 +289,7 @@ onUnmounted(() =>
 
 .cloud, .cloud-light {
   transform: translateY(10em);
-  transition: 1s cubic-bezier(0.56, 1.35, 0.52, 1);
+  transition: v-bind(mainDurationCSS) cubic-bezier(0.56, 1.35, 0.52, 1);
 }
 
 .cloud-son {
@@ -287,7 +297,7 @@ onUnmounted(() =>
   background-color: #fff;
   border-radius: 50%;
   z-index: 1; /* 比背景高一层 */
-  transition: transform 6s, right 1s, bottom 1s; /* 保留原始动画 */
+  transition: transform 6s, right v-bind(mainDurationCSS), bottom v-bind(mainDurationCSS); /* 保留原始动画 */
 }
 
 .cloud-son:nth-child(6n + 1) {

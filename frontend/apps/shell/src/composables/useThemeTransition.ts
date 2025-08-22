@@ -21,61 +21,6 @@ interface LAB
     alpha: number;
 }
 
-/**
- * 递归地使两个主题对象的结构对称。
- * 如果一个键只在其中一个对象中存在，会使用另一个主题的 `bodyColor`
- * 作为回退值来填充缺失的键，从而确保每个属性都有明确的始末颜色。
- * @param source - 源主题对象部分
- * @param target - 目标主题对象部分
- * @param sourceFallbackColor - 源主题的回退颜色 (通常是 bodyColor)
- * @param targetFallbackColor - 目标主题的回退颜色 (通常是 bodyColor)
- */
-function symmetrizeObjects(source: any, target: any, sourceFallbackColor: string, targetFallbackColor: string)
-{
-    const newSource = cloneDeep(source);
-    const newTarget = cloneDeep(target);
-    const allKeys = new Set([...Object.keys(newSource), ...Object.keys(newTarget)]);
-
-    for (const key of allKeys)
-    {
-        const val1 = newSource[key];
-        const val2 = newTarget[key];
-
-        // 使用 == null 同时捕获 undefined 和 null
-        if (val1 != null && typeof val1 === 'object' && val2 != null && typeof val2 === 'object')
-        {
-            const {symmetricSource, symmetricTarget} = symmetrizeObjects(val1, val2, sourceFallbackColor, targetFallbackColor);
-            newSource[key] = symmetricSource;
-            newTarget[key] = symmetricTarget;
-        }
-        else
-        {
-            if (val1 == null && val2 != null)
-            {
-                newSource[key] = isColorString(val2) ? sourceFallbackColor : val2;
-            }
-            if (val2 == null && val1 != null)
-            {
-                newTarget[key] = isColorString(val1) ? targetFallbackColor : val1;
-            }
-        }
-    }
-    return {symmetricSource: newSource, symmetricTarget: newTarget};
-}
-
-
-/**
- * 主对称化函数，从根级别开始处理。
- */
-function createSymmetricThemes(source: GlobalTheme, target: GlobalTheme)
-{
-    // Naive UI 的 bodyColor 是最安全、最通用的回退色
-    const sourceFallback = source.common?.bodyColor ?? '#FFFFFF';
-    const targetFallback = target.common?.bodyColor ?? '#101010';
-
-    return symmetrizeObjects(source, target, sourceFallback, targetFallback);
-}
-
 function lerp(start: number, end: number, t: number): number
 {
     return start * (1 - t) + end * t;
@@ -214,146 +159,130 @@ function interpolateColorInLab(color1: string, color2: string, t: number): strin
     return labToRgbString(interpolatedLab);
 }
 
-// --- 经过重构的递归插值函数 ---
-
-function isObject(value: any): value is object
-{
-    return value !== null && typeof value === 'object' && !Array.isArray(value);
-}
-
-function isColorString(value: any): value is string
-{
-    if (typeof value !== 'string') return false;
-    return value.startsWith('#') || value.startsWith('rgb');
-}
-
-/**
- * 递归地插值两个主题对象。
- * 这是一个纯函数，它返回一个全新的对象，而不是修改现有对象。
- * @param source - 起始主题对象
- * @param target - 目标主题对象
- * @param t - 插值进度 (0 to 1)
- * @returns {any} - 计算出的新主题对象
- */
-function interpolateTheme(source: any, target: any, t: number): any
-{
-    const result: { [key: string]: any } = {};
-    for (const key in source)
-    { // 只需遍历 source，因为结构已对称
-        const val1 = source[key];
-        const val2 = target[key];
-
-        if (val1 !== null && typeof val1 === 'object')
-        {
-            result[key] = interpolateTheme(val1, val2, t);
-        }
-        else if (isColorString(val1) && isColorString(val2))
-        {
-            // 这里依然使用我们最好的 CIELAB 插值函数
-            result[key] = interpolateColorInLab(val1, val2, t);
-        }
-        else
-        {
-            // 对于非颜色属性（数字、字符串等）
-            result[key] = t < 0.5 ? val1 : val2;
-        }
-    }
-    return result;
-}
-
-// --- ✨ 新增：临时禁用 CSS 过渡的 Composable ✨ ---
-
-function useTransitionDisabler()
-{
-    let styleElement: HTMLStyleElement | null = null;
-    const rule = `*, *::before, *::after { transition: none !important; }`;
-
-    const disable = () =>
-    {
-        if (styleElement) return;
-        styleElement = document.createElement('style');
-        styleElement.textContent = rule;
-        document.head.appendChild(styleElement);
-    };
-
-    const enable = () =>
-    {
-        if (!styleElement) return;
-        document.head.removeChild(styleElement);
-        styleElement = null;
-    };
-
-    // 确保在组件卸载时清理样式
-    onScopeDispose(enable);
-
-    return {disable, enable};
-}
-
 // --- 主 Composable ---
 
-export function useThemeTransition(
-    finalThemeName: Readonly<Ref<'light' | 'dark'>>,
-    themes: { light: BuiltInGlobalTheme, dark: BuiltInGlobalTheme },
-    duration = 300 // 过渡持续时间 (ms)
-): { transitioningTheme: Ref<UnwrapRef<GlobalTheme>, UnwrapRef<GlobalTheme> | GlobalTheme> }
-{
-    // 初始状态直接使用目标主题，避免闪烁
-    const transitioningTheme = ref<GlobalTheme>(themes[finalThemeName.value]);
-    let animationFrameId: number | null = null;
+// --- 过渡状态管理 ---
+export const isTransitioning = ref(false);
+const fallbackMask = ref({
+    visible: false,
+    color: '',
+    opacity: 0,
+});
 
-    watch(finalThemeName, (newThemeName) =>
-    {
-        if (animationFrameId)
-        {
+let animationFrameId: number | null = null;
+
+/**
+ * 触发主题切换的过渡效果
+ * @param event - 触发切换的鼠标点击事件
+ * @param themes - 包含 light 和 dark 主题的对象
+ * @param currentThemeName - 当前的主题名称 ('light' | 'dark')
+ * @param targetThemeName - 目标主题名称 ('light' | 'dark')
+ * @param duration - 动画时长 (ms)
+ * @param onTransitionEnd - 在 DOM 更新和动画开始后执行的回调
+ */
+export function triggerThemeTransition(
+    event: MouseEvent,
+    themes: { light: GlobalTheme, dark: GlobalTheme },
+    currentThemeName: 'light' | 'dark',
+    targetThemeName: 'light' | 'dark',
+    duration: number,
+    onTransitionEnd: () => void
+) {
+    if (isTransitioning.value) return;
+
+    const startX = event.clientX;
+    const startY = event.clientY;
+    // 动画开始前，立即强制整个页面的鼠标为手形
+    document.documentElement.style.cursor = 'pointer';
+
+    const cleanup = () => {
+        isTransitioning.value = false;
+        // 动画结束后，清除我们设置的强制样式，让鼠标恢复正常
+        document.documentElement.style.cursor = '';
+    };
+
+    // --- 方案一：优先使用 View Transitions API ---
+    // @ts-ignore - document.startViewTransition 可能不存在
+    if (document.startViewTransition) {
+        isTransitioning.value = true;
+
+        // @ts-ignore
+        const transition = document.startViewTransition(() => {
+            onTransitionEnd();
+        });
+
+        transition.ready.then(() => {
+            const endRadius = Math.hypot(
+                Math.max(startX, window.innerWidth - startX),
+                Math.max(startY, window.innerHeight - startY)
+            );
+
+            document.documentElement.animate(
+                {
+                    clipPath: [
+                        `circle(0% at ${startX}px ${startY}px)`,
+                        `circle(${endRadius}px at ${startX}px ${startY}px)`,
+                    ],
+                },
+                {
+                    duration,
+                    easing: 'ease-in-out',
+                    pseudoElement: '::view-transition-new(root)',
+                }
+            ).onfinish = cleanup;
+        });
+        return;
+    }
+
+    // --- 方案二：降级为颜色渐变遮罩 ---
+    isTransitioning.value = true;
+
+    const sourceColor = themes[currentThemeName].common?.bodyColor ?? '#ffffff';
+    const targetColor = themes[targetThemeName].common?.bodyColor ?? '#1a1a1a';
+    let startTime: number | null = null;
+
+    // 缓动函数
+    const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
+
+    const animateMask = (timestamp: number) => {
+        if (!startTime) {
+            startTime = timestamp;
+            // 在第一帧，立即切换底层主题
+            onTransitionEnd();
+            // 并显示一个完全不透明的、颜色为【旧主题背景色】的遮罩
+            fallbackMask.value = { visible: true, color: sourceColor, opacity: 1 };
+        }
+
+        const elapsedTime = timestamp - startTime;
+        const progress = Math.min(elapsedTime / duration, 1);
+        const easedProgress = easeInOutQuad(progress);
+
+        // a. 遮罩的颜色从【旧主题色】平滑过渡到【新主题色】
+        fallbackMask.value.color = interpolateColorInLab(sourceColor, targetColor, easedProgress);
+
+        // b. ✨ 核心修改：遮罩的透明度从 1 (完全不透明) 过渡到 0 (完全透明)
+        fallbackMask.value.opacity = 1 - easedProgress;
+
+        if (progress < 1) {
+            animationFrameId = requestAnimationFrame(animateMask);
+        } else {
+            // 动画结束
+            fallbackMask.value.visible = false;
+            animationFrameId = null;
+            cleanup();
+        }
+    };
+
+
+    animationFrameId = requestAnimationFrame(animateMask);
+}
+
+// 导出一个可以在 App.vue 中使用的 Composable
+export function useThemeFallbackMask() {
+    onScopeDispose(() => {
+        if (animationFrameId) {
             cancelAnimationFrame(animationFrameId);
         }
-
-        // 关键：sourceTheme 总是从当前正在显示的、可能不完整的过渡主题开始
-        const sourceTheme = cloneDeep(transitioningTheme.value);
-        const targetTheme = themes[newThemeName];
-        let startTime: number | null = null;
-
-        const {symmetricSource, symmetricTarget} = createSymmetricThemes(sourceTheme, targetTheme);
-
-        // 缓动函数，使过渡更自然
-        const easeInOutQuad = (t: number) => t < 0.5 ? 2 * t * t : -1 + (4 - 2 * t) * t;
-
-        const animate = (timestamp: number) =>
-        {
-            if (!startTime) startTime = timestamp;
-            const elapsedTime = timestamp - startTime;
-            const progress = Math.min(elapsedTime / duration, 1);
-            const easedProgress = easeInOutQuad(progress);
-
-            // 使用重构后的、更健壮的插值函数
-            const newTheme = interpolateTheme(symmetricSource, symmetricTarget, easedProgress);
-            transitioningTheme.value = newTheme as GlobalTheme;
-
-
-            if (progress < 1)
-            {
-                animationFrameId = requestAnimationFrame(animate);
-            }
-            else
-            {
-                // 确保最终状态是精确的目标主题，以清除任何插值误差
-                transitioningTheme.value = cloneDeep(targetTheme); // 使用 cloneDeep 避免后续意外修改原始主题
-                animationFrameId = null;
-            }
-        };
-
-        animationFrameId = requestAnimationFrame(animate);
-    }, {immediate: false}); // immediate: false 避免初始加载时就执行动画
-
-    // 当主题名称变化时，立即更新一次，以防在动画未触发时主题不匹配
-    watch(finalThemeName, (themeName) =>
-    {
-        if (!animationFrameId)
-        {
-            transitioningTheme.value = themes[themeName];
-        }
-    }, {immediate: true});
-
-
-    return {transitioningTheme};
+    });
+    return { fallbackMask };
 }

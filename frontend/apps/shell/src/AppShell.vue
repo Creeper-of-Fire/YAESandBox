@@ -22,7 +22,7 @@
 
       <!-- 用户状态和登出按钮 -->
       <n-flex align="center" class="user-controls">
-        <DayNightToggleWithDropDown v-model:themeMode="themeMode"/>
+        <DayNightToggleWithDropDown v-model:themeMode="themeMode"  @toggle="$emit('toggle-theme', $event)"/>
         <span v-if="authStore.isAuthenticated">
           欢迎, {{ userName }}
         </span>
@@ -34,7 +34,6 @@
 
     <main class="app-main-content">
       <!--
-        修复后的 router-view：
         - 从 v-slot 中额外获取 route 对象。
         - 为 <component> 绑定了唯一的 :key="route.path"。
         - 当路由从 /game 切换到 /workbench 时, key 会发生变化，
@@ -58,8 +57,6 @@ import {useAuthStore} from "#/app-authentication/stores/authStore.ts";
 import {computed, inject} from "vue";
 import DayNightToggleWithDropDown from "#/component/DayNightToggleWithDropDown.vue";
 import type {PluginModule} from "@yaesandbox-frontend/core-services";
-// import GlobalErrorDisplay from '#/components/GlobalErrorDisplay.vue';
-// import AppWideNotifications from '#/components/AppWideNotifications.vue';
 
 // 注入由 main.ts 提供的插件元数据
 const loadedPlugins = inject<PluginModule['meta'][]>('loadedPlugins', []);
@@ -76,6 +73,8 @@ const navLinks = computed(() =>
       }));
 });
 
+
+defineEmits(['update:themeMode', 'toggle-theme']);
 const themeMode = defineModel<'light' | 'dark' | 'system'>({default: 'system'});
 
 const authStore = useAuthStore();
