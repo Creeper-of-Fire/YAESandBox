@@ -10,7 +10,7 @@ import 'vfonts/FiraCode.css'
 import './styles/draggable.css';
 import './styles/global.css'
 
-import router from './router/routerIndex.ts'
+import {createRouterInstance} from './router/routerIndex.ts'
 import {installBuiltinComponents} from "@yaesandbox-frontend/shared-ui/content-renderer";
 // 导入 ApiRequestOptions 类型，我们可以从任何一个客户端导入，因为它们是相同的
 // --- 将 Token 注入到所有 API 请求中 ---
@@ -25,10 +25,13 @@ const app = createApp(App);
 const pinia = createPinia();
 app.use(pinia)
 
+
 // 调用插件加载器
-const loadedPluginMetas = await loadPlugins(app, pinia);
+const {pluginMetaList: loadedPluginMetas, pluginRoutes} = await loadPlugins(app, pinia);
 // 将插件元数据 provide 给整个应用，以便 App.vue 生成导航
 app.provide('loadedPlugins', loadedPluginMetas);
+
+const router = createRouterInstance(pluginRoutes);
 app.use(router)
 
 // 定义一个函数，用于从 store 中获取 token
@@ -65,8 +68,9 @@ app.provide(TokenResolverKey, tokenResolver);
 app.provide('axios', axiosInstance);
 
 installBuiltinComponents();
-
+await router.isReady()
 app.mount('#app')
+await router.push(router.currentRoute.value.path)
 
 // ---  为插件暴露全局依赖 ---
 // 这段代码是专门为了让插件能够找到Vue

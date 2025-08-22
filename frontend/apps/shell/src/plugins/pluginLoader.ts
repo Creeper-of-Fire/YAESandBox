@@ -1,5 +1,4 @@
 ﻿import {type App, type Component, h} from 'vue';
-import router from '#/router/routerIndex'; // 导入主应用的 router 实例
 import type {PluginModule} from '@yaesandbox-frontend/core-services';
 
 // --- 开发时：静态导入所有插件 ---
@@ -9,7 +8,7 @@ import dialogTestPlugin from '@yaesandbox-frontend/plugin-dialog-test';
 import eraLitePlugin from '@yaesandbox-frontend/plugin-era-lite';
 import PluginProvider from "#/component/PluginProvider.vue";
 import {PluginUniqueNameKey} from "@yaesandbox-frontend/core-services/injectKeys";
-import type {RouteComponent} from "vue-router";
+import type {RouteComponent, RouteRecordRaw} from "vue-router";
 import type {Pinia} from "pinia";
 // import gamePlugin from '@yaesandbox-frontend/plugin-game';
 // import testHarnessPlugin from '@yaesandbox-frontend/plugin-dialog-test-harness';
@@ -31,16 +30,18 @@ type RawRouteComponent = RouteComponent | Lazy<RouteComponent>;
 function wrapComponentWithProvider(component: RawRouteComponent, pluginUniqueName: string): RouteComponent
 {
     // --- 关键：检测 component 是否为懒加载函数 ---
-    if (typeof component === 'function') {
+    if (typeof component === 'function')
+    {
         // 如果是函数，我们返回一个新的懒加载函数
-        return async () => {
+        return async () =>
+        {
             // 1. 执行原始的 import() 函数，等待组件模块加载完成
             const resolvedModule = await (component as () => Promise<any>)();
             // 2. 从模块中提取出真正的组件定义（处理 ESM 的 default 导出）
             const actualComponent = resolvedModule.default || resolvedModule;
             // 3. 返回一个包裹了真实组件的新组件定义
             return {
-                render: () => h(PluginProvider, { pluginUniqueName }, {
+                render: () => h(PluginProvider, {pluginUniqueName}, {
                     default: () => h(actualComponent)
                 })
             };
@@ -49,7 +50,7 @@ function wrapComponentWithProvider(component: RawRouteComponent, pluginUniqueNam
 
     // 如果 component 是一个普通的对象，我们同步地返回包装器
     return {
-        render: () => h(PluginProvider, { pluginUniqueName }, {
+        render: () => h(PluginProvider, {pluginUniqueName}, {
             default: () => h(component as Component)
         })
     };
@@ -69,6 +70,7 @@ export async function loadPlugins(app: App, pinia: Pinia)
     // 在生产环境中，你可以从 API 获取插件列表
     // const remotePlugins = await fetchPluginsFromApi();
     const allPlugins = [...localPlugins /*, ...remotePlugins*/];
+    const routers: RouteRecordRaw[] = [];
 
     for (const pluginModule of allPlugins)
     {
@@ -89,7 +91,7 @@ export async function loadPlugins(app: App, pinia: Pinia)
                 {
                     route.component = wrapComponentWithProvider(route.component, pluginUniqueName);
                 }
-                router.addRoute(route);
+                routers.push(route);
             });
 
             console.log(`插件 "${pluginModule.meta.name}" 加载成功。`);
@@ -100,7 +102,10 @@ export async function loadPlugins(app: App, pinia: Pinia)
     }
 
     // 返回加载的插件元数据，供主应用使用（例如生成导航栏）
-    return allPlugins.map(p => p.meta);
+    return {
+        pluginMetaList: allPlugins.map(p => p.meta),
+        pluginRoutes: routers
+    };
 }
 
 // 可选：生产环境的动态加载逻辑

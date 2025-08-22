@@ -21,7 +21,7 @@
 
         <PropertyGroup>
             <SolutionFilePath>$(SolutionPath)</SolutionFilePath>
-            <LicenseOutputPath>$(SolutionDir)licenses.json</LicenseOutputPath>
+            <LicenseOutputPath>$(SolutionDir)../frontend/apps/shell/public/licenses-backend.json</LicenseOutputPath>
             <!-- 设置一个信号量属性，告诉后续项目构建无需再次运行此 Target -->
             <_LicenseReportGenerated>true</_LicenseReportGenerated>
         </PropertyGroup>
@@ -29,7 +29,7 @@
         <Error Text="解决方案文件未找到: '$(SolutionFilePath)'" Condition="!Exists('$(SolutionFilePath)')"/>
 
         <Exec Command="nuget-license -i $(SolutionFilePath) -t -o jsonPretty -fo $(LicenseOutputPath) -exclude-projects *Tests*"
-              ContinueOnError="false"/>
+              ContinueOnError="WarnAndContinue"/>
 
         <Message Text="[SHARED] NuGet 许可证报告已生成到: $(LicenseOutputPath)" Importance="high" Condition="Exists('$(LicenseOutputPath)')"/>
     </Target>

@@ -14,9 +14,15 @@ import {useAuthStore} from "#/app-authentication/stores/authStore.ts";
 const shellRoutes: RouteRecordRaw[] = [
     {
         path: '/',
-        name: 'Home', // 或者一个专门的欢迎/仪表盘页面
-        // component: HomeView, // 如果有 HomeView
-        redirect: '/workbench',
+        name: 'Home',
+        component: () => import('#/view/HomeView.vue'),
+        meta: {requiresAuth: false}
+    },
+    {
+        path: '/about',
+        name: 'About',
+        component: () => import('#/view/AboutView.vue'),
+        meta: {requiresAuth: false}
     },
     ...authRoutes,
 
@@ -28,59 +34,59 @@ const shellRoutes: RouteRecordRaw[] = [
     // },
 ];
 
-// 4. 创建路由实例
-const router = createRouter({
-    history: createWebHistory(import.meta.env.BASE_URL), // HTML5 History 模式
-    routes: shellRoutes, // 使用我们定义的主路由规则
-    scrollBehavior(to, from, savedPosition)
-    {
-        // 控制滚动行为，例如切换路由时滚动到页面顶部
-        if (savedPosition)
+export function createRouterInstance(dynamicRoutes: RouteRecordRaw[])
+{
+    // 创建路由实例
+    const router = createRouter({
+        history: createWebHistory(import.meta.env.BASE_URL), // HTML5 History 模式
+        routes: [...shellRoutes, ...dynamicRoutes], // 使用我们定义的主路由规则
+        scrollBehavior(to, from, savedPosition)
         {
-            return savedPosition;
+            // 控制滚动行为，例如切换路由时滚动到页面顶部
+            if (savedPosition)
+            {
+                return savedPosition;
+            }
+            else
+            {
+                return {top: 0, behavior: 'smooth'};
+            }
+        }
+    });
+
+    // 添加全局导航守卫
+    router.beforeEach((to, from, next) =>
+    {
+        const authStore = useAuthStore();
+
+        // 检查路由是否需要认证 (我们约定，没有 meta.requiresAuth 的都默认需要)
+        const requiresAuth = to.meta.requiresAuth ?? true;
+
+        if (requiresAuth && !authStore.isAuthenticated)
+        {
+            // 如果需要登录但未登录，则重定向到登录页
+            next({name: 'Login', query: {redirect: to.fullPath}});
+        }
+        else if (to.name === 'Login' && authStore.isAuthenticated)
+        {
+            // 如果已登录，访问登录页则自动跳转到主页
+            next({name: 'Home'});
         }
         else
         {
-            return {top: 0, behavior: 'smooth'};
+            // 否则继续导航
+            next();
         }
-    }
-});
+    });
 
-// 5. 添加全局导航守卫
-router.beforeEach((to, from, next) =>
-{
-    const authStore = useAuthStore();
+    // router.afterEach((to, from) => {
+    //   // 可以在这里更新页面标题等
+    //   if (to.meta.title) {
+    //     document.title = `${to.meta.title} - YourAppName`;
+    //   } else {
+    //     document.title = 'YourAppName';
+    //   }
+    // });
 
-    // 检查路由是否需要认证 (我们约定，没有 meta.requiresAuth 的都默认需要)
-    const requiresAuth = to.meta.requiresAuth !== false;
-
-    if (requiresAuth && !authStore.isAuthenticated)
-    {
-        // 如果需要登录但未登录，则重定向到登录页
-        next({name: 'Login'});
-    }
-    else if (to.name === 'Login' && authStore.isAuthenticated)
-    {
-        // 如果已登录，访问登录页则自动跳转到主页
-        next({name: 'Home'});
-    }
-    else
-    {
-        // 否则继续导航
-        next();
-    }
-});
-
-
-// router.afterEach((to, from) => {
-//   // 可以在这里更新页面标题等
-//   if (to.meta.title) {
-//     document.title = `${to.meta.title} - YourAppName`;
-//   } else {
-//     document.title = 'YourAppName';
-//   }
-// });
-
-
-// 6. 导出路由实例
-export default router;
+    return router;
+}

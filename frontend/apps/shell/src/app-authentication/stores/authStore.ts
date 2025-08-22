@@ -8,14 +8,18 @@ import {
     type RegisterRequest
 } from '#/app-authentication/types/generated/authentication-api-client';
 import {useStorage} from "@vueuse/core";
-import router from "#/router/routerIndex.ts";
 import {jwtDecode} from 'jwt-decode';
 
 const serializer = {
     read: (v: any) => v ? JSON.parse(v) : null,
     write: (v: any) => JSON.stringify(v),
 }
-
+export type RegisterResult = {
+    IsSuccess: true;
+} | {
+    IsSuccess: false;
+    ErrorMessage: string;
+}
 const STORAGE_KEY = 'app-shell-authentication';
 
 export const useAuthStore = defineStore(STORAGE_KEY, () =>
@@ -24,7 +28,6 @@ export const useAuthStore = defineStore(STORAGE_KEY, () =>
     const token = useStorage<string | null>(`${STORAGE_KEY}-authToken`, null, localStorage);
     const refreshToken = useStorage<string | null>(`${STORAGE_KEY}-authRefreshToken`, null, localStorage);
     const user = useStorage<{ userId: string, username: string } | null>(`${STORAGE_KEY}-authUser`, null, localStorage, {serializer});
-    const authError = ref<string | null>(null);
     const userName = computed(() => user.value?.username || '');
 
     const isRefreshing = ref(false); // 防止并发刷新
@@ -58,30 +61,18 @@ export const useAuthStore = defineStore(STORAGE_KEY, () =>
      * 登录
      * @param credentials - 用户名和密码
      */
-    async function login(credentials: LoginRequest): Promise<boolean>
+    async function login(credentials: LoginRequest): Promise<RegisterResult>
     {
-        authError.value = null;
         try
         {
             const response = await AuthService.postApiV1AuthLogin({requestBody: credentials});
-
             setAuth(response);
-
-            // // --- 优雅的改动 ---
-            // // 检查路由中是否有 'redirect' 参数，实现登录后跳转回原页面的功能
-            // const urlParams = new URLSearchParams(window.location.search);
-            // // 默认重定向到根目录
-            // window.location.href = urlParams.get('redirect') || '/'; // 跳转并刷新
-            const redirectPath = router.currentRoute.value.query.redirect as string || '/';
-            await router.push(redirectPath);
-
-            return true; // 返回成功
+            return {IsSuccess: true}; // 返回成功
         } catch (error: any)
         {
             console.error("Login failed:", error);
-            authError.value = error.body?.message || error.message || '登录失败，请检查用户名或密码。';
-            logout(false);
-            return false; // 返回失败
+            clearAuth();
+            return {IsSuccess: false, ErrorMessage: error.body?.message || error.message || '登录失败，请检查用户名或密码。'}; // 返回失败
         }
     }
 
@@ -168,36 +159,27 @@ export const useAuthStore = defineStore(STORAGE_KEY, () =>
      * @param credentials - 注册所需的用户信息（包含用户名、密码等，具体字段由 RegisterRequest 类型定义）
      * @returns Promise<boolean> - 注册成功返回 true，失败返回 false
      */
-    async function register(credentials: RegisterRequest): Promise<boolean>
+    async function register(credentials: RegisterRequest): Promise<RegisterResult>
     {
-        authError.value = null;
         try
         {
             const successMessage = await AuthService.postApiV1AuthRegister({requestBody: credentials});
             console.log('注册成功:', successMessage);
             // 可以在这里用全局 message 提示用户注册成功
             // message.success(successMessage || '注册成功！现在可以登录了。');
-            return true; // 表示成功
+            return {IsSuccess: true}; // 表示成功
         } catch (error: any)
         {
-            console.error("注册失败:", error);
-            authError.value = error.body || error.message || '注册失败，用户名可能已被占用。';
-            return false; // 表示失败
+            return {IsSuccess: false, ErrorMessage: error.body || error.message || '注册失败，用户名可能已被占用。'}; // 表示失败
         }
     }
 
     /**
      * 登出
-     * @param redirect - 是否重定向到登录页
      */
-    function logout(redirect = true)
+    function logout()
     {
         clearAuth();
-
-        if (redirect)
-        {
-            window.location.href = '/login'; // 假设登录页的路径是 /login
-        }
     }
 
     return {
@@ -206,7 +188,6 @@ export const useAuthStore = defineStore(STORAGE_KEY, () =>
         user,
         userName,
         isAuthenticated,
-        authError,
         isTokenExpiring,
         refreshAccessToken,
         login,
