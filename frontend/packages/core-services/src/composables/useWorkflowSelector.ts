@@ -58,8 +58,8 @@ export function useWorkflowSelector(storageKey: string)
         if (!selectedWorkflowId.value || !workflowProvider)
             return undefined;
 
-        const workflowConfig: WorkflowResourceItem = workflowProvider.state.value[selectedWorkflowId.value];
-        if (!workflowConfig.isSuccess)
+        const workflowConfig: WorkflowResourceItem | undefined = workflowProvider.state?.value[selectedWorkflowId.value];
+        if (!workflowConfig || !workflowConfig.isSuccess)
             return undefined;
         return workflowConfig.data;
     });

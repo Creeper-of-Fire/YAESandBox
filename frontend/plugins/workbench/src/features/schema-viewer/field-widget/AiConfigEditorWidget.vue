@@ -12,38 +12,6 @@
         <div style="display: flex; justify-content: space-between; align-items: center;">
           <span>AI 服务配置</span>
           <n-flex align="center">
-            <!-- 启用/禁用按钮 -->
-            <n-popover v-if="!config" trigger="hover">
-              <template #trigger>
-                <n-button circle size="small" type="primary" @click="handleEnableAiConfig">
-                  <template #icon>
-                    <n-icon :component="AddIcon"/>
-                  </template>
-                </n-button>
-              </template>
-              启用并配置 AI 服务
-            </n-popover>
-            <n-popconfirm
-                v-if="config"
-                negative-text="取消"
-                positive-text="确认禁用"
-                @positive-click="handleDisableAiConfig"
-            >
-              <template #trigger>
-                <n-popover trigger="hover">
-                  <template #trigger>
-                    <n-button circle size="small" type="error">
-                      <template #icon>
-                        <n-icon :component="DeleteIcon"/>
-                      </template>
-                    </n-button>
-                  </template>
-                  禁用 AI 服务配置
-                </n-popover>
-              </template>
-              确定要禁用并清空此符文的 AI 服务配置吗？
-            </n-popconfirm>
-
             <!-- 折叠按钮 -->
             <n-popover v-if="config" trigger="hover">
               <template #trigger>
@@ -96,7 +64,7 @@
               <n-switch v-model:value="config.isStream"/>
             </n-form-item-row>
 
-            <!-- 新增：管理配置集按钮 -->
+            <!-- 管理配置集按钮 -->
             <div style="margin-top: 16px; text-align: right;">
               <n-button size="small" tertiary @click="showEditorPanel = !showEditorPanel">
                 <template #icon>
@@ -121,7 +89,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, onMounted, ref} from 'vue';
+import {computed, onMounted} from 'vue';
 import {
   NAlert,
   NButton,
@@ -147,6 +115,7 @@ import {useAiConfigurationStore} from '#/features/ai-config-panel/useAiConfigura
 import {useAiConfigSchemaStore} from '#/features/ai-config-panel/aiConfigSchemaStore';
 import type {AiConfigurationSet} from "#/types/generated/ai-config-api-client";
 import {useVModel} from "@vueuse/core";
+import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 
 // --- 数据模型定义 ---
 interface AiRuneSpecificConfig
@@ -158,16 +127,25 @@ interface AiRuneSpecificConfig
 
 // --- Props and Emits (v-model) ---
 const props = defineProps<{
-  modelValue: AiRuneSpecificConfig | undefined;
+  modelValue: AiRuneSpecificConfig;
 }>();
 
 const emit = defineEmits<{
-  (e: 'update:modelValue', value: AiRuneSpecificConfig | undefined): void;
+  (e: 'update:modelValue', value: AiRuneSpecificConfig): void;
 }>();
 
+// --- v-model 代理 ---
+const config = useVModel(props, 'modelValue', emit, {
+  deep: true,
+  passive: true,
+});
+
 // --- 本地 UI 状态 ---
-const isExpanded = ref(true);
-const showEditorPanel = ref(false); // 新增状态，控制配置面板的显示
+const isExpanded = useScopedStorage('isExpanded', true);
+const showEditorPanel = useScopedStorage('showEditorPanel', false);
+defineOptions({
+  name: "aiConfigEditorWidget",
+})
 
 // --- Store 实例化 ---
 const configStore = useAiConfigurationStore();
@@ -177,9 +155,6 @@ const {
   isLoading: isLoadingAiConfigSets,
   configSetOptions
 } = storeToRefs(configStore);
-
-// --- v-model 代理 ---
-const config = useVModel(props, 'modelValue', emit);
 
 onMounted(() =>
 {
@@ -223,21 +198,6 @@ const handleConfigSetChange = (newUuid: string | null) =>
       }
     }
   }
-};
-
-const handleEnableAiConfig = () =>
-{
-  emit('update:modelValue', {
-    aiProcessorConfigUuid: null,
-    selectedAiRuneType: null,
-    isStream: false,
-  });
-  isExpanded.value = true;
-};
-
-const handleDisableAiConfig = () =>
-{
-  emit('update:modelValue', undefined);
 };
 
 </script>

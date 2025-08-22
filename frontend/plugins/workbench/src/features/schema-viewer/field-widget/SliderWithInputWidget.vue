@@ -48,7 +48,7 @@ const props = defineProps<{
 const emit = defineEmits(['update:modelValue']);
 
 const model = useVModel(props, 'modelValue', emit, {
-  passive: true, // 仅在 modelValue 存在时才进行双向绑定
+  passive: true, // 使用watch模式
   // 如果父组件没有提供 modelValue，可以提供一个默认值，
   // 比如 props.default 或者 null
   defaultValue: props.default ?? null,
