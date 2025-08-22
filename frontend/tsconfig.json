@@ -33,9 +33,6 @@
     },
     {
       "path": "./packages/shared-ui"
-    },
-    {
-      "path": "./packages/shared-utils"
     }
   ]
 }

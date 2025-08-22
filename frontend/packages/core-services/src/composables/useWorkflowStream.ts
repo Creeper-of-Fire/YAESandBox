@@ -1,5 +1,5 @@
 ﻿import { ref, inject, onScopeDispose, type Ref } from 'vue';
-import { executeWorkflowStream } from '@yaesandbox-frontend/core-services';
+import { executeWorkflowStream } from '#/services/workflowService';
 import { TokenResolverKey } from '#/utils/injectKeys';
 import type {WorkflowConfig} from "#/types/generated/workflow-test-api-client";
 

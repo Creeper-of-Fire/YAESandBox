@@ -24,9 +24,8 @@
   },
   "dependencies": {
     "@guolao/vue-monaco-editor": "^1.5.5",
-    "@lljj/vue3-form-naive": "^1.19.1",
     "@vee-validate/i18n": "^4.15.1",
-    "@vee-validate/zod": "^4.15.1",
+    "@vee-validate/rules": "^4.15.1",
     "@vueuse/core": "^13.6.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
@@ -38,13 +37,11 @@
     "uuid": "^11.1.0",
     "vee-validate": "^4.15.1",
     "vue-draggable-plus": "^0.6.0",
-    "vue-router": "^4.5.1",
-    "zod": "^3.24.0"
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "@types/color-hash": "^2.0.0",
     "@types/lodash-es": "^4.17.12",
-    "@vue/reactivity": "^3.5.19",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.18"
