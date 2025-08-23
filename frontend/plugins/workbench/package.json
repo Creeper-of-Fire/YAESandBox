@@ -10,7 +10,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "build": "pnpm vue-tsc -b && vite build",
+    "build": "pnpm vue-tsc -b && vite build --mode production",
     "checkTsc": "pnpm vue-tsc -b"
   },
   "exports": {
@@ -18,32 +18,37 @@
     "./*": "./src/*"
   },
   "peerDependencies": {
+    "axios": "^1.11.0",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
-    "vue": "^3.5.18"
+    "vue": "^3.5.18",
+    "@guolao/vue-monaco-editor": "^1.5.5",
+    "@vueuse/core": "^13.6.0",
+    "monaco-languageclient": "^9.8.0",
+    "vue-router": "^4.5.1"
   },
   "dependencies": {
-    "@guolao/vue-monaco-editor": "^1.5.5",
     "@vee-validate/i18n": "^4.15.1",
     "@vee-validate/rules": "^4.15.1",
-    "@vueuse/core": "^13.6.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
-    "axios": "^1.11.0",
     "color-hash": "^2.0.2",
     "form-data": "^4.0.4",
-    "lodash-es": "^4.17.21",
-    "monaco-languageclient": "^9.8.0",
     "uuid": "^11.1.0",
     "vee-validate": "^4.15.1",
     "vue-draggable-plus": "^0.6.0",
-    "vue-router": "^4.5.1"
+    "lodash-es": "^4.17.21"
   },
   "devDependencies": {
-    "@types/color-hash": "^2.0.0",
-    "@types/lodash-es": "^4.17.12",
+    "axios": "^1.11.0",
+    "vue-router": "^4.5.1",
+    "monaco-languageclient": "^9.8.0",
+    "vue": "^3.5.18",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
-    "vue": "^3.5.18"
+    "@guolao/vue-monaco-editor": "^1.5.5",
+    "@vueuse/core": "^13.6.0",
+    "@types/color-hash": "^2.0.0",
+    "rollup-plugin-visualizer": "^6.0.3"
   }
 }

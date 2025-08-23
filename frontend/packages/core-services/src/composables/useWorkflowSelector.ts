@@ -1,8 +1,8 @@
 ﻿import {computed, inject, onMounted, ref} from 'vue';
 import {useScopedStorage} from './useScopedStorage';
-import type {WorkflowResourceItem} from '#/utils/injectKeys';
-import {WorkflowConfigProviderKey} from '#/utils/injectKeys';
-import type {WorkflowConfig} from "#/types/generated/workflow-test-api-client";
+import type {WorkflowResourceItem} from '../utils/injectKeys';
+import {WorkflowConfigProviderKey} from '../utils/injectKeys';
+import type {WorkflowConfig} from "../types";
 
 export interface MappedWorkflow {
     id: string;

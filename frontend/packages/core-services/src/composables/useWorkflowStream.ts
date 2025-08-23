@@ -1,7 +1,7 @@
 ﻿import { ref, inject, onScopeDispose, type Ref } from 'vue';
-import { executeWorkflowStream } from '#/services/workflowService';
-import { TokenResolverKey } from '#/utils/injectKeys';
-import type {WorkflowConfig} from "#/types/generated/workflow-test-api-client";
+import { executeWorkflowStream } from '../services/workflowService';
+import { TokenResolverKey } from '../utils/injectKeys';
+import type {WorkflowConfig} from "../types";
 
 /**
  * 一个可复用的 Vue Composable，用于执行后端工作流并处理流式 JSON 响应。

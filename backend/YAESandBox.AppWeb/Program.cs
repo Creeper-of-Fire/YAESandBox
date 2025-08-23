@@ -2,52 +2,116 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Loader;
 using DotNetEnv;
+using ElectronNET.API;
+using ElectronNET.API.Entities;
 using Microsoft.AspNetCore.DataProtection;
-using Microsoft.Extensions.FileProviders;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.AppWeb;
+using YAESandBox.AppWeb.Services;
 using YAESandBox.Authentication;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.AspNetCore.Secret;
+using YAESandBox.Depend.AspNetCore.Services;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.API;
 using YAESandBox.Workflow.API;
 using YAESandBox.Workflow.Test.API;
 
-Env.Load();
+Console.OutputEncoding = System.Text.Encoding.UTF8;
 var builder = WebApplication.CreateBuilder(args);
+builder.WebHost.UseUrls("http://127.0.0.1:0");
 
+// =========================================================================
+// === 1. 环境与配置设置 (核心改造部分) ===
+// =========================================================================
 
-// 1. 定义 CORS 策略名称 (可以自定义)
+// **Electron & Desktop App Configuration**
+var rootPathProvider = new AppRootPathProvider(builder.Environment);
+builder.Services.AddSingleton<IRootPathProvider>(rootPathProvider);
+var physicalAppRoot = rootPathProvider.RootPath;
+
+string userDataPath = Path.Combine(physicalAppRoot, "UserData");
+Directory.CreateDirectory(userDataPath);
+
+// 只在开发环境中加载 .env 文件
+if (builder.Environment.IsDevelopment())
+{
+    Console.WriteLine("Running in Development. Loading .env file...");
+    Env.Load();
+}
+
+// ** 安全密钥管理: 从 UserData/secrets.json 加载或生成 **
+string secretsFilePath = Path.Combine(userDataPath, "secrets.json");
+var secretsConfigBuilder = new ConfigurationBuilder().AddJsonFile(secretsFilePath, optional: true, reloadOnChange: true);
+var secretsConfig = secretsConfigBuilder.Build();
+
+string? jwtKey = secretsConfig["Jwt:Key"];
+string? dataProtectionKey = secretsConfig["DataProtectionKey"];
+bool secretsWereGenerated = false;
+
+if (string.IsNullOrEmpty(jwtKey))
+{
+    jwtKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)); // 256-bit key
+    secretsWereGenerated = true;
+}
+
+if (string.IsNullOrEmpty(dataProtectionKey))
+{
+    dataProtectionKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+    secretsWereGenerated = true;
+}
+
+if (secretsWereGenerated)
+{
+    var newSecrets = new Dictionary<string, object>
+    {
+        ["Jwt:Key"] = jwtKey,
+        ["DataProtectionKey"] = dataProtectionKey
+    };
+    string json = System.Text.Json.JsonSerializer.Serialize(newSecrets,
+        new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+    File.WriteAllText(secretsFilePath, json);
+    Console.WriteLine($"New security keys generated and saved to: {secretsFilePath}");
+}
+
+// ** 将安全密钥动态添加到应用程序的整体配置中 **
+builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
+{
+    { "Jwt:Key", jwtKey },
+    { "DataProtectionKey", dataProtectionKey }
+});
+
+// =========================================================================
+// === 3. 服务注册 ===
+// =========================================================================
+
+// --- CORS (在 Electron 环境中非必须，但为开发环境保留) ---
 const string myAllowSpecificOrigins = "_myAllowSpecificOrigins";
-
-// 2. 添加 CORS 服务，并配置策略
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy(name: myAllowSpecificOrigins,
-        policy =>
-        {
-            policy.WithOrigins(
-                    // *** 把这里替换成你的 Vite 前端开发服务器的确切地址! ***
-                    "http://localhost:4173", // 示例 Vite 默认端口
-                    "http://127.0.0.1:4173", // 有时也需要加上 127.0.0.1
-                    "http://localhost:5173", // 示例 Vite 默认端口
-                    "http://127.0.0.1:5173" // 有时也需要加上 127.0.0.1
-                    // 如果你的前端运行在其他地址，也要加进去
-                )
-                .AllowAnyHeader() // 允许所有请求头
-                .AllowAnyMethod() // 允许所有 HTTP 方法 (GET, POST, PUT, etc.)
-                .AllowCredentials(); // *** SignalR 必须允许凭据 ***
-        });
+    options.AddPolicy(name: myAllowSpecificOrigins, policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:4173",
+                "http://127.0.0.1:4173",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
 });
 
 // 在程序启动早期就发现和加载所有模块（内置+插件）
 // ** 手动创建发现服务实例，用于模块加载 **
-var pluginDiscoveryService = new DefaultPluginDiscoveryService(builder.Environment, builder.Configuration);
+string pluginsRelativePath = builder.Configuration.GetValue<string>("Plugins:RootPath") ?? "Plugins";
+string pluginsAbsolutePath = Path.Combine(physicalAppRoot, pluginsRelativePath);
+var pluginDiscoveryService = new DefaultPluginDiscoveryService(pluginsAbsolutePath);
 var (allModules, pluginAssemblies) = ApplicationModules.DiscoverAndLoadAllModules(pluginDiscoveryService);
 
 // 添加 MVC 服务
@@ -57,7 +121,6 @@ var mvcBuilder = builder.Services.AddControllers()
         // Serialize enums as strings in requests/responses
         YaeSandBoxJsonHelper.CopyFrom(options.JsonSerializerOptions, YaeSandBoxJsonHelper.JsonSerializerOptions);
     });
-
 // 告诉 MVC 框架，停止默认的全局扫描行为。
 // 我们将手动告诉它去哪里找控制器。
 mvcBuilder.PartManager.ApplicationParts.Clear();
@@ -65,6 +128,7 @@ mvcBuilder.PartManager.ApplicationParts.Clear();
 // 将 allModules 列表封装到 ModuleProvider 中，并将其注册为单例服务。
 // 这样，应用程序的任何部分都可以通过注入 IModuleProvider 来访问所有模块。
 builder.Services.AddSingleton<IModuleProvider>(new ModuleProvider(allModules));
+builder.Services.AddSingleton<IPluginDiscoveryService>(pluginDiscoveryService);
 
 // 循环配置 MVC 部件
 allModules.ForEachModules<IProgramModuleMvcConfigurator>(it => it.ConfigureMvc(mvcBuilder));
@@ -104,26 +168,29 @@ builder.Services.AddSignalR()
         YaeSandBoxJsonHelper.CopyFrom(options.PayloadSerializerOptions, YaeSandBoxJsonHelper.JsonSerializerOptions);
     });
 
-// ---- 数据保护服务 ---
-// 1. 添加数据保护服务
-builder.Services.AddDataProtection();
-//.PersistKeysToFileSystem(new DirectoryInfo(@"/path/to/keys")) // 在生产环境中配置密钥存储位置
+// --- 数据保护服务 ---
+// 这将自动从 IConfiguration 读取 "DataProtectionKey"
+builder.Services.AddDataProtection()
+    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(userDataPath, "DataProtection-Keys")))
+    .SetApplicationName("YAESandBox"); // 为数据保护设置一个唯一的应用名
 
-// 2. 将 SecretProtector 注册为单例
-// 它现在自己处理 IDataProtectionProvider 的依赖
 builder.Services.AddSingleton<ISecretProtector, SecretProtector>();
-
-// 3. 注册通用的数据保护服务
 builder.Services.AddSingleton<IDataProtectionService, DataProtectionService>();
 
-// --- 存储服务 ---
-// 1. 将最内层的、带缓存的存储服务注册为一个具体的类型。
+// --- 存储服务 (配置数据文件根目录到 UserData 下) ---
+// 1. 将所有基于文件的数据存储也放入 UserData 文件夹
+//    从配置中读取数据文件的相对路径
+string dataFilesRelativePath = builder.Configuration.GetValue<string>("DataFiles:RootDirectory") ?? "UserData/DataFiles"; // 提供一个安全的默认值
+string dataFilesAbsolutePath = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, dataFilesRelativePath));
+Directory.CreateDirectory(dataFilesAbsolutePath); // 确保目录存在
+
+// 2. 将最内层的、带缓存的存储服务注册为一个具体的类型。
 //    它本身也是一个单例。
 builder.Services.AddSingleton(
     new JsonFileCacheJsonStorage(builder.Configuration.GetValue<string?>("DataFiles:RootDirectory"))
 );
 
-// 2. 注册我们的装饰器。这才是最终提供给应用程序的服务。
+// 3. 注册我们的装饰器。这才是最终提供给应用程序的服务。
 //    使用工厂模式来确保正确的依赖被注入到装饰器的构造函数中。
 builder.Services.AddSingleton<IGeneralJsonRootStorage>(sp =>
     new ProtectedJsonStorage(
@@ -132,10 +199,14 @@ builder.Services.AddSingleton<IGeneralJsonRootStorage>(sp =>
     )
 );
 
+// --- 模块初始化 ---
 allModules.ForEachModules<IProgramModuleWithInitialization>(it =>
     it.Initialize(new ModuleInitializationContext(allModules, pluginAssemblies)));
 
-builder.Services.AddSingleton<IPluginDiscoveryService>(pluginDiscoveryService);
+
+// =========================================================================
+// === 4. 构建 WebApplication & 配置中间件管道 ===
+// =========================================================================
 
 var app = builder.Build();
 
@@ -150,7 +221,7 @@ allModules.ForEachModules<IProgramModuleAppConfigurator>(it => it.ConfigureApp(a
 app.UseDefaultFiles(); // 使其查找 wwwroot 中的 index.html 或 default.html (可选，但良好实践)
 app.UseStaticFiles(); // 启用从 wwwroot 提供静态文件的功能
 
-// Configure the HTTP request pipeline.
+// --- Swagger UI 只在开发模式下启用 ---
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger(); // 启用 Swagger 中间件 (提供 JSON)
@@ -159,7 +230,7 @@ if (app.Environment.IsDevelopment())
         // 找到所有实现了 ISwaggerUIOptionsConfigurator 接口的模块，循环应用它们的配置
         allModules.ForEachModules<IProgramModuleSwaggerUiOptionsConfigurator>(it => it.ConfigureSwaggerUi(c));
 
-        // (可选) 设置默认展开级别等 UI 选项
+        // 设置默认展开级别等 UI 选项
         c.DefaultModelsExpandDepth(-1); // 折叠模型定义
         c.DocExpansion(DocExpansion.List); // 列表形式展开操作
     });
@@ -175,7 +246,11 @@ else
 
 app.UseRouting(); // Add routing middleware
 
-app.UseCors(myAllowSpecificOrigins); // Apply CORS policy - place before UseAuthorization/UseEndpoints
+// --- CORS 中间件只在开发模式下启用 ---
+if (app.Environment.IsDevelopment())
+{
+    app.UseCors(myAllowSpecificOrigins);
+}
 
 app.UseAuthentication(); // <-- 先认证
 app.UseAuthorization(); // <-- 后授权
@@ -184,6 +259,8 @@ app.MapControllers(); // Map attribute-routed controllers
 
 // 聚合映射所有模块提供的 Hub
 allModules.ForEachModules<IProgramModuleHubRegistrar>(it => it.MapHubs(app));
+
+app.MapFallbackToFile("index.html");
 
 app.Run();
 

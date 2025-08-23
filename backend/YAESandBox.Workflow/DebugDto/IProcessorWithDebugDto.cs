@@ -1,6 +1,4 @@
-﻿using YAESandBox.Workflow.Rune;
-
-namespace YAESandBox.Workflow.DebugDto;
+﻿namespace YAESandBox.Workflow.DebugDto;
 
 /// <summary>
 /// 一种携带了DebugDTO的类型

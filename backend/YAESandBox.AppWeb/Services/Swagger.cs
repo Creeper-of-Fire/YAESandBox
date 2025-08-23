@@ -2,7 +2,7 @@
 using Swashbuckle.AspNetCore.SwaggerGen;
 using YAESandBox.Depend.AspNetCore;
 
-namespace YAESandBox.AppWeb;
+namespace YAESandBox.AppWeb.Services;
 
 /// <summary>
 /// 一个 Swagger 文档过滤器，用于确保 SignalR 使用的 DTOs 被包含在 OpenAPI Schema 中，

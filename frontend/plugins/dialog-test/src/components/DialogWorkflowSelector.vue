@@ -51,7 +51,7 @@ const selectOptions = computed<SelectOption[]>(() =>
     {
       // 在这个 if 代码块内部, TypeScript 知道 item 的类型是:
       // { isSuccess: true; data: WorkflowConfig; }
-      // 同样，可以直接使用 item.data，因为它满足 RawWorkflowConfig 的结构
+      // 同样，可以直接使用 item.data，因为它满足 WorkflowConfig 的结构
       acc.push({
         label: item.data.name,
         value: id,

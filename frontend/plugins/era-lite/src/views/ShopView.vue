@@ -66,7 +66,13 @@
 
     <n-list bordered hoverable>
       <n-list-item v-for="item in shopStore.itemsForSale" :key="item.id">
-        <n-thing :description="item.description" :title="`${item.name} - ${item.price} G`"/>
+        <n-thing
+            :content-style="{ whiteSpace: 'normal', wordBreak: 'break-word' }"
+            :description="item.description"
+            :header-style="{ whiteSpace: 'normal', wordBreak: 'break-word' }"
+            :title="`${item.name} - ${item.price} G`"
+            style="white-space: pre-wrap;"
+        />
         <template #suffix>
           <n-button :disabled="playerStore.money < item.price" @click="buyItem(item)">
             购买

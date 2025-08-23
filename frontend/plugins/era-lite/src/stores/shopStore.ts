@@ -1,5 +1,5 @@
 ﻿import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
+import {ref, toRaw, watch} from 'vue';
 import {type Item } from '#/types/models';
 import { nanoid } from 'nanoid';
 import localforage from 'localforage';
@@ -49,7 +49,7 @@ export const useShopStore = defineStore(STORAGE_KEY, () => {
 
     // 监听变化并持久化
     watch(itemsForSale, (newItems) => {
-        localforage.setItem(STORAGE_KEY, newItems);
+        localforage.setItem(STORAGE_KEY, toRaw(newItems));
     }, { deep: true });
 
 

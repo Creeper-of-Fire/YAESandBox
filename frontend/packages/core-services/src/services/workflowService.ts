@@ -1,14 +1,12 @@
 ﻿// @yaesandbox-frontend/core-services/services/workflowService.ts
 import { HubConnectionBuilder, HubConnection, LogLevel } from '@microsoft/signalr';
 // 假设这些类型可以从你的项目别名中导入
-import type { RawWorkflowConfig } from "#/types/rawWorkflow"; // 使用一个本地的或共享的类型定义
-import type { ApiRequestOptions } from "#/utils/injectKeys.ts";
-
-// RawWorkflowConfig是一个简化的工作流配置接口，它只适用于直接引用的情况。
+import type { ApiRequestOptions } from "../utils/injectKeys.ts";
+import type {WorkflowConfig} from "../types";
 
 // 请求体的类型 (用于外部调用，保持不变)
 export interface StreamRequest {
-    workflowConfig: RawWorkflowConfig;
+    workflowConfig: WorkflowConfig;
     workflowInputs: Record<string, string>;
 }
 

@@ -9,19 +9,21 @@ import {createRouter, createWebHistory, type RouteRecordRaw} from 'vue-router';
 //    每个特性符文内部可以有一个 routes.ts 文件，导出该特性相关的子路由数组
 import {routes as authRoutes} from '#/app-authentication/routes.ts';
 import {useAuthStore} from "#/app-authentication/stores/authStore.ts";
+import HomeView from "#/view/HomeView.vue";
+import AboutView from "#/view/AboutView.vue";
+
 
 // 3. 定义主路由规则 (顶层路由)
 const shellRoutes: RouteRecordRaw[] = [
     {
         path: '/',
-        name: 'Home',
-        component: () => import('#/view/HomeView.vue'),
+        name: 'App_Shell_HomeView',
+        component: HomeView,
         meta: {requiresAuth: false}
     },
     {
         path: '/about',
-        name: 'About',
-        component: () => import('#/view/AboutView.vue'),
+        component: AboutView,
         meta: {requiresAuth: false}
     },
     ...authRoutes,
@@ -34,12 +36,69 @@ const shellRoutes: RouteRecordRaw[] = [
     // },
 ];
 
+/**
+ * 检查路由名称的唯一性，并在发现重复时抛出致命错误。
+ * @param routes 要检查的路由记录数组
+ */
+function assertUniqueRouteNames(routes: RouteRecordRaw[]): void
+{
+    const seenNames = new Map<string | symbol, string>(); // 使用 Map 来存储见过的名称及其来源路径
+
+    function check(route: RouteRecordRaw)
+    {
+        if (route.name)
+        {
+            const nameKey = route.name;
+            if (seenNames.has(nameKey))
+            {
+                // 发现重复！
+                const originalPath = seenNames.get(nameKey);
+                const errorMessage = `
+============================== 致命启动错误 ==============================
+          检测到重复的路由名称: "${String(route.name)}"
+--------------------------------------------------------------------------------
+此路由名称先前已为路径注册: "${originalPath}"
+现在它又被非法地为路径重新注册: "${route.path}"
+
+为何这是致命错误:
+路由名称在整个应用（包括所有插件）中【必须】是唯一的。
+重复的名称会导致不可预测的导航和静默失败。
+
+如何修复:
+1. 找到路径为 "${route.path}" 的路由定义文件。
+2.a 将其 "name" 属性更改为唯一的值，通常是添加一个特定于插件的前缀
+   (例如: "MyPlugin_${String(route.name)}")。
+2.b 在路由的 "name" 属性后面添加专门的、硬编码uuid。
+2.c 不使用带有 "name" 属性的“具名路由”。
+
+应用程序启动已被中止。
+================================================================================
+`;
+
+                // 直接抛出错误，让应用崩溃！
+                throw new Error(errorMessage);
+            }
+            seenNames.set(nameKey, route.path);
+        }
+
+        // 递归检查子路由
+        if (route.children)
+        {
+            route.children.forEach(check);
+        }
+    }
+
+    routes.forEach(check);
+}
+
 export function createRouterInstance(dynamicRoutes: RouteRecordRaw[])
 {
+    const allRoutes = [...shellRoutes, ...dynamicRoutes];
+    assertUniqueRouteNames(allRoutes)
     // 创建路由实例
     const router = createRouter({
         history: createWebHistory(import.meta.env.BASE_URL), // HTML5 History 模式
-        routes: [...shellRoutes, ...dynamicRoutes], // 使用我们定义的主路由规则
+        routes: allRoutes, // 使用我们定义的主路由规则
         scrollBehavior(to, from, savedPosition)
         {
             // 控制滚动行为，例如切换路由时滚动到页面顶部
@@ -65,12 +124,12 @@ export function createRouterInstance(dynamicRoutes: RouteRecordRaw[])
         if (requiresAuth && !authStore.isAuthenticated)
         {
             // 如果需要登录但未登录，则重定向到登录页
-            next({name: 'Login', query: {redirect: to.fullPath}});
+            next({name: 'App_Shell_Login', query: {redirect: to.fullPath}});
         }
-        else if (to.name === 'Login' && authStore.isAuthenticated)
+        else if (to.name === 'App_Shell_Login' && authStore.isAuthenticated)
         {
             // 如果已登录，访问登录页则自动跳转到主页
-            next({name: 'Home'});
+            next({name: 'App_Shell_HomeView'});
         }
         else
         {

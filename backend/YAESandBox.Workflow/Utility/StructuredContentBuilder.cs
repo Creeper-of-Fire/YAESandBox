@@ -279,7 +279,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
             // 尝试将所有子元素名称解析为非负整数索引
             foreach (var child in childElements)
             {
-                if (int.TryParse(child.Name, out var index) && index >= 0 && !indexedChildren.ContainsKey(index))
+                if (int.TryParse(child.Name, out int index) && index >= 0 && !indexedChildren.ContainsKey(index))
                 {
                     indexedChildren.Add(index, child);
                 }

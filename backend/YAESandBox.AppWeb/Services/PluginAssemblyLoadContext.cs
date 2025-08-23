@@ -1,7 +1,7 @@
 ﻿using System.Reflection;
 using System.Runtime.Loader;
 
-namespace YAESandBox.AppWeb;
+namespace YAESandBox.AppWeb.Services;
 
 /// <summary>
 /// 一个自定义的程序集加载上下文，用于隔离插件及其依赖。

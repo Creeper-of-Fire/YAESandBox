@@ -11,6 +11,8 @@
 
         <RootNamespace>YAESandBox.Analyzers</RootNamespace>
         <AssemblyName>YAESandBox.Analyzers</AssemblyName>
+
+        <NoWarn>$(NoWarn);RS2007</NoWarn>
     </PropertyGroup>
 
     <ItemGroup>

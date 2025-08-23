@@ -10,12 +10,12 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vue-tsc -noEmit && vite build",
+    "build": "vite build --mode production",
     "preview": "vite preview",
-    "buildAndPreview": "vue-tsc -b && vite build && vite preview",
     "checkTsc": "vue-tsc -noEmit"
   },
   "dependencies": {
+    "@guolao/vue-monaco-editor": "^1.5.5",
     "@vueuse/core": "^13.6.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
@@ -23,6 +23,7 @@
     "form-data": "^4.0.4",
     "jwt-decode": "^4.0.0",
     "lodash-es": "^4.17.21",
+    "monaco-languageclient": "^9.8.0",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
     "vfonts": "^0.0.3",
@@ -30,10 +31,9 @@
     "vue-router": "^4.5.1"
   },
   "devDependencies": {
-    "@types/lodash-es": "^4.17.12",
     "@yaesandbox-frontend/plugin-dialog-test": "workspace:*",
-    "@yaesandbox-frontend/plugin-workbench": "workspace:*",
     "@yaesandbox-frontend/plugin-era-lite": "workspace:*",
+    "@yaesandbox-frontend/plugin-workbench": "workspace:*",
     "rollup-plugin-visualizer": "^6.0.3"
   }
 }

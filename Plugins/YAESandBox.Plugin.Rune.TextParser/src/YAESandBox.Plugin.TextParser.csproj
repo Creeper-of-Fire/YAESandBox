@@ -25,15 +25,15 @@
         <!-- 1. 定义变量 -->
         <PropertyGroup>
             <PluginName>$(AssemblyName)</PluginName>
-            <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</PluginDestination>
+            <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))../../../dist/Plugins/$(PluginName)</PluginDestination>
         </PropertyGroup>
 
         <Message Text="[COPY PLUGIN] 插件源输出目录 (OutputPath): $(OutputPath)" Importance="high"/>
         <Message Text="[COPY PLUGIN] 插件目标部署目录 (PluginDestination): $(PluginDestination)" Importance="high"/>
 
-        <!--        &lt;!&ndash; 2. 先删除旧目录 &ndash;&gt;-->
-        <!--        <RemoveDir Directories="$(PluginDestination)" />-->
-        <!--        <MakeDir Directories="$(PluginDestination)" />-->
+        <!-- &lt;!&ndash; 2. 先删除旧目录 &ndash;&gt; -->
+        <RemoveDir Directories="$(PluginDestination)" />
+        <MakeDir Directories="$(PluginDestination)"/>
 
         <ItemGroup>
             <!-- a) 复制插件自己的主文件 -->

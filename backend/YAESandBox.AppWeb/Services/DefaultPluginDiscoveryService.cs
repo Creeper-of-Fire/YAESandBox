@@ -1,9 +1,9 @@
 ﻿// 文件: YAESandBox.AppWeb/DefaultPluginDiscoveryService.cs
 
-using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using System.Collections.ObjectModel;
+using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 
-namespace YAESandBox.AppWeb;
+namespace YAESandBox.AppWeb.Services;
 
 /// <summary>
 /// IPluginDiscoveryService 的默认实现。
@@ -17,7 +17,7 @@ public class DefaultPluginDiscoveryService : IPluginDiscoveryService
     /// <summary>
     /// 初始化插件发现服务。
     /// </summary>
-    public DefaultPluginDiscoveryService(IWebHostEnvironment environment, IConfiguration configuration)
+    public DefaultPluginDiscoveryService(string pluginsRootPath)
     {
         // 使用延迟加载和锁来确保扫描只执行一次
         lock (this.DiscoveryLock)
@@ -26,8 +26,6 @@ public class DefaultPluginDiscoveryService : IPluginDiscoveryService
                 return;
             
             var plugins = new List<DiscoveredPlugin>();
-            string pluginsRelativePath = configuration.GetValue<string>("Plugins:RootPath") ?? "Plugins";
-            string pluginsRootPath = Path.GetFullPath(Path.Combine(environment.ContentRootPath, pluginsRelativePath));
 
             if (Directory.Exists(pluginsRootPath))
             {

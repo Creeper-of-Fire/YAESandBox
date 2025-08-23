@@ -11,72 +11,72 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Update="wwwroot\api-manifest.json">
-        <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
-      </Content>
+        <Content Update="wwwroot\api-manifest.json">
+            <ExcludeFromSingleFile>true</ExcludeFromSingleFile>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <EmbeddedResource Include="LuaRunner\json.lua" />
+        <EmbeddedResource Include="LuaRunner\json.lua"/>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="KeraLua" Version="1.4.6" />
-      <PackageReference Include="NLua" Version="1.7.5" />
+        <PackageReference Include="KeraLua" Version="1.4.6"/>
+        <PackageReference Include="NLua" Version="1.7.5"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\..\..\backend\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj" />
-      <ProjectReference Include="..\..\..\backend\YAESandBox.Workflow\YAESandBox.Workflow.csproj" />
+        <ProjectReference Include="..\..\..\backend\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj"/>
+        <ProjectReference Include="..\..\..\backend\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
 
     <!-- ⭐⭐⭐ 构建后自动复制到插件目录 ⭐⭐⭐ -->
     <Target Name="CopyToPluginsFolder" AfterTargets="Build">
-        
+
         <!-- 1. 定义变量 -->
         <PropertyGroup>
             <PluginName>$(AssemblyName)</PluginName>
-            <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))</PluginDestination>
+            <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))../../../dist/Plugins/$(PluginName)</PluginDestination>
         </PropertyGroup>
 
-        <Message Text="[COPY PLUGIN] 插件源输出目录 (OutputPath): $(OutputPath)" Importance="high" />
-        <Message Text="[COPY PLUGIN] 插件目标部署目录 (PluginDestination): $(PluginDestination)" Importance="high" />
+        <Message Text="[COPY PLUGIN] 插件源输出目录 (OutputPath): $(OutputPath)" Importance="high"/>
+        <Message Text="[COPY PLUGIN] 插件目标部署目录 (PluginDestination): $(PluginDestination)" Importance="high"/>
 
-        <!--        &lt;!&ndash; 2. 先删除旧目录 &ndash;&gt;-->
-        <!--        <RemoveDir Directories="$(PluginDestination)" />-->
-        <!--        <MakeDir Directories="$(PluginDestination)" />-->
+        <!-- &lt;!&ndash; 2. 先删除旧目录 &ndash;&gt; -->
+        <RemoveDir Directories="$(PluginDestination)"/>
+        <MakeDir Directories="$(PluginDestination)"/>
 
         <ItemGroup>
             <!-- a) 复制插件自己的主文件 -->
-            <FilesToCopy Include="$(OutputPath)$(AssemblyName).dll" />
-            <FilesToCopy Include="$(OutputPath)$(AssemblyName).pdb" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')" />
-            <FilesToCopy Include="$(OutputPath)$(AssemblyName).deps.json" />
+            <FilesToCopy Include="$(OutputPath)$(AssemblyName).dll"/>
+            <FilesToCopy Include="$(OutputPath)$(AssemblyName).pdb" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')"/>
+            <FilesToCopy Include="$(OutputPath)$(AssemblyName).deps.json"/>
 
             <!-- 
               b) 【核心】自动将 PackageReference 列表转换为文件路径
                  - `%(PackageReference.Identity)`: 获取包名，例如 "AngleSharp"
                  - `$(OutputPath)%(PackageReference.Identity).dll`: 拼接出在本地输出目录中的完整路径
             -->
-            <FilesToCopy Include="$(OutputPath)%(PackageReference.Identity).dll" />
+            <FilesToCopy Include="$(OutputPath)%(PackageReference.Identity).dll"/>
         </ItemGroup>
 
         <!-- 执行复制 -->
-        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(PluginDestination)" SkipUnchangedFiles="true" />
+        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(PluginDestination)" SkipUnchangedFiles="true"/>
 
         <!-- 5. 专门处理 runtimes 文件夹 -->
         <ItemGroup>
             <!-- 找到输出目录下的 runtimes 文件夹里的所有文件 -->
-            <RuntimeFilesToCopy Include="$(OutputPath)runtimes\**\*.*" />
+            <RuntimeFilesToCopy Include="$(OutputPath)runtimes\**\*.*"/>
         </ItemGroup>
         <Copy SourceFiles="@(RuntimeFilesToCopy)"
               DestinationFiles="@(RuntimeFilesToCopy -> '$(PluginDestination)\runtimes\%(RecursiveDir)%(Filename)%(Extension)')"
-              SkipUnchangedFiles="true" />
-        
+              SkipUnchangedFiles="true"/>
+
         <!-- 6. 专门处理 wwwroot -->
         <ItemGroup>
-            <WwwRootFiles Include="wwwroot\**\*.*" />
+            <WwwRootFiles Include="wwwroot\**\*.*"/>
         </ItemGroup>
         <Copy
                 SourceFiles="@(WwwRootFiles)"
@@ -84,7 +84,7 @@
                 SkipUnchangedFiles="true"
         />
 
-        <Message Text="[COPY PLUGIN] 成功将插件 '$(PluginName)' 和其声明的 NuGet 包依赖复制到目标目录。" Importance="high" />
+        <Message Text="[COPY PLUGIN] 成功将插件 '$(PluginName)' 和其声明的 NuGet 包依赖复制到目标目录。" Importance="high"/>
     </Target>
 
 </Project>

@@ -2,9 +2,12 @@
 import {defineConfig, mergeConfig} from 'vite';
 import {visualizer} from "rollup-plugin-visualizer";
 import {createMonorepoViteConfig} from "../../vite.config.shared";
+import * as path from "node:path";
 
 export default defineConfig(({command, mode}) =>
 {
+    const isBuild = mode === 'production';
+
     // 1. 使用构建器创建基础应用配置
     const baseAppConfig = createMonorepoViteConfig({
         packageDir: __dirname,
@@ -21,9 +24,10 @@ export default defineConfig(({command, mode}) =>
                 // template: 'treemap', // 可选 'treemap', 'sunburst', 'network' (默认为 treemap)
                 // projectRoot: process.cwd(), // 通常不需要修改
                 // sourcemap: false, // 是否分析 sourcemap (如果开启，分析时间会更长，但能更精确到原始代码行)
-            }),
+            }) as any,
         ],
         build: {
+            cssCodeSplit: false,
             rollupOptions: {
                 output: {
                     /**
@@ -96,5 +100,15 @@ export default defineConfig(({command, mode}) =>
         },
         resolve: {}
     });
+    if (isBuild)
+    {
+        shellSpecificConfig.resolve = {
+            alias: {
+                '@yaesandbox-frontend/plugin-workbench': path.resolve(__dirname, '../../plugins/workbench/dist/index.js'),
+                '@yaesandbox-frontend/plugin-dialog-test': path.resolve(__dirname, '../../plugins/dialog-test/dist/index.js'),
+                '@yaesandbox-frontend/plugin-era-lite': path.resolve(__dirname, '../../plugins/era-lite/dist/index.js')
+            },
+        };
+    }
     return mergeConfig(baseAppConfig, shellSpecificConfig);
 });

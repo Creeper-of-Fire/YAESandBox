@@ -2,8 +2,8 @@
 
 // 定义选中项的类型
 import type {ComputedRef, InjectionKey, Ref} from "vue";
-import type {GlobalResourceItem, RawWorkflowConfig} from "#/types";
-import type {WorkflowConfig} from "#/types/generated/workflow-test-api-client";
+import type {GlobalResourceItem} from "../types";
+import type {WorkflowConfig} from "../types";
 
 /**
  * 用于在应用中注入是否为暗黑主题的状态
@@ -38,6 +38,7 @@ export const TokenResolverKey: InjectionKey<TokenResolver> = Symbol('TokenResolv
 export const PluginUniqueNameKey: InjectionKey<string> = Symbol('PluginUniqueNameKey');
 
 export type WorkflowResourceItem = GlobalResourceItem<WorkflowConfig>;
+
 /**
  * @interface IWorkflowConfigProvider
  * @description 定义一个提供全局 WorkflowConfig 列表的异步数据源的契约。
@@ -70,6 +71,7 @@ export interface IWorkflowConfigProvider
      */
     execute: () => Promise<void>;
 }
+
 /**
  * @description 用于在整个应用中注入 IWorkflowConfigProvider 实现的 InjectionKey。
  */

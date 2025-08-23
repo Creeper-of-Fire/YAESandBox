@@ -1,4 +1,4 @@
-﻿namespace YAESandBox.Depend.AspNetCore;
+﻿namespace YAESandBox.Depend.AspNetCore.Services;
 
 /// <summary>
 /// 提供对应用程序中所有已发现和加载的模块的访问。

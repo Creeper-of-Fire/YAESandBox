@@ -5,17 +5,15 @@
   "version": "1.0.0",
   "description": "YAESandBox的核心服务",
   "main": "src/index.ts",
-  "imports": {
-    "#/*": "./src/*"
-  },
   "scripts": {
     "checkTsc": "vue-tsc -b --declaration"
   },
   "peerDependencies": {
-    "lodash-es": "^4.17.21",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
-    "vue": "^3.5.18"
+    "vue": "^3.5.18",
+    "@vueuse/core": "^13.7.0",
+    "axios": "^1.11.0"
   },
   "exports": {
     ".": "./src/index.ts",
@@ -25,13 +23,13 @@
   },
   "dependencies": {
     "@microsoft/signalr": "^9.0.6",
-    "@vueuse/core": "^13.7.0",
-    "axios": "^1.11.0",
+    "lodash-es": "^4.17.21",
     "form-data": "^4.0.4"
   },
   "devDependencies": {
-    "lodash-es": "^4.17.21",
     "vue": "^3.5.18",
-    "vue-router": "^4.5.1"
+    "vue-router": "^4.5.1",
+    "@vueuse/core": "^13.7.0",
+    "axios": "^1.11.0"
   }
 }

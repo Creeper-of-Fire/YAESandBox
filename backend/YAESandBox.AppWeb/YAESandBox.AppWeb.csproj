@@ -1,5 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
-
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <LangVersion>preview</LangVersion>
@@ -7,95 +6,116 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
     </PropertyGroup>
-
     <!-- 确保 Swashbuckle CLI 可以找到 Program.cs 中的启动类 -->
     <ItemGroup>
-        <ProjectCapability Include="AspNetCore" />
+        <ProjectCapability Include="AspNetCore"/>
     </ItemGroup>
-
     <ItemGroup>
         <InternalsVisibleTo Include="YAESandBox.Tests"/>
         <PackageReference Include="DotNetEnv" Version="3.1.1"/>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7" />
-        <PackageReference Include="Microsoft.OpenApi" Version="1.6.23" />
+        <PackageReference Include="ElectronNET.API" Version="23.6.2"/>
+        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7"/>
+        <PackageReference Include="Microsoft.OpenApi" Version="1.6.23"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.3" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.3" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.3" />
+        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.3"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.3"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.3"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.3"/>
     </ItemGroup>
-
     <ItemGroup>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.Test\YAESandBox.Workflow.Test.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
-
     <ItemGroup>
-        <Content Update="Plugins\**\wwwroot\**" CopyToOutputDirectory="PreserveNewest"/>
+        <Content Update="Plugins\**\wwwroot\**" Condition="'$(Configuration)' == 'Debug'">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </Content>
     </ItemGroup>
-
     <!-- ================================================================== -->
     <!-- == 自动生成 Swagger JSON 和 TypeScript 类型 (新架构) == -->
     <!-- ================================================================== -->
-
     <!-- 
-      主入口 Target: 这个 Target 在 Build 之后触发。
-      它的唯一职责就是按顺序调用其他两个 Target。
-    -->
-    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug'">
-        <CallTarget Targets="CollectSwaggerDocs" />
-        <CallTarget Targets="GenerateSwaggerFromReferences" />
+        主入口 Target: 这个 Target 在 Build 之后触发。
+        它的唯一职责就是按顺序调用其他两个 Target。
+      -->
+    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true'">
+        <CallTarget Targets="CollectSwaggerDocs"/>
+        <CallTarget Targets="GenerateSwaggerFromReferences"/>
     </Target>
-    
     <!-- 
-      步骤 1: 构建完成后，从所有项目引用中收集 <SwaggerDocToGenerate> 的定义。
-      - `ProjectReference` 是一个 ItemGroup，包含了此项目引用的所有其他项目。
-      - `%(ProjectReference.Identity)` 是被引用项目 csproj 文件的路径。
-      - `MSBuild` 命令在这里的作用是：去查询每一个被引用的项目，并取回它们定义的 `SwaggerDocToGenerate` 列表。
-      - 结果会被聚合到 `_AllSwaggerDocs` 这个新的 ItemGroup 中。
-    -->
+        步骤 1: 构建完成后，从所有项目引用中收集 <SwaggerDocToGenerate> 的定义。
+        - `ProjectReference` 是一个 ItemGroup，包含了此项目引用的所有其他项目。
+        - `%(ProjectReference.Identity)` 是被引用项目 csproj 文件的路径。
+        - `MSBuild` 命令在这里的作用是：去查询每一个被引用的项目，并取回它们定义的 `SwaggerDocToGenerate` 列表。
+        - 结果会被聚合到 `_AllSwaggerDocs` 这个新的 ItemGroup 中。
+      -->
     <Target Name="CollectSwaggerDocs">
         <MSBuild Projects="%(ProjectReference.Identity)" Targets="GetSwaggerDocsForReference">
-            <Output TaskParameter="TargetOutputs" ItemName="_AllSwaggerDocs" />
+            <Output TaskParameter="TargetOutputs" ItemName="_AllSwaggerDocs"/>
         </MSBuild>
-
-        <Message Text="发现待生成文档: @(_AllSwaggerDocs -> '%(Identity) at %(TsClientRoot)', ', ')" Importance="high" Condition="'@(_AllSwaggerDocs)' != ''" />
+        <Message Text="发现待生成文档: @(_AllSwaggerDocs -&gt; '%(Identity) at %(TsClientRoot)', ', ')" Importance="high" Condition="'@(_AllSwaggerDocs)' != ''"/>
     </Target>
 
     <!-- 
-      步骤 2: 循环处理收集到的所有文档定义，生成 JSON 和 TS 文件。
-      - 这个 Target 只在 AppWeb 项目中执行。
-      - Condition 确保只有在收集到了文档定义时才运行。
-    -->
-    <Target Name="GenerateSwaggerFromReferences" Condition="'$(Configuration)' == 'Debug' AND '@(_AllSwaggerDocs)' != ''">
-        <Message Text="------------------------------------------------------------------" Importance="high"/>
-        <Message Text="[AppWeb] 开始集中生成所有 Swagger JSON 和 TypeScript 文件..." Importance="high"/>
-
-        <PropertyGroup>
-            <!-- 临时 JSON 输出目录 -->
-            <JsonOutputBaseDir>$(MSBuildProjectDirectory)/obj/swagger_temp</JsonOutputBaseDir>
-            <!-- 关键：使用 AppWeb 自己的 DLL 作为 swagger 工具的启动程序集！ -->
-            <SwaggerHostAssembly>$(TargetPath)</SwaggerHostAssembly>
-        </PropertyGroup>
-
-        <!-- 步骤 2a: 循环生成所有的 swagger.json 文件 -->
-        <Message Text="[AppWeb] 正在生成 JSON for '%(_AllSwaggerDocs.Identity)'..." Importance="normal"/>
-        <Exec Command="swagger tofile --output $(JsonOutputBaseDir)/%(_AllSwaggerDocs.JsonFileName) $(SwaggerHostAssembly) %(_AllSwaggerDocs.Identity)"
-              WorkingDirectory="$(ProjectDir)"
-              ContinueOnError="false" />
-
-        <!-- 步骤 2b: 循环生成所有的 TypeScript 客户端 -->
-        <!-- 注意：这里的 WorkingDirectory 是从每个文档定义中动态获取的 TsClientRoot！ -->
-        <Message Text="[AppWeb] 正在生成 TS Client for '%(_AllSwaggerDocs.Identity)' to '%(_AllSwaggerDocs.TsClientRoot)'..." Importance="normal"/>
-        <Exec Command="npx openapi-typescript-codegen --input $(JsonOutputBaseDir)/%(_AllSwaggerDocs.JsonFileName) --output %(_AllSwaggerDocs.TsClientRoot)/types/generated/%(_AllSwaggerDocs.TsOutputSubDir) --client axios --useOptions"
-              WorkingDirectory="%(_AllSwaggerDocs.TsClientRoot)"
-              ContinueOnError="false"/>
+        主入口 Target: 它的职责是为每个文档定义调用一次处理 Target。
+        这利用了 MSBuild 的 Target Batching 机制，确保每次迭代都是独立的。
+      -->
+    <Target Name="GenerateSwaggerFromReferences"
+            AfterTargets="Build"
+            Condition="'$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true' AND '@(_AllSwaggerDocs)' != ''"
+            Inputs="@(_AllSwaggerDocs)"
+            Outputs="%(Identity).dummy"> <!-- Outputs 确保了对每个 Item 都执行一次 -->
 
         <Message Text="------------------------------------------------------------------" Importance="high"/>
+        <Message Text="[AppWeb] 开始处理 Swagger 文档: %(_AllSwaggerDocs.Identity)" Importance="high"/>
+
+        <!-- 调用子 Target，并传递必要的元数据 -->
+        <MSBuild Projects="$(MSBuildProjectFile)"
+                 Targets="ProcessSingleSwaggerDoc"
+                 Properties="
+                     DocIdentity=%(_AllSwaggerDocs.Identity);
+                     JsonFileName=%(_AllSwaggerDocs.JsonFileName);
+                     TsClientRoot=%(_AllSwaggerDocs.TsClientRoot);
+                     TsOutputSubDir=%(_AllSwaggerDocs.TsOutputSubDir)
+                     " />
     </Target>
 
+    <!-- 
+        工作 Target: 这个 Target 一次只处理一个文档定义。
+        所有逻辑都在这里，保证了操作的原子性和日志的隔离性。
+      -->
+    <Target Name="ProcessSingleSwaggerDoc">
+        <PropertyGroup>
+            <JsonOutputBaseDir>$(MSBuildProjectDirectory)/obj/swagger_temp</JsonOutputBaseDir>
+            <SwaggerHostAssembly>$(TargetPath)</SwaggerHostAssembly>
+            <TempLogFile>$(IntermediateOutputPath)swagger_gen_$(DocIdentity).log</TempLogFile>
+        </PropertyGroup>
+
+        <!-- 步骤 A: 生成 swagger.json -->
+        <Message Text="[AppWeb] 1. 生成 JSON for '$(DocIdentity)'..." Importance="high"/>
+        <Delete Files="$(TempLogFile)" ContinueOnError="true" />
+        <Exec Command="dotnet swagger tofile --output &quot;$(JsonOutputBaseDir)/$(JsonFileName)&quot; &quot;$(SwaggerHostAssembly)&quot; $(DocIdentity) &gt; &quot;$(TempLogFile)&quot; 2&gt;&amp;1"
+              WorkingDirectory="$(ProjectDir)"
+              ContinueOnError="false"
+              EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;DOTNET_CLI_UI_LANGUAGE=en-US" />
+
+        <ReadLinesFromFile File="$(TempLogFile)" Condition="Exists('$(TempLogFile)')">
+            <Output TaskParameter="Lines" ItemName="_JsonGenLogLines" />
+        </ReadLinesFromFile>
+        <Message Text="[JSON LOG] %(_JsonGenLogLines.Identity)" Importance="high" Condition="'@(_JsonGenLogLines)' != ''" />
+        
+        <!-- 步骤 B: 生成 TypeScript 客户端 -->
+        <!-- 注意：这里的 WorkingDirectory 是从每个文档定义中动态获取的 TsClientRoot！ -->
+        <Message Text="[AppWeb] 2. 生成 TS Client for '$(DocIdentity)'..." Importance="high"/>
+        <Exec Command="npx openapi-typescript-codegen --input $(JsonOutputBaseDir)/$(JsonFileName) --output $(TsClientRoot)/types/generated/$(TsOutputSubDir) --client axios --useOptions" 
+              WorkingDirectory="$(TsClientRoot)" ContinueOnError="false"/>
+    </Target>
+    
+    
+    <ItemGroup>
+        <Folder Include="wwwroot\"/>
+    </ItemGroup>
 </Project>

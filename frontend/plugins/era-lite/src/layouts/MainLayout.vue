@@ -55,28 +55,28 @@ const renderIcon = (icon: any) => () => h(NIcon, null, {default: () => h(icon)})
 
 const menuOptions = [
   {
-    label: () => h(RouterLink, {to: {name: 'Home'}}, {default: () => '主菜单'}),
-    key: 'Home',
+    label: () => h(RouterLink, {to: {name: 'Era_Lite_Home'}}, {default: () => '主菜单'}),
+    key: 'Era_Lite_Home',
     icon: renderIcon(HomeIcon),
   },
   {
-    label: () => h(RouterLink, {to: {name: 'Characters'}}, {default: () => '角色列表'}),
-    key: 'Characters',
+    label: () => h(RouterLink, {to: {name: 'Era_Lite_Characters'}}, {default: () => '角色列表'}),
+    key: 'Era_Lite_Characters',
     icon: renderIcon(PeopleIcon),
   },
   {
-    label: () => h(RouterLink, {to: {name: 'Scenes'}}, {default: () => '场景列表'}),
-    key: 'Scenes',
+    label: () => h(RouterLink, {to: {name: 'Era_Lite_Scenes'}}, {default: () => '场景列表'}),
+    key: 'Era_Lite_Scenes',
     icon: renderIcon(EarthIcon),
   },
   {
-    label: () => h(RouterLink, {to: {name: 'Shop'}}, {default: () => '道具商店'}),
-    key: 'Shop',
+    label: () => h(RouterLink, {to: {name: 'Era_Lite_Shop'}}, {default: () => '道具商店'}),
+    key: 'Era_Lite_Shop',
     icon: renderIcon(StorefrontIcon),
   },
   {
-    label: () => h(RouterLink, {to: {name: 'Backpack'}}, {default: () => '我的背包'}),
-    key: 'Backpack',
+    label: () => h(RouterLink, {to: {name: 'Era_Lite_Backpack'}}, {default: () => '我的背包'}),
+    key: 'Era_Lite_Backpack',
     icon: renderIcon(BagIcon),
   },
 ];

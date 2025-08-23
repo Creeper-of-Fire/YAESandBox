@@ -4,7 +4,7 @@ import WorkbenchView from '#/WorkbenchView.vue';
 export const routes: RouteRecordRaw[] = [
     {
         path: '/workbench',
-        name: 'Workbench',
+        name: 'Plugin_Workbench_Main',
         component: WorkbenchView,
         meta: {
             title: '工作流编辑器',

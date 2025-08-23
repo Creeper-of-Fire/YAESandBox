@@ -2,7 +2,7 @@
 import type {RemovableRef, StorageLike, UseStorageOptions} from '@vueuse/core';
 import {useStorage} from '@vueuse/core';
 import {getCurrentInstance, inject} from 'vue';
-import {PluginUniqueNameKey} from "#/utils/injectKeys.ts";
+import {PluginUniqueNameKey} from "../utils/injectKeys.ts";
 
 /**
  * 获取当前组件的作用域标识符。

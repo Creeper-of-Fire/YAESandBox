@@ -3,7 +3,6 @@ using NLua;
 using YAESandBox.Depend.Results;
 using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow.DebugDto;
-using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 #pragma warning disable CS8974 // 将方法组转换为非委托类型
 

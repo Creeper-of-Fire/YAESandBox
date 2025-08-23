@@ -54,7 +54,7 @@ export function useAuthNavigation()
         if (registerResult.IsSuccess)
         {
             // 注册成功后，通常会跳转到登录页面，并可能带上刚刚注册的用户名
-            await router.push({name: 'Login', query: {username: credentials.username}});
+            await router.push({name: 'App_Shell_Login', query: {username: credentials.username}});
             // 这里你也可以选择直接跳转到其他页面，比如一个“注册成功，请检查邮箱”的提示页
             return true;
         }

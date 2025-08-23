@@ -1,6 +1,4 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using System.Reflection;
-using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;

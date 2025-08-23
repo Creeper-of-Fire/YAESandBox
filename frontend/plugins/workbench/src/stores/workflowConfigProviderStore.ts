@@ -24,9 +24,6 @@ export const useWorkflowConfigProviderStore = defineStore(STORAGE_KEY, () =>
     // 从 workbenchStore 中获取原始的异步状态机
     const source = workbenchStore.globalWorkflowsAsync;
 
-    // 创建一个计算属性来安全地将 source.state 转换为消费者期望的类型。
-    // 由于 WorkflowConfig 和 RawWorkflowConfig 结构上是兼容的，这里可以直接进行类型断言。
-    // 如果未来结构不兼容，这里将是进行数据转换（映射）的理想位置。
     const state: ComputedRef<Record<string, WorkflowResourceItem>> = computed(() => source.state as Record<string, WorkflowResourceItem>);
 
     // 直接代理（或包装在 computed 中）其他状态属性，以确保响应性

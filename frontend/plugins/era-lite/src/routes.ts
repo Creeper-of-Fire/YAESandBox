@@ -12,7 +12,7 @@ export const routes: RouteRecordRaw[] = [
             {
                 // 路径为空，匹配 /era-lite
                 path: '', // 使其成为 /era-lite 的默认子路由
-                name: 'Home', // 必须与 MainLayout.vue 中的 key 匹配
+                name: 'Era_Lite_Home',
                 component: () => import('./views/HomeView.vue'),
                 meta: {
                     title: '主菜单',
@@ -21,11 +21,11 @@ export const routes: RouteRecordRaw[] = [
             {
                 // 为 'home' 路径添加一个别名
                 path: 'home',
-                redirect: { name: 'Home' },
+                redirect: { name: 'Era_Lite_Home' },
             },
             {
                 path: 'characters', // 完整路径 /era-lite/characters
-                name: 'Characters',
+                name: 'Era_Lite_Characters',
                 component: () => import('./views/CharacterListView.vue'),
                 meta: {
                     title: '角色列表',
@@ -33,7 +33,7 @@ export const routes: RouteRecordRaw[] = [
             },
             {
                 path: 'scenes', // 完整路径 /era-lite/scenes
-                name: 'Scenes',
+                name: 'Era_Lite_Scenes',
                 component: () => import('./views/SceneListView.vue'),
                 meta: {
                     title: '场景列表',
@@ -41,7 +41,7 @@ export const routes: RouteRecordRaw[] = [
             },
             {
                 path: 'shop', // 完整路径 /era-lite/shop
-                name: 'Shop',
+                name: 'Era_Lite_Shop',
                 component: () => import('./views/ShopView.vue'),
                 meta: {
                     title: '道具商店',
@@ -49,7 +49,7 @@ export const routes: RouteRecordRaw[] = [
             },
             {
                 path: 'backpack', // 完整路径 /era-lite/backpack
-                name: 'Backpack',
+                name: 'Era_Lite_Backpack',
                 component: () => import('./views/BackpackView.vue'),
                 meta: {
                     title: '我的背包',

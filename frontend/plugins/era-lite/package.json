@@ -19,19 +19,22 @@
     "./*": "./src/*"
   },
   "peerDependencies": {
+    "vue-router": "^4.5.1",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
-    "vue": "^3.5.18"
+    "vue": "^3.5.18",
+    "@vueuse/core": "^13.6.0",
+    "localforage": "^1.10.0"
   },
   "dependencies": {
     "@vicons/ionicons5": "^0.13.0",
-    "@vueuse/core": "^13.6.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
-    "localforage": "^1.10.0",
-    "nanoid": "^5.1.5",
-    "vue-router": "^4.5.1"
+    "nanoid": "^5.1.5"
   },
   "devDependencies": {
+    "localforage": "^1.10.0",
+    "vue-router": "^4.5.1",
+    "@vueuse/core": "^13.6.0",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.18"

@@ -14,7 +14,7 @@ export const routes: RouteRecordRaw[] = [
     // },
     {
         path: '/login', // 定义一个专门的URL
-        name: 'Login',
+        name: 'App_Shell_Login',
         component: LoginTestView,
         meta: {
             requiresAuth: false,

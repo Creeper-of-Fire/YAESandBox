@@ -61,3 +61,8 @@ vue-bundle.css
 vue-bundle.js
 /backend/.idea/.idea.YAESandBox/.idea/misc.xml
 runtimes/
+/backend/YAESandBox.AppWeb/wwwroot/
+/dist/
+/build/
+/build-assets/
+/Data/

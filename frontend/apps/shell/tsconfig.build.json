@@ -1,0 +1,28 @@
+// /apps/shell/tsconfig.build.json
+{
+  "extends": "../../tsconfig.base.json", // 继承根目录的基础配置
+  "compilerOptions": {
+    // --- 包的特定配置 ---
+    "baseUrl": ".", // baseUrl 必须在这里定义
+    "paths": {
+      "#/*": ["src/*"], // 路径别名也在这里定义
+      "@yaesandbox-frontend/plugin-workbench": [
+        "../../plugins/workbench/dist/index.d.ts"
+      ],
+      "@yaesandbox-frontend/plugin-dialog-test": [
+        "../../plugins/dialog-test/dist/index.d.ts"
+      ],
+      "@yaesandbox-frontend/plugin-era-lite": [
+        "../../plugins/era-lite/dist/index.d.ts"
+      ]
+    },
+
+    "outDir": "dist", // 库需要指定输出目录
+    "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    // 如果 shell 是应用而不是库，可以不生成声明文件
+    "declaration": true,
+    "declarationMap": true
+  },
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "references": []
+}

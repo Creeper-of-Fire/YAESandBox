@@ -1,5 +1,5 @@
 ﻿import { defineStore } from 'pinia';
-import { ref, computed, watch } from 'vue';
+import {ref, computed, watch, toRaw} from 'vue';
 import { type Item } from '#/types/models';
 import { nanoid } from 'nanoid';
 import localforage from 'localforage';
@@ -47,7 +47,7 @@ export const usePlayerStore = defineStore(STORAGE_KEY, () => {
     });
 
     watch(stateToPersist, (newState) => {
-        localforage.setItem(STORAGE_KEY, newState);
+        localforage.setItem(STORAGE_KEY, toRaw(newState));
     }, { deep: true });
 
     return { money, ownedItems, spendMoney, addItem };

@@ -26,9 +26,6 @@
         <n-button type="primary" block attr-type="submit" :loading="isLoading">
           {{ isLoginMode ? '登录' : '注册' }}
         </n-button>
-        <n-alert v-if="authStore.authError" title="操作失败" type="error" class="error-alert">
-          {{ authStore.authError }}
-        </n-alert>
       </n-form>
       <template #footer>
         <div class="switch-mode">
@@ -62,7 +59,6 @@ const toggleMode = () => {
   username.value = '';
   password.value = '';
   confirmPassword.value = '';
-  authStore.authError = null;
 };
 
 const handleSubmit = async () => {

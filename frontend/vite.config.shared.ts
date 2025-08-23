@@ -68,18 +68,41 @@ export function createMonorepoViteConfig(options: MonorepoViteConfigOptions): Us
                 lib: {
                     entry: path.resolve(packageDir, 'src/index.ts'),
                     name: path.basename(packageDir), // 自动使用包名
-                    fileName: (format) => `${path.basename(packageDir)}.${format}.js`,
+                    fileName: (format) =>
+                    {
+                        if (format === 'es') return 'index.js';   // ES Module 入口，最常用
+                        if (format === 'cjs') return 'index.cjs';  // 如果你配置了 cjs 输出
+                        return `index.${format}.js`;             // 其他格式 (如 umd) 的备用
+                    },
                 },
                 rollupOptions: {
                     // 插件需要将核心依赖外部化
-                    external: ['vue', 'vue-router', 'pinia', 'naive-ui'],
+                    external: [
+                        'vue',
+                        'vue-router',
+                        'pinia',
+                        'naive-ui',
+                        'monaco-editor',
+                        '@guolao/vue-monaco-editor',
+                        'monaco-languageclient',
+                        /^@vueuse\/.*/,
+                        'axios',
+                        'localforage',
+                    ],
                     output: {
                         globals: {
                             vue: 'Vue',
                             'vue-router': 'VueRouter',
                             pinia: 'Pinia',
                             'naive-ui': 'naive',
+                            'monaco-editor': 'monaco',
+                            '@guolao/vue-monaco-editor': 'VueMonacoEditor',
+                            '@vueuse/core': '@vueuseCore',
+                            'monaco-languageclient': 'monaco-languageclient',
+                            axios: 'axios',
+                            localforage: 'localforage'
                         },
+                        assetFileNames: 'style.css',
                     },
                 },
             },

@@ -7,8 +7,14 @@ import App from './App.vue';
 import 'vfonts/Lato.css'
 // 等宽字体
 import 'vfonts/FiraCode.css'
+
 import './styles/draggable.css';
 import './styles/global.css'
+
+// TODO 目前手动注入css
+import '../../../plugins/workbench/dist/style.css';
+import '../../../plugins/dialog-test/dist/style.css';
+import '../../../plugins/era-lite/dist/style.css';
 
 import {createRouterInstance} from './router/routerIndex.ts'
 import {installBuiltinComponents} from "@yaesandbox-frontend/shared-ui/content-renderer";
@@ -24,7 +30,6 @@ import axiosInstance from "#/utils/axiosInstance.ts";
 const app = createApp(App);
 const pinia = createPinia();
 app.use(pinia)
-
 
 // 调用插件加载器
 const {pluginMetaList: loadedPluginMetas, pluginRoutes} = await loadPlugins(app, pinia);
