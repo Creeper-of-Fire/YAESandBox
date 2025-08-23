@@ -7,7 +7,10 @@
   "license": "MIT",
   "main": "main.js",
   "scripts": {
-    "package": "node ./scripts/package.mjs && electron-builder"
+    "build-sources": "node ./scripts/build.mjs",
+    "assemble-app": "node ./scripts/assemble.mjs",
+    "package:full": "pnpm build-sources && pnpm assemble-app && electron-builder",
+    "package:fast": "pnpm assemble-app && electron-builder"
   },
   "dependencies": {
   },
@@ -35,7 +38,7 @@
       "target": [
         "dir"
       ],
-      "icon": "vue.svg"
+      "icon": "./buildResources/vue.svg"
     }
   },
   "devDependencies": {
