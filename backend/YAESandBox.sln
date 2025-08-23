@@ -22,9 +22,9 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Depend.Results",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Authentication", "YAESandBox.Authentication\YAESandBox.Authentication.csproj", "{93CA16F1-ACEC-4928-9D9B-F037C3CE7D45}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Plugin.LuaScript", "..\Plugins\YAESandBox.Plugin.Rune.LuaScript\src\YAESandBox.Plugin.LuaScript.csproj", "{E0A04829-F37C-4B07-971A-DA1180901FAF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Plugin.LuaScript", "..\Plugins\YAESandBox.Plugin.Rune.LuaScript\YAESandBox.Plugin.LuaScript.csproj", "{E0A04829-F37C-4B07-971A-DA1180901FAF}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Plugin.TextParser", "..\Plugins\YAESandBox.Plugin.Rune.TextParser\src\YAESandBox.Plugin.TextParser.csproj", "{85AD0F48-2062-43E5-BAA5-E55C1F7DF92A}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Plugin.TextParser", "..\Plugins\YAESandBox.Plugin.Rune.TextParser\YAESandBox.Plugin.TextParser.csproj", "{85AD0F48-2062-43E5-BAA5-E55C1F7DF92A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Launcher", "YAESandBox.Launcher\YAESandBox.Launcher.csproj", "{BE5B9AAD-FCE0-45B5-A825-98B57C0135ED}"
 EndProject
