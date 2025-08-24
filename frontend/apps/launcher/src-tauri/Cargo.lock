@@ -5505,10 +5505,13 @@ name = "yaesandbox-launcher"
 version = "0.1.0"
 dependencies = [
  "futures-util",
+ "hex",
  "portpicker",
  "reqwest",
+ "semver",
  "serde",
  "serde_json",
+ "sha2",
  "tauri",
  "tauri-build",
  "tauri-plugin-opener",

@@ -8,6 +8,7 @@ export interface AppConfig {
     app_download_url: string;
     backend_download_url: string;
     plugins_manifest_url: string;
+    launcher_update_manifest_url: string;
     proxy_address: string | null;
 }
 
@@ -42,6 +43,7 @@ const loadConfig = async () => {
             app_download_url: parsed.app_url || '',
             backend_download_url: parsed.backend_url || '',
             plugins_manifest_url: parsed.plugins_manifest_url || '',
+            launcher_update_manifest_url: parsed.plugins_manifest_url || '',
             proxy_address: parsed.proxy || null,
         };
     } catch (e) {

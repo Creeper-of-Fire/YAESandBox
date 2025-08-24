@@ -23,15 +23,8 @@ pub async fn download_file(
 ) -> Result<(), String> {
     let target_path = app_state.resolve_safe_path(&relative_path)?;
 
-    let mut client_builder = reqwest::Client::builder();
-    if let Some(proxy_url) = proxy {
-        let proxy = reqwest::Proxy::all(&proxy_url)
-            .map_err(|e| format!("无效的代理 URL '{}': {}", proxy_url, e))?;
-        client_builder = client_builder.proxy(proxy);
-    }
-    let client = client_builder
-        .build()
-        .map_err(|e| format!("构建 HTTP 客户端失败: {}", e))?;
+    let client = crate::core::http::create_http_client(proxy.as_deref())?;
+    
     let response = client
         .get(&url)
         .send()

@@ -73,7 +73,9 @@ pub fn run() {
             commands::fs_utils::delete_file,
             commands::process::start_local_backend,
             commands::config_cmd::read_config_as_string,
-            commands::plugin_cmd::fetch_plugins_manifest
+            commands::plugin_cmd::fetch_plugins_manifest,
+            commands::updater_cmd::check_launcher_update,
+            commands::updater_cmd::apply_launcher_update
         ])
         .run(tauri::generate_context!())
         .expect("运行 Tauri 应用时出错");

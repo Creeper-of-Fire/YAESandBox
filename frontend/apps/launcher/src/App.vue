@@ -130,6 +130,40 @@ const refreshAll = async () => {
   }
 };
 
+const checkForLauncherUpdate = async () => {
+  if (!config.value?.launcher_update_manifest_url) {
+    console.log("未配置启动器更新URL，跳过检查。");
+    return;
+  }
+
+  try {
+    console.log("正在检查启动器更新...");
+    // UpdateStatus 是一个枚举: { tag: "UpToDate" } 或 { tag: "UpdateAvailable", content: VersionManifest }
+    const result = await invoke('check_launcher_update', {
+      manifestUrl: config.value.launcher_update_manifest_url,
+      proxy: config.value.proxy_address,
+    });
+
+    if (result.tag === "UpdateAvailable") {
+      const manifest = result.content;
+      statusMessage.value = `发现启动器新版本 v${manifest.version}！`;
+
+      // 简单起见，我们直接弹窗询问
+      if (confirm(`发现新版本 v${manifest.version}，是否立即更新？\n\n更新日志:\n${manifest.notes}`)) {
+        statusMessage.value = "正在下载并应用更新，请稍候...";
+        await invoke('apply_launcher_update', { manifest });
+        // 如果成功，应用会自动退出，所以这里之后的代码不会执行
+      } else {
+        statusMessage.value = "已取消更新。";
+      }
+    } else {
+      console.log("启动器已是最新版本。");
+    }
+  } catch (error) {
+    console.error("检查启动器更新失败:", error);
+    statusMessage.value = `更新检查失败: ${String(error)}`;
+  }
+};
 
 watchEffect(() => {
   if (config.value) {

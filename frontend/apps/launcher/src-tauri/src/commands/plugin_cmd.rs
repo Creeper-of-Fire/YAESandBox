@@ -17,22 +17,9 @@ pub async fn fetch_plugins_manifest(
     proxy: Option<String>,
 ) -> Result<Vec<PluginInfo>, String> {
     println!("[Plugins] Fetching manifest from: {}", url);
-    if let Some(p) = &proxy {
-        println!("[Plugins] Using proxy: {}", p);
-    }
-
-    // 动态构建 reqwest 客户端
-    let client_builder = reqwest::Client::builder();
 
     // 如果前端传入了代理地址，就配置代理
-    let client = if let Some(proxy_url) = proxy {
-        let proxy = reqwest::Proxy::all(&proxy_url)
-            .map_err(|e| format!("无效的代理 URL '{}': {}", proxy_url, e))?;
-        client_builder.proxy(proxy).build()
-    } else {
-        client_builder.build()
-    }
-    .map_err(|e| format!("构建 HTTP 客户端失败: {}", e))?;
+    let client = crate::core::http::create_http_client(proxy.as_deref())?;
 
     // 3. 使用构建好的 client 发起请求
     let response = client

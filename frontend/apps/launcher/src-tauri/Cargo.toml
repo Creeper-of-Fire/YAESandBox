@@ -26,6 +26,9 @@ tokio = { version = "1", features = ["full"] }
 futures-util = "0.3"
 zip = "4.5.0"
 portpicker = "0.1"
+semver = "1" # 用于语义化版本比较
+sha2 = "0"  # 用于计算 SHA256
+hex = "0"    # 用于将哈希值转为字符串
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.61.3", features = [

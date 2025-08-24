@@ -12,7 +12,7 @@ const backendCacheDir = path.resolve(cacheDir, 'backend');
 const frontendCacheDir = path.resolve(cacheDir, 'frontend');
 
 const pluginsSource = path.resolve(projectRoot, 'build/Plugins');
-const launcherSource = path.resolve(projectRoot, 'build/Launcher/launcher.exe');
+const launcherSource = path.resolve(projectRoot, 'build/launcher/launcher.exe');
 
 // 目标路径
 const outputRoot = path.resolve(projectRoot, 'build/YAESandBox'); // 最终产品根目录
