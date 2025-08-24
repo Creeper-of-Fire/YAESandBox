@@ -2,8 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Loader;
 using DotNetEnv;
-using ElectronNET.API;
-using ElectronNET.API.Entities;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.OpenApi.Any;
 using Microsoft.OpenApi.Models;
@@ -32,7 +30,7 @@ builder.WebHost.UseUrls("http://127.0.0.1:0");
 // **Electron & Desktop App Configuration**
 var rootPathProvider = new AppRootPathProvider(builder.Environment);
 builder.Services.AddSingleton<IRootPathProvider>(rootPathProvider);
-var physicalAppRoot = rootPathProvider.RootPath;
+string physicalAppRoot = rootPathProvider.RootPath;
 
 string userDataPath = Path.Combine(physicalAppRoot, "UserData");
 Directory.CreateDirectory(userDataPath);

@@ -14,7 +14,6 @@
     <ItemGroup>
         <InternalsVisibleTo Include="YAESandBox.Tests"/>
         <PackageReference Include="DotNetEnv" Version="3.1.1"/>
-        <PackageReference Include="ElectronNET.API" Version="23.6.2"/>
         <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.7"/>
         <PackageReference Include="Microsoft.OpenApi" Version="1.6.23"/>
         <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>

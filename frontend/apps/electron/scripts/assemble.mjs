@@ -5,13 +5,14 @@ import path from 'path';
 const projectRoot = path.resolve(process.cwd(), '../../..');
 const electronRoot = path.resolve(projectRoot, 'frontend/apps/electron');
 
+const electronDistSource = path.resolve(electronRoot, 'node_modules/electron/dist');
 
 const cacheDir = path.resolve(projectRoot, 'build/cache');
 const backendCacheDir = path.resolve(cacheDir, 'backend');
 const frontendCacheDir = path.resolve(cacheDir, 'frontend');
 
-const pluginsSource = path.resolve(projectRoot, 'Plugins');
-const launcherSource = path.resolve(projectRoot, 'build-assets/launcher.exe');
+const pluginsSource = path.resolve(projectRoot, 'build/Plugins');
+const launcherSource = path.resolve(projectRoot, 'build/Launcher/launcher.exe');
 
 // 目标路径
 const outputRoot = path.resolve(projectRoot, 'build/YAESandBox'); // 最终产品根目录
@@ -25,6 +26,9 @@ async function main() {
     if (!await fs.pathExists(backendCacheDir) || !await fs.pathExists(frontendCacheDir)) {
         throw new Error('缓存目录不存在。请先运行完整的构建流程 (`pnpm package:full`)。');
     }
+    if (!await fs.pathExists(electronDistSource)) {
+        throw new Error(`Electron 运行时未找到，路径: ${electronDistSource}。\n请在 'frontend/apps/electron' 目录下运行 'pnpm install'。`);
+    }
 
     // 2. 准备最终的 app 目录
     console.log('🧹 正在清理并准备最终的应用目录...');
@@ -34,6 +38,20 @@ async function main() {
 
     // 3. 组装文件
     console.log('🚚 正在从缓存和源文件复制文件...');
+
+    // 3.1: 复制 Electron 运行时作为基础
+    console.log('  - 正在复制 Electron 运行时...');
+    await fs.copy(electronDistSource, appDestDir);
+
+    // 3.2: 重命名主程序
+    const originalExePath = path.resolve(appDestDir, 'electron.exe');
+    const newExePath = path.resolve(appDestDir, 'YAESandBox.exe'); // 你的目标名称
+    if (await fs.pathExists(originalExePath)) {
+        console.log(`  - 正在将 electron.exe 重命名为 YAESandBox.exe...`);
+        await fs.rename(originalExePath, newExePath);
+    } else {
+        console.warn(`[组装脚本] 未找到 electron.exe，跳过重命名。请检查 Electron 版本或平台。`);
+    }
 
     // 3.1 从缓存复制后端
     console.log('  - 正在从缓存复制后端文件...');
@@ -55,7 +73,7 @@ async function main() {
 
     const electronPackageJson = await fs.readJson(path.resolve(electronRoot, 'package.json'));
     const productionPackageJson = {
-        name: electronPackageJson.name,
+        name: "yaesandbox", // 保持简单，避免特殊字符
         version: electronPackageJson.version,
         main: 'main.js',
         dependencies: electronPackageJson.dependencies || {}

@@ -5,7 +5,7 @@ namespace YAESandBox.AppWeb.Services;
 
 /// <summary>
 /// IRootPathProvider 的默认实现。
-/// 它能够智能检测当前是否运行在Electron打包后的'app'子目录结构中，
+/// 它能够智能检测当前是否运行在打包后的'app'子目录结构中，
 /// 并据此计算出正确的物理应用根目录。
 /// </summary>
 public class AppRootPathProvider : IRootPathProvider
@@ -50,9 +50,9 @@ public class AppRootPathProvider : IRootPathProvider
 
         while (searchDir != null && maxDepth-- > 0)
         {
-            // 3. 检查当前目录是否包含名为 "resources" 的子目录。
-            //    这是 Electron.NET 打包后应用根目录的可靠标志。
-            if (Directory.Exists(Path.Combine(searchDir.FullName, "resources")))
+            // 3. 检查当前目录是否包含名为 "app" 的子目录。
+            //    这是打包后应用根目录的可靠标志。
+            if (Directory.Exists(Path.Combine(searchDir.FullName, "app")))
             {
                 // 找到了！这个目录就是我们需要的应用根目录。
                 foundRootPath = searchDir.FullName;
@@ -74,7 +74,7 @@ public class AppRootPathProvider : IRootPathProvider
             // 此时可以抛出异常，或者作为一个备选方案，使用可执行文件所在的目录。
             // 抛出异常更利于发现问题。
             throw new DirectoryNotFoundException(
-                $"无法确定打包后的应用根目录。从 '{exeDir}' 向上查找，未能找到包含 'resources' 子目录的文件夹。"
+                $"无法确定打包后的应用根目录。从 '{exeDir}' 向上查找，未能找到包含 'app' 子目录的文件夹。"
             );
         }
 

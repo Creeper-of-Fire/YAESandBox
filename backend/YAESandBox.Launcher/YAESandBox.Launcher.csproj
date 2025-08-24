@@ -1,16 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup>
-        <OutputType>WinExe</OutputType>
+        <OutputType>Exe</OutputType>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
 
+        <!-- 发布为单文件，方便管理 -->
         <PublishSingleFile>true</PublishSingleFile>
-        <SelfContained>true</SelfContained>
+        <!-- SelfContained 仍然为 true，确保在任何机器上都能运行 -->
+        <FrameworkDependent>true</FrameworkDependent>
+        <InvariantGlobalization>true</InvariantGlobalization>
         <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+        <TrimMode>full</TrimMode>
+        <IsAotCompatible>true</IsAotCompatible>
+        <PublishAot>true</PublishAot>
+
+        <!-- 代码裁剪 -->
         <PublishTrimmed>true</PublishTrimmed>
 
-        <PublishDir>$(MSBuildProjectDirectory)../../../build-assets</PublishDir>
-        <AssemblyName>launcher</AssemblyName>
+        <!-- 保持输出路径和命名 -->
+        <PublishDir>$(MSBuildProjectDirectory)../../../build/Launcher</PublishDir>
+        <AssemblyName>YAESandBoxLauncher</AssemblyName>
     </PropertyGroup>
 </Project>
