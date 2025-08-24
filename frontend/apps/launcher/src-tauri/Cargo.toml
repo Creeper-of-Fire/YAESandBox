@@ -1,0 +1,44 @@
+[package]
+name = "yaesandbox-launcher"
+version = "0.1.0"
+description = "A Tauri App"
+authors = ["you"]
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[lib]
+# The `_lib` suffix may seem redundant but it is necessary
+# to make the lib name unique and wouldn't conflict with the bin name.
+# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+name = "yaesandbox_launcher_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-opener = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+reqwest = { version = "0.12", features = ["json", "stream"] }
+tokio = { version = "1", features = ["full"] }
+futures-util = "0.3"
+
+[features]
+# this feature is used for production builds or when `devPath` points to the filesystem
+# DO NOT REMOVE!!
+custom-protocol = ["tauri/custom-protocol"]
+
+[profile.release]
+# "z" 代表优化体积而不是速度。 "s" 是次一级优化体积。
+opt-level = "z"
+# 链接时优化，允许编译器在整个程序级别进行优化。
+lto = true
+# 将所有代码编译成一个单元，增加编译时间但能带来更好的优化。
+codegen-units = 1
+# 发生panic时直接终止程序，而不是展开堆栈，可以减小体积。
+panic = "abort"
+# 自动剥离符号信息，显著减小二进制文件大小。
+strip = true
