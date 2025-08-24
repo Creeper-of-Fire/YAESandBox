@@ -71,7 +71,9 @@ pub fn run() {
             commands::download::download_file,
             commands::unzip::unzip_file,
             commands::fs_utils::delete_file,
-            commands::process::start_local_backend
+            commands::process::start_local_backend,
+            commands::config_cmd::read_config_as_string,
+            commands::plugin_cmd::fetch_plugins_manifest
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

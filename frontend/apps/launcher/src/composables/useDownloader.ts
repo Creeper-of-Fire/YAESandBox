@@ -11,6 +11,7 @@
 import {computed, onMounted, onUnmounted, type Ref, ref} from 'vue';
 import {invoke} from '@tauri-apps/api/core';
 import {listen, type UnlistenFn} from '@tauri-apps/api/event';
+import {useConfig} from "#/composables/useConfig.ts";
 
 /**
  * @interface DownloadableItem
@@ -104,6 +105,8 @@ export function useDownloader() {
         return `${formatBytes(downloadProgress.value.downloaded)} 已下载`;
     });
 
+    const {config} = useConfig();
+
     // --- 3. Method (方法) ---
     /**
      * @function performUpdate
@@ -124,6 +127,7 @@ export function useDownloader() {
             await invoke("download_file", {
                 url: item.url,
                 relativePath: item.savePath,
+                proxy: config.value?.proxy_address
             });
 
             // 步骤 2: 解压

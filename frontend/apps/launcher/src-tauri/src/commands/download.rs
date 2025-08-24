@@ -17,20 +17,27 @@ pub async fn download_file(
     // 标记为 pub
     url: String,
     relative_path: String,
+    proxy: Option<String>,
     app_handle: AppHandle,
     app_state: State<'_, AppState>,
 ) -> Result<(), String> {
     let target_path = app_state.resolve_safe_path(&relative_path)?;
 
-    if let Some(parent_dir) = target_path.parent() {
-        if !parent_dir.exists() {
-            std::fs::create_dir_all(parent_dir)
-                .map_err(|e| format!("Failed to create directory: {}", e))?;
-        }
+    let mut client_builder = reqwest::Client::builder();
+    if let Some(proxy_url) = proxy {
+        let proxy = reqwest::Proxy::all(&proxy_url)
+            .map_err(|e| format!("Invalid proxy URL '{}': {}", proxy_url, e))?;
+        client_builder = client_builder.proxy(proxy);
     }
-    let response = reqwest::get(&url)
+    let client = client_builder
+        .build()
+        .map_err(|e| format!("Failed to build HTTP client: {}", e))?;
+    let response = client
+        .get(&url)
+        .send()
         .await
         .map_err(|e| format!("Request failed: {}", e))?;
+
     let total_size = response.content_length();
     let mut file =
         File::create(&target_path).map_err(|e| format!("Failed to create file: {}", e))?;
