@@ -24,13 +24,13 @@ pub async fn start_local_backend(
     app_state: State<'_, AppState>,
 ) -> Result<(), String> {
     // --- 1. 准备环境 ---
-    let port = portpicker::pick_unused_port().expect("Failed to find a free port");
+    let port = portpicker::pick_unused_port().expect("未能找到可用端口");
     let api_url = format!("http://127.0.0.1:{}", port);
 
     let backend_exe_path = app_state.resolve_safe_path(&backend_exe_relative_path)?;
 
     let backend_working_dir = backend_exe_path.parent().ok_or_else(||
-        "Invalid backend executable path: cannot determine parent directory.".to_string()
+        "无效的后端可执行文件路径: 无法确定父目录。".to_string()
     )?;
 
     // --- 2. 创建用于“后端就绪”信令的通道 ---
@@ -50,7 +50,7 @@ pub async fn start_local_backend(
     command.creation_flags(CREATE_NO_WINDOW);
 
     // --- 启动子进程并将其绑定到 Job Object ---
-    let mut child = command.spawn().map_err(|e| format!("Failed to spawn backend: {}", e))?;
+    let mut child = command.spawn().map_err(|e| format!("启动后端进程失败: {}", e))?;
     let pid = child.id();
 
     // 在 Windows 上，将子进程的生命周期与父进程绑定
@@ -61,7 +61,7 @@ pub async fn start_local_backend(
 
         job.assign_process_by_pid(pid)?;
 
-        println!("[Launcher] Backend process successfully assigned to Job Object.");
+        println!("[Launcher] 后端进程已成功分配至作业对象。");
 
         // 将 Job Object 存储到 AppState 中，以保持其存活。
         // 当 AppState 被销毁时 (即启动器关闭时)，JobObject 的 Drop trait 会被调用，
@@ -70,14 +70,14 @@ pub async fn start_local_backend(
     }
 
     // --- 5. 异步处理子进程的 stdout 和 stderr ---
-    let stdout = child.stdout.take().expect("Failed to capture stdout");
-    let stderr = child.stderr.take().expect("Failed to capture stderr");
+    let stdout = child.stdout.take().expect("未能捕获标准输出");
+    let stderr = child.stderr.take().expect("未能捕获标准错误");
 
     let app_handle_clone = app_handle.clone();
     thread::spawn(move || {
         let reader = BufReader::new(stdout);
         for line in reader.lines().flatten() { // flatten() 忽略读取错误
-            println!("[Backend STDOUT]: {}", line);
+            println!("[后端标准输出]: {}", line);
             let _ = app_handle_clone.emit("backend-log", &line);
 
             if line.contains("Now listening on") {
@@ -90,7 +90,7 @@ pub async fn start_local_backend(
     thread::spawn(move || {
         let reader = BufReader::new(stderr);
         for line in reader.lines().flatten() {
-            println!("[Backend STDERR]: {}", line);
+            println!("[后端标准错误]: {}", line);
             let _ = app_handle_clone_err.emit("backend-log", &format!("[ERROR] {}", line));
         }
     });
@@ -99,15 +99,15 @@ pub async fn start_local_backend(
     let timeout_duration = Duration::from_secs(15);
     match timeout(timeout_duration, rx.recv()).await {
         Ok(Some(_)) => {
-            println!("[Launcher] Backend is ready. Navigating main window...");
+            println!("[Launcher] 后端已就绪。正在导航主窗口...");
             let main_window = app_handle.get_webview_window("main").unwrap();
             main_window.navigate(api_url.parse().unwrap())
-                .map_err(|e| format!("Failed to navigate window: {}", e))?;
+                .map_err(|e| format!("导航窗口失败: {}", e))?;
             Ok(())
         }
-        Ok(None) => Err("Backend process exited prematurely.".to_string()),
+        Ok(None) => Err("后端进程意外退出。".to_string()),
         Err(_) => Err(format!(
-            "Backend failed to start within {} seconds.",
+            "后端未能在 {} 秒内成功启动。",
             timeout_duration.as_secs()
         )),
     }

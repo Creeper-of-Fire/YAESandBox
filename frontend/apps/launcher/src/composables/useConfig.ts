@@ -45,7 +45,7 @@ const loadConfig = async () => {
             proxy_address: parsed.proxy || null,
         };
     } catch (e) {
-        const errorMessage = `Failed to load configuration: ${String(e)}`;
+        const errorMessage = `加载配置失败: ${String(e)}`;
         error.value = errorMessage;
         console.error(errorMessage);
     } finally {

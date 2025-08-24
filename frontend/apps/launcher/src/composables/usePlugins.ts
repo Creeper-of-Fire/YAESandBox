@@ -35,7 +35,7 @@ export function usePlugins() {
                 proxy: config.value?.proxy_address,
             });
         } catch (e) {
-            const errorMessage = `Failed to load plugins: ${String(e)}`;
+            const errorMessage = `加载插件失败: ${String(e)}`;
             error.value = errorMessage;
             console.error(errorMessage);
         } finally {

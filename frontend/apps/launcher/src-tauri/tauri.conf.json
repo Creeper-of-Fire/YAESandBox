@@ -13,7 +13,7 @@
     "withGlobalTauri": true,
     "windows": [
       {
-        "title": "yaesandbox-launcher",
+        "title": "YAESandBox 启动器",
         "width": 800,
         "height": 600
       }

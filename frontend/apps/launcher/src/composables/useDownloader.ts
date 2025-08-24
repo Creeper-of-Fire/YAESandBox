@@ -11,7 +11,7 @@
 import {computed, onMounted, onUnmounted, type Ref, ref} from 'vue';
 import {invoke} from '@tauri-apps/api/core';
 import {listen, type UnlistenFn} from '@tauri-apps/api/event';
-import {useConfig} from "#/composables/useConfig.ts";
+import {useConfig} from "./useConfig.ts";
 
 /**
  * @interface DownloadableItem

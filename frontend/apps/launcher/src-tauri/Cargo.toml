@@ -2,15 +2,14 @@
 name = "yaesandbox-launcher"
 version = "0.1.0"
 description = "A Tauri App"
-authors = ["you"]
+authors = ["creeperoffire"]
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+# 更多配置项请参考 https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [lib]
-# The `_lib` suffix may seem redundant but it is necessary
-# to make the lib name unique and wouldn't conflict with the bin name.
-# This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
+# _lib 后缀看似多余，但对于确保库名称唯一且不与二进制文件名冲突是必要的。
+# 这似乎只是 Windows 上的一个问题，详见 https://github.com/rust-lang/cargo/issues/8519
 name = "yaesandbox_launcher_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
@@ -37,8 +36,8 @@ windows = { version = "0.61.3", features = [
 ] }
 
 [features]
-# this feature is used for production builds or when `devPath` points to the filesystem
-# DO NOT REMOVE!!
+# 这个特性用于生产构建，或当 devPath 指向文件系统时
+# 请勿移除!!
 custom-protocol = ["tauri/custom-protocol"]
 
 [profile.release]

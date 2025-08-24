@@ -19,10 +19,10 @@ pub async fn unzip_file(
     let target_dir = app_state.resolve_safe_path(&target_relative_dir)?;
 
     if !zip_path.exists() {
-        return Err(format!("Zip file not found at: {}", zip_path.display()));
+        return Err(format!("在指定位置未找到 Zip 文件: {}", zip_path.display()));
     }
     if app_state.is_root(&target_dir) {
-        return Err("Unzipping directly into the application root is not allowed.".to_string());
+        return Err("不允许直接解压到应用根目录。".to_string());
     }
 
     // --- 2. 核心安全逻辑：所有权验证 ---
@@ -31,18 +31,18 @@ pub async fn unzip_file(
         if !marker_path.exists() {
             // 目录存在，但标记文件不存在 -> 立即中止！
             return Err(format!(
-                "Directory '{}' already exists and is not managed by this launcher. Please rename or remove it manually.",
+                "目录 '{}' 已存在且不由本启动器管理。请手动重命名或删除它。",
                 target_dir.display()
             ));
         }
         // 标记文件存在，我们可以安全地删除旧目录
         fs::remove_dir_all(&target_dir)
-            .map_err(|e| format!("Failed to remove old directory: {}", e))?;
+            .map_err(|e| format!("移除旧目录失败: {}", e))?;
     }
 
     // --- 3. 执行解压 ---
     fs::create_dir_all(&target_dir)
-        .map_err(|e| format!("Failed to create target directory: {}", e))?;
+        .map_err(|e| format!("创建目标目录失败: {}", e))?;
 
     let file = File::open(&zip_path).map_err(|e| e.to_string())?;
     let mut archive = ZipArchive::new(file).map_err(|e| e.to_string())?;
@@ -70,7 +70,7 @@ pub async fn unzip_file(
     // --- 4. 解压成功后，放置新的标记文件 ---
     let new_marker_path = target_dir.join(MARKER_FILENAME);
     File::create(new_marker_path)
-        .map_err(|e| format!("Failed to create ownership marker: {}", e))?;
+        .map_err(|e| format!("创建所有权标记文件失败: {}", e))?;
 
     Ok(())
 }

@@ -13,7 +13,7 @@ pub fn read_config_as_string(app_state: State<'_, AppState>) -> Result<String, S
 
     // 如果文件不存在，就地创建一个默认的。
     if !config_path.exists() {
-        let default_content = r#"; --- YAESandBox Launcher Configuration ---
+        let default_content = r#"; --- YAESandBox 启动器配置 ---
 [Downloads]
 app_url = "https://.../app.zip"
 backend_url = "https://.../backend.zip"
@@ -22,9 +22,9 @@ plugins_manifest_url = "https://.../plugins.json"
 proxy = ""
 "#;
         fs::write(&config_path, default_content)
-            .map_err(|e| format!("Failed to create default config file: {}", e))?;
+            .map_err(|e| format!("创建默认配置文件失败: {}", e))?;
     }
 
     fs::read_to_string(config_path)
-        .map_err(|e| format!("Failed to read config file: {}", e))
+        .map_err(|e| format!("读取配置文件失败: {}", e))
 }

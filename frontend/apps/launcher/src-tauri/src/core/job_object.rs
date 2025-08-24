@@ -27,7 +27,7 @@ impl JobObject {
         unsafe {
             // 1. 创建 Job Object 内核对象
             let handle = CreateJobObjectW(None, None)
-                .map_err(|e| format!("Failed to create Job Object: {}", e))?;
+                .map_err(|e| format!("创建作业对象失败: {}", e))?;
 
             // 2. 配置 Job Object 的行为
             let mut limit_info = JOBOBJECT_EXTENDED_LIMIT_INFORMATION::default();
@@ -41,7 +41,7 @@ impl JobObject {
                 &limit_info as *const _ as *const std::ffi::c_void,
                 info_size,
             )
-                .map_err(|e| format!("Failed to set Job Object information: {}", e))?;
+                .map_err(|e| format!("设置作业对象信息失败: {}", e))?;
 
             Ok(Self { handle })
         }
@@ -53,7 +53,7 @@ impl JobObject {
             // 2. 通过 PID 打开进程，获取一个拥有特定权限的句柄
             // AssignProcessToJobObject 需要 PROCESS_SET_QUOTA 和 PROCESS_TERMINATE 权限
             let process_handle = OpenProcess(PROCESS_SET_QUOTA | PROCESS_TERMINATE, bool::from(FALSE), pid)
-                .map_err(|e| format!("Failed to open process with PID {}: {}", pid, e))?;
+                .map_err(|e| format!("打开进程失败 (PID {}): {}", pid, e))?;
 
             // 3. 将获取到的句柄分配给 Job Object
             let result = AssignProcessToJobObject(self.handle, process_handle);
@@ -61,7 +61,7 @@ impl JobObject {
             // 4. 无论成功与否，都关闭我们刚刚打开的句柄，避免句柄泄漏
             let _ = CloseHandle(process_handle);
 
-            result.map_err(|e| format!("Failed to assign process to Job Object: {}", e))
+            result.map_err(|e| format!("将进程分配到作业对象失败: {}", e))
         }
     }
 }

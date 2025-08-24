@@ -12,22 +12,22 @@ pub fn delete_file(
     let target_path = app_state.resolve_safe_path(&relative_path)?;
 
     if app_state.is_root(&target_path) {
-        return Err("Cannot delete the root directory.".into());
+        return Err("不能删除根目录。".into());
     }
 
     // --- 2. 检查文件是否存在并删除 ---
     if target_path.exists() {
         if target_path.is_file() {
             fs::remove_file(&target_path)
-                .map_err(|e| format!("Failed to delete file: {}", e))?;
-            println!("Successfully deleted file: {}", target_path.display());
+                .map_err(|e| format!("删除文件失败: {}", e))?;
+            println!("成功删除文件: {}", target_path.display());
         } else {
             // 为了安全，这个 command 只删除文件，不删除目录
-            return Err("Target path is a directory, not a file.".into());
+            return Err("目标路径是一个目录，不是文件。".into());
         }
     } else {
         // 文件不存在也算“成功”，因为最终状态是一样的
-        println!("File not found, nothing to delete: {}", target_path.display());
+        println!("文件未找到，无需删除: {}", target_path.display());
     }
 
     Ok(())

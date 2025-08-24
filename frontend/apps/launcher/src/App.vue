@@ -2,10 +2,10 @@
 <template>
   <div class="container">
     <div class="header">
-      <h1>YAESandBox Launcher</h1>
+      <h1>YAESandBox 启动器</h1>
       <button @click="refreshAll" :disabled="isBusy" class="refresh-btn">
         <span v-if="isRefreshing">🔄</span>
-        <span v-else>Refresh</span>
+        <span v-else>刷新</span>
       </button>
     </div>
 
@@ -24,12 +24,12 @@
           :disabled="isBusy"
       >
         <!-- 当某个任务正在下载时，显示特定文本 -->
-        <span v-if="isDownloading && currentlyDownloadingId === item.id">Downloading...</span>
-        <span v-else>Download {{ item.name }}</span>
+        <span v-if="isDownloading && currentlyDownloadingId === item.id">下载中...</span>
+        <span v-else>下载 {{ item.name }}</span>
       </button>
 
       <button @click="launchApp" :disabled="isBusy">
-        Launch Application
+        启动应用
       </button>
     </div>
 
@@ -41,9 +41,9 @@
 
     <hr />
 
-    <h2>Available Plugins</h2>
+    <h2>可用插件</h2>
     <div v-if="arePluginsLoading">
-      <p>Loading plugins from manifest...</p>
+      <p>正在从清单加载插件...</p>
     </div>
     <div v-else-if="pluginError">
       <p class="error-message">{{ pluginError }}</p>
@@ -54,13 +54,13 @@
         <p>{{ plugin.description }}</p>
 
         <button @click="installPlugin(plugin)" :disabled="isDownloading">
-          <span v-if="isDownloading && currentlyDownloadingId === plugin.id">Installing...</span>
-          <span v-else>Install</span>
+          <span v-if="isDownloading && currentlyDownloadingId === plugin.id">安装中...</span>
+          <span v-else>安装</span>
         </button>
 
       </div>
     </div>
-    <p v-else>No plugins found in the manifest.</p>
+    <p v-else>清单中未找到任何插件。</p>
 
   </div>
 </template>
@@ -71,7 +71,7 @@ import { invoke } from '@tauri-apps/api/core';
 import DownloadProgressBar from './components/DownloadProgressBar.vue';
 import {type DownloadableItem, useDownloader} from './composables/useDownloader';
 import { useConfig } from './composables/useConfig';
-import {type PluginInfo, usePlugins} from "#/composables/usePlugins.ts";
+import {type PluginInfo, usePlugins} from "./composables/usePlugins.ts";
 
 const frontendPath = ref('app/wwwroot');
 const backendPath = ref('app/YAESandBox.AppWeb.exe');
@@ -79,14 +79,14 @@ const backendPath = ref('app/YAESandBox.AppWeb.exe');
 const downloadableItems = ref<DownloadableItem[]>([
   {
     id: 'app',
-    name: 'Core Application',
+    name: '前端应用',
     url: '',
     savePath: 'downloads/app.zip',
     extractPath: 'app/wwwroot',
   },
   {
     id: 'backend',
-    name: '.NET Backend',
+    name: '.NET 后端',
     url: '',
     savePath: 'downloads/backend.zip',
     extractPath: 'app',
@@ -103,7 +103,7 @@ const refreshAll = async () => {
   if (isBusy.value) return; // 如果正在下载或刷新，则不执行
 
   isRefreshing.value = true;
-  statusMessage.value = 'Refreshing configuration...';
+  statusMessage.value = '正在刷新配置...';
 
   try {
     // 步骤 A: 重新加载本地配置
@@ -111,18 +111,18 @@ const refreshAll = async () => {
 
     // 检查配置加载是否出错
     if (configError.value) {
-      statusMessage.value = `Failed to refresh config: ${configError.value}`;
+      statusMessage.value = `刷新配置失败: ${configError.value}`;
       return;
     }
 
     // 步骤 B: 使用新配置重新加载插件列表
-    statusMessage.value = 'Refreshing plugin list...';
+    statusMessage.value = '正在刷新插件列表...';
     await fetchPlugins();
 
     if (pluginError.value) {
-      statusMessage.value = `Failed to refresh plugins: ${pluginError.value}`;
+      statusMessage.value = `刷新插件失败: ${pluginError.value}`;
     } else {
-      statusMessage.value = 'Refresh complete. Launcher is ready.';
+      statusMessage.value = '刷新完成。启动器已就绪。';
     }
 
   } finally {
@@ -169,16 +169,16 @@ const installPlugin = (plugin: PluginInfo) => {
 };
 
 const launchApp = async () => {
-  statusMessage.value = 'Starting local services...';
+  statusMessage.value = '正在启动本地服务...';
   try {
     await invoke('start_local_backend', {
       frontendRelativePath: frontendPath.value,
       backendExeRelativePath: backendPath.value,
     });
-    statusMessage.value = 'Navigation successful. Loading application...';
+    statusMessage.value = '导航成功。正在加载应用...';
   } catch (error) {
-    console.error('Failed to start services:', error);
-    statusMessage.value = `Failed to start: ${String(error)}`;
+    console.error('启动服务失败:', error);
+    statusMessage.value = `启动失败: ${String(error)}`;
   }
 };
 

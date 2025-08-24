@@ -23,7 +23,7 @@ impl AppState {
         // 1. 检查危险的路径格式
         if relative_path.is_empty() || relative_path.contains("..") {
             return Err(format!(
-                "Invalid or potentially malicious path specified: {}",
+                "指定的路径无效或存在潜在风险: {}",
                 relative_path
             ));
         }
@@ -35,7 +35,7 @@ impl AppState {
         //    这是防止符号链接等更复杂攻击的最后一道防线。
         if !safe_path.starts_with(&self.app_dir) {
             return Err(format!(
-                "Path traversal attempt detected: {}",
+                "检测到路径遍历攻击: {}",
                 relative_path
             ));
         }
@@ -56,9 +56,9 @@ pub fn run() {
             let exe_dir = std::env::current_exe()
                 .ok()
                 .and_then(|p| p.parent().map(|p| p.to_path_buf()))
-                .expect("Failed to get exe parent directory");
+                .expect("未能获取可执行文件所在目录");
 
-            println!("App executable directory: {}", exe_dir.display());
+            println!("应用可执行文件目录: {}", exe_dir.display());
             app.manage(AppState {
                 app_dir: exe_dir,
                 #[cfg(windows)]
@@ -76,5 +76,5 @@ pub fn run() {
             commands::plugin_cmd::fetch_plugins_manifest
         ])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("运行 Tauri 应用时出错");
 }
