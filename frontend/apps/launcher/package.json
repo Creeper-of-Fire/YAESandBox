@@ -7,8 +7,10 @@
     "dev": "vite",
     "build": "tsc && vite build",
     "preview": "vite preview",
-    "tauri:build": "node scripts/build.mjs",
-    "tauri:dev": "tauri dev"
+    "tauri:build-only": "node scripts/build.mjs",
+    "tauri:dev": "tauri dev",
+    "tauri:assemble": "node scripts/assemble.mjs",
+    "tauri:build": "pnpm run tauri:build-only && pnpm run tauri:assemble"
   },
   "dependencies": {
     "@tauri-apps/api": "^2",

@@ -4,8 +4,7 @@ import {visualizer} from "rollup-plugin-visualizer";
 import {createMonorepoViteConfig} from "../../vite.config.shared";
 import * as path from "node:path";
 
-export default defineConfig(({command, mode}) =>
-{
+export default defineConfig(({command, mode}) => {
     const isBuild = mode === 'production';
 
     // 1. 使用构建器创建基础应用配置
@@ -35,30 +34,27 @@ export default defineConfig(({command, mode}) =>
                      * @param {string} id - 符文的路径
                      * @returns {string | undefined} - 返回自定义的 chunk 名称
                      */
-                    manualChunks(id: string): "vendor-naive-ui" | "vendor-vue" | "vendor-sortable" | "vendor-signalr" | "vendor"
-                    {
+                    manualChunks(id: string): "vendor-naive-ui" | "vendor-vue" | "vendor-sortable" | "vendor-signalr" | "vendor" | 'vendor-vscode' {
                         // 将 node_modules 中的依赖单独打包
-                        if (id.includes('node_modules'))
-                        {
+                        if (id.includes('node_modules')) {
                             // 重点优化 naive-ui，它通常是体积大户
-                            if (id.includes('naive-ui'))
-                            {
+                            if (id.includes('naive-ui')) {
                                 return 'vendor-naive-ui';
                             }
                             // 重点优化 vue 全家桶
-                            if (id.includes('vue') || id.includes('@vue'))
-                            {
+                            if (id.includes('vue') || id.includes('@vue')) {
                                 return 'vendor-vue';
                             }
                             // 重点优化 sortablejs (vue-draggable-plus 的依赖)
-                            if (id.includes('sortablejs'))
-                            {
+                            if (id.includes('sortablejs')) {
                                 return 'vendor-sortable';
                             }
                             // 重点优化 SignalR
-                            if (id.includes('@microsoft/signalr'))
-                            {
+                            if (id.includes('@microsoft/signalr')) {
                                 return 'vendor-signalr';
+                            }
+                            if (id.includes('@codingame') || id.includes('vscode')) {
+                                return 'vendor-vscode';
                             }
                             // 其他所有 node_modules 的依赖都打包到 vendor 文件
                             return 'vendor';
@@ -100,8 +96,7 @@ export default defineConfig(({command, mode}) =>
         },
         resolve: {}
     });
-    if (isBuild)
-    {
+    if (isBuild) {
         shellSpecificConfig.resolve = {
             alias: {
                 '@yaesandbox-frontend/plugin-workbench': path.resolve(__dirname, '../../plugins/workbench/dist/index.js'),

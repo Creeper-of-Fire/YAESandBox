@@ -1,106 +1,92 @@
 ﻿<!-- src/App.vue -->
-<script setup lang="ts">
-import {computed, onMounted, onUnmounted, ref} from 'vue';
-import {invoke} from '@tauri-apps/api/core';
-import {listen, type UnlistenFn} from '@tauri-apps/api/event';
-
-// --- 1. State Management (状态管理) ---
-const statusMessage = ref('Launcher is ready.');
-const isDownloading = ref(false);
-const downloadProgress = ref({downloaded: 0, total: 0});
-let unlisten: UnlistenFn | null = null;
-
-// --- 2. Computed Properties (计算属性) ---
-// 自动计算百分比和格式化文本，模板会更干净
-const progressPercentage = computed(() => {
-  if (!downloadProgress.value.total) return 0;
-  return Math.round((downloadProgress.value.downloaded / downloadProgress.value.total) * 100);
-});
-
-const progressText = computed(() => {
-  if (!isDownloading.value) return '';
-  if (downloadProgress.value.total) {
-    return `${progressPercentage.value}% - ${formatBytes(downloadProgress.value.downloaded)} / ${formatBytes(downloadProgress.value.total)}`;
-  }
-  return `${formatBytes(downloadProgress.value.downloaded)} downloaded`;
-});
-
-// --- 3. Methods (方法) ---
-async function startDownload() {
-  // 重置状态
-  isDownloading.value = true;
-  statusMessage.value = 'Starting download...';
-  downloadProgress.value = {downloaded: 0, total: 0};
-
-  try {
-    const downloadUrl = "https://speed.cloudflare.com/__down?during=download&bytes=104857600";
-    const relativeSavePath = "downloads/app.zip";
-
-    await invoke("download_file", {
-      url: downloadUrl,
-      relativePath: relativeSavePath,
-    });
-
-    statusMessage.value = `Download complete! Saved to ${relativeSavePath}`;
-  } catch (error) {
-    console.error("Download failed:", error);
-    statusMessage.value = `Download failed: ${String(error)}`;
-  } finally {
-    isDownloading.value = false;
-  }
-}
-
-// --- 4. Lifecycle Hooks (生命周期钩子) ---
-onMounted(async () => {
-  unlisten = await listen<{ downloaded: number; total: number | null }>(
-      'download-progress',
-      (event) => {
-        downloadProgress.value = {
-          downloaded: event.payload.downloaded,
-          total: event.payload.total || 0,
-        };
-      }
-  );
-});
-
-onUnmounted(() => {
-  // 组件销毁时，清理事件监听，防止内存泄漏
-  if (unlisten) {
-    unlisten();
-  }
-});
-
-// --- Helper Function ---
-function formatBytes(bytes: number, decimals = 2): string {
-  if (bytes === 0) return '0 Bytes';
-  const k = 1024;
-  const dm = decimals < 0 ? 0 : decimals;
-  const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB'];
-  const i = Math.floor(Math.log(bytes) / Math.log(k));
-  return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-}
-</script>
-
 <template>
   <div class="container">
     <h1>My Awesome App Launcher</h1>
     <p>{{ statusMessage }}</p>
 
+    <div>
+      <p>Frontend Path: <strong>{{ frontendPath }}</strong></p>
+      <p>Backend Path: <strong>{{ backendPath }}</strong></p>
+    </div>
+
     <div class="controls">
-      <button @click="startDownload" :disabled="isDownloading">
-        {{ isDownloading ? 'Downloading...' : 'Download Core App (ZIP)' }}
+      <button
+          v-for="item in downloadableItems"
+          :key="item.id"
+          @click="performUpdate(item)"
+          :disabled="isDownloading"
+      >
+        <!-- 当某个任务正在下载时，显示特定文本 -->
+        <span v-if="isDownloading && currentlyDownloadingId === item.id">Downloading...</span>
+        <span v-else>Download {{ item.name }}</span>
+      </button>
+
+      <button @click="launchApp" :disabled="isDownloading">
+        Launch Application
       </button>
     </div>
 
-    <div v-if="isDownloading" class="progress-container">
-      <div class="progress-bar" :style="{ width: progressPercentage + '%' }"></div>
-    </div>
-    <p v-if="isDownloading">{{ progressText }}</p>
+    <DownloadProgressBar
+        v-if="isDownloading"
+        :percentage="progressPercentage"
+        :text="progressText"
+    />
+
   </div>
 </template>
 
+<script setup lang="ts">
+import {ref} from 'vue';
+import { invoke } from '@tauri-apps/api/core';
+import DownloadProgressBar from './components/DownloadProgressBar.vue';
+import {type DownloadableItem, useDownloader} from './composables/useDownloader';
+
+const frontendPath = ref('app/wwwroot');
+const backendPath = ref('app/YAESandBox.AppWeb.exe');
+
+const downloadableItems = ref<DownloadableItem[]>([
+  {
+    id: 'app',
+    name: 'Core Application',
+    url: `https://disk.sample.cat/samples/zip/sample-1.zip`,
+    savePath: 'downloads/app.zip',
+    extractPath: 'app/wwwroot',
+  },
+  {
+    id: 'backend',
+    name: '.NET Backend',
+    url: `https://disk.sample.cat/samples/zip/sample-2.zip`,
+    savePath: 'downloads/backend.zip',
+    extractPath: 'app',
+  },
+]);
+
+const {
+  statusMessage,
+  isDownloading,
+  currentlyDownloadingId,
+  progressPercentage,
+  progressText,
+  performUpdate,
+} = useDownloader();
+
+const launchApp = async () => {
+  statusMessage.value = 'Starting local services...';
+  try {
+    await invoke('start_local_backend', {
+      frontendRelativePath: frontendPath.value,
+      backendExeRelativePath: backendPath.value,
+    });
+    statusMessage.value = 'Navigation successful. Loading application...';
+  } catch (error) {
+    console.error('Failed to start services:', error);
+    statusMessage.value = `Failed to start: ${String(error)}`;
+  }
+};
+</script>
+
 <style scoped>
-/* 把你的 CSS 样式粘贴到这里 */
+/* App.vue 现在只需要容器和按钮的样式 */
 .container {
   margin: 0;
   padding-top: 10vh;
@@ -110,25 +96,11 @@ function formatBytes(bytes: number, decimals = 2): string {
   text-align: center;
 }
 
-.progress-container {
-  width: 80%;
-  max-width: 400px;
-  margin: 20px auto;
-  background-color: #333;
-  border-radius: 5px;
-  border: 1px solid #555;
-}
-
-.progress-bar {
-  height: 20px;
-  background-color: #4caf50;
-  border-radius: 5px;
-  transition: width 0.1s linear;
-}
-
-p {
-  font-size: 0.9em;
-  color: #ccc;
+.controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem; /* 给按钮之间加点间距 */
+  margin-top: 1rem;
 }
 
 button:disabled {

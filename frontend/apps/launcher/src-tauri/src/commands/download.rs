@@ -20,11 +20,8 @@ pub async fn download_file(
     app_handle: AppHandle,
     app_state: State<'_, AppState>,
 ) -> Result<(), String> {
-    // ... 函数体内的所有代码保持不变 ...
-    let target_path = app_state.app_dir.join(&relative_path);
-    if !target_path.starts_with(&app_state.app_dir) {
-        return Err("Path traversal attempt detected.".into());
-    }
+    let target_path = app_state.resolve_safe_path(&relative_path)?;
+
     if let Some(parent_dir) = target_path.parent() {
         if !parent_dir.exists() {
             std::fs::create_dir_all(parent_dir)

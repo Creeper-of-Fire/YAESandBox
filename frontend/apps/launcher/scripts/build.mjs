@@ -13,9 +13,9 @@ const appVersion = tauriConfig.version;
 // 定义路径
 const projectRoot = process.cwd();
 const releaseDir = path.join(projectRoot, 'src-tauri/target/release');
-const distDir = path.join(projectRoot, 'dist');
-const portableDirName = `${appName}-v${appVersion}-portable`;
-const portableDirPath = path.join(distDir, portableDirName);
+
+const solutionRoot = path.resolve(projectRoot, '../../..');
+const launcherOutputDir = path.join(solutionRoot, 'build', 'launcher');
 
 // --- 脚本主逻辑 ---
 async function main() {
@@ -24,10 +24,10 @@ async function main() {
 
         // 1. 清理旧的输出目录
         console.log('🧹 清理旧的构建产物...');
-        if (fs.existsSync(distDir)) {
-            fs.rmSync(distDir, { recursive: true, force: true });
+        if (fs.existsSync(launcherOutputDir)) {
+            fs.rmSync(launcherOutputDir, { recursive: true, force: true });
         }
-        fs.mkdirSync(distDir, { recursive: true });
+        fs.mkdirSync(launcherOutputDir, { recursive: true });
 
         // 2. 执行 Tauri 构建
         console.log('🛠️ 正在执行 `pnpm tauri build`... (这可能需要几分钟)');
@@ -36,8 +36,7 @@ async function main() {
         console.log('✅ Tauri 构建成功!');
 
         // 3. 创建便携版目录并复制文件
-        console.log(`📦 正在创建便携版目录: ${portableDirName}`);
-        fs.mkdirSync(portableDirPath, { recursive: true });
+        console.log(`📦 正在将构建产物复制到目标目录...`);
 
         const filesToCopy = fs.readdirSync(releaseDir).filter(
             (file) => file.endsWith('.exe') || file.endsWith('.dll')
@@ -46,13 +45,13 @@ async function main() {
         console.log('📄 正在复制以下文件:');
         for (const file of filesToCopy) {
             const sourcePath = path.join(releaseDir, file);
-            const destPath = path.join(portableDirPath, file);
+            const destPath = path.join(launcherOutputDir, file);
             console.log(`   - ${file}`);
             fs.copyFileSync(sourcePath, destPath);
         }
 
-        console.log(`\n🎉 构建完成! 你的绿色版应用在这里:`);
-        console.log(`   ${portableDirPath}`);
+        console.log(`\n🎉 构建完成! 你的启动器文件在这里:`);
+        console.log(`   ${launcherOutputDir}`);
 
     } catch (error) {
         console.error('\n❌ 构建过程中发生错误:');

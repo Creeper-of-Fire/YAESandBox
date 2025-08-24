@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.AppWeb;
+using YAESandBox.AppWeb.InnerModule;
 using YAESandBox.AppWeb.Services;
 using YAESandBox.Authentication;
 using YAESandBox.Depend.AspNetCore;
@@ -21,19 +22,18 @@ using YAESandBox.Workflow.Test.API;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 var builder = WebApplication.CreateBuilder(args);
-builder.WebHost.UseUrls("http://127.0.0.1:0");
 
 // =========================================================================
 // === 1. 环境与配置设置 (核心改造部分) ===
 // =========================================================================
 
-// **Electron & Desktop App Configuration**
+// 存储位置
 var rootPathProvider = new AppRootPathProvider(builder.Environment);
 builder.Services.AddSingleton<IRootPathProvider>(rootPathProvider);
 string physicalAppRoot = rootPathProvider.RootPath;
-
-string userDataPath = Path.Combine(physicalAppRoot, "UserData");
-Directory.CreateDirectory(userDataPath);
+string dataRelativePath = builder.Configuration.GetValue<string>("DataFiles:RootDirectory") ?? "Data";
+string dataAbsolutePath = Path.GetFullPath(Path.Combine(physicalAppRoot, dataRelativePath));
+Directory.CreateDirectory(dataAbsolutePath);
 
 // 只在开发环境中加载 .env 文件
 if (builder.Environment.IsDevelopment())
@@ -42,8 +42,8 @@ if (builder.Environment.IsDevelopment())
     Env.Load();
 }
 
-// ** 安全密钥管理: 从 UserData/secrets.json 加载或生成 **
-string secretsFilePath = Path.Combine(userDataPath, "secrets.json");
+// ** 安全密钥管理: 从 Data/secrets.json 加载或生成 **
+string secretsFilePath = Path.Combine(dataAbsolutePath, "secrets.json");
 var secretsConfigBuilder = new ConfigurationBuilder().AddJsonFile(secretsFilePath, optional: true, reloadOnChange: true);
 var secretsConfig = secretsConfigBuilder.Build();
 
@@ -86,24 +86,6 @@ builder.Configuration.AddInMemoryCollection(new Dictionary<string, string?>
 // =========================================================================
 // === 3. 服务注册 ===
 // =========================================================================
-
-// --- CORS (在 Electron 环境中非必须，但为开发环境保留) ---
-const string myAllowSpecificOrigins = "_myAllowSpecificOrigins";
-builder.Services.AddCors(options =>
-{
-    options.AddPolicy(name: myAllowSpecificOrigins, policy =>
-    {
-        policy.WithOrigins(
-                "http://localhost:4173",
-                "http://127.0.0.1:4173",
-                "http://localhost:5173",
-                "http://127.0.0.1:5173"
-            )
-            .AllowAnyHeader()
-            .AllowAnyMethod()
-            .AllowCredentials();
-    });
-});
 
 // 在程序启动早期就发现和加载所有模块（内置+插件）
 // ** 手动创建发现服务实例，用于模块加载 **
@@ -168,27 +150,22 @@ builder.Services.AddSignalR()
 
 // --- 数据保护服务 ---
 // 这将自动从 IConfiguration 读取 "DataProtectionKey"
+var dataProtectionAbsolutePath = Path.Combine(dataAbsolutePath, "DataProtection-Keys");
 builder.Services.AddDataProtection()
-    .PersistKeysToFileSystem(new DirectoryInfo(Path.Combine(userDataPath, "DataProtection-Keys")))
+    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionAbsolutePath))
     .SetApplicationName("YAESandBox"); // 为数据保护设置一个唯一的应用名
-
+Directory.CreateDirectory(dataProtectionAbsolutePath); // 确保目录存在
 builder.Services.AddSingleton<ISecretProtector, SecretProtector>();
 builder.Services.AddSingleton<IDataProtectionService, DataProtectionService>();
 
-// --- 存储服务 (配置数据文件根目录到 UserData 下) ---
-// 1. 将所有基于文件的数据存储也放入 UserData 文件夹
-//    从配置中读取数据文件的相对路径
-string dataFilesRelativePath = builder.Configuration.GetValue<string>("DataFiles:RootDirectory") ?? "UserData/DataFiles"; // 提供一个安全的默认值
-string dataFilesAbsolutePath = Path.GetFullPath(Path.Combine(builder.Environment.ContentRootPath, dataFilesRelativePath));
-Directory.CreateDirectory(dataFilesAbsolutePath); // 确保目录存在
-
-// 2. 将最内层的、带缓存的存储服务注册为一个具体的类型。
+// --- 存储服务 ---
+// 将最内层的、带缓存的存储服务注册为一个具体的类型。
 //    它本身也是一个单例。
 builder.Services.AddSingleton(
-    new JsonFileCacheJsonStorage(builder.Configuration.GetValue<string?>("DataFiles:RootDirectory"))
+    new JsonFileCacheJsonStorage(dataAbsolutePath)
 );
 
-// 3. 注册我们的装饰器。这才是最终提供给应用程序的服务。
+// 注册我们的装饰器。这才是最终提供给应用程序的服务。
 //    使用工厂模式来确保正确的依赖被注入到装饰器的构造函数中。
 builder.Services.AddSingleton<IGeneralJsonRootStorage>(sp =>
     new ProtectedJsonStorage(
@@ -244,10 +221,27 @@ else
 
 app.UseRouting(); // Add routing middleware
 
-// --- CORS 中间件只在开发模式下启用 ---
-if (app.Environment.IsDevelopment())
+// --- 启用 CORS 中间件 ---
+// --- CORS ---
+if (builder.Environment.IsDevelopment())
 {
-    app.UseCors(myAllowSpecificOrigins);
+    const string devPipeLine = "_myAllowSpecificOrigins";
+    builder.Services.AddCors(options =>
+    {
+        options.AddPolicy(name: devPipeLine, policy =>
+        {
+            policy.WithOrigins(
+                    "http://localhost:4173",
+                    "http://127.0.0.1:4173",
+                    "http://localhost:5173",
+                    "http://127.0.0.1:5173"
+                )
+                .AllowAnyHeader()
+                .AllowAnyMethod()
+                .AllowCredentials();
+        });
+    });
+    app.UseCors(devPipeLine);
 }
 
 app.UseAuthentication(); // <-- 先认证
@@ -258,8 +252,9 @@ app.MapControllers(); // Map attribute-routed controllers
 // 聚合映射所有模块提供的 Hub
 allModules.ForEachModules<IProgramModuleHubRegistrar>(it => it.MapHubs(app));
 
-app.MapFallbackToFile("index.html");
-
+// --- 模块最后配置 ---
+var finalContext = new FinalConfigurationContext(app, app);
+allModules.ForEachModules<IProgramAtLastConfigurator>(it => it.ConfigureAtLast(finalContext));
 app.Run();
 
 namespace YAESandBox.AppWeb
@@ -413,7 +408,8 @@ namespace YAESandBox.AppWeb
             new AiServiceConfigModule(),
             new WorkflowConfigModule(),
             new WorkflowTestModule(),
-            new AuthenticationModule()
+            new AuthenticationModule(),
+            new FrontendHostModule()
         ];
 
         [field: AllowNull, MaybeNull]

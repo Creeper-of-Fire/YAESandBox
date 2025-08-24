@@ -10,9 +10,11 @@
   },
   "scripts": {
     "dev": "vite",
-    "build": "vite build --mode production",
+    "build:only": "vite build --mode production",
+    "build": "pnpm run build:only && pnpm run publish",
     "preview": "vite preview",
-    "checkTsc": "vue-tsc -noEmit"
+    "checkTsc": "vue-tsc -noEmit",
+    "publish": "node script/post-build.mjs"
   },
   "dependencies": {
     "@guolao/vue-monaco-editor": "^1.5.5",
