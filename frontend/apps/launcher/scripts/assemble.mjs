@@ -37,7 +37,7 @@ function main() {
         // --- Backend 复制逻辑修改开始 ---
         // 步骤 2.2: 复制 Backend (只复制 .exe 和 appsettings.json)
         console.log(`\n📦 正在组装 后端 (Backend)...`);
-        const backendDest = path.join(outputDir, 'app');
+        const backendDest = path.join(outputDir, 'backend');
 
         if (!fs.existsSync(backendSourceDir)) {
             console.warn(`   ⚠️  警告: 源目录 ${backendSourceDir} 不存在，跳过 后端 的复制。`);
@@ -84,7 +84,7 @@ function main() {
         // --- Backend 复制逻辑修改结束 ---
 
         // 步骤 2.3: 复制 Frontend
-        const frontendDest = path.join(outputDir, 'app', 'wwwroot');
+        const frontendDest = path.join(outputDir, 'wwwroot');
         // 无需手动创建 app/wwwroot，因为 copyDirectory 辅助函数会处理
         copyDirectory(frontendSourceDir, frontendDest, '前端 (Frontend)');
 

@@ -130,6 +130,7 @@ def main():
     # 准备工作
     DIST_DIR.mkdir(exist_ok=True)
     last_state = load_last_state()
+    last_hashes = last_state.get("hashes", {})
     current_hashes = {}
 
     components = []
@@ -150,7 +151,7 @@ def main():
                 "name": comp['name'],
                 "path": comp['path'],
                 "filter": comp.get('filter'),
-                "changed": last_state.get(comp['id']) != current_hash,
+                "changed": last_hashes.get(comp['id']) != current_hash,
                 "is_plugin": False
             }
             # 新增: 传递 publish_exe 标志
@@ -166,7 +167,7 @@ def main():
                 plugin_id = plugin_dir.name
                 current_hash = get_dir_hash(plugin_dir)
                 current_hashes['plugins'][plugin_id] = current_hash
-                last_plugin_hashes = last_state.get('plugins', {})
+                last_plugin_hashes = last_hashes.get('plugins', {})
                 components.append({
                     "id": plugin_id,
                     "name": f"插件: {plugin_id}",
@@ -237,7 +238,7 @@ def main():
             "is_plugin": comp['is_plugin']
         })
 
-        # 新增: 检查是否需要发布独立的 .exe
+        # 检查是否需要发布独立的 .exe
         if comp.get('publish_exe'):
             exe_path = find_unique_exe(comp['path'])
             if exe_path:
@@ -315,49 +316,55 @@ def main():
     last_core_manifest = last_state.get("manifests", {}).get("core", {})
     core_map = {item['id']: item for item in last_core_manifest.get("components", [])}
 
+    # --- 核心组件清单 ---
+    # ✨ 核心改动 1: 无条件地处理核心组件
+    # 无论 core_assets 是否为空，我们都继续执行，以确保 core_map 始终反映最新状态
     core_assets = [a for a in uploaded_assets_info if not a['is_plugin']]
-    if core_assets:
-        for asset in core_assets:
-            core_map[asset['id']] = {
-                "id": asset['id'], "name": asset['name'], "version": version.lstrip('v'),
-                "notes": release_notes, "url": asset['url'], "hash": asset['hash'],
-            }
+    for asset in core_assets:
+        core_map[asset['id']] = {
+            "id": asset['id'], "name": asset['name'], "version": version.lstrip('v'),
+            "notes": release_notes, "url": asset['url'], "hash": asset['hash'],
+        }
 
-        new_core_manifest = {"components": list(core_map.values())}  # 保持简单，只包含组件列表
-        core_manifest_path = DIST_DIR / "core_components_manifest.json"
-        with open(core_manifest_path, 'w', encoding='utf-8') as f:
-            json.dump(new_core_manifest, f, ensure_ascii=False, indent=4)
-        console.print(f"  -> 已生成核心组件清单: [green]{core_manifest_path.name}[/green]")
+    # 将更新后的 map 转换回清单格式
+    new_core_manifest = {"components": list(core_map.values())}
+    # 始终定义并写入文件路径
+    core_manifest_path = DIST_DIR / "core_components_manifest.json"
+    with open(core_manifest_path, 'w', encoding='utf-8') as f:
+        json.dump(new_core_manifest, f, ensure_ascii=False, indent=4)
+    # 如果有更新，就高亮显示，否则静默生成
+    if core_assets:
+        console.print(f"  -> 已更新并生成核心组件清单: [green]{core_manifest_path.name}[/green]")
     else:
-        new_core_manifest = last_core_manifest  # 如果没有核心更新，则沿用旧的
+        console.print(f"  -> 核心组件无变更，已沿用旧版内容重新生成清单: [dim green]{core_manifest_path.name}[/dim green]")
 
     # --- 插件清单 ---
     last_plugins_manifest = last_state.get("manifests", {}).get("plugins", [])
     plugins_map = {item['id']: item for item in last_plugins_manifest}
-
+    # ✨ 核心改动 2: 无条件地处理插件
     plugin_assets = [a for a in uploaded_assets_info if a['is_plugin']]
+    for asset in plugin_assets:
+        plugins_map[asset['id']] = {
+            "id": asset['id'], "name": asset['name'].replace("插件: ", ""), "version": version.lstrip('v'),
+            "description": f"发布于 {version}:\n{release_notes}", "url": asset['url'], "hash": asset['hash'],
+        }
+
+    # 将更新后的 map 转换回清单格式
+    new_plugins_manifest = list(plugins_map.values())
+    # 始终定义并写入文件路径
+    plugins_manifest_path = DIST_DIR / "plugins_manifest.json"
+    with open(plugins_manifest_path, 'w', encoding='utf-8') as f:
+        json.dump(new_plugins_manifest, f, ensure_ascii=False, indent=4)
+    # 同样，根据是否有更新来决定打印样式
     if plugin_assets:
-        for asset in plugin_assets:
-            plugins_map[asset['id']] = {
-                "id": asset['id'], "name": asset['name'].replace("插件: ", ""), "version": version.lstrip('v'),
-                "description": f"发布于 {version}:\n{release_notes}", "url": asset['url'], "hash": asset['hash'],
-            }
-
-        new_plugins_manifest = list(plugins_map.values())
-        plugins_manifest_path = DIST_DIR / "plugins_manifest.json"
-        with open(plugins_manifest_path, 'w', encoding='utf-8') as f:
-            json.dump(new_plugins_manifest, f, ensure_ascii=False, indent=4)
-        console.print(f"  -> 已生成插件清单: [green]{plugins_manifest_path.name}[/green]")
+        console.print(f"  -> 已更新并生成插件清单: [green]{plugins_manifest_path.name}[/green]")
     else:
-        new_plugins_manifest = last_plugins_manifest
+        console.print(f"  -> 插件无变更，已沿用旧版内容重新生成清单: [dim green]{plugins_manifest_path.name}[/dim green]")
 
-    # 10. 更新状态文件
-    console.print("\n📤 正在上传 Manifest 文件...")
-    manifests_to_upload = []
-    if core_manifest_path or core_manifest_path.exists():
-        manifests_to_upload.append(core_manifest_path)
-    if plugins_manifest_path or plugins_manifest_path.exists():
-        manifests_to_upload.append(plugins_manifest_path)
+    # ✨ 核心改动 3: 无条件地准备上传两个清单文件
+    console.print("\n📤 正在准备上传所有 Manifest 文件...")
+    # 现在这两个路径总是有效的 Path 对象，不再需要检查 None
+    manifests_to_upload = [core_manifest_path, plugins_manifest_path]
 
     with Progress(BarColumn(), DownloadColumn(), console=console) as progress:
         for file_path in manifests_to_upload:

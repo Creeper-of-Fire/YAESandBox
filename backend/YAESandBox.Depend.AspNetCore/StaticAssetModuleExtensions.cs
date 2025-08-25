@@ -30,14 +30,14 @@ public static class StaticAssetModuleExtensions
 
         // 如果未提供请求路径，则根据模块名称自动生成一个
         // 空字串表示根目录，依旧是有效的，所以我们这里只判断 null，不判断是否是空字符串
-        string requestPath = requestPathOverwrite ?? module.ToModuleRequestPath();
+        string requestPath = requestPathOverwrite ?? module.ToRequestPath();
 
         app.UseStaticFiles(new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(wwwRootPath),
             RequestPath = requestPath
         });
-        Console.WriteLine($"[{moduleType.Name}] 已通过 UseModuleWwwRoot 挂载 wwwroot -> '{requestPath}'");
+        Console.WriteLine($"[{moduleType.Name}] 已通过 UseModuleWwwRoot 挂载 wwwroot: {wwwRootPath} -> '{requestPath}'");
     }
 
     /// <summary>

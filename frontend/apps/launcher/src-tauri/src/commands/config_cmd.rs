@@ -30,6 +30,11 @@ core_components_manifest_url = "https://github.com/Creeper-of-Fire/YAESandBox/re
 plugins_manifest_url = "https://github.com/Creeper-of-Fire/YAESandBox/releases/latest/download/plugins_manifest.json"
 
 [Network]
+; 后端服务监听的本地端口。
+; 设置为 "auto" 将自动选择一个未被占用的端口（不推荐，会导致浏览器缓存失效）。
+; 推荐使用一个固定的、不容易被其他程序占用的端口（例如 10000-65535 之间）。
+backend_port = "60983"
+
 ; 网络代理设置。如果您的网络环境需要代理才能访问 GitHub，请在此处填写。
 ; 格式为: http://<ip>:<port> 或者 socks5://<ip>:<port>
 ; 例如: http://127.0.0.1:7890

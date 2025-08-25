@@ -1,6 +1,6 @@
 [package]
 name = "yaesandbox-launcher"
-version = "0.0.0"
+version = "0.0.3"
 description = "A Tauri App"
 authors = ["creeperoffire"]
 edition = "2021"
@@ -21,7 +21,7 @@ tauri = { version = "2", features = [] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
-reqwest = { version = "0.12", features = ["json", "stream"] }
+reqwest = { version = "0.12", features = ["blocking", "json", "stream"] }
 tokio = { version = "1", features = ["full"] }
 futures-util = "0.3"
 zip = "4.5.0"
@@ -29,7 +29,8 @@ portpicker = "0.1"
 semver = "1" # 用于语义化版本比较
 sha2 = "0"  # 用于计算 SHA256
 hex = "0"    # 用于将哈希值转为字符串
-walkdir = "2"
+self_update = { version = "0.40.0", features = ["archive-zip", "compression-zip-deflate", "rustls"], default-features = false }
+tempfile = "3.10.1"
 
 
 [target.'cfg(windows)'.dependencies]

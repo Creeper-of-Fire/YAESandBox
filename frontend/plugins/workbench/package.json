@@ -10,7 +10,7 @@
     "#/*": "./src/*"
   },
   "scripts": {
-    "build": "pnpm vue-tsc -b && vite build --mode production",
+    "build": "vite build --mode production",
     "checkTsc": "pnpm vue-tsc -b"
   },
   "exports": {

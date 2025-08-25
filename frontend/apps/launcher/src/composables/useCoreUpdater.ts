@@ -95,6 +95,7 @@ export function useCoreUpdater() {
             console.log('  - Remote Manifest:', JSON.parse(JSON.stringify(remoteManifest)));
 
             const remoteComponents = remoteManifest.components || []; // 增加保护，防止 components 不存在
+            allRemoteComponents.value = remoteComponents;
 
             // --- 日志埋点 4: 确认要比较的组件数量 ---
             console.log(`[CoreUpdater] 远程清单包含 ${remoteComponents.length} 个组件。开始比较...`);

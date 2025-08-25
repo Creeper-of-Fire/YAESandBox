@@ -12,6 +12,9 @@ use tokio::time::timeout;
 // 平台特定的引入
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
+use crate::commands::config_cmd::read_config_as_string;
+use crate::core::config_parser::get_ini_value;
+
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
 
@@ -24,7 +27,47 @@ pub async fn start_local_backend(
     app_state: State<'_, AppState>,
 ) -> Result<(), String> {
     // --- 1. 准备环境 ---
-    let port = portpicker::pick_unused_port().expect("未能找到可用端口");
+    let port = {
+        // 先调用 read_config_as_string 来确保配置文件存在并获取其内容
+        let config_content = read_config_as_string(app_state.clone())?;
+        // 解析 backend_port
+        let port_str = get_ini_value(&config_content, "Network", "backend_port")
+            .unwrap_or_else(|| "auto".to_string()); // 如果没找到，默认为 "auto"
+
+        println!("[Launcher] 从配置中读取到 backend_port = '{}'", port_str);
+
+        if port_str.to_lowercase() == "auto" {
+            // 行为不变：自动选择端口
+            portpicker::pick_unused_port().expect("未能找到可用端口")
+        } else {
+            // 尝试解析为 u16 端口号
+            match port_str.parse::<u16>() {
+                Ok(p) => {
+                    // 检查端口是否被占用 (可选但推荐)
+                    if portpicker::is_free(p) {
+                        p
+                    } else {
+                        // 如果被占用，返回错误，让用户去解决
+                        return Err(format!(
+                            "配置的端口 {} 已被占用。请关闭占用该端口的程序，或在 launcher.config 文件中修改端口。",
+                            p
+                        ));
+                    }
+                },
+                Err(_) => {
+                    // 解析失败，返回错误
+                    return Err(format!(
+                        "无效的端口号 '{}'。请在 launcher.config 文件中输入一个有效的端口号 (1-65535) 或 'auto'。",
+                        port_str
+                    ));
+                }
+            }
+        }
+    };
+
+    println!("[Launcher] 后端将启动于端口: {}", port);
+
+
     let api_url = format!("http://127.0.0.1:{}", port);
 
     let backend_exe_path = app_state.resolve_safe_path(&backend_exe_relative_path)?;

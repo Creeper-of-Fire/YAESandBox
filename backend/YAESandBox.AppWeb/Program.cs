@@ -94,6 +94,25 @@ string pluginsAbsolutePath = Path.Combine(physicalAppRoot, pluginsRelativePath);
 var pluginDiscoveryService = new DefaultPluginDiscoveryService(pluginsAbsolutePath);
 var (allModules, pluginAssemblies) = ApplicationModules.DiscoverAndLoadAllModules(pluginDiscoveryService);
 
+
+const string devPipeLine = "_myAllowSpecificOrigins";
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy(name: devPipeLine, policy =>
+    {
+        policy.WithOrigins(
+                "http://localhost:4173",
+                "http://127.0.0.1:4173",
+                "http://localhost:5173",
+                "http://127.0.0.1:5173"
+            )
+            .AllowAnyHeader()
+            .AllowAnyMethod()
+            .AllowCredentials();
+    });
+});
+
+
 // 添加 MVC 服务
 var mvcBuilder = builder.Services.AddControllers()
     .AddJsonOptions(options => // Configure JSON options
@@ -193,9 +212,6 @@ allModules.ForEachModules<IProgramModuleStaticAssetConfigurator>(it =>
 
 allModules.ForEachModules<IProgramModuleAppConfigurator>(it => it.ConfigureApp(app));
 
-app.UseDefaultFiles(); // 使其查找 wwwroot 中的 index.html 或 default.html (可选，但良好实践)
-app.UseStaticFiles(); // 启用从 wwwroot 提供静态文件的功能
-
 // --- Swagger UI 只在开发模式下启用 ---
 if (app.Environment.IsDevelopment())
 {
@@ -225,22 +241,6 @@ app.UseRouting(); // Add routing middleware
 // --- CORS ---
 if (builder.Environment.IsDevelopment())
 {
-    const string devPipeLine = "_myAllowSpecificOrigins";
-    builder.Services.AddCors(options =>
-    {
-        options.AddPolicy(name: devPipeLine, policy =>
-        {
-            policy.WithOrigins(
-                    "http://localhost:4173",
-                    "http://127.0.0.1:4173",
-                    "http://localhost:5173",
-                    "http://127.0.0.1:5173"
-                )
-                .AllowAnyHeader()
-                .AllowAnyMethod()
-                .AllowCredentials();
-        });
-    });
     app.UseCors(devPipeLine);
 }
 

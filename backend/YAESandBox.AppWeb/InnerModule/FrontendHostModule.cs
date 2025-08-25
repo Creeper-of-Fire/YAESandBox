@@ -13,9 +13,9 @@ internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProg
     public void ConfigureAtLast(FinalConfigurationContext context)
     {
         string? frontendAbsolutePath = GetFrontendAbsolutePath(context.App.ApplicationServices);
-        
+
         if (frontendAbsolutePath == null) return;
-        
+
         context.EndpointBuilder.MapFallbackToFile("index.html", new StaticFileOptions
         {
             FileProvider = new PhysicalFileProvider(frontendAbsolutePath)
@@ -26,7 +26,7 @@ internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProg
     public void ConfigureStaticAssets(IApplicationBuilder app, IWebHostEnvironment environment)
     {
         string? frontendAbsolutePath = GetFrontendAbsolutePath(app.ApplicationServices);
-        
+
         if (frontendAbsolutePath == null) return;
 
         app.UseStaticFiles(new StaticFileOptions
@@ -35,7 +35,7 @@ internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProg
             RequestPath = ""
         });
     }
-    
+
     /// <summary>
     /// 从服务容器中解析依赖，并计算出前端资源的绝对路径。
     /// </summary>
@@ -58,11 +58,11 @@ internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProg
 
         if (!Directory.Exists(absolutePath))
         {
-            Console.WriteLine($"[FrontendHost] Error: Frontend path does not exist at the calculated location: {absolutePath}");
+            Console.WriteLine($"[FrontendHost] 错误: 前端路径不存在, 已尝试组合的绝对路径为: {absolutePath}");
             return null;
         }
 
-        Console.WriteLine($"[FrontendHost] Successfully located and hosting frontend from: {absolutePath}");
+        Console.WriteLine($"[FrontendHost] 成功找到前端资源目录: {absolutePath}");
         return absolutePath;
     }
 }

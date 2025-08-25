@@ -99,8 +99,8 @@ export function useTaskManager() {
             // 步骤 2: 解压
             statusMessage.value = `正在安装 ${task.name}...`;
             await invoke('unzip_file', {
-                relativeSourcePath: savePath,
-                relativeDestPath: task.extractPath,
+                zipRelativePath: savePath,
+                targetRelativeDir: task.extractPath,
             });
 
             // 步骤 3: 更新本地版本记录

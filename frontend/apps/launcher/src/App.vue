@@ -1,25 +1,29 @@
 ﻿<script setup lang="ts">
-import {computed, onMounted, ref} from 'vue';
+import {computed, type ComputedRef, onMounted, type Ref, ref} from 'vue';
 import {invoke} from '@tauri-apps/api/core';
+import semver from "semver";
 
 // --- 1. 导入所有需要的模块 ---
 import {useConfig} from './composables/useConfig';
 import {type UpdateTask, useTaskManager} from './composables/useTaskManager';
 import {type ComponentConfig, type RemoteCoreComponent, useCoreUpdater} from './composables/useCoreUpdater';
 import {type RemotePluginInfo, usePlugins} from './composables/usePlugins';
-import semver from "semver";
 
-// --- 2. 定义应用的“单一真相源” ---
+// --- 2. 定义应用的“单一真相源” (Source of Truth) ---
 
 // 核心组件的配置，告诉 useCoreUpdater 如何处理它们
 const CORE_COMPONENTS_CONFIG: ComponentConfig[] = [
-  {id: 'app', extractPath: 'app/wwwroot'},
-  {id: 'backend', extractPath: 'app'},
+  {id: 'launcher', extractPath: 'manual_downloads/launcher_update'}, // 启动器特殊处理
+  {id: 'app', extractPath: 'wwwroot'},
+  {id: 'backend', extractPath: 'backend'},
 ];
 
-// 启动应用的路径，与更新逻辑完全解耦
-const frontendPath = ref('app/wwwroot');
-const backendExePath = ref('app/YAESandBox.AppWeb.exe');
+// 启动应用的路径
+const frontendPath = ref('wwwroot');
+const backendExePath = ref('backend/YAESandBox.AppWeb.exe');
+
+// 本地版本信息
+const localVersions = ref<Record<string, string | null>>({});
 
 // --- 3. 初始化所有 Composables ---
 const {config, reloadConfig, error: configError} = useConfig();
@@ -27,24 +31,65 @@ const {executeTask, isBusy: isTaskExecutorBusy, statusMessage: taskStatus, progr
 const {coreUpdateTasks, checkCoreUpdates, isCheckingCore, allCoreComponents, coreCheckError} = useCoreUpdater();
 const {pluginUpdateTasks, checkPluginUpdates, isCheckingPlugins, allPlugins, pluginCheckError} = usePlugins();
 
-// --- 4. 聚合状态 ---
-const showManualDownloader = ref(false);
 
-const checkError = computed(() => {
-  // 优先显示更具体的错误信息
-  if (coreCheckError.value) return coreCheckError.value;
-  if (pluginCheckError.value) return pluginCheckError.value;
-  return null;
-});
+// --- 4. 派生和聚合状态 (Derived and Aggregated State) ---
 
-// 主状态消息，优先显示任务执行器的状态，否则显示通用状态
-const mainStatusMessage = ref('启动器正在初始化...');
-// 全局的加载/繁忙状态，任何检查或执行任务都会使其为 true
+// 定义一个统一的组件展示类型，包含所有UI需要的信息
+type DisplayComponent = (RemoteCoreComponent | RemotePluginInfo) & {
+  localVersion: string | null;
+  status: 'uptodate' | 'update_available' | 'not_installed';
+  type: 'core' | 'plugin';
+};
+
+// 聚合所有检查错误
+const checkError = computed(() => coreCheckError.value || pluginCheckError.value || null);
+
+// 全局繁忙状态
 const isGloballyBusy = computed(() => isTaskExecutorBusy.value || isCheckingCore.value || isCheckingPlugins.value);
-// 所有可用更新任务的聚合列表
+
+// 主状态消息
+const mainStatusMessage = ref('启动器正在初始化...');
+
+// 【核心重构】创建用于UI渲染的计算属性列表
+const createDisplayList = <T extends RemoteCoreComponent | RemotePluginInfo>(
+    remoteComponents: Readonly<Ref<readonly T[]>>,
+    isChecking: Ref<boolean>,
+    type: 'core' | 'plugin'
+): ComputedRef<DisplayComponent[]> => {
+  return computed(() => {
+    if (isChecking.value && remoteComponents.value.length === 0) {
+      // 正在检查且还没有数据时，显示加载状态
+      return []; // 或者可以返回一个带骨架屏信息的对象
+    }
+
+    return remoteComponents.value.map(remote => {
+      const localVersion = localVersions.value[remote.id] || null;
+      let status: DisplayComponent['status'] = 'not_installed';
+
+      if (localVersion) {
+        if (semver.gt(remote.version, localVersion)) {
+          status = 'update_available';
+        } else {
+          status = 'uptodate';
+        }
+      }
+
+      return {
+        ...remote,
+        localVersion,
+        status,
+        type,
+      };
+    });
+  });
+};
+
+const displayedCoreComponents = createDisplayList(allCoreComponents, isCheckingCore, 'core');
+const displayedPlugins = createDisplayList(allPlugins, isCheckingPlugins, 'plugin');
+
+// 依然保留 allAvailableTasks 用于 "全部更新" 按钮
 const allAvailableTasks = computed(() => [...coreUpdateTasks.value, ...pluginUpdateTasks.value]);
 
-const allManifestComponents = computed(() => [...allCoreComponents.value, ...allPlugins.value]);
 
 // --- 5. 编排生命周期和更新流程 ---
 
@@ -55,54 +100,30 @@ onMounted(async () => {
     return;
   }
 
-  // 步骤 A: 检查启动器更新（最高优先级）
-  // 这个过程是独立的，成功则重启，失败则继续
-  const launcherUpdateAvailable = await checkLauncherUpdate();
-  if (launcherUpdateAvailable) {
-    // 如果启动器有更新并且用户确认了，应用会重启，后续代码不执行
-    // 如果用户取消，则会继续执行下面的检查
-    return;
-  }
+  // 【流程修复】首先检查启动器更新，但不再因为用户取消而中断整个流程
+  await checkLauncherUpdate();
 
-  // 步骤 B: 并行检查核心组件和插件的更新
-  mainStatusMessage.value = '正在检查组件和插件更新...';
-  await Promise.all([
-    checkCoreUpdates(CORE_COMPONENTS_CONFIG),
-    checkPluginUpdates(),
-  ]);
-
-  if (allAvailableTasks.value.length > 0) {
-    mainStatusMessage.value = `发现 ${allAvailableTasks.value.length} 个可用更新。`;
-  } else {
-    mainStatusMessage.value = '所有组件都已是最新版本。';
-  }
+  // 无论启动器更新与否，都继续执行后续的检查
+  await performUpdateChecks();
 });
 
 /**
  * 专门处理启动器更新的检查和执行流程。
- * (这是我们的核心修改区域)
- * @returns {Promise<boolean>} 如果发现并处理了更新（用户点击了确认或取消），返回 true。
+ * @returns {Promise<void>}
  */
-async function checkLauncherUpdate(): Promise<boolean> {
+async function checkLauncherUpdate(): Promise<void> {
   try {
     mainStatusMessage.value = '正在检查启动器更新...';
 
-    // 步骤 1: 获取本地启动器版本和远程清单
-    const [localVersions, remoteManifest] = await Promise.all([
-      invoke<Record<string, string | null>>('get_local_versions'),
-      invoke<{ components: RemoteCoreComponent[] }>('fetch_manifest', {
-        url: config.value?.core_components_manifest_url,
-        proxy: config.value?.proxy_address,
-      })
-    ]);
+    const localLauncherVersion = (await invoke<Record<string, string | null>>('get_local_versions'))['launcher'];
+    const remoteManifest = await invoke<{ components: RemoteCoreComponent[] }>('fetch_manifest', {
+      url: config.value?.core_components_manifest_url,
+      proxy: config.value?.proxy_address,
+    });
 
-    // 步骤 2: 从清单中查找启动器信息
     const launcherInfo = remoteManifest.components.find(c => c.id === 'launcher');
-    const localLauncherVersion = localVersions.launcher;
 
-    // 步骤 3: 比较版本
     if (launcherInfo && localLauncherVersion && semver.gt(launcherInfo.version, localLauncherVersion)) {
-      // 发现新版本！
       const userConfirmed = confirm(
           `发现启动器新版本 v${launcherInfo.version}！(当前 v${localLauncherVersion})\n` +
           `这是关键更新，建议立即安装。\n\n` +
@@ -116,31 +137,39 @@ async function checkLauncherUpdate(): Promise<boolean> {
           url: launcherInfo.url,
           hash: launcherInfo.hash,
           proxy: config.value?.proxy_address,
+          newVersion: launcherInfo.version,
         });
-        // 如果成功，应用已退出，这里的代码不会执行
+        // 如果成功，应用已退出，后续代码不会执行
       } else {
-        mainStatusMessage.value = '已取消启动器更新。请注意，部分功能可能需要新版启动器。';
+        mainStatusMessage.value = '已取消启动器更新。将继续检查其他组件。';
       }
-      return true; // 无论用户确认还是取消，我们都“处理”了更新流程
+    } else {
+      console.log('启动器已是最新版本。');
     }
-
-    console.log('启动器已是最新版本。');
-    return false; // 没有发现更新
 
   } catch (e) {
     const errorMsg = `检查启动器更新失败: ${String(e)}`;
     console.error(errorMsg, e);
-    mainStatusMessage.value = errorMsg;
-    return false; // 检查过程出错
+    // 不更新主状态，让后续检查的状态覆盖它
   }
 }
 
-// --- 6. UI 交互方法 ---
-
-// 一个可重用的函数，用于执行所有检查，方便重试
+/**
+ * 可重用的函数，用于执行所有检查，方便重试
+ */
 async function performUpdateChecks() {
+  mainStatusMessage.value = '正在获取本地版本信息...';
+  try {
+    localVersions.value = await invoke('get_local_versions');
+  } catch (e) {
+    mainStatusMessage.value = `获取本地版本失败: ${e}`;
+    // coreCheckError.value = `无法读取本地版本信息，请检查应用完整性。错误: ${e}`;
+    return;
+  }
+
   mainStatusMessage.value = '正在检查组件和插件更新...';
-  // Promise.all 会在任何一个 promise reject 时立即失败，这正是我们想要的
+
+  // 并行检查
   await Promise.all([
     checkCoreUpdates(CORE_COMPONENTS_CONFIG),
     checkPluginUpdates(),
@@ -148,7 +177,6 @@ async function performUpdateChecks() {
 
   // 更新检查完成后的状态提示逻辑
   if (checkError.value) {
-    // 如果有错误，主状态就提示错误
     mainStatusMessage.value = '检查更新时发生错误。';
   } else if (allAvailableTasks.value.length > 0) {
     mainStatusMessage.value = `发现 ${allAvailableTasks.value.length} 个可用更新。`;
@@ -157,79 +185,104 @@ async function performUpdateChecks() {
   }
 }
 
+// --- 6. UI 交互方法 ---
+
 /**
- * 手动下载/重新安装一个组件
- * @param component - 从 allManifestComponents 列表中选中的组件
+ * 【核心重构】处理单个组件的安装/更新/重装操作
+ * @param component - 从列表中选中的 DisplayComponent
  */
-async function manualDownload(component: RemoteCoreComponent | RemotePluginInfo) {
+async function handleComponentAction(component: DisplayComponent) {
   if (isTaskExecutorBusy.value) {
     alert('请等待当前任务执行完毕。');
     return;
   }
 
-  if (!confirm(`确定要手动下载/重新安装 ${component.name} v${component.version} 吗？\n此操作会覆盖现有文件。`)) {
-    return;
+  // 特殊处理启动器更新
+  // 只要组件 ID 是 'launcher'，就强制走特殊的自我更新流程，无论状态是什么。
+  if (component.id === 'launcher') {
+    const actionText = component.status === 'update_available' ? '更新' : '重新安装';
+    const userConfirmed = confirm(
+        `您确定要${actionText}启动器吗？\n` +
+        `此操作将会下载最新版本 v${component.version} 并重启应用。`
+    );
+
+    if (userConfirmed) {
+      mainStatusMessage.value = '正在处理启动器，应用即将重启...';
+      try {
+        // 直接调用能重启的 Rust 命令
+        await invoke('apply_launcher_self_update', {
+          url: component.url,
+          hash: component.hash,
+          proxy: config.value?.proxy_address,
+          newVersion: component.version,
+        });
+        // 如果成功，应用已退出，后续代码不执行
+      } catch (e) {
+        const errorMsg = `启动器${actionText}失败: ${String(e)}`;
+        console.error(errorMsg, e);
+        alert(errorMsg);
+        mainStatusMessage.value = errorMsg; // 更新主状态让用户看到错误
+      }
+    }
+    return; // 无论用户是否确认，都到此为止，不执行下面的通用逻辑
   }
 
   // 1. 确定解压路径
   let extractPath = '';
-  if (component.id === 'launcher') {
-    // 特殊情况：启动器下载到单独目录，避免覆盖自身
-    extractPath = `manual_downloads/launcher_v${component.version}`;
+  const coreConfig = CORE_COMPONENTS_CONFIG.find(c => c.id === component.id);
+  if (coreConfig) {
+    extractPath = coreConfig.extractPath;
   } else {
-    const coreConfig = CORE_COMPONENTS_CONFIG.find(c => c.id === component.id);
-    if (coreConfig) {
-      // 是核心组件
-      extractPath = coreConfig.extractPath;
-    } else {
-      // 默认是插件
-      extractPath = `Plugins/${component.id}`;
-    }
+    // 默认为插件
+    extractPath = `Plugins/${component.id}`;
   }
 
   // 2. 创建一个 UpdateTask
   const task: UpdateTask = {
-    ...component,
-    name: `(手动) ${component.name}`, // 加个前缀以区分
+    id: component.id,
+    name: component.name,
+    version: component.version,
+    url: component.url,
+    hash: component.hash,
     extractPath,
   };
 
   // 3. 执行任务
-  showManualDownloader.value = false; // 先关闭模态框
   const success = await executeTask(task);
 
-  // 4. 给出反馈
+  // 4. 给出反馈并刷新状态
   if (success) {
-    if (component.id === 'launcher') {
-      alert(`新版启动器已成功下载至应用目录下的 'manual_downloads/launcher_v${component.version}' 文件夹中。\n请关闭当前启动器，并运行新版本。`);
-    } else {
-      alert(`${component.name} 已成功安装！`);
-    }
+    alert(`${component.name} 已成功安装/更新！`);
   } else {
-    alert(`${component.name} 安装失败，请查看日志获取详细信息。`);
+    alert(`${component.name} 操作失败，请查看日志获取详细信息。`);
   }
+  // 无论成功失败，都重新检查以刷新UI
+  await performUpdateChecks();
 }
+
 
 /**
  * 串行执行所有可用的更新任务。
  */
 async function installAllUpdates() {
   for (const task of allAvailableTasks.value) {
+    // 启动器更新有自己的重启逻辑，不适合批量处理，在此跳过
+    if (task.id === 'launcher') continue;
+
     const success = await executeTask(task);
     if (!success) {
-      alert(`更新 ${task.name} 失败，请查看日志。更新流程已中止。`);
-      break; // 一旦有任务失败，就停止后续所有任务
+      alert(`更新 ${task.name} 失败，更新流程已中止。`);
+      break;
     }
   }
-  // 成功完成后，重新检查以刷新列表
-  if (!isTaskExecutorBusy.value) { // 仅在没有任务失败时刷新
-    mainStatusMessage.value = '所有更新已完成，正在重新校验...';
-    await Promise.all([
-      checkCoreUpdates(CORE_COMPONENTS_CONFIG),
-      checkPluginUpdates(),
-    ]);
-    mainStatusMessage.value = '校验完成，所有组件都已是最新版本。';
+
+  // 检查是否还有启动器更新
+  if (allAvailableTasks.value.some(t => t.id === 'launcher')) {
+    alert('其他组件更新完毕！启动器需要单独更新，请点击其旁边的更新按钮。');
   }
+
+  // 刷新状态
+  await performUpdateChecks();
 }
 
 /**
@@ -242,8 +295,6 @@ const launchApp = async () => {
       frontendRelativePath: frontendPath.value,
       backendExeRelativePath: backendExePath.value,
     });
-    // 这个 invoke 不会返回，因为它会打开一个新窗口并可能关闭启动器
-    // 如果它返回了，说明可能出错了
     mainStatusMessage.value = '启动命令已发送。';
   } catch (error) {
     console.error('启动服务失败:', error);
@@ -256,12 +307,12 @@ const launchApp = async () => {
   <div class="launcher-container">
     <header>
       <h1>YAESandBox 启动器</h1>
-      <p class="status-message" :class="{ 'is-busy': isGloballyBusy }">
+      <p class="status-message" :class="{ 'is-busy': isGloballyBusy, 'is-error': !!checkError }">
         {{ isTaskExecutorBusy ? taskStatus : mainStatusMessage }}
       </p>
     </header>
 
-    <main>
+    <main class="main-content">
       <!-- 任务执行时的进度条 -->
       <div v-if="isTaskExecutorBusy && currentTask" class="progress-section">
         <p>正在处理: <strong>{{ currentTask.name }} (v{{ currentTask.version }})</strong></p>
@@ -269,107 +320,161 @@ const launchApp = async () => {
         <span class="progress-text">{{ progress.text }}</span>
       </div>
 
-      <!-- 可用更新列表 -->
-      <div v-if="allAvailableTasks.length > 0 && !isTaskExecutorBusy" class="update-section">
-        <h2>发现 {{ allAvailableTasks.length }} 个可用更新</h2>
-        <ul class="task-list">
-          <li v-for="task in allAvailableTasks" :key="task.id">
-            <div class="task-info">
-              <span class="task-name">{{ task.name }}</span>
-              <span class="task-version">-> v{{ task.version }}</span>
-            </div>
-            <button @click="executeTask(task)" :disabled="isGloballyBusy" class="button-secondary">
-              单独更新
-            </button>
-          </li>
-        </ul>
-        <button @click="installAllUpdates" :disabled="isGloballyBusy" class="button-primary">
-          全部更新
-        </button>
-      </div>
-
+      <!-- 错误提示 -->
       <div v-if="checkError && !isGloballyBusy" class="error-section">
         <p class="error-title">❌ 无法获取更新信息</p>
         <p class="error-details">{{ checkError }}</p>
         <button @click="performUpdateChecks" class="button-secondary">重试</button>
       </div>
 
-      <div v-if="allAvailableTasks.length === 0 && !isGloballyBusy && !checkError" class="no-updates">
-        <p>✅ 所有组件都已是最新版本。</p>
+      <!-- 组件列表 -->
+      <div class="component-lists" v-if="!isTaskExecutorBusy">
+        <!-- 核心组件 -->
+        <section class="component-section">
+          <h2>核心组件</h2>
+          <div v-if="isCheckingCore && displayedCoreComponents.length === 0" class="loading-placeholder">正在检查...
+          </div>
+          <ul v-else class="component-list">
+            <li v-for="component in displayedCoreComponents" :key="component.id">
+              <div class="info">
+                <span class="name">{{ component.name }}</span>
+                <span class="version-info">
+                  <span v-if="component.localVersion" class="local-version">v{{ component.localVersion }}</span>
+                  <span v-if="component.status === 'update_available'" class="arrow">→</span>
+                  <span v-if="component.status === 'update_available'" class="remote-version">v{{
+                      component.version
+                    }}</span>
+                </span>
+              </div>
+              <div class="status-action">
+                 <span :class="['status-tag', `status-${component.status}`]">
+                  {{ {uptodate: '最新', update_available: '可更新', not_installed: '未安装'}[component.status] }}
+                </span>
+                <button
+                    @click="handleComponentAction(component)"
+                    :disabled="isGloballyBusy"
+                    class="button-primary"
+                >
+                  {{
+                    component.status === 'uptodate' ? '重新安装' : (component.status === 'update_available' ? '更新' : '安装')
+                  }}
+                </button>
+              </div>
+            </li>
+          </ul>
+        </section>
+
+        <!-- 插件 -->
+        <section class="component-section">
+          <h2>插件</h2>
+          <div v-if="isCheckingPlugins && displayedPlugins.length === 0" class="loading-placeholder">正在检查...</div>
+          <ul v-else-if="displayedPlugins.length > 0" class="component-list">
+            <li v-for="plugin in displayedPlugins" :key="plugin.id">
+              <div class="info">
+                <span class="name">{{ plugin.name }}</span>
+                <span class="version-info">
+                  <span v-if="plugin.localVersion" class="local-version">v{{ plugin.localVersion }}</span>
+                  <span v-if="plugin.status === 'update_available'" class="arrow">→</span>
+                  <span v-if="plugin.status === 'update_available'" class="remote-version">v{{ plugin.version }}</span>
+                </span>
+              </div>
+              <div class="status-action">
+                <span :class="['status-tag', `status-${plugin.status}`]">
+                  {{ {uptodate: '最新', update_available: '可更新', not_installed: '未安装'}[plugin.status] }}
+                </span>
+                <button
+                    @click="handleComponentAction(plugin)"
+                    :disabled="isGloballyBusy"
+                    class="button-primary"
+                >
+                  {{
+                    plugin.status === 'uptodate' ? '重新安装' : (plugin.status === 'update_available' ? '更新' : '安装')
+                  }}
+                </button>
+              </div>
+            </li>
+          </ul>
+          <div v-else class="loading-placeholder">没有发现可用的插件。</div>
+        </section>
       </div>
+
     </main>
 
     <footer>
-      <button @click="launchApp" :disabled="isGloballyBusy || allAvailableTasks.length > 0" class="button-launch">
-        启动应用
-      </button>
-      <button @click="showManualDownloader = true" :disabled="isGloballyBusy" class="button-secondary"
-              style="margin-left: 1rem;">
-        手动下载
-      </button>
+      <div class="footer-actions">
+        <button
+            v-if="allAvailableTasks.length > 0"
+            @click="installAllUpdates"
+            :disabled="isGloballyBusy"
+            class="button-update-all"
+        >
+          全部更新 ({{ allAvailableTasks.length }})
+        </button>
+        <button @click="performUpdateChecks" :disabled="isGloballyBusy" class="button-secondary">
+          刷新状态
+        </button>
+        <button @click="launchApp" :disabled="isGloballyBusy || allAvailableTasks.length > 0" class="button-launch">
+          启动应用
+        </button>
+      </div>
       <p v-if="allAvailableTasks.length > 0" class="update-hint">
         建议先完成所有更新再启动应用。
       </p>
     </footer>
-
-    <div v-if="showManualDownloader" class="modal-overlay">
-      <div class="modal-content">
-        <header class="modal-header">
-          <h2>手动下载/重新安装</h2>
-          <button @click="showManualDownloader = false" class="close-button">&times;</button>
-        </header>
-        <div class="modal-body">
-          <p class="modal-description">
-            在这里您可以查看所有可用的组件和插件，并选择手动下载或重新安装特定版本。
-          </p>
-          <ul class="task-list manual-download-list">
-            <li v-for="component in allManifestComponents" :key="component.id">
-              <div class="task-info">
-                <span class="task-name">{{ component.name }}</span>
-                <span class="task-version">v{{ component.version }}</span>
-              </div>
-              <button @click="manualDownload(component)" :disabled="isTaskExecutorBusy" class="button-primary">
-                下载
-              </button>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </div>
-
   </div>
 </template>
 
+
 <style scoped>
-/* 一些基础样式，让界面更清晰 */
+:global(html), :global(body) {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden; /* 对于固定窗口大小的应用，直接禁止滚动条更稳妥 */
+}
+
+/* 保持大部分原有样式，并增加新UI所需的样式 */
 .launcher-container {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 2rem;
+  padding: 1.5rem;
   box-sizing: border-box;
-  font-family: sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   text-align: center;
+  background-color: #f7f9fc;
 }
 
 header {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
+}
+
+h1 {
+  font-size: 1.8rem;
+  color: #333;
 }
 
 .status-message {
   min-height: 1.5em;
   transition: color 0.3s;
+  color: #666;
 }
 
 .status-message.is-busy {
   color: #007bff;
 }
 
-main {
-  flex-grow: 1;
+.status-message.is-error {
+  color: #dc3545;
 }
 
-.progress-section, .update-section {
+.main-content {
+  flex-grow: 1;
+  overflow-y: auto; /* 让组件列表区域可以滚动 */
+  padding: 0 1rem;
+}
+
+.progress-section {
   margin-bottom: 2rem;
 }
 
@@ -379,152 +484,13 @@ main {
   color: #555;
 }
 
-.task-list {
-  list-style: none;
-  padding: 0;
-  margin: 1rem 0;
-  max-width: 500px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.task-list li {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 0.5rem;
-  border-bottom: 1px solid #eee;
-}
-
-.task-name {
-  font-weight: bold;
-}
-
-.task-version {
-  color: #28a745;
-  margin-left: 1em;
-}
-
-footer {
-  margin-top: auto;
-  display: flex; /* 新增flex布局以便排列按钮 */
-  justify-content: center; /* 居中 */
-  align-items: center; /* 垂直居中 */
-  flex-direction: column; /* 保持原有堆叠 */
-}
-
-/* 调整按钮组为水平排列 */
-footer > button {
-  margin-bottom: 1rem;
-}
-
-footer {
-  flex-direction: row;
-  flex-wrap: wrap;
-}
-
-.button-launch {
-  padding: 1rem 2rem;
-  font-size: 1.2rem;
-  cursor: pointer;
-}
-
-.button-launch:disabled {
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.update-hint {
-  width: 100%; /* 提示信息占满一行 */
-  margin-top: 1rem;
-  color: #888;
-  font-size: 0.9em;
-}
-
-.button-primary, .button-secondary {
-  padding: 0.5em 1em;
-  border-radius: 4px;
-  border: 1px solid transparent;
-  cursor: pointer;
-}
-
-.button-primary {
-  background-color: #007bff;
-  color: white;
-}
-
-.button-secondary {
-  background-color: #f0f0f0;
-}
-
-/* 新增：模态框样式 */
-.modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  z-index: 1000;
-}
-
-.modal-content {
-  background: white;
-  padding: 1.5rem;
-  border-radius: 8px;
-  width: 90%;
-  max-width: 600px;
-  max-height: 80vh;
-  display: flex;
-  flex-direction: column;
-}
-
-.modal-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border-bottom: 1px solid #ddd;
-  padding-bottom: 1rem;
-  margin-bottom: 1rem;
-}
-
-.close-button {
-  background: none;
-  border: none;
-  font-size: 2rem;
-  cursor: pointer;
-  line-height: 1;
-}
-
-.modal-body {
-  overflow-y: auto; /* 使列表可滚动 */
-}
-
-.modal-description {
-  font-size: 0.9em;
-  color: #666;
-  margin-bottom: 1.5rem;
-  text-align: left;
-}
-
-.manual-download-list .task-version {
-  color: #555; /* 手动下载列表中的版本号颜色稍作区分 */
-}
-
-.status-message.is-error {
-  color: #dc3545; /* 红色，表示错误 */
-}
-
 .error-section {
-  background-color: #f8d7da;
+  background-color: #fff3f3;
   color: #721c24;
   border: 1px solid #f5c6cb;
   padding: 1rem;
-  border-radius: 4px;
-  max-width: 500px;
+  border-radius: 8px;
+  max-width: 600px;
   margin: 1rem auto;
 }
 
@@ -534,12 +500,196 @@ footer {
 }
 
 .error-details {
-  font-family: monospace; /* 使用等宽字体显示错误细节，更清晰 */
+  font-family: monospace;
   font-size: 0.9em;
-  word-break: break-all; /* 防止长 URL 撑破容器 */
+  word-break: break-all;
 }
 
 .error-section button {
   margin-top: 1rem;
 }
+
+.component-lists {
+  max-width: 800px;
+  margin: 0 auto;
+  text-align: left;
+}
+
+.component-section {
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.component-section h2 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 0.75rem;
+  margin-bottom: 1rem;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.loading-placeholder {
+  color: #888;
+  padding: 1rem 0;
+  text-align: center;
+}
+
+.component-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.component-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.component-list li:last-child {
+  border-bottom: none;
+}
+
+.info {
+  display: flex;
+  flex-direction: column;
+}
+
+.name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #2c3e50;
+}
+
+.version-info {
+  font-size: 0.85rem;
+  color: #888;
+  margin-top: 0.25rem;
+}
+
+.local-version {
+  text-decoration: line-through;
+}
+
+.arrow {
+  margin: 0 0.5em;
+  font-weight: bold;
+}
+
+.remote-version {
+  color: #28a745;
+  font-weight: bold;
+}
+
+.status-action {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.status-tag {
+  font-size: 0.8em;
+  padding: 0.2em 0.6em;
+  border-radius: 12px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.status-uptodate {
+  background-color: #28a745;
+}
+
+.status-update_available {
+  background-color: #ffc107;
+  color: #333;
+}
+
+.status-not_installed {
+  background-color: #6c757d;
+}
+
+
+footer {
+  padding-top: 1.5rem;
+  border-top: 1px solid #e0e0e0;
+  background-color: #f7f9fc;
+}
+
+.footer-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.button-primary, .button-secondary, .button-launch, .button-update-all {
+  padding: 0.6em 1.2em;
+  border-radius: 6px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s, opacity 0.2s;
+}
+
+.button-primary {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+.button-primary:hover {
+  background-color: #0056b3;
+}
+
+.button-secondary {
+  background-color: #6c757d;
+  color: white;
+  border-color: #6c757d;
+}
+
+.button-secondary:hover {
+  background-color: #5a6268;
+}
+
+.button-update-all {
+  background-color: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+
+.button-update-all:hover {
+  background-color: #218838;
+}
+
+.button-launch {
+  padding: 0.8rem 2.5rem;
+  font-size: 1.1rem;
+  background-color: #17a2b8;
+  color: white;
+  border-color: #17a2b8;
+}
+
+.button-launch:hover {
+  background-color: #138496;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.update-hint {
+  width: 100%;
+  margin-top: 1rem;
+  color: #888;
+  font-size: 0.9em;
+}
+
 </style>
