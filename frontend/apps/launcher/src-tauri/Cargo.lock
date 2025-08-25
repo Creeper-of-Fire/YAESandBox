@@ -5502,7 +5502,7 @@ dependencies = [
 
 [[package]]
 name = "yaesandbox-launcher"
-version = "0.1.0"
+version = "0.0.0"
 dependencies = [
  "futures-util",
  "hex",
@@ -5516,6 +5516,7 @@ dependencies = [
  "tauri-build",
  "tauri-plugin-opener",
  "tokio",
+ "walkdir",
  "windows",
  "zip",
 ]

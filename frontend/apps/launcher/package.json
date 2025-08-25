@@ -15,10 +15,12 @@
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
+    "semver": "^7.7.2",
     "vue": "^3.5.18"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",
+    "@types/semver": "^7.7.0",
     "archiver": "^7.0.1"
   }
 }

@@ -1,6 +1,6 @@
 [package]
 name = "yaesandbox-launcher"
-version = "0.1.0"
+version = "0.0.0"
 description = "A Tauri App"
 authors = ["creeperoffire"]
 edition = "2021"
@@ -29,6 +29,8 @@ portpicker = "0.1"
 semver = "1" # 用于语义化版本比较
 sha2 = "0"  # 用于计算 SHA256
 hex = "0"    # 用于将哈希值转为字符串
+walkdir = "2"
+
 
 [target.'cfg(windows)'.dependencies]
 windows = { version = "0.61.3", features = [

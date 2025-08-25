@@ -22,10 +22,7 @@ impl AppState {
     pub fn resolve_safe_path(&self, relative_path: &str) -> Result<PathBuf, String> {
         // 1. 检查危险的路径格式
         if relative_path.is_empty() || relative_path.contains("..") {
-            return Err(format!(
-                "指定的路径无效或存在潜在风险: {}",
-                relative_path
-            ));
+            return Err(format!("指定的路径无效或存在潜在风险: {}", relative_path));
         }
 
         // 2. 将相对路径附加到安全的根目录
@@ -34,10 +31,7 @@ impl AppState {
         // 3. 最终验证：确保最终路径确实以我们的根目录开头
         //    这是防止符号链接等更复杂攻击的最后一道防线。
         if !safe_path.starts_with(&self.app_dir) {
-            return Err(format!(
-                "检测到路径遍历攻击: {}",
-                relative_path
-            ));
+            return Err(format!("检测到路径遍历攻击: {}", relative_path));
         }
 
         Ok(safe_path)
@@ -68,14 +62,15 @@ pub fn run() {
         })
         .plugin(tauri_plugin_opener::init())
         .invoke_handler(tauri::generate_handler![
-            commands::download::download_file,
             commands::unzip::unzip_file,
             commands::fs_utils::delete_file,
             commands::process::start_local_backend,
             commands::config_cmd::read_config_as_string,
-            commands::plugin_cmd::fetch_plugins_manifest,
-            commands::updater_cmd::check_launcher_update,
-            commands::updater_cmd::apply_launcher_update
+            commands::manifest::fetch_manifest,
+            commands::updater_cmd::apply_launcher_self_update,
+            commands::update_manager::get_local_versions,
+            commands::download::download_and_verify_zip,
+            commands::update_manager::update_local_version
         ])
         .run(tauri::generate_context!())
         .expect("运行 Tauri 应用时出错");

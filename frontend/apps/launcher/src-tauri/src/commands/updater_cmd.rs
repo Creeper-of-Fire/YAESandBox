@@ -1,11 +1,10 @@
-﻿// src-tauri/src/commands/updater_cmd.rs
-use serde::{Deserialize, Serialize};
+﻿use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
-use std::io::{Cursor, Read, Write};
+use std::io::Cursor;
 use std::path::Path;
 use std::process::Command as StdCommand;
-use tauri::{command, AppHandle, Manager};
+use tauri::{command, AppHandle};
 
 // 与 launcher-version.json 匹配的结构体
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -13,77 +12,25 @@ pub struct VersionManifest {
     version: String,
     url: String,
     hash: String,
-}
-
-/// 检查启动器自身更新的状态
-#[derive(Serialize, Clone)]
-#[serde(tag = "tag", content = "content")] // Makes it easier to handle in JS/TS
-pub enum UpdateStatus {
-    UpToDate,                         // 已是最新
-    UpdateAvailable(VersionManifest), // 发现新版本
-}
-
-/// 检查启动器是否有新版本
-#[command]
-pub async fn check_launcher_update(
-    manifest_url: String,
-    proxy: Option<String>,
-) -> Result<UpdateStatus, String> {
-    // 1. 获取当前应用版本
-    let current_version_str = env!("CARGO_PKG_VERSION");
-    let current_version = semver::Version::parse(current_version_str)
-        .map_err(|e| format!("无效的当前版本号: {}", e))?;
-
-    println!("[Updater] 当前版本: {}", current_version);
-
-    // 2. 下载清单文件
-    let client = crate::core::http::create_http_client(proxy.as_deref())?;
-    let manifest_text = client
-        .get(&manifest_url)
-        .send()
-        .await
-        .map_err(|e| format!("下载更新清单失败: {}", e))?
-        .text()
-        .await
-        .map_err(|e| format!("读取清单内容失败: {}", e))?;
-
-    let manifest: VersionManifest =
-        serde_json::from_str(&manifest_text).map_err(|e| format!("解析清单JSON失败: {}", e))?;
-
-    // 3. 比较版本
-    let latest_version = semver::Version::parse(&manifest.version)
-        .map_err(|e| format!("无效的清单版本号: {}", e))?;
-
-    println!("[Updater] 最新版本: {}", latest_version);
-
-    if latest_version > current_version {
-        println!("[Updater] 发现新版本！");
-        Ok(UpdateStatus::UpdateAvailable(manifest))
-    } else {
-        println!("[Updater] 启动器已是最新版本。");
-        Ok(UpdateStatus::UpToDate)
-    }
+    notes: String,
 }
 
 /// 执行更新流程
 #[command]
-pub async fn apply_launcher_update(
+pub async fn apply_launcher_self_update(
     app_handle: AppHandle,
-    manifest: VersionManifest,
+    url: String,
+    hash: String,
     proxy: Option<String>,
 ) -> Result<(), String> {
-    // 步骤 1 & 2: 下载和校验 (跨平台通用)
-    println!("[Updater] 正在下载新版本: {}", manifest.url);
-
+    // 步骤 1 & 2: 下载和校验
+    println!("[Updater] 正在下载新版启动器: {}", url);
     let client = crate::core::http::create_http_client(proxy.as_deref())?;
-
-    let response = client
-        .get(&manifest.url)
+    let zip_data = client
+        .get(&url)
         .send()
         .await
-        .map_err(|e| format!("下载新版本失败: {}", e))?;
-
-    let zip_data = response
+        .map_err(|e| format!("下载新版本失败: {}", e))?
         .bytes()
         .await
         .map_err(|e| format!("读取响应体失败: {}", e))?;
@@ -93,10 +40,10 @@ pub async fn apply_launcher_update(
     hasher.update(&zip_data);
     let calculated_hash = hex::encode(hasher.finalize());
 
-    if calculated_hash.to_lowercase() != manifest.hash.to_lowercase() {
-        return Err("文件校验失败！下载的文件可能已损坏或被篡改。".into());
+    if calculated_hash.to_lowercase() != hash.to_lowercase() {
+        return Err("启动器文件校验失败！".into());
     }
-    println!("[Updater] 文件校验成功。");
+    println!("[Updater] 启动器文件校验成功。");
 
     // 步骤 3 & 4: 解压和准备路径 (跨平台通用)
     let current_exe = env::current_exe().expect("无法获取当前执行文件路径");
