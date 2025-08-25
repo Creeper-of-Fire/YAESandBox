@@ -6,7 +6,12 @@ import semver from "semver";
 // --- 1. 导入所有需要的模块 ---
 import {useConfig} from './composables/useConfig';
 import {type UpdateTask, useTaskManager} from './composables/useTaskManager';
-import {type ComponentConfig, type RemoteCoreComponent, useCoreUpdater} from './composables/useCoreUpdater';
+import {
+  type ComponentConfig,
+  type CoreManifest,
+  type RemoteCoreComponent,
+  useCoreUpdater
+} from './composables/useCoreUpdater';
 import {type RemotePluginInfo, usePlugins} from './composables/usePlugins';
 
 // --- 2. 定义应用的“单一真相源” (Source of Truth) ---
@@ -50,7 +55,7 @@ const isGloballyBusy = computed(() => isTaskExecutorBusy.value || isCheckingCore
 // 主状态消息
 const mainStatusMessage = ref('启动器正在初始化...');
 
-// 【核心重构】创建用于UI渲染的计算属性列表
+// 创建用于UI渲染的计算属性列表
 const createDisplayList = <T extends RemoteCoreComponent | RemotePluginInfo>(
     remoteComponents: Readonly<Ref<readonly T[]>>,
     isChecking: Ref<boolean>,
@@ -100,18 +105,18 @@ onMounted(async () => {
     return;
   }
 
-  // 【流程修复】首先检查启动器更新，但不再因为用户取消而中断整个流程
-  await checkLauncherUpdate();
+  // 第一步：检查启动器并获取核心清单
+  const coreManifest = await checkLauncherUpdateAndGetManifest();
 
-  // 无论启动器更新与否，都继续执行后续的检查
-  await performUpdateChecks();
+  // 第二步：使用获取到的清单执行后续检查
+  await performUpdateChecks(coreManifest);
 });
 
 /**
  * 专门处理启动器更新的检查和执行流程。
- * @returns {Promise<void>}
+ * @returns {Promise<CoreManifest | null>} 成功则返回清单对象，失败则返回 null。
  */
-async function checkLauncherUpdate(): Promise<void> {
+async function checkLauncherUpdateAndGetManifest(): Promise<CoreManifest | null> {
   try {
     mainStatusMessage.value = '正在检查启动器更新...';
 
@@ -146,18 +151,21 @@ async function checkLauncherUpdate(): Promise<void> {
     } else {
       console.log('启动器已是最新版本。');
     }
-
+    return remoteManifest;
   } catch (e) {
     const errorMsg = `检查启动器更新失败: ${String(e)}`;
     console.error(errorMsg, e);
-    // 不更新主状态，让后续检查的状态覆盖它
+    // 更新主状态，让后续检查的状态覆盖它
+    mainStatusMessage.value = errorMsg;
+    return null; // 失败时返回 null
   }
 }
 
 /**
  * 可重用的函数，用于执行所有检查，方便重试
+ * @param coreManifest - (可选) 从上一步获取的清单，以避免重复请求。
  */
-async function performUpdateChecks() {
+async function performUpdateChecks(coreManifest?: CoreManifest | null) {
   mainStatusMessage.value = '正在获取本地版本信息...';
   try {
     localVersions.value = await invoke('get_local_versions');
@@ -171,7 +179,7 @@ async function performUpdateChecks() {
 
   // 并行检查
   await Promise.all([
-    checkCoreUpdates(CORE_COMPONENTS_CONFIG),
+    checkCoreUpdates(CORE_COMPONENTS_CONFIG, coreManifest),
     checkPluginUpdates(),
   ]);
 
@@ -289,6 +297,18 @@ async function installAllUpdates() {
  * 启动主应用程序。
  */
 const launchApp = async () => {
+  // 【逻辑优化】如果检测到有更新，提醒用户。
+  if (allAvailableTasks.value.length > 0) {
+    const confirmed = confirm(
+        `检测到 ${allAvailableTasks.value.length} 个可用更新。\n\n` +
+        `在未更新的情况下启动可能会导致应用功能异常或不稳定。\n\n` +
+        `您确定要继续启动吗？`
+    );
+    if (!confirmed) {
+      return; // 用户取消启动
+    }
+  }
+
   mainStatusMessage.value = '正在启动本地服务...';
   try {
     await invoke('start_local_backend', {
@@ -324,7 +344,7 @@ const launchApp = async () => {
       <div v-if="checkError && !isGloballyBusy" class="error-section">
         <p class="error-title">❌ 无法获取更新信息</p>
         <p class="error-details">{{ checkError }}</p>
-        <button @click="performUpdateChecks" class="button-secondary">重试</button>
+        <button @click="performUpdateChecks()" class="button-secondary">重试</button>
       </div>
 
       <!-- 组件列表 -->
@@ -410,10 +430,10 @@ const launchApp = async () => {
         >
           全部更新 ({{ allAvailableTasks.length }})
         </button>
-        <button @click="performUpdateChecks" :disabled="isGloballyBusy" class="button-secondary">
+        <button @click="performUpdateChecks()" :disabled="isGloballyBusy" class="button-secondary">
           刷新状态
         </button>
-        <button @click="launchApp" :disabled="isGloballyBusy || allAvailableTasks.length > 0" class="button-launch">
+        <button @click="launchApp" :disabled="isTaskExecutorBusy" class="button-launch">
           启动应用
         </button>
       </div>

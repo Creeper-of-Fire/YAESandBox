@@ -1,10 +1,10 @@
 ﻿// src/composables/useCoreUpdater.ts
 
-import { ref, readonly } from 'vue';
-import { invoke } from '@tauri-apps/api/core';
+import {readonly, ref} from 'vue';
+import {invoke} from '@tauri-apps/api/core';
 import semver from 'semver';
-import type { UpdateTask } from './useTaskManager'; // 从我们的任务管理器导入类型
-import { useConfig } from './useConfig';
+import type {UpdateTask} from './useTaskManager'; // 从我们的任务管理器导入类型
+import {useConfig} from './useConfig';
 
 // --- 类型定义 ---
 
@@ -19,7 +19,7 @@ export interface RemoteCoreComponent {
 }
 
 // 远程核心清单的完整结构
-interface CoreManifest {
+export interface CoreManifest {
     components: RemoteCoreComponent[];
 }
 
@@ -35,7 +35,7 @@ export interface ComponentConfig {
 // --- Composable 实现 ---
 
 export function useCoreUpdater() {
-    const { config } = useConfig();
+    const {config} = useConfig();
 
     // 存储检查后发现的可用更新任务
     const availableUpdateTasks = ref<UpdateTask[]>([]);
@@ -50,8 +50,10 @@ export function useCoreUpdater() {
     /**
      * 检查核心组件的更新。
      * @param componentConfigs - 一个包含核心组件 ID 和解压路径配置的数组。这是此 Composable 的外部依赖，由调用方（App.vue）提供。
+     * @param remoteManifest - (可选) 一个预先获取的远程清单。如果提供，将跳过网络请求。
      */
-    const checkCoreUpdates = async (componentConfigs: ComponentConfig[]) => {
+    const checkCoreUpdates = async (componentConfigs: ComponentConfig[],
+                                    remoteManifest?: CoreManifest | null) => {
         if (isChecking.value) return;
 
         isChecking.value = true;
@@ -63,7 +65,7 @@ export function useCoreUpdater() {
         // --- 日志埋点 1: 检查配置 ---
         if (!config.value || !config.value.core_components_manifest_url) {
             const errorMsg = '[CoreUpdater] 错误: 配置未加载或清单 URL 为空!';
-            console.error(errorMsg, { config: config.value });
+            console.error(errorMsg, {config: config.value});
             error.value = errorMsg;
             isChecking.value = false;
             return;
@@ -72,32 +74,37 @@ export function useCoreUpdater() {
         const configMap = new Map(componentConfigs.map(c => [c.id, c]));
 
         try {
-            const manifestUrl = config.value.core_components_manifest_url;
-            const proxyAddress = config.value.proxy_address;
+            let manifestToUse: CoreManifest;
 
-            // --- 日志埋点 2: 打印将要调用的参数 ---
-            console.log('[CoreUpdater] 准备调用后端命令，参数如下:', {
-                manifestUrl,
-                proxyAddress,
-            });
-
-            const [localVersions, remoteManifest] = await Promise.all([
-                invoke<Record<string, string | null>>('get_local_versions'), // 明确类型可以为 null
-                invoke<CoreManifest>('fetch_manifest', {
+            // 如果外部传入了清单，则直接使用；否则，自己获取。
+            if (remoteManifest) {
+                console.log('[CoreUpdater] 使用了预先获取的远程清单。');
+                manifestToUse = remoteManifest;
+            } else {
+                console.log('[CoreUpdater] 没有预获取的清单，正在从网络获取...');
+                const manifestUrl = config.value.core_components_manifest_url;
+                const proxyAddress = config.value.proxy_address;
+                console.log('[CoreUpdater] 准备调用后端命令，参数如下:', {
+                    manifestUrl,
+                    proxyAddress,
+                });
+                manifestToUse = await invoke<CoreManifest>('fetch_manifest', {
                     url: manifestUrl,
                     proxy: proxyAddress,
-                })
+                });
+            }
+            const [localVersions] = await Promise.all([
+                invoke<Record<string, string | null>>('get_local_versions'),
             ]);
-
-            // --- 日志埋点 3 (最关键): 打印从后端获取到的原始数据 ---
+            // --- 打印从后端获取到的原始数据 ---
             console.log('[CoreUpdater] 成功从后端获取数据:');
             console.log('  - Local Versions:', JSON.parse(JSON.stringify(localVersions)));
             console.log('  - Remote Manifest:', JSON.parse(JSON.stringify(remoteManifest)));
 
-            const remoteComponents = remoteManifest.components || []; // 增加保护，防止 components 不存在
+            const remoteComponents = manifestToUse.components || []; // 增加保护，防止 components 不存在
             allRemoteComponents.value = remoteComponents;
 
-            // --- 日志埋点 4: 确认要比较的组件数量 ---
+            // --- 确认要比较的组件数量 ---
             console.log(`[CoreUpdater] 远程清单包含 ${remoteComponents.length} 个组件。开始比较...`);
 
             const tasks: UpdateTask[] = [];
@@ -109,7 +116,7 @@ export function useCoreUpdater() {
                 const localVersion = localVersions[remoteComponent.id];
                 const componentConfig = configMap.get(remoteComponent.id);
 
-                // --- 日志埋点 5: 打印每一次比较的详细信息 ---
+                // --- 打印每一次比较的详细信息 ---
                 console.log(`[CoreUpdater] 正在比较组件: ${remoteComponent.name} (${remoteComponent.id})`);
                 console.log(`  - 远程版本: ${remoteComponent.version}`);
                 console.log(`  - 本地版本: ${localVersion}`);
