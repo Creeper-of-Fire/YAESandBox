@@ -99,7 +99,7 @@ export function useCoreUpdater() {
             // --- 打印从后端获取到的原始数据 ---
             console.log('[CoreUpdater] 成功从后端获取数据:');
             console.log('  - Local Versions:', JSON.parse(JSON.stringify(localVersions)));
-            console.log('  - Remote Manifest:', JSON.parse(JSON.stringify(remoteManifest)));
+            console.log('  - Remote Manifest:', JSON.parse(JSON.stringify(manifestToUse)));
 
             const remoteComponents = manifestToUse.components || []; // 增加保护，防止 components 不存在
             allRemoteComponents.value = remoteComponents;
