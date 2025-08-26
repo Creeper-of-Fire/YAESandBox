@@ -47,17 +47,37 @@ impl AppState {
 pub fn run() {
     tauri::Builder::default()
         .setup(|app| {
+            // 1. 获取可执行文件所在的目录
             let exe_dir = std::env::current_exe()
                 .ok()
                 .and_then(|p| p.parent().map(|p| p.to_path_buf()))
                 .expect("未能获取可执行文件所在目录");
 
-            println!("应用可执行文件目录: {}", exe_dir.display());
+            // 2. 定义我们想要的 WebView2 缓存目录
+            //    建议放在一个子文件夹内，保持整洁
+            let data_dir = exe_dir.join("app_data");
+            println!("应用数据和缓存目录设置为: {}", data_dir.display());
+
+            // 3. 手动创建主窗口
+            //    我们使用 tauri::webview::WebviewWindowBuilder，这是您在文档中找到的正确工具
+            let _webview_window = tauri::webview::WebviewWindowBuilder::new(
+                app.handle(),                                // 需要 AppHandle
+                "main",                                      // 窗口的唯一标签 (label)
+                tauri::WebviewUrl::App("index.html".into()), // 你的前端入口 HTML
+            )
+            .title("YAESandBox启动器") // 设置窗口标题
+            .inner_size(800.0, 600.0) // 设置窗口大小
+            .data_directory(data_dir) // 在这里设置数据/缓存目录
+            .disable_drag_drop_handler() // 禁用窗口拖拽事件处理器，以使用html5原生拖拽
+            .build()?;
+
+            // 之前的 AppState 管理代码可以保留
             app.manage(AppState {
                 app_dir: exe_dir,
                 #[cfg(windows)]
                 job: Mutex::new(None),
             });
+
             Ok(())
         })
         .plugin(tauri_plugin_opener::init())

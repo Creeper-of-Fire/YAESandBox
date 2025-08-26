@@ -16,7 +16,7 @@ export default defineConfig(({command, mode}) => {
             // 通常建议放到末尾，以确保它能分析到所有其他插件处理后的最终结果
             visualizer({
                 // 常用配置项：
-                open: true,             // 在默认浏览器中自动打开报告
+                open: false,             // 在默认浏览器中自动打开报告
                 gzipSize: true,         // 显示 Gzip 压缩后的大小 (非常有用)
                 brotliSize: true,       // 显示 Brotli 压缩后的大小 (如果你的服务器支持 Brotli，这个更准确)
                 filename: 'stats.html', // 生成的报告文件名 (默认是 stats.html，会放在项目根目录)
