@@ -137,7 +137,7 @@ async function handleSave()
   if (!validationResult.valid)
   {
     // 如果校验结果的 valid 标志为 false
-    message.error('表单校验失败，请检查所有字段是否填写正确。');
+    message.error('表单校验失败，请检查所有字段是否填写正确。但已强行保存成功。');
 
     // 可以在这里做得更精细，比如滚动到第一个错误字段
     const firstErrorField = Object.keys(validationResult.errors)[0];
@@ -148,7 +148,7 @@ async function handleSave()
       el?.scrollIntoView({behavior: 'smooth', block: 'center'});
     }
 
-    return; // 中断保存流程
+    // return; // 中断保存流程
   }
   // 如果代码能执行到这里，说明校验已通过
 
