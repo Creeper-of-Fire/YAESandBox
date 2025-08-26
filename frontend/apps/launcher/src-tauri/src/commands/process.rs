@@ -1,5 +1,5 @@
 ﻿// src-tauri/src/commands/process.rs
-
+use std::sync::{Arc, Mutex};
 use super::super::AppState;
 use std::io::{BufRead, BufReader};
 use std::process::{Command as StdCommand, Stdio};
@@ -8,6 +8,7 @@ use std::time::Duration;
 use tauri::{command, AppHandle, Emitter, Manager, State};
 use tokio::sync::mpsc;
 use tokio::time::timeout;
+use crate::core::dialog_window::show_critical_error_and_exit;
 
 // 平台特定的引入
 #[cfg(windows)]
@@ -93,7 +94,17 @@ pub async fn start_local_backend(
     command.creation_flags(CREATE_NO_WINDOW);
 
     // --- 启动子进程并将其绑定到 Job Object ---
-    let mut child = command.spawn().map_err(|e| format!("启动后端进程失败: {}", e))?;
+    let mut child = match command.spawn() {
+        Ok(child) => child,
+        Err(e) => {
+            let error_msg = format!("启动后端进程失败: {}\n\n请确认后端可执行文件存在且未被杀毒软件拦截。", e);
+            // 直接调用我们的新函数！
+            show_critical_error_and_exit("启动器错误", &error_msg);
+            // 这行代码永远不会被执行，因为 show_critical_error_and_exit 会终止进程
+            unreachable!();
+        }
+    };
+
     let pid = child.id();
 
     // 在 Windows 上，将子进程的生命周期与父进程绑定
@@ -116,6 +127,8 @@ pub async fn start_local_backend(
     let stdout = child.stdout.take().expect("未能捕获标准输出");
     let stderr = child.stderr.take().expect("未能捕获标准错误");
 
+    let stderr_lines = Arc::new(Mutex::new(Vec::<String>::new()));
+
     let app_handle_clone = app_handle.clone();
     thread::spawn(move || {
         let reader = BufReader::new(stdout);
@@ -130,11 +143,16 @@ pub async fn start_local_backend(
     });
 
     let app_handle_clone_err = app_handle.clone();
+    let stderr_lines_clone = stderr_lines.clone();
     thread::spawn(move || {
         let reader = BufReader::new(stderr);
         for line in reader.lines().flatten() {
             println!("[后端标准错误]: {}", line);
             let _ = app_handle_clone_err.emit("backend-log", &format!("[ERROR] {}", line));
+
+            // 将错误行存入共享的 Vec
+            let mut lines = stderr_lines_clone.lock().unwrap();
+            lines.push(line);
         }
     });
 
@@ -148,10 +166,29 @@ pub async fn start_local_backend(
                 .map_err(|e| format!("导航窗口失败: {}", e))?;
             Ok(())
         }
-        Ok(None) => Err("后端进程意外退出。".to_string()),
-        Err(_) => Err(format!(
-            "后端未能在 {} 秒内成功启动。",
-            timeout_duration.as_secs()
-        )),
+        Ok(None) => {
+            let collected_errors = stderr_lines.lock().unwrap().join("\n");
+            let error_msg = if collected_errors.is_empty() {
+                "后端进程意外退出，但未提供任何错误信息。这可能由环境问题（如缺少.NET运行时）或程序崩溃引起。".to_string()
+            } else {
+                format!("后端进程启动失败并提前退出。错误详情：\n\n{}", collected_errors)
+            };
+            show_critical_error_and_exit("后端启动失败", &error_msg);
+            unreachable!();
+        },
+        Err(_) => {
+            let collected_errors = stderr_lines.lock().unwrap().join("\n");
+            let error_msg = if collected_errors.is_empty() {
+                format!("后端未能在 {} 秒内响应。请检查日志或尝试重启。", timeout_duration.as_secs())
+            } else {
+                format!(
+                    "后端未能在 {} 秒内响应。捕获到的错误信息如下：\n\n{}",
+                    timeout_duration.as_secs(),
+                    collected_errors
+                )
+            };
+            show_critical_error_and_exit("后端启动超时", &error_msg);
+            unreachable!();
+        },
     }
 }

@@ -26,10 +26,10 @@ tokio = { version = "1", features = ["full"] }
 futures-util = "0.3"
 zip = "4.5.0"
 portpicker = "0.1"
-semver = "1" # 用于语义化版本比较
+native-dialog = "0"
 sha2 = "0"  # 用于计算 SHA256
 hex = "0"    # 用于将哈希值转为字符串
-self_update = { version = "0.40.0", features = ["archive-zip", "compression-zip-deflate", "rustls"], default-features = false }
+self_update = { version = "0", features = ["archive-zip", "compression-zip-deflate", "rustls"], default-features = false }
 tempfile = "3.10.1"
 
 
@@ -53,7 +53,7 @@ opt-level = "z"
 lto = true
 # 将所有代码编译成一个单元，增加编译时间但能带来更好的优化。
 codegen-units = 1
-# 发生panic时直接终止程序，而不是展开堆栈，可以减小体积。
-panic = "abort"
+
+panic = "unwind"
 # 自动剥离符号信息，显著减小二进制文件大小。
 strip = true
