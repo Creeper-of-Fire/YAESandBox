@@ -1,0 +1,158 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral,
+            PublicKeyToken=b77a5c561934e089
+        </value>
+    </resheader>
+
+    <!-- GeneralAiConfig_ApiKey -->
+    <data name="GeneralAiConfig_ApiKey_Label" xml:space="preserve">
+    <value>API密钥</value>
+  </data>
+    <data name="GeneralAiConfig_ApiKey_Description" xml:space="preserve">
+    <value>访问AI服务所需的API密钥。</value>
+  </data>
+    <data name="GeneralAiConfig_ApiKey_Prompt" xml:space="preserve">
+    <value>请输入您的AI API密钥</value>
+  </data>
+
+    <!-- GeneralAiConfig_ModelName -->
+    <data name="GeneralAiConfig_ModelName_Label" xml:space="preserve">
+    <value>模型名称</value>
+  </data>
+    <data name="GeneralAiConfig_ModelName_Description" xml:space="preserve">
+        <value>要使用的AI模型名称。</value>
+    </data>
+
+    <!-- GeneralAiConfig_Temperature -->
+    <data name="GeneralAiConfig_Temperature_Label" xml:space="preserve">
+    <value>温度 (Temperature)</value>
+  </data>
+    <data name="GeneralAiConfig_Temperature_Description" xml:space="preserve">
+    <value>控制生成文本的随机性。较低的值（如0.2）使输出更具确定性和重点，较高的值（如0.8）使其更随机。默认值通常为0.7或0.9，具体取决于模型。取值范围一般为 0.0 到 2.0。</value>
+  </data>
+
+    <!-- GeneralAiConfig_TopP -->
+    <data name="GeneralAiConfig_TopP_Label" xml:space="preserve">
+    <value>Top P采样</value>
+  </data>
+    <data name="GeneralAiConfig_TopP_Description" xml:space="preserve">
+      <value>核心采样参数，模型会考虑概率总和为 top_p 的token。通常建议仅调整 temperature 或 top_p 其中之一，不建议两者都修改。</value>
+    </data>
+
+    <!-- GeneralAiConfig_StopSequences -->
+    <data name="GeneralAiConfig_StopSequences_Label" xml:space="preserve">
+    <value>停止序列 (Stop Sequences)</value>
+  </data>
+    <data name="GeneralAiConfig_StopSequences_Description" xml:space="preserve">
+        <value>模型遇到该字段所指定的字符串时将停止继续生成。</value>
+    </data>
+    
+    <data name="GeneralAiConfig_TopK_Label" xml:space="preserve">
+    <value>Top-K</value>
+  </data>
+    <data name="GeneralAiConfig_TopK_Description" xml:space="preserve">
+    <value>通过从 K 个最可能的下一个词元（token）中进行采样来控制生成内容的多样性。较高的值意味着更多样化，较低的值会使输出更集中和确定。</value>
+  </data>
+
+    <!-- GeneralAiConfig_ResponseFormatType -->
+    <data name="GeneralAiConfig_ResponseFormatType_Label" xml:space="preserve">
+    <value>响应格式类型</value>
+  </data>
+    <data name="GeneralAiConfig_ResponseFormatType_Description" xml:space="preserve">
+    <value>指定模型响应的格式。可选值为 "text"（默认）或 "json_object"（强制模型输出有效的JSON对象）。</value>
+  </data>
+
+    <!-- GeneralAiConfig_FrequencyPenalty -->
+    <data name="GeneralAiConfig_FrequencyPenalty_Label" xml:space="preserve">
+    <value>频率惩罚 (Frequency Penalty)</value>
+  </data>
+    <data name="GeneralAiConfig_FrequencyPenalty_Description" xml:space="preserve">
+    <value>根据Token在文本中已出现的频率来惩罚新Token，从而减少逐字重复。正值会降低重复性。取值范围通常在 -2.0 到 2.0 之间。</value>
+  </data>
+
+    <!-- GeneralAiConfig_PresencePenalty -->
+    <data name="GeneralAiConfig_PresencePenalty_Label" xml:space="preserve">
+    <value>存在惩罚 (Presence Penalty)</value>
+  </data>
+    <data name="GeneralAiConfig_PresencePenalty_Description" xml:space="preserve">
+    <value>根据Token是否已在文本中出现至少一次来惩罚新Token，从而鼓励模型引入新的概念和主题。取值范围通常在 -2.0 到 2.0 之间。</value>
+  </data>
+
+    <!-- GeneralAiConfig_StreamOptions -->
+    <data name="GeneralAiConfig_StreamOptions_IncludeUsage_Label" xml:space="preserve">
+      <value>流式响应选项——包含用量统计</value>
+    </data>
+    <data name="GeneralAiConfig_StreamOptions_IncludeUsage_Description" xml:space="preserve">
+      <value>流式调用时，是否在响应结束时返回 token 用量信息。设置为true会包含这些统计数据。</value>
+    </data>
+
+    <!-- GeneralAiConfig_ServiceTier -->
+    <data name="GeneralAiConfig_ServiceTier_Label" xml:space="preserve">
+    <value>服务等级/优先级</value>
+  </data>
+    <data name="GeneralAiConfig_ServiceTier_Description" xml:space="preserve">
+        <value>指定请求的服务等级。</value>
+    </data>
+
+    <!-- GeneralAiConfig_Logprobs -->
+    <data name="GeneralAiConfig_Logprobs_Label" xml:space="preserve">
+    <value>返回Logprobs</value>
+  </data>
+    <data name="GeneralAiConfig_Logprobs_Description" xml:space="preserve">
+      <value>是否返回输出 tokens 的对数概率。
+false：不返回对数概率信息。
+true：返回消息内容中每个输出 token 的对数概率。</value>
+    </data>
+
+    <!-- GeneralAiConfig_TopLogprobs -->
+    <data name="GeneralAiConfig_TopLogprobs_Label" xml:space="preserve">
+    <value>Top Logprobs数量</value>
+  </data>
+    <data name="GeneralAiConfig_TopLogprobs_Description" xml:space="preserve">
+      <value>取值范围为 [0, 20]。
+指定每个输出 token 位置最有可能返回的 token 数量，每个 token 都有关联的对数概率。仅当 Logprobs为true 时此参数生效。</value>
+    </data>
+
+    <!-- GeneralAiConfig_LogitBias -->
+    <data name="GeneralAiConfig_LogitBias_Label" xml:space="preserve">
+    <value>Logit偏置 (Logit Bias)</value>
+  </data>
+    <data name="GeneralAiConfig_LogitBias_Description" xml:space="preserve">
+      <value>调整指定 token 在模型输出内容中出现的概率。logit_bias 接受一个 Token ID 到偏置值的映射，取值范围为 [-100, 100]。
+-1 会减少选择的可能性，1 会增加选择的可能性；-100 会完全禁止选择该 token，100 会导致仅可选择该 token。该参数的实际效果可能因模型而异。</value>
+    </data>
+    <!-- GeneralAiConfig.MaxInputTokens -->
+    <data name="GeneralAiConfig_MaxInputTokens_Label" xml:space="preserve">
+      <value>最大输入Token数</value>
+    </data>
+    <data name="GeneralAiConfig_MaxInputTokens_Description" xml:space="preserve">
+      <value>设置模型允许处理的最大输入Token数量。此设置主要用于在发送请求前进行内容截断或验证，通常不直接作为API参数发送。</value>
+    </data>
+
+    <!-- GeneralAiConfig.MaxOutputTokens -->
+    <data name="GeneralAiConfig_MaxOutputTokens_Label" xml:space="preserve">
+      <value>最大输出Token数</value>
+    </data>
+    <data name="GeneralAiConfig_MaxOutputTokens_Description" xml:space="preserve">
+      <value>限制模型在单次响应中生成的最大Token数量。这可以用来控制响应的长度和成本。</value>
+    </data>
+</root>

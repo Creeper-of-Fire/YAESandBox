@@ -31,9 +31,8 @@ public class AiConfigurationSet : IProtectedData
     /// 用户为配置集指定的名称，用于在 UI 上显示和识别。
     /// </summary>
     [Display(
-        Name = "AiConfigurationSet_ConfigSetName_Label",
-        Description = "AiConfigurationSet_ConfigSetName_Description",
-        ResourceType = typeof(AiProcessorConfigResources))]
+        Name = "配置集名称",
+        Description = "为此组AI配置指定一个易于识别的名称。")]
     [Required]
     public string ConfigSetName { get; init; } = string.Empty;
 

@@ -12,65 +12,110 @@ namespace YAESandBox.Workflow.AIService.AiConfig.DeepSeek;
 /// </summary>
 internal record DeepSeekAiProcessorConfig() : AbstractAiProcessorConfig("DeepSeek")
 {
-    // --- 核心配置 ---
-
-    [Required(ErrorMessage = "API密钥是必填项。")]
-    [DataType(DataType.Password)]
-    [Display(Name = "API 密钥 (API Key)", Description = "您的 DeepSeek API 密钥。")]
-    [Protected]
-    public string? ApiKey { get; init; }
-
-    [Required(ErrorMessage = "模型名称是必填项。")]
-    [DefaultValue("deepseek-chat")]
-    [StringOptions("deepseek-chat", "deepseek-reasoner", IsEditableSelectOptions = true)]
-    [Display(Name = "模型名称 (Model Name)", Description = "要使用的模型ID, 例如 'deepseek-chat' 或 'deepseek-reasoner'。")]
-    public string? ModelName { get; init; }
-
-    // --- 生成控制参数 ---
     [Display(Name = "最大输出Token数 (Max Tokens)", Description = "限制单次请求生成的最大Token数量。")]
     [DefaultValue(8192)]
     public int? MaxOutputTokens { get; init; }
 
-    [Range(0.0, 2.0, ErrorMessage = "温度值必须在 0.0 到 2.0 之间。")]
+    // --- 核心配置 ---
+
+    [Display(
+        Name = "GeneralAiConfig_ApiKey_Label",
+        Description = "GeneralAiConfig_ApiKey_Description",
+        Prompt = "GeneralAiConfig_ApiKey_Prompt",
+        ResourceType = typeof(GeneralAiResources)
+    )]
+    [Required]
+    [DataType(DataType.Password)]
+    [Protected]
+    public string? ApiKey { get; init; }
+
+    /// <summary>
+    /// 模型名称
+    /// </summary>
+    [Display(
+        Name = "GeneralAiConfig_ModelName_Label",
+        Description = "GeneralAiConfig_ModelName_Description",
+        ResourceType = typeof(GeneralAiResources)
+    )]
+    [Required]
+    [DefaultValue("deepseek-chat")]
+    [StringOptions("deepseek-chat", "deepseek-reasoner", IsEditableSelectOptions = true)]
+    public string? ModelName { get; init; }
+
+    // --- 生成控制参数 ---
+
+    [Display(
+        Name = "GeneralAiConfig_Temperature_Label",
+        Description = "GeneralAiConfig_Temperature_Description",
+        ResourceType = typeof(GeneralAiResources)
+    )]
+    [Range(0.0, 2.0)]
     [DefaultValue(1.0)]
-    [Display(Name = "温度 (Temperature)", Description = "控制输出的随机性。较低的值更确定，较高的值更随机。介于0和2之间。")]
     public double? Temperature { get; init; }
 
-    [Range(0.0, 1.0, ErrorMessage = "Top P值必须在 0.0 到 1.0 之间。")]
+    [Display(
+        Name = "GeneralAiConfig_TopP_Label",
+        Description = "GeneralAiConfig_TopP_Description",
+        ResourceType = typeof(GeneralAiResources)
+    )]
+    [Range(0.0, 1.0)]
     [DefaultValue(1.0)]
-    [Display(Name = "Top P", Description = "核心采样参数，模型会考虑概率总和为 top_p 的token。不建议与温度同时修改。")]
     public float? TopP { get; init; }
 
-    [Display(Name = "停止序列 (Stop Sequences)", Description = "一个或多个字符串，当模型生成这些字符串时将停止输出。最多16个。")]
+    [Display(
+        Name = "DeepSeekAiConfig_StopSequences_Label",
+        Description = "DeepSeekAiConfig_StopSequences_Description",
+        ResourceType = typeof(DeepSeekAiResources)
+    )]
     public IReadOnlyList<string>? StopSequences { get; init; }
 
-    [Display(Name = "响应格式 (Response Format)", Description = "指定模型必须输出的格式。设置为 'json_object' 以启用 JSON 模式。")]
+    [Display(
+        Name = "GeneralAiConfig_ResponseFormatType_Label",
+        Description = "GeneralAiConfig_ResponseFormatType_Description",
+        ResourceType = typeof(GeneralAiResources)
+    )]
     [StringOptions("text", "json_object")]
     [DefaultValue("text")]
     public string? ResponseFormatType { get; init; }
 
     // --- 惩罚参数 ---
 
-    [Range(-2.0, 2.0, ErrorMessage = "频率惩罚值必须在 -2.0 到 2.0 之间。")]
+    [Display(
+        Name = "GeneralAiConfig_FrequencyPenalty_Label",
+        Description = "GeneralAiConfig_FrequencyPenalty_Description",
+        ResourceType = typeof(GeneralAiResources)
+    )]
+    [Range(-2.0, 2.0)]
     [DefaultValue(0.0)]
-    [Display(Name = "频率惩罚 (Frequency Penalty)", Description = "正值会根据token在已有文本中的频率来惩罚新token，降低重复内容的可能性。")]
     public float? FrequencyPenalty { get; init; }
 
-    [Range(-2.0, 2.0, ErrorMessage = "存在惩罚值必须在 -2.0 到 2.0 之间。")]
+    [Display(
+        Name = "GeneralAiConfig_PresencePenalty_Label",
+        Description = "GeneralAiConfig_PresencePenalty_Description",
+        ResourceType = typeof(GeneralAiResources)
+    )]
+    [Range(-2.0, 2.0)]
     [DefaultValue(0.0)]
-    [Display(Name = "存在惩罚 (Presence Penalty)", Description = "正值会根据token是否已在文本中出现来惩罚新token，鼓励模型谈论新主题。")]
     public float? PresencePenalty { get; init; }
 
     // --- 流式与高级选项 ---
 
-    [Display(Name = "流式选项：包含用量 (Include Usage in Stream)", Description = "如果为true，在流式输出的末尾会额外发送一个包含token用量统计的数据块。")]
+    [Display(
+        Name = "GeneralAiConfig_StreamOptions_IncludeUsage_Label",
+        Description = "GeneralAiConfig_StreamOptions_IncludeUsage_Description",
+        ResourceType = typeof(GeneralAiResources)
+    )]
     public bool? StreamOptionsIncludeUsage { get; init; }
 
     [Display(Name = "返回对数概率 (Logprobs)", Description = "是否返回输出token的对数概率。")]
     public bool? Logprobs { get; init; }
 
-    [Range(0, 20, ErrorMessage = "Top Logprobs 值必须在 0 到 20 之间。")]
-    [Display(Name = "返回Top N对数概率 (Top Logprobs)", Description = "指定在每个位置返回概率最高的N个token及其对数概率。需要Logprobs为true。")]
+    [Display(
+        Name = "GeneralAiConfig_Logprobs_Label",
+        Description = "GeneralAiConfig_Logprobs_Description",
+        ResourceType = typeof(GeneralAiResources)
+    )]
+    [Range(0, 20)]
     public int? TopLogprobs { get; init; }
 
     // --- 重写 ToAiProcessor 方法 ---

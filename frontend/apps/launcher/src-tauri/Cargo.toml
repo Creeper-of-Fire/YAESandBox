@@ -1,6 +1,6 @@
 [package]
 name = "yaesandbox-launcher"
-version = "0.0.3"
+version = "0.0.6"
 description = "A Tauri App"
 authors = ["creeperoffire"]
 edition = "2021"

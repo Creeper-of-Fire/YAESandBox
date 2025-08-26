@@ -10,7 +10,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig;
 /// 这个是Ai服务配置的基类，仅含绝对存在的字段。
 /// </summary>
 [JsonConverter(typeof(AbstractAiProcessorConfigConverter))]
-public abstract record AbstractAiProcessorConfig(string ConfigType):IProtectedData
+public abstract record AbstractAiProcessorConfig(string ConfigType) : IProtectedData
 {
     /// <summary>
     /// 根据此配置创建一个具体的 AI 处理器实例。
@@ -23,9 +23,9 @@ public abstract record AbstractAiProcessorConfig(string ConfigType):IProtectedDa
     /// 最大输入Token数。不出现在请求体中，但是在其他地方（如历史记录生成）会有用。
     /// </summary>
     [Display(
-        Name = "AbstractAiProcessorConfig_MaxInputTokens_Label",
-        Description = "AbstractAiProcessorConfig_MaxInputTokens_Description",
-        ResourceType = typeof(AiProcessorConfigResources)
+        Name = "GeneralAiConfig_MaxInputTokens_Label",
+        Description = "GeneralAiConfig_MaxInputTokens_Description",
+        ResourceType = typeof(GeneralAiResources)
     )]
     [DefaultValue(int.MaxValue)]
     public int? MaxInputTokens { get; init; }
@@ -37,8 +37,6 @@ public abstract record AbstractAiProcessorConfig(string ConfigType):IProtectedDa
     [Required]
     [HiddenInForm(true)]
     public string ConfigType { get; init; } = ConfigType;
-
-    // 没有流式响应的配置，因为流式应该在调用AI处配置，如工作流的AI配置。
 }
 
 /// <summary>

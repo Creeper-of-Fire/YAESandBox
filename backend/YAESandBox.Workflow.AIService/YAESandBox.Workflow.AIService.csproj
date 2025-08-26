@@ -26,26 +26,62 @@
     </ItemGroup>
 
     <ItemGroup>
-        <EmbeddedResource Update="AiConfig\AiProcessorConfigResources.resx">
-            <Generator>PublicResXFileCodeGenerator</Generator>
-            <LastGenOutput>AiProcessorConfigResources.Designer.cs</LastGenOutput>
+        <EmbeddedResource Update="Capabilities\CapabilitiesResources.resx">
+          <Generator>ResXFileCodeGenerator</Generator>
+          <LastGenOutput>Capabilities.Designer.cs</LastGenOutput>
         </EmbeddedResource>
-        <EmbeddedResource Update="AiConfig\Doubao\DoubaoConfigResources.resx">
-            <Generator>PublicResXFileCodeGenerator</Generator>
-            <LastGenOutput>DoubaoConfigResources.Designer.cs</LastGenOutput>
+        <EmbeddedResource Update="AiConfig\GeneralAiResources.resx">
+          <Generator>PublicResXFileCodeGenerator</Generator>
+          <LastGenOutput>GeneralAiResources.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="AiConfig\Doubao\DoubaoAiResources.resx">
+          <Generator>PublicResXFileCodeGenerator</Generator>
+          <LastGenOutput>DoubaoAiResources.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="AiConfig\DeepSeek\DeepSeekAiResources.resx">
+          <Generator>PublicResXFileCodeGenerator</Generator>
+          <LastGenOutput>DeepSeekAiResources.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="AiConfig\Gemini\GeminiAiResources.resx">
+          <Generator>PublicResXFileCodeGenerator</Generator>
+          <LastGenOutput>GeminiAiResource.Designer.cs</LastGenOutput>
+        </EmbeddedResource>
+        <EmbeddedResource Update="AiConfig\OpenAiCompatible\OpenAiCompatibleAiResources.resx">
+          <Generator>PublicResXFileCodeGenerator</Generator>
+          <LastGenOutput>OpenAiCompatible.Designer.cs</LastGenOutput>
         </EmbeddedResource>
     </ItemGroup>
 
     <ItemGroup>
-        <Compile Update="AiConfig\AiProcessorConfigResources.Designer.cs">
-            <DesignTime>True</DesignTime>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>AiProcessorConfigResources.resx</DependentUpon>
+        <Compile Update="Capabilities\CapabilitiesResources.Designer.cs">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>CapabilitiesResources.resx</DependentUpon>
         </Compile>
-        <Compile Update="AiConfig\Doubao\DoubaoConfigResources.Designer.cs">
-            <DesignTime>True</DesignTime>
-            <AutoGen>True</AutoGen>
-            <DependentUpon>DoubaoConfigResources.resx</DependentUpon>
+        <Compile Update="AiConfig\GeneralAiResources.Designer.cs">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>GeneralAiResources.resx</DependentUpon>
+        </Compile>
+        <Compile Update="AiConfig\Doubao\DoubaoAiResources.Designer.cs">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>DoubaoAiResources.resx</DependentUpon>
+        </Compile>
+        <Compile Update="AiConfig\DeepSeek\DeepSeekAiResources.Designer.cs">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>DeepSeekAiResources.resx</DependentUpon>
+        </Compile>
+        <Compile Update="AiConfig\Gemini\GeminiAiResources.Designer.cs">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>GeminiAiResources.resx</DependentUpon>
+        </Compile>
+        <Compile Update="AiConfig\OpenAiCompatible\OpenAiCompatibleAiResources.Designer.cs">
+          <DesignTime>True</DesignTime>
+          <AutoGen>True</AutoGen>
+          <DependentUpon>OpenAiCompatibleAiResources.resx</DependentUpon>
         </Compile>
     </ItemGroup>
     
