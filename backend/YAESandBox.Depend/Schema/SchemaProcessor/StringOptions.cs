@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel;
+using System.Resources;
 using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 
@@ -36,6 +37,16 @@ public class StringOptionsAttribute() : Attribute
     /// 通常暗示前端应渲染一个 combobox。
     /// </summary>
     public bool IsEditableSelectOptions { get; set; } = false;
+    
+    /// <summary>
+    /// 指定用于本地化选项标签的资源类型。
+    /// 如果设置了此属性，<see cref="Options"/> 中每个元组的 <c>Label</c> 将被用作键，
+    /// 从指定的资源文件中查找本地化的字符串。
+    /// </summary>
+    /// <example>
+    /// ResourceType = typeof(MyProject.Resources.MyStrings)
+    /// </example>
+    public Type? ResourceType { get; set; }
 
     /// <summary>
     /// Value=Label时的构造函数
@@ -64,21 +75,33 @@ internal class StringOptionsProcessor : YaePropertyAttributeProcessor<StringOpti
 {
     protected override void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, StringOptionsAttribute attribute)
     {
-        // Exporter 会根据属性类型生成 "type": "string"。我们不需要再像旧代码那样去强制设置它。
-        // 这是新系统的一个优点，Schema 的基础类型总是正确的。
-
         // 1. 处理静态选项
         if (attribute.Options.Any())
         {
             // 使用 JsonArray 来创建 enum 和 enumNames
             var enumValues = attribute.Options.Select(o =>o.Value).ToJsonArray();
-            var enumLabels = attribute.Options.Select(o => o.Label).ToJsonArray();
-
             schema["enum"] = enumValues;
+            
+            JsonArray enumLabels;
 
+            // 检查是否需要本地化
+            if (attribute.ResourceType is not null)
+            {
+                var resourceManager = new ResourceManager(attribute.ResourceType);
+                enumLabels = attribute.Options
+                    .Select(o => resourceManager.GetString(o.Label) ?? o.Label) // 查找资源，如果找不到则回退到键名
+                    .ToJsonArray();
+            }
+            else
+            {
+                // 保持原始行为
+                enumLabels = attribute.Options.Select(o => o.Label).ToJsonArray();
+            }
+            
             // JSON Schema 标准中没有 "enumNames"，这是一个 UI 库的扩展。
             // vue-json-schema-form 使用它。我们直接写入。
             schema["enumNames"] = enumLabels;
+
 
             // 2. 处理默认值
             // 检查属性上是否已经有 DefaultValueAttribute

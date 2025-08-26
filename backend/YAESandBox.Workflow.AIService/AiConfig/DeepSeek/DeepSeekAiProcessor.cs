@@ -28,7 +28,7 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
 {
     private DeepSeekAiProcessorConfig Config { get; } = config;
 
-    private FlexibleOpenAiClient Client { get; } = new(dependencies.HttpClient, new ApiClientConfig(
+    private FlexibleAiClient Client { get; } = new(dependencies.HttpClient, new ApiClientConfig(
         BaseUrl: "https://api.deepseek.com/",
         ApiKey: config.ApiKey
     ));

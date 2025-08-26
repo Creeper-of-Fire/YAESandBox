@@ -10,7 +10,7 @@ namespace YAESandBox.Workflow.AIService.Shared;
 /// 一个灵活的、可重用的客户端，用于与任何遵循"类OpenAI"API格式的服务进行通信。
 /// 它通过泛型将HTTP通信逻辑与具体的数据模型解耦，从而实现了极高的可复用性。
 /// </summary>
-public class FlexibleOpenAiClient(HttpClient httpClient, ApiClientConfig config)
+public class FlexibleAiClient(HttpClient httpClient, ApiClientConfig config)
 {
     private ApiClientConfig Config { get; } = config;
 
@@ -81,6 +81,6 @@ public class FlexibleOpenAiClient(HttpClient httpClient, ApiClientConfig config)
 }
 
 /// <summary>
-/// 用于配置 FlexibleOpenAiClient 的数据记录。
+/// 用于配置 FlexibleAiClient 的数据记录。
 /// </summary>
 public record ApiClientConfig(string BaseUrl, string? ApiKey);

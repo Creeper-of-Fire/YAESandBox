@@ -15,9 +15,8 @@ internal class DisplayAttributeProcessor : YaeGeneralAttributeProcessor<DisplayA
         // .NET 9 Exporter 不会自动处理 DisplayAttribute，所以我们需要自己添加。
         // 这给了我们更大的控制权。
 
-
-        // NJsonSchema 通常会处理 Name -> title 和 Description -> description
-        // 但我们可以确保或覆盖（如果需要）
+        
+        // 确保或覆盖 Name -> title 和 Description -> description
         string? name = attribute.GetName(); // 支持本地化资源
         if (!string.IsNullOrWhiteSpace(name))
         {
