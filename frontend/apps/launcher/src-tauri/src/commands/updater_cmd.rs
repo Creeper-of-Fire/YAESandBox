@@ -1,7 +1,5 @@
 ﻿use std::env;
 use std::fs;
-use std::fs::File;
-use std::io::Write;
 use tauri::{command, AppHandle, State};
 use serde::{Deserialize, Serialize};
 use crate::AppState;

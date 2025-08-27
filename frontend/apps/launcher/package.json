@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "check": "tsc -b",
     "build": "tsc && vite build",
     "preview": "vite preview",
     "tauri:build-only": "node scripts/build.mjs",
@@ -16,7 +17,8 @@
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
     "semver": "^7.7.2",
-    "vue": "^3.5.18"
+    "vue": "^3.5.18",
+    "pinia": "^3.0.3"
   },
   "devDependencies": {
     "@tauri-apps/cli": "^2",

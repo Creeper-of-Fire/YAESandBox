@@ -51,7 +51,7 @@ custom-protocol = ["tauri/custom-protocol"]
 opt-level = "z"
 # 链接时优化，允许编译器在整个程序级别进行优化。
 lto = true
-# 将所有代码编译成一个单元，增加编译时间但能带来更好的优化。
+# 所有代码使用一个单元编译，增加编译时间但能带来更好的优化。
 codegen-units = 1
 
 panic = "unwind"

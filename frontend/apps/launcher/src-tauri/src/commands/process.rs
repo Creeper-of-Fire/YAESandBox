@@ -162,6 +162,12 @@ pub async fn start_local_backend(
         Ok(Some(_)) => {
             println!("[Launcher] 后端已就绪。正在导航主窗口...");
             let main_window = app_handle.get_webview_window("main").unwrap();
+
+            // 在导航之前，先最大化窗口。
+            // maximize() 返回一个 Result，我们用 .ok() 忽略可能的错误，
+            // 因为即使最大化失败，我们仍然希望继续导航。
+            main_window.maximize().ok();
+
             main_window.navigate(api_url.parse().unwrap())
                 .map_err(|e| format!("导航窗口失败: {}", e))?;
             Ok(())
