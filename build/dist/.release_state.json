@@ -1,8 +1,9 @@
 {
     "hashes": {
-        "launcher": "42900d5379085939477d68d37e1421cb6ffff9b1c8d63a1f4b07c90f6a6204e4",
-        "app": "1de4a9eeeff470078a76324921081506fefab207db6bc5192dd58e71ab2c1054",
-        "backend": "da35802cf9fdaaba926ab68ea338c04d47cdc83eb697de71572a6b7375d15a2d",
+        "launcher": "ea148e599d164888e7e9be86e7413b485d36938c811d82a7fe7041c8810c7fe3",
+        "app": "7235a946b1647db128537df440da602e302da1b79c12efe9b8fc557fcb74995a",
+        "backend": "8072fb5bd1f25c2bcf2b1841bb4ca73038c7e04305a87ca8f8ff9684ae1f87a1",
+        "backend-slim": "c53082942155f9809bc9fbd8fa4babd425da2df31dafcfbf7475358fffc47679",
         "plugins": {
             "YAESandBox.Plugin.LuaScript": "d31da9aebc5c4142762365c0ae6974b4adb35035ada64029606fb234615b9ca7",
             "YAESandBox.Plugin.TextParser": "d5d450c7b984ed028cdfc7d2f7f6e2a15b2b1b2e3b6ffbcdf90f97f1b9eae5a2"
@@ -14,26 +15,54 @@
                 {
                     "id": "launcher",
                     "name": "启动器",
-                    "version": "0.0.7",
-                    "notes": "刚刚Bug修好了但是忘了build就把中间版本发出去了。\n呜呜呜，这都是些啥呀。\n实在是很抱歉，总之这是更新日志：\n完善了Tauri的日志输出，设置了缓存路径（也许成功了？）\n完善了后端的本地化资源。似乎增加了对Gemini和通用AI的支持，但是我不太确定。\n抱歉抱歉。",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.7/launcher.zip",
-                    "hash": "8b871b0154bc511930469e47aaefd2e571ae9d2bb023eab98888fdbabd776d4f"
+                    "version": "0.0.9",
+                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
+                    "hash": "f606f6cd64a07b4f8f3996fe0d675a81f027e4f733a526f0545046c9120b278b",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/launcher.zip"
                 },
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.8",
-                    "notes": "紧急修复：修复了无法配置AI设置的情况\n如果你更新后发现还可以，试试看删除app_data目录，不过那里面会有你的默认登录配置和目前的前端小游戏的持久化数据什么的（暂时的），总之这么做可以清空缓存",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.8/app.zip",
-                    "hash": "fa3dda7d483df33bc1f48768d552b720317e8358b76097a64956656f76d24044"
+                    "version": "0.0.9",
+                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
+                    "hash": "23024daf7b324328a4e6c18c16c16b13bb2242d78bc3d3bf26782629c22cc6a2",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/app.zip"
                 },
                 {
                     "id": "backend",
-                    "name": ".NET 后端",
-                    "version": "0.0.7",
-                    "notes": "刚刚Bug修好了但是忘了build就把中间版本发出去了。\n呜呜呜，这都是些啥呀。\n实在是很抱歉，总之这是更新日志：\n完善了Tauri的日志输出，设置了缓存路径（也许成功了？）\n完善了后端的本地化资源。似乎增加了对Gemini和通用AI的支持，但是我不太确定。\n抱歉抱歉。",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.7/backend.zip",
-                    "hash": "aea20f7abb69abee41abe738c7523ff706068a3e8e8ff373797b89c9e8755368"
+                    "name": ".NET 后端 (完整版)",
+                    "version": "0.0.9",
+                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
+                    "hash": "c5ebd1404e21dcd43b8d53cd9d2e6afa0a7f4c76ce0a7fc53e195fb0f81cea40",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/backend.zip"
+                }
+            ]
+        },
+        "slim": {
+            "components": [
+                {
+                    "id": "launcher",
+                    "name": "启动器",
+                    "version": "0.0.9",
+                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
+                    "hash": "f606f6cd64a07b4f8f3996fe0d675a81f027e4f733a526f0545046c9120b278b",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/launcher.zip"
+                },
+                {
+                    "id": "app",
+                    "name": "前端应用",
+                    "version": "0.0.9",
+                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
+                    "hash": "23024daf7b324328a4e6c18c16c16b13bb2242d78bc3d3bf26782629c22cc6a2",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/app.zip"
+                },
+                {
+                    "id": "backend",
+                    "name": ".NET 后端 (精简版)",
+                    "version": "0.0.9",
+                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
+                    "hash": "f956726fa3978a271c0deaccbc678b015cfbc2725fb5f8d2322fb54838362c0e",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/backend-slim.zip"
                 }
             ]
         },
