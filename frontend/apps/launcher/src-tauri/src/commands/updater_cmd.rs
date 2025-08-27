@@ -2,8 +2,12 @@
 use std::fs;
 use std::fs::File;
 use std::io::Write;
-use tauri::{command, AppHandle};
+use tauri::{command, AppHandle, State};
 use serde::{Deserialize, Serialize};
+use crate::AppState;
+use crate::core::ownership;
+
+const TEMP_UPDATE_DIR_NAME: &str = "_temp_updates";
 
 // 一个简单的结构体，用于写入标记文件
 #[derive(Serialize, Deserialize)]
@@ -11,59 +15,41 @@ struct UpdateMarker {
     version: String,
 }
 
-/// 执行更新流程
+/// 执行更新流程，此函数现在假定 ZIP 文件已被下载和校验
 #[command]
 pub async fn apply_launcher_self_update(
     app_handle: AppHandle,
-    url: String,
-    hash: String,
-    proxy: Option<String>,
-    new_version: String,
+    app_state: State<'_, AppState>, // 依赖注入 AppState
+    zip_relative_path: String,      // 接收 ZIP 文件的相对路径
+    new_version: String,            // 需要更新本地版本记录
 ) -> Result<(), String> {
-    // --- 步骤 1: 带代理的下载 ---
-    println!("[Updater] 准备下载，代理: {:?}", proxy);
-    let client_builder = reqwest::Client::builder();
-    let client = if let Some(p) = proxy {
-        let proxy = reqwest::Proxy::all(p).map_err(|e| format!("无效的代理地址: {}", e))?;
-        client_builder.proxy(proxy).build().map_err(|e| e.to_string())?
-    } else {
-        client_builder.build().map_err(|e| e.to_string())?
-    };
-
-    let response = client.get(&url).send().await.map_err(|e| format!("下载失败: {}", e))?;
-    let zip_data = response.bytes().await.map_err(|e| format!("读取响应体失败: {}", e))?;
-    println!("[Updater] 下载完成，大小: {} bytes", zip_data.len());
-
-    // --- 步骤 2: 手动校验 Hash ---
-    use sha2::{Digest, Sha256};
-    let mut hasher = Sha256::new();
-    hasher.update(&zip_data);
-    let calculated_hash = hex::encode(hasher.finalize());
-
-    if calculated_hash.to_lowercase() != hash.to_lowercase() {
-        return Err("启动器文件校验失败！下载的文件可能已损坏或被篡改。".into());
+    // --- 步骤 1: 解析文件路径 ---
+    let zip_path = app_state.resolve_safe_path(&zip_relative_path)?;
+    if !zip_path.exists() {
+        return Err(format!("启动器更新包未找到于: {}", zip_path.display()));
     }
-    println!("[Updater] 文件校验成功。");
+    println!("[Updater] 找到更新包: {}", zip_path.display());
 
-    // --- 步骤 3: 解压到临时目录 ---
+    // --- 步骤 2: 解压到临时目录 ---
+    let temp_parent_dir = app_state.app_dir.join(TEMP_UPDATE_DIR_NAME);
+
+    // a. 首先，安全地清理任何旧的、属于我们的临时目录
+    ownership::safe_remove_owned_directory(&temp_parent_dir)?;
+
+    // b. 然后，创建一个新的、带所有权的临时目录
+    ownership::create_owned_directory(&temp_parent_dir)?;
+
     let temp_dir = tempfile::Builder::new()
         .prefix("launcher-update-")
-        .tempdir()
-        .map_err(|e| format!("创建临时目录失败: {}", e))?;
+        .tempdir_in(&temp_parent_dir)
+        .map_err(|e| format!("在受控的临时目录内创建工作区失败: {}", e))?;
 
-    // ✨ 核心修正 1: 创建一个临时文件来存放我们的 ZIP 数据
-    let temp_zip_path = temp_dir.path().join("update.zip");
-    let mut temp_zip_file = File::create(&temp_zip_path)
-        .map_err(|e| format!("创建临时ZIP文件失败: {}", e))?;
-    temp_zip_file.write_all(&zip_data)
-        .map_err(|e| format!("写入临时ZIP文件失败: {}", e))?;
-
-    println!("[Updater] 已将下载内容写入临时文件: {}", temp_zip_path.display());
+    println!("[Updater] 已在受控目录内创建临时工作区: {}", temp_dir.path().display());
 
     let bin_name = "yaesandbox-launcher.exe";
 
-    // ✨ 核心修正 2: 现在我们从一个文件路径来解压，类型匹配了！
-    self_update::Extract::from_source(&temp_zip_path)
+    // 我们从一个已知的、安全的本地文件路径来解压
+    self_update::Extract::from_source(&zip_path)
         .archive(self_update::ArchiveKind::Zip)
         .extract_file(temp_dir.path(), bin_name)
         .map_err(|e| format!("从ZIP包解压 '{}' 失败: {}", bin_name, e))?;
@@ -74,7 +60,7 @@ pub async fn apply_launcher_self_update(
     }
     println!("[Updater] 已成功解压新版本到: {}", new_exe_path.display());
 
-    // --- 步骤 4: 创建“原子更新”标记文件 ---
+    // --- 步骤 3: 创建“原子更新”标记文件 ---
     // 这是保证状态一致性的关键！
     let exe_dir = env::current_exe().map_err(|e| e.to_string())?.parent().unwrap().to_path_buf();
     let marker_path = exe_dir.join("update_pending.json");
@@ -83,7 +69,7 @@ pub async fn apply_launcher_self_update(
     fs::write(&marker_path, marker_content).map_err(|e| format!("创建更新标记文件失败: {}", e))?;
     println!("[Updater] 已创建更新标记于: {}", marker_path.display());
 
-    // --- 步骤 5: 调用 self_replace 执行魔法 ---
+    // --- 步骤 4: 调用 self_replace 执行魔法 ---
     // 这是最关键的一步。这个函数会处理所有平台相关的棘手问题。
     println!("[Updater] 准备执行自我替换...");
     self_update::self_replace::self_replace(&new_exe_path)

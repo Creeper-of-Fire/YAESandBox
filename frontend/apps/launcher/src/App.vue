@@ -215,16 +215,31 @@ async function handleComponentAction(component: DisplayComponent) {
     );
 
     if (userConfirmed) {
-      mainStatusMessage.value = '正在处理启动器，应用即将重启...';
+      const savePath = `downloads/${component.id}_update.zip`;
+      mainStatusMessage.value = '正在处理启动器...';
+
       try {
-        // 直接调用能重启的 Rust 命令
-        await invoke('apply_launcher_self_update', {
+        // --- 重构后的新流程 ---
+
+        // 步骤 1: 下载并校验
+        mainStatusMessage.value = `正在下载 ${component.name}...`;
+        await invoke('download_and_verify_zip', {
+          id: component.id, // 用于进度事件
           url: component.url,
-          hash: component.hash,
+          relativePath: savePath,
+          expectedHash: component.hash,
           proxy: config.value?.proxy_address,
+        });
+
+        // 步骤 2: 应用更新
+        mainStatusMessage.value = '正在应用更新，应用即将重启...';
+        await invoke('apply_launcher_self_update', {
+          zipRelativePath: savePath, // 传递已下载文件的路径
           newVersion: component.version,
         });
+
         // 如果成功，应用已退出，后续代码不执行
+
       } catch (e) {
         const errorMsg = `启动器${actionText}失败: ${String(e)}`;
         console.error(errorMsg, e);
@@ -297,7 +312,7 @@ async function installAllUpdates() {
  * 启动主应用程序。
  */
 const launchApp = async () => {
-  // 【逻辑优化】如果检测到有更新，提醒用户。
+  // 如果检测到有更新，提醒用户。
   if (allAvailableTasks.value.length > 0) {
     const confirmed = confirm(
         `检测到 ${allAvailableTasks.value.length} 个可用更新。\n\n` +

@@ -1,11 +1,14 @@
 // Prevents additional console window on Windows in release, DO NOT REMOVE!!
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+use yaesandbox_launcher_lib::core::ownership;
 use native_dialog::{MessageDialogBuilder, MessageLevel};
 use serde::Deserialize;
 use std::env;
 use std::fs;
 use std::panic;
+
+const TEMP_UPDATE_DIR_NAME: &str = "_temp_updates";
 
 /// 程序的入口点。
 /// 检查命令行参数以确定是正常启动还是执行更新任务。
@@ -44,6 +47,24 @@ fn main() {
         // 注意：钩子返回后，线程仍然会终止。
         // 如果是主线程 panic，整个程序会退出。
     }));
+
+    // --- 使用带所有权验证的函数进行清理 ---
+    if let Ok(exe_path) = env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            let temp_updates_path = exe_dir.join(TEMP_UPDATE_DIR_NAME);
+            println!("[Main] 正在检查并安全清理临时更新目录...");
+
+            // 使用 safe_remove_owned_directory
+            // - 如果目录存在且有标记，则删除。
+            // - 如果目录存在但无标记，则跳过并打印日志（保护用户数据）。
+            // - 如果目录不存在，则什么也不做。
+            if let Err(e) = ownership::safe_remove_owned_directory(&temp_updates_path) {
+                eprintln!("[Main] 安全清理临时更新目录时发生错误 (不影响启动): {}", e);
+            } else {
+                println!("[Main] 临时更新目录安全清理完成。");
+            }
+        }
+    }
 
     // 在启动Tauri之前，先执行更新的收尾工作
     if let Err(e) = finalize_pending_update() {

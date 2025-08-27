@@ -2,7 +2,7 @@
 use std::path::{Path, PathBuf};
 use tauri::Manager;
 mod commands;
-mod core;
+pub mod core;
 use std::sync::Mutex;
 
 #[cfg(windows)]
