@@ -3,6 +3,7 @@ import {invoke} from '@tauri-apps/api/core';
 import {listen, type UnlistenFn} from '@tauri-apps/api/event';
 import semver from 'semver';
 import {computed, ref} from "vue";
+import { useConfigStore } from "./configStore.ts";
 
 // --- 1. 类型定义 ---
 
@@ -91,26 +92,31 @@ export const useUpdaterStore = defineStore('updater', () => {
         globalStatusMessage.value = '正在加载配置...';
         globalError.value = null;
 
-        try {
-            const configText = await invoke<string>('read_config_as_string');
-            const parsed = parseIni(configText);
-            config.value = {
-                core_components_manifest_url: parsed.core_components_manifest_url,
-                plugins_manifest_url: parsed.plugins_manifest_url,
-                proxy_address: parsed.proxy_address || null,
-            };
+        const configStore = useConfigStore();
+        if (!configStore.parsedConfig) {
+            await configStore.loadConfig();
+        }
 
+        const config = configStore.parsedConfig;
+        if (!config || !config.core_components_manifest_url || !config.plugins_manifest_url) {
+            globalError.value = '配置文件无效或缺失关键URL。';
+            globalStatusMessage.value = '配置错误。';
+            isChecking.value = false;
+            return;
+        }
+
+        try {
             globalStatusMessage.value = '正在获取版本信息...';
 
             const [localVersions, coreManifest, pluginManifest] = await Promise.all([
                 invoke<Record<string, string>>('get_local_versions'),
                 invoke<{ components: any[] }>('fetch_manifest', {
-                    url: config.value.core_components_manifest_url,
-                    proxy: config.value.proxy_address
+                    url: config.core_components_manifest_url,
+                    proxy: config.proxy_address
                 }),
                 invoke<any[]>('fetch_manifest', {
-                    url: config.value.plugins_manifest_url,
-                    proxy: config.value.proxy_address
+                    url: config.plugins_manifest_url,
+                    proxy: config.proxy_address
                 })
             ]);
 
@@ -179,11 +185,14 @@ export const useUpdaterStore = defineStore('updater', () => {
         component.progress = {percentage: 0, text: '准备下载...'};
         component.error = null;
 
+        const configStore = useConfigStore(); // 获取 configStore
+        const proxy = configStore.parsedConfig?.proxy_address;
+
         try {
             const savePath = `downloads/${component.id}.zip`;
             await invoke('download_and_verify_zip', {
                 id, url: component.url, relativePath: savePath,
-                expectedHash: component.hash, proxy: config.value?.proxy_address,
+                expectedHash: component.hash, proxy: proxy,
             });
             component.status = 'pending_install';
             component.statusText = '等待安装';
@@ -336,24 +345,6 @@ export const useUpdaterStore = defineStore('updater', () => {
 });
 
 // --- 4. 辅助函数 ---
-
-function parseIni(text: string): Record<string, string> {
-    const result: Record<string, string> = {};
-    const lines = text.split(/\r?\n/);
-    for (const line of lines) {
-        const trimmedLine = line.trim();
-        if (trimmedLine.startsWith(';') || trimmedLine.startsWith('#') || !trimmedLine.includes('=')) continue;
-        const firstEqualIndex = trimmedLine.indexOf('=');
-        const key = trimmedLine.substring(0, firstEqualIndex).trim();
-        let value = trimmedLine.substring(firstEqualIndex + 1).trim();
-        if ((value.startsWith('"') && value.endsWith('"')) || (value.startsWith("'") && value.endsWith("'"))) {
-            value = value.substring(1, value.length - 1);
-        }
-        result[key] = value;
-    }
-    return result;
-}
-
 function processComponent(
     remote: any,
     localVersions: Record<string, string>,

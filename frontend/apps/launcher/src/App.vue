@@ -1,22 +1,81 @@
 ﻿<script setup lang="ts">
-import { onMounted } from 'vue';
-import { invoke } from '@tauri-apps/api/core';
+import {computed, onMounted, ref, watch} from 'vue';
+import {invoke} from '@tauri-apps/api/core';
 import ComponentItem from './components/ComponentItem.vue';
 import {useUpdaterStore} from "./stores/updaterStore.ts";
+import {type ManifestMode, useConfigStore} from "./stores/configStore.ts";
+import ConfirmationDialog from "./components/ConfirmationDialog.vue";
 
-const store = useUpdaterStore();
+const updaterStore = useUpdaterStore();
+const configStore = useConfigStore();
 
 const frontendPath = 'wwwroot';
 const backendExePath = 'backend/YAESandBox.AppWeb.exe';
 
-onMounted(() => {
-  store.listenForProgress();
-  store.initialize();
+const customManifestUrl = ref('');
+
+onMounted(async () => {
+  await updaterStore.listenForProgress();
+  await configStore.loadConfig();
+  await updaterStore.initialize();
 });
+
+// 监视 configStore 的变化，以更新本地的自定义 URL 输入框
+watch(() => configStore.parsedConfig?.core_components_manifest_url, (newUrl) => {
+  if (configStore.currentMode === 'custom') {
+    customManifestUrl.value = newUrl || '';
+  }
+}, {immediate: true});
+
+const showSlimWarningDialog = ref(false);
+const slimWarningMessage = `您选择的“精简版”不包含 .NET 运行环境。
+
+请确保您的系统已安装【.NET 9 (或更高版本) ASP.NET Core 运行时】，否则后端服务将无法启动。
+
+您可以从微软官方网站下载：
+<a href="https://dotnet.microsoft.com/zh-cn/download/dotnet/9.0" target="_blank">https://dotnet.microsoft.com/zh-cn/download/dotnet/9.0</a>`;
+
+const selectedMode = computed<ManifestMode>({
+  get() {
+    return configStore.currentMode;
+  },
+  set(newMode: ManifestMode) {
+    if (newMode === 'slim') {
+      // 2. 显示我们的自定义对话框，而不是调用 confirm()
+      showSlimWarningDialog.value = true;
+    }
+
+    if (newMode === 'full' || newMode === 'slim') {
+      configStore.changeManifestUrl(configStore.MANIFEST_URLS[newMode]);
+    }
+    // "custom" 模式的 URL 将通过输入框和按钮单独处理
+  }
+});
+
+// 处理对话框的确认事件
+function handleSlimConfirm() {
+  configStore.changeManifestUrl(configStore.MANIFEST_URLS.slim);
+  showSlimWarningDialog.value = false;
+}
+
+// 处理对话框的取消事件
+function handleSlimCancel() {
+  showSlimWarningDialog.value = false;
+  // selectedMode 会因为 configStore.currentMode 没变而自动弹回原来的值，无需手动处理
+}
+
+
+function applyCustomUrl() {
+  if (customManifestUrl.value.trim()) {
+    configStore.changeManifestUrl(customManifestUrl.value.trim());
+  } else {
+    alert('自定义 URL 不能为空。');
+  }
+}
 
 const launchApp = async () => {
   // 检查是否有核心组件的更新未完成
-  const hasCoreUpdates = store.coreComponents.some(c => c.status === 'update_available');
+  const hasCoreUpdates = updaterStore.coreComponents.some(c => c.status === 'update_available');
   if (hasCoreUpdates) {
     const confirmed = confirm(
         `检测到核心组件有可用更新。\n\n` +
@@ -26,35 +85,41 @@ const launchApp = async () => {
     if (!confirmed) return;
   }
 
-  store.globalStatusMessage = '正在启动本地服务...';
+  updaterStore.globalStatusMessage = '正在启动本地服务...';
   try {
     await invoke('start_local_backend', {
       frontendRelativePath: frontendPath,
       backendExeRelativePath: backendExePath,
     });
-    store.globalStatusMessage = '启动命令已发送。';
+    updaterStore.globalStatusMessage = '启动命令已发送。';
   } catch (error) {
     console.error('启动服务失败:', error);
-    store.globalStatusMessage = `启动失败: ${String(error)}`;
+    updaterStore.globalStatusMessage = `启动失败: ${String(error)}`;
   }
 };
+
+async function handleRefresh() {
+  await configStore.loadConfig();
+  await updaterStore.initialize();
+}
 </script>
 
 <template>
   <div class="launcher-container">
     <header>
       <h1>YAESandBox 启动器</h1>
-      <p class="status-message" :class="{ 'is-busy': store.isInstalling || store.isDownloading, 'is-error': !!store.globalError }">
-        {{ store.globalStatusMessage }}
+      <p class="status-message"
+         :class="{ 'is-busy': updaterStore.isInstalling || updaterStore.isDownloading, 'is-error': !!updaterStore.globalError }">
+        {{ updaterStore.globalStatusMessage }}
       </p>
     </header>
 
     <main class="main-content">
       <!-- 错误提示 -->
-      <div v-if="store.globalError && !store.isChecking" class="error-section">
+      <div v-if="updaterStore.globalError && !updaterStore.isChecking" class="error-section">
         <p class="error-title">❌ 无法获取更新信息</p>
-        <p class="error-details">{{ store.globalError }}</p>
-        <button @click="store.initialize()" class="button-secondary">重试</button>
+        <p class="error-details">{{ updaterStore.globalError }}</p>
+        <button @click="updaterStore.initialize()" class="button-secondary">重试</button>
       </div>
 
       <!-- 组件列表 -->
@@ -62,10 +127,12 @@ const launchApp = async () => {
         <!-- 核心组件 -->
         <section class="component-section">
           <h2>核心组件</h2>
-          <div v-if="store.isChecking && store.coreComponents.length === 0" class="loading-placeholder">正在检查...</div>
+          <div v-if="updaterStore.isChecking && updaterStore.coreComponents.length === 0" class="loading-placeholder">
+            正在检查...
+          </div>
           <ul v-else class="component-list">
             <ComponentItem
-                v-for="component in store.coreComponents"
+                v-for="component in updaterStore.coreComponents"
                 :key="component.id"
                 :component="component"
             />
@@ -75,10 +142,12 @@ const launchApp = async () => {
         <!-- 插件 -->
         <section class="component-section">
           <h2>插件</h2>
-          <div v-if="store.isChecking && store.pluginComponents.length === 0" class="loading-placeholder">正在检查...</div>
-          <ul v-else-if="store.pluginComponents.length > 0" class="component-list">
+          <div v-if="updaterStore.isChecking && updaterStore.pluginComponents.length === 0" class="loading-placeholder">
+            正在检查...
+          </div>
+          <ul v-else-if="updaterStore.pluginComponents.length > 0" class="component-list">
             <ComponentItem
-                v-for="plugin in store.pluginComponents"
+                v-for="plugin in updaterStore.pluginComponents"
                 :key="plugin.id"
                 :component="plugin"
             />
@@ -90,26 +159,48 @@ const launchApp = async () => {
     </main>
 
     <footer>
+      <div class="settings-area">
+        <label for="manifest-mode">更新源模式:</label>
+        <select id="manifest-mode" v-model="selectedMode">
+          <option value="full">完整版 (自带.NET9.0环境)</option>
+          <option value="slim">精简版 (需自行安装.NET9.0)</option>
+          <option value="custom">自定义</option>
+        </select>
+        <div v-if="selectedMode === 'custom'" class="custom-url-input">
+          <input type="text" v-model="customManifestUrl" placeholder="输入核心组件清单URL">
+          <button @click="applyCustomUrl" class="button-secondary">应用</button>
+        </div>
+      </div>
+
       <div class="footer-actions">
         <button
-            v-if="store.availableUpdates.length > 0"
-            @click="store.downloadAll()"
-            :disabled="store.isInstalling"
+            v-if="updaterStore.availableUpdates.length > 0"
+            @click="updaterStore.downloadAll()"
+            :disabled="updaterStore.isInstalling"
             class="button-update-all"
         >
-          全部更新 ({{ store.availableUpdates.length }})
+          全部更新 ({{ updaterStore.availableUpdates.length }})
         </button>
-        <button @click="store.initialize()" :disabled="store.isInstalling || store.isChecking" class="button-secondary">
+        <button @click="updaterStore.initialize()" :disabled="updaterStore.isInstalling || updaterStore.isChecking"
+                class="button-secondary">
           刷新状态
         </button>
-        <button @click="launchApp" :disabled="store.isInstalling" class="button-launch">
+        <button @click="launchApp" :disabled="updaterStore.isInstalling" class="button-launch">
           启动应用
         </button>
       </div>
-      <p v-if="store.availableUpdates.length > 0" class="update-hint">
+      <p v-if="updaterStore.availableUpdates.length > 0" class="update-hint">
         建议先完成所有更新再启动应用。
       </p>
     </footer>
+
+    <ConfirmationDialog
+        v-if="showSlimWarningDialog"
+        title="切换模式警告"
+        :message="slimWarningMessage"
+        @confirm="handleSlimConfirm"
+        @cancel="handleSlimCancel"
+    />
   </div>
 </template>
 
@@ -308,5 +399,31 @@ button:disabled {
   margin-top: 1rem;
   color: #888;
   font-size: 0.9em;
+}
+
+.settings-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.5rem;
+  font-size: 0.9em;
+  color: #555;
+}
+
+.settings-area select, .settings-area input {
+  padding: 0.4rem;
+  border-radius: 4px;
+  border: 1px solid #ccc;
+  background-color: #fff;
+}
+
+.custom-url-input {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.custom-url-input input {
+  width: 300px; /* 根据需要调整 */
 }
 </style>

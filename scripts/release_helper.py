@@ -26,6 +26,7 @@ BUILD_DIR = SOLUTION_ROOT / 'build'
 LAUNCHER_SOURCE_DIR = BUILD_DIR / 'launcher'
 FRONTEND_SOURCE_DIR = BUILD_DIR / 'frontend'
 BACKEND_SOURCE_DIR = BUILD_DIR / 'backend'
+BACKEND_SLIM_SOURCE_DIR = BUILD_DIR / 'backend' / 'slim'
 PLUGINS_SOURCE_DIR = BUILD_DIR / 'Plugins'
 
 # 输出目录 (用于存放打包好的 zip 和 manifest)
@@ -137,9 +138,10 @@ def main():
 
     # 1. 定义和检测核心组件
     core_components_def = [
-        {"id": "launcher", "name": "启动器", "path": LAUNCHER_SOURCE_DIR, "publish_exe": True},
-        {"id": "app", "name": "前端应用", "path": FRONTEND_SOURCE_DIR},
-        {"id": "backend", "name": ".NET 后端", "path": BACKEND_SOURCE_DIR, "filter": backend_filter},
+        {"id": "launcher", "name": "启动器", "path": LAUNCHER_SOURCE_DIR, "publish_exe": True, "manifest_type": ["full", "slim"]},
+        {"id": "app", "name": "前端应用", "path": FRONTEND_SOURCE_DIR, "manifest_type": ["full", "slim"]},
+        {"id": "backend", "name": ".NET 后端 (完整版)", "path": BACKEND_SOURCE_DIR, "filter": backend_filter, "manifest_type": ["full"]},
+        {"id": "backend-slim", "name": ".NET 后端 (精简版)", "path": BACKEND_SLIM_SOURCE_DIR, "filter": backend_filter, "manifest_type": ["slim"]},
     ]
 
     for comp in core_components_def:
@@ -147,16 +149,10 @@ def main():
             current_hash = get_dir_hash(comp['path'], comp.get('filter'))
             current_hashes[comp['id']] = current_hash
             comp_data = {
-                "id": comp['id'],
-                "name": comp['name'],
-                "path": comp['path'],
-                "filter": comp.get('filter'),
+                **comp,
                 "changed": last_hashes.get(comp['id']) != current_hash,
                 "is_plugin": False
             }
-            # 新增: 传递 publish_exe 标志
-            if comp.get('publish_exe'):
-                comp_data['publish_exe'] = True
             components.append(comp_data)
 
     # 2. 定义和检测插件
@@ -310,33 +306,42 @@ def main():
                     continue
 
     # 9. 生成 Manifest 文件
-    core_manifest_path: Path | None = None
-    plugins_manifest_path: Path | None = None
+    console.print("\n📝 正在生成 Manifest 文件...")
+    last_manifests = last_state.get("manifests", {})
 
-    last_core_manifest = last_state.get("manifests", {}).get("core", {})
-    core_map = {item['id']: item for item in last_core_manifest.get("components", [])}
 
-    # --- 核心组件清单 ---
-    # ✨ 核心改动 1: 无条件地处理核心组件
-    # 无论 core_assets 是否为空，我们都继续执行，以确保 core_map 始终反映最新状态
+
+    # --- 核心组件清单 (完整版 & 精简版) ---
+    last_full_manifest = last_manifests.get("full", {})
+    last_slim_manifest = last_manifests.get("slim", {})
+    full_core_map = {item['id']: item for item in last_full_manifest.get("components", [])}
+    slim_core_map = {item['id']: item for item in last_slim_manifest.get("components", [])}
+
     core_assets = [a for a in uploaded_assets_info if not a['is_plugin']]
     for asset in core_assets:
-        core_map[asset['id']] = {
-            "id": asset['id'], "name": asset['name'], "version": version.lstrip('v'),
-            "notes": release_notes, "url": asset['url'], "hash": asset['hash'],
+        manifest_entry = {
+            "name": asset['name'], "version": version.lstrip('v'), "notes": release_notes,
+            "url": asset['url'], "hash": asset['hash'],
         }
+        # 根据组件定义，决定更新哪个清单
+        if 'full' in asset['manifest_type']:
+            full_core_map[asset['id']] = {"id": asset['id'], **manifest_entry}
+        if 'slim' in asset['manifest_type']:
+            # 关键：对于 slim 清单，backend-slim 的 id 必须是 'backend'
+            target_id = 'backend' if asset['id'] == 'backend-slim' else asset['id']
+            slim_core_map[target_id] = {"id": target_id, **manifest_entry}
 
-    # 将更新后的 map 转换回清单格式
-    new_core_manifest = {"components": list(core_map.values())}
-    # 始终定义并写入文件路径
+    new_full_manifest = {"components": list(full_core_map.values())}
     core_manifest_path = DIST_DIR / "core_components_manifest.json"
     with open(core_manifest_path, 'w', encoding='utf-8') as f:
-        json.dump(new_core_manifest, f, ensure_ascii=False, indent=4)
-    # 如果有更新，就高亮显示，否则静默生成
-    if core_assets:
-        console.print(f"  -> 已更新并生成核心组件清单: [green]{core_manifest_path.name}[/green]")
-    else:
-        console.print(f"  -> 核心组件无变更，已沿用旧版内容重新生成清单: [dim green]{core_manifest_path.name}[/dim green]")
+        json.dump(new_full_manifest, f, ensure_ascii=False, indent=4)
+    console.print(f"  -> 已生成核心组件清单 (完整版): [green]{core_manifest_path.name}[/green]")
+
+    new_slim_manifest = {"components": list(slim_core_map.values())}
+    slim_manifest_path = DIST_DIR / "core_components_slim_manifest.json"
+    with open(slim_manifest_path, 'w', encoding='utf-8') as f:
+        json.dump(new_slim_manifest, f, ensure_ascii=False, indent=4)
+    console.print(f"  -> 已生成核心组件清单 (精简版): [green]{slim_manifest_path.name}[/green]")
 
     # --- 插件清单 ---
     last_plugins_manifest = last_state.get("manifests", {}).get("plugins", [])
@@ -364,7 +369,7 @@ def main():
     # ✨ 核心改动 3: 无条件地准备上传两个清单文件
     console.print("\n📤 正在准备上传所有 Manifest 文件...")
     # 现在这两个路径总是有效的 Path 对象，不再需要检查 None
-    manifests_to_upload = [core_manifest_path, plugins_manifest_path]
+    manifests_to_upload = [core_manifest_path, slim_manifest_path, plugins_manifest_path]
 
     with Progress(BarColumn(), DownloadColumn(), console=console) as progress:
         for file_path in manifests_to_upload:
@@ -382,7 +387,7 @@ def main():
                     continue
 
     # 成功后，保存新的完整状态
-    new_manifests_state = {"core": new_core_manifest, "plugins": new_plugins_manifest}
+    new_manifests_state = {"full": new_full_manifest, "slim": new_slim_manifest, "plugins": new_plugins_manifest}
     save_current_state(current_hashes, new_manifests_state)
     console.print(f"\n✅ 状态已更新到 [yellow]{STATE_FILE}[/yellow]")
     console.print("\n[bold green]🎉 全部完成！发布成功！[/bold green]")

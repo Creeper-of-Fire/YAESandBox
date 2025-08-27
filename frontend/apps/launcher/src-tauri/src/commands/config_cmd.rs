@@ -50,3 +50,11 @@ proxy_address = ""
     fs::read_to_string(config_path)
         .map_err(|e| format!("读取配置文件失败: {}", e))
 }
+
+/// 将给定的字符串内容覆写到配置文件中。
+#[command]
+pub fn write_config_as_string(app_state: State<'_, AppState>, content: String) -> Result<(), String> {
+    let config_path = app_state.app_dir.join(CONFIG_FILENAME);
+    fs::write(&config_path, content)
+        .map_err(|e| format!("写入配置文件 '{}' 失败: {}", config_path.display(), e))
+}

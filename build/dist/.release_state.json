@@ -1,0 +1,59 @@
+{
+    "hashes": {
+        "launcher": "42900d5379085939477d68d37e1421cb6ffff9b1c8d63a1f4b07c90f6a6204e4",
+        "app": "1de4a9eeeff470078a76324921081506fefab207db6bc5192dd58e71ab2c1054",
+        "backend": "da35802cf9fdaaba926ab68ea338c04d47cdc83eb697de71572a6b7375d15a2d",
+        "plugins": {
+            "YAESandBox.Plugin.LuaScript": "d31da9aebc5c4142762365c0ae6974b4adb35035ada64029606fb234615b9ca7",
+            "YAESandBox.Plugin.TextParser": "d5d450c7b984ed028cdfc7d2f7f6e2a15b2b1b2e3b6ffbcdf90f97f1b9eae5a2"
+        }
+    },
+    "manifests": {
+        "full": {
+            "components": [
+                {
+                    "id": "launcher",
+                    "name": "启动器",
+                    "version": "0.0.7",
+                    "notes": "刚刚Bug修好了但是忘了build就把中间版本发出去了。\n呜呜呜，这都是些啥呀。\n实在是很抱歉，总之这是更新日志：\n完善了Tauri的日志输出，设置了缓存路径（也许成功了？）\n完善了后端的本地化资源。似乎增加了对Gemini和通用AI的支持，但是我不太确定。\n抱歉抱歉。",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.7/launcher.zip",
+                    "hash": "8b871b0154bc511930469e47aaefd2e571ae9d2bb023eab98888fdbabd776d4f"
+                },
+                {
+                    "id": "app",
+                    "name": "前端应用",
+                    "version": "0.0.8",
+                    "notes": "紧急修复：修复了无法配置AI设置的情况\n如果你更新后发现还可以，试试看删除app_data目录，不过那里面会有你的默认登录配置和目前的前端小游戏的持久化数据什么的（暂时的），总之这么做可以清空缓存",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.8/app.zip",
+                    "hash": "fa3dda7d483df33bc1f48768d552b720317e8358b76097a64956656f76d24044"
+                },
+                {
+                    "id": "backend",
+                    "name": ".NET 后端",
+                    "version": "0.0.7",
+                    "notes": "刚刚Bug修好了但是忘了build就把中间版本发出去了。\n呜呜呜，这都是些啥呀。\n实在是很抱歉，总之这是更新日志：\n完善了Tauri的日志输出，设置了缓存路径（也许成功了？）\n完善了后端的本地化资源。似乎增加了对Gemini和通用AI的支持，但是我不太确定。\n抱歉抱歉。",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.7/backend.zip",
+                    "hash": "aea20f7abb69abee41abe738c7523ff706068a3e8e8ff373797b89c9e8755368"
+                }
+            ]
+        },
+        "plugins": [
+            {
+                "id": "YAESandBox.Plugin.LuaScript",
+                "name": "YAESandBox.Plugin.LuaScript",
+                "version": "0.0.1",
+                "description": "发布于 v0.0.1:\n开始！好耶！终于搞完了！",
+                "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.1/YAESandBox.Plugin.LuaScript.zip",
+                "hash": "5644be178e27f2760db4dc204c407ee7a2614108550d180dbb9236dea648105f"
+            },
+            {
+                "id": "YAESandBox.Plugin.TextParser",
+                "name": "YAESandBox.Plugin.TextParser",
+                "version": "0.0.1",
+                "description": "发布于 v0.0.1:\n开始！好耶！终于搞完了！",
+                "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.1/YAESandBox.Plugin.TextParser.zip",
+                "hash": "1a8264923db67d45d925eeb3a0fc93a7f0f41b3a5d00e7fd93b481d03e5df2e0"
+            }
+        ]
+    }
+}

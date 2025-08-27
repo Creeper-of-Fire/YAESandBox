@@ -86,6 +86,7 @@ pub fn run() {
             commands::fs_utils::delete_file,
             commands::process::start_local_backend,
             commands::config_cmd::read_config_as_string,
+            commands::config_cmd::write_config_as_string,
             commands::manifest::fetch_manifest,
             commands::updater_cmd::apply_launcher_self_update,
             commands::update_manager::get_local_versions,
