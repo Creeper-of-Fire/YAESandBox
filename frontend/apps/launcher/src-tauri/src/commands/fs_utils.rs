@@ -20,14 +20,14 @@ pub fn delete_file(
         if target_path.is_file() {
             fs::remove_file(&target_path)
                 .map_err(|e| format!("删除文件失败: {}", e))?;
-            println!("成功删除文件: {}", target_path.display());
+            log::info!("成功删除文件: {}", target_path.display());
         } else {
             // 为了安全，这个 command 只删除文件，不删除目录
             return Err("目标路径是一个目录，不是文件。".into());
         }
     } else {
         // 文件不存在也算“成功”，因为最终状态是一样的
-        println!("文件未找到，无需删除: {}", target_path.display());
+        log::info!("文件未找到，无需删除: {}", target_path.display());
     }
 
     Ok(())

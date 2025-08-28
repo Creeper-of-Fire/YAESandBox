@@ -8,7 +8,7 @@ pub fn create_http_client(proxy: Option<&str>) -> Result<reqwest::Client, String
     if let Some(proxy_url) = proxy {
         // 只有在代理地址非空时才进行配置
         if !proxy_url.trim().is_empty() {
-            println!("[HTTP] 使用代理: {}", proxy_url);
+            log::info!("[HTTP] 使用代理: {}", proxy_url);
             let proxy = reqwest::Proxy::all(proxy_url)
                 .map_err(|e| format!("无效的代理 URL '{}': {}", proxy_url, e))?;
             client_builder = client_builder.proxy(proxy);

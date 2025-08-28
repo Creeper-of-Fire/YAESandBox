@@ -1,0 +1,16 @@
+/*
+ *  全局 CSS 重置
+ *  移除浏览器为 html, body 和所有元素 (*) 添加的默认内外边距。
+ *  并设置 box-sizing 为 border-box，这是现代 CSS 布局的基石。
+ */
+html,
+body {
+    margin: 0;
+    padding: 0;
+    height: 100%; /* 确保 html 和 body 占满整个视口高度 */
+    overflow: hidden; /* 防止意外的滚动条出现 */
+}
+
+* {
+    box-sizing: border-box;
+}

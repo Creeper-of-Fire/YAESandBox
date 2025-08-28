@@ -4,26 +4,12 @@
 import type {ComputedRef, InjectionKey, Ref} from "vue";
 import type {GlobalResourceItem} from "../types";
 import type {WorkflowConfig} from "../types";
+import type {ApiRequestOptions} from "../types";
 
 /**
  * 用于在应用中注入是否为暗黑主题的状态
  */
 export const IsDarkThemeKey: InjectionKey<Ref<boolean>> = Symbol('IsDarkThemeKey');
-
-export type ApiRequestOptions = {
-    readonly method: 'GET' | 'PUT' | 'POST' | 'DELETE' | 'OPTIONS' | 'HEAD' | 'PATCH';
-    readonly url: string;
-    readonly path?: Record<string, any>;
-    readonly cookies?: Record<string, any>;
-    readonly headers?: Record<string, any>;
-    readonly query?: Record<string, any>;
-    readonly formData?: Record<string, any>;
-    readonly body?: any;
-    readonly mediaType?: string;
-    readonly responseHeader?: string;
-    readonly errors?: Record<number, string>;
-};
-
 /**
  * 定义 Token 解析器函数的类型。
  * 这是一个异步函数，接收 ApiRequestOptions 参数，返回一个 Promise，该 Promise 解析为 token 字符串。

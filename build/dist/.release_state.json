@@ -1,12 +1,12 @@
 {
     "hashes": {
-        "launcher": "ea148e599d164888e7e9be86e7413b485d36938c811d82a7fe7041c8810c7fe3",
-        "app": "7235a946b1647db128537df440da602e302da1b79c12efe9b8fc557fcb74995a",
-        "backend": "8072fb5bd1f25c2bcf2b1841bb4ca73038c7e04305a87ca8f8ff9684ae1f87a1",
-        "backend-slim": "c53082942155f9809bc9fbd8fa4babd425da2df31dafcfbf7475358fffc47679",
+        "launcher": "aebe2ad900ba295356a50e22938f42bcf78673cc1d1036a18598b7bdddd10130",
+        "app": "43d89c39c1b05aee07c895e54e13b0c43981662196ae34188daf9f0b0c2fbfca",
+        "backend": "f2b14c2344dde45c45ac43f5786cf552b5514803a8c1c81dd7544e476bb15638",
+        "backend-slim": "5003c96a4f8a35ba0f1dfc2110e0166069438aa097344faadf39f6f07c49e12a",
         "plugins": {
-            "YAESandBox.Plugin.LuaScript": "d31da9aebc5c4142762365c0ae6974b4adb35035ada64029606fb234615b9ca7",
-            "YAESandBox.Plugin.TextParser": "d5d450c7b984ed028cdfc7d2f7f6e2a15b2b1b2e3b6ffbcdf90f97f1b9eae5a2"
+            "YAESandBox.Plugin.LuaScript": "6f76b0199657d077af7ee65cd2b6bb1a67d5f992c529be50d28dc56320dcfa11",
+            "YAESandBox.Plugin.TextParser": "e3e1a455d11cd6d5b085f9b3671a038dcfc6d782ebbe0de801da4e981d4d988a"
         }
     },
     "manifests": {
@@ -15,26 +15,26 @@
                 {
                     "id": "launcher",
                     "name": "启动器",
-                    "version": "0.0.9",
-                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
-                    "hash": "f606f6cd64a07b4f8f3996fe0d675a81f027e4f733a526f0545046c9120b278b",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/launcher.zip"
+                    "version": "0.0.10",
+                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
+                    "hash": "00224aabe43bcc8845567e231f62ccc09e8910fda1e56fc2b3bea82fe93815ea",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/launcher.zip"
                 },
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.9",
-                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
-                    "hash": "23024daf7b324328a4e6c18c16c16b13bb2242d78bc3d3bf26782629c22cc6a2",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/app.zip"
+                    "version": "0.0.10",
+                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
+                    "hash": "ccb08443dc6c2b7b11aca4a1097198658bd82bb6fc30126ca8979e15084e1a94",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/app.zip"
                 },
                 {
                     "id": "backend",
                     "name": ".NET 后端 (完整版)",
-                    "version": "0.0.9",
-                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
-                    "hash": "c5ebd1404e21dcd43b8d53cd9d2e6afa0a7f4c76ce0a7fc53e195fb0f81cea40",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/backend.zip"
+                    "version": "0.0.10",
+                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
+                    "hash": "f18a5a1e52b2d0b27cf9c6ca2a511355b5ab4edfa7b708af3429720aa403d2e5",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/backend.zip"
                 }
             ]
         },
@@ -43,26 +43,26 @@
                 {
                     "id": "launcher",
                     "name": "启动器",
-                    "version": "0.0.9",
-                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
-                    "hash": "f606f6cd64a07b4f8f3996fe0d675a81f027e4f733a526f0545046c9120b278b",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/launcher.zip"
+                    "version": "0.0.10",
+                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
+                    "hash": "00224aabe43bcc8845567e231f62ccc09e8910fda1e56fc2b3bea82fe93815ea",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/launcher.zip"
                 },
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.9",
-                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
-                    "hash": "23024daf7b324328a4e6c18c16c16b13bb2242d78bc3d3bf26782629c22cc6a2",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/app.zip"
+                    "version": "0.0.10",
+                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
+                    "hash": "ccb08443dc6c2b7b11aca4a1097198658bd82bb6fc30126ca8979e15084e1a94",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/app.zip"
                 },
                 {
                     "id": "backend",
                     "name": ".NET 后端 (精简版)",
-                    "version": "0.0.9",
-                    "notes": "默认后端自带runtime，原先的后端作为精简版。\n增加引导文字。\n可以并行下载了。\n不知道修了什么bug总之是修了。",
-                    "hash": "f956726fa3978a271c0deaccbc678b015cfbc2725fb5f8d2322fb54838362c0e",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.9/v0.0.9/backend-slim.zip"
+                    "version": "0.0.10",
+                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
+                    "hash": "1906ecd8d88f8db26e2a07199ea6c0a775c6889bb58bff40f86a792b07323553",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/backend-slim.zip"
                 }
             ]
         },
@@ -70,18 +70,18 @@
             {
                 "id": "YAESandBox.Plugin.LuaScript",
                 "name": "YAESandBox.Plugin.LuaScript",
-                "version": "0.0.1",
-                "description": "发布于 v0.0.1:\n开始！好耶！终于搞完了！",
-                "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.1/YAESandBox.Plugin.LuaScript.zip",
-                "hash": "5644be178e27f2760db4dc204c407ee7a2614108550d180dbb9236dea648105f"
+                "version": "0.0.10",
+                "description": "发布于 v0.0.10:\n添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
+                "hash": "51126249d13f5eb29536043b3db19e8af01b119777ea93b3a3529c550a66a0d0",
+                "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/YAESandBox.Plugin.LuaScript.zip"
             },
             {
                 "id": "YAESandBox.Plugin.TextParser",
                 "name": "YAESandBox.Plugin.TextParser",
-                "version": "0.0.1",
-                "description": "发布于 v0.0.1:\n开始！好耶！终于搞完了！",
-                "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.1/YAESandBox.Plugin.TextParser.zip",
-                "hash": "1a8264923db67d45d925eeb3a0fc93a7f0f41b3a5d00e7fd93b481d03e5df2e0"
+                "version": "0.0.10",
+                "description": "发布于 v0.0.10:\n添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
+                "hash": "04448c4600dcc20d91d4fb02b9a8d69531261d6778ee13fc579eda32282d93ea",
+                "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/YAESandBox.Plugin.TextParser.zip"
             }
         ]
     }

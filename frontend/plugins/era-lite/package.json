@@ -24,11 +24,13 @@
     "pinia": "^3.0.3",
     "vue": "^3.5.18",
     "@vueuse/core": "^13.6.0",
-    "localforage": "^1.10.0"
+    "localforage": "^1.10.0",
+    "axios": "^1.11.0"
   },
   "dependencies": {
     "@vicons/ionicons5": "^0.13.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
+    "@yaesandbox-frontend/shared-ui": "workspace:*",
     "nanoid": "^5.1.5"
   },
   "devDependencies": {
@@ -37,6 +39,7 @@
     "@vueuse/core": "^13.6.0",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
-    "vue": "^3.5.18"
+    "vue": "^3.5.18",
+    "axios": "^1.11.0"
   }
 }

@@ -1,8 +1,9 @@
 ﻿// @yaesandbox-frontend/core-services/services/workflowService.ts
-import { HubConnectionBuilder, HubConnection, LogLevel } from '@microsoft/signalr';
-// 假设这些类型可以从你的项目别名中导入
-import type { ApiRequestOptions } from "../utils/injectKeys.ts";
-import type {WorkflowConfig} from "../types";
+import {HubConnection, HubConnectionBuilder, LogLevel} from '@microsoft/signalr';
+import axios from 'axios';
+
+import type {ApiRequestOptions, WorkflowConfig} from "../types";
+import {getAbsoluteUrl} from './api';
 
 // 请求体的类型 (用于外部调用，保持不变)
 export interface StreamRequest {
@@ -38,18 +39,19 @@ export async function executeWorkflowStream(
     outputFormat: 'Json' | 'Xml' = 'Json'
 ) {
     let connection: HubConnection | null = null;
-    const HUB_URL = '/hubs/game-era-test';
+    const HUB_RELATIVE_URL = '/hubs/game-era-test';
+    const TRIGGER_RELATIVE_URL = '/api/v1/workflow-execution/execute-signalr';
 
     try {
         // 1. 获取用于 SignalR Hub 连接的认证 Token
         const signalRToken = await tokenResolver({
             method: 'POST',
-            url: HUB_URL,
+            url: HUB_RELATIVE_URL,
         });
 
         // 2. 构建并配置 SignalR 连接
         connection = new HubConnectionBuilder()
-            .withUrl(HUB_URL, {
+            .withUrl(getAbsoluteUrl(HUB_RELATIVE_URL), {
                 accessTokenFactory: () => signalRToken
             })
             .withAutomaticReconnect()
@@ -98,7 +100,7 @@ export async function executeWorkflowStream(
         // 6. 连接成功后，发送 HTTP 请求以触发后台工作流
         const triggerToken = await tokenResolver({
             method: 'POST',
-            url: '/api/v1/workflow-execution/execute-signalr',
+            url: TRIGGER_RELATIVE_URL,
         });
 
         const headers: Record<string, string> = {
@@ -108,27 +110,24 @@ export async function executeWorkflowStream(
             headers['Authorization'] = `Bearer ${triggerToken}`;
         }
 
-        const triggerResponse = await fetch('/api/v1/workflow-execution/execute-signalr', {
-            method: 'POST',
-            headers: headers,
-            body: JSON.stringify({
+        await axios.post(
+            TRIGGER_RELATIVE_URL,
+            {
                 ...requestBody,
                 connectionId: connection.connectionId,
                 outputFormat: outputFormat, // <-- 将格式参数包含在请求体中
-            }),
-        });
-
-        if (triggerResponse.status !== 202) {
-            const errorText = await triggerResponse.text();
-            throw new Error(`Failed to trigger workflow. Status: ${triggerResponse.status}. Body: ${errorText}`);
-        }
+            }
+        );
 
     } catch (err) {
         callbacks.onError(err as Error);
         if (connection && connection.state === 'Connected') {
             await connection.stop();
         }
-        return { abort: () => {} };
+        return {
+            abort: () => {
+            }
+        };
     }
 
     // 7. 返回一个可以从外部调用的中止函数

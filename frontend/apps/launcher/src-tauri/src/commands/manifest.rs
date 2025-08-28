@@ -13,7 +13,7 @@ use tauri::command;
 #[command]
 pub async fn fetch_manifest(url: String, proxy: Option<String>) -> Result<Value, String> {
     // 增加统一的日志输出，方便调试
-    println!("[Manifest] 正在从以下地址获取清单: {}", &url);
+    log::info!("[Manifest] 正在从以下地址获取清单: {}", &url);
 
     // 1. 创建 HTTP 客户端，逻辑完全一致
     let client = crate::core::http::create_http_client(proxy.as_deref())?;
@@ -40,7 +40,7 @@ pub async fn fetch_manifest(url: String, proxy: Option<String>) -> Result<Value,
         .await
         .map_err(|e| format!("解析清单 JSON 失败: {}", e))?;
 
-    println!("[Manifest] 成功获取并解析了清单。");
+    log::info!("[Manifest] 成功获取并解析了清单。");
 
     // 5. 返回通用的 JSON Value
     Ok(manifest_json)

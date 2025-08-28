@@ -6,9 +6,12 @@ use native_dialog::{MessageDialogBuilder, MessageLevel};
 use serde::Deserialize;
 use std::env;
 use std::fs;
+use std::fs::File;
 use std::panic;
+use simplelog::*;
 
 const TEMP_UPDATE_DIR_NAME: &str = "_temp_updates";
+const LOG_FILENAME: &str = "launcher.log";
 
 /// 程序的入口点。
 /// 检查命令行参数以确定是正常启动还是执行更新任务。
@@ -33,7 +36,7 @@ fn main() {
         );
 
         // 记录到控制台，方便调试
-        eprintln!("{}", error_message);
+        log::error!("{}", error_message);
 
         // 弹出原生对话框
         MessageDialogBuilder::default()
@@ -42,26 +45,44 @@ fn main() {
             .set_level(MessageLevel::Error)
             .alert() // show_alert 阻塞直到用户点击 "OK"
             .show()
-            .unwrap_or_else(|e| eprintln!("无法显示错误对话框: {}", e));
+            .unwrap_or_else(|e| log::error!("无法显示错误对话框: {}", e));
 
         // 注意：钩子返回后，线程仍然会终止。
         // 如果是主线程 panic，整个程序会退出。
     }));
 
+    // 在所有逻辑之前，先设置好日志
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            let log_path = exe_dir.join(LOG_FILENAME);
+
+            CombinedLogger::init(vec![
+                TermLogger::new(LevelFilter::Info, Config::default(), TerminalMode::Mixed, ColorChoice::Auto),
+                WriteLogger::new(
+                    LevelFilter::Info,
+                    Config::default(),
+                    File::create(log_path).expect("无法创建日志文件"),
+                ),
+            ]).expect("初始化日志系统失败");
+
+            log::info!("--- 日志系统已启动 ---");
+        }
+    }
+
     // --- 使用带所有权验证的函数进行清理 ---
     if let Ok(exe_path) = env::current_exe() {
         if let Some(exe_dir) = exe_path.parent() {
             let temp_updates_path = exe_dir.join(TEMP_UPDATE_DIR_NAME);
-            println!("[Main] 正在检查并安全清理临时更新目录...");
+            log::info!("[Main] 正在检查并安全清理临时更新目录...");
 
             // 使用 safe_remove_owned_directory
             // - 如果目录存在且有标记，则删除。
             // - 如果目录存在但无标记，则跳过并打印日志（保护用户数据）。
             // - 如果目录不存在，则什么也不做。
             if let Err(e) = ownership::safe_remove_owned_directory(&temp_updates_path) {
-                eprintln!("[Main] 安全清理临时更新目录时发生错误 (不影响启动): {}", e);
+                log::error!("[Main] 安全清理临时更新目录时发生错误 (不影响启动): {}", e);
             } else {
-                println!("[Main] 临时更新目录安全清理完成。");
+                log::info!("[Main] 临时更新目录安全清理完成。");
             }
         }
     }
@@ -69,7 +90,7 @@ fn main() {
     // 在启动Tauri之前，先执行更新的收尾工作
     if let Err(e) = finalize_pending_update() {
         // 即使收尾失败，我们也不应该阻止应用启动
-        eprintln!("[Main] 完成更新时发生错误 (不影响启动): {}", e);
+        log::error!("[Main] 完成更新时发生错误 (不影响启动): {}", e);
     }
 
     // 正常启动您的Tauri应用
@@ -92,7 +113,7 @@ fn finalize_pending_update() -> Result<(), String> {
     let marker_path = exe_dir.join("update_pending.json");
 
     if marker_path.exists() {
-        println!("[Main] 检测到待处理的更新标记文件...");
+        log::info!("[Main] 检测到待处理的更新标记文件...");
         let content =
             fs::read_to_string(&marker_path).map_err(|e| format!("读取标记文件失败: {}", e))?;
         let marker: UpdateMarker =
@@ -114,14 +135,14 @@ fn finalize_pending_update() -> Result<(), String> {
 
         let new_v_content = serde_json::to_string_pretty(&versions).map_err(|e| e.to_string())?;
         fs::write(versions_path, new_v_content).map_err(|e| e.to_string())?;
-        println!(
+        log::info!(
             "[Main] local_versions.json 已更新至版本: {}",
             marker.version
         );
 
         // 最关键的一步：删除标记文件，防止下次启动时重复执行
         fs::remove_file(marker_path).map_err(|e| format!("删除标记文件失败: {}", e))?;
-        println!("[Main] 更新标记文件已删除。更新流程彻底完成。");
+        log::info!("[Main] 更新标记文件已删除。更新流程彻底完成。");
     }
 
     Ok(())

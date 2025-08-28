@@ -1,11 +1,10 @@
 ﻿import type { RouteRecordRaw } from 'vue-router';
-import WorkbenchView from '#/WorkbenchView.vue';
 
 export const routes: RouteRecordRaw[] = [
     {
         path: '/workbench',
         name: 'Plugin_Workbench_Main',
-        component: WorkbenchView,
+        component: ()=>import('./WorkbenchView.vue'),
         meta: {
             title: '工作流编辑器',
             requiresAuth: true // 显式声明

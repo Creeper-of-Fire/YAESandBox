@@ -12,7 +12,8 @@
     "install:all": "pnpm install",
     "generate:licenses": "pnpm-licenses generate-disclaimer --prod --output-file=./apps/shell/public/THIRD_PARTY_LICENSES.txt",
     "check:licenses": "node ./scripts/check-licenses.mjs",
-    "check:deps": "node ./scripts/check-deps.mjs"
+    "check:deps": "node ./scripts/check-deps.mjs",
+    "build:app": "pnpm --filter @yaesandbox-frontend/shell build"
   },
   "devDependencies": {
     "@quantco/pnpm-licenses": "^2.2.1",

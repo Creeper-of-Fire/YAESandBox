@@ -1,4 +1,5 @@
 ﻿import {type Component, markRaw} from 'vue';
+import {getAbsoluteUrl} from '@yaesandbox-frontend/core-services';
 
 // --- 类型定义 ---
 export interface DynamicAsset
@@ -17,10 +18,10 @@ let loadingPromise: Promise<any> | null = null;
 
 /**
  * 动态加载脚本文件。
- * @param url - 脚本的URL。
+ * @param url - 脚本的【处理后URL】。
  * @returns - 一个在脚本加载完成时解析的Promise。
  */
- function loadScript(url: string): Promise<void>
+function loadScript(url: string): Promise<void>
 {
     if (loadedScriptUrls.has(url))
     {
@@ -43,7 +44,7 @@ let loadingPromise: Promise<any> | null = null;
 
 /**
  * 动态加载样式文件。
- * @param url - 样式的URL。
+ * @param url - 样式的【处理后URL】。
  * @returns - 一个在样式加载完成时解析的Promise。
  */
 function loadStyle(url: string): Promise<void>
@@ -75,18 +76,27 @@ async function doLoadAndRegister(assets: DynamicAsset[]): Promise<void>
 {
     const promisesToAwait: Promise<void>[] = [];
 
-    // 第一轮：收集所有需要加载的资源，并发起请求
+    // 第一轮：构建绝对URL，收集所有需要加载的资源，并发起请求
     for (const asset of assets)
     {
+
         // 加载样式
-        if (asset.styleUrl && !loadedStyleUrls.has(asset.styleUrl))
+        if (asset.styleUrl)
         {
-            promisesToAwait.push(loadStyle(asset.styleUrl));
+            const absoluteUrl = getAbsoluteUrl(asset.styleUrl);
+            if (!loadedStyleUrls.has(absoluteUrl))
+            {
+                promisesToAwait.push(loadStyle(absoluteUrl));
+            }
         }
         // 加载脚本
-        if (asset.scriptUrl && !loadedScriptUrls.has(asset.scriptUrl))
+        if (asset.scriptUrl)
         {
-            promisesToAwait.push(loadScript(asset.scriptUrl));
+            const absoluteUrl = getAbsoluteUrl(asset.scriptUrl);
+            if (!loadedScriptUrls.has(absoluteUrl))
+            {
+                promisesToAwait.push(loadScript(absoluteUrl));
+            }
         }
     }
 

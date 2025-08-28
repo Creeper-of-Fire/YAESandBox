@@ -65,7 +65,7 @@ pub async fn download_and_verify_zip(
         .map_err(|e| format!("写入文件失败: {}", e))?;
 
     // 开始校验
-    println!(
+    log::info!(
         "[Updater] 下载完成，正在校验文件: {}",
         target_path.display()
     );
@@ -83,6 +83,6 @@ pub async fn download_and_verify_zip(
         ));
     }
 
-    println!("[Updater] 文件校验成功。");
+    log::info!("[Updater] 文件校验成功。");
     Ok(())
 }

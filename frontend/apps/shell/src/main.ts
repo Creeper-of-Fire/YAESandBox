@@ -23,10 +23,23 @@ import {installBuiltinComponents} from "@yaesandbox-frontend/shared-ui/content-r
 // 必须在 Pinia 安装之后，才能使用 useAuthStore
 // 导入所有需要认证的 API 客户端的 OpenAPI 对象
 import {useAuthStore} from "#/app-authentication/stores/authStore.ts"
-import {type ApiRequestOptions, TokenResolverKey} from '@yaesandbox-frontend/core-services/injectKeys';
+import {TokenResolverKey} from '@yaesandbox-frontend/core-services/injectKeys';
 import {loadPlugins} from "#/plugins/pluginLoader.ts";
 import axiosInstance from "#/utils/axiosInstance.ts";
+import type {ApiRequestOptions} from "@yaesandbox-frontend/core-services/types";
+import {getBaseUrl} from '@yaesandbox-frontend/core-services';
+import {loader} from '@guolao/vue-monaco-editor'
 
+const MONACO_EDITOR_CDN = 'https://cdn.bootcdn.net/ajax/libs/monaco-editor/0.52.2/min/vs'
+
+loader.config({
+    paths: {
+        vs: MONACO_EDITOR_CDN
+    },
+    'vs/nls': {
+        availableLanguages: {'*': 'zh-cn'}
+    }
+})
 const app = createApp(App);
 const pinia = createPinia();
 app.use(pinia)
@@ -38,6 +51,8 @@ app.provide('loadedPlugins', loadedPluginMetas);
 
 const router = createRouterInstance(pluginRoutes);
 app.use(router)
+
+axiosInstance.defaults.baseURL = getBaseUrl();
 
 // 定义一个函数，用于从 store 中获取 token
 /**
@@ -73,9 +88,7 @@ app.provide(TokenResolverKey, tokenResolver);
 app.provide('axios', axiosInstance);
 
 installBuiltinComponents();
-await router.isReady()
 app.mount('#app')
-await router.push(router.currentRoute.value.path)
 
 // ---  为插件暴露全局依赖 ---
 // 这段代码是专门为了让插件能够找到Vue

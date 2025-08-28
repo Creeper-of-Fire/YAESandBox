@@ -9,7 +9,7 @@
       核心改动：移除 v-show，让编辑器组件的 DOM 结构保持稳定。
       Vue 将不再因为 isLoading 状态的改变而去尝试修改编辑器的显示属性。
     -->
-    <vue-monaco-editor
+    <VueMonacoEditor
         v-model:value="internalValue"
         :language="language"
         :options="editorOptions"

@@ -35,7 +35,7 @@ pub async fn start_local_backend(
         let port_str = get_ini_value(&config_content, "Network", "backend_port")
             .unwrap_or_else(|| "auto".to_string()); // 如果没找到，默认为 "auto"
 
-        println!("[Launcher] 从配置中读取到 backend_port = '{}'", port_str);
+        log::info!("[Launcher] 从配置中读取到 backend_port = '{}'", port_str);
 
         if port_str.to_lowercase() == "auto" {
             // 行为不变：自动选择端口
@@ -66,7 +66,7 @@ pub async fn start_local_backend(
         }
     };
 
-    println!("[Launcher] 后端将启动于端口: {}", port);
+    log::info!("[Launcher] 后端将启动于端口: {}", port);
 
 
     let api_url = format!("http://127.0.0.1:{}", port);
@@ -115,7 +115,7 @@ pub async fn start_local_backend(
 
         job.assign_process_by_pid(pid)?;
 
-        println!("[Launcher] 后端进程已成功分配至作业对象。");
+        log::info!("[Launcher] 后端进程已成功分配至作业对象。");
 
         // 将 Job Object 存储到 AppState 中，以保持其存活。
         // 当 AppState 被销毁时 (即启动器关闭时)，JobObject 的 Drop trait 会被调用，
@@ -133,7 +133,7 @@ pub async fn start_local_backend(
     thread::spawn(move || {
         let reader = BufReader::new(stdout);
         for line in reader.lines().flatten() { // flatten() 忽略读取错误
-            println!("[后端标准输出]: {}", line);
+            log::info!("[后端标准输出]: {}", line);
             let _ = app_handle_clone.emit("backend-log", &line);
 
             if line.contains("Now listening on") {
@@ -147,7 +147,7 @@ pub async fn start_local_backend(
     thread::spawn(move || {
         let reader = BufReader::new(stderr);
         for line in reader.lines().flatten() {
-            println!("[后端标准错误]: {}", line);
+            log::info!("[后端标准错误]: {}", line);
             let _ = app_handle_clone_err.emit("backend-log", &format!("[ERROR] {}", line));
 
             // 将错误行存入共享的 Vec
@@ -160,7 +160,7 @@ pub async fn start_local_backend(
     let timeout_duration = Duration::from_secs(15);
     match timeout(timeout_duration, rx.recv()).await {
         Ok(Some(_)) => {
-            println!("[Launcher] 后端已就绪。正在导航主窗口...");
+            log::info!("[Launcher] 后端已就绪。正在导航主窗口...");
             let main_window = app_handle.get_webview_window("main").unwrap();
 
             // 在导航之前，先最大化窗口。

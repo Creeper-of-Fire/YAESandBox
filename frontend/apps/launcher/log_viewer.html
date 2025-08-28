@@ -1,0 +1,35 @@
+﻿<!-- launcher/log_viewer.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>启动器日志</title>
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1e1e1e;
+            color: #d4d4d4;
+            font-family: Consolas, 'Courier New', monospace;
+            font-size: 14px;
+        }
+        #log-content {
+            margin: 0;
+            padding: 10px;
+            height: 100%;
+            box-sizing: border-box;
+            white-space: pre-wrap; /* 自动换行 */
+            word-wrap: break-word; /* 单词内换行 */
+            overflow-y: scroll; /* 允许垂直滚动 */
+        }
+    </style>
+</head>
+<body>
+<pre id="log-content">正在加载日志...</pre>
+<!-- 关键改动：引用一个本地的 .ts 文件 -->
+<script type="module" src="/src/log_viewer.ts"></script>
+</body>
+</html>

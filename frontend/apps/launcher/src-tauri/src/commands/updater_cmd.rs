@@ -26,7 +26,7 @@ pub async fn apply_launcher_self_update(
     if !zip_path.exists() {
         return Err(format!("启动器更新包未找到于: {}", zip_path.display()));
     }
-    println!("[Updater] 找到更新包: {}", zip_path.display());
+    log::info!("[Updater] 找到更新包: {}", zip_path.display());
 
     // --- 步骤 2: 解压到临时目录 ---
     let temp_parent_dir = app_state.app_dir.join(TEMP_UPDATE_DIR_NAME);
@@ -42,7 +42,7 @@ pub async fn apply_launcher_self_update(
         .tempdir_in(&temp_parent_dir)
         .map_err(|e| format!("在受控的临时目录内创建工作区失败: {}", e))?;
 
-    println!("[Updater] 已在受控目录内创建临时工作区: {}", temp_dir.path().display());
+    log::info!("[Updater] 已在受控目录内创建临时工作区: {}", temp_dir.path().display());
 
     let bin_name = "yaesandbox-launcher.exe";
 
@@ -56,7 +56,7 @@ pub async fn apply_launcher_self_update(
     if !new_exe_path.exists() {
         return Err(format!("解压后未在临时目录中找到 '{}'", bin_name));
     }
-    println!("[Updater] 已成功解压新版本到: {}", new_exe_path.display());
+    log::info!("[Updater] 已成功解压新版本到: {}", new_exe_path.display());
 
     // --- 步骤 3: 创建“原子更新”标记文件 ---
     // 这是保证状态一致性的关键！
@@ -65,17 +65,17 @@ pub async fn apply_launcher_self_update(
     let marker = UpdateMarker { version: new_version };
     let marker_content = serde_json::to_string_pretty(&marker).unwrap();
     fs::write(&marker_path, marker_content).map_err(|e| format!("创建更新标记文件失败: {}", e))?;
-    println!("[Updater] 已创建更新标记于: {}", marker_path.display());
+    log::info!("[Updater] 已创建更新标记于: {}", marker_path.display());
 
     // --- 步骤 4: 调用 self_replace 执行魔法 ---
     // 这是最关键的一步。这个函数会处理所有平台相关的棘手问题。
-    println!("[Updater] 准备执行自我替换...");
+    log::info!("[Updater] 准备执行自我替换...");
     self_update::self_replace::self_replace(&new_exe_path)
         .map_err(|e| format!("自我替换操作失败: {}", e))?;
 
     // 如果 self_replace 成功，当前进程已经被替换，但仍在运行旧代码。
     // 我们需要重启来加载新版本的代码。
-    println!("[Updater] 替换成功！准备重启应用...");
+    log::info!("[Updater] 替换成功！准备重启应用...");
     app_handle.restart();
 
     #[allow(unreachable_code)]

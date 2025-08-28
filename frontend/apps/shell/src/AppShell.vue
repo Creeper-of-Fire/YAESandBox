@@ -57,6 +57,7 @@ import {useAuthStore} from "#/app-authentication/stores/authStore.ts";
 import {computed, inject} from "vue";
 import DayNightToggleWithDropDown from "#/component/DayNightToggleWithDropDown.vue";
 import type {PluginModule} from "@yaesandbox-frontend/core-services";
+import {useAuthNavigation} from "#/app-authentication/composables/useAuthNavigation.ts";
 
 // 注入由 main.ts 提供的插件元数据
 const loadedPlugins = inject<PluginModule['meta'][]>('loadedPlugins', []);
@@ -84,7 +85,7 @@ const userName = computed(() =>
 {
   return authStore.user?.username;
 })
-
+const {logoutAndRedirect} = useAuthNavigation();
 
 // const connectionStore = useConnectionStore();
 
@@ -107,7 +108,7 @@ const userName = computed(() =>
 
 const handleLogout = () =>
 {
-  authStore.logout();
+  logoutAndRedirect();
 };
 
 const backgroundColor = computed(() => themeVars.value.baseColor);

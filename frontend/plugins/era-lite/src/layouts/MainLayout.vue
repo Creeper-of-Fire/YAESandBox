@@ -19,7 +19,7 @@
           <!-- 如果未折叠，显示完整标题 -->
           <span v-if="!collapsed">ERA-LITE</span>
           <!-- 如果已折叠，显示游戏图标 -->
-          <n-icon v-else :component="GameIcon" :size="32"/>
+          <n-icon v-else :component="GameControllerIcon" :size="32"/>
         </Transition>
       </div>
       <n-menu
@@ -44,7 +44,8 @@
 import {h} from 'vue';
 import {RouterLink, useRoute} from 'vue-router';
 import {NIcon, NLayout, NLayoutSider, NMenu, NMessageProvider, useThemeVars} from 'naive-ui';
-import {BagIcon, EarthIcon, GameIcon, HomeIcon, PeopleIcon, StorefrontIcon} from '#/utils/icon.ts';
+import {BagIcon, EarthIcon, HomeIcon, PeopleIcon, StorefrontIcon} from '#/utils/icon.ts';
+import {GameControllerIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 
 const collapsed = useScopedStorage('collapsed', false);

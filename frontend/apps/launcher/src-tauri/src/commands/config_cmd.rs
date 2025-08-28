@@ -16,7 +16,7 @@ pub fn read_config_as_string(app_state: State<'_, AppState>) -> Result<String, S
 
     // 检查文件是否存在
     if !config_path.exists() {
-        println!("[Config] 配置文件不存在，正在于 '{}' 创建默认配置...", config_path.display());
+        log::info!("[Config] 配置文件不存在，正在于 '{}' 创建默认配置...", config_path.display());
 
         // 使用原始字符串字面量 (r#""#) 来创建多行字符串，非常清晰
         let default_content = r#"; --- YAESandBox 启动器配置 ---

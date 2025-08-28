@@ -39,7 +39,17 @@ export function useAuthNavigation()
     function logoutAndRedirect()
     {
         authStore.logout();
-        router.push('/login');
+
+        // 获取当前路由的完整路径（包括查询参数）
+        const redirectPath = router.currentRoute.value.fullPath;
+
+        // 跳转到登录页，并带上 redirect 参数
+        router.push({
+            path: '/login',
+            query: {
+                redirect: redirectPath
+            }
+        });
     }
 
     /**

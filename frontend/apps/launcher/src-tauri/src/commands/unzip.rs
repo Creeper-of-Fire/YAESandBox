@@ -63,14 +63,14 @@ pub async fn unzip_file(
     match unzip_result {
         Ok(_) => {
             // 解压成功，万事大吉。所有权已在解压前标记。
-            println!("[Unzip] 文件解压成功，目录 '{}' 已是最新状态。", target_dir.display());
+            log::info!("[Unzip] 文件解压成功，目录 '{}' 已是最新状态。", target_dir.display());
             Ok(())
         }
         Err(e) => {
             // 解压失败，回滚操作。
             // 因为 `create_owned_directory` 已经标记了所有权，
             // 所以我们现在必须使用 `safe_remove_owned_directory` 来清理。
-            println!("[Unzip] 解压失败: {}. 正在回滚...", e);
+            log::info!("[Unzip] 解压失败: {}. 正在回滚...", e);
             ownership::safe_remove_owned_directory(&target_dir)
                 .map_err(|cleanup_err| format!("解压失败，并且回滚清理也失败了: {}", cleanup_err))?;
             Err(format!("解压失败: {}", e))

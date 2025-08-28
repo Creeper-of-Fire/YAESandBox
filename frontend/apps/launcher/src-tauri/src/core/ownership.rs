@@ -45,7 +45,7 @@ pub fn create_owned_directory(dir_path: &Path) -> Result<(), String> {
         // 如果目录已存在，我们必须确认它是我们自己的，否则不允许操作
         match verify_ownership(dir_path)? {
             true => {
-                println!("[Ownership] 目录 '{}' 已存在并已验证所有权，无需创建。", dir_path.display());
+                log::info!("[Ownership] 目录 '{}' 已存在并已验证所有权，无需创建。", dir_path.display());
                 return Ok(()); // 已经是我们的了，操作成功
             },
             false => return Err(format!(
@@ -71,13 +71,13 @@ pub fn safe_remove_owned_directory(dir_path: &Path) -> Result<(), String> {
     match verify_ownership(dir_path)? {
         true => {
             // 所有权验证通过，执行删除
-            println!("[Ownership] 正在安全地移除受控目录 '{}'...", dir_path.display());
+            log::info!("[Ownership] 正在安全地移除受控目录 '{}'...", dir_path.display());
             fs::remove_dir_all(dir_path)
                 .map_err(|e| format!("移除受控目录 '{}' 失败: {}", dir_path.display(), e))
         },
         false => {
             if dir_path.exists() {
-                println!("[Ownership] 跳过移除：目录 '{}' 不由本启动器管理。", dir_path.display());
+                log::info!("[Ownership] 跳过移除：目录 '{}' 不由本启动器管理。", dir_path.display());
             }
             Ok(()) // 目录不存在或不属于我们，都视为“删除”成功
         }
@@ -96,6 +96,6 @@ pub fn mark_as_owned(dir_path: &Path) -> Result<(), String> {
     let marker_path_display = marker_path.display().to_string();
     File::create(&marker_path)
         .map_err(|e| format!("创建所有权标记文件 '{}' 失败: {}", marker_path_display, e))?;
-    println!("[Ownership] 已成功为目录 '{}' 设置所有权标记。", dir_path.display());
+    log::info!("[Ownership] 已成功为目录 '{}' 设置所有权标记。", dir_path.display());
     Ok(())
 }

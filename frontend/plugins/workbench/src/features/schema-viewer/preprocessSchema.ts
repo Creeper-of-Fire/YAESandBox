@@ -2,7 +2,6 @@
 import {type Component, defineAsyncComponent, markRaw} from "vue";
 import {getVuePluginComponent} from "#/features/schema-viewer/plugin-loader.ts";
 import WebComponentWrapper from "#/features/schema-viewer/WebComponentWrapper.vue";
-import MonacoEditorWidget from "#/features/schema-viewer/field-widget/MonacoEditorWidget.vue";
 import MyCustomStringAutoComplete from "#/features/schema-viewer/field-widget/MyCustomStringAutoComplete.vue";
 import SliderWithInputWidget from "#/features/schema-viewer/field-widget/SliderWithInputWidget.vue";
 import {NAutoComplete, NCheckbox, NInput, NInputNumber, NSelect, NSwitch} from "naive-ui";
@@ -32,7 +31,7 @@ const COMPONENT_MAP: Record<string, Component> = {
     // 自定义 Widget 组件
     'SliderWithInputWidget': markRaw(SliderWithInputWidget),
     'MyCustomStringAutoComplete': markRaw(MyCustomStringAutoComplete),
-    'MonacoEditorWidget': markRaw(MonacoEditorWidget),
+    'MonacoEditorWidget': markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/MonacoEditorWidget.vue'))),
     'WebComponentWrapper': markRaw(WebComponentWrapper),
     'RadioGroupWidget': markRaw(RadioGroupWidget),
 
@@ -160,7 +159,8 @@ function processNode(
                 {
                     const propNode = node.properties![key];
                     // 安全检查：如果 ui:order 中的 key 在 properties 中不存在，则跳过
-                    if (!propNode) {
+                    if (!propNode)
+                    {
                         return [];
                     }
 
@@ -266,9 +266,11 @@ function determineComponentAndProps(node: FieldProps): { component: string; prop
             node.enum.length <= RADIO_GROUP_THRESHOLD &&
             // 确保 isEditableSelectOptions 优先级更高
             !node['ui:options']?.isEditableSelectOptions
-        ) {
+        )
+        {
             component = 'RadioGroupWidget';
-        } else {
+        } else
+        {
             component = node['ui:options']?.isEditableSelectOptions ? 'MyCustomStringAutoComplete' : 'Select';
         }
         return {component, props};
@@ -284,8 +286,7 @@ function determineComponentAndProps(node: FieldProps): { component: string; prop
                 props.max = node.maximum;
                 props.step = node.multipleOf || 1;
                 component = 'SliderWithInputWidget';
-            }
-            else
+            } else
             {
                 component = 'InputNumber';
             }
@@ -300,8 +301,7 @@ function determineComponentAndProps(node: FieldProps): { component: string; prop
                 props.type = 'textarea';
                 props.autosize = {minRows: 3}; // 提供一个合理的默认值
                 component = 'Input';
-            }
-            else
+            } else
             {
                 component = 'Input';
             }

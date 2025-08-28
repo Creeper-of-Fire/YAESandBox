@@ -82,7 +82,7 @@
     <!-- 下半部分：可折叠的 AiConfigEditorPanel -->
     <n-collapse-transition :show="showEditorPanel">
       <div class="embedded-panel-container">
-        <ai-config-editor-panel/>
+        <AiConfigEditorPanel/>
       </div>
     </n-collapse-transition>
   </n-flex>

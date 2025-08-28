@@ -21,10 +21,10 @@ function main() {
         console.log('🚀 开始组装最终应用包: YAESandBox...');
 
         // 1. 清理并创建最终输出目录
-        console.log(`🧹 清理旧的输出目录: ${outputDir}`);
-        if (fs.existsSync(outputDir)) {
-            fs.rmSync(outputDir, { recursive: true, force: true });
-        }
+        // console.log(`🧹 清理旧的输出目录: ${outputDir}`);
+        // if (fs.existsSync(outputDir)) {
+        //     fs.rmSync(outputDir, { recursive: true, force: true });
+        // }
         fs.mkdirSync(outputDir, { recursive: true });
         console.log('✅ 输出目录已准备就绪。');
 

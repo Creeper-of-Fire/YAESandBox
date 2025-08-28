@@ -2,7 +2,6 @@
 import {defineConfig, mergeConfig} from 'vite';
 import {visualizer} from "rollup-plugin-visualizer";
 import {createMonorepoViteConfig} from "../../vite.config.shared";
-import * as path from "node:path";
 
 export default defineConfig(({command, mode}) => {
     const isBuild = mode === 'production';
@@ -27,41 +26,41 @@ export default defineConfig(({command, mode}) => {
         ],
         build: {
             cssCodeSplit: false,
-            rollupOptions: {
-                output: {
-                    /**
-                     * 手动分包，把大块的依赖拆分出来
-                     * @param {string} id - 符文的路径
-                     * @returns {string | undefined} - 返回自定义的 chunk 名称
-                     */
-                    manualChunks(id: string): "vendor-naive-ui" | "vendor-vue" | "vendor-sortable" | "vendor-signalr" | "vendor" | 'vendor-vscode' {
-                        // 将 node_modules 中的依赖单独打包
-                        if (id.includes('node_modules')) {
-                            // 重点优化 naive-ui，它通常是体积大户
-                            if (id.includes('naive-ui')) {
-                                return 'vendor-naive-ui';
-                            }
-                            // 重点优化 vue 全家桶
-                            if (id.includes('vue') || id.includes('@vue')) {
-                                return 'vendor-vue';
-                            }
-                            // 重点优化 sortablejs (vue-draggable-plus 的依赖)
-                            if (id.includes('sortablejs')) {
-                                return 'vendor-sortable';
-                            }
-                            // 重点优化 SignalR
-                            if (id.includes('@microsoft/signalr')) {
-                                return 'vendor-signalr';
-                            }
-                            if (id.includes('@codingame') || id.includes('vscode')) {
-                                return 'vendor-vscode';
-                            }
-                            // 其他所有 node_modules 的依赖都打包到 vendor 文件
-                            return 'vendor';
-                        }
-                    },
-                }
-            }
+            // rollupOptions: {
+            //     output: {
+            //         /**
+            //          * 手动分包，把大块的依赖拆分出来
+            //          * @param {string} id - 符文的路径
+            //          * @returns {string | undefined} - 返回自定义的 chunk 名称
+            //          */
+            //         manualChunks(id: string): "vendor-naive-ui" | "vendor-vue" | "vendor-sortable" | "vendor-signalr" | "vendor" | 'vendor-vscode' {
+            //             // 将 node_modules 中的依赖单独打包
+            //             if (id.includes('node_modules')) {
+            //                 // 重点优化 naive-ui，它通常是体积大户
+            //                 if (id.includes('naive-ui')) {
+            //                     return 'vendor-naive-ui';
+            //                 }
+            //                 // 重点优化 vue 全家桶
+            //                 if (id.includes('vue') || id.includes('@vue')) {
+            //                     return 'vendor-vue';
+            //                 }
+            //                 // 重点优化 sortablejs (vue-draggable-plus 的依赖)
+            //                 if (id.includes('sortablejs')) {
+            //                     return 'vendor-sortable';
+            //                 }
+            //                 // 重点优化 SignalR
+            //                 if (id.includes('@microsoft/signalr')) {
+            //                     return 'vendor-signalr';
+            //                 }
+            //                 if (id.includes('@codingame') || id.includes('vscode')) {
+            //                     return 'vendor-vscode';
+            //                 }
+            //                 // 其他所有 node_modules 的依赖都打包到 vendor 文件
+            //                 return 'vendor';
+            //             }
+            //         },
+            //     }
+            // }
         }
     });
 
@@ -72,38 +71,23 @@ export default defineConfig(({command, mode}) => {
             proxy: {
                 // 将所有以 /api 开头的请求代理到后端服务器
                 '/api': {
-                    target: 'http://localhost:7018', // <--- 你的后端 API 服务器地址和端口
-                    changeOrigin: true, // 必须，对于虚拟主机站点是必需的
-                    // secure: false, // 如果后端是 https 且证书无效，可能需要
-                    // rewrite: (path) => path.replace(/^\/api/, '/api') // 通常不需要，除非后端路径也需要调整
+                    target: 'http://localhost:7018',
+                    changeOrigin: true,
                 },
+                // 通常是后端代理的，关于插件的静态文件
                 '/plugins': {
-                    target: 'http://localhost:7018', // <--- 替换成你的后端实际运行地址和端口
-                    changeOrigin: true, // 改变源，使其看起来像是从目标服务器发出的请求
-                    // 如果你的后端是 HTTPS，并且使用了自签名证书，你可能还需要添加 secure: false
-                    // target: 'https://localhost:5001',
-                    // secure: false,
-                    // rewrite: (path) => path.replace(/^\/plugins/, '/plugins'), // 如果路径需要重写，但这里通常不需要
+                    target: 'http://localhost:7018',
+                    changeOrigin: true,
                 },
                 // 代理所有 /hubs 开头的请求 (用于 SignalR)
                 '/hubs': {
-                    target: 'http://localhost:7018', // <--- 替换成你的后端地址!
-                    changeOrigin: true, // 必须设置为 true
-                    ws: true, // <--- SignalR 必须启用 WebSocket 代理
-                    // secure: false, // 如果你的后端是 https 且证书是自签名的，需要这个
+                    target: 'http://localhost:7018',
+                    changeOrigin: true,
+                    ws: true,
                 }
             }
         },
         resolve: {}
     });
-    if (isBuild) {
-        shellSpecificConfig.resolve = {
-            alias: {
-                '@yaesandbox-frontend/plugin-workbench': path.resolve(__dirname, '../../plugins/workbench/dist/index.js'),
-                '@yaesandbox-frontend/plugin-dialog-test': path.resolve(__dirname, '../../plugins/dialog-test/dist/index.js'),
-                '@yaesandbox-frontend/plugin-era-lite': path.resolve(__dirname, '../../plugins/era-lite/dist/index.js')
-            },
-        };
-    }
     return mergeConfig(baseAppConfig, shellSpecificConfig);
 });
