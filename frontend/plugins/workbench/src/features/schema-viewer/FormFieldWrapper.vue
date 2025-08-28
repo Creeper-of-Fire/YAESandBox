@@ -9,7 +9,7 @@
           title-placement="left"
       >
         {{ label }}
-        <n-tooltip v-if="description" trigger="hover">
+        <n-popover v-if="description" trigger="hover">
           <template #trigger>
             <!-- 添加一些样式让图标和文字对齐更好看 -->
             <n-icon style="vertical-align: middle; margin-left: 4px; cursor: pointer;">
@@ -17,20 +17,20 @@
             </n-icon>
           </template>
           {{ description }}
-        </n-tooltip>
+        </n-popover>
       </n-divider>
 
       <!-- 情况二：否则，使用 n-text 渲染方式 -->
       <n-text v-else :key="name">
         {{ label }}
-        <n-tooltip v-if="description" trigger="hover">
+        <n-popover v-if="description" trigger="hover">
           <template #trigger>
             <n-icon>
               <InfoIcon/>
             </n-icon>
           </template>
           {{ description }}
-        </n-tooltip>
+        </n-popover>
       </n-text>
 
     </div>
@@ -48,7 +48,7 @@
 <script lang="ts" setup>
 import {ErrorMessage} from 'vee-validate';
 import {InfoIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import {NTooltip, useThemeVars} from "naive-ui";
+import {useThemeVars} from "naive-ui";
 
 defineProps<{
   name: string;

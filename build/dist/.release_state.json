@@ -1,7 +1,7 @@
 {
     "hashes": {
         "launcher": "aebe2ad900ba295356a50e22938f42bcf78673cc1d1036a18598b7bdddd10130",
-        "app": "43d89c39c1b05aee07c895e54e13b0c43981662196ae34188daf9f0b0c2fbfca",
+        "app": "3dd21c480d896c7651902c230e43f96a3d3cdbc24170dccb30efce9fc188cc16",
         "backend": "f2b14c2344dde45c45ac43f5786cf552b5514803a8c1c81dd7544e476bb15638",
         "backend-slim": "5003c96a4f8a35ba0f1dfc2110e0166069438aa097344faadf39f6f07c49e12a",
         "plugins": {
@@ -23,10 +23,10 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.10",
-                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
-                    "hash": "ccb08443dc6c2b7b11aca4a1097198658bd82bb6fc30126ca8979e15084e1a94",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/app.zip"
+                    "version": "0.0.11",
+                    "notes": "优化 WorkflowProviderButton 组件，\n修复一个 Monaco 导入相关的bug",
+                    "hash": "09ade79eb9b460a53e4a5737397de19d9dd4ad2f8f8a1f8b2bdf7ad683831a17",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.11/v0.0.11/app.zip"
                 },
                 {
                     "id": "backend",
@@ -51,10 +51,10 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.10",
-                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
-                    "hash": "ccb08443dc6c2b7b11aca4a1097198658bd82bb6fc30126ca8979e15084e1a94",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/app.zip"
+                    "version": "0.0.11",
+                    "notes": "优化 WorkflowProviderButton 组件，\n修复一个 Monaco 导入相关的bug",
+                    "hash": "09ade79eb9b460a53e4a5737397de19d9dd4ad2f8f8a1f8b2bdf7ad683831a17",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.11/v0.0.11/app.zip"
                 },
                 {
                     "id": "backend",

@@ -31,7 +31,9 @@
     "vue-router": "^4.5.1",
     "@yaesandbox-frontend/plugin-dialog-test": "workspace:*",
     "@yaesandbox-frontend/plugin-era-lite": "workspace:*",
-    "@yaesandbox-frontend/plugin-workbench": "workspace:*"
+    "@yaesandbox-frontend/plugin-workbench": "workspace:*",
+    "monaco-languageclient": "^9.8.0",
+    "@guolao/vue-monaco-editor": "^1.5.5"
   },
   "devDependencies": {
     "rollup-plugin-visualizer": "^6.0.3"

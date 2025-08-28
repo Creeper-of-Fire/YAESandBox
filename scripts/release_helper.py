@@ -2,6 +2,8 @@
 import hashlib
 import json
 import os
+import threading
+import time
 import zipfile
 from pathlib import Path
 
@@ -81,6 +83,91 @@ def find_unique_exe(directory: Path) -> Path | None:
     return None
 
 
+def increment_version_tag(tag: str) -> str | None:
+    """尝试将版本号标签的最后一部分加一 (e.g., v1.2.3 -> v1.2.4)"""
+    original_tag = tag
+    prefix = ""
+    if tag.startswith('v'):
+        prefix = 'v'
+        tag = tag[1:]
+
+    parts = tag.split('.')
+    if not parts:
+        return None
+
+    try:
+        last_part_num = int(parts[-1])
+        parts[-1] = str(last_part_num + 1)
+        return prefix + ".".join(parts)
+    except (ValueError, IndexError):
+        # 如果最后一部分不是数字，则无法自动递增
+        return None
+
+
+def get_suggested_version(token: str) -> str | None:
+    """从 GitHub 获取最新的 release tag 并建议下一个版本号"""
+    console.print("🔍 [bold]正在获取上一个版本号...[/bold]")
+    headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
+    url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/releases/latest"
+    try:
+        response = requests.get(url, headers=headers, timeout=5)
+        if response.status_code == 404:
+            console.print("  -> 未找到上一个版本，请手动输入。")
+            return None
+        response.raise_for_status()
+        latest_release = response.json()
+        last_tag = latest_release.get("tag_name")
+        if last_tag:
+            suggested_tag = increment_version_tag(last_tag)
+            if suggested_tag:
+                console.print(f"  -> [green]建议版本号:[/green] {suggested_tag} (基于上个版本 [cyan]{last_tag}[/cyan])")
+                return suggested_tag
+            else:
+                console.print(f"  -> 上一个版本号 '{last_tag}' 格式无法自动递增。")
+        return None
+    except requests.exceptions.RequestException as e:
+        console.print(f"[yellow]警告: 获取最新版本失败: {e}[/yellow]")
+        return None
+
+
+class UploadProgressReader:
+    """
+    一个包装文件对象的类，用于在requests上传时实时更新rich进度条。
+    """
+
+    def __init__(self, fp, progress: Progress, task_id):
+        self.fp = fp
+        self.progress = progress
+        self.task_id = task_id
+        self.total_size = os.fstat(fp.fileno()).st_size
+        # 确保任务的总大小已设置
+        self.progress.update(self.task_id, total=self.total_size)
+
+    def read(self, size=-1):
+        chunk = self.fp.read(size)
+        if chunk:
+            # 读取到数据块时，推进进度条
+            self.progress.advance(self.task_id, len(chunk))
+        return chunk
+
+    def __len__(self):
+        return self.total_size
+
+
+def upload_worker(url: str, headers: dict, data: UploadProgressReader, result: dict):
+    """
+    执行文件上传的函数，设计为在单独的线程中运行。
+    """
+    try:
+        response = requests.post(url, headers=headers, data=data)
+        response.raise_for_status()
+        result['response'] = response
+        result['exception'] = None
+    except requests.exceptions.RequestException as e:
+        result['response'] = None
+        result['exception'] = e
+
+
 def main():
     # --- 1. 初始化和环境检查 ---
     load_dotenv()
@@ -142,20 +229,23 @@ def main():
     if not Confirm.ask("\n[bold]是否基于以上变更创建新版本？[/bold]", default=True): return
 
     console.print("\n[bold]Step 2: 请输入新版本信息...[/bold]")
-    version = Prompt.ask("版本号 (e.g., v1.2.3)")
+    suggested_version = get_suggested_version(token)
+    version = Prompt.ask("版本号 (e.g., v1.2.3)", default=suggested_version)
     release_title = Prompt.ask("发布标题", default=f"Release {version}")
     console.print("更新日志 (输入 'EOF' 结束):")
     release_notes_lines = []
     while True:
-        line = input();
+        line = input()
         if line == 'EOF': break
         release_notes_lines.append(line)
     release_notes = "\n".join(release_notes_lines)
 
+    is_latest = Confirm.ask("\n[bold]将此版本标记为 'latest' (最新) 版本吗？[/bold]", default=True)
+
     console.print("\n[bold]Step 3: 请选择要发布的组件...[/bold]")
     to_release = [c for c in changed_components if Confirm.ask(f"发布 [cyan]{c['name']}[/cyan]?", default=True)]
     if not to_release:
-        console.print("未选择任何组件，操作取消。");
+        console.print("未选择任何组件，操作取消。")
         return
 
     # --- 4. 本地构建与生成 (原子事务) ---
@@ -245,7 +335,14 @@ def main():
 
     # 6a. 创建 Release
     try:
-        release_data = {"tag_name": version, "name": release_title, "body": release_notes, "draft": False, "prerelease": False}
+        release_data = {
+            "tag_name": version,
+            "name": release_title,
+            "body": release_notes,
+            "draft": False,
+            "prerelease": False,
+            "make_latest": str(is_latest).lower()
+        }
         headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
         response = requests.post(f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/releases", headers=headers, json=release_data)
         response.raise_for_status()
@@ -253,7 +350,7 @@ def main():
         upload_url_template = release_info['upload_url']
         console.print(f"✅ [green]GitHub Release 创建成功:[/green] [link={release_info['html_url']}]{release_info['html_url']}[/link]")
     except requests.exceptions.RequestException as e:
-        console.print(f"[bold red]❌ 创建 GitHub Release 失败: {e}\n响应内容: {e.response.text}[/bold red]");
+        console.print(f"[bold red]❌ 创建 GitHub Release 失败: {e}\n响应内容: {e.response.text}[/bold red]")
         return
 
     # 6b. 上传所有文件
@@ -269,36 +366,48 @@ def main():
             upload_url = upload_url_template.split('{')[0] + f"?name={file_name}"
 
             with open(file_path, 'rb') as f:
-                try:
-                    upload_response = requests.post(upload_url, headers=headers_upload, data=f)
-                    upload_response.raise_for_status()
-                    asset_info = upload_response.json()
+                progress_reader = UploadProgressReader(f, progress, item_task)
 
-                    # 更新清单中的 URL
-                    file_url = asset_info['browser_download_url']
-                    if file_path == core_manifest_path:
-                        for comp in new_full_manifest["components"]:
-                            comp_zip_name = f"{comp['id']}.zip"
-                            if any(p['zip_path'].name == comp_zip_name for p in packaged_assets):
-                                comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{version}/{comp_zip_name}"
-                    elif file_path == slim_manifest_path:
-                        for comp in new_slim_manifest["components"]:
-                            comp_id_source = 'backend-slim' if comp['id'] == 'backend' else comp['id']
-                            comp_zip_name = f"{comp_id_source}.zip"
-                            if any(p['zip_path'].name == comp_zip_name for p in packaged_assets):
-                                comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{version}/{comp_zip_name}"
-                    elif file_path == plugins_manifest_path:
-                        for comp in new_plugins_manifest:
-                            comp_zip_name = f"{comp['id']}.zip"
-                            if any(p['zip_path'].name == comp_zip_name for p in packaged_assets):
-                                comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{version}/{comp_zip_name}"
+                # --- 使用线程执行上传 ---
+                result = {}
+                thread = threading.Thread(target=upload_worker, args=(upload_url, headers_upload, progress_reader, result))
+                thread.start()
 
-                    progress.update(item_task, completed=file_size)
-                    progress.advance(upload_task)
-                except requests.exceptions.RequestException as e:
+                # 主线程等待，同时允许rich更新UI
+                while thread.is_alive():
+                    time.sleep(0.1)
+
+                # 检查线程执行结果
+                upload_exception = result.get('exception')
+                if upload_exception:
                     progress.stop()
-                    console.print(f"[bold red]❌ 上传 {file_name} 失败: {e}\n响应内容: {e.response.text}[/bold red]")
+                    e = upload_exception
+                    console.print(f"[bold red]❌ 上传 {file_name} 失败: {e}\n响应内容: {e.response.text if e.response else 'N/A'}[/bold red]")
                     return
+
+                upload_response = result['response']
+                asset_info = upload_response.json()
+
+                # 更新清单中的 URL
+                file_url = asset_info['browser_download_url']
+                if file_path == core_manifest_path:
+                    for comp in new_full_manifest["components"]:
+                        comp_zip_name = f"{comp['id']}.zip"
+                        if any(p['zip_path'].name == comp_zip_name for p in packaged_assets):
+                            comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{version}/{comp_zip_name}"
+                elif file_path == slim_manifest_path:
+                    for comp in new_slim_manifest["components"]:
+                        comp_id_source = 'backend-slim' if comp['id'] == 'backend' else comp['id']
+                        comp_zip_name = f"{comp_id_source}.zip"
+                        if any(p['zip_path'].name == comp_zip_name for p in packaged_assets):
+                            comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{version}/{comp_zip_name}"
+                elif file_path == plugins_manifest_path:
+                    for comp in new_plugins_manifest:
+                        comp_zip_name = f"{comp['id']}.zip"
+                        if any(p['zip_path'].name == comp_zip_name for p in packaged_assets):
+                            comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{version}/{comp_zip_name}"
+
+                progress.advance(upload_task)
 
     # --- 7. 保存状态 ---
     new_manifests_state = {"full": new_full_manifest, "slim": new_slim_manifest, "plugins": new_plugins_manifest}

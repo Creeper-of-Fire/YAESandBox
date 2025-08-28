@@ -20,12 +20,12 @@
     </div>
     <div class="input-settings">
       <n-flex align="center" size="small">
-        <n-tooltip trigger="hover">
+        <n-popover trigger="hover">
           <template #trigger>
-            <n-switch v-model:value="sendWithEnter" />
+            <n-switch v-model:value="sendWithEnter"/>
           </template>
           {{ sendWithEnter ? '当前: Enter 发送消息' : '当前: Shift+Enter 发送消息' }}
-        </n-tooltip>
+        </n-popover>
         <label>使用 Enter 键发送</label>
       </n-flex>
     </div>
@@ -33,8 +33,8 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, computed } from 'vue';
-import { NInput, NButton, NSwitch, NFlex, NTooltip } from 'naive-ui';
+import {computed, ref} from 'vue';
+import {NButton, NFlex, NInput, NSwitch} from 'naive-ui';
 
 const props = defineProps<{
   loading: boolean;
@@ -49,25 +49,31 @@ const sendWithEnter = ref(false);
 const isSendDisabled = computed(() => props.loading || !userInput.value.trim());
 
 // 新增：动态的 placeholder
-const inputPlaceholder = computed(() => {
-  if (sendWithEnter.value) {
+const inputPlaceholder = computed(() =>
+{
+  if (sendWithEnter.value)
+  {
     return '输入消息... (Enter 发送, Shift + Enter 换行)';
-  } else {
+  } else
+  {
     return '输入消息... (Shift + Enter 发送, Enter 换行)';
   }
 });
 
 // 重构：将发送逻辑提取为独立函数
-function sendMessage() {
+function sendMessage()
+{
   if (isSendDisabled.value) return;
   emit('send-message', userInput.value);
   userInput.value = '';
 }
 
 // 重构：键盘事件处理函数
-function handleKeyDown(event: KeyboardEvent) {
+function handleKeyDown(event: KeyboardEvent)
+{
   // 我们只关心 Enter 键
-  if (event.key !== 'Enter') {
+  if (event.key !== 'Enter')
+  {
     return;
   }
 
@@ -75,7 +81,8 @@ function handleKeyDown(event: KeyboardEvent) {
   const shouldSendWithEnter = sendWithEnter.value && !event.shiftKey;
   const shouldSendWithShiftEnter = !sendWithEnter.value && event.shiftKey;
 
-  if (shouldSendWithEnter || shouldSendWithShiftEnter) {
+  if (shouldSendWithEnter || shouldSendWithShiftEnter)
+  {
     // 阻止默认行为（换行）
     event.preventDefault();
     sendMessage();

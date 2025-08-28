@@ -10,7 +10,7 @@
             :action="createNewAction"
             @confirm="handleCreateNew"
         >
-          <n-tooltip trigger="hover">
+          <n-popover trigger="hover">
             <template #trigger>
               <n-button
                   tag="h4"
@@ -21,7 +21,7 @@
               </n-button>
             </template>
             新建全局{{ currentTabLabel }}
-          </n-tooltip>
+          </n-popover>
         </InlineInputPopover>
       </n-flex>
 

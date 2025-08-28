@@ -28,6 +28,7 @@
         <!-- 我们的配置提供者按钮 -->
         <WorkflowProviderButton
             storage-key="shop-item-generator"
+            :expected-inputs="['topic']"
             @click="handleGenerateItem"
         />
       </n-flex>
@@ -166,8 +167,7 @@ function buyItem(item: Item)
   {
     playerStore.addItem(item);
     message.success(`成功购买 ${item.name}!`);
-  }
-  else
+  } else
   {
     message.error('金钱不足！');
   }
