@@ -326,7 +326,8 @@ function determineValidationRules(node: FieldProps, name: string, parentRequired
         // FIX: 'numeric' 规则过于严格（只允许无符号整数）。
         // 对于 'integer' 类型，使用 'integer' 规则（允许负数）；
         // 对于 'number' 类型，使用 'double' 规则（允许负数和小数）。
-        rules.push(type === 'integer' ? 'integer' : 'double');
+        if (type === 'integer')
+            rules.push('integer');
 
         if (node.minimum !== undefined)
             rules.push(`min_value:${node.minimum}`);

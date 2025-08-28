@@ -11,6 +11,17 @@ namespace YAESandBox.Workflow.AIService.AiConfig.Gemini;
 internal record GeminiAiProcessorConfig() : AbstractAiProcessorConfig(nameof(GeminiAiProcessorConfig))
 {
     /// <summary>
+    /// 最大输出Token数
+    /// </summary>
+    [Display(
+        Name = "GeneralAiConfig_MaxOutputTokens_Label",
+        Description = "GeneralAiConfig_MaxOutputTokens_Description",
+        ResourceType = typeof(GeneralAiResources)
+    )]
+    [DefaultValue(65536)]
+    public int? MaxOutputTokens { get; init; }
+    
+    /// <summary>
     /// API Key
     /// </summary>
     [Display(
@@ -34,12 +45,11 @@ internal record GeminiAiProcessorConfig() : AbstractAiProcessorConfig(nameof(Gem
     )]
     [Required]
     [StringOptions(
-        "gemini-1.5-pro-latest",
-        "gemini-1.5-flash-latest",
-        "gemini-1.0-pro",
-        "gemini-pro-vision", // 旧版多模态
+        "gemini-2.5-pro",
+        "gemini-2.5-flash",
+        "gemini-2.5-flash-lite",
         IsEditableSelectOptions = true)]
-    [DefaultValue("gemini-1.5-flash-latest")]
+    [DefaultValue("gemini-2.5-pro")]
     public string? ModelName { get; init; }
 
     [Display(
@@ -57,6 +67,7 @@ internal record GeminiAiProcessorConfig() : AbstractAiProcessorConfig(nameof(Gem
         ResourceType = typeof(GeneralAiResources)
     )]
     [Range(0.0, 1.0)]
+    [DefaultValue(1.0)]
     public float? TopP { get; init; }
 
     [Display(
@@ -65,18 +76,7 @@ internal record GeminiAiProcessorConfig() : AbstractAiProcessorConfig(nameof(Gem
         ResourceType = typeof(GeneralAiResources)
     )]
     public int? TopK { get; init; }
-
-    /// <summary>
-    /// 最大输出Token数
-    /// </summary>
-    [Display(
-        Name = "GeneralAiConfig_MaxOutputTokens_Label",
-        Description = "GeneralAiConfig_MaxOutputTokens_Description",
-        ResourceType = typeof(GeneralAiResources)
-    )]
-    [DefaultValue(8192)]
-    public int? MaxOutputTokens { get; init; }
-
+    
     [Display(
         Name = "GeneralAiConfig_StopSequences_Label",
         Description = "GeneralAiConfig_StopSequences_Description",

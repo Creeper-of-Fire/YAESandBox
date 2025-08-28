@@ -163,7 +163,7 @@
 &lt;/SessionState&gt;</s:String>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=Analyzers1_002FResources/@EntryIndexedValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=Analyzers1_002FResources/@EntryIndexRemoved">True</s:Boolean>
-	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=Analyzers_002FYAESandBox_002EAnalyzers_002FResources/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=Analyzers_002FYAESandBox_002EAnalyzers_002FResources/@EntryIndexedValue">False</s:Boolean>
 	
 	
 	
@@ -176,7 +176,7 @@
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FAiProcessorConfigResources/@EntryIndexedValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FAiProcessorConfigResources/@EntryIndexRemoved">True</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FDeepSeek_002FDeepSeekAiResources/@EntryIndexedValue">False</s:Boolean>
-	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FDoubao_002FDoubaoAiResources/@EntryIndexedValue">False</s:Boolean>
+	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FDoubao_002FDoubaoAiResources/@EntryIndexedValue">True</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FDoubao_002FDoubaoConfigResources/@EntryIndexedValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FDoubao_002FDoubaoConfigResources/@EntryIndexRemoved">True</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FGemini_002FGeminiAiResource/@EntryIndexedValue">False</s:Boolean>
@@ -186,7 +186,7 @@
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FGeneralAiResources/@EntryIndexedValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FOpenAiCompatible_002FOpenAiCompatible/@EntryIndexedValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FOpenAiCompatible_002FOpenAiCompatible/@EntryIndexRemoved">True</s:Boolean>
-	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FOpenAiCompatible_002FOpenAiCompatibleAiResources/@EntryIndexedValue">True</s:Boolean>
+	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FAiConfig_002FOpenAiCompatible_002FOpenAiCompatibleAiResources/@EntryIndexedValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FCapabilities_002FCapabilities/@EntryIndexedValue">False</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FCapabilities_002FCapabilities/@EntryIndexRemoved">True</s:Boolean>
 	<s:Boolean x:Key="/Default/ResxEditorPersonal/CheckedGroups/=YAESandBox_002EWorkflow_002EAIService_002FCapabilities_002FCapabilitiesResources/@EntryIndexedValue">False</s:Boolean>

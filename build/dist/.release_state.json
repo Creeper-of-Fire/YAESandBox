@@ -1,9 +1,9 @@
 {
     "hashes": {
         "launcher": "aebe2ad900ba295356a50e22938f42bcf78673cc1d1036a18598b7bdddd10130",
-        "app": "3dd21c480d896c7651902c230e43f96a3d3cdbc24170dccb30efce9fc188cc16",
-        "backend": "f2b14c2344dde45c45ac43f5786cf552b5514803a8c1c81dd7544e476bb15638",
-        "backend-slim": "5003c96a4f8a35ba0f1dfc2110e0166069438aa097344faadf39f6f07c49e12a",
+        "app": "ddddbe9442cf62fa89533a2a456d58ef3926a43947a15ddf42fe7624b35920da",
+        "backend": "e0f4aca89281a966b20870adb96350fcdd6fcbc01fd66ea6fbe066c0b61f780c",
+        "backend-slim": "68869541fc4c05d889236c6ae750d55d1319c9bf9a3a53cb8daf1623f4dc743b",
         "plugins": {
             "YAESandBox.Plugin.LuaScript": "6f76b0199657d077af7ee65cd2b6bb1a67d5f992c529be50d28dc56320dcfa11",
             "YAESandBox.Plugin.TextParser": "e3e1a455d11cd6d5b085f9b3671a038dcfc6d782ebbe0de801da4e981d4d988a"
@@ -23,18 +23,18 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.11",
-                    "notes": "优化 WorkflowProviderButton 组件，\n修复一个 Monaco 导入相关的bug",
-                    "hash": "09ade79eb9b460a53e4a5737397de19d9dd4ad2f8f8a1f8b2bdf7ad683831a17",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.11/v0.0.11/app.zip"
+                    "version": "0.0.12",
+                    "notes": "修复了无法正确保存AI配置的bug\n修复了表单默认值不起效的bug\n修改了部分表单的默认值\n修改了部分表单的顺序",
+                    "hash": "a4efd116581fcf0a10650f948afe1726d220bd7378bcbe645a9e32515fce7f02",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.12/v0.0.12/app.zip"
                 },
                 {
                     "id": "backend",
                     "name": ".NET 后端 (完整版)",
-                    "version": "0.0.10",
-                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
-                    "hash": "f18a5a1e52b2d0b27cf9c6ca2a511355b5ab4edfa7b708af3429720aa403d2e5",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/backend.zip"
+                    "version": "0.0.12",
+                    "notes": "修复了无法正确保存AI配置的bug\n修复了表单默认值不起效的bug\n修改了部分表单的默认值\n修改了部分表单的顺序",
+                    "hash": "6a9970fb10d733b143b769da1f5281bc842700ed8594a065285e746ecfa39bf7",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.12/v0.0.12/backend.zip"
                 }
             ]
         },
@@ -51,18 +51,18 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.11",
-                    "notes": "优化 WorkflowProviderButton 组件，\n修复一个 Monaco 导入相关的bug",
-                    "hash": "09ade79eb9b460a53e4a5737397de19d9dd4ad2f8f8a1f8b2bdf7ad683831a17",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.11/v0.0.11/app.zip"
+                    "version": "0.0.12",
+                    "notes": "修复了无法正确保存AI配置的bug\n修复了表单默认值不起效的bug\n修改了部分表单的默认值\n修改了部分表单的顺序",
+                    "hash": "a4efd116581fcf0a10650f948afe1726d220bd7378bcbe645a9e32515fce7f02",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.12/v0.0.12/app.zip"
                 },
                 {
                     "id": "backend",
                     "name": ".NET 后端 (精简版)",
-                    "version": "0.0.10",
-                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
-                    "hash": "1906ecd8d88f8db26e2a07199ea6c0a775c6889bb58bff40f86a792b07323553",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/backend-slim.zip"
+                    "version": "0.0.12",
+                    "notes": "修复了无法正确保存AI配置的bug\n修复了表单默认值不起效的bug\n修改了部分表单的默认值\n修改了部分表单的顺序",
+                    "hash": "a06575453f7edf70d3d9a8d7cb433aff2a3111afeb7b82cf012880168931e1f9",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.12/v0.0.12/backend-slim.zip"
                 }
             ]
         },

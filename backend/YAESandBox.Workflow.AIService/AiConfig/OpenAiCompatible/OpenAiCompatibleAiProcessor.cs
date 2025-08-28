@@ -110,7 +110,6 @@ internal class OpenAiCompatibleAiProcessor(AiProcessorDependencies dependencies,
             Temperature: this.Config.Temperature,
             MaxTokens: this.Config.MaxOutputTokens,
             TopP: this.Config.TopP,
-            Stop: this.Config.StopSequences,
             ResponseFormat: responseFormat
         );
     }

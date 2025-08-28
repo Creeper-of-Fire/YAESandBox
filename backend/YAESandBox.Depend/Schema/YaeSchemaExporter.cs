@@ -22,6 +22,7 @@ public static class YaeSchemaExporter
             new DataTypeProcessor(),
             new RangeProcessor(),
             new StringOptionsProcessor(),
+            new DefaultValueProcessor(),
             new ComplexDefaultValueProcessor(),
             new InlineGroupProcessor(),
             new RequiredProcessor()

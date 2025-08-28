@@ -12,6 +12,16 @@ namespace YAESandBox.Workflow.AIService.AiConfig.OpenAiCompatible;
 internal record OpenAiCompatibleAiProcessorConfig() : AbstractAiProcessorConfig(nameof(OpenAiCompatibleAiProcessorConfig))
 {
     /// <summary>
+    /// 最大输出Token数
+    /// </summary>
+    [Display(
+        Name = "GeneralAiConfig_MaxOutputTokens_Label",
+        Description = "GeneralAiConfig_MaxOutputTokens_Description",
+        ResourceType = typeof(GeneralAiResources)
+    )]
+    public int? MaxOutputTokens { get; init; }
+    
+    /// <summary>
     /// API 的基地址 (Base URL)。
     /// 例如: "https://api.openai.com/v1/" 或 "https://your-custom-endpoint/v1/"
     /// </summary>
@@ -35,7 +45,6 @@ internal record OpenAiCompatibleAiProcessorConfig() : AbstractAiProcessorConfig(
         ResourceType = typeof(GeneralAiResources)
     )]
     [DataType(DataType.Password)]
-    [Required]
     [Protected]
     public string ApiKey { get; init; } = string.Empty;
 
@@ -48,18 +57,7 @@ internal record OpenAiCompatibleAiProcessorConfig() : AbstractAiProcessorConfig(
         ResourceType = typeof(GeneralAiResources)
     )]
     [Required]
-    [DefaultValue("gpt-4o")]
-    public string ModelName { get; init; } = "gpt-4o";
-
-    /// <summary>
-    /// 最大输出Token数
-    /// </summary>
-    [Display(
-        Name = "GeneralAiConfig_MaxOutputTokens_Label",
-        Description = "GeneralAiConfig_MaxOutputTokens_Description",
-        ResourceType = typeof(GeneralAiResources)
-    )]
-    public int? MaxOutputTokens { get; init; }
+    public string ModelName { get; init; } = string.Empty;
 
     [Display(
         Name = "GeneralAiConfig_Temperature_Label",
@@ -78,13 +76,6 @@ internal record OpenAiCompatibleAiProcessorConfig() : AbstractAiProcessorConfig(
     [Range(0.0, 1.0)]
     [DefaultValue(1.0)]
     public float? TopP { get; init; }
-
-    [Display(
-        Name = "DoubaoAiConfig_StopSequences_Label", // 可以复用或创建新的资源字符串
-        Description = "DoubaoAiConfig_StopSequences_Description",
-        ResourceType = typeof(DoubaoAiResources)
-    )]
-    public IReadOnlyList<string>? StopSequences { get; init; }
 
     [Display(
         Name = "GeneralAiConfig_ResponseFormatType_Label",
