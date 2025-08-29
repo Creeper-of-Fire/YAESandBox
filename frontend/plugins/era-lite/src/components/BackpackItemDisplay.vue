@@ -1,27 +1,30 @@
 ﻿<!-- era-lite/src/components/BackpackItemDisplay.vue -->
 <template>
-  <BaseItemDisplay v-if="item" :title="item.name" :description="item.description">
+  <BaseItemDisplay v-if="item" :description="item.description" :title="item.name">
     <template #actions>
       <n-button @click="openEditModal">编辑</n-button>
-      <n-button type="warning" ghost @click="handleDrop">丢弃</n-button>
+      <n-button ghost type="warning" @click="handleDrop">丢弃</n-button>
     </template>
   </BaseItemDisplay>
-  <ItemEditor
+  <EntityEditor
       v-if="item"
       v-model:show="showEditorModal"
-      mode="edit"
       :initial-data="item"
+      :schema="itemSchema"
+      entity-name="背包物品"
+      mode="edit"
       @save="handleSave"
   />
 </template>
 
-<script setup lang="ts">
+<script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NButton, useDialog, useMessage} from 'naive-ui';
 import {useBackpackStore} from '#/stores/backpackStore';
 import BaseItemDisplay from './BaseItemDisplay.vue';
-import ItemEditor from "#/components/ItemEditor.vue";
+import EntityEditor from "#/components/EntityEditor.vue";
 import type {Item} from '#/types/models';
+import {itemSchema} from "#/schemas/entitySchemas.ts";
 
 const props = defineProps<{ itemId: string }>();
 const backpackStore = useBackpackStore();

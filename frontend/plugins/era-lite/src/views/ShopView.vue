@@ -8,7 +8,7 @@
       <template #extra>
         <n-flex align="center">
           <span>你的金钱: {{ backpackStore.money }} G</span>
-          <n-button @click="openCreateModal" type="primary">手动添加商品</n-button>
+          <n-button type="primary" @click="openCreateModal">手动添加商品</n-button>
           <n-button :loading="shopStore.isLoading" @click="shopStore.generateShopItems()">
             刷新商品
           </n-button>
@@ -18,13 +18,13 @@
 
     <GeneratorPanel
         v-model="generatedItem"
-        :schema="itemSchema"
-        storage-key="shop-item-generator"
         :expected-inputs="['topic']"
-        title="AI 商品生成器"
+        :schema="itemSchema"
+        entity-name="物品"
         generation-prompt-label="输入你想要生成的物品描述，例如：一把能斩断噩梦的短剑"
-        @accept="addGeneratedItemToShop"
-    />
+        storage-key="shop-item-generator"
+        title="AI 商品生成器"
+        @accept="addGeneratedItemToShop"/>
 
     <n-list bordered hoverable>
       <ShopItemDisplay
@@ -34,12 +34,13 @@
       />
     </n-list>
 
-    <ItemEditor
+    <EntityEditor
         v-model:show="showCreateModal"
+        :initial-data="null as Partial<Item> | null"
+        :schema="itemSchema"
+        entity-name=""
         mode="create"
-        :initial-data="null"
-        @save="handleCreate"
-    />
+        @save="handleCreate"/>
   </n-flex>
 </template>
 
@@ -47,12 +48,12 @@
 import {NButton, NFlex, NH1, NList, NPageHeader, useMessage} from 'naive-ui';
 import {useShopStore} from '../stores/shopStore';
 import {useBackpackStore} from '../stores/backpackStore.ts';
+import EntityEditor from "#/components/EntityEditor.vue";
 import {ref} from "vue";
-import type {SchemaField} from '#/types/generator.ts';
 import type {Item} from '#/types/models.ts';
 import ShopItemDisplay from "#/components/ShopItemDisplay.vue";
-import ItemEditor from "#/components/ItemEditor.vue";
 import GeneratorPanel from "#/components/GeneratorPanel.vue";
+import {itemSchema} from "#/schemas/entitySchemas.ts";
 
 const shopStore = useShopStore();
 const backpackStore = useBackpackStore();
@@ -68,39 +69,20 @@ function openCreateModal()
   showCreateModal.value = true;
 }
 
-function handleCreate(newItemData: Omit<Item, 'id'>) {
+function handleCreate(newItemData: Omit<Item, 'id'>)
+{
   shopStore.addItem(newItemData);
   message.success('新物品已创建');
 }
 
 // --- AI 生成逻辑 ---
-
-// 1. 定义 Item 的 Schema
-const itemSchema: SchemaField[] = [
-  {key: 'name', label: '物品名称', type: 'text'},
-  {key: 'description', label: '物品描述', type: 'textarea'},
-  {key: 'price', label: '价格', type: 'number'},
-];
-
-// 2. 创建一个 ref 来接收生成的数据
 const generatedItem = ref<Partial<Item> | null>(null);
 
-// 3. 实现 accept 事件的回调
-function addGeneratedItemToShop(newItem: Partial<Item>)
+// "直接添加" 按钮的回调
+function addGeneratedItemToShop(itemData: Omit<Item, 'id'>)
 {
-  // 进行数据校验，确保核心字段存在
-  if (!newItem.name || !newItem.price)
-  {
-    message.error('AI生成的数据不完整，已丢弃。');
-    return;
-  }
-
-  shopStore.addItem({
-    name: newItem.name,
-    description: newItem.description || '无描述',
-    price: newItem.price,
-  });
-  message.success(`“${newItem.name}”已成功添加到商店！`);
-  generatedItem.value = null; // 清空，准备下一次生成
+  shopStore.addItem(itemData);
+  message.success(`“${itemData.name}”已成功添加到商店！`);
+  generatedItem.value = null;
 }
 </script>
