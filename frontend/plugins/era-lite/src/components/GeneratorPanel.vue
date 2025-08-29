@@ -6,7 +6,7 @@
           v-model:value="generationTopic"
           :placeholder="props.generationPromptLabel"
           clearable
-          type="text"
+          type="textarea"
       />
 
       <!-- 配置提供者按钮 -->

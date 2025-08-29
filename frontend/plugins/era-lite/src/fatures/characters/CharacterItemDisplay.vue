@@ -4,7 +4,11 @@
     <template #prefix>
       <n-avatar :size="48" style="font-size: 32px;">{{ character.avatar }}</n-avatar>
     </template>
-    <n-thing :description="character.description" :title="character.name"/>
+    <n-thing
+        :description="character.description"
+        :description-style="{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }"
+        :title="character.name"/>
+
     <template #suffix>
       <n-flex>
         <n-button :type="sessionStore.protagonistId === character.id ? 'primary' : 'default'" ghost

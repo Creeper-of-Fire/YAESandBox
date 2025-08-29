@@ -4,92 +4,77 @@ import {cloneDeep, isEqualWith, isObject} from 'lodash-es';
 type IndexableObject = Record<string, any>;
 
 /**
- * 递归地统一两个对象的键结构。
- * 如果一个键只存在于其中一个对象中，则在另一个对象中添加该键，并将其值设置为 undefined。
- * 这确保了在后续比较中，两个对象具有完全相同的键集合。
- * 返回一个包含两个新对象的元组，不会修改原始对象。
- *
- * @param valueA 第一个值
- * @param valueB 第二个值
- * @returns {[any, any]} 包含两个键结构统一后的新值的元组
- */
+* 递归地统一两个值的结构。
+* - 如果是对象，则统一它们的键。缺失的键将被添加并赋值为 undefined。
+* - 如果是数组，则统一它们的长度。
+* - 如果一个值是对象/数组而另一个不是，则将非容器值转换为空的对应类型（{} 或 []）。
+* 这确保了在后续比较中，两个值具有完全相同的“形状”。
+* 返回一个包含两个新值的元组，不会修改原始对象。
+*
+* @param valueA 第一个值
+* @param valueB 第二个值
+* @returns {[any, any]} 包含两个结构统一后的新值的元组
+*/
 const unifyKeysDeep = (valueA: any, valueB: any): [any, any] =>
 {
-    // 创建深度克隆以避免修改原始输入
-    const unifiedA = cloneDeep(valueA);
-    const unifiedB = cloneDeep(valueB);
-
-    const recurse = (objA: IndexableObject, objB: IndexableObject) =>
+    // 内部递归函数，它总是返回一个元组 [unifiedA, unifiedB]
+    const traverse = (a: any, b: any): [any, any] =>
     {
-        // 检查在调用处，这里假定传入的已经是对象
-        const allKeys = new Set([...Object.keys(objA), ...Object.keys(objB)]);
+        // 使用 cloneDeep 来确保我们操作的是副本，避免深层嵌套的引用问题
+        const unifiedA = cloneDeep(a);
+        const unifiedB = cloneDeep(b);
 
-        allKeys.forEach(key =>
+        const isAObject = isObject(unifiedA) && !Array.isArray(unifiedA);
+        const isBObject = isObject(unifiedB) && !Array.isArray(unifiedB);
+        const isAArray = Array.isArray(unifiedA);
+        const isBArray = Array.isArray(unifiedB);
+
+        // Case 1: 两个都是对象
+        if (isAObject && isBObject)
         {
-            const aHasKey = key in objA;
-            const bHasKey = key in objB;
-
-            // 确保双方都有这个键，没有的用 undefined 填充
-            if (aHasKey && !bHasKey)
+            const objA = unifiedA as IndexableObject;
+            const objB = unifiedB as IndexableObject;
+            const allKeys = new Set([...Object.keys(objA), ...Object.keys(objB)]);
+            allKeys.forEach(key =>
             {
-                objB[key] = undefined;
-            }
-            else if (!aHasKey && bHasKey)
+                const [newValA, newValB] = traverse(objA[key], objB[key]);
+                objA[key] = newValA;
+                objB[key] = newValB;
+            });
+            return [objA, objB];
+        }
+
+        // Case 2: 两个都是数组
+        if (isAArray && isBArray)
+        {
+            const maxLength = Math.max(unifiedA.length, unifiedB.length);
+            for (let i = 0; i < maxLength; i++)
             {
-                objA[key] = undefined;
+                const [newItemA, newItemB] = traverse(unifiedA[i], unifiedB[i]);
+                unifiedA[i] = newItemA;
+                unifiedB[i] = newItemB;
             }
+            return [unifiedA, unifiedB];
+        }
 
-            const valA = objA[key];
-            const valB = objB[key];
+        // Case 3: 类型不匹配（一个是对象/数组，另一个不是）
+        // 我们将非容器类型提升为空容器，然后再次调用 traverse
+        if (isAObject || isBObject)
+        {
+            return traverse(isAObject ? unifiedA : {}, isBObject ? unifiedB : {});
+        }
+        if (isAArray || isBArray)
+        {
+            return traverse(isAArray ? unifiedA : [], isBArray ? unifiedB : []);
+        }
 
-            const isValAObject = isObject(valA) && !Array.isArray(valA);
-            const isValBObject = isObject(valB) && !Array.isArray(valB);
-
-            if (isValAObject || isValBObject)
-            {
-                // 如果某一方不是对象，将其变为空对象，并进行类型断言
-                if (!isValAObject)
-                {
-                    objA[key] = {} as IndexableObject;
-                }
-                if (!isValBObject)
-                {
-                    objB[key] = {} as IndexableObject;
-                }
-                recurse(objA[key], objB[key]);
-            }
-        });
+        // Case 4: 两个都不是对象或数组（原始类型，null等），直接返回
+        return [unifiedA, unifiedB];
     };
 
-    // 顶层预处理：如果其中一个是对象而另一个不是，将非对象的转换为空对象
-    const isTopAObject = isObject(unifiedA) && !Array.isArray(unifiedA);
-    const isTopBObject = isObject(unifiedB) && !Array.isArray(unifiedB);
-
-    if (isTopAObject && isTopBObject)
-    {
-        recurse(unifiedA, unifiedB);
-    }
-    else if (Array.isArray(unifiedA) && Array.isArray(unifiedB))
-    {
-        const maxLength = Math.max(unifiedA.length, unifiedB.length);
-        for (let i = 0; i < maxLength; i++)
-        {
-            const itemA = unifiedA[i];
-            const itemB = unifiedB[i];
-            const isItemAObject = isObject(itemA) && !Array.isArray(itemA);
-            const isItemBObject = isObject(itemB) && !Array.isArray(itemB);
-
-            if (isItemAObject || isItemBObject)
-            {
-                if (!isItemAObject) unifiedA[i] = {} as IndexableObject;
-                if (!isItemBObject) unifiedB[i] = {} as IndexableObject;
-                recurse(unifiedA[i], unifiedB[i]);
-            }
-        }
-    }
-
-    return [unifiedA, unifiedB];
+    return traverse(valueA, valueB);
 };
+
 
 
 /**

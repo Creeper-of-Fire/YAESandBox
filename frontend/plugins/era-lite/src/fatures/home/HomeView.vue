@@ -21,7 +21,7 @@
       </n-empty>
       <div v-else>
         <n-h3 style="margin: 0">{{ sessionStore.selectedScene.name }}</n-h3>
-        <p>{{ sessionStore.selectedScene.description }}</p>
+        <p style="white-space: pre-wrap;">{{ sessionStore.selectedScene.description }}</p>
       </div>
     </n-card>
 

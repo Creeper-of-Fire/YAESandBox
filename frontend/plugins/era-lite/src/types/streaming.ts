@@ -4,6 +4,6 @@
  */
 export type ComplexPropertyValue = {
     _text?: string;
-    think?: string;
+    think?: ComplexPropertyValue;
     [key: string]: any; // 容纳其他标签
 };

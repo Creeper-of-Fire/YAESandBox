@@ -444,7 +444,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
 
     /**
-     * 新增计算属性，用于判断整个工作台是否存在任何未保存的更改。
+     * 计算属性，用于判断整个工作台是否存在任何未保存的更改。
      * 这将用于在用户关闭浏览器标签页时发出警告。
      */
     const hasDirtyDrafts = computed(() =>

@@ -24,5 +24,5 @@ export const sceneSchema: EntityFieldSchema[] = [
 export const itemSchema: EntityFieldSchema[] = [
     {key: 'name', label: '物品名称', component: NInput, rules: {required: true, message: '请输入名称'}},
     {key: 'description', label: '物品描述', component: NInput, componentProps: {type: 'textarea'}},
-    {key: 'price', label: '价格', component: NInputNumber, rules: {type: 'number', required: true, message: '请输入价格'}},
+    {key: 'price', label: '价格', component: NInputNumber, dataType: 'number', rules: {type: 'number', required: true, message: '请输入价格'}},
 ];

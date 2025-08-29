@@ -2,7 +2,7 @@
 import {useWorkflowStream} from '@yaesandbox-frontend/core-services/composables';
 import {getText, getThink, parseNumber} from '#/utils/workflowParser';
 import type {ComplexPropertyValue} from '#/types/streaming';
-import type {SchemaField} from '#/types/generator';
+import type {EntityFieldSchema} from "#/types/entitySchema.ts";
 
 /**
  * 一个更高阶的 Composable，用于处理流式工作流并将其映射到指定的结构化对象。
@@ -13,7 +13,7 @@ import type {SchemaField} from '#/types/generator';
  */
 export function useStructuredWorkflowStream<T extends object>(
     targetRef: Ref<T | null>,
-    schema: SchemaField[]
+    schema: EntityFieldSchema[]
 )
 {
     // 底层的、非结构化的流式数据
@@ -47,10 +47,11 @@ export function useStructuredWorkflowStream<T extends object>(
             const streamValue = newData[field.key];
             if (streamValue !== undefined)
             {
-                if (field.type === 'number')
+                if (field.dataType === 'number')
                 {
                     newTarget[field.key] = parseNumber(streamValue);
-                } else
+                }
+                else
                 {
                     newTarget[field.key] = getText(streamValue);
                 }
@@ -64,10 +65,18 @@ export function useStructuredWorkflowStream<T extends object>(
     {
         if (!rawStreamData.value) return '';
 
-        return schema
+        const thoughts: string[] = [];
+
+        const rootThink = rawStreamData.value.think?._text;
+        if (typeof rootThink === 'string' && rootThink.trim())
+        {
+            thoughts.push(rootThink);
+        }
+        const fieldThinks = schema
             .map(field => getThink(rawStreamData.value![field.key]))
-            .filter(Boolean) // 过滤掉 null 或空字符串
-            .join('\n\n---\n\n'); // 用分隔符让思考过程更清晰
+            .filter((think): think is string => !!think);
+
+        return [...thoughts, ...fieldThinks].join('\n\n---\n\n');
     });
 
     // 清理函数

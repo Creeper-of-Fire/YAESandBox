@@ -4,7 +4,8 @@
     <n-thing
         :title="title"
         :description="description"
-        :content-style="{ whiteSpace: 'normal', wordBreak: 'break-word' }"
+        :description-style="{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }"
+        :content-style="{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }"
         :header-style="{ whiteSpace: 'normal', wordBreak: 'break-word' }"
         style="white-space: pre-wrap;"
     />

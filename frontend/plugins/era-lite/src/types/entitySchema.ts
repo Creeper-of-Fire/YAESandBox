@@ -8,6 +8,7 @@ import type {FormItemRule} from "naive-ui";
 export interface EntityFieldSchema {
     key: string;                    // 对应数据对象中的键名
     label: string;                  // 表单项和展示时的标签
+    dataType?: 'string' | 'number'; // 定义字段的数据类型
 
     // -- 编辑器配置 --
     component: Component;           // 要渲染的 Vue 组件 (例如 NInput, NInputNumber)

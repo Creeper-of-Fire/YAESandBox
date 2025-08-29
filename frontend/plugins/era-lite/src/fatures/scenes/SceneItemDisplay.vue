@@ -1,7 +1,12 @@
 ﻿<!-- era-lite/src/components/SceneItemDisplay.vue -->
 <template>
   <n-list-item v-if="scene">
-    <n-thing :description="scene.description" :title="scene.name"/>
+    <n-thing
+        :content-style="{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }"
+        :description="scene.description"
+        :description-style="{ whiteSpace: 'pre-wrap', wordBreak: 'break-word' }"
+        :title="scene.name"
+    />
     <template #suffix>
       <n-flex>
         <n-button :type="sessionStore.currentSceneId === scene.id ? 'primary' : 'default'"

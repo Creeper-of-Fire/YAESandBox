@@ -21,8 +21,8 @@ export function getThink(value: ComplexPropertyValue | undefined): string | null
         return null;
     }
     // `think` 的值根据后端契约，应该就是纯字符串
-    if (typeof value.think === 'string') {
-        return value.think;
+    if (typeof value.think?._text === 'string') {
+        return value.think._text;
     }
     return null;
 }

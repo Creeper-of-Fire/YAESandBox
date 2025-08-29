@@ -10,7 +10,7 @@
       <n-avatar :size="60" style="font-size: 40px;">{{ character.avatar }}</n-avatar>
       <div>
         <n-h3 style="margin: 0">{{ character.name }}</n-h3>
-        <p>{{ character.description }}</p>
+        <p style="white-space: pre-wrap;">{{ character.description }}</p>
       </div>
     </n-flex>
   </n-card>
