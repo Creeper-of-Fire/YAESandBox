@@ -46,7 +46,7 @@ import {useSceneStore} from './sceneStore.ts';
 import type {Scene} from '#/types/models.ts';
 import GeneratorPanel from "#/components/GeneratorPanel.vue";
 import EntityEditor from "#/components/EntityEditor.vue";
-import SceneItemDisplay from "#/fatures/scenes/SceneItemDisplay.vue";
+import SceneItemDisplay from "#/features/scenes/SceneItemDisplay.vue";
 import {sceneSchema} from "#/schemas/entitySchemas.ts";
 
 const sceneStore = useSceneStore();

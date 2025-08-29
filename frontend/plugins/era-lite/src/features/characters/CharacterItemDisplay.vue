@@ -45,7 +45,7 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NAvatar, NButton, NFlex, NIcon, NListItem, NThing, useDialog, useMessage} from 'naive-ui';
-import {useCharacterStore} from '#/fatures/characters/characterStore.ts';
+import {useCharacterStore} from '#/features/characters/characterStore.ts';
 import {useSessionStore} from '#/stores/sessionStore.ts';
 import {Pencil as EditIcon, TrashBinOutline as DeleteIcon} from '@vicons/ionicons5';
 import type {Character} from '#/types/models.ts';

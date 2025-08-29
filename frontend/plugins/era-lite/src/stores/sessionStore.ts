@@ -1,7 +1,7 @@
 ﻿import {defineStore} from 'pinia';
 import {computed} from 'vue';
-import {useCharacterStore} from '../fatures/characters/characterStore.ts';
-import {useSceneStore} from '../fatures/scenes/sceneStore.ts';
+import {useCharacterStore} from '#/features/characters/characterStore.ts';
+import {useSceneStore} from '#/features/scenes/sceneStore.ts';
 import {type Character, type Scene} from '#/types/models';
 import {createPersistentState} from '#/composables/createPersistentState';
 

@@ -1,4 +1,4 @@
-﻿import type { RouteRecordRaw } from 'vue-router';
+﻿import type {RouteRecordRaw} from 'vue-router';
 
 export const routes: RouteRecordRaw[] = [
     {
@@ -13,7 +13,7 @@ export const routes: RouteRecordRaw[] = [
                 // 路径为空，匹配 /era-lite
                 path: '', // 使其成为 /era-lite 的默认子路由
                 name: 'Era_Lite_Home',
-                component: () => import('./fatures/home/HomeView.vue'),
+                component: () => import('#/features/home/HomeView.vue'),
                 meta: {
                     title: '主菜单',
                 }
@@ -21,12 +21,12 @@ export const routes: RouteRecordRaw[] = [
             {
                 // 为 'home' 路径添加一个别名
                 path: 'home',
-                redirect: { name: 'Era_Lite_Home' },
+                redirect: {name: 'Era_Lite_Home'},
             },
             {
                 path: 'characters', // 完整路径 /era-lite/characters
                 name: 'Era_Lite_Characters',
-                component: () => import('./fatures/characters/CharacterListView.vue'),
+                component: () => import('#/features/characters/CharacterListView.vue'),
                 meta: {
                     title: '角色列表',
                 }
@@ -34,7 +34,7 @@ export const routes: RouteRecordRaw[] = [
             {
                 path: 'scenes', // 完整路径 /era-lite/scenes
                 name: 'Era_Lite_Scenes',
-                component: () => import('./fatures/scenes/SceneListView.vue'),
+                component: () => import('#/features/scenes/SceneListView.vue'),
                 meta: {
                     title: '场景列表',
                 }
@@ -42,7 +42,7 @@ export const routes: RouteRecordRaw[] = [
             {
                 path: 'shop', // 完整路径 /era-lite/shop
                 name: 'Era_Lite_Shop',
-                component: () => import('./fatures/shop/ShopView.vue'),
+                component: () => import('#/features/shop/ShopView.vue'),
                 meta: {
                     title: '道具商店',
                 }
@@ -50,11 +50,27 @@ export const routes: RouteRecordRaw[] = [
             {
                 path: 'backpack', // 完整路径 /era-lite/backpack
                 name: 'Era_Lite_Backpack',
-                component: () => import('./fatures/backpack/BackpackView.vue'),
+                component: () => import('#/features/backpack/BackpackView.vue'),
                 meta: {
                     title: '我的背包',
                 }
             },
+            {
+                path: 'chat', // 聊天列表
+                name: 'Era_Lite_Chat_List',
+                component: () => import('#/features/chat/ChatListView.vue'),
+                meta: {
+                    title: '对话记录'
+                }
+            },
+            {
+                path: 'chat/:sessionId', // 单个聊天视图
+                name: 'Era_Lite_Chat_View',
+                component: () => import('#/features/chat/ChatView.vue'),
+                meta: {
+                    title: '对话'
+                }
+            }
         ]
     },
 ];

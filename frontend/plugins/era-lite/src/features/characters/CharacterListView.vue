@@ -48,7 +48,7 @@ import {useCharacterStore} from './characterStore.ts';
 import type {Character} from '#/types/models.ts';
 import GeneratorPanel from "#/components/GeneratorPanel.vue";
 import EntityEditor from "#/components/EntityEditor.vue";
-import CharacterItemDisplay from "#/fatures/characters/CharacterItemDisplay.vue";
+import CharacterItemDisplay from "#/features/characters/CharacterItemDisplay.vue";
 import {characterSchema} from "#/schemas/entitySchemas.ts";
 
 const characterStore = useCharacterStore();

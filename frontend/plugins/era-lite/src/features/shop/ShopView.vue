@@ -51,7 +51,7 @@ import {useBackpackStore} from '../backpack/backpackStore.ts';
 import EntityEditor from "#/components/EntityEditor.vue";
 import {ref} from "vue";
 import type {Item} from '#/types/models.ts';
-import ShopItemDisplay from "#/fatures/shop/ShopItemDisplay.vue";
+import ShopItemDisplay from "#/features/shop/ShopItemDisplay.vue";
 import GeneratorPanel from "#/components/GeneratorPanel.vue";
 import {itemSchema} from "#/schemas/entitySchemas.ts";
 

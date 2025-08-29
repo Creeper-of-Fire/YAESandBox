@@ -24,8 +24,8 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NButton, useDialog, useMessage} from 'naive-ui';
-import {useShopStore} from '#/fatures/shop/shopStore.ts';
-import {useBackpackStore} from '#/fatures/backpack/backpackStore.ts';
+import {useShopStore} from '#/features/shop/shopStore.ts';
+import {useBackpackStore} from '#/features/backpack/backpackStore.ts';
 import BaseItemDisplay from '../../components/BaseItemDisplay.vue';
 import EntityEditor from "#/components/EntityEditor.vue";
 import type {Item} from '#/types/models.ts';
