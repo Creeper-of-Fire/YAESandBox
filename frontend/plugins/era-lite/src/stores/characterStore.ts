@@ -1,30 +1,42 @@
 ﻿import { defineStore } from 'pinia';
-import { ref, watch } from 'vue';
 import { type Character } from '#/types/models';
 import { nanoid } from 'nanoid';
-import localforage from 'localforage';
+import { createPersistentState } from '#/composables/createPersistentState';
+import { watchOnce } from '@vueuse/core';
 
 const STORAGE_KEY = 'era-lite-characters';
 
 export const useCharacterStore = defineStore(STORAGE_KEY, () => {
-    const characters = ref<Character[]>([
-        // 一些初始数据用于测试
-        { id: nanoid(), name: '爱丽丝', description: '一位好奇心旺盛的探险家。', avatar: '👩‍🚀' },
-        { id: nanoid(), name: '鲍勃', description: '沉默寡言但可靠的保镖。', avatar: '💂‍♂️' },
-        { id: nanoid(), name: '克莱尔', description: '神秘的占卜师，似乎知晓一切。', avatar: '🧙‍♀️' },
-    ]);
+    const { state: characters, isReady } = createPersistentState<Character[]>(STORAGE_KEY, []);
 
-    // 从 IndexedDB 加载初始状态
-    localforage.getItem<Character[]>(STORAGE_KEY).then(savedCharacters => {
-        if (savedCharacters && savedCharacters.length > 0) {
-            characters.value = savedCharacters;
+    // --- Actions ---
+    function addCharacter(charData: Omit<Character, 'id'>) {
+        const newChar: Character = { ...charData, id: nanoid() };
+        characters.value.unshift(newChar);
+    }
+
+    function updateCharacter(updatedChar: Character) {
+        const index = characters.value.findIndex(c => c.id === updatedChar.id);
+        if (index !== -1) {
+            characters.value[index] = updatedChar;
+        }
+    }
+
+    function deleteCharacter(characterId: string) {
+        characters.value = characters.value.filter(c => c.id !== characterId);
+    }
+
+    // --- Initialization Logic ---
+    watchOnce(isReady, () => {
+        if (characters.value.length === 0) {
+            console.log('No characters found in storage, creating initial set.');
+            characters.value = [
+                { id: nanoid(), name: '爱丽丝', description: '一位好奇心旺盛的探险家。', avatar: '👩‍🚀' },
+                { id: nanoid(), name: '鲍勃', description: '沉默寡言但可靠的保镖。', avatar: '💂‍♂️' },
+                { id: nanoid(), name: '克莱尔', description: '神秘的占卜师，似乎知晓一切。', avatar: '🧙‍♀️' },
+            ];
         }
     });
 
-    // 监听变化并持久化
-    watch(characters, (newCharacters) => {
-        localforage.setItem(STORAGE_KEY, newCharacters);
-    }, { deep: true });
-
-    return { characters };
+    return { characters, isReady, addCharacter, updateCharacter, deleteCharacter };
 });

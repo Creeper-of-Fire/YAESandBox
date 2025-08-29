@@ -29,7 +29,7 @@
 import { computed } from 'vue';
 import { NListItem, NThing, NFlex, NButton, useMessage, useDialog } from 'naive-ui';
 import { useShopStore } from '#/stores/shopStore';
-import { usePlayerStore } from '#/stores/playerStore';
+import { useBackpackStore } from '#/stores/backpackStore.ts';
 import type { Item } from '#/types/models';
 
 const props = defineProps<{
@@ -42,7 +42,7 @@ const emit = defineEmits<{
 }>();
 
 const shopStore = useShopStore();
-const playerStore = usePlayerStore();
+const playerStore = useBackpackStore();
 const message = useMessage();
 const dialog = useDialog();
 

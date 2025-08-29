@@ -22,8 +22,8 @@
 
 <script setup lang="ts">
 import { NFlex, NH1, NList, NEmpty, NPageHeader } from 'naive-ui';
-import { usePlayerStore } from '../stores/playerStore';
+import { useBackpackStore } from '../stores/backpackStore.ts';
 import ItemDisplay from "#/components/ItemDisplay.vue";
 
-const playerStore = usePlayerStore();
+const playerStore = useBackpackStore();
 </script>

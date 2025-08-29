@@ -1,14 +1,15 @@
 ﻿import {defineStore} from 'pinia';
-import {ref, toRaw, watch} from 'vue';
+import {ref} from 'vue';
 import {type Item} from '#/types/models';
 import {nanoid} from 'nanoid';
-import localforage from 'localforage';
+import {createPersistentState} from "#/composables/createPersistentState.ts";
+import {watchOnce} from "@vueuse/core";
 
 const STORAGE_KEY = 'era-lite-shop';
 
 export const useShopStore = defineStore(STORAGE_KEY, () =>
 {
-    const itemsForSale = ref<Item[]>([]);
+    const {state: itemsForSale, isReady} = createPersistentState<Item[]>(STORAGE_KEY, []);
     const isLoading = ref(false);
 
     // --- Actions ---
@@ -75,25 +76,15 @@ export const useShopStore = defineStore(STORAGE_KEY, () =>
         isLoading.value = false;
     }
 
-    // --- Persistence ---
-    // 从 IndexedDB 加载初始状态
-    localforage.getItem<Item[]>(STORAGE_KEY).then(savedItems =>
+    // --- Initialization Logic ---
+    // 仅在首次加载完成，且商店为空时，生成初始商品
+    watchOnce(isReady, () =>
     {
-        if (savedItems && savedItems.length > 0)
+        if (isReady.value && itemsForSale.value.length === 0)
         {
-            itemsForSale.value = savedItems;
-        } else
-        {
-            // 如果没有缓存，则自动生成第一批商品
             generateShopItems();
         }
     });
-
-    // 监听变化并持久化
-    watch(itemsForSale, (newItems) =>
-    {
-        localforage.setItem(STORAGE_KEY, toRaw(newItems));
-    }, {deep: true});
 
 
     return {

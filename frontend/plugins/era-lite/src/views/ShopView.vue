@@ -16,46 +16,15 @@
       </template>
     </n-page-header>
 
-    <n-card title="AI 商品生成器">
-      <n-flex :size="12" vertical>
-        <n-input
-            v-model:value="generationTopic"
-            clearable
-            placeholder="输入你想要生成的物品描述，例如：一把能斩断噩梦的短剑"
-            type="text"
-        />
-        <WorkflowProviderButton
-            storage-key="shop-item-generator"
-            :expected-inputs="['topic']"
-            @click="handleGenerateItem"
-        />
-      </n-flex>
-      <div v-if="isGenerating || generatedItem" style="margin-top: 24px;">
-        <n-divider/>
-        <n-alert v-if="generationError" title="生成失败" type="error">
-          {{ generationError.message }}
-        </n-alert>
-        <div v-else-if="generatedItem">
-          <n-thing>
-            <template #header>
-              <n-h3 style="margin: 0">
-                {{ getText(generatedItem.name) || '...' }} - {{ parseNumber(generatedItem.price) || '...' }} G
-              </n-h3>
-            </template>
-            <template #description>
-              <p style="white-space: pre-wrap;">{{ getText(generatedItem.description) || '...' }}</p>
-            </template>
-          </n-thing>
-          <n-collapse-transition :show="!!thinkingProcess">
-            <n-log :log="thinkingProcess" language="text" trim/>
-          </n-collapse-transition>
-        </div>
-        <n-flex v-if="isGenerationFinished" justify="end" style="margin-top: 16px;">
-          <n-button type="primary" @click="addGeneratedItemToShop">添加到商店</n-button>
-          <n-button @click="clearGeneratedItem">丢弃</n-button>
-        </n-flex>
-      </div>
-    </n-card>
+    <GeneratorPanel
+        v-model="generatedItem"
+        :schema="itemSchema"
+        storage-key="shop-item-generator"
+        :expected-inputs="['topic']"
+        title="AI 商品生成器"
+        generation-prompt-label="输入你想要生成的物品描述，例如：一把能斩断噩梦的短剑"
+        @accept="addGeneratedItemToShop"
+    />
 
     <n-list bordered hoverable>
       <ItemDisplay
@@ -73,20 +42,18 @@
 </template>
 
 <script lang="ts" setup>
-import {NButton, NFlex, NH1, NList, NPageHeader, NThing, useMessage} from 'naive-ui';
+import {NButton, NFlex, NH1, NList, NPageHeader, useMessage} from 'naive-ui';
 import {useShopStore} from '../stores/shopStore';
-import {usePlayerStore} from '../stores/playerStore';
-import {useWorkflowStream} from '@yaesandbox-frontend/core-services/composables';
-import WorkflowProviderButton from "#/components/WorkflowProviderButton.vue";
-import type {WorkflowConfig} from "@yaesandbox-frontend/core-services/types";
-import {computed, ref} from "vue";
-import {getText, getThink, parseNumber} from "#/utils/workflowParser.ts";
-import type {StreamedItem} from "#/types/streaming.ts";
+import {useBackpackStore} from '../stores/backpackStore.ts';
+import {ref} from "vue";
+import type {SchemaField} from '#/types/generator.ts';
+import type {Item} from '#/types/models.ts';
 import ItemDisplay from "#/components/ItemDisplay.vue";
 import ItemEditor from "#/components/ItemEditor.vue";
+import GeneratorPanel from "#/components/GeneratorPanel.vue";
 
 const shopStore = useShopStore();
-const playerStore = usePlayerStore();
+const playerStore = useBackpackStore();
 const message = useMessage();
 
 // --- 编辑器模态框状态 ---
@@ -106,55 +73,33 @@ function openEditModal(id: string)
 }
 
 // --- AI 生成逻辑 ---
-const generationTopic = ref<string>('');
-const {
-  data: generatedItem,
-  isLoading: isGenerating,
-  error: generationError,
-  isFinished: isGenerationFinished,
-  execute: executeItemGeneration,
-} = useWorkflowStream<Partial<StreamedItem>>();
 
-const thinkingProcess = computed(() =>
-{
-  if (!generatedItem.value) return '';
-  const thoughts = [
-    getThink(generatedItem.value.name),
-    getThink(generatedItem.value.description),
-    getThink(generatedItem.value.price)
-  ].filter(Boolean);
-  return thoughts.join('\n');
-});
+// 1. 定义 Item 的 Schema
+const itemSchema: SchemaField[] = [
+  {key: 'name', label: '物品名称', type: 'text'},
+  {key: 'description', label: '物品描述', type: 'textarea'},
+  {key: 'price', label: '价格', type: 'number'},
+];
 
-async function handleGenerateItem(config: WorkflowConfig)
+// 2. 创建一个 ref 来接收生成的数据
+const generatedItem = ref<Partial<Item> | null>(null);
+
+// 3. 实现 accept 事件的回调
+function addGeneratedItemToShop(newItem: Partial<Item>)
 {
-  if (!generationTopic.value.trim())
+  // 进行数据校验，确保核心字段存在
+  if (!newItem.name || !newItem.price)
   {
-    message.warning('请输入物品的描述！');
+    message.error('AI生成的数据不完整，已丢弃。');
     return;
   }
-  const inputs = {topic: generationTopic.value};
-  await executeItemGeneration(config, inputs);
-}
 
-function addGeneratedItemToShop()
-{
-  if (generatedItem.value)
-  {
-    const newItemData = {
-      name: getText(generatedItem.value.name) || '未命名商品',
-      description: getText(generatedItem.value.description) || '无描述',
-      price: parseNumber(generatedItem.value.price) || 100,
-    };
-    // 使用 store action 来添加
-    shopStore.addItem(newItemData);
-    message.success(`“${newItemData.name}”已成功添加到商店！`);
-    clearGeneratedItem();
-  }
-}
-
-function clearGeneratedItem()
-{
-  generatedItem.value = null;
+  shopStore.addItem({
+    name: newItem.name,
+    description: newItem.description || '无描述',
+    price: newItem.price,
+  });
+  message.success(`“${newItem.name}”已成功添加到商店！`);
+  generatedItem.value = null; // 清空，准备下一次生成
 }
 </script>
