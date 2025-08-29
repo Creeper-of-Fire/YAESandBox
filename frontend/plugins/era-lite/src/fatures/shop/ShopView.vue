@@ -46,12 +46,12 @@
 
 <script lang="ts" setup>
 import {NButton, NFlex, NH1, NList, NPageHeader, useMessage} from 'naive-ui';
-import {useShopStore} from '../stores/shopStore';
-import {useBackpackStore} from '../stores/backpackStore.ts';
+import {useShopStore} from './shopStore.ts';
+import {useBackpackStore} from '../backpack/backpackStore.ts';
 import EntityEditor from "#/components/EntityEditor.vue";
 import {ref} from "vue";
 import type {Item} from '#/types/models.ts';
-import ShopItemDisplay from "#/components/ShopItemDisplay.vue";
+import ShopItemDisplay from "#/fatures/shop/ShopItemDisplay.vue";
 import GeneratorPanel from "#/components/GeneratorPanel.vue";
 import {itemSchema} from "#/schemas/entitySchemas.ts";
 

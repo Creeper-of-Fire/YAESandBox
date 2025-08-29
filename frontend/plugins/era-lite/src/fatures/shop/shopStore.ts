@@ -1,6 +1,6 @@
 ﻿import {defineStore} from 'pinia';
 import {ref} from 'vue';
-import {type Item} from '#/types/models';
+import {type Item} from '#/types/models.ts';
 import {nanoid} from 'nanoid';
 import {createPersistentState} from "#/composables/createPersistentState.ts";
 import {watchOnce} from "@vueuse/core";

@@ -1,8 +1,8 @@
 ﻿import {defineStore} from 'pinia';
 import {computed} from 'vue';
-import {type Item} from '#/types/models';
+import {type Item} from '#/types/models.ts';
 import {nanoid} from 'nanoid';
-import {createPersistentState} from '#/composables/createPersistentState';
+import {createPersistentState} from '#/composables/createPersistentState.ts';
 
 const STORAGE_KEY = 'era-lite-backpack';
 

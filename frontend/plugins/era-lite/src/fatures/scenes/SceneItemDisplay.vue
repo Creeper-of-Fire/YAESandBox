@@ -35,10 +35,10 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NButton, NFlex, NIcon, NListItem, NThing, useDialog, useMessage} from 'naive-ui';
-import {useSceneStore} from '#/stores/sceneStore';
-import {useSessionStore} from '#/stores/sessionStore';
+import {useSceneStore} from '#/fatures/scenes/sceneStore.ts';
+import {useSessionStore} from '#/stores/sessionStore.ts';
 import {Pencil as EditIcon, TrashBinOutline as DeleteIcon} from '@vicons/ionicons5';
-import type {Scene} from '#/types/models';
+import type {Scene} from '#/types/models.ts';
 import EntityEditor from "#/components/EntityEditor.vue";
 import {sceneSchema} from "#/schemas/entitySchemas.ts";
 

@@ -13,7 +13,7 @@ export const routes: RouteRecordRaw[] = [
                 // 路径为空，匹配 /era-lite
                 path: '', // 使其成为 /era-lite 的默认子路由
                 name: 'Era_Lite_Home',
-                component: () => import('./views/HomeView.vue'),
+                component: () => import('./fatures/home/HomeView.vue'),
                 meta: {
                     title: '主菜单',
                 }
@@ -26,7 +26,7 @@ export const routes: RouteRecordRaw[] = [
             {
                 path: 'characters', // 完整路径 /era-lite/characters
                 name: 'Era_Lite_Characters',
-                component: () => import('./views/CharacterListView.vue'),
+                component: () => import('./fatures/characters/CharacterListView.vue'),
                 meta: {
                     title: '角色列表',
                 }
@@ -34,7 +34,7 @@ export const routes: RouteRecordRaw[] = [
             {
                 path: 'scenes', // 完整路径 /era-lite/scenes
                 name: 'Era_Lite_Scenes',
-                component: () => import('./views/SceneListView.vue'),
+                component: () => import('./fatures/scenes/SceneListView.vue'),
                 meta: {
                     title: '场景列表',
                 }
@@ -42,7 +42,7 @@ export const routes: RouteRecordRaw[] = [
             {
                 path: 'shop', // 完整路径 /era-lite/shop
                 name: 'Era_Lite_Shop',
-                component: () => import('./views/ShopView.vue'),
+                component: () => import('./fatures/shop/ShopView.vue'),
                 meta: {
                     title: '道具商店',
                 }
@@ -50,7 +50,7 @@ export const routes: RouteRecordRaw[] = [
             {
                 path: 'backpack', // 完整路径 /era-lite/backpack
                 name: 'Era_Lite_Backpack',
-                component: () => import('./views/BackpackView.vue'),
+                component: () => import('./fatures/backpack/BackpackView.vue'),
                 meta: {
                     title: '我的背包',
                 }

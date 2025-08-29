@@ -42,11 +42,11 @@
 <script lang="ts" setup>
 import {ref} from 'vue';
 import {NButton, NFlex, NH1, NList, NPageHeader, useMessage} from 'naive-ui';
-import {useSceneStore} from '../stores/sceneStore';
-import type {Scene} from '#/types/models';
+import {useSceneStore} from './sceneStore.ts';
+import type {Scene} from '#/types/models.ts';
 import GeneratorPanel from "#/components/GeneratorPanel.vue";
 import EntityEditor from "#/components/EntityEditor.vue";
-import SceneItemDisplay from "#/components/SceneItemDisplay.vue";
+import SceneItemDisplay from "#/fatures/scenes/SceneItemDisplay.vue";
 import {sceneSchema} from "#/schemas/entitySchemas.ts";
 
 const sceneStore = useSceneStore();

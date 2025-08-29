@@ -1,7 +1,7 @@
 ﻿import { defineStore } from 'pinia';
-import { type Scene } from '#/types/models';
+import { type Scene } from '#/types/models.ts';
 import { nanoid } from 'nanoid';
-import { createPersistentState } from '#/composables/createPersistentState';
+import { createPersistentState } from '#/composables/createPersistentState.ts';
 import { watchOnce } from '@vueuse/core';
 
 const STORAGE_KEY = 'era-lite-scenes';

@@ -21,8 +21,8 @@
 
 <script setup lang="ts">
 import { NFlex, NH1, NList, NEmpty, NPageHeader } from 'naive-ui';
-import { useBackpackStore } from '../stores/backpackStore.ts';
-import BackpackItemDisplay from "#/components/BackpackItemDisplay.vue";
+import { useBackpackStore } from './backpackStore.ts';
+import BackpackItemDisplay from "#/fatures/backpack/BackpackItemDisplay.vue";
 
 const playerStore = useBackpackStore();
 </script>

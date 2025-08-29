@@ -24,11 +24,11 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NButton, useDialog, useMessage} from 'naive-ui';
-import {useShopStore} from '#/stores/shopStore';
-import {useBackpackStore} from '#/stores/backpackStore';
-import BaseItemDisplay from './BaseItemDisplay.vue';
+import {useShopStore} from '#/fatures/shop/shopStore.ts';
+import {useBackpackStore} from '#/fatures/backpack/backpackStore.ts';
+import BaseItemDisplay from '../../components/BaseItemDisplay.vue';
 import EntityEditor from "#/components/EntityEditor.vue";
-import type {Item} from '#/types/models';
+import type {Item} from '#/types/models.ts';
 import {itemSchema} from "#/schemas/entitySchemas.ts";
 
 const props = defineProps<{ itemId: string }>();

@@ -41,8 +41,8 @@
 
 <script setup lang="ts">
 import { NFlex, NH1, NGrid, NGi, NCard, NEmpty, NButton, NH3 } from 'naive-ui';
-import { useSessionStore } from '../stores/sessionStore';
-import CharacterDisplayCard from '../components/CharacterDisplayCard.vue';
+import { useSessionStore } from '../../stores/sessionStore.ts';
+import CharacterDisplayCard from './CharacterDisplayCard.vue';
 import {useRouter} from "vue-router";
 
 const router = useRouter();

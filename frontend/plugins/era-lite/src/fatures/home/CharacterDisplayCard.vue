@@ -18,7 +18,7 @@
 
 <script lang="ts" setup>
 import {NAvatar, NButton, NCard, NEmpty, NH3, NFlex} from 'naive-ui';
-import {type Character} from '#/types/models';
+import {type Character} from '#/types/models.ts';
 import {useRouter} from "vue-router";
 
 defineProps<{

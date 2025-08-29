@@ -44,11 +44,11 @@
 <script lang="ts" setup>
 import {ref} from 'vue';
 import {NButton, NFlex, NH1, NInput, NList, NPageHeader, useMessage} from 'naive-ui';
-import {useCharacterStore} from '../stores/characterStore';
-import type {Character} from '#/types/models';
+import {useCharacterStore} from './characterStore.ts';
+import type {Character} from '#/types/models.ts';
 import GeneratorPanel from "#/components/GeneratorPanel.vue";
 import EntityEditor from "#/components/EntityEditor.vue";
-import CharacterItemDisplay from "#/components/CharacterItemDisplay.vue";
+import CharacterItemDisplay from "#/fatures/characters/CharacterItemDisplay.vue";
 import {characterSchema} from "#/schemas/entitySchemas.ts";
 
 const characterStore = useCharacterStore();
