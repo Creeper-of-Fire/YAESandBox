@@ -195,8 +195,8 @@ public class WorkflowProcessor(
         foreach (var tuum in this.Tuums)
         {
             var tuumConfig = tuum.TuumContent.TuumConfig;
-            // Tuum 的输入端点是 InputMappings 的 Keys
-            foreach (string inputEndpointName in tuumConfig.InputMappings.Keys)
+            // Tuum 的输入端点是 InputMappings 的 Values
+            foreach (string inputEndpointName in tuumConfig.InputMappings.Values)
             {
                 if (allAvailableOutputs.TryGetValue(inputEndpointName, out var sourceEndpoint))
                 {

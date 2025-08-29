@@ -114,7 +114,7 @@ public class TuumProcessor(
     /// <summary>
     /// 此枢机声明的所有输入端点的名称。
     /// </summary>
-    internal IEnumerable<string> InputEndpoints { get; } = config.InputMappings.Keys;
+    internal IEnumerable<string> InputEndpoints { get; } = config.InputMappings.Values;
 
     /// <summary>
     /// 此枢机声明的所有输出端点的名称。
