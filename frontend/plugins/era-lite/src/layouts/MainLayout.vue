@@ -31,11 +31,9 @@
       />
     </n-layout-sider>
     <n-layout>
-      <n-message-provider>
-        <div class="main-content">
-          <router-view/>
-        </div>
-      </n-message-provider>
+      <div class="main-content">
+        <router-view/>
+      </div>
     </n-layout>
   </n-layout>
 </template>
@@ -43,8 +41,8 @@
 <script lang="ts" setup>
 import {h} from 'vue';
 import {RouterLink, useRoute} from 'vue-router';
-import {NIcon, NLayout, NLayoutSider, NMenu, NMessageProvider, useThemeVars} from 'naive-ui';
-import {BagIcon, EarthIcon, HomeIcon, PeopleIcon, StorefrontIcon} from '#/utils/icon.ts';
+import {NIcon, NLayout, NLayoutSider, NMenu, useThemeVars} from 'naive-ui';
+import {BagIcon, ChatIcon, EarthIcon, HomeIcon, PeopleIcon, StorefrontIcon} from '#/utils/icon.ts';
 import {GameControllerIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 
@@ -59,6 +57,11 @@ const menuOptions = [
     label: () => h(RouterLink, {to: {name: 'Era_Lite_Home'}}, {default: () => '主菜单'}),
     key: 'Era_Lite_Home',
     icon: renderIcon(HomeIcon),
+  },
+  {
+    label: () => h(RouterLink, {to: {name: 'Era_Lite_Chat_List'}}, {default: () => '对话记录'}),
+    key: 'Era_Lite_Chat_List',
+    icon: renderIcon(ChatIcon),
   },
   {
     label: () => h(RouterLink, {to: {name: 'Era_Lite_Characters'}}, {default: () => '角色列表'}),

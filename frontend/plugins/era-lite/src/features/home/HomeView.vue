@@ -1,22 +1,22 @@
 ﻿<!-- era-lite/src/views/HomeView.vue -->
 <template>
-  <n-flex vertical :size="24">
+  <n-flex :size="24" vertical>
     <n-h1>欢迎来到 Era-Lite</n-h1>
 
     <!-- 当前选择 -->
     <n-grid :cols="2" :x-gap="24">
       <n-gi>
-        <character-display-card title="主角" :character="sessionStore.selectedProtagonist" />
+        <character-display-card :character="sessionStore.selectedPlayerCharacter" title="主角"/>
       </n-gi>
       <n-gi>
-        <character-display-card title="交互对象" :character="sessionStore.selectedInteractTarget" />
+        <character-display-card :character="sessionStore.selectedTargetCharacter" title="交互对象"/>
       </n-gi>
     </n-grid>
 
     <n-card title="当前场景">
       <n-empty v-if="!sessionStore.selectedScene" description="尚未选择场景">
         <template #extra>
-          <n-button @click="router.push({ name: 'Scenes' })">去选择</n-button>
+          <n-button @click="router.push({ name: 'Era_Lite_Scenes' })">去选择</n-button>
         </template>
       </n-empty>
       <div v-else>
@@ -28,10 +28,10 @@
     <!-- 操作按钮 -->
     <n-card title="开始行动">
       <n-flex>
-        <n-button size="large" type="primary" :disabled="!sessionStore.isReadyForInteraction">
-          开始交互 (WIP)
+        <n-button :disabled="!sessionStore.isReadyForInteraction" size="large" type="primary" @click="startInteraction">
+          开始交互
         </n-button>
-        <n-button size="large" @click="sessionStore.clearSelections()" ghost>
+        <n-button ghost size="large" @click="sessionStore.clearSelections()">
           清空选择
         </n-button>
       </n-flex>
@@ -39,12 +39,40 @@
   </n-flex>
 </template>
 
-<script setup lang="ts">
-import { NFlex, NH1, NGrid, NGi, NCard, NEmpty, NButton, NH3 } from 'naive-ui';
-import { useSessionStore } from '../../stores/sessionStore.ts';
+<script lang="ts" setup>
+import {NButton, NCard, NEmpty, NFlex, NGi, NGrid, NH1, NH3, useMessage} from 'naive-ui';
+import {useSessionStore} from '#/stores/sessionStore.ts';
 import CharacterDisplayCard from './CharacterDisplayCard.vue';
 import {useRouter} from "vue-router";
+import {useChatStore} from '#/features/chat/chatStore.ts';
 
 const router = useRouter();
 const sessionStore = useSessionStore();
+const chatStore = useChatStore();
+const message = useMessage();
+
+function startInteraction()
+{
+  if (!sessionStore.isReadyForInteraction)
+  {
+    message.warning('请先选择主角、交互对象和场景。');
+    return;
+  }
+
+  try
+  {
+    const newSessionId = chatStore.createChatSession(
+        sessionStore.playerCharacterId!,
+        sessionStore.targetCharacterId!,
+        sessionStore.currentSceneId!
+    );
+
+    message.success('新对话已创建！');
+    router.push({name: 'Era_Lite_Chat_View', params: {sessionId: newSessionId}});
+
+  } catch (error: any)
+  {
+    message.error(`无法开始交互: ${error.message}`);
+  }
+}
 </script>

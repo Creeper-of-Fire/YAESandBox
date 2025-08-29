@@ -11,11 +11,11 @@
 
     <template #suffix>
       <n-flex>
-        <n-button :type="sessionStore.protagonistId === character.id ? 'primary' : 'default'" ghost
-                  @click="sessionStore.setProtagonist(character.id)">设为主角
+        <n-button :type="sessionStore.playerCharacterId === character.id ? 'primary' : 'default'" ghost
+                  @click="sessionStore.setPlayerCharacter(character.id)">设为主角
         </n-button>
-        <n-button :type="sessionStore.interactTargetId === character.id ? 'success' : 'default'"
-                  ghost @click="sessionStore.setInteractTarget(character.id)">设为交互对象
+        <n-button :type="sessionStore.targetCharacterId === character.id ? 'success' : 'default'"
+                  ghost @click="sessionStore.setTargetCharacter(character.id)">设为交互对象
         </n-button>
         <n-button circle @click="openEditModal">
           <template #icon>

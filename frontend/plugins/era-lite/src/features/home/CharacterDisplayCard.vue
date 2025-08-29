@@ -3,7 +3,7 @@
   <n-card :title="title">
     <n-empty v-if="!character" :description="`尚未选择${title}`">
       <template #extra>
-        <n-button @click="router.push({ name: 'Characters' })">去选择</n-button>
+        <n-button @click="router.push({ name: 'Era_Lite_Characters' })">去选择</n-button>
       </template>
     </n-empty>
     <n-flex v-else align="center">

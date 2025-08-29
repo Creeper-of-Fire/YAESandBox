@@ -9,32 +9,32 @@ const STORAGE_KEY = 'era-lite-session';
 
 interface SessionState
 {
-    protagonistId: string | null;
-    interactTargetId: string | null;
+    playerCharacterId: string | null;
+    targetCharacterId: string | null;
     currentSceneId: string | null;
 }
 
 export const useSessionStore = defineStore(STORAGE_KEY, () =>
 {
     const {state: session, isReady} = createPersistentState<SessionState>(STORAGE_KEY, {
-        protagonistId: null,
-        interactTargetId: null,
+        playerCharacterId: null,
+        targetCharacterId: null,
         currentSceneId: null,
     });
 
     // --- Computed Refs for easier access and assignment ---
-    const protagonistId = computed({
-        get: () => session.value.protagonistId,
+    const playerCharacterId = computed({
+        get: () => session.value.playerCharacterId,
         set: (val) =>
         {
-            session.value.protagonistId = val;
+            session.value.playerCharacterId = val;
         }
     });
-    const interactTargetId = computed({
-        get: () => session.value.interactTargetId,
+    const targetCharacterId = computed({
+        get: () => session.value.targetCharacterId,
         set: (val) =>
         {
-            session.value.interactTargetId = val;
+            session.value.targetCharacterId = val;
         }
     });
     const currentSceneId = computed({
@@ -50,22 +50,22 @@ export const useSessionStore = defineStore(STORAGE_KEY, () =>
     const sceneStore = useSceneStore();
 
     // --- Actions ---
-    function setProtagonist(id: string)
+    function setPlayerCharacter(id: string)
     {
-        if (interactTargetId.value === id)
+        if (targetCharacterId.value === id)
         {
-            interactTargetId.value = protagonistId.value;
+            targetCharacterId.value = playerCharacterId.value;
         }
-        protagonistId.value = id;
+        playerCharacterId.value = id;
     }
 
-    function setInteractTarget(id: string)
+    function setTargetCharacter(id: string)
     {
-        if (protagonistId.value === id)
+        if (playerCharacterId.value === id)
         {
-            protagonistId.value = interactTargetId.value;
+            playerCharacterId.value = targetCharacterId.value;
         }
-        interactTargetId.value = id;
+        targetCharacterId.value = id;
     }
 
     function setCurrentScene(id: string)
@@ -75,23 +75,23 @@ export const useSessionStore = defineStore(STORAGE_KEY, () =>
 
     function clearSelections()
     {
-        protagonistId.value = null;
-        interactTargetId.value = null;
+        playerCharacterId.value = null;
+        targetCharacterId.value = null;
         currentSceneId.value = null;
     }
 
     // --- Getters (Computed) ---
-    const selectedProtagonist = computed((): Character | undefined =>
+    const selectedPlayerCharacter = computed((): Character | undefined =>
     {
-        return protagonistId.value
-            ? characterStore.characters.find(c => c.id === protagonistId.value)
+        return playerCharacterId.value
+            ? characterStore.characters.find(c => c.id === playerCharacterId.value)
             : undefined;
     });
 
-    const selectedInteractTarget = computed((): Character | undefined =>
+    const selectedTargetCharacter = computed((): Character | undefined =>
     {
-        return interactTargetId.value
-            ? characterStore.characters.find(c => c.id === interactTargetId.value)
+        return targetCharacterId.value
+            ? characterStore.characters.find(c => c.id === targetCharacterId.value)
             : undefined;
     });
 
@@ -104,20 +104,20 @@ export const useSessionStore = defineStore(STORAGE_KEY, () =>
 
     const isReadyForInteraction = computed(() =>
     {
-        return !!(selectedProtagonist.value && selectedInteractTarget.value && selectedScene.value);
+        return !!(selectedPlayerCharacter.value && selectedTargetCharacter.value && selectedScene.value);
     });
 
     return {
-        protagonistId,
-        interactTargetId,
+        playerCharacterId,
+        targetCharacterId,
         currentSceneId,
         isSessionReady: isReady,
-        setProtagonist,
-        setInteractTarget,
+        setPlayerCharacter,
+        setTargetCharacter,
         setCurrentScene,
         clearSelections,
-        selectedProtagonist,
-        selectedInteractTarget,
+        selectedPlayerCharacter,
+        selectedTargetCharacter,
         selectedScene,
         isReadyForInteraction,
     };

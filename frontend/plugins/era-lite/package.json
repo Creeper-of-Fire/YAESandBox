@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@vicons/ionicons5": "^0.13.0",
+    "@vicons/fluent": "^0.13.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
     "nanoid": "^5.1.5"
