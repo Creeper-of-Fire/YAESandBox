@@ -7,7 +7,7 @@
       </template>
       <template #extra>
         <n-flex align="center">
-          <span>你的金钱: {{ playerStore.money }} G</span>
+          <span>你的金钱: {{ backpackStore.money }} G</span>
           <n-button @click="openCreateModal" type="primary">手动添加商品</n-button>
           <n-button :loading="shopStore.isLoading" @click="shopStore.generateShopItems()">
             刷新商品
@@ -27,17 +27,19 @@
     />
 
     <n-list bordered hoverable>
-      <ItemDisplay
+      <ShopItemDisplay
           v-for="item in shopStore.itemsForSale"
           :key="item.id"
           :item-id="item.id"
-          context="shop"
-          @edit="openEditModal"
       />
     </n-list>
 
-    <!-- 编辑/创建模态框 -->
-    <ItemEditor v-model:show="showEditorModal" :item-id="editingItemId"/>
+    <ItemEditor
+        v-model:show="showCreateModal"
+        mode="create"
+        :initial-data="null"
+        @save="handleCreate"
+    />
   </n-flex>
 </template>
 
@@ -48,28 +50,27 @@ import {useBackpackStore} from '../stores/backpackStore.ts';
 import {ref} from "vue";
 import type {SchemaField} from '#/types/generator.ts';
 import type {Item} from '#/types/models.ts';
-import ItemDisplay from "#/components/ItemDisplay.vue";
+import ShopItemDisplay from "#/components/ShopItemDisplay.vue";
 import ItemEditor from "#/components/ItemEditor.vue";
 import GeneratorPanel from "#/components/GeneratorPanel.vue";
 
 const shopStore = useShopStore();
-const playerStore = useBackpackStore();
+const backpackStore = useBackpackStore();
 const message = useMessage();
 
 // --- 编辑器模态框状态 ---
-const showEditorModal = ref(false);
+const showCreateModal = ref(false);
 const editingItemId = ref<string | null>(null);
 
 function openCreateModal()
 {
   editingItemId.value = null;
-  showEditorModal.value = true;
+  showCreateModal.value = true;
 }
 
-function openEditModal(id: string)
-{
-  editingItemId.value = id;
-  showEditorModal.value = true;
+function handleCreate(newItemData: Omit<Item, 'id'>) {
+  shopStore.addItem(newItemData);
+  message.success('新物品已创建');
 }
 
 // --- AI 生成逻辑 ---

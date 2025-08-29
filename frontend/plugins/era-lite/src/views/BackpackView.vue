@@ -9,8 +9,7 @@
     </n-page-header>
     <n-empty v-if="playerStore.ownedItems.length === 0" description="你的背包空空如也" />
     <n-list v-else bordered hoverable>
-      <!-- 直接使用 ItemDisplay 组件 -->
-      <ItemDisplay
+      <BackpackItemDisplay
           v-for="item in playerStore.ownedItems"
           :key="item.id"
           :item-id="item.id"
@@ -23,7 +22,7 @@
 <script setup lang="ts">
 import { NFlex, NH1, NList, NEmpty, NPageHeader } from 'naive-ui';
 import { useBackpackStore } from '../stores/backpackStore.ts';
-import ItemDisplay from "#/components/ItemDisplay.vue";
+import BackpackItemDisplay from "#/components/BackpackItemDisplay.vue";
 
 const playerStore = useBackpackStore();
 </script>
