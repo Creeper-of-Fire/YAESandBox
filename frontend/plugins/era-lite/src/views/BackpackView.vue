@@ -9,16 +9,21 @@
     </n-page-header>
     <n-empty v-if="playerStore.ownedItems.length === 0" description="你的背包空空如也" />
     <n-list v-else bordered hoverable>
-      <n-list-item v-for="item in playerStore.ownedItems" :key="item.id">
-        <n-thing :title="item.name" :description="item.description" />
-      </n-list-item>
+      <!-- 直接使用 ItemDisplay 组件 -->
+      <ItemDisplay
+          v-for="item in playerStore.ownedItems"
+          :key="item.id"
+          :item-id="item.id"
+          context="backpack"
+      />
     </n-list>
   </n-flex>
 </template>
 
 <script setup lang="ts">
-import { NFlex, NH1, NList, NListItem, NThing, NEmpty, NPageHeader } from 'naive-ui';
+import { NFlex, NH1, NList, NEmpty, NPageHeader } from 'naive-ui';
 import { usePlayerStore } from '../stores/playerStore';
+import ItemDisplay from "#/components/ItemDisplay.vue";
 
 const playerStore = usePlayerStore();
 </script>

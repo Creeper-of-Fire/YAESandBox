@@ -1,22 +1,61 @@
-﻿import { defineStore } from 'pinia';
+﻿import {defineStore} from 'pinia';
 import {ref, toRaw, watch} from 'vue';
-import {type Item } from '#/types/models';
-import { nanoid } from 'nanoid';
+import {type Item} from '#/types/models';
+import {nanoid} from 'nanoid';
 import localforage from 'localforage';
 
 const STORAGE_KEY = 'era-lite-shop';
 
-export const useShopStore = defineStore(STORAGE_KEY, () => {
+export const useShopStore = defineStore(STORAGE_KEY, () =>
+{
     const itemsForSale = ref<Item[]>([]);
     const isLoading = ref(false);
 
     // --- Actions ---
 
+
+    /**
+     * 向商店添加一个新物品。
+     * @param itemData - 物品数据，无需包含 id。
+     */
+    function addItem(itemData: Omit<Item, 'id'>)
+    {
+        const newItem: Item = {
+            ...itemData,
+            id: nanoid(),
+        };
+        itemsForSale.value.unshift(newItem); // 添加到数组开头，方便查看
+    }
+
+    /**
+     * 更新商店中的一个现有物品。
+     * @param updatedItem - 包含完整 id 和更新后数据的物品对象。
+     */
+    function updateItem(updatedItem: Item)
+    {
+        const index = itemsForSale.value.findIndex(item => item.id === updatedItem.id);
+        if (index !== -1)
+        {
+            itemsForSale.value[index] = updatedItem;
+        }
+    }
+
+    /**
+     * 从商店删除一个物品。
+     * @param itemId - 要删除的物品的 id。
+     */
+    function deleteItem(itemId: string)
+    {
+        itemsForSale.value = itemsForSale.value.filter(item => item.id !== itemId);
+    }
+
+
     /**
      * 填充商店商品。这是未来集成 AI 的入口点。
      * 现在我们用静态数据模拟，但保留了异步结构。
      */
-    async function generateShopItems() {
+    async function generateShopItems()
+    {
         isLoading.value = true;
         console.log("正在生成/刷新商店商品...");
 
@@ -27,9 +66,9 @@ export const useShopStore = defineStore(STORAGE_KEY, () => {
         // **现在**: 使用静态数据模拟
         await new Promise(resolve => setTimeout(resolve, 500)); // 模拟网络延迟
         itemsForSale.value = [
-            { id: nanoid(), name: '荧光蘑菇', description: '在黑暗中散发着柔和的光芒。', price: 60 },
-            { id: nanoid(), name: '破译的密码盘', description: '似乎可以解开某种古老的锁。', price: 250 },
-            { id: nanoid(), name: '一瓶星尘', description: '握在手中感觉暖洋洋的。', price: 400 },
+            {id: nanoid(), name: '荧光蘑菇', description: '在黑暗中散发着柔和的光芒。', price: 60},
+            {id: nanoid(), name: '破译的密码盘', description: '似乎可以解开某种古老的锁。', price: 250},
+            {id: nanoid(), name: '一瓶星尘', description: '握在手中感觉暖洋洋的。', price: 400},
         ];
 
         console.log("商店商品已更新。");
@@ -38,20 +77,31 @@ export const useShopStore = defineStore(STORAGE_KEY, () => {
 
     // --- Persistence ---
     // 从 IndexedDB 加载初始状态
-    localforage.getItem<Item[]>(STORAGE_KEY).then(savedItems => {
-        if (savedItems && savedItems.length > 0) {
+    localforage.getItem<Item[]>(STORAGE_KEY).then(savedItems =>
+    {
+        if (savedItems && savedItems.length > 0)
+        {
             itemsForSale.value = savedItems;
-        } else {
+        } else
+        {
             // 如果没有缓存，则自动生成第一批商品
             generateShopItems();
         }
     });
 
     // 监听变化并持久化
-    watch(itemsForSale, (newItems) => {
+    watch(itemsForSale, (newItems) =>
+    {
         localforage.setItem(STORAGE_KEY, toRaw(newItems));
-    }, { deep: true });
+    }, {deep: true});
 
 
-    return { itemsForSale, isLoading, generateShopItems };
+    return {
+        itemsForSale,
+        isLoading,
+        generateShopItems,
+        addItem,
+        updateItem,
+        deleteItem
+    };
 });
