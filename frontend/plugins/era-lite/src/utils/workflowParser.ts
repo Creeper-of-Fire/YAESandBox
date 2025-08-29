@@ -1,20 +1,14 @@
 ﻿import type { ComplexPropertyValue } from '#/types/streaming';
 
+
 /**
  * 从 ComplexPropertyValue 中安全地提取可显示的文本。
- * 处理三种情况:
- * 1. "纯字符串" -> "纯字符串"
- * 2. { _text: "文本" } -> "文本"
- * 3. { other: "..." } -> "" (没有可直接显示的文本)
+ * 由于后端结构统一，只需检查 _text 属性即可。
  * @param value 要解析的值
  * @returns 提取出的字符串，如果没有则返回空字符串
  */
 export function getText(value: ComplexPropertyValue | undefined): string {
-    if (!value) return '';
-    if (typeof value === 'string') {
-        return value;
-    }
-    return value._text || '';
+    return value?._text || '';
 }
 
 /**
@@ -23,7 +17,7 @@ export function getText(value: ComplexPropertyValue | undefined): string {
  * @returns 思考内容字符串，如果没有则返回 null
  */
 export function getThink(value: ComplexPropertyValue | undefined): string | null {
-    if (!value || typeof value === 'string') {
+    if (!value) {
         return null;
     }
     // `think` 的值根据后端契约，应该就是纯字符串

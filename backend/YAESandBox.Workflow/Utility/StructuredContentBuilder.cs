@@ -97,7 +97,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
                 targetNode.Children.RemoveAll(child => child is TextNode);
                 return;
             }
-            
+
             // 寻找第一个文本节点。
             var firstTextNode = targetNode.Children.OfType<TextNode>().FirstOrDefault();
 
@@ -256,6 +256,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
         {
             return "{}";
         }
+
         return JsonSerializer.Serialize(representation, YaeSandBoxJsonHelper.JsonSerializerOptions);
     }
 
@@ -275,7 +276,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
         {
             var indexedChildren = new SortedDictionary<int, ElementNode>();
             bool allChildrenAreIntKeys = true;
-            
+
             // 尝试将所有子元素名称解析为非负整数索引
             foreach (var child in childElements)
             {
@@ -311,9 +312,9 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
             }
         }
         // --- 数组检测逻辑 END ---
-        
+
         var jsonObject = new Dictionary<string, object?>();
-        
+
         // 1. 优先处理所有子元素
         if (childElements.Any())
         {
@@ -341,9 +342,11 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
         // 3. 根据内容决定最终返回类型
         if (!jsonObject.Any() && !string.IsNullOrEmpty(directText))
         {
-            // 情况 A: 节点只包含文本，例如 <thought>text</thought>
-            // 这是最关键的修正，确保返回纯字符串而不是对象。
-            return directText;
+            // 情况 A: 节点只包含文本，例如 <name>爱丽丝</name>
+            // 旧逻辑: return directText;
+            // 新逻辑: 总是返回一个包含 _text 的对象，以保证结构一致性。
+            jsonObject["_text"] = directText;
+            return jsonObject;
         }
 
         if (jsonObject.Any() && !string.IsNullOrEmpty(directText))
