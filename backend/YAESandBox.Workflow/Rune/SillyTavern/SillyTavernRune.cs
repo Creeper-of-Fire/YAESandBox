@@ -21,18 +21,20 @@ internal record SillyTavernRuneConfig : AbstractRuneConfig<SillyTavernRuneProces
 {
     private const string GroupInputs = "输入变量";
     private const string GroupOutputs = "输出变量";
-    private const string GroupSettings = "全局设置";
+    private const string GroupSettings = "世界书全局设置";
 
     /// <summary>
     /// 定义世界书的全局处理设置。
     /// </summary>
     public record WorldInfoSettings
     {
+        [InlineGroup(groupName: GroupSettings)]
         [Required]
-        [DefaultValue(20)]
+        [DefaultValue(2)]
         [Display(Name = "全局扫描深度", Description = "默认在历史记录中回溯多少条消息来匹配世界书关键字。")]
-        public int GlobalScanDepth { get; init; } = 20;
+        public int GlobalScanDepth { get; init; } = 2;
 
+        [InlineGroup(groupName: GroupSettings)]
         [Required]
         [DefaultValue(5)]
         [Display(Name = "最大递归深度", Description = "世界书条目之间互相激活的最大次数。0 表示无限（内部会设一个安全上限）。")]
@@ -43,34 +45,38 @@ internal record SillyTavernRuneConfig : AbstractRuneConfig<SillyTavernRuneProces
 
     [Required]
     [DefaultValue(AiRuneConfig.PromptsDefaultName)]
-    [Display(Name = "输出提示词列表", GroupName = GroupOutputs, Description = "处理完成后生成的最终提示词列表的变量名。")]
+    [Display(Name = "输出提示词列表", Description = "处理完成后生成的最终提示词列表的变量名。")]
     public string OutputPromptsVariableName { get; init; } = AiRuneConfig.PromptsDefaultName;
 
+    [InlineGroup(groupName: GroupInputs)]
     [Required]
     [DefaultValue(HistoryAppendRuneConfig.HistoryDefaultName)]
     [Display(Name = "输入历史记录", GroupName = GroupInputs, Description = "要处理的原始聊天记录提示词列表的变量名。")]
     public string HistoryVariableName { get; init; } = HistoryAppendRuneConfig.HistoryDefaultName;
 
+    [InlineGroup(groupName: GroupInputs)]
     [Required]
     [DefaultValue("worldInfoList")]
-    [Display(Name = "世界书JSON列表", GroupName = GroupInputs, Description = "包含多个世界书JSON字符串的列表变量名。")]
+    [Display(Name = "世界书JSON列表", Description = "包含多个世界书JSON字符串的列表变量名。")]
     public string WorldInfoJsonsVariableName { get; init; } = "worldInfoList";
 
+    [InlineGroup(groupName: GroupInputs)]
     [Required]
     [DefaultValue("playerCharacter")]
-    [Display(Name = "玩家角色信息", GroupName = GroupInputs, Description = "用于填充 {{user}} 和 {{persona}} 的玩家角色信息变量名。")]
+    [Display(Name = "玩家角色信息", Description = "用于填充 {{user}} 和 {{persona}}/personaDescription 的玩家角色信息变量名。")]
     public string PlayerCharacterVariableName { get; init; } = "playerCharacter";
 
+    [InlineGroup(groupName: GroupInputs)]
     [Required]
     [DefaultValue("targetCharacter")]
-    [Display(Name = "目标角色信息", GroupName = GroupInputs, Description = "用于填充 {{char}} 和 {{description}} 的目标角色信息变量名。")]
+    [Display(Name = "目标角色信息", Description = "用于填充 {{char}} 和 {{description}}/charDescription 的目标角色信息变量名。")]
     public string TargetCharacterVariableName { get; init; } = "targetCharacter";
 
-    [Display(Name = "世界书全局设置", GroupName = GroupSettings, Description = "配置世界书的全局扫描和递归行为。")]
+    [Display(Name = "世界书全局设置", Description = "配置世界书的全局扫描和递归行为。")]
     public WorldInfoSettings WorldInfoGlobalSettings { get; init; } = new();
 
     [Required(AllowEmptyStrings = true)]
-    [DataType(DataType.MultilineText)]
+    [RenderWithCustomWidget("SillyTavernPresetEditor")]
     [Display(Name = "SillyTavern 预设 JSON", Description = "在此处粘贴完整的 SillyTavern 预设 JSON 内容。")]
     public string PresetJson { get; init; } = string.Empty;
 

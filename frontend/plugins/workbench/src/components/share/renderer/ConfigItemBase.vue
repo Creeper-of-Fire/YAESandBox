@@ -26,7 +26,7 @@
       <slot name="actions"></slot>
     </div>
 
-    <div class="enable-switch-wrapper" @click.stop>
+    <div v-if="!hiddenSwitch" class="enable-switch-wrapper" @click.stop>
       <n-switch
           :round="false"
           :value="enabled"
@@ -55,6 +55,7 @@ const props = defineProps<{
   isDraggable?: boolean; // 是否可拖拽（显示拖拽把手）
   highlightColorCalculator: string;
   enabled: boolean;
+  hiddenSwitch?: boolean;
 }>();
 
 const isParentDisabled = inject(IsParentDisabledKey, ref(false));

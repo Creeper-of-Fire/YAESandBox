@@ -1,11 +1,13 @@
 <template>
   <n-config-provider :theme="finalThemeObject" class="app-container">
     <n-message-provider>
-      <n-dialog-provider>
-        <n-notification-provider>
-          <AppShell  v-model:themeMode="themeMode" @toggle-theme="handleThemeToggle"/>
-        </n-notification-provider>
-      </n-dialog-provider>
+      <n-modal-provider>
+        <n-dialog-provider>
+          <n-notification-provider>
+            <AppShell v-model:themeMode="themeMode" @toggle-theme="handleThemeToggle"/>
+          </n-notification-provider>
+        </n-dialog-provider>
+      </n-modal-provider>
     </n-message-provider>
   </n-config-provider>
   <!-- 可能的全局元素，如全局错误弹窗 -->
@@ -13,7 +15,7 @@
   <!--  <AppWideNotifications />-->
 
   <!-- 引入降级方案的遮罩组件 -->
-  <ThemeTransitionMask />
+  <ThemeTransitionMask/>
 </template>
 
 <script lang="ts" setup>
@@ -21,7 +23,7 @@ import AppShell from "#/AppShell.vue";
 import {computed, provide, ref, watch} from "vue";
 import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
 import {usePreferredDark} from "@vueuse/core";
-import {triggerThemeTransition,isTransitioning} from "#/composables/useThemeTransition.ts";
+import {isTransitioning, triggerThemeTransition} from "#/composables/useThemeTransition.ts";
 import {darkTheme, lightTheme} from "naive-ui";
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 import ThemeTransitionMask from "#/component/ThemeTransitionMask.vue";
@@ -35,16 +37,18 @@ const finalThemeName = ref<'light' | 'dark'>(
 );
 
 // 监听系统主题和用户设置的变化来更新 finalThemeName
-watch([themeMode, isSystemDark], () => {
+watch([themeMode, isSystemDark], () =>
+{
   if (isTransitioning.value) return; // 如果正在过渡，则不立即切换
   const newTheme = themeMode.value === 'system' ? (isSystemDark.value ? 'dark' : 'light') : themeMode.value;
   finalThemeName.value = newTheme;
 });
 
-const themes = { light: lightTheme, dark: darkTheme };
+const themes = {light: lightTheme, dark: darkTheme};
 const finalThemeObject = computed(() => themes[finalThemeName.value]);
 
-const handleThemeToggle = (event: MouseEvent) => {
+const handleThemeToggle = (event: MouseEvent) =>
+{
   if (isTransitioning.value) return;
 
   const currentTheme = finalThemeName.value;
@@ -56,7 +60,8 @@ const handleThemeToggle = (event: MouseEvent) => {
       currentTheme,
       targetTheme,
       700, // 动画时长
-      () => {
+      () =>
+      {
         // 这是核心：这个回调函数会在正确的时机（View Transition 内部或遮罩动画第一帧）
         // 安全地更新我们的主题状态
         finalThemeName.value = targetTheme;
@@ -90,6 +95,7 @@ defineOptions({
 ::view-transition-old(root) {
   animation: none;
 }
+
 /* 将上面定义的动画应用到新视图上 */
 ::view-transition-new(root) {
   animation: reveal-in 0.7s ease-in-out; /* 这里的 0.5s 应该和 JS 里的 duration 匹配 */

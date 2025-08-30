@@ -13,7 +13,8 @@ import RadioGroupWidget from "#/features/schema-viewer/field-widget/RadioGroupWi
 
 // 主应用内建的、通过键名引用的自定义组件
 const MAIN_APP_WIDGETS: Record<string, Component> = {
-    'AiConfigEditorWidget': markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/AiConfigEditorWidget.vue')))
+    'AiConfigEditorWidget': markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/AiConfigEditorWidget.vue'))),
+    'SillyTavernPresetEditor': markRaw(defineAsyncComponent(() => import('#/features/sillytavern-widget/PresetEditor.vue')))
     // ... 其他内建组件
 };
 
@@ -269,7 +270,8 @@ function determineComponentAndProps(node: FieldProps): { component: string; prop
         )
         {
             component = 'RadioGroupWidget';
-        } else
+        }
+        else
         {
             component = node['ui:options']?.isEditableSelectOptions ? 'MyCustomStringAutoComplete' : 'Select';
         }
@@ -286,7 +288,8 @@ function determineComponentAndProps(node: FieldProps): { component: string; prop
                 props.max = node.maximum;
                 props.step = node.multipleOf || 1;
                 component = 'SliderWithInputWidget';
-            } else
+            }
+            else
             {
                 component = 'InputNumber';
             }
@@ -301,7 +304,8 @@ function determineComponentAndProps(node: FieldProps): { component: string; prop
                 props.type = 'textarea';
                 props.autosize = {minRows: 3}; // 提供一个合理的默认值
                 component = 'Input';
-            } else
+            }
+            else
             {
                 component = 'Input';
             }

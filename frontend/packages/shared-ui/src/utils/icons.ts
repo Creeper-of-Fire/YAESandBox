@@ -24,3 +24,6 @@ export {default as TuumIcon} from '@vicons/material/es/AccountTreeOutlined';
 export {default as TrashIcon} from '@vicons/ionicons5/es/TrashBinOutline';
 export {default as EllipsisHorizontalIcon} from '@vicons/ionicons5/es/EllipsisHorizontal';
 export {default as ChevronDownIcon} from '@vicons/ionicons5/es/ChevronDownOutline';
+export {default as PricetagOutline} from '@vicons/ionicons5/es/PricetagOutline';
+export {default as LinkOffOutline} from '@vicons/ionicons5/es/PricetagOutline';
+export {default as DocumentTextOutline} from '@vicons/ionicons5/es/PricetagOutline';

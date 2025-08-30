@@ -25,7 +25,8 @@ public static class YaeSchemaExporter
             new DefaultValueProcessor(),
             new ComplexDefaultValueProcessor(),
             new InlineGroupProcessor(),
-            new RequiredProcessor()
+            new RequiredProcessor(),
+            new CustomWidgetRendererSchemaProcessor()
         ]);
 
         // 我们需要先执行扁平化，再构建UI顺序
