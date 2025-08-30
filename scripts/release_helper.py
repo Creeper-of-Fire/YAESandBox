@@ -22,7 +22,7 @@ BUILD_DIR = SOLUTION_ROOT / 'build'
 LAUNCHER_SOURCE_DIR = BUILD_DIR / 'launcher'
 FRONTEND_SOURCE_DIR = BUILD_DIR / 'frontend'
 BACKEND_SOURCE_DIR = BUILD_DIR / 'backend'
-BACKEND_SLIM_SOURCE_DIR = BUILD_DIR / 'backend' / 'slim'
+BACKEND_SLIM_SOURCE_DIR = BUILD_DIR / 'backend-slim'
 PLUGINS_SOURCE_DIR = BUILD_DIR / 'Plugins'
 DIST_DIR = SOLUTION_ROOT / 'build' / 'dist'
 STATE_FILE = DIST_DIR / '.release_state.json'
@@ -74,6 +74,9 @@ def package_component(name: str, src_dir: Path, filter_func=None) -> Path:
 
 def backend_filter(path: Path) -> bool:
     return path.name.lower().endswith('.exe') or path.name.lower() == 'appsettings.json'
+
+def plugin_filter(path: Path) -> bool:
+    return not path.name.lower().endswith('.pdb')
 
 
 def find_unique_exe(directory: Path) -> Path | None:
@@ -208,7 +211,7 @@ def main():
                 current_hashes['plugins'][plugin_id] = current_hash
                 last_plugin_hashes = last_hashes.get('plugins', {})
                 components.append({
-                    "id": plugin_id, "name": f"插件: {plugin_id}", "path": plugin_dir, "filter": None,
+                    "id": plugin_id, "name": f"插件: {plugin_id}", "path": plugin_dir, "filter": plugin_filter,
                     "changed": last_plugin_hashes.get(plugin_id) != current_hash, "is_plugin": True
                 })
 

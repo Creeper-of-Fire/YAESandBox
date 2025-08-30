@@ -1,0 +1,19 @@
+﻿<Project>
+    <PropertyGroup>
+        <!-- 
+          1. 启用确定性构建
+          确保只要源代码和依赖不变，编译出的 DLL 哈希值就不变。
+        -->
+        <Deterministic>true</Deterministic>
+
+        <!-- 
+          2. 映射源代码路径
+          将 PDB 文件中所有对本项目源代码的引用路径，
+          从类似 'C:\Users\YourUser\...' 的本地绝对路径，
+          重写为一个通用的、匿名的相对路径，例如 '/src/MyProject/...'。
+          '$(MSBuildThisFileDirectory)' 是一个内置变量，代表这个 Directory.Build.props 文件所在的目录，
+          也就是你的解决方案根目录。
+        -->
+        <PathMap>$(MSBuildThisFileDirectory)=/src/</PathMap>
+    </PropertyGroup>
+</Project>
