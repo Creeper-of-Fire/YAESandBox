@@ -43,10 +43,10 @@ import type {PromptItem} from './sillyTavernPreset';
 // 假设你有一些图标
 import {
   DeleteIcon,
-  DocumentTextOutline as ContentIcon,
+  DocumentTextIcon as ContentIcon,
   EditIcon,
-  LinkOffOutline as UnlinkIcon,
-  PricetagOutline as MarkerIcon
+  LinkIcon as UnlinkIcon,
+  PricetagIcon as MarkerIcon
 } from '@yaesandbox-frontend/shared-ui/icons';
 import ConfigItemBase from "#/components/share/renderer/ConfigItemBase.vue";
 

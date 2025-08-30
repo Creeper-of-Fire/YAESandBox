@@ -97,16 +97,17 @@ const handleDragUpdate = (newItemsArray: (typeof orderWithDetails.value[0] | Pro
     // 检查这个 item 是否是我们已经处理过的、带有 'orderInfo' 的对象
     if ('orderInfo' in item && item.orderInfo) {
       // 如果是，说明它是一个已存在的项（可能只是位置变了），直接返回它的 OrderItem 部分
-      return item.orderInfo;
+      return (item as typeof orderWithDetails.value[0]).orderInfo;
     }
 
     // 如果没有 'orderInfo'，说明这是一个刚从左侧拖入的、原始的 PromptItem 对象
     // 我们需要将它转换为 OrderItem 格式
     const newPromptItem = item as PromptItem;
-    return {
+    const newOrderItem: OrderItem = { // 也可以在这里显式声明
       identifier: newPromptItem.identifier,
       enabled: true, // 新添加的项默认启用
     };
+    return newOrderItem;
   });
 
   emit('update:order', newOrder);

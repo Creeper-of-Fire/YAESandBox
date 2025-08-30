@@ -18,6 +18,7 @@ interface PromptItemBase {
     system_prompt: boolean;
     marker: boolean;
     enabled?: boolean; // 这个字段在 'prompts' 列表中有时会出现
+    [key: string]: unknown;
 }
 
 /**
@@ -57,6 +58,7 @@ export type PromptItem = MarkerPromptItem | ContentPromptItem;
 export interface OrderItem {
     identifier: string;
     enabled: boolean;
+    [key: string]: unknown;
 }
 
 /**
@@ -73,4 +75,15 @@ export interface PromptOrderSetting {
 export interface SillyTavernPreset {
     prompts: PromptItem[];
     prompt_order: PromptOrderSetting[];
+    [key: string]: unknown;
+}
+
+/**
+ * 创建一个空的、有效的 SillyTavernPreset 对象
+ */
+export function createEmptyPreset(): SillyTavernPreset {
+    return {
+        prompts: [],
+        prompt_order: [],
+    };
 }
