@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Diagnostics.CodeAnalysis;
+using System.Text.Json;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Core;
@@ -67,41 +68,66 @@ public class TuumProcessor(
         /// <summary>
         /// 获得枢机的变量，带有类型转换，并且有序列化尝试
         /// </summary>
-        /// <param name="valueName"></param>
-        /// <typeparam name="T"></typeparam>
-        /// <returns></returns>
-        /// <exception cref="InvalidCastException"></exception>
         public T? GetTuumVar<T>(string valueName)
         {
-            object? tryGetValue = this.GetTuumVar(valueName);
-            if (tryGetValue is null || tryGetValue.Equals(default(T)))
-                return default;
+            if (this.TryGetTuumVar<T>(valueName, out var value))
+            {
+                return value;
+            }
+            return default;
+        }
+        
+        /// <summary>
+        /// 尝试获得枢机的变量，带有类型转换，并且有序列化尝试。
+        /// </summary>
+        /// <typeparam name="T">目标类型。</typeparam>
+        /// <param name="valueName">变量名。</param>
+        /// <param name="value">如果成功，则输出转换后的值；否则为 null 或 default。</param>
+        /// <returns>如果成功找到并转换了变量，则返回 true；否则返回 false。</returns>
+        public bool TryGetTuumVar<T>(string valueName, [MaybeNullWhen(false)] out T value)
+        {
+            object? rawValue = this.GetTuumVar(valueName);
+            
+            // Case 1: 变量不存在或其值就是 null。
+            if (rawValue is null)
+            {
+                value = default;
+                return false;
+            }
 
-            if (tryGetValue is T promptsValue)
-                return promptsValue;
+            // Case 2: 变量已经是正确的类型（最快路径）。
+            if (rawValue is T typedValue)
+            {
+                value = typedValue;
+                return true;
+            }
 
             try
             {
                 string json;
-                if (tryGetValue is string stringTryGetValue)
+                if (rawValue  is string stringTryGetValue)
                     json = stringTryGetValue;
                 else
                     // 将 C# 对象序列化成 JSON 字符串
-                    json = JsonSerializer.Serialize(tryGetValue);
+                    json = JsonSerializer.Serialize(rawValue );
 
                 var result = JsonSerializer.Deserialize<T>(json, YaeSandBoxJsonHelper.JsonSerializerOptions);
 
                 if (result is null || result.Equals(default(T)))
-                    return default;
+                {
+                    value = result;
+                    return false;
+                }
 
                 // 为了后续访问效率，可以将转换后的结果写回 TuumVariable
                 this.SetTuumVar(valueName, result);
-
-                return result;
+                value = result;
+                return true;
             }
             catch (Exception ex)
             {
-                return default;
+                value = default;
+                return false;
                 // 提供详细的错误信息
                 // TODO 应该记录在Tuum的Debug里面
 

@@ -169,7 +169,7 @@ builder.Services.AddSignalR()
 
 // --- 数据保护服务 ---
 // 这将自动从 IConfiguration 读取 "DataProtectionKey"
-var dataProtectionAbsolutePath = Path.Combine(dataAbsolutePath, "DataProtection-Keys");
+string dataProtectionAbsolutePath = Path.Combine(dataAbsolutePath, "DataProtection-Keys");
 builder.Services.AddDataProtection()
     .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionAbsolutePath))
     .SetApplicationName("YAESandBox"); // 为数据保护设置一个唯一的应用名

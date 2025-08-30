@@ -116,7 +116,7 @@ internal class HistoryAppendRuneProcessor(WorkflowRuntimeService workflowRuntime
 [ClassLabel("📜历史追加")]
 internal record HistoryAppendRuneConfig : AbstractRuneConfig<HistoryAppendRuneProcessor>
 {
-    private const string HistoryDefaultName = "History";
+    public const string HistoryDefaultName = "History";
 
     /// <summary>
     /// 包含历史对话的提示词列表变量的名称。

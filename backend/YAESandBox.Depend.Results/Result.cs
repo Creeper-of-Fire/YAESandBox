@@ -112,21 +112,6 @@ public record Result<TValue> : Result
         this.Value = Value;
     }
 
-    // /// <summary>
-    // /// 改变类型，如果值类型不是 <typeparamref name="TNewValue"/>，则返回错误。
-    // /// </summary>
-    // /// <typeparam name="TNewValue"></typeparam>
-    // /// <returns></returns>
-    // public Result<TNewValue> TypeOf<TNewValue>()
-    // {
-    //     if (this.IsFailed)
-    //         return new Result<TNewValue>(this.Error, default);
-    //
-    //     if (this is TNewValue newValue)
-    //         return new Result<TNewValue>(null, newValue);
-    //     return Fail($"{this}不是{typeof(TNewValue)}");
-    // }
-
     /// <summary>
     /// 映射，失败的部分保持不变，成功的部分改变类型
     /// </summary>

@@ -37,7 +37,7 @@ internal class GeminiApiClient(HttpClient httpClient, ApiClientConfig config)
         [EnumeratorCancellation] CancellationToken cancellationToken = default
     ) where TRequest : class where TResponseChunk : class
     {
-        var requestUri = BuildRequestUri(modelName, stream: true);
+        string requestUri = BuildRequestUri(modelName, stream: true);
         using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
         request.Content = JsonContent.Create(requestPayload, options: SerializerOptions);
         // Gemini 不使用 Bearer Token 进行 API Key 身份验证，而是使用 x-goog-api-key 标头或查询参数。
@@ -76,7 +76,7 @@ internal class GeminiApiClient(HttpClient httpClient, ApiClientConfig config)
         CancellationToken cancellationToken = default
     ) where TRequest : class where TResponse : class
     {
-        var requestUri = BuildRequestUri(modelName, stream: false);
+        string requestUri = BuildRequestUri(modelName, stream: false);
         using var request = new HttpRequestMessage(HttpMethod.Post, requestUri);
         request.Content = JsonContent.Create(requestPayload, options: SerializerOptions);
         request.Headers.Add("x-goog-api-key", this.Config.ApiKey);
@@ -94,9 +94,9 @@ internal class GeminiApiClient(HttpClient httpClient, ApiClientConfig config)
     /// </summary>
     private string BuildRequestUri(string modelName, bool stream)
     {
-        var action = stream ? "streamGenerateContent" : "generateContent";
+        string action = stream ? "streamGenerateContent" : "generateContent";
         // 确保 BaseUrl 尾部有斜杠
-        var baseUrl = this.Config.BaseUrl.EndsWith('/') ? this.Config.BaseUrl : this.Config.BaseUrl + "/";
+        string baseUrl = this.Config.BaseUrl.EndsWith('/') ? this.Config.BaseUrl : this.Config.BaseUrl + "/";
 
         // 如果使用查询参数传递key（备选方案）：
         // return $"{baseUrl}models/{modelName}:{action}?key={this.Config.ApiKey}";

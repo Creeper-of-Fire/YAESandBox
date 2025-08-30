@@ -21,7 +21,7 @@ file static class PromptMapper
                 continue;
             }
 
-            var currentRole = prompt.Role switch
+            string currentRole = prompt.Role switch
             {
                 PromptRoleType.User => "user",
                 PromptRoleType.Assistant => "model",
@@ -73,7 +73,7 @@ internal class GeminiAiProcessor(AiProcessorDependencies dependencies, GeminiAiP
         try
         {
             var requestPayload = this.CreateGenerateContentRequestPayload(prompts);
-            var modelName = this.Config.ModelName ?? throw new InvalidOperationException("Gemini模型名称未配置。");
+            string modelName = this.Config.ModelName ?? throw new InvalidOperationException("Gemini模型名称未配置。");
 
             await foreach (var chunk in this.Client.StreamChatCompletionsAsync<GeminiGenerateContentRequest, GeminiGenerateContentResponse>
                                (requestPayload, modelName, cancellationToken))
@@ -112,7 +112,7 @@ internal class GeminiAiProcessor(AiProcessorDependencies dependencies, GeminiAiP
         try
         {
             var requestPayload = this.CreateGenerateContentRequestPayload(prompts);
-            var modelName = this.Config.ModelName ?? throw new InvalidOperationException("Gemini模型名称未配置。");
+            string modelName = this.Config.ModelName ?? throw new InvalidOperationException("Gemini模型名称未配置。");
 
             var response =
                 await this.Client.GetChatCompletionsAsync<GeminiGenerateContentRequest, GeminiGenerateContentResponse>(requestPayload,

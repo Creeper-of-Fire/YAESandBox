@@ -7,6 +7,7 @@ using YAESandBox.Workflow.API.Controller;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Analysis;
 using YAESandBox.Workflow.Rune.ExactRune;
+using YAESandBox.Workflow.Rune.SillyTavern;
 using YAESandBox.Workflow.Utility;
 
 namespace YAESandBox.Workflow.API;
@@ -74,5 +75,6 @@ public class WorkflowConfigModule :
         typeof(HistoryAppendRuneConfig),
         typeof(StaticVariableRuneConfig),
         typeof(TuumRuneConfig),
+        typeof(SillyTavernRuneConfig)
     ];
 }
