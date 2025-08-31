@@ -46,15 +46,15 @@ export function useTuumAnalysis(tuum: Ref<TuumConfig | null>)
     }
 
     // 深度监听 tuum Ref 的变化，并在变化时触发防抖的分析函数
-    watch(tuum, async (newTuum) =>
+    watch(tuum, (newTuum) =>
     {
-        await debouncedExecuteAnalysis(newTuum);
+        debouncedExecuteAnalysis(newTuum).then(_ => {});
     }, {
         deep: true,       // 深度监听，因为 TuumConfig 是一个复杂的对象
         immediate: false
     });
 
-    onMounted(async () => await executeAnalysis(tuum.value));
+    onMounted(() => executeAnalysis(tuum.value).then(_ => {}));
 
     return {
         /**

@@ -8,6 +8,7 @@
           v-model="localPrompts"
           :group="draggableGroupConfig"
           :sort="false"
+          handle=".drag-handle"
           class="prompts-list"
           ghost-class="ghost-item"
           item-key="identifier"

@@ -284,8 +284,7 @@ export const useUpdaterStore = defineStore('updater', () => {
             // console.log('[Installer] 发现待处理任务，叫工人来上班。');
             isInstalling.value = true;
             // 叫醒工人，让他开始工作。我们不等待他完成所有工作。
-            installationWorker().then(_ => {
-            });
+            installationWorker().then(_ => {});
         }
     }
 

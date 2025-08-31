@@ -25,7 +25,7 @@
         <n-flex class="action-bar" justify="space-between">
           <!-- 左侧：动态生成的上下文操作 -->
           <n-flex>
-            <template v-for="action in actions" :key="action.key">
+            <template v-for="action in getItemActions()" :key="action.key">
               <!-- 渲染需要 Popover 的动作 (如重命名、添加) -->
               <InlineInputPopover v-if="action.renderType === 'popover'"
                                   :action="action"
@@ -82,9 +82,9 @@
         </template>
 
         <template v-else-if="session.type === 'rune' && runeData">
-          <n-alert style="margin-top: 16px;" title="提示" type="info">
-            这是一个独立的符文。请在中间的主编辑区完成详细配置。
-          </n-alert>
+          <RuneItemRenderer
+              :rune="runeData"
+              :parent-tuum="null"/>
         </template>
       </template>
     </HeaderAndBodyLayout>
@@ -124,6 +124,7 @@ import {AddBoxIcon, SwapHorizIcon,CloseIcon} from '@yaesandbox-frontend/shared-u
 import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
+import RuneItemRenderer from "#/components/rune/RuneItemRenderer.vue";
 
 const props = defineProps<{
   session: EditSession | null;
@@ -189,7 +190,7 @@ function handleClose()
 }
 
 // --- 从 composable 获取动作 ---
-const {actions} = useConfigItemActions({
+const {getActions: getItemActions} = useConfigItemActions({
   itemRef: computed(() => props.session?.getData().value ?? null),
   parentContextRef: ref(null), // 侧边栏是顶级编辑，没有父级
 });

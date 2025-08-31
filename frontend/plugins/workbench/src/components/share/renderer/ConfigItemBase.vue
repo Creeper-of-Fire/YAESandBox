@@ -1,6 +1,8 @@
 <!-- src/app-workbench/components/.../ConfigItemBase.vue -->
 <template>
   <div
+      v-lazy-render="renderActions"
+      ref="rootElement"
       :class="{ 'is-selected': isSelected , 'is-disabled': !enabled || isParentDisabled }"
       class="config-item-base"
       @click="$emit('click')"
@@ -18,12 +20,14 @@
 
     <!-- 主内容区插槽 -->
     <div class="item-content-wrapper">
-      <slot name="content"></slot>
+      <slot name="content" :title-class="$style.title"></slot>
     </div>
 
     <div class="item-actions">
-      <!-- 动作插槽：可用于放置编辑按钮、删除按钮、更多操作菜单等 -->
-      <slot name="actions"></slot>
+      <!-- 使用 v-if 控制插槽的渲染 -->
+      <template v-if="shouldRenderActions">
+        <slot name="actions"></slot>
+      </template>
     </div>
 
     <div v-if="!hiddenSwitch" class="enable-switch-wrapper" @click.stop>
@@ -43,10 +47,11 @@
 <script lang="ts" setup>
 import {NIcon, useThemeVars} from 'naive-ui';
 import {DragHandleOutlined} from '@yaesandbox-frontend/shared-ui/icons';
-import {computed, inject, ref} from "vue";
+import {computed, inject, onMounted, onUnmounted, ref} from "vue";
 import ColorHash from "color-hash";
 import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
+import {vLazyRender} from '@yaesandbox-frontend/shared-ui'
 
 // 定义组件的 props
 const props = defineProps<{
@@ -57,6 +62,11 @@ const props = defineProps<{
   enabled: boolean;
   hiddenSwitch?: boolean;
 }>();
+
+const rootElement = ref<HTMLElement | null>(null);
+const shouldRenderActions = ref(false);
+
+const renderActions = () => { shouldRenderActions.value = true; };
 
 const isParentDisabled = inject(IsParentDisabledKey, ref(false));
 
@@ -216,5 +226,16 @@ const primaryColor = computed(() => themeVars.value.primaryColor);
   flex-shrink: 0;
   padding: 0 6px; /* 给予和内容区对称的内边距 */
   gap: 6px;
+}
+</style>
+
+<style module>
+.title {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-width: 0;
+  width: 100%;
+  display: block;
 }
 </style>

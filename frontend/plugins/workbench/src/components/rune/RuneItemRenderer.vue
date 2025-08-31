@@ -8,7 +8,7 @@
       @click="updateSelectedConfig"
       @dblclick="handleDoubleClick"
   >
-    <template #content>
+    <template #content="{ titleClass }">
       <!-- 折叠按钮，仅当为 TuumRune 时显示 -->
       <n-button v-if="hasInnerTuum" :focusable="false" text @click.stop="toggleExpansion">
         <template #icon>
@@ -16,11 +16,11 @@
         </template>
       </n-button>
 
-      <span class="rune-name">{{ rune.name }}</span>
+      <span :class="titleClass" class="rune-name">{{ rune.name }}</span>
     </template>
 
     <template #actions>
-      <n-popover v-if="rulesForThisRune" trigger="hover">
+      <n-popover v-if="rulesForThisRune" trigger ="hover">
         <template #trigger>
           <n-icon :color="normalIconColor" :component="InfoIcon"/>
         </template>
@@ -50,7 +50,7 @@
       </n-popover>
 
       <!-- "更多" 操作的下拉菜单 -->
-      <ConfigItemActionsMenu :actions="itemActions"/>
+      <ConfigItemActionsMenu :actionsProvider="getItemActions"/>
     </template>
   </ConfigItemBase>
 
@@ -79,7 +79,7 @@ import type {AbstractRuneConfig, TuumConfig} from '#/types/generated/workflow-co
 import {computed, inject, provide, ref, toRef} from "vue";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 import {IsParentDisabledKey, SelectedConfigItemKey} from "#/utils/injectKeys.ts";
-import {FindInPageIcon,InfoIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@yaesandbox-frontend/shared-ui/icons';
+import {FindInPageIcon, InfoIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useRuneAnalysis} from "#/composables/useRuneAnalysis.ts";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "#/components/share/ConfigItemActionsMenu.vue";
@@ -146,7 +146,7 @@ const rulesForThisRune = computed(() => metadataForThisRune.value?.rules);
 
 const runeClassLabel = computed(() => metadataForThisRune.value?.classLabel);
 
-const {actions: itemActions} = useConfigItemActions({
+const {getActions: getItemActions} = useConfigItemActions({
   itemRef: toRef(props, 'rune'),
   parentContextRef: computed(() =>
       props.parentTuum

@@ -1,19 +1,21 @@
 ﻿<!-- DraggablePromptItem.vue -->
 <template>
   <ConfigItemBase
+      style="user-select: none"
       :enabled="finalEnabledState"
+      :hidden-switch="context === 'pool'"
       :highlight-color-calculator="promptItem.name"
       :is-selected="isSelected"
-      :hidden-switch="context === 'pool'"
       is-draggable
+      @dblclick="$emit('edit', promptItem.identifier)"
       @update:enabled="(newVal) => $emit('update:enabled', newVal)"
   >
-    <template #content>
+    <template #content="{ titleClass }">
       <div class="prompt-item-content">
         <n-icon class="item-icon">
           <component :is="itemIcon"/>
         </n-icon>
-        <span class="item-name">{{ promptItem.name }}</span>
+        <span :class="titleClass" class="item-name">{{ promptItem.name }}</span>
       </div>
     </template>
     <template #actions>
@@ -64,8 +66,10 @@ const itemIcon = computed(() => props.promptItem.marker ? MarkerIcon : ContentIc
 const showDelete = computed(() => props.context === 'pool');
 const showUnlink = computed(() => props.context === 'order');
 
-const finalEnabledState = computed(() => {
-  if (props.context === 'pool') {
+const finalEnabledState = computed(() =>
+{
+  if (props.context === 'pool')
+  {
     // 在 'pool' 上下文中，我们希望它永远是 'enabled' (亮的) 状态
     return true;
   }
@@ -78,8 +82,10 @@ const themeVars = useThemeVars();
 
 <style scoped>
 .prompt-item-content {
+  flex-grow: 1;
   display: flex;
   align-items: center;
   gap: 8px;
+  min-width: 0;
 }
 </style>

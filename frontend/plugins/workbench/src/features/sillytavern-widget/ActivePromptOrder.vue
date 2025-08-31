@@ -7,6 +7,7 @@
         :group="draggableGroupConfig"
         :model-value="orderWithDetails"
         class="prompts-list"
+        handle=".drag-handle"
         ghost-class="ghost-item"
         item-key="identifier"
         @update:model-value="handleDragUpdate"

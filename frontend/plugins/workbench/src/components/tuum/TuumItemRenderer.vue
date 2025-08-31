@@ -11,19 +11,19 @@
         @dblclick="handleDoubleClick"
     >
       <!-- 使用插槽来自定义 Tuum 的标题部分 -->
-      <template #content>
+      <template #content="{ titleClass }">
         <!-- 一个展开/折叠的小箭头 -->
         <n-button v-if="isCollapsible" :focusable="false" text @click.stop="toggleExpansion">
           <template #icon>
             <n-icon :component="isExpanded ? KeyboardArrowUpIcon : KeyboardArrowDownIcon"/>
           </template>
         </n-button>
-        <span class="tuum-header-content">{{ tuum.name }}</span>
+        <span :class="titleClass" class="tuum-header-content">{{ tuum.name }}</span>
       </template>
 
       <template #actions>
         <!-- 枢机的操作按钮 -->
-        <ConfigItemActionsMenu :actions="itemActions"/>
+        <ConfigItemActionsMenu :actions-provider="getItemActions"/>
       </template>
     </ConfigItemBase>
 
@@ -92,7 +92,7 @@ const isSelected = computed(() =>
 });
 
 // 使用可组合函数获取动作
-const {actions: itemActions} = useConfigItemActions({
+const {getActions: getItemActions} = useConfigItemActions({
   itemRef: toRef(props, 'tuum'),
   parentContextRef: computed(() =>
       props.parentWorkflow

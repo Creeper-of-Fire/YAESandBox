@@ -1,1 +1,1 @@
-﻿
+﻿export {default as vLazyRender} from './directives/vLazyRender'

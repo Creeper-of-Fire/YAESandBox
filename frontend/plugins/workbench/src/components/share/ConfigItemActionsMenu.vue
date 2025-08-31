@@ -8,6 +8,7 @@
         placement="bottom-end"
         trigger="hover"
         @select="handleSelect"
+        @update:show="handleUpdateShow"
     >
       <n-button style="font-size: 20px;" text>
         <n-icon :component="EllipsisHorizontalIcon"/>
@@ -15,9 +16,10 @@
     </n-dropdown>
 
     <!-- 保留 InlineInputPopover，但它将由 Dropdown 的事件来触发显示 -->
-    <InlineInputPopover ref="popoverRef"
-                        :action="activePopoverAction || undefined"
-                        @confirm="handlePopoverConfirm"
+    <InlineInputPopover
+        ref="popoverRef"
+        :action="activePopoverAction || undefined"
+        @confirm="handlePopoverConfirm"
     >
       <!-- 这个插槽内容不会被实际渲染，只是为了让 Popover 有个挂载点 -->
       <div style="display: none;"></div>
@@ -30,35 +32,46 @@ import {computed, h, ref} from 'vue';
 import {type DropdownOption, NButton, NDropdown, NIcon, useDialog} from 'naive-ui';
 import InlineInputPopover from './InlineInputPopover.vue';
 import {EllipsisHorizontalIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
+import type {ActionsProvider, EnhancedAction} from "#/composables/useConfigItemActions.ts";
 
 // 接口定义（保持不变，它依然是我们强大的数据模型）
 
 
 const props = defineProps<{
-  actions: EnhancedAction[];
+  actionsProvider: ActionsProvider;
 }>();
 
 const dialog = useDialog();
 const popoverRef = ref<InstanceType<typeof InlineInputPopover> | null>(null);
 const activePopoverAction = ref<EnhancedAction | null>(null);
 
+const calculatedActions = ref<EnhancedAction[]>([]);
+
+function handleUpdateShow(show: boolean)
+{
+  // 当菜单即将显示，并且我们还没有计算过动作时
+  if (show && calculatedActions.value.length === 0)
+  {
+    // 调用 provider 函数来获取动作列表
+    calculatedActions.value = props.actionsProvider();
+  }
+}
+
 // 将我们的 EnhancedAction 数组转换为 Naive UI Dropdown 需要的格式
 const dropdownOptions = computed<DropdownOption[]>(() =>
 {
-  return props.actions.map(action => ({
+  return calculatedActions.value.map(action => ({
     label: action.label,
     key: action.key,
     disabled: action.disabled,
     icon: action.icon ? () => h(NIcon, {component: action.icon}) : undefined,
-    // 如果有子菜单，可以继续在这里扩展
   }));
 });
 
 // 处理 Dropdown 选项的点击事件
 function handleSelect(key: string)
 {
-  const action = props.actions.find(a => a.key === key);
+  const action = calculatedActions.value.find(a => a.key === key);
   if (!action) return;
 
   switch (action.renderType)

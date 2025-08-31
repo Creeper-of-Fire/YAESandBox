@@ -26,7 +26,7 @@ import { useRouter } from 'vue-router';
 const router = useRouter();
 
 const goToAbout = () => {
-  router.push({ name: 'About' });
+  router.push({ name: 'App_Shell_HomeView_About' });
 };
 </script>
 

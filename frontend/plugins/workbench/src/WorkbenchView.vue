@@ -1,60 +1,40 @@
 <!-- 文件路径: src/app-workbench/WorkbenchView.vue -->
 <template>
   <div class="workbench-view">
-    <!-- 1. 顶部控制栏 -->
-    <div class="workbench-header">
-      <!-- 左侧：标题和紧邻的开关 -->
-      <div class="header-left-group">
-        <n-h3 style="margin: 0;">工作流编辑器</n-h3>
-        <!-- 使用 v-model:value 来正确绑定 n-switch -->
-        <n-switch v-model:value="isGlobalPanelVisible" size="large">
-          <template #checked>
-            全局资源 (开)
-          </template>
-          <template #unchecked>
-            全局资源 (关)
-          </template>
-        </n-switch>
-
-        <n-switch v-model:value="isEditorPanelVisible" size="large">
-          <template #checked>
-            当前编辑 (开)
-          </template>
-          <template #unchecked>
-            当前编辑 (关)
-          </template>
-        </n-switch>
-      </div>
-
-      <!-- 右侧的全局操作按钮 -->
-      <n-flex class="header-right-controls">
-        <n-button
-            :disabled="!workbenchStore.hasDirtyDrafts" :loading="isSavingAll" secondary
-            strong
-            type="primary"
-            @click="handleSaveAll"
-        >
-          <template #icon>
-            <n-icon :component="SaveIcon"/>
-          </template>
-          全部保存
-        </n-button>
-        <n-button @click="showAiConfigModal = true">全局AI配置</n-button>
-      </n-flex>
-    </div>
-
-    <!-- 2. 编辑器核心布局 -->
     <EditorLayout
-        :is-editor-panel-visible="isEditorPanelVisible"
-        :is-global-panel-visible="isGlobalPanelVisible"
         class="editor-layout"
     >
-      <!-- 2a. 全局资源面板插槽 -->
+      <template #header-left-group>
+        <!-- 左侧：标题和紧邻的开关 -->
+        <div class="header-left-group">
+          <n-h3 style="margin: 0;">工作流编辑器</n-h3>
+        </div>
+
+      </template>
+      <template #header-right-group>
+        <!-- 右侧的全局操作按钮 -->
+        <n-flex class="header-right-controls">
+          <n-button
+              :disabled="!workbenchStore.hasDirtyDrafts" :loading="isSavingAll" secondary
+              strong
+              type="primary"
+              @click="handleSaveAll"
+          >
+            <template #icon>
+              <n-icon :component="SaveIcon"/>
+            </template>
+            全部保存
+          </n-button>
+          <n-button @click="showAiConfigModal = true">全局AI配置</n-button>
+        </n-flex>
+      </template>
+
+      <!-- 全局资源面板插槽 -->
       <template #global-panel>
         <GlobalResourcePanel @start-editing="handleStartEditing"/>
       </template>
 
-      <!-- 2b. 当前编辑结构插槽 -->
+      <!-- 当前编辑结构插槽 -->
       <template #editor-panel>
         <WorkbenchSidebar
             :key="activeSession?.globalId ?? 'empty-session'"
@@ -64,7 +44,7 @@
         />
       </template>
 
-      <!-- 2c. 主内容区插槽 -->
+      <!-- 主内容区插槽 -->
       <template #rune-panel>
         <MainEditPanel/>
       </template>
@@ -89,7 +69,7 @@
 
 <script lang="ts" setup>
 import {onBeforeUnmount, onMounted, provide, ref} from 'vue';
-import {NButton, NH3, NSwitch, useDialog, useMessage, useThemeVars} from 'naive-ui';
+import {NButton, NH3, useDialog, useMessage, useThemeVars} from 'naive-ui';
 import {SaveIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useWorkbenchStore} from '#/stores/workbenchStore';
 import {type ConfigType, type EditSession} from '#/services/EditSession';
@@ -180,8 +160,6 @@ const isAcquiringSession = ref(false);
 const isSavingAll = ref(false);
 
 // --- UI 控制状态 ---
-const isGlobalPanelVisible = ref(true);
-const isEditorPanelVisible = ref(true);
 const showAiConfigModal = ref(false);
 
 /**
@@ -242,14 +220,15 @@ async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: 
   if (isAcquiringSession.value) return;
 
   // 如果点击的是当前已激活的会话，则根据类型辅助性地打开面板，然后直接返回
-  if (activeSession.value && activeSession.value.globalId === globalId)
-  {
-    if (type !== 'rune')
-    {
-      isEditorPanelVisible.value = true;
-    }
-    return;
-  }
+  // TODO 暂时移除相关逻辑
+  // if (activeSession.value && activeSession.value.globalId === globalId)
+  // {
+  //   if (type !== 'rune')
+  //   {
+  //     isEditorPanelVisible.value = true;
+  //   }
+  //   return;
+  // }
 
   // 切换新会话前，重置UI状态
   selectedConfig.value = null;
@@ -276,10 +255,11 @@ async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: 
       // --- 修复逻辑结束 ---
 
       // 辅助性UI逻辑：如果编辑的不是符文，自动打开“当前编辑”面板
-      if (type !== 'rune')
-      {
-        isEditorPanelVisible.value = true;
-      }
+      // TODO 暂时移除相关逻辑
+      // if (type !== 'rune')
+      // {
+      //   isEditorPanelVisible.value = true;
+      // }
     }
     else
     {
@@ -335,26 +315,5 @@ const themeVars = useThemeVars();
 .editor-layout {
   flex: 1;
   min-height: 0; /* 修复flex布局中的高度计算问题 */
-}
-
-.workbench-header {
-  padding: 10px 24px;
-  border-bottom: 1px solid v-bind('themeVars.borderColor');
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-shrink: 0;
-}
-
-.header-left-group {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-.header-right-controls {
-  display: flex;
-  gap: 16px;
-  align-items: center;
 }
 </style>

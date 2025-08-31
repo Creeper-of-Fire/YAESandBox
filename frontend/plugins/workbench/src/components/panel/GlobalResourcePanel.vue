@@ -1,167 +1,175 @@
 ﻿<!-- src/app-workbench/components/.../GlobalResourcePanel.vue -->
 <template>
-  <HeaderAndBodyLayout>
-    <template #header>
-      <n-flex justify="space-between">
-        <n-h4>
-          全局资源
-        </n-h4>
-        <InlineInputPopover
-            :action="createNewAction"
-            @confirm="handleCreateNew"
-        >
-          <n-popover trigger="hover">
-            <template #trigger>
-              <n-button
-                  tag="h4"
-                  text
-                  type="primary"
-              >
-                新建{{ currentTabLabel }}
-              </n-button>
-            </template>
-            新建全局{{ currentTabLabel }}
-          </n-popover>
-        </InlineInputPopover>
-      </n-flex>
-
-      <!-- 状态一：正在加载 -->
-      <div v-if="aggregatedIsLoading" class="panel-state-wrapper">
-        <n-spin size="small"/>
-        <span style="margin-left: 8px;">正在加载...</span>
-      </div>
-
-      <!-- 状态二：加载出错 -->
-      <div v-else-if="aggregatedError" class="panel-state-wrapper">
-        <n-alert :show-icon="true" title="加载错误" type="error">
-          无法加载全局资源。
-        </n-alert>
-        <!-- 将重试按钮放在 alert 下方，作为独立的错误恢复操作 -->
-        <n-button block secondary strong style="margin-top: 12px;" @click="executeAll">
-          重试
-        </n-button>
-      </div>
-
-      <!-- 状态三：加载成功，显示数据 -->
-      <n-tabs
-          v-model:value="activeTab"
-          :animated="false"
-          class="global-resource-tabs"
-          justify-content="space-evenly"
-          type="segment"
-      >
-        <!-- 工作流标签页 -->
-        <n-tab name="workflow" tab="工作流"/>
-        <!-- 枢机标签页 -->
-        <n-tab name="tuum" tab="枢机"/>
-        <!-- 符文标签页 -->
-        <n-tab name="rune" tab="符文"/>
-      </n-tabs>
-
-
-    </template>
-
-    <template #body>
-      <div v-if="activeTab===`workflow`">
-        <draggable
-            v-if="workflowsList.length > 0"
-            v-model="workflowsList"
-            :animation="150"
-            :clone="handleResourceClone"
-            :group="{ name: 'workflows-group', pull: 'clone', put: false }"
-            :setData="handleSetData"
-            :sort="false"
-            class="resource-list"
-            item-key="id"
-        >
-          <div v-for="element in workflowsList"
-               :key="element.id"
-               :data-drag-id="element.id"
-               data-drag-type="workflow"
+  <div ref="panelRoot">
+    <HeaderAndBodyLayout>
+      <template #header>
+        <n-flex justify="space-between">
+          <n-h4>
+            全局资源
+          </n-h4>
+          <InlineInputPopover
+              :action="createNewAction"
+              @confirm="handleCreateNew"
           >
-            <GlobalResourceListItem
-                :id="element.id"
-                :item="element.item"
-                type="workflow"
-                @start-editing="startEditing"
-                @show-error-detail="showErrorDetail"
-                @contextmenu="handleContextMenu"
-            />
-          </div>
-        </draggable>
-        <n-empty v-else class="empty-container" description="无全局工作流" small/>
-      </div>
-      <div v-if="activeTab===`tuum`">
-        <draggable
-            v-if="tuumsList.length > 0"
-            v-model="tuumsList"
-            :animation="150"
-            :clone="handleResourceClone"
-            :group="{ name: 'tuums-group', pull: 'clone', put: false }"
-            :setData="handleSetData"
-            :sort="false"
-            class="resource-list"
-            item-key="id"
-        >
-          <div v-for="element in tuumsList"
-               :key="element.id"
-               :data-drag-id="element.id"
-               data-drag-type="tuum"
-          >
-            <GlobalResourceListItem
-                :id="element.id"
-                :item="element.item"
-                type="tuum"
-                @start-editing="startEditing"
-                @show-error-detail="showErrorDetail"
-                @contextmenu="handleContextMenu"
-            />
-          </div>
-        </draggable>
-        <n-empty v-else class="empty-container" description="无全局枢机" small/>
-      </div>
-      <div v-if="activeTab===`rune`">
-        <draggable
-            v-if="runesList.length > 0"
-            v-model="runesList"
-            :animation="150"
-            :clone="handleResourceClone"
-            :group="{ name: 'runes-group', pull: 'clone', put: false }"
-            :setData="handleSetData"
-            :sort="false"
-            class="resource-list"
-            item-key="id"
-        >
-          <div v-for="element in runesList"
-               :key="element.id"
-               :data-drag-id="element.id"
-               data-drag-type="rune"
-          >
-            <GlobalResourceListItem
-                :id="element.id"
-                :item="element.item"
-                type="rune"
-                @start-editing="startEditing"
-                @show-error-detail="showErrorDetail"
-                @contextmenu="handleContextMenu"
-            />
-          </div>
-        </draggable>
-        <n-empty v-else class="empty-container" description="无全局符文" small/>
-      </div>
-    </template>
-  </HeaderAndBodyLayout>
+            <n-popover trigger="hover">
+              <template #trigger>
+                <n-button
+                    tag="h4"
+                    text
+                    type="primary"
+                >
+                  新建{{ currentTabLabel }}
+                </n-button>
+              </template>
+              新建全局{{ currentTabLabel }}
+            </n-popover>
+          </InlineInputPopover>
+        </n-flex>
 
-  <n-dropdown
-      placement="bottom-start"
-      trigger="manual"
-      :x="dropdownPosition.x"
-      :y="dropdownPosition.y"
-      :options="dropdownOptions"
-      :show="showDropdown"
-      @select="handleDropdownSelect"
-      @clickoutside="showDropdown = false"
-  />
+        <!-- 状态一：正在加载 -->
+        <div v-if="aggregatedIsLoading" class="panel-state-wrapper">
+          <n-spin size="small"/>
+          <span style="margin-left: 8px;">正在加载...</span>
+        </div>
+
+        <!-- 状态二：加载出错 -->
+        <div v-else-if="aggregatedError" class="panel-state-wrapper">
+          <n-alert :show-icon="true" title="加载错误" type="error">
+            无法加载全局资源。
+          </n-alert>
+          <!-- 将重试按钮放在 alert 下方，作为独立的错误恢复操作 -->
+          <n-button block secondary strong style="margin-top: 12px;" @click="executeAll">
+            重试
+          </n-button>
+        </div>
+
+        <!-- 状态三：加载成功，显示数据 -->
+        <n-tabs
+            v-model:value="activeTab"
+            :animated="false"
+            class="global-resource-tabs"
+            justify-content="space-evenly"
+            type="segment"
+        >
+          <!-- 工作流标签页 -->
+          <n-tab name="workflow" tab="工作流"/>
+          <!-- 枢机标签页 -->
+          <n-tab name="tuum" tab="枢机"/>
+          <!-- 符文标签页 -->
+          <n-tab name="rune" tab="符文"/>
+        </n-tabs>
+
+
+      </template>
+
+      <template #body>
+        <div v-if="activeTab===`workflow`">
+          <draggable
+              v-if="workflowsList.length > 0"
+              v-model="workflowsList"
+              :animation="150"
+              :clone="handleResourceClone"
+              :group="{ name: 'workflows-group', pull: 'clone', put: false }"
+              :setData="handleSetData"
+              :sort="false"
+              class="resource-list"
+              item-key="id"
+              @end="onDragEnd"
+              @start="onDragStart"
+          >
+            <div v-for="element in workflowsList"
+                 :key="element.id"
+                 :data-drag-id="element.id"
+                 data-drag-type="workflow"
+            >
+              <GlobalResourceListItem
+                  :id="element.id"
+                  :item="element.item"
+                  type="workflow"
+                  @contextmenu="handleContextMenu"
+                  @start-editing="startEditing"
+                  @show-error-detail="showErrorDetail"
+              />
+            </div>
+          </draggable>
+          <n-empty v-else class="empty-container" description="无全局工作流" small/>
+        </div>
+        <div v-if="activeTab===`tuum`">
+          <draggable
+              v-if="tuumsList.length > 0"
+              v-model="tuumsList"
+              :animation="150"
+              :clone="handleResourceClone"
+              :group="{ name: 'tuums-group', pull: 'clone', put: false }"
+              :setData="handleSetData"
+              :sort="false"
+              class="resource-list"
+              item-key="id"
+              @end="onDragEnd"
+              @start="onDragStart"
+          >
+            <div v-for="element in tuumsList"
+                 :key="element.id"
+                 :data-drag-id="element.id"
+                 data-drag-type="tuum"
+            >
+              <GlobalResourceListItem
+                  :id="element.id"
+                  :item="element.item"
+                  type="tuum"
+                  @contextmenu="handleContextMenu"
+                  @start-editing="startEditing"
+                  @show-error-detail="showErrorDetail"
+              />
+            </div>
+          </draggable>
+          <n-empty v-else class="empty-container" description="无全局枢机" small/>
+        </div>
+        <div v-if="activeTab===`rune`">
+          <draggable
+              v-if="runesList.length > 0"
+              v-model="runesList"
+              :animation="150"
+              :clone="handleResourceClone"
+              :group="{ name: 'runes-group', pull: 'clone', put: false }"
+              :setData="handleSetData"
+              :sort="false"
+              class="resource-list"
+              item-key="id"
+              @end="onDragEnd"
+              @start="onDragStart"
+          >
+            <div v-for="element in runesList"
+                 :key="element.id"
+                 :data-drag-id="element.id"
+                 data-drag-type="rune"
+            >
+              <GlobalResourceListItem
+                  :id="element.id"
+                  :item="element.item"
+                  type="rune"
+                  @contextmenu="handleContextMenu"
+                  @start-editing="startEditing"
+                  @show-error-detail="showErrorDetail"
+              />
+            </div>
+          </draggable>
+          <n-empty v-else class="empty-container" description="无全局符文" small/>
+        </div>
+      </template>
+    </HeaderAndBodyLayout>
+
+    <n-dropdown
+        :options="dropdownOptions"
+        :show="showDropdown"
+        :x="dropdownPosition.x"
+        :y="dropdownPosition.y"
+        placement="bottom-start"
+        trigger="manual"
+        @clickoutside="showDropdown = false"
+        @select="handleDropdownSelect"
+    />
+  </div>
 </template>
 
 
@@ -312,7 +320,7 @@ const runeDefaultNameGenerator = (newType: string, options: any[]) =>
  *             :select-placeholder="'请选择符文类型'"
  *             :title="`新建全局${currentTabLabel}`"
  */
-const createNewAction = computed<EnhancedAction>(()=>
+const createNewAction = computed<EnhancedAction>(() =>
     ({
       key: 'create-new-global',
       icon: AddIcon,
@@ -429,26 +437,30 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement)
 
 // --- 右键菜单 (Context Menu) 的状态和逻辑 ---
 const showDropdown = ref(false);
-const dropdownPosition = reactive({ x: 0, y: 0 });
+const dropdownPosition = reactive({x: 0, y: 0});
 const activeContextItem = ref<{ type: ConfigType; id: string; name: string; isDamaged?: boolean } | null>(null);
 
 // 动态生成菜单选项
-const dropdownOptions = computed<DropdownOption[]>(() => {
+const dropdownOptions = computed<DropdownOption[]>(() =>
+{
   if (!activeContextItem.value) return [];
 
   const options: DropdownOption[] = [];
 
-  if (activeContextItem.value.isDamaged) {
+  if (activeContextItem.value.isDamaged)
+  {
     options.push({
       label: '强制删除',
       key: 'delete',
-      icon: () => h(NIcon, { component: TrashIcon })
+      icon: () => h(NIcon, {component: TrashIcon})
     });
-  } else {
+  }
+  else
+  {
     options.push({
       label: '编辑',
       key: 'edit',
-      icon: () => h(NIcon, { component: EditIcon })
+      icon: () => h(NIcon, {component: EditIcon})
     });
     options.push({
       type: 'divider',
@@ -457,54 +469,95 @@ const dropdownOptions = computed<DropdownOption[]>(() => {
     options.push({
       label: '删除',
       key: 'delete',
-      icon: () => h(NIcon, { component: TrashIcon })
+      icon: () => h(NIcon, {component: TrashIcon})
     });
   }
   return options;
 });
 
 // 处理从子组件发出的右键事件
-function handleContextMenu(payload: { type: ConfigType; id: string; name: string; isDamaged?: boolean; event: MouseEvent }) {
+function handleContextMenu(payload: { type: ConfigType; id: string; name: string; isDamaged?: boolean; event: MouseEvent })
+{
   showDropdown.value = false; // 先隐藏任何已存在的菜单
-  activeContextItem.value = { ...payload };
+  activeContextItem.value = {...payload};
   dropdownPosition.x = payload.event.clientX;
   dropdownPosition.y = payload.event.clientY;
 
-  nextTick(() => {
+  nextTick(() =>
+  {
     showDropdown.value = true; // 在下一个 DOM 更新周期显示菜单
   });
 }
 
 // 处理菜单项点击
-function handleDropdownSelect(key: 'edit' | 'delete') {
+function handleDropdownSelect(key: 'edit' | 'delete')
+{
   showDropdown.value = false;
   const item = activeContextItem.value;
   if (!item) return;
 
-  if (key === 'edit') {
-    startEditing({ type: item.type, id: item.id });
-  } else if (key === 'delete') {
+  if (key === 'edit')
+  {
+    startEditing({type: item.type, id: item.id});
+  }
+  else if (key === 'delete')
+  {
     promptDelete(item.type, item.id, item.name);
   }
 }
 
 // 弹出删除确认对话框
-function promptDelete(type: ConfigType, id: string, name: string) {
+function promptDelete(type: ConfigType, id: string, name: string)
+{
   dialog.warning({
     title: '确认删除',
     content: `你确定要永久删除全局资源 “${name}” 吗？此操作不可恢复。`,
     positiveText: '确定删除',
     negativeText: '取消',
-    onPositiveClick: async () => {
-      try {
+    onPositiveClick: async () =>
+    {
+      try
+      {
         // 调用我们第一步在 store 中添加的方法
         await workbenchStore.deleteGlobalConfig(type, id);
         message.success(`已删除 “${name}”`);
-      } catch (error) {
+      } catch (error)
+      {
         message.error(`删除 “${name}” 失败，请查看控制台获取详情。`);
       }
     },
   });
+}
+
+const panelRoot = ref<HTMLDivElement | null>(null);
+
+// 当拖动开始时触发
+function onDragStart()
+{
+  if (!panelRoot.value) return;
+
+  // 创建一个自定义的、可冒泡的 DOM 事件
+  const event = new CustomEvent('drag-from-panel:start', {
+    bubbles: true, // 这是关键，允许事件向上冒泡
+    composed: true // 允许事件跨越 Shadow DOM (可选，但推荐)
+  });
+
+  // 从组件的根元素派发事件
+  panelRoot.value.dispatchEvent(event);
+}
+
+// 当拖动结束时触发
+function onDragEnd()
+{
+  if (!panelRoot.value) return;
+
+  // 派发一个结束事件
+  const event = new CustomEvent('drag-from-panel:end', {
+    bubbles: true,
+    composed: true
+  });
+
+  panelRoot.value.dispatchEvent(event);
 }
 
 </script>

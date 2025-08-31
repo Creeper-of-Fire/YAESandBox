@@ -23,6 +23,7 @@ const shellRoutes: RouteRecordRaw[] = [
     },
     {
         path: '/about',
+        name: "App_Shell_HomeView_About",
         component: AboutView,
         meta: {requiresAuth: false}
     },
