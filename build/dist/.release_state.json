@@ -1,12 +1,12 @@
 {
     "hashes": {
         "launcher": "aebe2ad900ba295356a50e22938f42bcf78673cc1d1036a18598b7bdddd10130",
-        "app": "57e3731c38af6b7cdd687fb03608f534314d4027b112b47b6cdc196f2ebd55ab",
-        "backend": "8577fbb29938b4dadb007403d61b7b0f7884842b712ec43ef7ada9b0825342ee",
-        "backend-slim": "ccaf1f20edb49ec71d9d282ea9078862240835df95f3fe5462797728e14c115d",
+        "app": "92dc641cf58e61fee4adf5a70e1646e0a1136fbfdde7abed9b8ac210641e91cc",
+        "backend": "f26a2961d4073988fc291abd6ff7cc564fd094124591b023399de7a0360ec4a1",
+        "backend-slim": "cb7b65e5ab4fe2642f4b3c6e470e181dc6e39a1b1e80a57945fadee77e40a5bc",
         "plugins": {
-            "YAESandBox.Plugin.LuaScript": "31fe02f691536ee3050f8dfd352bebcb69d9a5b477c3a350518588016ecbb133",
-            "YAESandBox.Plugin.TextParser": "6d2accbbd4418b6673bb44d1ae19b1ea0b7f31837db042af25e8b65cf19d8e1e"
+            "YAESandBox.Plugin.LuaScript": "413cb1c40b16c216dbbfcbd750d121414995f1b971670b663e7d891b8aac998e",
+            "YAESandBox.Plugin.TextParser": "e32afdee92a34dbc5a71db0c44791ba9c70a44084bed41377781a1182b825560"
         }
     },
     "manifests": {
@@ -15,26 +15,26 @@
                 {
                     "id": "launcher",
                     "name": "启动器",
-                    "version": "0.0.10",
-                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
+                    "version": "0.0.16",
+                    "notes": "重新全部发布一遍试试看。好像文件校验刚刚有问题。",
                     "hash": "00224aabe43bcc8845567e231f62ccc09e8910fda1e56fc2b3bea82fe93815ea",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/launcher.zip"
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.16/launcher.zip"
                 },
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.14",
-                    "notes": "### 新增功能：SillyTavern 工作流集成与预设编辑器\n\n本次更新引入了对 SillyTavern 格式的深度集成，包括后端处理逻辑和前端可视化编辑器，旨在为用户提供更灵活、更强大的工作流构建能力。\n\n**核心更新内容:**\n\n*   **后端：新增 SillyTavern 处理符文**\n    *   引入了 `SillyTavernRune`，一个用于处理 SillyTavern 预设（Preset）和世界书（World Info）的核心工作流节点。\n    *   该符文能够解析复杂的预设结构，执行模板填充、变量处理和深度注入指令。\n    *   同时，它完整地实现了对世界书的关键字扫描、递归激活、分组选择等高级功能，使其可以无缝融入现有工作流。\n\n*   **前端：新增 SillyTavern 预设编辑器**\n    *   上线了可视化的预设编辑器，允许用户直观地管理预设中的“定义池”与“激活顺序”。\n    *   支持通过拖拽操作对提示词进行排序、链接和取消链接。\n    *   提供了完整的增、删、改功能，并为关键操作加入了确认步骤以防止误操作。\n    *   **注意**：当前版本的编辑器专注于预设的管理，世界书的相关编辑功能将在后续版本中提供。\n\n通过此次更新，用户现在可以在工作流中直接利用 SillyTavern 社区中丰富的预设和世界书资源，并通过我们提供的编辑器轻松进行定制。\n\n另外，之前没有启用确定性编译导致插件的版本号即使没有更新也在推进，这次更新之后应该不会了，大概。",
-                    "hash": "e90990c43ca480c09c08ee09eaee780561ccb7def6225a9697dddc97ebe8335a",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.14/v0.0.14/app.zip"
+                    "version": "0.0.17",
+                    "notes": "优化变量默认值和修复输入校验\n重构编辑布局适应不同屏幕尺寸",
+                    "hash": "3078e9e7f508dd8f57186a33be085c103472a739e2202e6b52d10c104b41248d",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.17/app.zip"
                 },
                 {
                     "id": "backend",
                     "name": ".NET 后端 (完整版)",
-                    "version": "0.0.14",
-                    "notes": "### 新增功能：SillyTavern 工作流集成与预设编辑器\n\n本次更新引入了对 SillyTavern 格式的深度集成，包括后端处理逻辑和前端可视化编辑器，旨在为用户提供更灵活、更强大的工作流构建能力。\n\n**核心更新内容:**\n\n*   **后端：新增 SillyTavern 处理符文**\n    *   引入了 `SillyTavernRune`，一个用于处理 SillyTavern 预设（Preset）和世界书（World Info）的核心工作流节点。\n    *   该符文能够解析复杂的预设结构，执行模板填充、变量处理和深度注入指令。\n    *   同时，它完整地实现了对世界书的关键字扫描、递归激活、分组选择等高级功能，使其可以无缝融入现有工作流。\n\n*   **前端：新增 SillyTavern 预设编辑器**\n    *   上线了可视化的预设编辑器，允许用户直观地管理预设中的“定义池”与“激活顺序”。\n    *   支持通过拖拽操作对提示词进行排序、链接和取消链接。\n    *   提供了完整的增、删、改功能，并为关键操作加入了确认步骤以防止误操作。\n    *   **注意**：当前版本的编辑器专注于预设的管理，世界书的相关编辑功能将在后续版本中提供。\n\n通过此次更新，用户现在可以在工作流中直接利用 SillyTavern 社区中丰富的预设和世界书资源，并通过我们提供的编辑器轻松进行定制。\n\n另外，之前没有启用确定性编译导致插件的版本号即使没有更新也在推进，这次更新之后应该不会了，大概。",
-                    "hash": "9e91b0517881f15634adc15188504b98fd991b0cc9208678146606a5679d5623",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.14/v0.0.14/backend.zip"
+                    "version": "0.0.17",
+                    "notes": "优化变量默认值和修复输入校验\n重构编辑布局适应不同屏幕尺寸",
+                    "hash": "42f114bde7eb5237eaf7ae14413457c9378dab1d24afed443556c5e50deafac8",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.17/backend.zip"
                 }
             ]
         },
@@ -43,26 +43,26 @@
                 {
                     "id": "launcher",
                     "name": "启动器",
-                    "version": "0.0.10",
-                    "notes": "添加了日志页面和开发者页面\n修复了前端路由错误和前端重定向相关的bug\n按理说插件没更新，但是我的自动发布脚本说更新了，那就更新了吧",
+                    "version": "0.0.16",
+                    "notes": "重新全部发布一遍试试看。好像文件校验刚刚有问题。",
                     "hash": "00224aabe43bcc8845567e231f62ccc09e8910fda1e56fc2b3bea82fe93815ea",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.10/v0.0.10/launcher.zip"
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.16/launcher.zip"
                 },
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.14",
-                    "notes": "### 新增功能：SillyTavern 工作流集成与预设编辑器\n\n本次更新引入了对 SillyTavern 格式的深度集成，包括后端处理逻辑和前端可视化编辑器，旨在为用户提供更灵活、更强大的工作流构建能力。\n\n**核心更新内容:**\n\n*   **后端：新增 SillyTavern 处理符文**\n    *   引入了 `SillyTavernRune`，一个用于处理 SillyTavern 预设（Preset）和世界书（World Info）的核心工作流节点。\n    *   该符文能够解析复杂的预设结构，执行模板填充、变量处理和深度注入指令。\n    *   同时，它完整地实现了对世界书的关键字扫描、递归激活、分组选择等高级功能，使其可以无缝融入现有工作流。\n\n*   **前端：新增 SillyTavern 预设编辑器**\n    *   上线了可视化的预设编辑器，允许用户直观地管理预设中的“定义池”与“激活顺序”。\n    *   支持通过拖拽操作对提示词进行排序、链接和取消链接。\n    *   提供了完整的增、删、改功能，并为关键操作加入了确认步骤以防止误操作。\n    *   **注意**：当前版本的编辑器专注于预设的管理，世界书的相关编辑功能将在后续版本中提供。\n\n通过此次更新，用户现在可以在工作流中直接利用 SillyTavern 社区中丰富的预设和世界书资源，并通过我们提供的编辑器轻松进行定制。\n\n另外，之前没有启用确定性编译导致插件的版本号即使没有更新也在推进，这次更新之后应该不会了，大概。",
-                    "hash": "e90990c43ca480c09c08ee09eaee780561ccb7def6225a9697dddc97ebe8335a",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.14/v0.0.14/app.zip"
+                    "version": "0.0.17",
+                    "notes": "优化变量默认值和修复输入校验\n重构编辑布局适应不同屏幕尺寸",
+                    "hash": "3078e9e7f508dd8f57186a33be085c103472a739e2202e6b52d10c104b41248d",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.17/app.zip"
                 },
                 {
                     "id": "backend",
                     "name": ".NET 后端 (精简版)",
-                    "version": "0.0.14",
-                    "notes": "### 新增功能：SillyTavern 工作流集成与预设编辑器\n\n本次更新引入了对 SillyTavern 格式的深度集成，包括后端处理逻辑和前端可视化编辑器，旨在为用户提供更灵活、更强大的工作流构建能力。\n\n**核心更新内容:**\n\n*   **后端：新增 SillyTavern 处理符文**\n    *   引入了 `SillyTavernRune`，一个用于处理 SillyTavern 预设（Preset）和世界书（World Info）的核心工作流节点。\n    *   该符文能够解析复杂的预设结构，执行模板填充、变量处理和深度注入指令。\n    *   同时，它完整地实现了对世界书的关键字扫描、递归激活、分组选择等高级功能，使其可以无缝融入现有工作流。\n\n*   **前端：新增 SillyTavern 预设编辑器**\n    *   上线了可视化的预设编辑器，允许用户直观地管理预设中的“定义池”与“激活顺序”。\n    *   支持通过拖拽操作对提示词进行排序、链接和取消链接。\n    *   提供了完整的增、删、改功能，并为关键操作加入了确认步骤以防止误操作。\n    *   **注意**：当前版本的编辑器专注于预设的管理，世界书的相关编辑功能将在后续版本中提供。\n\n通过此次更新，用户现在可以在工作流中直接利用 SillyTavern 社区中丰富的预设和世界书资源，并通过我们提供的编辑器轻松进行定制。\n\n另外，之前没有启用确定性编译导致插件的版本号即使没有更新也在推进，这次更新之后应该不会了，大概。",
-                    "hash": "58dbcafdfb4d66e31b1b6a0f1c0203aaf09d647d031a8e88776b5099491e7a52",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.14/v0.0.14/backend-slim.zip"
+                    "version": "0.0.17",
+                    "notes": "优化变量默认值和修复输入校验\n重构编辑布局适应不同屏幕尺寸",
+                    "hash": "c52bd542961936ba2ee6113c9f6e57e03ab63d7f00eb75c2aa89712ef122ffba",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.17/backend-slim.zip"
                 }
             ]
         },
@@ -70,18 +70,18 @@
             {
                 "id": "YAESandBox.Plugin.LuaScript",
                 "name": "YAESandBox.Plugin.LuaScript",
-                "version": "0.0.14",
-                "description": "发布于 v0.0.14:\n### 新增功能：SillyTavern 工作流集成与预设编辑器\n\n本次更新引入了对 SillyTavern 格式的深度集成，包括后端处理逻辑和前端可视化编辑器，旨在为用户提供更灵活、更强大的工作流构建能力。\n\n**核心更新内容:**\n\n*   **后端：新增 SillyTavern 处理符文**\n    *   引入了 `SillyTavernRune`，一个用于处理 SillyTavern 预设（Preset）和世界书（World Info）的核心工作流节点。\n    *   该符文能够解析复杂的预设结构，执行模板填充、变量处理和深度注入指令。\n    *   同时，它完整地实现了对世界书的关键字扫描、递归激活、分组选择等高级功能，使其可以无缝融入现有工作流。\n\n*   **前端：新增 SillyTavern 预设编辑器**\n    *   上线了可视化的预设编辑器，允许用户直观地管理预设中的“定义池”与“激活顺序”。\n    *   支持通过拖拽操作对提示词进行排序、链接和取消链接。\n    *   提供了完整的增、删、改功能，并为关键操作加入了确认步骤以防止误操作。\n    *   **注意**：当前版本的编辑器专注于预设的管理，世界书的相关编辑功能将在后续版本中提供。\n\n通过此次更新，用户现在可以在工作流中直接利用 SillyTavern 社区中丰富的预设和世界书资源，并通过我们提供的编辑器轻松进行定制。\n\n另外，之前没有启用确定性编译导致插件的版本号即使没有更新也在推进，这次更新之后应该不会了，大概。",
-                "hash": "636a7358a414587c558ef8817026f2d405c6ae20fa891cf2c830acaae41f5fe9",
-                "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.14/v0.0.14/YAESandBox.Plugin.LuaScript.zip"
+                "version": "0.0.17",
+                "description": "发布于 v0.0.17:\n优化变量默认值和修复输入校验\n重构编辑布局适应不同屏幕尺寸",
+                "hash": "bb2f49491833c94ef3fb4f3f1112a84fa9fb1c5120b9b49d0bcf7dd7baa233c9",
+                "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.17/YAESandBox.Plugin.LuaScript.zip"
             },
             {
                 "id": "YAESandBox.Plugin.TextParser",
                 "name": "YAESandBox.Plugin.TextParser",
-                "version": "0.0.14",
-                "description": "发布于 v0.0.14:\n### 新增功能：SillyTavern 工作流集成与预设编辑器\n\n本次更新引入了对 SillyTavern 格式的深度集成，包括后端处理逻辑和前端可视化编辑器，旨在为用户提供更灵活、更强大的工作流构建能力。\n\n**核心更新内容:**\n\n*   **后端：新增 SillyTavern 处理符文**\n    *   引入了 `SillyTavernRune`，一个用于处理 SillyTavern 预设（Preset）和世界书（World Info）的核心工作流节点。\n    *   该符文能够解析复杂的预设结构，执行模板填充、变量处理和深度注入指令。\n    *   同时，它完整地实现了对世界书的关键字扫描、递归激活、分组选择等高级功能，使其可以无缝融入现有工作流。\n\n*   **前端：新增 SillyTavern 预设编辑器**\n    *   上线了可视化的预设编辑器，允许用户直观地管理预设中的“定义池”与“激活顺序”。\n    *   支持通过拖拽操作对提示词进行排序、链接和取消链接。\n    *   提供了完整的增、删、改功能，并为关键操作加入了确认步骤以防止误操作。\n    *   **注意**：当前版本的编辑器专注于预设的管理，世界书的相关编辑功能将在后续版本中提供。\n\n通过此次更新，用户现在可以在工作流中直接利用 SillyTavern 社区中丰富的预设和世界书资源，并通过我们提供的编辑器轻松进行定制。\n\n另外，之前没有启用确定性编译导致插件的版本号即使没有更新也在推进，这次更新之后应该不会了，大概。",
-                "hash": "b314546cf17a92386a82f5a21bf4154c9a90509013566aadfc159dc34a636b5e",
-                "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.14/v0.0.14/YAESandBox.Plugin.TextParser.zip"
+                "version": "0.0.17",
+                "description": "发布于 v0.0.17:\n优化变量默认值和修复输入校验\n重构编辑布局适应不同屏幕尺寸",
+                "hash": "0a875891d8b82a5ccfc098e7d33a68ef55c028cb8508be0c403c601a613e3360",
+                "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.17/YAESandBox.Plugin.TextParser.zip"
             }
         ]
     }

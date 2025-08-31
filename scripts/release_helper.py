@@ -397,18 +397,18 @@ def main():
                     for comp in new_full_manifest["components"]:
                         comp_zip_name = f"{comp['id']}.zip"
                         if any(p['zip_path'].name == comp_zip_name for p in packaged_assets):
-                            comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{version}/{comp_zip_name}"
+                            comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{comp_zip_name}"
                 elif file_path == slim_manifest_path:
                     for comp in new_slim_manifest["components"]:
                         comp_id_source = 'backend-slim' if comp['id'] == 'backend' else comp['id']
                         comp_zip_name = f"{comp_id_source}.zip"
                         if any(p['zip_path'].name == comp_zip_name for p in packaged_assets):
-                            comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{version}/{comp_zip_name}"
+                            comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{comp_zip_name}"
                 elif file_path == plugins_manifest_path:
                     for comp in new_plugins_manifest:
                         comp_zip_name = f"{comp['id']}.zip"
                         if any(p['zip_path'].name == comp_zip_name for p in packaged_assets):
-                            comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{version}/{comp_zip_name}"
+                            comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{comp_zip_name}"
 
                 progress.advance(upload_task)
 
