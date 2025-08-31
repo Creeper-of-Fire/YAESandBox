@@ -97,7 +97,7 @@ internal record EmitEventRuneConfig : AbstractRuneConfig<EmitEventRuneProcessor>
         Name = "源变量名",
         Description = "指定要读取并作为数据发射的内部变量的名称。"
     )]
-    public string SourceVariableName { get; init; } = string.Empty;
+    public string SourceVariableName { get; init; } = AiRuneConfig.AiOutputDefaultName;
 
     /// <summary>
     /// 数据要发射到的外部逻辑地址。

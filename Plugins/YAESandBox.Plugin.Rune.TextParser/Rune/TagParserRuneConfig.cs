@@ -248,7 +248,7 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
     /// <summary>
     /// 指定从哪个枢机变量中读取要解析的原始HTML/XML文本。
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [Display(Name = "输入变量名", Description = "包含标签文本的源变量。")]
     public string InputVariableName { get; init; } = string.Empty;
 
@@ -341,7 +341,7 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
     /// <summary>
     /// 指定将提取出的结果存入哪个枢机变量。
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [Display(Name = "输出变量名", Description = "用于存储提取结果的目标变量。")]
     public string OutputVariableName { get; init; } = string.Empty;
 

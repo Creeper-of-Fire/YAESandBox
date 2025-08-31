@@ -87,14 +87,14 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
     /// <summary>
     /// 要处理的输入变量的名称。
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [Display(Name = "输入变量名", Description = "指定要从枢机上下文中读取哪个变量作为输入。")]
     public string InputVariableName { get; init; } = string.Empty;
 
     /// <summary>
     /// 处理完成后要写入的输出变量的名称。
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [Display(Name = "输出变量名", Description = "指定处理结果要写入到哪个枢机变量中。")]
     public string OutputVariableName { get; init; } = string.Empty;
 

@@ -172,7 +172,7 @@ public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRunePr
     /// <summary>
     /// 指定从哪个枢机变量中读取源文本。
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [Display(Name = "输入变量名", Description = "包含源文本的变量。")]
     public string InputVariableName { get; init; } = string.Empty;
 
@@ -191,7 +191,7 @@ public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRunePr
     /// <summary>
     /// 用于查找匹配项的 .NET 正则表达式，支持命名捕获组。
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [DataType(DataType.MultilineText)]
     [Display(Name = "正则表达式", Description = ".NET 正则表达式，用于查找所有匹配项。")]
     [DefaultValue(@"姓名：(?<name>\S+)\s+年龄：(?<age>\d+)")]
@@ -234,7 +234,7 @@ public record RegexGeneratorRuneConfig : AbstractRuneConfig<RegexGeneratorRunePr
     /// <summary>
     /// 指定将最终拼接好的结果存入哪个枢机变量。
     /// </summary>
-    [Required]
+    [Required(AllowEmptyStrings = true)]
     [Display(Name = "输出变量名", Description = "用于存储最终生成文本的目标变量。")]
     public string OutputVariableName { get; init; } = string.Empty;
 
