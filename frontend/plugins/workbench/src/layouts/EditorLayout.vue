@@ -52,6 +52,7 @@
       <template v-else-if="isNarrowDesktop">
         <n-split
             v-show="isEditorPanelVisible&&isGlobalPanelVisible"
+            v-model:size="splitSize"
             class="left-panels"
             default-size="80%"
             direction="vertical"
@@ -83,7 +84,7 @@
       <template v-else>
         <!-- 1. 全局资源区 -> 抽屉 -->
         <n-drawer
-            v-model:show="isGlobalPanelVisible"
+            v-model:show="isGlobalPanelDrawerVisible"
             :width="320"
             placement="left"
         >
@@ -117,7 +118,7 @@
             </n-tabs>
 
             <div v-show="activeTab === 'editor'" class="mobile-global-resource-btn">
-              <n-button block @click="isGlobalPanelVisible = true">
+              <n-button block @click="isGlobalPanelDrawerVisible = true">
                 全局资源
               </n-button>
             </div>
@@ -151,8 +152,11 @@ const isMobile = breakpoints.smaller('md'); // < 768px
 const isNarrowDesktop = breakpoints.between('md', 'lg'); // 768px ~ 1280px
 const isWideDesktop = breakpoints.greaterOrEqual('lg'); // >= 1280px
 
-const isGlobalPanelVisible = ref(!isMobile.value);
-const isEditorPanelVisible = ref(true);
+const isGlobalPanelVisible = useScopedStorage('editor-layout-global-panel-visible', true);
+const isEditorPanelVisible = useScopedStorage('editor-layout-editor-panel-visible', true);
+const splitSize = useScopedStorage('editor-layout-split-size', '80%');
+
+const isGlobalPanelDrawerVisible = ref(false);
 
 const activeTab = useScopedStorage('editor-active-tab', 'editor');
 
