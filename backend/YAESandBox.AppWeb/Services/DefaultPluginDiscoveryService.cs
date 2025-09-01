@@ -12,7 +12,6 @@ namespace YAESandBox.AppWeb.Services;
 /// </summary>
 public class DefaultPluginDiscoveryService : IPluginDiscoveryService
 {
-    private static ILogger Logger { get; } = AppLogging.CreateLogger<DefaultPluginDiscoveryService>();
     private ReadOnlyCollection<DiscoveredPlugin> DiscoveredPlugins { get; } 
     private Lock DiscoveryLock { get; } = new(); // C# 13 的新特性，用于线程安全
 
@@ -43,7 +42,7 @@ public class DefaultPluginDiscoveryService : IPluginDiscoveryService
             }
 
             this.DiscoveredPlugins = new ReadOnlyCollection<DiscoveredPlugin>(plugins);
-            Logger.LogInformation("发现 {DiscoveredPluginsCount} 个插件。", this.DiscoveredPlugins.Count);
+            Console.WriteLine($"发现 {DiscoveredPlugins.Count} 个插件。");
         }
     }
 

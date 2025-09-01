@@ -11,8 +11,6 @@ namespace YAESandBox.AppWeb.Services;
 /// </summary>
 public class AppRootPathProvider : IRootPathProvider
 {
-    private static ILogger Logger { get; } = AppLogging.CreateLogger<AppRootPathProvider>();
-
     /// <inheritdoc />
     public string RootPath { get; }
 
@@ -26,7 +24,7 @@ public class AppRootPathProvider : IRootPathProvider
         {
             // === 设计时工具模式 ===
             this.RootPath = Path.GetTempPath();
-            Logger.LogInformation("[AppRootPathProvider] 检测到设计时工具 '{ProcessName}'。使用当前工作目录作为根目录: {RootPath}", processName, this.RootPath);
+            Console.WriteLine($"[AppRootPathProvider] 检测到设计时工具 '{processName}'。使用当前工作目录作为根目录: {RootPath}");
             return;
         }
 
@@ -34,7 +32,7 @@ public class AppRootPathProvider : IRootPathProvider
         {
             // === 开发模式逻辑 ===
             this.RootPath = FindProjectRootDirectory() ?? throw new DirectoryNotFoundException("在开发模式下无法找到项目根目录（.sln 文件所在目录）。");
-            Logger.LogInformation("[AppRootPathProvider] 物理应用根路径解析为: {RootPath}", this.RootPath);
+            Console.WriteLine($"[AppRootPathProvider] 物理应用根路径解析为: {RootPath}");
             return;
         }
 
@@ -81,7 +79,7 @@ public class AppRootPathProvider : IRootPathProvider
         }
 
         // 在启动时打印日志，方便调试
-        Logger.LogInformation("[AppRootPathProvider] 物理应用根路径解析为: {RootPath}", this.RootPath);
+        Console.WriteLine($"[AppRootPathProvider] 物理应用根路径解析为: {RootPath}");
     }
 
     /// <summary>

@@ -1,6 +1,4 @@
 ﻿using System.Collections.ObjectModel;
-using Microsoft.Extensions.Logging;
-using YAESandBox.Depend;
 using YAESandBox.Workflow.API;
 using YAESandBox.Workflow.Rune;
 
@@ -17,8 +15,6 @@ internal static class RuneConfigTypeResolver
     /// 使用 IReadOnlyDictionary 确保初始化后的不可变性。
     /// </summary>
     private static IReadOnlyDictionary<string, Type> ResolvedTypesCache { get; set; } = new Dictionary<string, Type>();
-
-    private static ILogger Logger { get; } = AppLogging.CreateLogger(nameof(RuneConfigTypeResolver));
 
     /// <summary>
     /// 缓存：Type -> 提供了该类型的模块
@@ -51,7 +47,7 @@ internal static class RuneConfigTypeResolver
                 if (type is not { IsClass: true, IsAbstract: false } || !InterfaceType.IsAssignableFrom(type))
                 {
                     // 可以在这里记录一个警告，因为插件声明了一个无效的符文类型
-                    Logger.LogWarning("[警告] 模块 '{Name}' 提供的类型 '{TypeName}' 不是一个有效的符文配置类，将被忽略。", provider.GetType().Name, type.Name);
+                    Console.WriteLine($"[警告] 模块 '{provider.GetType().Name}' 提供的类型 '{type.Name}' 不是一个有效的符文配置类，将被忽略。");
                     continue;
                 }
 
@@ -67,7 +63,7 @@ internal static class RuneConfigTypeResolver
 
                 temporaryDictionary.Add(runeTypeName, type);
                 typeToProviderDict.Add(type, provider);
-                Logger.LogInformation("[RuneResolver] 已从模块 '{Name}' 注册符文: {RuneTypeName}", provider.GetType().Name, runeTypeName);
+                Console.WriteLine($"[RuneResolver] 已从模块 '{provider.GetType().Name}' 注册符文: {runeTypeName}");
             }
         }
 
