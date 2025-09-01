@@ -7,13 +7,20 @@ import RawHtmlComponent from '../components/RawHtml.vue';
 
 // --- 1. 定义核心数据结构 ---
 
-/**
- * 定义解析器应如何处理一个标签的子内容。
- * 'strict': 递归地、严格地解析子内容。这是默认行为。
- * 'raw':    不解析子内容，将其作为单个原始字符串处理，交给组件渲染。
- */
+
 export interface ComponentContract {
+    /**
+     * 定义解析器应如何处理一个标签的子内容。
+     * 'strict': 递归地、严格地解析子内容。这是默认行为。
+     * 'raw':    不解析子内容，将其作为单个原始字符串处理，交给组件渲染。
+     */
     parseMode: 'strict' | 'raw';
+    /**
+     * 定义如何处理该标签周围的空白文本节点。
+     * 'trim':   移除该标签前后的纯空白文本节点。（默认行为，适用于块级组件）
+     * 'preserve': 保留该标签前后的纯空白文本节点。（适用于内联组件）
+     */
+    whitespace: 'trim' | 'preserve';
 }
 
 /**
@@ -28,16 +35,16 @@ export interface ComponentRegistration {
 
 export const builtinRegistrations: Record<string, ComponentRegistration> = {
     'collapse': {
-        contract: { parseMode: 'strict' },
+        contract: { parseMode: 'strict', whitespace: 'trim' },
         component: CollapseComponent
     },
     'info-popup': {
-        contract: { parseMode: 'strict' },
+        contract: { parseMode: 'strict', whitespace: 'preserve' },
         component: InfoPopupComponent
     },
     // 为 raw-html 定义一个特殊的 'raw' 契约
     'raw-html': {
-        contract: { parseMode: 'raw' },
+        contract: { parseMode: 'raw', whitespace: 'trim' },
         component: RawHtmlComponent
     }
 };

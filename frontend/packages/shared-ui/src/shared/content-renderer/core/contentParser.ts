@@ -37,7 +37,7 @@ function parseAttributes(attrString: string): Record<string, any>
  * 任何不符合规范的情况都会生成 ErrorNode。
  * @private
  */
-function _strictParse(rawContent: string, contracts: Map<string, ComponentContract>): DeepAstNode[]
+function _initialParse(rawContent: string, contracts: Map<string, ComponentContract>): DeepAstNode[]
 {
     // 使用 g 和 u 标志。u 支持 Unicode，g 使得 exec 可以连续查找
     const tagRegex = /<(\/)?([\p{L}\p{N}_-]+)([^<>]*)>/gu;
@@ -159,6 +159,63 @@ function _strictParse(rawContent: string, contracts: Map<string, ComponentContra
     return root.children;
 }
 
+// 后处理函数，用于智能修剪空白
+function _postProcessWhitespace(nodes: DeepAstNode[], contracts: Map<string, ComponentContract>): DeepAstNode[] {
+    const processedNodes: DeepAstNode[] = [];
+    const isWhitespaceOnly = /^\s*$/; // 正则：检查字符串是否只包含空白
+
+    for (let i = 0; i < nodes.length; i++) {
+        let currentNode = nodes[i];
+
+        // 只处理纯空白的文本节点
+        if (currentNode.type === 'text' && isWhitespaceOnly.test(currentNode.content)) {
+            const prevNode = i > 0 ? nodes[i - 1] : null;
+            const nextNode = i < nodes.length - 1 ? nodes[i + 1] : null;
+
+            // 检查前一个节点是否需要 trim
+            const shouldTrimBefore = !prevNode || // 文档开头
+                (prevNode.type === 'tag' && contracts.get(prevNode.tagName.toLowerCase())?.whitespace === 'trim');
+
+            // 检查后一个节点是否需要 trim
+            const shouldTrimAfter = !nextNode || // 文档结尾
+                (nextNode.type === 'tag' && contracts.get(nextNode.tagName.toLowerCase())?.whitespace === 'trim');
+
+            if (shouldTrimBefore && shouldTrimAfter) {
+                // 如果前后都需要 trim，则完全丢弃这个空白节点
+                continue;
+            }
+        }
+
+        // 如果节点不是纯空白文本，或者它旁边的标签需要 preserve，则保留它
+        processedNodes.push(currentNode);
+    }
+
+    // 第二遍遍历，trim 那些与 'trim' 标签相邻的非空白文本节点
+    return processedNodes.map((node, i, arr) => {
+        if (node.type !== 'text') {
+            return node;
+        }
+
+        let content = node.content;
+        const prevNode = i > 0 ? arr[i - 1] : null;
+        const nextNode = i < arr.length - 1 ? arr[i + 1] : null;
+
+        const shouldTrimStart = !prevNode || (prevNode.type === 'tag' && contracts.get(prevNode.tagName.toLowerCase())?.whitespace === 'trim');
+        const shouldTrimEnd = !nextNode || (nextNode.type === 'tag' && contracts.get(nextNode.tagName.toLowerCase())?.whitespace === 'trim');
+
+        if (shouldTrimStart) {
+            content = content.trimStart();
+        }
+        if (shouldTrimEnd) {
+            content = content.trimEnd();
+        }
+
+        // 如果 trim 后内容不为空，则返回更新后的节点
+        return content ? { ...node, content } : null;
+
+    }).filter(Boolean) as DeepAstNode[]; // 过滤掉因 trim 变为空的节点
+}
+
 /**
  * 内部函数：将深度AST节点数组序列化回字符串。
  * @private
@@ -212,7 +269,10 @@ function _serializeAstNodes(nodes: DeepAstNode[]): string
  */
 export function parseContent(rawContent: string, contracts: Map<string, ComponentContract>): AstNode[]
 {
-    const deepNodes = _strictParse(rawContent, contracts);
+    let deepNodes = _initialParse(rawContent, contracts);
+
+    // 后处理，根据契约智能修剪空白
+    deepNodes = _postProcessWhitespace(deepNodes, contracts);
 
     // 将深度AST转换为供渲染器使用的浅层AST
     return deepNodes.map((node): AstNode =>
@@ -225,11 +285,12 @@ export function parseContent(rawContent: string, contracts: Map<string, Componen
         else
         {
             // 对于标签节点，将其子节点序列化回字符串
+            const processedChildren = _postProcessWhitespace(node.children, contracts);
             return {
                 type: 'tag',
                 tagName: node.tagName,
                 attributes: node.attributes,
-                innerContent: _serializeAstNodes(node.children),
+                innerContent: _serializeAstNodes(processedChildren),
             };
         }
     });

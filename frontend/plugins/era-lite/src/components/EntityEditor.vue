@@ -8,11 +8,11 @@
   >
     <n-form ref="formRef" :model="formValue" :rules="formRules">
       <!-- 根据 schema 动态渲染表单项 -->
-      <n-form-item v-for="field in schema" :key="field.key" :label="field.label" :path="field.key">
+      <n-form-item v-for="field in schema" :key="getKey(field)" :label="field.label" :path="getKey(field)">
         <!-- 使用动态组件 :is 来渲染输入控件 -->
         <component
             :is="field.component"
-            v-model:value="formValue[field.key]"
+            v-model:value="formValue[getKey(field)]"
             style="width: 100%"
             v-bind="field.componentProps"
         />
@@ -32,7 +32,7 @@ import {computed, ref, watch} from 'vue';
 import type {FormInst, FormRules} from 'naive-ui';
 import {NButton, NFlex, NForm, NFormItem, NModal, useMessage} from 'naive-ui';
 import {useRefHistory} from '@vueuse/core';
-import type {EntityFieldSchema} from "#/types/entitySchema.ts";
+import {type EntityFieldSchema, getKey} from "#/types/entitySchema.ts";
 
 // 组件的 props 定义，使用泛型 T 约束实体类型，TMode 约束工作模式
 const props = defineProps<{
@@ -66,7 +66,7 @@ const formRules = computed((): FormRules =>
   return Object.fromEntries(
       props.schema
           .filter(field => field.rules)
-          .map(field => [field.key, field.rules!])
+          .map(field => [getKey(field), field.rules!])
   );
 });
 
@@ -83,7 +83,7 @@ watch(() => props.show, (newVal) =>
   if (newVal)
   {
     // 合并默认值和传入的初始数据，确保表单结构完整
-    const initialScaffold = Object.fromEntries(props.schema.map(field => [field.key, undefined]));
+    const initialScaffold = Object.fromEntries(props.schema.map(field => [getKey(field), undefined]));
     const initial = {...initialScaffold, ...(props.initialData || {})};
     formValue.value = JSON.parse(JSON.stringify(initial));
 
