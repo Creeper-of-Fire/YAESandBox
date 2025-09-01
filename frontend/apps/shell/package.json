@@ -17,23 +17,24 @@
     "publish": "node script/post-build.mjs"
   },
   "dependencies": {
+    "@guolao/vue-monaco-editor": "^1.5.5",
     "@vueuse/core": "^13.6.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
+    "@yaesandbox-frontend/plugin-dialog-test": "workspace:*",
+    "@yaesandbox-frontend/plugin-era-lite": "workspace:*",
+    "@yaesandbox-frontend/plugin-workbench": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
     "axios": "^1.11.0",
     "form-data": "^4.0.4",
+    "highlight.js": "^11.11.1",
     "jwt-decode": "^4.0.0",
     "lodash-es": "^4.17.21",
+    "monaco-languageclient": "^9.8.0",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
     "vfonts": "^0.0.3",
     "vue": "^3.5.18",
-    "vue-router": "^4.5.1",
-    "@yaesandbox-frontend/plugin-dialog-test": "workspace:*",
-    "@yaesandbox-frontend/plugin-era-lite": "workspace:*",
-    "@yaesandbox-frontend/plugin-workbench": "workspace:*",
-    "monaco-languageclient": "^9.8.0",
-    "@guolao/vue-monaco-editor": "^1.5.5"
+    "vue-router": "^4.5.1"
   },
   "devDependencies": {
     "rollup-plugin-visualizer": "^6.0.3"

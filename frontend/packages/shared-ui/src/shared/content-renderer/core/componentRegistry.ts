@@ -3,7 +3,7 @@
 // 导入我们所有的内置组件
 import CollapseComponent from '../components/Collapse.vue';
 import InfoPopupComponent from '../components/InfoPopup.vue';
-// import RawHtmlComponent from '../components/RawHtml.vue';
+import RawHtmlComponent from '../components/RawHtml.vue';
 
 // --- 1. 定义核心数据结构 ---
 
@@ -36,10 +36,10 @@ export const builtinRegistrations: Record<string, ComponentRegistration> = {
         component: InfoPopupComponent
     },
     // 为 raw-html 定义一个特殊的 'raw' 契约
-    // 'raw-html': {
-    //     contract: { parseMode: 'raw' },
-    //     component: RawHtmlComponent
-    // }
+    'raw-html': {
+        contract: { parseMode: 'raw' },
+        component: RawHtmlComponent
+    }
 };
 
 

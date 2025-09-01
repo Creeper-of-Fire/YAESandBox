@@ -32,4 +32,7 @@ export {default as CloudDownloadIcon } from '@vicons/ionicons5/es/CloudDownloadO
 export {default as ChevronLeftIcon}from'@vicons/material/es/ChevronLeftOutlined';
 export {default as ChevronRightIcon}from'@vicons/material/es/ChevronRightOutlined';
 export {default as RefreshIcon}from'@vicons/ionicons5/es/Refresh';
+export {default as CodeIcon}from'@vicons/ionicons5/es/CodeOutline';
+export {default as FullscreenExitIcon}from'@vicons/material/es/FullscreenExitOutlined';
+export {default as FullscreenIcon}from'@vicons/material/es/FullscreenOutlined';
 // export {default as }from'@vicons/ionicons5/es/';

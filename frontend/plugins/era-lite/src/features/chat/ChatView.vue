@@ -33,6 +33,18 @@
                 </template>
                 <span>在发送给AI时，自动移除历史消息中的 <code>&lt;think&gt;...&lt;/think&gt;</code> 标签及其内容。本地对话记录不受影响。</span>
               </n-popover>
+              <n-button
+                  :type="scriptError ? 'error' : undefined"
+                  block
+                  quaternary
+                  title="自定义内容显示脚本"
+                  @click="isScriptModalVisible = true"
+              >
+                <template #icon>
+                  <n-icon :component="CodeIcon"/>
+                </template>
+                自定义内容显示脚本
+              </n-button>
             </n-flex>
           </n-space>
         </template>
@@ -45,6 +57,7 @@
           <ChatMessageDisplay
               v-for="msg in activeHistory"
               :key="msg.id"
+              :custom-transform-function="compiledCustomFunction || undefined"
               :message-id="msg.id"
               @regenerate="handleRegenerate"
               @edit-and-resubmit="handleEditAndResubmit"
@@ -71,6 +84,14 @@
             @click="handleSend"
         />
       </div>
+
+      <ResizableMonacoEditorModal
+          v-model:script="customScript"
+          v-model:show="isScriptModalVisible"
+          :default-script="defaultScriptExample"
+          expected-function-name="transformContent"
+          storage-key-prefix="chat-view-script"
+          title="自定义内容显示脚本"/>
     </n-layout-content>
   </n-layout>
 </template>
@@ -78,7 +99,7 @@
 <script lang="ts" setup>
 import {computed, nextTick, ref, watch} from 'vue';
 import {useRoute, useRouter} from 'vue-router';
-import {NFlex, NH2, NInput, NLayout, NLayoutContent, NLayoutHeader, NPageHeader} from 'naive-ui';
+import {NButton, NFlex, NH2, NIcon, NInput, NLayout, NLayoutContent, NLayoutHeader, NPageHeader, NSpace} from 'naive-ui';
 import {useChatStore} from './chatStore.ts';
 import ChatMessageDisplay from './ChatMessageDisplay.vue';
 import type {WorkflowConfig} from "@yaesandbox-frontend/core-services/types";
@@ -87,8 +108,11 @@ import WorkflowProviderButton from "#/components/WorkflowProviderButton.vue";
 import {useCharacterStore} from "#/features/characters/characterStore.ts";
 import {useSceneStore} from "#/features/scenes/sceneStore.ts";
 import {EarthIcon} from "#/utils/icon.ts";
-import {HelpCircleIcon,} from '@yaesandbox-frontend/shared-ui/icons';
+import {CodeIcon, HelpCircleIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
+import {defaultTransformMessageContent} from "#/features/chat/messageTransformer.ts";
+import ResizableMonacoEditorModal from "#/features/chat/ResizableMonacoEditorModal.vue";
+import {useScriptCompiler} from "#/features/chat/useScriptCompiler.ts";
 
 
 const route = useRoute();
@@ -122,6 +146,20 @@ const userInput = ref('');
 const scrollContainerRef = ref<HTMLElement | null>(null);
 const workflowBtnRef = ref<InstanceType<typeof WorkflowProviderButton> | null>(null);
 const filterThinkEnabled = useScopedStorage("chat-view-filter-think-enabled", true);
+
+// --- 自定义脚本逻辑 ---
+const customScript = useScopedStorage(`chat-view-custom-script`, '');
+const isScriptModalVisible = ref(false);
+
+const defaultScriptExample = computed(() => defaultTransformMessageContent.toString()
+    // 将导出的函数名 `defaultTransformMessageContent` 替换为约定的函数名 `transformContent`
+    .replace('export function defaultTransformMessageContent', 'function transformContent')
+);
+
+const {compiledFunction: compiledCustomFunction, error: scriptError} = useScriptCompiler({
+  scriptRef: customScript,
+  expectedFunctionName: 'transformContent'
+});
 
 // --- 流式工作流逻辑 ---
 const {
@@ -213,8 +251,10 @@ async function _executeWorkflow(config: WorkflowConfig, historyLeafId: string)
  * @param rawContent 包含类XML标签的原始字符串。
  * @returns 移除了所有 think/thinking 块之后的新字符串。
  */
-function removeThinkTags(rawContent: string): string {
-  if (!rawContent || !rawContent.includes('<')) {
+function removeThinkTags(rawContent: string): string
+{
+  if (!rawContent || !rawContent.includes('<'))
+  {
     return rawContent;
   }
 
@@ -225,27 +265,34 @@ function removeThinkTags(rawContent: string): string {
   const openTags = ['<think>', '<thinking>'];
   const closeTags = ['</think>', '</thinking>'];
 
-  while (i < rawContent.length) {
+  while (i < rawContent.length)
+  {
     let tagFound = false;
 
     // 检查是否匹配任何一个开放标签
-    for (const tag of openTags) {
-      if (rawContent.substring(i, i + tag.length).toLowerCase() === tag) {
+    for (const tag of openTags)
+    {
+      if (rawContent.substring(i, i + tag.length).toLowerCase() === tag)
+      {
         nestingLevel++;
         i += tag.length;
         tagFound = true;
         break;
       }
     }
-    if (tagFound) {
+    if (tagFound)
+    {
       continue;
     }
 
     // 检查是否匹配任何一个闭合标签
-    for (const tag of closeTags) {
-      if (rawContent.substring(i, i + tag.length).toLowerCase() === tag) {
+    for (const tag of closeTags)
+    {
+      if (rawContent.substring(i, i + tag.length).toLowerCase() === tag)
+      {
         // 只有在嵌套级别大于0时才减少，防止错误的闭合标签导致级别变为负数
-        if (nestingLevel > 0) {
+        if (nestingLevel > 0)
+        {
           nestingLevel--;
         }
         i += tag.length;
@@ -253,12 +300,14 @@ function removeThinkTags(rawContent: string): string {
         break;
       }
     }
-    if (tagFound) {
+    if (tagFound)
+    {
       continue;
     }
 
     // 如果当前不在任何 think 标签内，则将当前字符追加到结果中
-    if (nestingLevel === 0) {
+    if (nestingLevel === 0)
+    {
       result += rawContent[i];
     }
 

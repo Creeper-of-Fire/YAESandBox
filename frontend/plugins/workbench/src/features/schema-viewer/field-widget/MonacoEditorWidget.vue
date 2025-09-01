@@ -35,11 +35,12 @@
   </div>
 </template>
 <script lang="ts" setup>
-import {computed, onUnmounted, ref, watch} from 'vue';
+import {computed, inject, onUnmounted, ref, watch} from 'vue';
 import {type MonacoEditor, VueMonacoEditor} from '@guolao/vue-monaco-editor';
 import {NAlert, NSpin} from 'naive-ui';
 import {useDebounceFn} from '@vueuse/core';
 import {MonacoLanguageClient} from "monaco-languageclient";
+import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
 
 // --- Props ---
 const props = defineProps<{
@@ -53,11 +54,13 @@ const props = defineProps<{
 
   // 其他可配置项
   height?: string;        // 编辑器高度，例如 "300px"
-  theme?: 'vs-dark' | 'light'; // 主题
 }>();
 
 // --- Emits ---
 const emit = defineEmits(['update:modelValue']);
+
+const isCurrentlyDark = inject(IsDarkThemeKey, ref(false));
+const editorTheme = computed(() => isCurrentlyDark.value ? 'vs-dark' : 'light')
 
 // --- 内部状态 ---
 const internalValue = ref(props.modelValue ?? '');
@@ -66,7 +69,6 @@ const loadingText = ref('正在加载编辑器核心...');
 const error = ref<string | null>(null);
 const editorHeight = ref(props.height || '600px');
 const editorContainerRef = ref<HTMLElement | null>(null);
-const editorTheme = computed(() => props.theme || 'vs-dark');
 
 // Monaco Editor 的配置项
 const editorOptions = {

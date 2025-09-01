@@ -48,7 +48,7 @@ export type {
  */
 export { default as CollapseComponent } from './components/Collapse.vue';
 export { default as InfoPopupComponent } from './components/InfoPopup.vue';
-// export { default as RawHtmlComponent } from './components/RawHtml.vue';
+export { default as RawHtmlComponent } from './components/RawHtml.vue';
 
 /**
  * 导出内置组件的完整注册定义，以备不时之需或用于构建自定义的安装逻辑。

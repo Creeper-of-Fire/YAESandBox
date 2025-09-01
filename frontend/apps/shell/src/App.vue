@@ -1,5 +1,5 @@
 <template>
-  <n-config-provider :theme="finalThemeObject" class="app-container">
+  <n-config-provider :hljs="hljs" :theme="finalThemeObject" class="app-container">
     <n-message-provider>
       <n-modal-provider>
         <n-dialog-provider>
@@ -27,6 +27,10 @@ import {isTransitioning, triggerThemeTransition} from "#/composables/useThemeTra
 import {darkTheme, lightTheme} from "naive-ui";
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 import ThemeTransitionMask from "#/component/ThemeTransitionMask.vue";
+import hljs from 'highlight.js/lib/core'
+import javascript from 'highlight.js/lib/languages/javascript'
+
+hljs.registerLanguage('javascript', javascript)
 
 // --- 状态管理和计算 ---
 const themeMode = useScopedStorage<'light' | 'dark' | 'system'>('theme-mode', 'system');
@@ -85,7 +89,7 @@ defineOptions({
 })
 </script>
 <style>
-/* --- ✨ 新增：为 View Transitions API 添加样式 --- */
+/* --- ✨ 为 View Transitions API 添加样式 --- */
 
 /*
   这是核心修复：
