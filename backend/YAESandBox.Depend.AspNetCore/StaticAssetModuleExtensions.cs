@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 
 namespace YAESandBox.Depend.AspNetCore;
@@ -9,6 +10,8 @@ namespace YAESandBox.Depend.AspNetCore;
 /// </summary>
 public static class StaticAssetModuleExtensions
 {
+    private static ILogger Logger { get; } = AppLogging.CreateLogger(nameof(StaticAssetModuleExtensions));
+
     /// <summary>
     /// 为实现了 IProgramModule 的模块挂载其内嵌的 "wwwroot" 目录作为静态文件服务。
     /// 这是为插件和模块提供前端资源的标准、便捷方式。
@@ -37,7 +40,8 @@ public static class StaticAssetModuleExtensions
             FileProvider = new PhysicalFileProvider(wwwRootPath),
             RequestPath = requestPath
         });
-        Console.WriteLine($"[{moduleType.Name}] 已通过 UseModuleWwwRoot 挂载 wwwroot: {wwwRootPath} -> '{requestPath}'");
+        Logger.LogInformation("[{ModuleTypeName}] 已通过 UseModuleWwwRoot 挂载 wwwroot: {WwwRootPath} -> '{RequestPath}'",
+            moduleType.Name, wwwRootPath, requestPath);
     }
 
     /// <summary>

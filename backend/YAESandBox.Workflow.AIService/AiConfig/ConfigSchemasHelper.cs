@@ -2,6 +2,8 @@
 
 using System.Collections.ObjectModel;
 using System.Reflection;
+using Microsoft.Extensions.Logging;
+using YAESandBox.Depend;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;
 
@@ -12,6 +14,8 @@ namespace YAESandBox.Workflow.AIService.AiConfig;
 /// </summary>
 internal static class ConfigSchemasHelper // 改为静态类，因为所有成员都是静态的
 {
+    private static ILogger Logger { get; } = AppLogging.CreateLogger(nameof(ConfigSchemasHelper));
+
     // 假设 AbstractAiProcessorConfig 是定义 AI 处理器配置的基类
     private static Type AbstractAiProcessorConfigType { get; } = typeof(AbstractAiProcessorConfig);
 
@@ -33,8 +37,7 @@ internal static class ConfigSchemasHelper // 改为静态类，因为所有成�
 
         if (targetAssembly == null)
         {
-            // Log.Error($"无法获取类型 '{AbstractAiProcessorConfigType.FullName}' 所在的程序集。AI 配置类型将无法被发现。");
-            Console.Error.WriteLine($"[ERROR] 无法获取类型 '{AbstractAiProcessorConfigType.FullName}' 所在的程序集。AI 配置类型将无法被发现。"); // 临时使用 Console
+            Logger.LogError("[ERROR] 无法获取类型 '{FullName}' 所在的程序集。AI 配置类型将无法被发现。", AbstractAiProcessorConfigType.FullName);
             AvailableAiConfigTypesCache = new ReadOnlyDictionary<string, Type>(temporaryDictionary); // 初始化为空字典
             return;
         }
@@ -57,10 +60,9 @@ internal static class ConfigSchemasHelper // 改为静态类，因为所有成�
             // 处理类型名称冲突 (忽略大小写)
             if (temporaryDictionary.TryGetValue(typeName, out var existingType))
             {
-                string errorMessage = $"AI 配置类型名称冲突：类型 '{type.FullName}' 和 '{existingType.FullName}' " +
-                                      $"都具有相同的类名 '{typeName}' (忽略大小写)。类名必须在该上下文中唯一。";
-                // Log.Error(errorMessage);
-                Console.Error.WriteLine($"[ERROR] {errorMessage}"); // 临时使用 Console
+                Logger.LogError(
+                    "[ERROR] AI 配置类型名称冲突：类型 '{TypeFullName}' 和 '{ExistingTypeFullName}' 都具有相同的类名 '{TypeName}' (忽略大小写)。类名必须在该上下文中唯一。",
+                    type.FullName, existingType.FullName, typeName);
                 // 可以选择抛出异常或跳过冲突的类型，这里选择记录错误并跳过后来者（或先来者，取决于字典行为）
                 // 如果严格要求唯一性，则应抛出 InvalidOperationException
                 // throw new InvalidOperationException(errorMessage);
@@ -72,13 +74,11 @@ internal static class ConfigSchemasHelper // 改为静态类，因为所有成�
 
         AvailableAiConfigTypesCache = new ReadOnlyDictionary<string, Type>(temporaryDictionary);
 
-        int count = AvailableAiConfigTypesCache.Count;
-        // Log.Info($"已发现 {count} 个 AI 配置类型。");
-        Console.WriteLine($"[INFO] ConfigSchemasHelper: 已发现 {count} 个 AI 配置类型。"); // 临时使用 Console
-        // foreach (var (name, type) in AvailableAiConfigTypesCache)
-        // {
-        //    Console.WriteLine($"[DEBUG] ConfigSchemasHelper: 发现 AI 配置: {name} -> {type.FullName}");
-        // }
+        Logger.LogInformation("[INFO] ConfigSchemasHelper: 已发现 {Count} 个 AI 配置类型。", AvailableAiConfigTypesCache.Count);
+        foreach (var (name, type) in AvailableAiConfigTypesCache)
+        {
+            Logger.LogDebug("[DEBUG] ConfigSchemasHelper: 发现 AI 配置: {Name} -> {TypeFullName}", name, type.FullName);
+        }
     }
 
     /// <summary>

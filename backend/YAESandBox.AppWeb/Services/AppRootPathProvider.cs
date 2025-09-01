@@ -1,4 +1,5 @@
 ﻿using System.Diagnostics;
+using YAESandBox.Depend;
 using YAESandBox.Depend.AspNetCore.Services;
 
 namespace YAESandBox.AppWeb.Services;
@@ -10,6 +11,8 @@ namespace YAESandBox.AppWeb.Services;
 /// </summary>
 public class AppRootPathProvider : IRootPathProvider
 {
+    private static ILogger Logger { get; } = AppLogging.CreateLogger<AppRootPathProvider>();
+
     /// <inheritdoc />
     public string RootPath { get; }
 
@@ -22,9 +25,8 @@ public class AppRootPathProvider : IRootPathProvider
         if (isDesignTimeTool)
         {
             // === 设计时工具模式 ===
-            this.RootPath = Path.GetTempPath(); 
-            Console.WriteLine(
-                $"[AppRootPathProvider] Design-time tool '{processName}' detected. Using current working directory as root: {this.RootPath}");
+            this.RootPath = Path.GetTempPath();
+            Logger.LogInformation("[AppRootPathProvider] 检测到设计时工具 '{ProcessName}'。使用当前工作目录作为根目录: {RootPath}", processName, this.RootPath);
             return;
         }
 
@@ -32,7 +34,7 @@ public class AppRootPathProvider : IRootPathProvider
         {
             // === 开发模式逻辑 ===
             this.RootPath = FindProjectRootDirectory() ?? throw new DirectoryNotFoundException("在开发模式下无法找到项目根目录（.sln 文件所在目录）。");
-            Console.WriteLine($"[AppRootPathProvider] Physical Application Root Path resolved to: {this.RootPath}");
+            Logger.LogInformation("[AppRootPathProvider] 物理应用根路径解析为: {RootPath}", this.RootPath);
             return;
         }
 
@@ -62,7 +64,7 @@ public class AppRootPathProvider : IRootPathProvider
             // 4. 如果没找到，就移动到父目录继续搜索
             searchDir = searchDir.Parent;
         }
-        
+
         // 5. 最终确定根路径
         if (foundRootPath != null)
         {
@@ -79,7 +81,7 @@ public class AppRootPathProvider : IRootPathProvider
         }
 
         // 在启动时打印日志，方便调试
-        Console.WriteLine($"[AppRootPathProvider] Physical Application Root Path resolved to: {this.RootPath}");
+        Logger.LogInformation("[AppRootPathProvider] 物理应用根路径解析为: {RootPath}", this.RootPath);
     }
 
     /// <summary>

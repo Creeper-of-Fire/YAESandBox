@@ -1,5 +1,6 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
+using Microsoft.Extensions.Logging;
 using YAESandBox.Depend;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Schema.SchemaProcessor;
@@ -60,6 +61,7 @@ public class RenderWithMonacoEditorAttribute(string language) : Attribute
 internal class MonacoEditorRendererSchemaProcessor : YaePropertyAttributeProcessor<RenderWithMonacoEditorAttribute>
 {
     private const string PluginScheme = "plugin://";
+    private static ILogger Logger { get; } = AppLogging.CreateLogger<MonacoEditorRendererSchemaProcessor>();
 
     /// <summary>
     /// 解析包含 plugin:// 协议的 URL。
@@ -84,7 +86,7 @@ internal class MonacoEditorRendererSchemaProcessor : YaePropertyAttributeProcess
             return $"{providerModule.ToRequestPath()}/{relativePath}";
 
         // 如果找不到提供者，则无法解析路径，记录警告并返回 null
-        Log.Warning($"[SchemaProcessor] 警告: 无法解析路径 '{templateUrl}'，因为类型 '{ownerType.Name}' 没有找到对应的插件提供者。");
+        Logger.LogWarning("[SchemaProcessor] 警告: 无法解析路径 '{TemplateUrl}'，因为类型 '{OwnerTypeName}' 没有找到对应的插件提供者。", templateUrl, ownerType.Name);
         return null;
     }
 

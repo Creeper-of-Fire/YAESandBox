@@ -11,6 +11,7 @@ using YAESandBox.AppWeb;
 using YAESandBox.AppWeb.InnerModule;
 using YAESandBox.AppWeb.Services;
 using YAESandBox.Authentication;
+using YAESandBox.Depend;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.AspNetCore.Secret;
@@ -22,6 +23,10 @@ using YAESandBox.Workflow.Test.API;
 
 Console.OutputEncoding = System.Text.Encoding.UTF8;
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Logging.ClearProviders();
+builder.Logging.AddConsole();
+builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
 // =========================================================================
 // === 1. 环境与配置设置 (核心改造部分) ===
@@ -38,7 +43,7 @@ Directory.CreateDirectory(dataAbsolutePath);
 // 只在开发环境中加载 .env 文件
 if (builder.Environment.IsDevelopment())
 {
-    Console.WriteLine("Running in Development. Loading .env file...");
+    Console.WriteLine("在开发模式下运行，寻找 .env 文件...");
     Env.Load();
 }
 
@@ -73,7 +78,7 @@ if (secretsWereGenerated)
     string json = System.Text.Json.JsonSerializer.Serialize(newSecrets,
         new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
     File.WriteAllText(secretsFilePath, json);
-    Console.WriteLine($"New security keys generated and saved to: {secretsFilePath}");
+    Console.WriteLine($"新的安全密钥存储并且保存到：{secretsFilePath}");
 }
 
 // ** 将安全密钥动态添加到应用程序的整体配置中 **
@@ -197,12 +202,14 @@ builder.Services.AddSingleton<IGeneralJsonRootStorage>(sp =>
 allModules.ForEachModules<IProgramModuleWithInitialization>(it =>
     it.Initialize(new ModuleInitializationContext(allModules, pluginAssemblies)));
 
+var app = builder.Build();
+
+var loggerFactory = app.Services.GetRequiredService<ILoggerFactory>();
+AppLogging.Initialize(loggerFactory);
 
 // =========================================================================
 // === 4. 构建 WebApplication & 配置中间件管道 ===
 // =========================================================================
-
-var app = builder.Build();
 
 // 配置中间件
 // =================== 统一插件静态文件挂载 ===================

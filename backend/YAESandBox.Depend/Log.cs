@@ -1,137 +1,51 @@
-﻿namespace YAESandBox.Depend;
+﻿using Microsoft.Extensions.Logging;
 
-file interface ILogger
-{
-    /// <summary> 消息 </summary>
-    void Info(string message);
-
-    /// <summary> 警告 </summary>
-    void Warning(string message);
-
-    /// <summary> 错误 </summary>
-    void Error(string message);
-
-    /// <summary> 调试 </summary>
-    void Debug(string message);
-}
-
-internal class Logger : ILogger
-{
-    /// <inheritdoc/>
-    public virtual void Info(string message)
-    {
-        Console.WriteLine(message);
-    }
-
-    /// <inheritdoc/>
-    public virtual void Warning(string message)
-    {
-        Console.WriteLine(message);
-    }
-
-    /// <inheritdoc/>
-    public virtual void Error(string message)
-    {
-        Console.WriteLine(message);
-    }
-
-    /// <inheritdoc/>
-    public virtual void Debug(string message)
-    {
-        Console.WriteLine(message);
-    }
-}
-
-file class Logger<T> : Logger, ILogger<T>
-{
-    /// <inheritdoc cref="ILogger{T}.Info" />
-    public override void Info(string message)
-    {
-        base.Info($"{nameof(T)}: {message}");
-    }
-
-    /// <inheritdoc cref="ILogger{T}.Info" />
-    public override void Warning(string message)
-    {
-        Console.WriteLine($"{nameof(T)}: {message}");
-    }
-
-    /// <inheritdoc cref="ILogger{T}.Info" />
-    public override void Error(string message)
-    {
-        Console.WriteLine($"{nameof(T)}: {message}");
-    }
-
-    /// <inheritdoc cref="ILogger{T}.Info" />
-    public override void Debug(string message)
-    {
-        Console.WriteLine($"{nameof(T)}: {message}");
-    }
-}
-
-/// <summary>
-/// 日志接口
-/// </summary>
-/// <typeparam name="T"></typeparam>
-public interface ILogger<T>
-{
-    /// <summary> 消息 </summary>
-    void Info(string message);
-
-    /// <summary> 警告 </summary>
-    void Warning(string message);
-
-    /// <summary> 错误 </summary>
-    void Error(string message);
-
-    /// <summary> 调试 </summary>
-    void Debug(string message);
-}
+namespace YAESandBox.Depend;
 
 /// <summary>
 /// 日志
 /// </summary>
-public static class Log
+public static class AppLogging
 {
-    private static readonly Logger Logger = new();
+    private static ILoggerFactory? Factory { get; set; }
 
-    /// <summary> 创建日志实例 (泛型,输出带有类 <typeparamref name="T"/> 自身的信息) </summary>
-    /// <typeparam name="T">一般为所有者的类型</typeparam>
-    public static ILogger<T> CreateLogger<T>() => new Logger<T>();
-
-    /// <inheritdoc cref="ILogger{T}.Info(string)"/>
-    public static void Info(string message)
+    /// <summary>
+    /// 初始化日志系统。此方法应在应用程序启动时调用一次。
+    /// </summary>
+    /// <param name="loggerFactory">由依赖注入容器配置和创建的 ILoggerFactory。</param>
+    public static void Initialize(ILoggerFactory loggerFactory)
     {
-        Logger.Info(message);
+        Factory = loggerFactory;
     }
 
-    /// <inheritdoc cref="ILogger{T}.Warning(string)"/>
-    public static void Warning(string message)
+    /// <summary>
+    /// 创建一个指定类别的日志记录器实例。
+    /// </summary>
+    /// <typeparam name="T">日志记录器关联的类型。</typeparam>
+    /// <returns>一个 ILogger&lt;T&gt; 实例。</returns>
+    public static ILogger<T> CreateLogger<T>()
     {
-        Logger.Warning(message);
+        // 如果工厂未初始化，则抛出异常，这有助于在开发早期发现配置错误。
+        if (Factory == null)
+        {
+            throw new InvalidOperationException("AppLogging尚未初始化。请在程序启动时调用 Initialize() 方法。");
+        }
+
+        return Factory.CreateLogger<T>();
     }
 
-    /// <inheritdoc cref="ILogger{T}.Warning(string)"/>
-    public static void Warning(Exception exception, string message)
+    /// <summary>
+    /// 创建一个非泛型的日志记录器实例。
+    /// </summary>
+    /// <param name="categoryName">日志的名字。</param>
+    /// <returns>一个 ILogger 实例。</returns>
+    public static ILogger CreateLogger(string categoryName)
     {
-        Logger.Warning(message);
-    }
+        if (Factory == null)
+        {
+            throw new InvalidOperationException("AppLogging尚未初始化。请在程序启动时调用 Initialize() 方法。");
+        }
 
-    /// <inheritdoc cref="ILogger{T}.Error(string)"/>
-    public static void Error(string message)
-    {
-        Logger.Error(message);
-    }
-
-    /// <inheritdoc cref="ILogger{T}.Error(string)"/>
-    public static void Error(Exception exception, string message)
-    {
-        Logger.Error(message);
-    }
-
-    /// <inheritdoc cref="ILogger{T}.Debug(string)"/>
-    public static void Debug(string message)
-    {
-        Logger.Debug(message);
+        return Factory.CreateLogger(categoryName);
     }
 }
