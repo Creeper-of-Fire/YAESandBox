@@ -133,7 +133,7 @@ import {
   NTooltip,
   useThemeVars,
 } from 'naive-ui';
-import {CloseIcon as CloseIcon, HelpCircleIcon, SaveIcon as SaveIcon,} from '@yaesandbox-frontend/shared-ui/icons';
+import {CloseIcon as CloseIcon, HelpCircleIcon, SaveIcon as SaveIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import type {ContentPromptItem, MarkerPromptItem, PromptItem} from './sillyTavernPreset';
 
 // 1. 定义 Props 和 Emits

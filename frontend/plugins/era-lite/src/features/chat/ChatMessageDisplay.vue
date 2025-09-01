@@ -1,29 +1,68 @@
 ﻿<!-- src/features/chat/ChatMessageDisplay.vue -->
 <template>
-  <div :class="['message-wrapper', `role-${message.role.toLowerCase()}`]">
+  <div v-if="message" :class="['message-wrapper', `role-${message.role.toLowerCase()}`]">
+    <!-- 头像 (左) -->
     <n-avatar v-if="isAssistant" :size="32" round style="margin-right: 8px;">
       {{ avatar }}
     </n-avatar>
+
     <div class="message-content">
-      <n-card :bordered="false" content-style="padding: 10px 14px;" size="small">
-        <div v-if="isAssistant && message.content.think" class="message-actions">
-          <n-button size="tiny" text @click="showThink = !showThink">
-            <template #icon>
-              <n-icon :component="BrainIcon"/>
-            </template>
-            思考过程
-          </n-button>
-          <n-collapse-transition :show="showThink">
-            <n-log :log="message.content.think" language="text" style="margin-top: 8px;" trim/>
-          </n-collapse-transition>
-        </div>
-        <!-- TODO: 使用 markdown-it 渲染 content -->
-        <div style="white-space: pre-wrap; word-break: break-word; min-width: 50px">{{ message.content.content }}</div>
+      <n-card :bordered="false" content-style="padding: 10px 14px; white-space: pre-wrap; word-break: break-word;" size="small">
+        <!-- 编辑模式 -->
+        <n-flex v-if="isEditing" vertical>
+          <n-input v-model:value="editingText" autosize type="textarea"/>
+          <n-space justify="end">
+            <n-button size="tiny" @click="handleCancelEdit">取消</n-button>
+            <n-button size="tiny" type="primary" @click="handleSaveEdit">保存</n-button>
+            <n-button size="tiny" type="primary" @click="handleSaveAndResubmit">保存并重新生成</n-button>
+          </n-space>
+        </n-flex>
+
+        <!-- 展示模式 -->
+        <template v-else>
+          <ContentRenderer :content="displayContent"/>
+        </template>
       </n-card>
+
+      <!-- 动作和分支切换 -->
       <div class="message-actions">
-        <!-- WIP: 添加重试、编辑等按钮 -->
+        <!-- 分支切换 -->
+        <n-space v-if="siblings.length > 1" align="center" size="small">
+          <n-button :disabled="isFirstSibling" circle size="tiny" text @click="switchToSibling(-1)">
+            <template #icon>
+              <n-icon :component="ChevronLeftIcon"/>
+            </template>
+          </n-button>
+          <span>{{ currentSiblingIndex + 1 }} / {{ siblings.length }}</span>
+          <n-button :disabled="isLastSibling" circle size="tiny" text @click="switchToSibling(1)">
+            <template #icon>
+              <n-icon :component="ChevronRightIcon"/>
+            </template>
+          </n-button>
+        </n-space>
+
+        <!-- 操作按钮 -->
+        <n-space>
+          <n-button size="tiny" text @click="handleEdit">
+            <template #icon>
+              <n-icon :component="EditIcon"/>
+            </template>
+          </n-button>
+          <n-button v-if="isAssistant" size="tiny" text @click="handleRegenerate">
+            <template #icon>
+              <n-icon :component="RefreshIcon"/>
+            </template>
+          </n-button>
+          <n-button size="tiny" text @click="handleDelete">
+            <template #icon>
+              <n-icon :component="DeleteIcon"/>
+            </template>
+          </n-button>
+        </n-space>
       </div>
     </div>
+
+    <!-- 头像 (右) -->
     <n-avatar v-if="isUser" :size="32" round style="margin-left: 8px;">
       {{ avatar }}
     </n-avatar>
@@ -31,26 +70,107 @@
 </template>
 
 <script lang="ts" setup>
-import {computed,ref} from 'vue';
-import {NAvatar, NCard} from 'naive-ui';
-import type {ChatMessage} from '#/types/chat';
+import {computed, ref, watch} from 'vue';
+import {NAvatar, NButton, NCard, NFlex, NIcon, NInput, NSpace, useDialog} from 'naive-ui';
 import {useChatStore} from './chatStore.ts';
 import {useCharacterStore} from '#/features/characters/characterStore.ts';
-import {BrainIcon} from "#/utils/icon.ts";
+import {ChevronLeftIcon, ChevronRightIcon, DeleteIcon, EditIcon, RefreshIcon} from '@yaesandbox-frontend/shared-ui/icons'
+import {ContentRenderer} from "@yaesandbox-frontend/shared-ui/content-renderer";
 
-const props = defineProps<{ message: ChatMessage }>();
+const props = defineProps<{ messageId: string }>();
+const emit = defineEmits<{
+  (e: 'regenerate', parentMessageId: string): void
+  (e: 'edit-and-resubmit', messageId: string, newContent: string): void
+}>();
 
 const chatStore = useChatStore();
 const characterStore = useCharacterStore();
+const dialog = useDialog();
 
-const isUser = computed(() => props.message.role === 'User');
-const isAssistant = computed(() => props.message.role === 'Assistant');
+// --- 核心数据 ---
+const message = computed(() => chatStore.messages[props.messageId]);
 
-const showThink = ref(false);
+// --- 状态 ---
+const isUser = computed(() => message.value?.role === 'User');
+const isAssistant = computed(() => message.value?.role === 'Assistant');
+const isEditing = ref(false);
+const editingText = ref('');
 
+watch(message, (newMessage) =>
+{
+  if (newMessage)
+  {
+    // 编辑时总是使用原始内容
+    editingText.value = newMessage.data.content;
+  }
+}, {immediate: true});
+
+
+/**
+ * 将特定的消息内容（合并流式后的）标签转换为可渲染的 <collapse> 组件标签。
+ * @param content 原始消息字符串
+ * @returns 转换后的字符串
+ */
+function transformMessageContent(content: string): string
+{
+  let transformedContent = content;
+  const targetComponentTag = 'collapse';
+
+  // --- 步骤1: 处理那些需要“提升子标签为name”的父标签 ---
+
+  // 定义需要此行为的父标签列表
+  const parentTagsToTransform = ['detail', 'collapse'];
+
+  // 根据列表动态创建一个正则表达式，例如: /<(detail|collapse)>(.*?)<\/\1>/gs
+  const parentTagRegex = new RegExp(`<(${parentTagsToTransform.join('|')})>(.*?)<\\/\\1>`, 'gs');
+
+  transformedContent = transformedContent.replace(parentTagRegex, (match, parentTagName, innerContent) =>
+  {
+    // 这里的 parentTagName 会是 'detail' 或 'collapse'
+
+    const parser = new DOMParser();
+    // 使用 text/html 解析器更宽容，能处理非严格的XML
+    const doc = parser.parseFromString(`<div>${innerContent}</div>`, 'text/html');
+    const wrapper = doc.body.firstChild as Element;
+
+    if (!wrapper) return ''; // 如果内部为空，则返回空字符串
+
+    // 遍历所有直接子元素，将它们转换为目标组件 <collapse>
+    return Array.from(wrapper.children)
+        .map(element =>
+        {
+          const childTagName = element.tagName.toLowerCase(); // 子标签名作为 name
+          const innerHTML = element.innerHTML; // 保留子标签内的所有内容
+          // 使用模板字符串和变量来构建，而不是硬编码
+          return `<${targetComponentTag} name="${childTagName}">${innerHTML}</${targetComponentTag}>`;
+        })
+        .join(''); // 将所有转换后的 <collapse> 拼接起来
+  });
+
+  // 规则 2: 处理独立的 <think> 和 <summary> 标签
+  // 这个替换也会处理那些不在 <detail> 标签内的 <think> 和 <summary>
+  transformedContent = transformedContent.replace(/<think>(.*?)<\/think>/gs, `<${targetComponentTag} name="思维链">$1</${targetComponentTag}>`);
+  transformedContent = transformedContent.replace(/<summary>(.*?)<\/summary>/gs, `<${targetComponentTag} name="总结">$1</${targetComponentTag}>`);
+
+  return transformedContent;
+}
+
+const displayContent = computed(() =>
+{
+  if (message.value)
+  {
+    // 只在展示时转换内容
+    return transformMessageContent(message.value.data.content);
+  }
+  return '';
+});
+
+
+// --- 计算属性 ---
 const avatar = computed(() =>
 {
-  const session = chatStore.sessions.find(s => s.id === props.message.sessionId);
+  if (!message.value) return '?';
+  const session = chatStore.sessions.find(s => s.id === message.value.sessionId);
   if (!session) return '?';
 
   if (isUser.value)
@@ -63,6 +183,77 @@ const avatar = computed(() =>
   }
   return 'S';
 });
+
+// --- 分支逻辑 ---
+const siblings = computed(() => message.value ? chatStore.findMessageSiblings(props.messageId) : []);
+const currentSiblingIndex = computed(() => siblings.value.findIndex(s => s.id === props.messageId));
+const isFirstSibling = computed(() => currentSiblingIndex.value <= 0);
+const isLastSibling = computed(() => currentSiblingIndex.value >= siblings.value.length - 1);
+
+function switchToSibling(direction: 1 | -1)
+{
+  const targetIndex = currentSiblingIndex.value + direction;
+  if (targetIndex >= 0 && targetIndex < siblings.value.length)
+  {
+    const targetSibling = siblings.value[targetIndex];
+    chatStore.setActiveLeaf(targetSibling.sessionId, targetSibling.id);
+  }
+}
+
+// --- CURD 操作 ---
+function handleEdit()
+{
+  isEditing.value = true;
+}
+
+function handleCancelEdit() {
+  // 退出编辑时，恢复原始文本，防止用户输入被意外保留
+  if (message.value) {
+    editingText.value = message.value.data.content;
+  }
+  isEditing.value = false;
+}
+
+function handleSaveEdit() {
+  if (message.value) {
+    // 直接调用 store action 来更新内容
+    chatStore.updateMessageData(props.messageId, {content:editingText.value});
+  }
+  isEditing.value = false;
+}
+
+
+function handleSaveAndResubmit()
+{
+  if (message.value)
+  {
+    emit('edit-and-resubmit', props.messageId, editingText.value);
+  }
+  isEditing.value = false;
+}
+
+function handleRegenerate()
+{
+  if (message.value?.parentId)
+  {
+    emit('regenerate', message.value.parentId);
+  }
+}
+
+function handleDelete()
+{
+  if (!message.value) return;
+  dialog.warning({
+    title: '确认删除',
+    content: `你确定要删除这条消息及其所有后续分支吗？此操作不可逆。`,
+    positiveText: '确定',
+    negativeText: '取消',
+    onPositiveClick: () =>
+    {
+      chatStore.deleteMessageAndChildren(props.messageId);
+    },
+  });
+}
 </script>
 
 <style scoped>
@@ -105,11 +296,20 @@ const avatar = computed(() =>
   background-color: #f0f0f0;
 }
 
+.message-think {
+  margin-bottom: 8px;
+}
+
 .message-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   font-size: 12px;
   margin-top: 4px;
   opacity: 0;
   transition: opacity 0.2s;
+  padding: 0 8px;
+  min-height: 24px;
 }
 
 .message-wrapper:hover .message-actions {

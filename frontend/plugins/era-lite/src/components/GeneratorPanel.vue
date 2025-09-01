@@ -25,13 +25,13 @@
       </n-alert>
       <div v-else-if="modelValue">
         <!-- 根据 Schema 动态渲染字段 -->
-        <n-thing v-for="field in props.schema" :key="field.key">
+        <n-thing v-for="field in props.schema" :key="getKey(field)">
           <template #header>
             <n-h3 style="margin: 0">{{ field.label }}</n-h3>
           </template>
           <template #description>
             <p style="white-space: pre-wrap;">
-              {{ (modelValue as any)[field.key] ?? '...' }}
+              {{ (modelValue as any)[getKey(field)] ?? '...' }}
             </p>
           </template>
         </n-thing>
@@ -72,7 +72,8 @@ import type {WorkflowConfig} from '@yaesandbox-frontend/core-services/types';
 import {useStructuredWorkflowStream} from '#/composables/useStructuredWorkflowStream';
 import WorkflowProviderButton from "#/components/WorkflowProviderButton.vue";
 import EntityEditor from "#/components/EntityEditor.vue";
-import type {EntityFieldSchema} from "#/types/entitySchema.ts";
+import {type EntityFieldSchema, getKey} from "#/types/entitySchema.ts";
+import {useVModel} from "@vueuse/core";
 
 const props = defineProps<{
   modelValue: Partial<T> | null;
@@ -91,29 +92,34 @@ const emit = defineEmits<{
 
 const message = useMessage();
 const generationTopic = ref('');
+// 控制外部编辑器的显示状态
+const showEditor = ref(false);
 
-// 将 v-model 转换为内部可写的 ref
-const internalModel = ref(props.modelValue) as Ref<Partial<T> | null>;
-watch(() => props.modelValue, (newVal) =>
-{
-  internalModel.value = newVal;
-});
-watch(internalModel, (newVal) =>
-{
-  emit('update:modelValue', newVal);
-});
-
+const internalModel = useVModel(props, 'modelValue', emit) as Ref<Partial<T> | null>;
 
 const {
+  flatData,
   isLoading,
   error,
   isFinished,
   execute,
   thinkingProcess,
-  clear,
-} = useStructuredWorkflowStream<Partial<T>>(internalModel, props.schema);
+  clear: clearStream,
+} = useStructuredWorkflowStream({schema: props.schema});
 
-// --- 校验和编辑器逻辑 ---
+if (flatData)
+{
+  watch(flatData, (newData) =>
+  {
+    if (newData)
+    {
+      // 直接赋值给 useVModel 返回的 ref，它会自动 emit update 事件
+      internalModel.value = newData as Partial<T>;
+    }
+  });
+}
+
+// --- 校验逻辑 ---
 // 数据完整性校验
 const isDataComplete = computed(() =>
 {
@@ -121,13 +127,10 @@ const isDataComplete = computed(() =>
   // 遍历 schema，检查每一项在 internalModel 中是否存在且不为空
   return props.schema.every(field =>
   {
-    const value = (internalModel.value as any)[field.key];
+    const value = (internalModel.value as any)[getKey(field)];
     return value !== null && value !== undefined && value !== '';
   });
 });
-
-// 控制外部编辑器的显示状态
-const showEditor = ref(false);
 
 
 async function handleGenerate(config: WorkflowConfig)
@@ -151,7 +154,7 @@ function handleAccept()
       // 显式地移除 id 属性（如果存在），以符合 Omit<T, 'id'> 类型
       const {id, ...dataToAccept}: Partial<T> = internalModel.value;
       emit('accept', dataToAccept as Omit<T, 'id'>);
-      clear();
+      clearStream();
     }
     else
     {
@@ -163,7 +166,8 @@ function handleAccept()
 
 function handleClear()
 {
-  clear();
+  clearStream();
+  internalModel.value = null;
 }
 
 // "编辑/补全后添加" 按钮
@@ -181,6 +185,6 @@ function handleSaveFromEditor(completedData: Omit<T, 'id'>)
   // 收到编辑器保存的数据后，通过 accept 事件将最终结果向上冒泡
   emit('accept', completedData);
   // 清理自身状态，准备下一次生成
-  clear();
+  clearStream();
 }
 </script>

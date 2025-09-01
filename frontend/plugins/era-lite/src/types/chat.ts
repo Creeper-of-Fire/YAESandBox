@@ -7,14 +7,26 @@ import type {Character, Scene} from '#/types/models';
 export type MessageRole = 'User' | 'Assistant' | 'System';
 
 /**
- * 消息内容的结构化载荷。
- * 存储所有与消息内容相关的数据。
+ * 聊天消息的载荷。这是整个设计的核心之一。
+ * 它清晰地分离了“用于展示的内容”和“用于驱动逻辑的结构化数据”。
  */
-export interface MessagePayload
+export interface ChatMessagePayload
 {
-    content: string; // 核心的可视内容
-    think?: string;  // AI 的思考过程
-    [key: string]: any; // 扩展字段
+    /**
+     * [给渲染器]
+     * 用于最终展示的核心内容字符串，可能包含自定义XML标签。
+     * 这是渲染的“唯一事实来源”。
+     * 例如: "<character>RIM</character>ぷはー今日もイイ天気"
+     */
+    content: string;
+
+    /**
+     * [给游戏/应用逻辑]
+     * 一个开放的容器，用于存放AI生成的、非对话性的结构化数据。
+     * 系统可以根据这些数据更新状态、触发事件等。
+     * 例如: { "variables": { "quest_status": "complete" }, "events": ["unlock_door"] }
+     */
+    structuredData?: Record<string, any>;
 }
 
 /**
@@ -29,7 +41,7 @@ export interface ChatMessage
     parentId: string | null; // null 表示这是根消息
     role: MessageRole;
     name?: string; // 可选，用于标识发言角色名
-    content: MessagePayload;
+    data: ChatMessagePayload;
     timestamp: number;
 }
 

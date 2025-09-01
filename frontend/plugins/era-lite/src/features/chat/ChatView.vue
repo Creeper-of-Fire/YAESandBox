@@ -19,9 +19,21 @@
               {{ targetCharacter.name }}
             </n-tag>
             <n-tag v-if="scene" :bordered="false" round>
-              <template #icon><n-icon :component="EarthIcon"/></template>
+              <template #icon>
+                <n-icon :component="EarthIcon"/>
+              </template>
               场景: {{ scene.name }}
             </n-tag>
+            <n-flex align="center" size="small" style="margin-left: 16px;">
+              <label for="filter-think-switch" style="font-size: 14px; color: #666; cursor: pointer;">过滤思考</label>
+              <n-switch id="filter-think-switch" v-model:value="filterThinkEnabled"/>
+              <n-popover trigger="hover">
+                <template #trigger>
+                  <n-icon :component="HelpCircleIcon" style="cursor: help; color: #999;"/>
+                </template>
+                <span>在发送给AI时，自动移除历史消息中的 <code>&lt;think&gt;...&lt;/think&gt;</code> 标签及其内容。本地对话记录不受影响。</span>
+              </n-popover>
+            </n-flex>
           </n-space>
         </template>
       </n-page-header>
@@ -33,7 +45,9 @@
           <ChatMessageDisplay
               v-for="msg in activeHistory"
               :key="msg.id"
-              :message="msg"
+              :message-id="msg.id"
+              @regenerate="handleRegenerate"
+              @edit-and-resubmit="handleEditAndResubmit"
           />
           <!-- 当AI正在响应时，显示一个加载中的占位符 -->
           <n-spin v-if="isLoading" size="small" style="align-self: flex-start; margin-left: 40px;"/>
@@ -72,8 +86,10 @@ import {useStructuredWorkflowStream} from "#/composables/useStructuredWorkflowSt
 import WorkflowProviderButton from "#/components/WorkflowProviderButton.vue";
 import {useCharacterStore} from "#/features/characters/characterStore.ts";
 import {useSceneStore} from "#/features/scenes/sceneStore.ts";
-import type {MessagePayload} from "#/types/chat.ts";
 import {EarthIcon} from "#/utils/icon.ts";
+import {HelpCircleIcon,} from '@yaesandbox-frontend/shared-ui/icons';
+import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
+
 
 const route = useRoute();
 const router = useRouter();
@@ -105,62 +121,189 @@ const scene = computed(() =>
 const userInput = ref('');
 const scrollContainerRef = ref<HTMLElement | null>(null);
 const workflowBtnRef = ref<InstanceType<typeof WorkflowProviderButton> | null>(null);
+const filterThinkEnabled = useScopedStorage("chat-view-filter-think-enabled", true);
 
 // --- 流式工作流逻辑 ---
-const streamingResponse = ref<Partial<MessagePayload> | null>(null);
-const responseSchema = [
-  {key: 'content', label: '回复', component: NInput},
-  {key: 'think', label: '思考', component: NInput}
-];
-
 const {
+  xmlLikeString: streamingResponse,
   isLoading,
+  isFinished,
   execute,
-} = useStructuredWorkflowStream(streamingResponse, responseSchema);
+} = useStructuredWorkflowStream({xmlToStringPath: ['content']});
 
-// 监听流式响应的变化，并更新到 store
-watch(streamingResponse, (newValue) =>
+// 只有在 streamingResponse 确实存在的情况下（即我们请求了它），才建立 watch
+if (streamingResponse)
 {
-  const lastMessage = activeHistory.value[activeHistory.value.length - 1];
-  // 确保我们只更新AI的消息
-  if (newValue && lastMessage && lastMessage.role === 'Assistant')
+  watch(streamingResponse, (newValue) =>
   {
-    chatStore.updateMessagePayload(lastMessage.id, newValue);
+    // 内部逻辑是完美的，不需要改变
+    if (!newValue) return; // 可以在流开始前或结束后忽略空值
+
+    const lastMessage = activeHistory.value[activeHistory.value.length - 1];
+
+    // 确保我们只更新正在进行的、来自AI的消息
+    if (lastMessage && lastMessage.role === 'Assistant' && !isFinished.value)
+    {
+      // 这里的更新逻辑可以更精细，比如只更新 content 字段
+      const newPayload = {...lastMessage.data, content: newValue};
+      chatStore.updateMessageData(lastMessage.id, newPayload);
+    }
+  });
+}
+
+// 示例：当流结束时，可能需要做最终的确认或保存
+watch(isFinished, (finished) =>
+{
+  if (finished && streamingResponse?.value)
+  {
+    // TODO 可以在这里进行一次最终的、完整的消息更新，确保数据一致性
+    console.log("Stream finished. Final content:", streamingResponse.value);
   }
-});
+})
+
+// --- 私有执行函数，用于复用 ---
+async function _executeWorkflow(config: WorkflowConfig, historyLeafId: string)
+{
+  if (!sessionInfo.value) return;
+
+  // 1. 创建AI消息占位符
+  const assistantMessageId = chatStore.createAssistantMessagePlaceholder(sessionId.value, historyLeafId);
+
+  // 2. 准备工作流输入
+  const history = chatStore.getHistoryFromLeaf(historyLeafId)
+      .filter(msg => msg.role !== 'System') // 通常不把System Prompt发给模型
+      .map(msg =>
+      {
+        let content = msg.data.content;
+        if (filterThinkEnabled.value && content)
+        {
+          content = removeThinkTags(content);
+        }
+        return {
+          role: msg.role,
+          name: msg.name,
+          content: content,
+        };
+      });
+
+  const inputs = {
+    history_json: JSON.stringify(history),
+    playerCharacter_json: JSON.stringify(playerCharacter.value),
+    targetCharacter_json: JSON.stringify(targetCharacter.value),
+    scene_json: JSON.stringify(scene.value),
+  };
+
+  // 3. 执行工作流
+  await execute(config, inputs);
+}
+
+/**
+ * 从原始字符串中移除所有 <think>...</think> 和 <thinking>...</thinking> 标签及其内容。
+ * 这个函数使用一个简单的状态机（嵌套级别计数器）来正确处理嵌套标签，这是简单的正则表达式无法做到的。
+ *
+ * 例如，对于输入:
+ * "这是公开内容。<think>这是第一层思考<thinking>这是第二层思考</thinking>思考完毕</think>又是公开内容。"
+ * 它会正确地移除整个嵌套块，返回:
+ * "这是公开内容。又是公开内容。"
+ *
+ * 另一个复杂的例子，AI可能生成的文本:
+ * "<think>用户让我用<think>这个词来标记思考</think>好的"
+ * 它也能正确处理，因为内部的 "<think>" 只是文本，不会被误认为标签。
+ *
+ * @param rawContent 包含类XML标签的原始字符串。
+ * @returns 移除了所有 think/thinking 块之后的新字符串。
+ */
+function removeThinkTags(rawContent: string): string {
+  if (!rawContent || !rawContent.includes('<')) {
+    return rawContent;
+  }
+
+  let result = '';
+  let nestingLevel = 0;
+  let i = 0;
+
+  const openTags = ['<think>', '<thinking>'];
+  const closeTags = ['</think>', '</thinking>'];
+
+  while (i < rawContent.length) {
+    let tagFound = false;
+
+    // 检查是否匹配任何一个开放标签
+    for (const tag of openTags) {
+      if (rawContent.substring(i, i + tag.length).toLowerCase() === tag) {
+        nestingLevel++;
+        i += tag.length;
+        tagFound = true;
+        break;
+      }
+    }
+    if (tagFound) {
+      continue;
+    }
+
+    // 检查是否匹配任何一个闭合标签
+    for (const tag of closeTags) {
+      if (rawContent.substring(i, i + tag.length).toLowerCase() === tag) {
+        // 只有在嵌套级别大于0时才减少，防止错误的闭合标签导致级别变为负数
+        if (nestingLevel > 0) {
+          nestingLevel--;
+        }
+        i += tag.length;
+        tagFound = true;
+        break;
+      }
+    }
+    if (tagFound) {
+      continue;
+    }
+
+    // 如果当前不在任何 think 标签内，则将当前字符追加到结果中
+    if (nestingLevel === 0) {
+      result += rawContent[i];
+    }
+
+    i++;
+  }
+
+  // 最后清理一下可能因标签移除而产生的多余空白
+  return result.trim();
+}
+
+// --- 事件处理 ---
 
 async function handleSend(config: WorkflowConfig)
 {
   const content = userInput.value.trim();
   if (!content || isLoading.value || !sessionInfo.value) return;
 
-  // 1. 将用户输入添加到 store
   const userMessage = chatStore.addUserMessage(sessionId.value, content);
-  userInput.value = ''; // 清空输入框
+  userInput.value = '';
 
-  // 2. 创建AI消息占位符
-  const assistantMessageId = chatStore.createAssistantMessagePlaceholder(sessionId.value, userMessage.id);
+  await _executeWorkflow(config, userMessage.id);
+}
 
-  // 3. 准备工作流输入
-  const playerCharacter = characterStore.characters.find(c => c.id === sessionInfo.value!.playerCharacterId);
-  const targetCharacter = characterStore.characters.find(c => c.id === sessionInfo.value!.targetCharacterId);
-  const scene = sceneStore.scenes.find(s => s.id === sessionInfo.value!.sceneId);
-  const history = chatStore.getHistoryFromLeaf(userMessage.id)
-      .map(msg => ({
-        role: msg.role,
-        name: msg.name,
-        content: msg.content.content
-      }));
+async function handleRegenerate(parentMessageId: string)
+{
+  if (isLoading.value) return;
+  const config = workflowBtnRef.value?.selectedWorkflowConfig;
+  if (!config) return;
 
-  const inputs = {
-    history_json: JSON.stringify(history),
-    playerCharacter_json: JSON.stringify(playerCharacter),
-    targetCharacter_json: JSON.stringify(targetCharacter),
-    scene_json: JSON.stringify(scene),
-  };
+  // 将激活分支切回父节点
+  chatStore.setActiveLeaf(sessionId.value, parentMessageId);
+  // 从父节点开始重新执行
+  await _executeWorkflow(config, parentMessageId);
+}
 
-  // 4. 执行工作流
-  await execute(config, inputs);
+async function handleEditAndResubmit(messageId: string, newContent: string)
+{
+  if (isLoading.value) return;
+  const config = workflowBtnRef.value?.selectedWorkflowConfig;
+  if (!config) return;
+
+  // 1. 在 store 中更新消息内容，并删除其后代
+  chatStore.editMessageContent(messageId, newContent);
+  // 2. editMessageContent 会自动把 activeLeaf 切到 messageId，我们直接从这里开始执行
+  await _executeWorkflow(config, messageId);
 }
 
 

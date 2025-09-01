@@ -62,7 +62,7 @@
         style="width: 600px"
         title="选择一个工作流"
     >
-      <n-alert v-if="props.expectedInputs && props.expectedInputs.length > 0" title="当前需求" type="info" style="margin-bottom: 16px;">
+      <n-alert v-if="props.expectedInputs && props.expectedInputs.length > 0" style="margin-bottom: 16px;" title="当前需求" type="info">
         此场景需要一个能接收以下输入的工作流:
         <n-space :style="{ marginTop: '8px' }">
           <n-tag v-for="input in props.expectedInputs" :key="input" type="success">
@@ -160,6 +160,10 @@ const {
   clearSelection,
 } = useWorkflowSelector(props.storageKey);
 
+defineExpose({
+  selectedWorkflowConfig: selectedWorkflowConfig
+})
+
 // 2. 主按钮点击逻辑
 function handleClick()
 {
@@ -167,7 +171,8 @@ function handleClick()
   {
     // 如果已经配置，就向外发射事件，并携带配置信息
     emit('click', selectedWorkflowConfig.value);
-  } else
+  }
+  else
   {
     // 如果未配置，就打开选择模态框，引导用户配置
     openSelectorModal();
@@ -210,7 +215,8 @@ function handleDropdownSelect(key: string | number)
   if (key === 'select')
   {
     openSelectorModal();
-  } else if (key === 'clear')
+  }
+  else if (key === 'clear')
   {
     clearSelection();
   }
