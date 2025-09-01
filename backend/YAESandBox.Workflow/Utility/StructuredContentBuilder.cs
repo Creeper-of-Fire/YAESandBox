@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Collections.Specialized;
+using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using YAESandBox.Depend.Storage;
@@ -252,7 +253,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
         // ToJson 的逻辑完全委托给 ConvertNodeToObject，从根节点开始
         object representation = this.ConvertNodeToObject(this.Root);
         // 如果根节点本身就是个空对象，我们返回一个空JSON对象字符串
-        if (representation is Dictionary<string, object> { Count: 0 })
+        if (representation is SortedDictionary<string, object> { Count: 0 })
         {
             return "{}";
         }
@@ -313,51 +314,32 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
         }
         // --- 数组检测逻辑 END ---
 
-        var jsonObject = new Dictionary<string, object?>();
+        // 使用 OrderedDictionary 来严格保证键的插入顺序
+        var jsonObject = new OrderedDictionary();
 
-        // 1. 优先处理所有子元素
+        // 1. 遍历有序的子元素列表。
+        //    由于我们确认了同一层级不会有同名子元素，逻辑大大简化。
         if (childElements.Any())
         {
-            var groupedChildren = childElements.GroupBy(node => node.Name);
-
-            foreach (var group in groupedChildren)
+            foreach (var childNode in childElements)
             {
-                var items = group.Select(this.ConvertNodeToObject).ToList();
-                if (items.Count > 1)
-                {
-                    // 规则：多个同名子节点，转换为数组
-                    jsonObject[group.Key] = items;
-                }
-                else
-                {
-                    // 单个子节点，直接赋值
-                    jsonObject[group.Key] = items.FirstOrDefault();
-                }
+                jsonObject[childNode.Name] = this.ConvertNodeToObject(childNode);
             }
         }
 
         // 2. 处理所有文本内容
         string directText = string.Concat(textNodes.Select(tn => tn.Content.ToString())).Trim();
 
-        // 3. 根据内容决定最终返回类型
-        if (!jsonObject.Any() && !string.IsNullOrEmpty(directText))
+        // 3. 统一处理混合内容和纯文本内容
+        //    如果存在有效的文本内容，就将其添加到 "_text" 键中。
+        if (!string.IsNullOrEmpty(directText))
         {
-            // 情况 A: 节点只包含文本，例如 <name>爱丽丝</name>
-            // 旧逻辑: return directText;
-            // 新逻辑: 总是返回一个包含 _text 的对象，以保证结构一致性。
-            jsonObject["_text"] = directText;
-            return jsonObject;
-        }
-
-        if (jsonObject.Any() && !string.IsNullOrEmpty(directText))
-        {
-            // 情况 B: 混合内容，例如 <message>Hello<user>AI</user></message>
-            // 将文本内容存放到一个特殊键 "_text" 中。
             jsonObject["_text"] = directText;
         }
 
-        // 情况 C: 节点只包含子元素，或为空节点。
-        // 例如 <data><item>1</item></data> 或 <empty/>
+        // 最终，总是返回一个 OrderedDictionary (JSON 对象)。
+        // 即使是空元素 <empty/>，也会返回一个空的 {} 对象，而不是 null 或 string。
+        // 这保证了数据契约的稳定性。
         return jsonObject;
     }
 }

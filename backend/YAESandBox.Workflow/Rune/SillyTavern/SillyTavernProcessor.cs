@@ -112,7 +112,7 @@ public static partial class SillyTavernProcessor
                 case "worldInfoAfter":
                     if (!string.IsNullOrWhiteSpace(worldInfoResult.WorldInfoAfter))
                     {
-                        finalPromptList.Add(new RoledPromptDto { Role = templateItem.Role, Content = worldInfoResult.WorldInfoBefore });
+                        finalPromptList.Add(new RoledPromptDto { Role = templateItem.Role, Content = worldInfoResult.WorldInfoAfter });
                     }
 
                     break;
@@ -120,7 +120,7 @@ public static partial class SillyTavernProcessor
                 case "charDescription":
                     if (!string.IsNullOrWhiteSpace(targetCharacter.Description))
                     {
-                        finalPromptList.Add(new RoledPromptDto { Role = templateItem.Role, Content = worldInfoResult.WorldInfoBefore });
+                        finalPromptList.Add(new RoledPromptDto { Role = templateItem.Role, Content = targetCharacter.Description });
                     }
 
                     break;
@@ -128,7 +128,7 @@ public static partial class SillyTavernProcessor
                 case "personaDescription":
                     if (!string.IsNullOrWhiteSpace(playerCharacter.Description))
                     {
-                        finalPromptList.Add(new RoledPromptDto { Role = templateItem.Role, Content = worldInfoResult.WorldInfoBefore });
+                        finalPromptList.Add(new RoledPromptDto { Role = templateItem.Role, Content = playerCharacter.Description });
                     }
 
                     break;
