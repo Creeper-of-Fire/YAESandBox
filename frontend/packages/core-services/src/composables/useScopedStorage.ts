@@ -7,7 +7,6 @@ import {PluginUniqueNameKey} from "../utils/injectKeys.ts";
 /**
  * 获取当前组件的作用域标识符。
  * 优先使用组件的 'name' 选项。
- * 在开发模式下，如果 name 未提供，则回退到文件路径并发出警告。
  * @returns {string | null} 组件作用域标识符或 null。
  */
 function getComponentScope(): string | null
@@ -26,24 +25,6 @@ function getComponentScope(): string | null
     if (componentName)
     {
         return componentName;
-    }
-
-    // --- 仅限开发模式的辅助功能 ---
-    if ((import.meta as any).env.DEV)
-    {
-        const filePath = (instance.type as any).__file;
-        if (filePath)
-        {
-            console.warn(
-                `[useScopedStorage] 组件 (${filePath}) 未设置 'name' 选项。` +
-                `建议使用 defineOptions({ name: '...' }) 来创建一个稳定的存储 key。` +
-                `当前已回退到使用文件路径作为 key。`
-            );
-            // 从文件路径中提取一个相对干净的 key
-            // e.g., /src/views/ShopView.vue -> ShopView
-            const key = filePath.split('/').pop()?.replace('.vue', '');
-            return key || filePath;
-        }
     }
 
     return null;
