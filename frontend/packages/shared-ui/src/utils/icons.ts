@@ -29,3 +29,7 @@ export {default as LinkIcon} from '@vicons/ionicons5/es/LinkOutline';
 export {default as DocumentTextIcon} from '@vicons/ionicons5/es/DocumentTextOutline';
 export {default as CloudUploadIcon} from '@vicons/ionicons5/es/CloudUploadOutline';
 export {default as CloudDownloadIcon } from '@vicons/ionicons5/es/CloudDownloadOutline';
+export {default as ChevronLeftIcon}from'@vicons/material/es/ChevronLeftOutlined';
+export {default as ChevronRightIcon}from'@vicons/material/es/ChevronRightOutlined';
+export {default as RefreshIcon}from'@vicons/ionicons5/es/Refresh';
+// export {default as }from'@vicons/ionicons5/es/';
