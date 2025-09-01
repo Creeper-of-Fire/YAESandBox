@@ -30,18 +30,16 @@
 
     <!-- 3. 渲染解析错误节点 -->
     <template v-else-if="node.type === 'error'">
-      <n-alert :bordered="true" style="margin: 8px 0;" title="内容解析错误" type="error">
-        <p style="font-family: monospace; white-space: pre-wrap; word-break: break-all;">
-          {{ node.message }}
-        </p>
+      <n-alert :bordered="false" class="error-alert" type="error">
         <template #header>
           <strong>内容解析错误</strong>
         </template>
         <p>以下内容块无法被正确解析：</p>
-        <pre
-            style="background-color: #f8f8f8; padding: 8px; border-radius: 4px; color: #d93026; white-space: pre-wrap; word-break: break-all;"><code>{{
-            node.rawContent
-          }}</code></pre>
+        <pre class="error-code-block"><code>{{ node.rawContent }}</code></pre>
+        <details class="error-details">
+          <summary>查看技术细节</summary>
+          <p>{{ node.message }}</p>
+        </details>
       </n-alert>
     </template>
   </template>
@@ -52,11 +50,41 @@ import {computed} from 'vue';
 import {parseContent} from './core/contentParser';
 import {contractsMap, resolveComponent} from './core/componentRegistry';
 import type {AstNode} from './types';
+import {NAlert, useThemeVars} from 'naive-ui';
 
 const props = defineProps({
   content: {type: String, default: ''}
 });
-
+const themeVars = useThemeVars();
 const nodesToRender = computed<AstNode[]>(() => parseContent(props.content, contractsMap.value));
 </script>
+
+<style scoped>
+.error-alert {
+  margin: 8px 0;
+  border-radius: v-bind('themeVars.borderRadius');
+  background-color: v-bind('themeVars.errorColorSuppl'); /* 使用柔和的错误背景色 */
+}
+
+.error-code-block {
+  background-color: v-bind('themeVars.codeColor');
+  padding: 8px 12px;
+  border-radius: 4px;
+  color: v-bind('themeVars.errorColor'); /* 错误文本颜色 */
+  white-space: pre-wrap;
+  word-break: break-all;
+  border: 1px solid v-bind('themeVars.borderColor');
+}
+
+.error-details {
+  margin-top: 8px;
+  font-size: 12px;
+  color: v-bind('themeVars.textColor3');
+}
+
+.error-details summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+</style>
 

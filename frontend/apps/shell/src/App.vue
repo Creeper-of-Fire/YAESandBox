@@ -29,8 +29,10 @@ import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 import ThemeTransitionMask from "#/component/ThemeTransitionMask.vue";
 import hljs from 'highlight.js/lib/core'
 import javascript from 'highlight.js/lib/languages/javascript'
+import xml from 'highlight.js/lib/languages/xml'
 
-hljs.registerLanguage('javascript', javascript)
+hljs.registerLanguage('javascript', javascript);
+hljs.registerLanguage('xml', xml);
 
 // --- 状态管理和计算 ---
 const themeMode = useScopedStorage<'light' | 'dark' | 'system'>('theme-mode', 'system');

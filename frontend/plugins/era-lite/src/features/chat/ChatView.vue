@@ -153,7 +153,7 @@ const isScriptModalVisible = ref(false);
 
 const defaultScriptExample = computed(() => defaultTransformMessageContent.toString()
     // 将导出的函数名 `defaultTransformMessageContent` 替换为约定的函数名 `transformContent`
-    .replace('export function defaultTransformMessageContent', 'function transformContent')
+    .replace('function defaultTransformMessageContent', 'function transformContent')
 );
 
 const {compiledFunction: compiledCustomFunction, error: scriptError} = useScriptCompiler({

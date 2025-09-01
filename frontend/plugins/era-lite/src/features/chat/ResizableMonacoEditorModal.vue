@@ -72,7 +72,6 @@
 
       <!-- 拖拽手柄 -->
       <div
-          v-if="!isModalFullscreen"
           class="resize-handle"
           @mousedown="handleMouseDown"
       />
@@ -143,7 +142,7 @@ const minWidth = 500;
 const editorHeight = computed(() => (isModalFullscreen.value ? 'calc(95vh - 260px)' : '400px'));
 const modalStyle = computed(() => (
     isModalFullscreen.value
-        ? {width: '95vw', maxWidth: '95vw'}
+        ? {width: `${modalWidth.value}px`, maxWidth: '95vw'}
         : {width: `${modalWidth.value}px`, minWidth: `${minWidth}px`}
 ));
 

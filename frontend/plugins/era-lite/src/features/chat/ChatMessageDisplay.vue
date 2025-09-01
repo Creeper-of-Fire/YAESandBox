@@ -1,10 +1,13 @@
 ﻿<!-- src/features/chat/ChatMessageDisplay.vue -->
 <template>
-  <div v-if="message" :class="['message-wrapper', `role-${message.role.toLowerCase()}`]">
-    <!-- 头像 (左) -->
-    <n-avatar v-if="isAssistant" :size="32" round style="margin-right: 8px;">
-      {{ avatar }}
-    </n-avatar>
+  <div v-if="isVisible" :class="['message-wrapper', `role-${message.role.toLowerCase()}`]">
+    <!-- 消息头：包含头像和角色名 -->
+    <div v-if="character" class="message-header">
+      <n-avatar :size="32" round>
+        {{ character.avatar }}
+      </n-avatar>
+      <span class="character-name">{{ character.name }}</span>
+    </div>
 
     <div class="message-content">
       <n-card :bordered="false" content-style="padding: 10px 14px; white-space: pre-wrap; word-break: break-word;" size="small">
@@ -43,17 +46,44 @@
 
         <!-- 操作按钮 -->
         <n-space>
-          <n-button size="tiny" text @click="handleEdit">
+          <n-button
+              size="tiny"
+              text
+              title="预览脚本渲染效果"
+              @click="handlePreviewRender"
+          >
+            <template #icon>
+              <n-icon :component="CodeIcon"/>
+            </template>
+          </n-button>
+
+          <n-button
+              size="tiny"
+              text
+              title="编辑消息"
+              @click="handleEdit"
+          >
             <template #icon>
               <n-icon :component="EditIcon"/>
             </template>
           </n-button>
-          <n-button v-if="isAssistant" size="tiny" text @click="handleRegenerate">
+          <n-button
+              v-if="isAssistant"
+              size="tiny"
+              text
+              title="重新生成"
+              @click="handleRegenerate"
+          >
             <template #icon>
               <n-icon :component="RefreshIcon"/>
             </template>
           </n-button>
-          <n-button size="tiny" text @click="handleDelete">
+          <n-button
+              size="tiny"
+              text
+              title="删除消息"
+              @click="handleDelete"
+          >
             <template #icon>
               <n-icon :component="DeleteIcon"/>
             </template>
@@ -61,20 +91,15 @@
         </n-space>
       </div>
     </div>
-
-    <!-- 头像 (右) -->
-    <n-avatar v-if="isUser" :size="32" round style="margin-left: 8px;">
-      {{ avatar }}
-    </n-avatar>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {computed, ref, watch} from 'vue';
-import {NAvatar, NButton, NCard, NFlex, NIcon, NInput, NSpace, useDialog} from 'naive-ui';
+import {computed, ref, watch, h} from 'vue';
+import {NAvatar, NButton, NCard, NCode, NFlex, NIcon, NInput, NSpace, useDialog, useThemeVars} from 'naive-ui';
 import {useChatStore} from './chatStore.ts';
 import {useCharacterStore} from '#/features/characters/characterStore.ts';
-import {ChevronLeftIcon, ChevronRightIcon, DeleteIcon, EditIcon, RefreshIcon} from '@yaesandbox-frontend/shared-ui/icons'
+import {ChevronLeftIcon, ChevronRightIcon, CodeIcon, DeleteIcon, EditIcon, RefreshIcon} from '@yaesandbox-frontend/shared-ui/icons'
 import {ContentRenderer} from "@yaesandbox-frontend/shared-ui/content-renderer";
 import {defaultTransformMessageContent} from "#/features/chat/messageTransformer.ts";
 
@@ -91,9 +116,24 @@ const emit = defineEmits<{
 const chatStore = useChatStore();
 const characterStore = useCharacterStore();
 const dialog = useDialog();
+const themeVars = useThemeVars();
 
 // --- 核心数据 ---
 const message = computed(() => chatStore.messages[props.messageId]);
+
+const isVisible = computed(() =>
+{
+  if (!message.value)
+  {
+    return false;
+  }
+  // 如果是作为根节点的、且内容为空的系统消息，则不显示它
+  if (message.value.role === 'System' && message.value.parentId === null && !message.value.data.content)
+  {
+    return false;
+  }
+  return true;
+});
 
 // --- 状态 ---
 const isUser = computed(() => message.value?.role === 'User');
@@ -118,10 +158,13 @@ const displayContent = computed(() =>
   const rawContent = message.value.data.content;
 
   // 优先使用自定义转换函数
-  if (props.customTransformFunction) {
-    try {
+  if (props.customTransformFunction)
+  {
+    try
+    {
       return props.customTransformFunction(rawContent);
-    } catch (e) {
+    } catch (e)
+    {
       console.error("执行自定义内容转换脚本失败，已回退到默认转换器:", e);
       // 如果自定义函数执行失败，则使用默认函数作为后备
       return defaultTransformMessageContent(rawContent);
@@ -132,23 +175,53 @@ const displayContent = computed(() =>
   return defaultTransformMessageContent(rawContent);
 });
 
+function handlePreviewRender() {
+  dialog.info({
+    title: '脚本处理后源代码预览',
+    // 使用 h 函数动态创建 NCode VNode 来展示处理后的字符串
+    content: () => h(NCode, {
+      code: displayContent.value,
+      language: 'xml', // 将其作为 XML 进行语法高亮
+      wordWrap: true
+    }),
+    positiveText: '关闭',
+    maskClosable: true,
+    style: {
+      width: '60vw',
+      maxWidth: '800px',
+    },
+    // 让弹窗内容可以滚动
+    contentStyle: {
+      maxHeight: '60vh',
+      overflow: 'auto'
+    }
+  });
+}
 
-// --- 计算属性 ---
-const avatar = computed(() =>
+
+// 计算角色信息
+const character = computed(() =>
 {
-  if (!message.value) return '?';
-  const session = chatStore.sessions.find(s => s.id === message.value.sessionId);
-  if (!session) return '?';
+  if (!message.value) return null;
+  const session = chatStore.sessions.find(s => s.id === message.value!.sessionId);
+  if (!session) return null;
 
+  let char;
   if (isUser.value)
   {
-    return characterStore.characters.find(c => c.id === session.playerCharacterId)?.avatar || 'U';
+    char = characterStore.characters.find(c => c.id === session.playerCharacterId);
   }
-  if (isAssistant.value)
+  else if (isAssistant.value)
   {
-    return characterStore.characters.find(c => c.id === session.targetCharacterId)?.avatar || 'A';
+    char = characterStore.characters.find(c => c.id === session.targetCharacterId);
   }
-  return 'S';
+
+  if (char)
+  {
+    return {name: char.name, avatar: char.avatar || '?'};
+  }
+  // Fallback
+  return {name: isUser.value ? '玩家' : '助手', avatar: isUser.value ? 'U' : 'A'};
 });
 
 // --- 分支逻辑 ---
@@ -230,19 +303,24 @@ function handleDelete()
 <style scoped>
 .message-wrapper {
   display: flex;
-  margin-bottom: 16px;
+  flex-direction: column;
+  margin-bottom: 24px; /* 增加消息间距 */
   max-width: 80%;
 }
 
+/* 消息靠右 */
 .role-user {
   align-self: flex-end;
-  flex-direction: row-reverse;
+  align-items: flex-end; /* 使内部元素也靠右对齐 */
 }
 
+/* 消息靠左 */
 .role-assistant {
   align-self: flex-start;
+  align-items: flex-start;
 }
 
+/* 系统消息居中（样式不变） */
 .role-system {
   align-self: center;
   max-width: 100%;
@@ -250,37 +328,68 @@ function handleDelete()
   color: #999;
 }
 
+/* 消息头 (头像 + 名字) */
+.message-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.character-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: v-bind('themeVars.textColor2');
+}
+
+/* 用户消息头，名字在左，头像在右 */
+.role-user .message-header {
+  flex-direction: row-reverse;
+}
+
+/* 消息内容区（卡片 + 操作） */
 .message-content {
   display: flex;
   flex-direction: column;
+  width: 100%;
 }
 
-.role-user .message-content {
-  align-items: flex-end;
+/* 使用 :deep() 来穿透 scoped 样式，修改 Naive UI 组件的内部样式 */
+.message-wrapper :deep(.n-card) {
+  border-radius: 12px; /* 更大的圆角 */
+  box-shadow: v-bind('themeVars.boxShadow1');
+  transition: all 0.2s ease-in-out;
 }
 
-.role-user .n-card {
-  background-color: #cce5ff;
+.message-wrapper:hover :deep(.n-card) {
+  box-shadow: v-bind('themeVars.boxShadow2');
+  transform: translateY(-2px);
 }
 
-.role-assistant .n-card {
-  background-color: #f0f0f0;
+/* 助手消息卡片样式 */
+.role-assistant :deep(.n-card) {
+  background-color: v-bind('themeVars.cardColor');
+  border: 1px solid v-bind('themeVars.borderColor');
 }
 
-.message-think {
-  margin-bottom: 8px;
+/* 用户消息卡片样式 */
+.role-user :deep(.n-card) {
+  /* 使用一个柔和的主题色 */
+  background-color: v-bind('themeVars.actionColor');
+  border: 1px solid v-bind('themeVars.primaryColorHover');
 }
 
+/* 消息操作区 */
 .message-actions {
   display: flex;
   justify-content: space-between;
   align-items: center;
   font-size: 12px;
-  margin-top: 4px;
-  opacity: 0;
-  transition: opacity 0.2s;
+  margin-top: 6px;
   padding: 0 8px;
   min-height: 24px;
+  opacity: 0;
+  transition: opacity 0.2s;
 }
 
 .message-wrapper:hover .message-actions {

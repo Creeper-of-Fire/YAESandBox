@@ -27,15 +27,34 @@ function getComponentScope(): string | null
         return componentName;
     }
 
+    // --- 仅限开发模式的辅助功能 ---
+    if ((import.meta as any).env.DEV)
+    {
+        const filePath = (instance.type as any).__file;
+        if (filePath)
+        {
+            console.warn(
+                `[useScopedStorage] 组件 (${filePath}) 未设置 'name' 选项。` +
+                `建议使用 defineOptions({ name: '...' }) 来创建一个稳定的存储 key。` +
+                `当前已回退到使用文件路径作为 key。`
+            );
+            // 从文件路径中提取一个相对干净的 key
+            // e.g., /src/views/ShopView.vue -> ShopView
+            const key = filePath.split('/').pop()?.replace('.vue', '');
+            return key || filePath;
+        }
+    }
+
     return null;
 }
 
 /**
  * 一个带有自动作用域的 useStorage 封装。
- * 它会根据调用它的上下文（组件或路由）自动生成唯一的 key，
+ * 它会根据调用它的上下文（插件、组件、路由）自动生成唯一的 key，
+ * 并且只使用其中一个，
  * 以避免在不同组件或视图中发生 key 冲突。
  *
- * 作用域优先级: 组件 name > (开发模式下的组件文件路径) > 路由 name/path
+ * 作用域优先级: 注入的插件运行时ID > 组件 name > (开发模式下的组件文件路径) > 路由 name/path
  *
  * @param localKey - 在当前作用域内的局部 key。
  * @param initialValue - 初始值。
@@ -57,8 +76,12 @@ export function useScopedStorage<T>(
     // 1. 尝试注入插件运行时 ID (最高优先级)
     const pluginId = inject(PluginUniqueNameKey, null);
 
-    // 2. 尝试获取组件作用域
-    const componentScope = componentScopeRewrite || getComponentScope();
+    let componentScope;
+    if (!pluginId)
+    {
+        // 2. 尝试获取组件作用域
+        componentScope = componentScopeRewrite || getComponentScope();
+    }
 
     // 3. 回退到路由作用域
     const routeScope = (route.name?.toString() || route.path).replace(/\//g, '_');
@@ -66,7 +89,7 @@ export function useScopedStorage<T>(
     // 组合全局 Key，优先级: 插件 > 组件 > 路由
     const scopeParts = [
         pluginId,
-        componentScope,
+        (!pluginId) ? componentScope : null,
         // 如果没有更具体的作用域，才使用路由
         (!pluginId && !componentScope) ? routeScope : null
     ].filter(Boolean); // 过滤掉 null 或 undefined 的部分
