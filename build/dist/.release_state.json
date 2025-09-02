@@ -1,7 +1,7 @@
 {
     "hashes": {
         "launcher": "aebe2ad900ba295356a50e22938f42bcf78673cc1d1036a18598b7bdddd10130",
-        "app": "4e46042cfce59846e31d66fd6f95b1cd535c1f413e5f091647b35ecb719e0e49",
+        "app": "f114388fd5cc4d41d0c37b853d34da3687196ebaf22dce7ce69a9a126bd00ceb",
         "backend": "3af929d76507edeb5d5e27212d8a53f7136290b5f04022b93a91abadae1270fb",
         "backend-slim": "d72f8bb087d4765fd57ed55256168a8f3ae2156f71c9d3f854b0f5a4933a4d55",
         "plugins": {
@@ -23,10 +23,10 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.21",
-                    "notes": "增加空白节点的智能处理机制",
-                    "hash": "9717275544709d9974ee65074f347328bbb3e0f32b6098481b2f6e709d26a1f6",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.21/app.zip"
+                    "version": "0.0.22",
+                    "notes": "紧急修复：修复了Schema定义错误导致无法编辑/生成物品的bug",
+                    "hash": "77e6b9994abcee09f4cd882a5d63471521292129085aa48ee8786e55da02983e",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.22/app.zip"
                 },
                 {
                     "id": "backend",
@@ -51,10 +51,10 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.21",
-                    "notes": "增加空白节点的智能处理机制",
-                    "hash": "9717275544709d9974ee65074f347328bbb3e0f32b6098481b2f6e709d26a1f6",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.21/app.zip"
+                    "version": "0.0.22",
+                    "notes": "紧急修复：修复了Schema定义错误导致无法编辑/生成物品的bug",
+                    "hash": "77e6b9994abcee09f4cd882a5d63471521292129085aa48ee8786e55da02983e",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.22/app.zip"
                 },
                 {
                     "id": "backend",
