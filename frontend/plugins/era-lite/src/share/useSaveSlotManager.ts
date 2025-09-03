@@ -21,7 +21,6 @@ export interface SaveSlotMeta
 }
 
 const META_FILENAME = 'meta.json';
-const LAST_PLAYED_ID_FILENAME = 'last_played.json';
 
 export function useSaveSlotManager(
     scopeManager: StorageScopeManager,

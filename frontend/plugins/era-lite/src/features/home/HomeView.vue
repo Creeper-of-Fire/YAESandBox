@@ -25,7 +25,7 @@
       </div>
     </n-card>
 
-    <SaveManagerCard />
+    <SaveManagerCard/>
 
     <!-- 操作按钮 -->
     <n-card title="开始行动">
@@ -35,6 +35,9 @@
         </n-button>
         <n-button ghost size="large" @click="sessionStore.clearSelections()">
           清空选择
+        </n-button>
+        <n-button ghost size="large" type="error" @click="quitToMainMenu">
+          返回主菜单
         </n-button>
       </n-flex>
     </n-card>
@@ -48,11 +51,18 @@ import CharacterDisplayCard from './CharacterDisplayCard.vue';
 import {useRouter} from "vue-router";
 import {useChatStore} from '#/features/chat/chatStore.ts';
 import SaveManagerCard from "#/share/SaveManagerCard.vue";
+import {useEraLiteGameMenu} from "#/features/home/useEraLiteGameMenu.ts";
 
 const router = useRouter();
 const sessionStore = useSessionStore();
 const chatStore = useChatStore();
 const message = useMessage();
+const gameMenu = useEraLiteGameMenu();
+
+function quitToMainMenu()
+{
+  gameMenu.quitToMainMenu();
+}
 
 function startInteraction()
 {

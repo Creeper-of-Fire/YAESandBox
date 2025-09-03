@@ -21,7 +21,7 @@ export interface StorageScopeManager {
     readonly availableScopes: Readonly<Ref<readonly string[]>>;
 
     /** 切换到指定的作用域 */
-    selectScope(scopeName: string): Promise<void>;
+    selectScope(scopeName: string | null): Promise<void>;
 
     /** 创建一个新的作用域 */
     createScope(scopeName: string): Promise<void>;
@@ -66,11 +66,16 @@ export function useStorageScopeManager(
         }
     }
 
-    async function selectScope(scopeName: string): Promise<void> {
-        // 即使作用域在列表中不存在，也允许选择，以便可以创建新文件
-        // _activeScopeName.value = scopeName;
-        _activeScopePath.value = [...rootPath, scopeName];
-        console.log(`改变作用域到：${scopeName}`);
+    async function selectScope(scopeName: string | null): Promise<void> {
+        if (scopeName) {
+            // 如果提供了有效的 scopeName，则构建并设置路径
+            _activeScopePath.value = [...rootPath, scopeName];
+            console.log(`改变作用域到：${scopeName}`);
+        } else {
+            // 如果传入 null，则明确地将 activeScopePath 设为 null
+            _activeScopePath.value = null;
+            console.log(`已卸载当前作用域。`);
+        }
     }
 
     async function createScope(scopeName: string): Promise<void> {

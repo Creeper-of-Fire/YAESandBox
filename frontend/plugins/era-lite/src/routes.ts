@@ -2,10 +2,24 @@
 
 export const routes: RouteRecordRaw[] = [
     {
-        // --- 父路由：承载所有 era-lite 页面的布局 ---
+        // --- 新的启动页路由 ---
         path: '/era-lite',
+        name: 'Era_Lite_Startup',
+        component: () => import('#/features/home/StartupView.vue'),
+        meta: {
+            // 标记这个路由不需要激活的存档
+            requiresActiveSave: false,
+        }
+    },
+    {
+        // --- 父路由：承载所有游戏内页面的布局 ---
+        path: '/era-lite/session', // 路径已更改
         // 动态导入我们的主布局组件
         component: () => import('./layouts/MainLayout.vue'),
+        meta: {
+            // 标记所有子路由都需要一个激活的存档
+            requiresActiveSave: true,
+        },
 
         // --- 子路由：所有页面都在 MainLayout 的 <router-view> 中显示 ---
         children: [

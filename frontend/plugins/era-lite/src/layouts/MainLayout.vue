@@ -39,16 +39,42 @@
 </template>
 
 <script lang="ts" setup>
-import {h} from 'vue';
-import {RouterLink, useRoute} from 'vue-router';
+import {h, watch} from 'vue';
+import {RouterLink, useRoute, useRouter} from 'vue-router';
 import {NIcon, NLayout, NLayoutSider, NMenu, useThemeVars} from 'naive-ui';
 import {BagIcon, ChatIcon, EarthIcon, HomeIcon, PeopleIcon, StorefrontIcon} from '#/utils/icon.ts';
 import {GameControllerIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
+import {useEraLiteGameMenu} from "#/features/home/useEraLiteGameMenu.ts";
 
-const collapsed = useScopedStorage('collapsed', false);
+const collapsed = useScopedStorage('mainLayout:collapsed', false);
 
 const route = useRoute();
+
+const router = useRouter();
+
+const gameMenu = useEraLiteGameMenu();
+
+// --- 路由守卫逻辑 ---
+// 监听当前激活的存档名称。
+watch(
+    () => gameMenu.isGameLoaded.value,
+    (activeScopeName) =>
+    {
+      // 如果没有激活的存档 (例如，用户点击了“返回主菜单”)
+      if (!activeScopeName)
+      {
+        console.log('没有检测到激活的存档，正在重定向到启动页...');
+        // 强制跳转回启动页
+        router.push({name: 'Era_Lite_Startup'});
+      }
+    },
+    {
+      // 立即执行一次，确保在组件挂载时就进行检查
+      immediate: true,
+    }
+);
+
 
 const renderIcon = (icon: any) => () => h(NIcon, null, {default: () => h(icon)});
 
