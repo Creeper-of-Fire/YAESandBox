@@ -1,13 +1,19 @@
 ﻿import { defineStore } from 'pinia';
-import { type Scene } from '#/types/models.ts';
+import {type Item, type Scene} from '#/types/models.ts';
 import { nanoid } from 'nanoid';
-import { createPersistentState } from '#/composables/createPersistentState.ts';
+import { createScopedPersistentState } from '#/share/createScopedPersistentState.ts';
 import { watchOnce } from '@vueuse/core';
+import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
 
 const STORAGE_KEY = 'era-lite-scenes';
 
 export const useSceneStore = defineStore(STORAGE_KEY, () => {
-    const { state: scenes, isReady } = createPersistentState<Scene[]>(STORAGE_KEY, []);
+    const globalStore = useEraLiteSaveStore();
+
+    const {state: scenes, isReady} = globalStore.createState<Scene[]>(
+        STORAGE_KEY,
+        []
+    );
 
     // --- Actions ---
     function addScene(sceneData: Omit<Scene, 'id'>) {

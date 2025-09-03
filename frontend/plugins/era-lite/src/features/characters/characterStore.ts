@@ -1,13 +1,16 @@
 ﻿import { defineStore } from 'pinia';
 import { type Character } from '#/types/models.ts';
 import { nanoid } from 'nanoid';
-import { createPersistentState } from '#/composables/createPersistentState.ts';
+import { createScopedPersistentState } from '#/share/createScopedPersistentState.ts';
 import { watchOnce } from '@vueuse/core';
+import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
 
 const STORAGE_KEY = 'era-lite-characters';
 
 export const useCharacterStore = defineStore(STORAGE_KEY, () => {
-    const { state: characters, isReady } = createPersistentState<Character[]>(STORAGE_KEY, []);
+    const globalStore = useEraLiteSaveStore();
+
+    const { state: characters, isReady } =  globalStore.createState<Character[]>(STORAGE_KEY, []);
 
     // --- Actions ---
     function addCharacter(charData: Omit<Character, 'id'>) {

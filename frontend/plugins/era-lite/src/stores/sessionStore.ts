@@ -3,7 +3,7 @@ import {computed} from 'vue';
 import {useCharacterStore} from '#/features/characters/characterStore.ts';
 import {useSceneStore} from '#/features/scenes/sceneStore.ts';
 import {type Character, type Scene} from '#/types/models';
-import {createPersistentState} from '#/composables/createPersistentState';
+import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
 
 const STORAGE_KEY = 'era-lite-session';
 
@@ -16,11 +16,16 @@ interface SessionState
 
 export const useSessionStore = defineStore(STORAGE_KEY, () =>
 {
-    const {state: session, isReady} = createPersistentState<SessionState>(STORAGE_KEY, {
-        playerCharacterId: null,
-        targetCharacterId: null,
-        currentSceneId: null,
-    });
+    const globalStore = useEraLiteSaveStore();
+
+    const {state: session, isReady} = globalStore.createState<SessionState>(
+        STORAGE_KEY,
+        {
+            playerCharacterId: null,
+            targetCharacterId: null,
+            currentSceneId: null,
+        }
+    );
 
     // --- Computed Refs for easier access and assignment ---
     const playerCharacterId = computed({

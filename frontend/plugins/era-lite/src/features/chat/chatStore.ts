@@ -2,19 +2,22 @@
 import {defineStore} from 'pinia';
 import {computed, toRaw} from 'vue';
 import {nanoid} from 'nanoid';
-import {createPersistentState} from '#/composables/createPersistentState.ts';
-import type {ChatMessage, ChatSession, EnrichedChatSession, ChatMessagePayload} from '#/types/chat';
+import type {ChatMessage, ChatMessagePayload, ChatSession, EnrichedChatSession} from '#/types/chat';
 import {useCharacterStore} from '#/features/characters/characterStore.ts';
 import {useSceneStore} from '#/features/scenes/sceneStore.ts';
+import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
 
 const STORAGE_KEY_SESSIONS = 'era-lite-chat-sessions';
 const STORAGE_KEY_MESSAGES = 'era-lite-chat-messages';
 
 export const useChatStore = defineStore('era-lite-chat', () =>
 {
-    const {state: sessions, isReady: isSessionsReady} = createPersistentState<ChatSession[]>(STORAGE_KEY_SESSIONS, []);
+    const globalStore = useEraLiteSaveStore();
+
+    const {state: sessions, isReady: isSessionsReady} = globalStore.createState<ChatSession[]>(STORAGE_KEY_SESSIONS, []);
     // 消息以 Record<id, message> 的形式存储，便于快速查找，避免深层嵌套
-    const {state: messages, isReady: isMessagesReady} = createPersistentState<Record<string, ChatMessage>>(STORAGE_KEY_MESSAGES, {});
+    const {state: messages, isReady: isMessagesReady} = globalStore.createState<Record<string, ChatMessage>>(STORAGE_KEY_MESSAGES, {});
+
 
     const characterStore = useCharacterStore();
     const sceneStore = useSceneStore();
@@ -180,9 +183,11 @@ export const useChatStore = defineStore('era-lite-chat', () =>
      * @param messageId - 要更新的消息ID。
      * @param newContent - 新的文本内容。
      */
-    function editMessageContent(messageId: string, newContent: string) {
+    function editMessageContent(messageId: string, newContent: string)
+    {
         const message = messages.value[messageId];
-        if (message) {
+        if (message)
+        {
             message.data.content = newContent;
             // 编辑会使所有后续分支无效，因此删除所有子消息。
             deleteMessageAndChildren(messageId, true);
@@ -197,28 +202,34 @@ export const useChatStore = defineStore('era-lite-chat', () =>
      * @param messageId - 要删除的起始消息ID。
      * @param keepSelf - 是否保留 messageId 本身（用于编辑后删除子节点）。
      */
-    function deleteMessageAndChildren(messageId: string, keepSelf = false) {
+    function deleteMessageAndChildren(messageId: string, keepSelf = false)
+    {
         // 1. 在删除前，获取所有必要信息
         const startingMessage = messages.value[messageId];
-        if (!startingMessage) {
+        if (!startingMessage)
+        {
             console.warn(`Attempted to delete a non-existent message: ${messageId}`);
             return;
         }
-        const { sessionId, parentId } = startingMessage;
+        const {sessionId, parentId} = startingMessage;
 
         // 2. 广度优先搜索（BFS）找到所有要删除的后代消息ID
         const toDelete = new Set<string>();
         const queue: string[] = [messageId];
 
-        if (!keepSelf) {
+        if (!keepSelf)
+        {
             toDelete.add(messageId);
         }
 
         let head = 0;
-        while(head < queue.length) {
+        while (head < queue.length)
+        {
             const currentId = queue[head++]; // 使用索引代替 shift() 以提高性能
-            for (const id in messages.value) {
-                if (messages.value[id].parentId === currentId) {
+            for (const id in messages.value)
+            {
+                if (messages.value[id].parentId === currentId)
+                {
                     toDelete.add(id);
                     queue.push(id);
                 }
@@ -230,21 +241,27 @@ export const useChatStore = defineStore('era-lite-chat', () =>
         if (!session) return;
 
         // 如果激活分支的叶子节点在即将被删除的集合中，说明分支受到了影响
-        const activeBranchIsAffected = toDelete.has(session.activeLeafMessageId);
+        const activeAutosaveIsAffected = toDelete.has(session.activeLeafMessageId);
 
         // 4. 执行删除操作
-        toDelete.forEach(id => {
+        toDelete.forEach(id =>
+        {
             delete messages.value[id];
         });
 
         // 5. 如果激活分支被影响，将其安全地重置到被删除节点的父节点上
-        if (activeBranchIsAffected) {
-            if (parentId && messages.value[parentId]) {
+        if (activeAutosaveIsAffected)
+        {
+            if (parentId && messages.value[parentId])
+            {
                 session.activeLeafMessageId = parentId;
-            } else {
+            }
+            else
+            {
                 // 如果父节点也找不到了（极端情况），回退到会话的根消息
                 const rootMessage = Object.values(messages.value).find(m => m.sessionId === sessionId && m.parentId === null);
-                if (rootMessage) {
+                if (rootMessage)
+                {
                     session.activeLeafMessageId = rootMessage.id;
                 }
             }

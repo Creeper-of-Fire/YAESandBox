@@ -25,6 +25,8 @@
       </div>
     </n-card>
 
+    <SaveManagerCard />
+
     <!-- 操作按钮 -->
     <n-card title="开始行动">
       <n-flex>
@@ -45,6 +47,7 @@ import {useSessionStore} from '#/stores/sessionStore.ts';
 import CharacterDisplayCard from './CharacterDisplayCard.vue';
 import {useRouter} from "vue-router";
 import {useChatStore} from '#/features/chat/chatStore.ts';
+import SaveManagerCard from "#/share/SaveManagerCard.vue";
 
 const router = useRouter();
 const sessionStore = useSessionStore();

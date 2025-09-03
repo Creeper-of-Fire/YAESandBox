@@ -2,7 +2,8 @@
 import {computed} from 'vue';
 import {type Item} from '#/types/models.ts';
 import {nanoid} from 'nanoid';
-import {createPersistentState} from '#/composables/createPersistentState.ts';
+import {createScopedPersistentState} from '#/share/createScopedPersistentState.ts';
+import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
 
 const STORAGE_KEY = 'era-lite-backpack';
 
@@ -14,8 +15,10 @@ interface BackpackState
 
 export const useBackpackStore = defineStore(STORAGE_KEY, () =>
 {
+    const globalStore = useEraLiteSaveStore();
+
     // 使用一个 state 对象来统一管理持久化数据
-    const {state, isReady} = createPersistentState<BackpackState>(STORAGE_KEY, {
+    const {state, isReady} =  globalStore.createState<BackpackState>(STORAGE_KEY, {
         money: 1000,
         ownedItems: [],
     });

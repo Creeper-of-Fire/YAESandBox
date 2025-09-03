@@ -2,18 +2,23 @@
 import {ref} from 'vue';
 import {type Item} from '#/types/models.ts';
 import {nanoid} from 'nanoid';
-import {createPersistentState} from "#/composables/createPersistentState.ts";
 import {watchOnce} from "@vueuse/core";
+import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
 
 const STORAGE_KEY = 'era-lite-shop';
 
 export const useShopStore = defineStore(STORAGE_KEY, () =>
 {
-    const {state: itemsForSale, isReady} = createPersistentState<Item[]>(STORAGE_KEY, []);
+    const globalStore = useEraLiteSaveStore();
+
+    const {state: itemsForSale, isReady} = globalStore.createState<Item[]>(
+        STORAGE_KEY,
+        []
+    );
+
     const isLoading = ref(false);
 
     // --- Actions ---
-
 
     /**
      * 向商店添加一个新物品。
