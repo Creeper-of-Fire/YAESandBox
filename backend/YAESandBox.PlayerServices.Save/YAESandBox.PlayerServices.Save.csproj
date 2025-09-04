@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net9.0</TargetFramework>
+        <LangVersion>preview</LangVersion>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+      <ProjectReference Include="..\YAESandBox.Authentication\YAESandBox.Authentication.csproj" />
+      <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj" />
+    </ItemGroup>
+    
+    <ItemGroup>
+        <!-- 
+          - Identity (Include): Swagger 文档的名称，必须和 C# 代码中的 docName 完全一致。
+          - JsonFileName: 生成的 swagger.json 文件的名字。
+          - TsOutputSubDir: 生成的 TypeScript 客户端代码的子目录名。
+          - TsClientRoot: 生成的 TypeScript 客户端代码的根目录。$(MSBuildProjectDirectory) 是当前 csproj 文件所在的目录。
+        -->
+        <!-- 工作流测试服务 -->
+        <SwaggerDocToGenerate Include="v1-player-save" Visible="false">
+            <JsonFileName>player-save-api.swagger.json</JsonFileName>
+            <TsOutputSubDir>player-save-api-client</TsOutputSubDir>
+            <TsClientRoot>$([System.IO.Path]::GetFullPath('$(MSBuildProjectDirectory)/../../frontend/packages/core-services/src'))</TsClientRoot>
+        </SwaggerDocToGenerate>
+    </ItemGroup>
+</Project>

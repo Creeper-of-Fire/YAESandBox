@@ -24,6 +24,7 @@
     </ItemGroup>
     <ItemGroup>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
+        <ProjectReference Include="..\YAESandBox.PlayerServices.Save\YAESandBox.PlayerServices.Save.csproj" />
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.Test\YAESandBox.Workflow.Test.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
@@ -40,6 +41,7 @@
         主入口 Target: 这个 Target 在 Build 之后触发。
         它的唯一职责就是按顺序调用其他两个 Target。
       -->
+<!--    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true'">-->
     <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="false AND '$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true'">
         <CallTarget Targets="CollectSwaggerDocs"/>
         <CallTarget Targets="GenerateSwaggerFromReferences"/>

@@ -17,6 +17,7 @@ using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.AspNetCore.Secret;
 using YAESandBox.Depend.AspNetCore.Services;
 using YAESandBox.Depend.Storage;
+using YAESandBox.PlayerServices.Save;
 using YAESandBox.Workflow.AIService.API;
 using YAESandBox.Workflow.API;
 using YAESandBox.Workflow.Test.API;
@@ -416,7 +417,8 @@ namespace YAESandBox.AppWeb
             new WorkflowConfigModule(),
             new WorkflowTestModule(),
             new AuthenticationModule(),
-            new FrontendHostModule()
+            new FrontendHostModule(),
+            new PlayerSaveModule()
         ];
 
         [field: AllowNull, MaybeNull]

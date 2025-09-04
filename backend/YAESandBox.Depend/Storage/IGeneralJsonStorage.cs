@@ -57,7 +57,7 @@ public interface IGeneralJsonStorage:IWorkPathProvider
     /// </summary>
     public record ListFileOption
     {
-        internal static ListFileOption Default { get; } = new();
+        public static ListFileOption Default { get; } = new();
 
         /// <summary>
         /// 搜索匹配，仅限简单通配符

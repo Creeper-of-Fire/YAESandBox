@@ -10,23 +10,22 @@ namespace YAESandBox.Depend.AspNetCore;
 public static partial class ResultToActionExtensions
 {
     /// <summary>
-    /// 智能地将 Result<typeparamref name="T"/> 转换为 ActionResult<typeparamref name="T"/>。
-    /// 成功时，返回包含值的 OkObjectResult (HTTP 200 OK)。
-    /// 失败时，检查错误：
-    /// - 如果错误是 <see cref="NormalError"/> 类型并包含有效的 <see cref="NormalError.ServerErrorType"/> Code，
-    ///   则根据该 Code 映射到相应的 HTTP 状态码，并返回包含错误消息的 ObjectResult。
-    /// - 否则，返回包含错误消息的 ObjectResult，状态码为 500 Internal Server Error。
+    /// 智能地将 Result (非泛型) 转换为 ActionResult，并应用自定义选项。
     /// </summary>
-    /// <typeparam name="T">结果中值的类型。</typeparam>
-    /// <param name="result">要转换的 Result<typeparamref name="T"/> 对象。</param>
-    /// <returns>
-    /// 成功时为 <see cref="OkObjectResult"/>；
-    /// 失败时为 <see cref="ObjectResult"/>，其状态码根据错误类型智能决定。
-    /// </returns>
-    public static ActionResult<T> ToActionResult<T>(this Result<T> result)
+    /// <param name="result">要转换的 Result 对象。</param>
+    /// <param name="options">转换选项，例如指定成功的状态码。</param>
+    public static ActionResult<T> ToActionResult<T>(this Result<T> result, ActionResultConversionOptions? options = null)
     {
-        if (result.TryGetValue(out var value, out var error)) // 尝试获取成功的结果值
-            return new OkObjectResult(value); // 成功，返回 200 OK 和值
+        var resultOptions = options ?? ActionResultConversionOptions.Default;
+
+        if (result.TryGetValue(out var value, out var error))
+        {
+            // 如果成功，应用自定义状态码，否则默认为 200 OK
+            return new ObjectResult(value)
+            {
+                StatusCode = resultOptions.SuccessStatusCode ?? StatusCodes.Status200OK
+            };
+        }
 
         // 处理失败情况
         string errorMessage = error.Message;
@@ -39,22 +38,22 @@ public static partial class ResultToActionExtensions
     }
 
     /// <summary>
-    /// 智能地将 Result (非泛型) 转换为 ActionResult。
-    /// 成功时，返回 NoContentResult (HTTP 204 No Content)。
-    /// 失败时，检查错误：
-    /// - 如果错误是 <see cref="NormalError"/> 类型并包含有效的 <see cref="NormalError.ServerErrorType"/> Code，
-    ///   则根据该 Code 映射到相应的 HTTP 状态码，并返回包含错误消息的 ObjectResult。
-    /// - 否则，返回包含错误消息的 ObjectResult，状态码为 500 Internal Server Error。
+    /// 智能地将 Result (非泛型) 转换为 ActionResult，并应用自定义选项。
     /// </summary>
     /// <param name="result">要转换的 Result 对象。</param>
-    /// <returns>
-    /// 成功时为 <see cref="NoContentResult"/>；
-    /// 失败时为 <see cref="ObjectResult"/>，其状态码根据错误类型智能决定。
-    /// </returns>
-    public static ActionResult ToActionResult(this Result result)
+    /// <param name="options">转换选项，例如指定成功的状态码。</param>
+    public static ActionResult ToActionResult(this Result result, ActionResultConversionOptions? options = null)
     {
-        if (!result.TryGetError(out var error)) // 检查结果是否成功
-            return new NoContentResult(); // 成功，返回 204 No Content
+        var resultOptions = options ?? ActionResultConversionOptions.Default;
+        if (!result.TryGetError(out var error))
+        {
+            // 如果成功，应用自定义状态码，否则默认为 204 NoContent
+            int statusCode = resultOptions.SuccessStatusCode ?? StatusCodes.Status204NoContent;
+            // 对于204，必须返回无内容的Result
+            return statusCode == StatusCodes.Status204NoContent
+                ? new NoContentResult()
+                : new StatusCodeResult(statusCode);
+        }
 
         // 处理失败情况
         string errorMessage = error.Message;
@@ -120,8 +119,7 @@ public static partial class ResultToActionExtensions
     /// <typeparam name="T">集合中Dto的内部的值的类型。</typeparam>
     /// <param name="collectionResult">要转换的CollectionResult对象。</param>
     /// <returns>一个封装了操作结果的ActionResult。</returns>
-    public static ActionResult<List<ResultDto<T>>> ToActionResult<T>(
-        this CollectionResult<T> collectionResult)
+    public static ActionResult<List<ResultDto<T>>> ToActionResult<T>(this CollectionResult<T> collectionResult)
     {
         // 1. 检查整个批量操作是否失败。
         if (collectionResult.TryGetError(out var error))

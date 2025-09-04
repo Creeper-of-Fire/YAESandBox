@@ -50,7 +50,6 @@ public class WorkflowTestModule : IProgramModuleSwaggerUiOptionsConfigurator, IP
 
         // 注册模拟的 IWorkflowDataAccess
         service.AddSingleton<IWorkflowDataAccess, MockWorkflowDataAccess>();
-        service.AddSingleton<UserSaveDataService>();
     }
 
     /// <inheritdoc />
