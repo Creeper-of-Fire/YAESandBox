@@ -64,6 +64,30 @@ export class ProjectSaveSlotService {
         });
     }
     /**
+     * 获取指定项目的元数据/项目根级别数据的存储容器访问Token。
+     * @returns string OK
+     * @throws ApiError
+     */
+    public static getApiV1UserDataSavesMeta({
+        projectUniqueName,
+    }: {
+        /**
+         * 项目的唯一标识符。
+         */
+        projectUniqueName: string,
+    }): CancelablePromise<string> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/v1/user-data/{projectUniqueName}/saves/meta',
+            path: {
+                'projectUniqueName': projectUniqueName,
+            },
+            errors: {
+                400: `Bad Request`,
+            },
+        });
+    }
+    /**
      * 复制一个现有的存档槽，以创建一个内容相同的新槽。
      * @returns SaveSlot Created
      * @throws ApiError

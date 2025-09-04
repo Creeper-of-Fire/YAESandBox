@@ -19,7 +19,8 @@
     ".": "./src/index.ts",
     "./composables": "./src/composables.ts",
     "./types": "./src/types/index.ts",
-    "./injectKeys": "./src/utils/injectKeys.ts"
+    "./injectKeys": "./src/utils/injectKeys.ts",
+    "./playerSave": "./src/player-save/index.ts"
   },
   "dependencies": {
     "@microsoft/signalr": "^9.0.6",

@@ -5,7 +5,7 @@ namespace YAESandBox.PlayerServices.Save.SaveSlot;
 /// <summary>
 /// 表示一个存档槽的完整信息。这是高层API的主要数据结构。
 /// </summary>
-public record SaveSlot(string Id, string Token, string Name, string Type, DateTime CreatedAt)
+public record SaveSlot(string Id, string Token, string Name, string Type, long CreatedAt)
 {
     /// <summary>
     /// 存档槽的唯一标识符，使用其对目录进行操作。
@@ -30,9 +30,12 @@ public record SaveSlot(string Id, string Token, string Name, string Type, DateTi
     [Required]
     public string Type { get; init; } = Type;
 
-    /// <summary>存档创建时间，来自meta.json。</summary>
+    /// <summary>
+    /// 存档创建时间，来自meta.json。
+    /// 使用Unix毫秒级时间戳。
+    /// </summary>
     [Required]
-    public DateTime CreatedAt { get; init; } = CreatedAt;
+    public long CreatedAt { get; init; } = CreatedAt;
 }
 
 /// <summary>
@@ -51,7 +54,7 @@ public record SaveSlotMeta
 
     /// <summary>存档创建时间的UTC时间戳。</summary>
     [Required]
-    public required DateTime CreatedAt { get; init; }
+    public required long CreatedAt { get; init; }
 }
 
 /// <summary>

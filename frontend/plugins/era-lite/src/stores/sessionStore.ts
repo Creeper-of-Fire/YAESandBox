@@ -3,7 +3,7 @@ import {computed} from 'vue';
 import {useCharacterStore} from '#/features/characters/characterStore.ts';
 import {useSceneStore} from '#/features/scenes/sceneStore.ts';
 import {type Character, type Scene} from '#/types/models';
-import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
+import {useEraLiteSaveStore} from "#/features/home/useEraLiteSaveStore.ts";
 
 const STORAGE_KEY = 'era-lite-session';
 

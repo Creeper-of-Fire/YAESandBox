@@ -1,20 +1,19 @@
 ﻿import {computed, h, ref} from 'vue';
 import {NInput, useDialog, useMessage} from 'naive-ui';
-import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
+import {useEraLiteGameMenu} from "#/features/home/useEraLiteGameMenu.ts";
+import type {ISaveManager} from "#/share/ISaveUIManager.ts";
 
 /**
  * 这是一个专门为 SaveManagerCard.vue 服务的 Composable (Presenter)。
  * 它包含了所有与UI交互相关的逻辑，如弹窗、确认、消息提示等。
  */
-export function useSaveManagerCard()
+export function useSaveManagerCard(saveManager: ISaveManager)
 {
     const dialog = useDialog();
     const message = useMessage();
-    const {saveSlotManager} = useEraLiteSaveStore();
+    const { slots, activeSlot, activeSlotId } = saveManager;
 
-    // 直接从管理器暴露状态
-    const {slots, activeSlotId} = saveSlotManager;
-    const activeSlot = computed(() => slots.value.find(s => s.id === activeSlotId.value));
+    const saveSlotManager = saveManager;
 
     /**
      * 处理用户点击存档槽的核心逻辑。
@@ -27,7 +26,7 @@ export function useSaveManagerCard()
         if (targetSlot.type === 'autosave')
         {
             // 点击自动存档，直接切换
-            await saveSlotManager.selectAutosave(targetSlot.id);
+            await saveSlotManager.loadAutosave(targetSlot.id);
             message.success(`已切换到自动存档: ${targetSlot.name}`);
         }
         else
@@ -47,7 +46,7 @@ export function useSaveManagerCard()
                     closable: true, // 允许用户点击关闭按钮取消操作
                     onPositiveClick: async () =>
                     {
-                        await saveSlotManager.selectAutosave(existingAutosave.id);
+                        await saveSlotManager.loadAutosave(existingAutosave.id);
                         message.info(`已切换到现有自动存档: ${existingAutosave.name}`);
                     },
                     onNegativeClick: async () =>

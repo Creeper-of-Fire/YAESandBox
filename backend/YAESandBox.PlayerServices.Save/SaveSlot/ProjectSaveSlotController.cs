@@ -2,6 +2,7 @@
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Authentication;
 using YAESandBox.Depend.AspNetCore;
+using YAESandBox.PlayerServices.Save.Utils;
 
 namespace YAESandBox.PlayerServices.Save.SaveSlot;
 
@@ -25,6 +26,17 @@ public class ProjectSaveSlotController(ProjectSaveSlotService projectSaveSlotSer
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<IEnumerable<SaveSlot>>> ListSaveSlots(string projectUniqueName) =>
         await this.ProjectSaveSlotService.ListSaveSlotsAsync(this.UserId, projectUniqueName).ToActionResultAsync();
+    
+    /// <summary>
+    /// 获取指定项目的元数据/项目根级别数据的存储容器访问Token。
+    /// </summary>
+    /// <param name="projectUniqueName">项目的唯一标识符。</param>
+    /// <returns>返回一个专用于项目根级别数据的token</returns>
+    [HttpGet("meta")]
+    [ProducesResponseType<string>(StatusCodes.Status200OK)]
+    [ProducesResponseType(StatusCodes.Status400BadRequest)]
+    public Task<ActionResult<string>> GetMetaSlots(string projectUniqueName) =>
+        Task.FromResult<ActionResult<string>>(TokenUtil.CreateToken(projectUniqueName));
 
     /// <summary>
     /// 为指定项目创建一个新的存档槽。

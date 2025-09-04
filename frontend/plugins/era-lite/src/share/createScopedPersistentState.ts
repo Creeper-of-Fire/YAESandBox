@@ -1,16 +1,15 @@
 ﻿import type {Ref} from 'vue';
 import {ref, toRaw, watch} from 'vue';
-import type {StorageScopeManager} from "#/share/useStorageScopeManager";
-import type {StorageAdapter} from "#/share/services/storageAdapter";
+import type {IScopedStorage, SaveSlot} from "@yaesandbox-frontend/core-services/playerSave";
 
 interface ScopedPersistentStateOptions<T>
 {
     /** 初始状态，如果存储中没有值，则使用此值。 */
     initialState: T;
-    /** 底层存储适配器。 */
-    storageAdapter: StorageAdapter;
-    /** 全局作用域管理器，提供响应式的当前路径。 */
-    scopeManager: StorageScopeManager;
+    /** 底层作用域存储服务。 */
+    scopedStorage: IScopedStorage;
+    /** 响应式的当前激活存档槽，提供 token。 */
+    activeSlot: Readonly<Ref<SaveSlot | null>>;
     /** 是否深度监听状态变化。 */
     deep?: boolean;
 }
@@ -29,7 +28,7 @@ export function createScopedPersistentState<T>(
     options: ScopedPersistentStateOptions<T>
 )
 {
-    const {initialState, storageAdapter, scopeManager, deep = true} = options;
+    const {initialState, scopedStorage, activeSlot, deep = true} = options;
 
     const state: Ref<T> = ref(JSON.parse(JSON.stringify(initialState))) as Ref<T>;
 
@@ -37,19 +36,19 @@ export function createScopedPersistentState<T>(
     const isReady = ref(false);
 
     // --- 核心加载逻辑 ---
-    async function load(path: readonly string[])
+    async function load(token: string)
     {
         isReady.value = false;
         try
         {
-            const storedValue = await storageAdapter.getItem<T>(path, fileName);
+            const storedValue = await scopedStorage.getItem<T>(token, fileName);
             // 只有当存储中有值时才覆盖，否则保持 initialState
             state.value = storedValue !== null && storedValue !== undefined
                 ? storedValue
                 : JSON.parse(JSON.stringify(initialState)); // 使用深拷贝避免污染
         } catch (error)
         {
-            console.error(`[createScopedPersistentState] 加载 [${[...path, fileName].join('/')}] 时失败:`, error);
+            console.error(`[createScopedPersistentState] 加载 [token: ${token.substring(0, 8)}... / ${fileName}] 时失败:`, error);
             // 加载失败时也恢复到初始状态
             state.value = JSON.parse(JSON.stringify(initialState));
         } finally
@@ -60,17 +59,17 @@ export function createScopedPersistentState<T>(
     }
 
     // --- 核心保存逻辑 ---
-    async function save(path: readonly string[], value: T)
+    async function save(token: string, value: T)
     {
         // 只有在数据加载完成后才允许保存，防止初始状态意外覆盖已有存档。
         if (!isReady.value) return;
 
         try
         {
-            await storageAdapter.setItem(path, fileName, toRaw(value));
+            await scopedStorage.setItem(token, fileName, toRaw(value));
         } catch (error)
         {
-            console.error(`[createScopedPersistentState] Failed to save [${[...path, fileName].join('/')}]:`, error);
+            console.error(`[createScopedPersistentState] 保存 [token: ${token.substring(0, 8)}... / ${fileName}] 时失败:`, error);
         }
     }
 
@@ -78,7 +77,8 @@ export function createScopedPersistentState<T>(
      * 重置状态到初始值，并标记为“未就绪”。
      * 在退出到主菜单或存档加载失败时调用。
      */
-    function resetToInitial() {
+    function resetToInitial()
+    {
         state.value = JSON.parse(JSON.stringify(initialState));
         isReady.value = false;
     }
@@ -87,15 +87,18 @@ export function createScopedPersistentState<T>(
 
     // 1. 监听作用域路径的变化。当路径改变时（切换存档），重新加载数据。
     watch(
-        () => scopeManager.activeScopePath.value,
-        (newPath) =>
+        () => activeSlot.value, // The reactive source is now the active slot object
+        (newSlot) =>
         {
-            if (newPath) {
-                // 如果有新路径（加载存档），则加载数据
-                load(newPath);
-            } else {
-                // 如果路径为 null（退出到主菜单），则重置状态
-                console.log(`Scope unloaded. Resetting state for "${fileName}".`);
+            if (newSlot && newSlot.token)
+            {
+                // 如果有新存档（加载存档），则使用其 token 加载数据
+                load(newSlot.token);
+            }
+            else
+            {
+                // 如果存档为 null（退出到主菜单），则重置状态
+                console.log(`Active slot unloaded. Resetting state for "${fileName}".`);
                 resetToInitial();
             }
         },
@@ -107,10 +110,11 @@ export function createScopedPersistentState<T>(
         state,
         (newValue) =>
         {
-            const currentPath = scopeManager.activeScopePath.value;
-            // 只有在路径存在时才保存
-            if (currentPath) {
-                save(currentPath, newValue);
+            const currentToken = activeSlot.value?.token;
+            // 只有在 token 存在时才保存
+            if (currentToken)
+            {
+                save(currentToken, newValue);
             }
         },
         {deep}

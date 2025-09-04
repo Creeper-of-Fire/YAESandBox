@@ -76,7 +76,6 @@ public class UserSaveDataController(UserSaveDataService userSaveDataService) : A
     /// </summary>
     /// <param name="token">
     /// 访问令牌，代表要列出内容的容器位置。
-    /// 如果为空，则列出用户存档的根位置下的资源内容。
     /// </param>
     /// <returns>文件名列表。</returns>
     /// <response code="200">成功返回资源名称列表（可能为空）。</response>
@@ -85,6 +84,6 @@ public class UserSaveDataController(UserSaveDataService userSaveDataService) : A
     [Produces("application/json")]
     [ProducesResponseType(typeof(IEnumerable<string>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
-    public async Task<ActionResult<IEnumerable<string>>> ListUserData([FromQuery] string? token = null) =>
+    public async Task<ActionResult<IEnumerable<string>>> ListUserData([Required] [FromQuery] string token) =>
         await this.UserSaveDataService.ListDataAsync(this.UserId, ParseToken(token)).ToActionResultAsync();
 }

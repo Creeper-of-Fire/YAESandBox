@@ -5,7 +5,13 @@ internal class TokenUtil
     /// <summary>
     /// 根据项目和存档槽位名创建Token字符串。
     /// </summary>
-    public static string CreateToken(string project, string slot) => $"{project}/{slot}";
+    public static string CreateToken(string project, string? slot = null)
+    {
+        if (string.IsNullOrEmpty(slot))
+            return project;
+        return $"{project}/{slot}";
+    }
+
     /// <summary>
     /// 将Token字符串解析为用于存储服务的路径片段。
     /// </summary>

@@ -70,7 +70,7 @@ public class ProjectSaveSlotService(IUserScopedStorageFactory userStorageFactory
         {
             Name = request.Name,
             Type = request.Type,
-            CreatedAt = DateTime.UtcNow
+            CreatedAt = new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()
         };
 
         var saveResult = await projectStorage.SaveAllAsync(meta, MetaFileName, slotId);
@@ -103,7 +103,7 @@ public class ProjectSaveSlotService(IUserScopedStorageFactory userStorageFactory
         {
             Name = request.Name,
             Type =  request.Type,
-            CreatedAt =  DateTime.UtcNow
+            CreatedAt =  new DateTimeOffset(DateTime.UtcNow).ToUnixTimeMilliseconds()
         };
         var saveMetaResult = await projectStorage.SaveAllAsync(newMeta, MetaFileName, newSlotId);
         if (saveMetaResult.TryGetError(out error))

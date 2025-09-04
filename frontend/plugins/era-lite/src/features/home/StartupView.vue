@@ -10,7 +10,7 @@
     <n-h1 style="font-size: 48px; margin-bottom: 48px;">Era-Lite</n-h1>
     <n-space size="large" vertical style="width: 300px;">
       <n-button
-          :disabled="!gameMenu.lastActiveScopeName.value"
+          :disabled="!gameMenu.lastActiveSlotName.value"
           block
           size="large"
           type="primary"
@@ -89,7 +89,7 @@ watch(
       // 只有在初始化完成后才执行检查
       if (isReady) {
         // 检查开关是否开启，并且确实有上次的存档记录
-        if (autoLoadEnabled.value && gameMenu.lastActiveScopeName.value) {
+        if (autoLoadEnabled.value && gameMenu.lastActiveSlotName.value) {
           message.loading('正在自动加载上次游戏...', {duration: 1500});
           // 延迟一小段时间给用户看清提示
           setTimeout(() => {

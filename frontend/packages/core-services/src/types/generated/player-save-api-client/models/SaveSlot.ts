@@ -25,7 +25,8 @@ export type SaveSlot = {
     type: string;
     /**
      * 存档创建时间，来自meta.json。
+     * 使用Unix毫秒级时间戳。
      */
-    createdAt: string;
+    createdAt: number;
 };
 

@@ -119,9 +119,8 @@ export class UserSaveDataService {
     }: {
         /**
          * 访问令牌，代表要列出内容的容器位置。
-         * 如果为空，则列出用户存档的根位置下的资源内容。
          */
-        token?: string,
+        token: string,
     }): CancelablePromise<Array<string>> {
         return __request(OpenAPI, {
             method: 'GET',

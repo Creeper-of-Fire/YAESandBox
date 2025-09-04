@@ -33,8 +33,19 @@
 <script lang="ts" setup>
 import {NButton, NCard, NDivider, NH4, NList, NListItem, NSpace, NTag, NThing, NTime} from 'naive-ui';
 import {useSaveManagerCard} from "#/share/useSaveManagerCard.ts";
+import {useEraLiteSaveManager} from "#/features/home/useEraLiteSaveManager.ts";
 
-const getSlotTypeName = (saveType: 'autosave' | 'snapshot') => saveType === 'autosave' ? '自动' : '快照'
+const getSlotTypeName = (saveType: string) =>
+{
+  if (saveType === 'autosave')
+    return '自动';
+  else if (saveType === 'snapshot')
+    return '快照';
+  else
+    return '未知';
+}
+
+const saveManager = useEraLiteSaveManager();
 
 const {
   slots,
@@ -43,5 +54,5 @@ const {
   handleSlotClick,
   handleCreateAutosave,
   handleCreateSnapshot
-} = useSaveManagerCard();
+} = useSaveManagerCard(saveManager);
 </script>

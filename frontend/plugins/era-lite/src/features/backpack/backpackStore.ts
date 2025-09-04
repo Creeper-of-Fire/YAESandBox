@@ -3,7 +3,7 @@ import {computed} from 'vue';
 import {type Item} from '#/types/models.ts';
 import {nanoid} from 'nanoid';
 import {createScopedPersistentState} from '#/share/createScopedPersistentState.ts';
-import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
+import {useEraLiteSaveStore} from "#/features/home/useEraLiteSaveStore.ts";
 
 const STORAGE_KEY = 'era-lite-backpack';
 
