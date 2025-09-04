@@ -47,7 +47,6 @@ public class UserSaveDataController(UserSaveDataService userSaveDataService) : A
     /// <response code="200">成功返回资源内容。</response>
     /// <response code="404">未找到指定的资源。</response>
     [HttpGet("{*filename}")]
-    [Produces("application/json")]
     [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<string>> GetUserData(string filename, [Required] [FromQuery] string token) =>

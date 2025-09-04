@@ -15,7 +15,7 @@ export function useEraLiteGameMenu()
     const projectUniqueName = inject(PluginUniqueNameKey);
     if (!projectUniqueName)
     {
-        throw new Error("无法得到 project unique name。useEraLiteGameMenu()可能运行在非Setup上下文或对应的provide失效。");
+        throw new Error("无法得到 project unique name。useEraLiteGameMenu() 可能运行在非Setup上下文或对应的provide失效。");
     }
 
     // 2. 实例化所有需要的服务

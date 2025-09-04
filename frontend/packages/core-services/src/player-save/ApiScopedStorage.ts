@@ -5,17 +5,29 @@ export class ApiScopedStorage implements IScopedStorage
 {
     async getItem<T>(token: string, fileName: string): Promise<T | null>
     {
+        // try {
         const jsonString = await UserSaveDataService.getApiV1UserDataUserSaves({
             token: token,
             filename: fileName,
         });
+        if (jsonString === "")
+            return null
         return JSON.parse(jsonString) as T;
+        // } catch (error: any) {
+        //     // API 客户端在 404 时会抛出 ApiError
+        //     if (error.name === 'ApiError' && error.status === 404) {
+        //         return null;
+        //     }
+        //     // 其他错误则重新抛出
+        //     throw error;
+        // }
     }
 
     async setItem<T>(token: string, fileName: string, value: T): Promise<void>
     {
         // 后端 API 需要一个 JSON 字符串
         const requestBody = JSON.stringify(value);
+        debugger
         await UserSaveDataService.putApiV1UserDataUserSaves({
             token: token,
             filename: fileName,

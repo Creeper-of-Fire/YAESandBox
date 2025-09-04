@@ -36,6 +36,16 @@ public record ProtectedJsonStorage(
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// 不应当用于可能被加密/解密的数据。
+    /// </remarks>
+    public async Task<Result<string>> LoadRawStringAsync(string fileName, params string[] subDirectories)
+    {
+        // 无法进行解密，因此直接调用底层存储加载原始字符串
+        return await this.UnderlyingStorage.LoadRawStringAsync(fileName, subDirectories);
+    }
+
+    /// <inheritdoc />
     /// <remarks>保存文件时，会先对数据进行加密，然后调用底层存储保存加密后的数据。</remarks>
     public async Task<Result> SaveAllAsync<T>(T? needSaveObj, string fileName, params string[] subDirectories)
     {
@@ -51,16 +61,32 @@ public record ProtectedJsonStorage(
     }
 
     /// <inheritdoc />
+    /// <remarks>
+    /// 不应当用于可能被加密/解密的数据。
+    /// </remarks>
+    public Task<Result> SaveRawAsync(string rawString, string fileName, params string[] subDirectories)
+    {
+        // 无法进行加密，因此直接调用底层存储保存原始字符串
+        return this.UnderlyingStorage.SaveRawAsync(rawString, fileName, subDirectories);
+    }
+
+    /// <inheritdoc />
     /// <remarks>列出文件名不涉及文件内容，直接穿透到底层存储。</remarks>
     public Task<Result<IEnumerable<string>>> ListFileNamesAsync(ListFileOption? listOption = null, params string[] subDirectories) =>
         this.UnderlyingStorage.ListFileNamesAsync(listOption, subDirectories);
 
     /// <inheritdoc />
+    /// <remarks>列出文件夹名不涉及文件内容，直接穿透到底层存储。</remarks>   
+    public Task<Result<IEnumerable<string>>> ListFoldersAsync(ListFileOption? listOption = null, params string[] subDirectories) =>
+        this.UnderlyingStorage.ListFoldersAsync(listOption, subDirectories);
+
+    /// <inheritdoc />
     /// <remarks>删除文件不涉及文件内容，直接穿透到底层存储。</remarks>
     public Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories) =>
         this.UnderlyingStorage.DeleteFileAsync(fileName, subDirectories);
-    
+
     /// <inheritdoc />
+    /// <remarks>删除文件夹不涉及文件内容，直接穿透到底层存储。</remarks>
     public Task<Result> DeleteDirectoryAsync(DirectoryDeleteOption deleteOption, params string[] subDirectories) =>
         this.UnderlyingStorage.DeleteDirectoryAsync(deleteOption, subDirectories);
 }

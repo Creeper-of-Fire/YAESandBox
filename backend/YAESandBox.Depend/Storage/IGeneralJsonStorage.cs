@@ -17,6 +17,16 @@ public interface IGeneralJsonStorage:IWorkPathProvider
     /// <param name="subDirectories">文件所在的子目录。</param>
     /// <returns>表示操作结果的 Result。</returns>
     Task<Result> SaveAllAsync<T>(T? needSaveObj, string fileName, params string[] subDirectories);
+    
+    /// <summary>
+    /// 异步保存完整数据。
+    /// 非泛型模式。
+    /// </summary>
+    /// <param name="rawString">要保存的 JSON 数据。</param>
+    /// <param name="fileName">文件名。</param>
+    /// <param name="subDirectories">文件所在的子目录。</param>
+    /// <returns>表示操作结果的 Result。</returns>
+    Task<Result> SaveRawAsync(string rawString, string fileName, params string[] subDirectories);
 
     /// <summary>
     /// 异步加载完整的数据。
@@ -27,6 +37,15 @@ public interface IGeneralJsonStorage:IWorkPathProvider
     /// <typeparam name="T">反序列化为的类型</typeparam>
     /// <returns>类型为 T? 的对象，可能为default，如果为空则表示对应的文件没有内容，需要自行处理空值；或表示失败的 Result。</returns>
     Task<Result<T?>> LoadAllAsync<T>(string fileName, params string[] subDirectories);
+    
+    /// <summary>
+    /// 异步加载完整数据。
+    /// 非泛型模式。
+    /// </summary>
+    /// <param name="fileName">文件名。</param>
+    /// <param name="subDirectories">文件所在的子目录。</param>
+    /// <returns>表示操作结果的 Result。</returns>
+    Task<Result<string>> LoadRawStringAsync(string fileName, params string[] subDirectories);
 
     /// <summary>
     /// 列出所有可用的文件的名字。
@@ -35,6 +54,14 @@ public interface IGeneralJsonStorage:IWorkPathProvider
     /// <param name="subDirectories">需要搜索的子目录。</param>
     /// <returns></returns>
     Task<Result<IEnumerable<string>>> ListFileNamesAsync(ListFileOption? listOption = null, params string[] subDirectories);
+
+    /// <summary>
+    /// 列出指定子目录下的所有【目录】名称。
+    /// </summary>
+    /// <param name="listOption">列出选项，如搜索模式和是否递归。如果为null，则使用默认值。</param>
+    /// <param name="subDirectories">要搜索的子目录路径部分。</param>
+    /// <returns>一个包含目录名称列表的结果对象。</returns>
+    public Task<Result<IEnumerable<string>>> ListFoldersAsync(ListFileOption? listOption = null, params string[] subDirectories);
 
     /// <summary>
     /// 删除指定的文件。

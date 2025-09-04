@@ -22,6 +22,19 @@ public partial class JsonFileJsonStorage
         }
     }
 
+    /// <inheritdoc />
+    public virtual async Task<Result> SaveRawAsync(string rawString, string fileName, params string[] subDirectories)
+    {
+        var filePathResult = this.GetValidatedFilePath(fileName, subDirectories);
+        if (filePathResult.TryGetError(out var filePathError, out var filePath))
+            return filePathError;
+
+        using (await this.GetLockForFile(filePath).LockAsync())
+        {
+            return await this.SaveFileContentAsync(rawString, filePath);
+        }
+    }
+
     /// <inheritdoc/>
     public virtual async Task<Result<T?>> LoadAllAsync<T>(string fileName, params string[] subDirectories)
     {
@@ -51,6 +64,26 @@ public partial class JsonFileJsonStorage
         {
             return JsonError.Error(jsonContent, $"反序列化数据为类型 {typeof(T).Name} 时出错: {ex.Message}");
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<Result<string>> LoadRawStringAsync(string fileName, params string[] subDirectories)
+    {
+        var filePathResult = this.GetValidatedFilePath(fileName, subDirectories);
+        if (filePathResult.TryGetError(out var filePathError, out var filePath))
+            return filePathError;
+
+        string? jsonContent;
+
+        using (await this.GetLockForFile(filePath).LockAsync())
+        {
+            var loadResult = await this.LoadFileContentAsync(filePath);
+            if (loadResult.TryGetError(out var error, out string? content))
+                return error;
+            jsonContent = content;
+        }
+
+        return jsonContent ?? string.Empty;
     }
 
 
@@ -95,6 +128,47 @@ public partial class JsonFileJsonStorage
         }
     }
 
+    /// <inheritdoc />
+    public virtual async Task<Result<IEnumerable<string>>> ListFoldersAsync(
+        ListFileOption? listOption = null, params string[] subDirectories)
+    {
+        var pathResult = GetValidatedFullPath(subDirectories);
+        if (pathResult.TryGetError(out var error, out var directoryPath))
+            return error;
+
+        try // 这个try-catch捕获Task.Run本身可能抛出的问题（例如线程池拒绝）或Task中未处理的异常
+        {
+            return await Task.Run(() => // Task.Run<Result<IEnumerable<string>>>
+            {
+                try // lambda 内部的 try-catch
+                {
+                    if (!Directory.Exists(directoryPath))
+                    {
+                        return Result.Ok(Enumerable.Empty<string>());
+                    }
+
+                    var options = listOption ?? ListFileOption.Default;
+
+                    IEnumerable<string> files = Directory.GetDirectories(directoryPath,
+                        options.SearchPattern,
+                        options.IsRecursive ? SearchOption.AllDirectories : SearchOption.TopDirectoryOnly);
+
+                    var fileNames = files.Select(Path.GetFileName).WhereNotNull();
+                    return Result.Ok(fileNames);
+                }
+                catch (Exception ex)
+                {
+                    // 从 lambda 内部返回失败的 Result
+                    return NormalError.Error($"在后台线程列出文件名时出错 (路径: {directoryPath}): {ex.Message}");
+                }
+            });
+        }
+        catch (Exception ex) // 捕获 await Task.Run() 可能重新抛出的异常
+        {
+            return NormalError.Error($"列出文件名时发生顶层错误: {ex.Message}");
+        }
+    }
+    
     /// <inheritdoc />
     public virtual async Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories)
     {

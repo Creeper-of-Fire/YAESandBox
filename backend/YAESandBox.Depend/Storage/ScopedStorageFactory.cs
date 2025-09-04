@@ -102,17 +102,29 @@ public static class ScopedStorageFactory
             this.GeneralJsonStorage.SaveAllAsync(needSaveObj, fileName, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());
 
         /// <inheritdoc />
+        public Task<Result> SaveRawAsync(string rawString, string fileName, params string[] subDirectories) =>
+            this.GeneralJsonStorage.SaveRawAsync(rawString, fileName, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());
+
+        /// <inheritdoc />
         public Task<Result<T?>> LoadAllAsync<T>(string fileName, params string[] subDirectories) =>
             this.GeneralJsonStorage.LoadAllAsync<T>(fileName, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());
+
+        /// <inheritdoc />
+        public Task<Result<string>> LoadRawStringAsync(string fileName, params string[] subDirectories) =>
+            this.GeneralJsonStorage.LoadRawStringAsync(fileName, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());
 
         /// <inheritdoc />
         public Task<Result<IEnumerable<string>>> ListFileNamesAsync(ListFileOption? listOption = null, params string[] subDirectories) =>
             this.GeneralJsonStorage.ListFileNamesAsync(listOption, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());
 
         /// <inheritdoc />
+        public Task<Result<IEnumerable<string>>> ListFoldersAsync(ListFileOption? listOption = null, params string[] subDirectories) =>
+            this.GeneralJsonStorage.ListFoldersAsync(listOption, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());
+
+        /// <inheritdoc />
         public Task<Result> DeleteFileAsync(string fileName, params string[] subDirectoryParts) =>
             this.GeneralJsonStorage.DeleteFileAsync(fileName, this.ScopePrefixPathParts.Concat(subDirectoryParts).ToArray());
-        
+
         /// <inheritdoc />
         public Task<Result> DeleteDirectoryAsync(DirectoryDeleteOption deleteOption, params string[] subDirectories) =>
             this.GeneralJsonStorage.DeleteDirectoryAsync(deleteOption, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());

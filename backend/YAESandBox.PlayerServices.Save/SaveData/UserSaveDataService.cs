@@ -18,7 +18,7 @@ public class UserSaveDataService(IUserScopedStorageFactory userStorageFactory)
     private ScopeTemplate ForUserSaves { get; } = SaveRoot();
 
     /// <summary>
-    /// [NEW] 辅助方法，用于获取用户的作用域存储实例。
+    /// 辅助方法，用于获取用户的作用域存储实例。
     /// 路径验证的责任已移至底层存储实现。
     /// </summary>
     private Task<Result<ScopedJsonStorage>> GetStorageAsync(string userId)
@@ -27,7 +27,7 @@ public class UserSaveDataService(IUserScopedStorageFactory userStorageFactory)
     }
 
     /// <summary>
-    /// [NEW] 辅助方法，确保文件名以 ".json" 结尾，忽略大小写。
+    /// 辅助方法，确保文件名以 ".json" 结尾，忽略大小写。
     /// </summary>
     private string EnsureJsonExtension(string fileName)
     {
@@ -63,7 +63,7 @@ public class UserSaveDataService(IUserScopedStorageFactory userStorageFactory)
         }
 
         string finalFileName = this.EnsureJsonExtension(fileName);
-        var result = await finalStorage.LoadAllAsync<string>(finalFileName, directoryParts);
+        var result = await finalStorage.LoadRawStringAsync(finalFileName, directoryParts);
 
         if (result.TryGetError(out error, out var value))
             return error;

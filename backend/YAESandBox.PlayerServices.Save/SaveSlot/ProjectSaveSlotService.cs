@@ -28,7 +28,7 @@ public class ProjectSaveSlotService(IUserScopedStorageFactory userStorageFactory
         if (storageResult.TryGetError(out var error, out var projectStorage))
             return error;
 
-        var listResult = await projectStorage.ListFileNamesAsync();
+        var listResult = await projectStorage.ListFoldersAsync();
         if (listResult.TryGetError(out error, out var slotIds))
             return error;
 
@@ -169,11 +169,11 @@ public class ProjectSaveSlotService(IUserScopedStorageFactory userStorageFactory
 
         foreach (var fileName in filesToCopy)
         {
-            var contentResult = await storage.LoadAllAsync<object>(fileName, sourceDir);
-            if (contentResult.TryGetError(out error, out object? content))
+            var contentResult = await storage.LoadRawStringAsync(fileName, sourceDir);
+            if (contentResult.TryGetError(out error, out string? content))
                 return error;
 
-            var saveResult = await targetStorage.SaveAllAsync(content, fileName, newDirectoryName);
+            var saveResult = await targetStorage.SaveRawAsync(content, fileName, newDirectoryName);
             if (saveResult.TryGetError(out error))
                 return error;
         }
