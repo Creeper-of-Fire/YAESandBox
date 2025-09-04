@@ -1,8 +1,8 @@
 ﻿// src/stores/useEraLiteGlobalScopeStore.ts
 import {defineStore} from 'pinia';
 import {markRaw, readonly, type Ref, ref} from "vue";
-import {createScopedPersistentState} from "#/share/createScopedPersistentState.ts";
 import type {IScopedStorage, SaveSlot} from "@yaesandbox-frontend/core-services/playerSave";
+import {createScopedPersistentState} from "@yaesandbox-frontend/core-services/playerSave";
 
 // 定义初始化所需的依赖项接口
 interface SaveStoreDependencies

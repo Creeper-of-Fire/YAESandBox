@@ -1,5 +1,5 @@
 ﻿import type {ISaveSlotManager, SaveSlot} from './ISaveSlotManager.ts';
-import {ProjectSaveSlotService} from "../types/generated/player-save-api-client";
+import {ProjectSaveSlotService} from "../../types/generated/player-save-api-client";
 
 /**
  * ApiSaveSlotManager 的一个具体实现。

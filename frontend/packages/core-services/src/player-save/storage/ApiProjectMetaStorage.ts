@@ -1,6 +1,6 @@
-﻿import type {IProjectMetaStorage} from './IProjectMetaStorage';
-import type {IScopedStorage} from './IScopedStorage';
-import {ProjectSaveSlotService} from "../types/generated/player-save-api-client";
+﻿import type {IProjectMetaStorage} from './IProjectMetaStorage.ts';
+import type {IScopedStorage} from './IScopedStorage.ts';
+import {ProjectSaveSlotService} from "../../types/generated/player-save-api-client";
 
 export class ApiProjectMetaStorage implements IProjectMetaStorage
 {

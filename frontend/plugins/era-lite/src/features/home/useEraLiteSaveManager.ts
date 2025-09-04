@@ -1,5 +1,5 @@
 ﻿import {useEraLiteGameMenu} from "#/features/home/useEraLiteGameMenu.ts";
-import type {ISaveManager} from "#/share/ISaveUIManager.ts";
+import type {ISaveManager} from "@yaesandbox-frontend/core-services/playerSave";
 import type {SaveSlot} from "@yaesandbox-frontend/core-services/playerSave";
 
 /**
@@ -13,7 +13,6 @@ export function useEraLiteSaveManager(): ISaveManager
     const gameMenu = useEraLiteGameMenu();
 
     // 2. 实现 ISaveManager 接口的每一个部分
-
     // 查询方法
     function findAutosaveByName(name: string): SaveSlot | null
     {

@@ -32,8 +32,8 @@
 
 <script lang="ts" setup>
 import {NButton, NCard, NDivider, NH4, NList, NListItem, NSpace, NTag, NThing, NTime} from 'naive-ui';
-import {useSaveManagerCard} from "#/share/useSaveManagerCard.ts";
-import {useEraLiteSaveManager} from "#/features/home/useEraLiteSaveManager.ts";
+import {useSaveManagerCard} from "@yaesandbox-frontend/core-services/playerSave";
+import {useEraLiteSaveManager} from "../features/home/useEraLiteSaveManager.ts";
 
 const getSlotTypeName = (saveType: string) =>
 {

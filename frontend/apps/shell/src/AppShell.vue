@@ -43,7 +43,7 @@
         <!--                transition 调了半天还是不舒服，扔了得了，美化是没完没了的-->
         <!--                <transition name="fade" mode="in-out">-->
         <keep-alive>
-          <component :is="Component" :key="route.path"/>
+          <component :is="Component" :key="route.matched.length > 0 ? route.matched[0].path : route.path"/>
         </keep-alive>
         <!--                </transition>-->
       </router-view>

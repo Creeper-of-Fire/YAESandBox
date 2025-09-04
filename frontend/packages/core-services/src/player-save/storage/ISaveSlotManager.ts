@@ -1,4 +1,4 @@
-﻿import type {SaveSlot as ApiSaveSlot} from "../types/generated/player-save-api-client";
+﻿import type {SaveSlot as ApiSaveSlot} from "../../types/generated/player-save-api-client";
 
 
 // 我们可以重新定义一个前端模型，或者直接复用API客户端的模型

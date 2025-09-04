@@ -1,9 +1,9 @@
 {
     "hashes": {
         "launcher": "aebe2ad900ba295356a50e22938f42bcf78673cc1d1036a18598b7bdddd10130",
-        "app": "f114388fd5cc4d41d0c37b853d34da3687196ebaf22dce7ce69a9a126bd00ceb",
-        "backend": "3af929d76507edeb5d5e27212d8a53f7136290b5f04022b93a91abadae1270fb",
-        "backend-slim": "d72f8bb087d4765fd57ed55256168a8f3ae2156f71c9d3f854b0f5a4933a4d55",
+        "app": "45021b739b1e0193679528e48e5c288df3645f2eb9d410a6c2ce21a17e2aed9d",
+        "backend": "2e349a8c0b945e786076df9c261b81b3860c96354e48bc5a0bc3c8a9a27936ad",
+        "backend-slim": "8663c85d1e8323a2e50e8a76a9761b8b6a1151bb23d7f6c59b0fce87b19fcb96",
         "plugins": {
             "YAESandBox.Plugin.LuaScript": "b49fd23342816af909afc97fd514c0089b77de59ce448d753dce8c418476eca9",
             "YAESandBox.Plugin.TextParser": "5f0f46b949d5c5148f7942b56a415ecbaa19e47134f34de41e63a4449e5e06e4"
@@ -23,18 +23,18 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.22",
-                    "notes": "紧急修复：修复了Schema定义错误导致无法编辑/生成物品的bug",
-                    "hash": "77e6b9994abcee09f4cd882a5d63471521292129085aa48ee8786e55da02983e",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.22/app.zip"
+                    "version": "0.0.23",
+                    "notes": "添加了存档功能\n目前流式生成时的存档逻辑还很笨，每次都要全量覆盖聊天记录，所以还请不要聊太长……\n可能有奇奇怪怪的bug\n总之就是这样",
+                    "hash": "5f204f5eca24629705c5089ebd3f80fefe5a65ac9e56e8413b424a8a64e022fd",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.23/app.zip"
                 },
                 {
                     "id": "backend",
                     "name": ".NET 后端 (完整版)",
-                    "version": "0.0.19",
-                    "notes": "FIX 紧急修复\n修复日志系统错误导致后端程序完全不可用的bug",
-                    "hash": "4be94f845a787ef6726663b551fa765853927c86da36883b1c33d29f1ae45922",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.19/backend.zip"
+                    "version": "0.0.23",
+                    "notes": "添加了存档功能\n目前流式生成时的存档逻辑还很笨，每次都要全量覆盖聊天记录，所以还请不要聊太长……\n可能有奇奇怪怪的bug\n总之就是这样",
+                    "hash": "9859d812247de3270f8ac051dbb2ff8cc6e9c57290300345fccfc9e4cb42b335",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.23/backend.zip"
                 }
             ]
         },
@@ -51,18 +51,18 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.22",
-                    "notes": "紧急修复：修复了Schema定义错误导致无法编辑/生成物品的bug",
-                    "hash": "77e6b9994abcee09f4cd882a5d63471521292129085aa48ee8786e55da02983e",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.22/app.zip"
+                    "version": "0.0.23",
+                    "notes": "添加了存档功能\n目前流式生成时的存档逻辑还很笨，每次都要全量覆盖聊天记录，所以还请不要聊太长……\n可能有奇奇怪怪的bug\n总之就是这样",
+                    "hash": "5f204f5eca24629705c5089ebd3f80fefe5a65ac9e56e8413b424a8a64e022fd",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.23/app.zip"
                 },
                 {
                     "id": "backend",
                     "name": ".NET 后端 (精简版)",
-                    "version": "0.0.19",
-                    "notes": "FIX 紧急修复\n修复日志系统错误导致后端程序完全不可用的bug",
-                    "hash": "e0e357899b6b46c52b9e8803ca0e9f9bb05fbfebb5e6192afa2863cfd8e0ae15",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.19/backend-slim.zip"
+                    "version": "0.0.23",
+                    "notes": "添加了存档功能\n目前流式生成时的存档逻辑还很笨，每次都要全量覆盖聊天记录，所以还请不要聊太长……\n可能有奇奇怪怪的bug\n总之就是这样",
+                    "hash": "fa43ca7ab4a33decfcb6334e9a28f96a3df7fe1a5769dd6e524bb37321664a91",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.23/backend-slim.zip"
                 }
             ]
         },

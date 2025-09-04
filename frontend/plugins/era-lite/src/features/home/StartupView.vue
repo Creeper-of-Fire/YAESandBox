@@ -81,6 +81,7 @@ const showSaveManager = ref(false);
 const showNewGameModal = ref(false);
 const newGameName = ref('新的冒险');
 
+// TODO 这里有bug，子路由切换，有可能是创建createScopedPersistentState时，会触发
 // 2. 实现自动加载的核心逻辑
 watch(
     // 监听 gameMenu 是否初始化完成

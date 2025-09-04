@@ -5,6 +5,7 @@ import type {ComputedRef, InjectionKey, Ref} from "vue";
 import type {GlobalResourceItem} from "../types";
 import type {WorkflowConfig} from "../types";
 import type {ApiRequestOptions} from "../types";
+import {useGameMenu} from "../player-save";
 
 /**
  * 用于在应用中注入是否为暗黑主题的状态
@@ -61,4 +62,7 @@ export interface IWorkflowConfigProvider
 /**
  * @description 用于在整个应用中注入 IWorkflowConfigProvider 实现的 InjectionKey。
  */
-export const WorkflowConfigProviderKey: InjectionKey<IWorkflowConfigProvider> = Symbol('WorkflowConfigProviderKey');
+export const WorkflowConfigProviderKey: InjectionKey<IWorkflowConfigProvider> = Symbol('WorkflowConfigProviderKey')
+
+
+export const GameMenuKey: InjectionKey<ReturnType<typeof useGameMenu>> = Symbol('GameMenu');;

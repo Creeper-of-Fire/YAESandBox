@@ -26,15 +26,16 @@ public class UserSaveDataController(UserSaveDataService userSaveDataService) : A
     /// </summary>
     /// <param name="filename">要操作的文件名</param>
     /// <param name="token">访问令牌，用于唯一地定位一个资源容器的位置。</param>
-    /// <param name="jsonData">要存储的 JSON 字符串。</param>
+    /// <param name="jsonObject">要存储的 JSON 对象。</param>
     /// <response code="204">数据已成功保存。</response>
     /// <response code="400">请求无效，例如：Token无效或 JSON 格式错误。</response>
     [HttpPut("{*filename}")]
+    [Produces("application/json")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     public async Task<IActionResult> SaveUserData(string filename, [Required] [FromQuery] string token,
-        [Required] [FromBody] string jsonData) =>
-        await this.UserSaveDataService.SaveDataAsync(this.UserId, ParseToken(token), filename, jsonData).ToActionResultAsync();
+        [Required] [FromBody] object jsonObject) =>
+        await this.UserSaveDataService.SaveDataAsync(this.UserId, ParseToken(token), filename, jsonObject).ToActionResultAsync();
 
     // --- Read ---
 
@@ -47,9 +48,10 @@ public class UserSaveDataController(UserSaveDataService userSaveDataService) : A
     /// <response code="200">成功返回资源内容。</response>
     /// <response code="404">未找到指定的资源。</response>
     [HttpGet("{*filename}")]
-    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    [Produces("application/json")]
+    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
-    public async Task<ActionResult<string>> GetUserData(string filename, [Required] [FromQuery] string token) =>
+    public async Task<ActionResult<object>> GetUserData(string filename, [Required] [FromQuery] string token) =>
         await this.UserSaveDataService.ReadDataAsync(this.UserId, ParseToken(token), filename).ToActionResultAsync();
 
     // --- Delete ---

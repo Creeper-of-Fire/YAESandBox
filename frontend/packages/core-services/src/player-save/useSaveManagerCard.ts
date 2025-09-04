@@ -1,7 +1,6 @@
-﻿import {computed, h, ref} from 'vue';
+﻿import {h, ref} from 'vue';
 import {NInput, useDialog, useMessage} from 'naive-ui';
-import {useEraLiteGameMenu} from "#/features/home/useEraLiteGameMenu.ts";
-import type {ISaveManager} from "#/share/ISaveUIManager.ts";
+import type {ISaveManager} from "./ISaveUIManager.ts";
 
 /**
  * 这是一个专门为 SaveManagerCard.vue 服务的 Composable (Presenter)。
@@ -11,7 +10,7 @@ export function useSaveManagerCard(saveManager: ISaveManager)
 {
     const dialog = useDialog();
     const message = useMessage();
-    const { slots, activeSlot, activeSlotId } = saveManager;
+    const {slots, activeSlot, activeSlotId} = saveManager;
 
     const saveSlotManager = saveManager;
 

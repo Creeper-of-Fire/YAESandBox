@@ -1,6 +1,7 @@
 ﻿import type {Ref} from 'vue';
 import {ref, toRaw, watch} from 'vue';
-import type {IScopedStorage, SaveSlot} from "@yaesandbox-frontend/core-services/playerSave";
+import type {IScopedStorage} from "./storage/IScopedStorage.ts";
+import type {SaveSlot} from "./storage/ISaveSlotManager.ts";
 
 interface ScopedPersistentStateOptions<T>
 {
@@ -87,13 +88,13 @@ export function createScopedPersistentState<T>(
 
     // 1. 监听作用域路径的变化。当路径改变时（切换存档），重新加载数据。
     watch(
-        () => activeSlot.value, // The reactive source is now the active slot object
-        (newSlot) =>
+        () =>activeSlot.value?.token,
+        (newToken) =>
         {
-            if (newSlot && newSlot.token)
+            if (newToken)
             {
                 // 如果有新存档（加载存档），则使用其 token 加载数据
-                load(newSlot.token);
+                load(newToken);
             }
             else
             {
@@ -102,7 +103,7 @@ export function createScopedPersistentState<T>(
                 resetToInitial();
             }
         },
-        {immediate: true, deep: true} // immediate: 立即加载初始作用域的数据
+        {immediate: true} // immediate: 立即加载初始作用域的数据
     );
 
     // 2. 监听本地 state 的变化。当 state 改变时，将其保存回当前作用域路径。

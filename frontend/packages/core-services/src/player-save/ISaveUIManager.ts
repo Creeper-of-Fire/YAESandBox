@@ -1,11 +1,12 @@
-﻿import type {SaveSlot} from "@yaesandbox-frontend/core-services/playerSave";
-import type {Ref} from "vue";
+﻿import type {Ref} from "vue";
+import type {SaveSlot} from "./storage/ISaveSlotManager.ts";
 
 /**
  * 为 SaveManagerCard UI 组件提供所需全部状态和行为的接口。
  * 这个接口精确地定义了 UI 与存档业务逻辑之间的契约。
  */
-export interface ISaveManager {
+export interface ISaveManager
+{
     // --- 响应式状态 ---
     slots: Readonly<Ref<readonly SaveSlot[]>>;
     activeSlot: Readonly<Ref<SaveSlot | null>>;

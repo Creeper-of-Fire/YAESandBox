@@ -1,5 +1,6 @@
 ﻿import {computed, readonly, ref} from 'vue';
-import type {IProjectMetaStorage, ISaveSlotManager, SaveSlot} from "@yaesandbox-frontend/core-services/playerSave";
+import type {IProjectMetaStorage} from "./storage/IProjectMetaStorage.ts";
+import type {ISaveSlotManager, SaveSlot} from "./storage/ISaveSlotManager.ts";
 
 // 定义 useGameMenu 需要的依赖项接口
 export interface GameMenuDependencies
@@ -164,8 +165,9 @@ export function useGameMenu(deps: GameMenuDependencies)
         {
             // 1. 调用底层服务复制存档
             const newSlot = await saveSlotManager.copySlot(snapshotId, newAutosaveName, 'autosave');
-            // 2. 刷新列表并在前端激活
-            await refreshSlots(); // 重新从后端拉取列表以保证一致性
+            // 2. 使用乐观更新，直接将新存档添加到本地列表
+            slots.value.unshift(newSlot);
+
             await _setActiveSlot(newSlot.id);
         } finally
         {
@@ -209,7 +211,7 @@ export function useGameMenu(deps: GameMenuDependencies)
         activeSlotId: readonly(activeSlotId),
         lastActiveSlot: readonly(lastActiveSlot),
         lastActiveSlotName: readonly(lastActiveSlotName),
-        isGameLoaded,
+        isGameLoaded: readonly(isGameLoaded),
 
         // --- 操作 ---
         initialize,

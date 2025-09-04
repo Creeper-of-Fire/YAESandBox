@@ -1,5 +1,5 @@
 ﻿import type {IScopedStorage} from './IScopedStorage.ts';
-import {UserSaveDataService} from "../types/generated/player-save-api-client";
+import {UserSaveDataService} from "../../types/generated/player-save-api-client";
 
 export class ApiScopedStorage implements IScopedStorage
 {
@@ -12,7 +12,7 @@ export class ApiScopedStorage implements IScopedStorage
         });
         if (jsonString === "")
             return null
-        return JSON.parse(jsonString) as T;
+        return jsonString as T;
         // } catch (error: any) {
         //     // API 客户端在 404 时会抛出 ApiError
         //     if (error.name === 'ApiError' && error.status === 404) {
@@ -25,9 +25,8 @@ export class ApiScopedStorage implements IScopedStorage
 
     async setItem<T>(token: string, fileName: string, value: T): Promise<void>
     {
-        // 后端 API 需要一个 JSON 字符串
-        const requestBody = JSON.stringify(value);
-        debugger
+        const requestBody = value;
+
         await UserSaveDataService.putApiV1UserDataUserSaves({
             token: token,
             filename: fileName,

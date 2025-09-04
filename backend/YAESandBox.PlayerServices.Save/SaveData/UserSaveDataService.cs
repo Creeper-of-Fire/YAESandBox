@@ -1,4 +1,5 @@
-﻿using YAESandBox.Authentication.Storage;
+﻿using System.Text.Json.Nodes;
+using YAESandBox.Authentication.Storage;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;
@@ -39,7 +40,7 @@ public class UserSaveDataService(IUserScopedStorageFactory userStorageFactory)
     /// <summary>
     /// 将一个 JSON 字符串保存到用户存档目录下的指定路径。
     /// </summary>
-    public async Task<Result> SaveDataAsync(string userId, string[] directoryParts, string fileName, string jsonData)
+    public async Task<Result> SaveDataAsync(string userId, string[] directoryParts, string fileName, object jsonObject)
     {
         var storageResult = await this.GetStorageAsync(userId);
         if (storageResult.TryGetError(out var error, out var finalStorage))
@@ -48,13 +49,13 @@ public class UserSaveDataService(IUserScopedStorageFactory userStorageFactory)
         }
 
         string finalFileName = this.EnsureJsonExtension(fileName);
-        return await finalStorage.SaveAllAsync(jsonData, finalFileName, directoryParts);
+        return await finalStorage.SaveAllAsync(jsonObject, finalFileName, directoryParts);
     }
 
     /// <summary>
     /// 从用户存档目录中读取指定的 JSON 字符串。
     /// </summary>
-    public async Task<Result<string>> ReadDataAsync(string userId, string[] directoryParts, string fileName)
+    public async Task<Result<object>> ReadDataAsync(string userId, string[] directoryParts, string fileName)
     {
         var storageResult = await this.GetStorageAsync(userId);
         if (storageResult.TryGetError(out var error, out var finalStorage))
@@ -63,11 +64,11 @@ public class UserSaveDataService(IUserScopedStorageFactory userStorageFactory)
         }
 
         string finalFileName = this.EnsureJsonExtension(fileName);
-        var result = await finalStorage.LoadRawStringAsync(finalFileName, directoryParts);
+        var result = await finalStorage.LoadAllAsync<JsonNode>(finalFileName, directoryParts);
 
         if (result.TryGetError(out error, out var value))
             return error;
-        if (string.IsNullOrEmpty(value))
+        if (value == null)
             return string.Empty;
         return value;
     }

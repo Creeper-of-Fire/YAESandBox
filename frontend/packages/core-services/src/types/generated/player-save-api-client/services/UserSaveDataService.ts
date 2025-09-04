@@ -25,9 +25,9 @@ export class UserSaveDataService {
          */
         token: string,
         /**
-         * 要存储的 JSON 字符串。
+         * 要存储的 JSON 对象。
          */
-        requestBody: string,
+        requestBody: any,
     }): CancelablePromise<void> {
         return __request(OpenAPI, {
             method: 'PUT',
@@ -47,7 +47,7 @@ export class UserSaveDataService {
     }
     /**
      * 读取Token指定位置的JSON资源。
-     * @returns string 成功返回资源内容。
+     * @returns any 成功返回资源内容。
      * @throws ApiError
      */
     public static getApiV1UserDataUserSaves({
@@ -62,7 +62,7 @@ export class UserSaveDataService {
          * 访问令牌，用于唯一地定位一个资源容器的位置。
          */
         token: string,
-    }): CancelablePromise<string> {
+    }): CancelablePromise<any> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/user-data/user-saves/{filename}',
