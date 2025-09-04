@@ -28,8 +28,53 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRoo
     /// <returns></returns>
     private AsyncLock GetLockForFile(FilePath filesPath) => this.FilesLocks.GetOrAdd(filesPath.TotalPath, _ => new AsyncLock());
 
-    private FilePath GetNewFilePath(string fileName, params string[] subDirectories) => new(this.WorkPath, fileName, subDirectories);
+    private Result<FilePath> GetValidatedFilePath(string fileName, params string[] subDirectories)
+    {
+        var allParts = subDirectories.Append(fileName).ToArray();
+        var validationResult = GetValidatedFullPath(allParts);
+        
+        if (validationResult.TryGetError(out var error))
+            return error;
 
+        return new FilePath(this.WorkPath, fileName, subDirectories) ;
+    }
+
+    /// <summary>
+    /// 验证给定的路径部分是否安全，并返回位于 WorkPath 内的完整绝对路径。
+    /// </summary>
+    /// <param name="pathParts">文件名和子目录的集合。</param>
+    /// <returns>成功时返回包含完整路径的 Result，失败时返回包含错误信息的 Result。</returns>
+    private Result<string> GetValidatedFullPath(params string[] pathParts)
+    {
+        // 1. 检查每个路径部分是否包含非法字符或遍历序列
+        foreach (var part in pathParts)
+        {
+            if (string.IsNullOrEmpty(part)) continue; // 允许空部分，Path.Combine会处理
+            if (part.Contains("..") || part.Contains(':') || part.Contains('/') || part.Contains('\\'))
+            {
+                return Result.Fail($"路径部分 '{part}' 包含非法的目录遍历或绝对路径序列。");
+            }
+            if (part.IndexOfAny(Path.GetInvalidFileNameChars()) >= 0)
+            {
+                return Result.Fail($"路径部分 '{part}' 包含非法字符。");
+            }
+        }
+
+        // 2. 组合路径
+        string combinedPath = Path.Combine([this.WorkPath, ..pathParts]);
+
+        // 3. 规范化路径并进行最终验证
+        string fullWorkPath = Path.GetFullPath(this.WorkPath);
+        string fullFinalPath = Path.GetFullPath(combinedPath);
+
+        if (!fullFinalPath.StartsWith(fullWorkPath, StringComparison.OrdinalIgnoreCase))
+        {
+            return Result.Fail("路径遍历攻击被阻止。最终路径超出了允许的工作目录范围。");
+        }
+
+        return Result.Ok(fullFinalPath);
+    }
+    
     private static void EnsureDirectory(FilePath filePath)
     {
         string directory = filePath.TotalDirectory;

@@ -43,6 +43,14 @@ public interface IGeneralJsonStorage:IWorkPathProvider
     /// <param name="subDirectories">文件所在的子目录。</param>
     /// <returns></returns>
     Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories);
+    
+    /// <summary>
+    /// 删除指定的子目录。
+    /// </summary>
+    /// <param name="deleteOption">删除选项，控制删除行为（例如，是否递归删除）。</param>
+    /// <param name="subDirectories">要删除的目录所在的路径。</param>
+    /// <returns>表示操作结果的 Result。</returns>
+    Task<Result> DeleteDirectoryAsync(DirectoryDeleteOption deleteOption = DirectoryDeleteOption.OnlyIfEmpty, params string[] subDirectories);
 
     /// <summary>
     /// 文件筛选选项
@@ -60,5 +68,27 @@ public interface IGeneralJsonStorage:IWorkPathProvider
         /// 是否支持递归
         /// </summary>
         public bool IsRecursive { get; init; } = false;
+    }
+    
+    /// <summary>
+    /// 定义目录删除的行为。
+    /// </summary>
+    public enum DirectoryDeleteOption
+    {
+        /// <summary>
+        /// （默认）仅当目录为空时才删除。如果目录不为空，操作将失败。这是最安全的选择。
+        /// </summary>
+        OnlyIfEmpty,
+        
+        /// <summary>
+        /// 递归地删除目录，但前提是该目录及其所有子目录中都不包含任何文件。
+        /// 如果在任何层级发现文件，整个操作将失败并回滚（即不删除任何内容）。
+        /// </summary>
+        RecursiveIfEmpty,
+
+        /// <summary>
+        /// 递归删除目录及其所有内容（包括子目录和文件）。这是一个危险操作，请谨慎使用。
+        /// </summary>
+        Recursive
     }
 }

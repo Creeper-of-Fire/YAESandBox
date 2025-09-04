@@ -59,4 +59,8 @@ public record ProtectedJsonStorage(
     /// <remarks>删除文件不涉及文件内容，直接穿透到底层存储。</remarks>
     public Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories) =>
         this.UnderlyingStorage.DeleteFileAsync(fileName, subDirectories);
+    
+    /// <inheritdoc />
+    public Task<Result> DeleteDirectoryAsync(DirectoryDeleteOption deleteOption, params string[] subDirectories) =>
+        this.UnderlyingStorage.DeleteDirectoryAsync(deleteOption, subDirectories);
 }

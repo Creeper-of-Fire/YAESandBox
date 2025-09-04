@@ -57,6 +57,29 @@ public partial class JsonFileCacheJsonStorage
         string cacheKey = filePath.SubPath;
         this.Cache.TryRemove(cacheKey, out _);
     }
+    
+    /// <summary>
+    /// 从缓存中移除指定目录下的所有文件条目。
+    /// </summary>
+    /// <param name="subDirectories">要移除的目录路径部分。</param>
+    private void RemoveDirectoryFromCache(params string[] subDirectories)
+    {
+        if (subDirectories.Length == 0)
+        {
+            this.Cache.Clear(); // 如果是根目录，则清空所有缓存
+            return;
+        }
+
+        string directoryPrefix = Path.Combine(subDirectories) + Path.DirectorySeparatorChar;
+
+        var keysToRemove = this.Cache.Keys.Where(key => 
+            key.StartsWith(directoryPrefix, StringComparison.OrdinalIgnoreCase)).ToList();
+
+        foreach (var key in keysToRemove)
+        {
+            this.Cache.TryRemove(key, out _);
+        }
+    }
 
     /// <summary>
     /// 代表缓存中一个文件的条目。

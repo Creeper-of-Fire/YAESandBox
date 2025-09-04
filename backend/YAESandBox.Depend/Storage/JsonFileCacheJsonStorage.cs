@@ -1,4 +1,5 @@
 ﻿using YAESandBox.Depend.Results;
+using static YAESandBox.Depend.Storage.IGeneralJsonStorage;
 
 namespace YAESandBox.Depend.Storage;
 
@@ -61,5 +62,15 @@ public partial class JsonFileCacheJsonStorage(string? dataRootPath) : JsonFileJs
         
         // 2. 然后调用基类方法从磁盘删除
         return await base.DeleteFileAsync(fileName, subDirectories);
+    }
+    
+    /// <inheritdoc />
+    public override async Task<Result> DeleteDirectoryAsync(DirectoryDeleteOption deleteOption, params string[] subDirectories)
+    {
+        // 1. 清理缓存中所有位于该目录下的文件
+        this.RemoveDirectoryFromCache(subDirectories);
+        
+        // 2. 调用基类方法从磁盘删除目录
+        return await base.DeleteDirectoryAsync(deleteOption, subDirectories);
     }
 }

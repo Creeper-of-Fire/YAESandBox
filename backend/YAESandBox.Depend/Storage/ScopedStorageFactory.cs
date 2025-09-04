@@ -112,6 +112,10 @@ public static class ScopedStorageFactory
         /// <inheritdoc />
         public Task<Result> DeleteFileAsync(string fileName, params string[] subDirectoryParts) =>
             this.GeneralJsonStorage.DeleteFileAsync(fileName, this.ScopePrefixPathParts.Concat(subDirectoryParts).ToArray());
+        
+        /// <inheritdoc />
+        public Task<Result> DeleteDirectoryAsync(DirectoryDeleteOption deleteOption, params string[] subDirectories) =>
+            this.GeneralJsonStorage.DeleteDirectoryAsync(deleteOption, this.ScopePrefixPathParts.Concat(subDirectories).ToArray());
     }
 }
 
