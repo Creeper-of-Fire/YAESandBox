@@ -2,6 +2,13 @@
   <div class="editor-layout">
     <!-- 左侧：组件列表 -->
     <n-card title="已注册组件" class="components-pane">
+      <template #header-extra>
+        <n-button type="primary" size="small" @click="handleNewComponent">
+          <template #icon><n-icon :component="AddIcon" /></template>
+          新建组件
+        </n-button>
+      </template>
+
       <n-spin :show="!isStoreReady">
         <n-list hoverable clickable>
           <n-list-item v-for="comp in allComponents" :key="comp.id" @click="loadComponentIntoEditor(comp)">
@@ -75,21 +82,21 @@
 
 <script lang="ts" setup>
 import {ref, computed} from 'vue';
-import {useComponentStore} from '../stores/useComponentStore';
+import {type DynamicComponentState, useComponentStore} from '../stores/useComponentStore';
 import {NCard, NInput, NButton, NAlert,useDialog} from 'naive-ui';
 // 导入我们强大的 ContentRenderer
 import {ContentRenderer} from '@yaesandbox-frontend/shared-ui/content-renderer';
 import {exampleCode, exampleContent, exampleName} from "#/views/example.ts";
-import {TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
+import {TrashIcon,AddIcon} from "@yaesandbox-frontend/shared-ui/icons";
 
 const dialog = useDialog();
 const store = useComponentStore();
 const isStoreReady = computed(() => store.isReady);
 
 // 编辑器状态
-const testContent = ref(exampleContent);
-const componentId = ref(exampleName);
-const sourceCode = ref(exampleCode);
+const testContent = ref('');
+const componentId = ref('');
+const sourceCode = ref('');
 
 // 从 store 派生计算属性
 const allComponents = computed(() => Array.from(store.components.values()));
@@ -105,12 +112,19 @@ const handleCompile = () =>
     alert('Component tag name and source code cannot be empty.');
     return;
   }
-  store.addOrUpdateComponent(componentId.value, sourceCode.value);
+  store.addOrUpdateComponent(componentId.value, sourceCode.value, testContent.value);
 };
 
-const loadComponentIntoEditor = (comp: { id: string; source: string }) => {
+const loadComponentIntoEditor = (comp: DynamicComponentState) => {
   componentId.value = comp.id;
   sourceCode.value = comp.source;
+  testContent.value = comp.testContent;
+};
+
+const handleNewComponent = () => {
+  componentId.value = exampleName;
+  sourceCode.value = exampleCode;
+  testContent.value = exampleContent;
 };
 
 const handleDelete = (id: string) => {

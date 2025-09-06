@@ -2,19 +2,26 @@
 import {type Component, shallowReactive, watch} from 'vue';
 
 // 从 shared-ui 导入注册函数和契约类型
-import {type ComponentContract, registerComponents, unregisterComponents} from '@yaesandbox-frontend/shared-ui/content-renderer';
+import {
+    type ComponentContract,
+    type ComponentRegistration,
+    registerComponents,
+    unregisterComponents
+} from '@yaesandbox-frontend/shared-ui/content-renderer';
 
 // JSX 编译器工具函数
 import {compileJsx} from "#/utils/compiler";
 import {createAsyncComponentFromJs} from '../utils/component-factory';
 import {useComponentSaveStore} from "#/saves/useComponentSaveStore.ts";
+import {exampleCode, exampleContent, exampleName} from '#/views/example.ts';
 
 
 // 定义组件状态的数据结构
-interface DynamicComponentState
+export interface DynamicComponentState
 {
     id: string;
     source: string;
+    testContent: string;
     compiledCode: string | null;
     component: Component | null;
     error: string | null;
@@ -22,7 +29,7 @@ interface DynamicComponentState
 }
 
 // 定义持久化数据的结构 (只存ID和源码)
-type PersistedComponent = { id: string; source: string; };
+type PersistedComponent = { id: string; source: string; testContent: string; };
 type PersistedState = Record<string, PersistedComponent>;
 
 const STORAGE_KEY = 'custom-components';
@@ -40,22 +47,49 @@ export const useComponentStore = defineStore(STORAGE_KEY, () =>
      */
     async function rebuildAllFromSource(sourceData: PersistedState)
     {
-        console.log("Rebuilding all components from persisted source...");
-        const newMap = new Map<string, DynamicComponentState>();
-        const rebuildPromises = Object.values(sourceData).map(p =>
-            addOrUpdateComponent(p.id, p.source, {
-                // 在重建时不立即触发持久化，避免循环
-                skipPersistence: true,
-                // 将组件添加到新的map中，而不是当前的components map
-                targetMap: newMap
-            })
-        );
-        await Promise.all(rebuildPromises);
+        console.log("正在从持久化源数据重建所有组件...");
 
-        // 原子性地替换整个 map 来触发响应式更新
+        const newInternalStateMap = new Map<string, DynamicComponentState>();
+        const componentsToRegister: Record<string, ComponentRegistration> = {};
+
+        // 1. 遍历持久化数据，使用 addOrUpdateComponent 在临时 map 中构建所有组件
+        for (const persisted of Object.values(sourceData))
+        {
+            const lowerCaseId = persisted.id.toLowerCase();
+            const asyncComponent = await addOrUpdateComponent(
+                persisted.id,
+                persisted.source,
+                persisted.testContent,
+                {
+                    skipPersistence: true,     // 不用再次保存
+                    skipRegistration: true,    // 我们将进行批量注册
+                    targetMap: newInternalStateMap // 在新的 map 上操作
+                }
+            );
+
+            // 如果组件成功创建，则加入到批量注册列表
+            if (asyncComponent)
+            {
+                componentsToRegister[lowerCaseId] = {
+                    contract: {parseMode: 'raw', whitespace: 'trim'},
+                    component: asyncComponent,
+                };
+            }
+        }
+
+        // 2. 执行原子性的更新操作
+        unregisterComponents(Array.from(components.keys()));
+
+        if (Object.keys(componentsToRegister).length > 0)
+        {
+            registerComponents(componentsToRegister);
+            console.log("批量注册组件:", Object.keys(componentsToRegister));
+        }
+
         components.clear();
-        newMap.forEach((value, key) => components.set(key, value));
-        console.log("Rebuild complete.");
+        newInternalStateMap.forEach((value, key) => components.set(key, value));
+
+        console.log("组件重建完成。");
     }
 
     // 监听持久化状态是否就绪和变化
@@ -70,21 +104,31 @@ export const useComponentStore = defineStore(STORAGE_KEY, () =>
     async function addOrUpdateComponent(
         id: string,
         jsxSource: string,
-        options: { skipPersistence?: boolean, targetMap?: Map<string, DynamicComponentState> } = {}
+        testContent: string,
+        options: { skipPersistence?: boolean, skipRegistration?: boolean, targetMap?: Map<string, DynamicComponentState> } = {}
     )
     {
         const lowerCaseId = id.toLowerCase();
         const target = options.targetMap || components;
 
         // 1. 初始化或更新状态
-        let state = components.get(lowerCaseId);
+        let state = target.get(lowerCaseId);
         if (!state)
         {
-            state = {id: lowerCaseId, source: '', compiledCode: null, component: null, error: null, status: 'pending'};
-            components.set(lowerCaseId, state);
+            state = {
+                id: lowerCaseId,
+                source: '',
+                testContent: '',
+                compiledCode: null,
+                component: null,
+                error: null,
+                status: 'pending'
+            };
+            target.set(lowerCaseId, state);
         }
         state.status = 'compiling';
         state.source = jsxSource;
+        state.testContent = testContent;
         state.error = null;
 
         try
@@ -103,23 +147,29 @@ export const useComponentStore = defineStore(STORAGE_KEY, () =>
             state.component = asyncComponent;
 
             // 4. 注册到全局渲染系统
-            registerComponents({
-                [lowerCaseId]: {
-                    contract: {parseMode: 'raw', whitespace: 'trim'} as ComponentContract,
-                    component: asyncComponent
-                }
-            });
+            if (!options.skipRegistration)
+            {
+                registerComponents({
+                    [lowerCaseId]: {
+                        contract: {parseMode: 'raw', whitespace: 'trim'} as ComponentContract,
+                        component: asyncComponent
+                    }
+                });
+            }
 
             // 5. 更新最终状态
             state.status = 'ready';
 
             // --- 更新持久化状态 ---
-            if (!options.skipPersistence) {
+            if (!options.skipPersistence)
+            {
                 persistedComponents.value = {
                     ...persistedComponents.value,
-                    [lowerCaseId]: { id: lowerCaseId, source: jsxSource }
+                    [lowerCaseId]: {id: lowerCaseId, source: jsxSource, testContent: testContent}
                 };
             }
+
+            return asyncComponent;
 
         } catch (compileError: any)
         {

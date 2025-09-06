@@ -136,13 +136,13 @@ const CharacterStatusBar = {
 CharacterStatusBar
 `;
 
-export const exampleName = 'char-status-bar';
+export const exampleName = '默认示例';
 
 export const exampleContent = `
-<char-status-bar name="Alice" level="15" class="Warrior">
+<默认示例 name="Alice" level="15" class="Warrior">
   <hp current="85" max="100" />
   <mp current="40" max="60" />
   <status-effect type="buff">Blessing</status-effect>
   <status-effect type="debuff">Poison</status-effect>
-</char-status-bar>
+</默认示例>
 `
