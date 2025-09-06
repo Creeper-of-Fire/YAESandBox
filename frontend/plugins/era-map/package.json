@@ -1,9 +1,9 @@
 {
-  "name": "@yaesandbox-frontend/plugin-era-lite",
+  "name": "@yaesandbox-frontend/plugin-era-map",
   "private": true,
   "license": "MIT",
   "version": "1.0.0",
-  "description": "一个轻量级的测试用era游戏插件",
+  "description": "一个地图版本的测试用era游戏插件",
   "main": "src/index.ts",
   "module": "src/index.ts",
   "type": "module",
@@ -19,10 +19,8 @@
     "./*": "./src/*"
   },
   "peerDependencies": {
-    "@guolao/vue-monaco-editor": "^1.5.5",
     "@vueuse/core": "^13.6.0",
     "axios": "^1.11.0",
-    "monaco-languageclient": "^9.8.0",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.18",
@@ -34,13 +32,15 @@
     "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
     "acorn": "^8.15.0",
-    "nanoid": "^5.1.5"
+    "konva": "^10.0.0",
+    "matter-js": "^0.20.0",
+    "nanoid": "^5.1.5",
+    "vue-konva": "^3.2.6"
   },
   "devDependencies": {
-    "@guolao/vue-monaco-editor": "^1.5.5",
+    "@types/matter-js": "^0.20.0",
     "@vueuse/core": "^13.6.0",
     "axios": "^1.11.0",
-    "monaco-languageclient": "^9.8.0",
     "naive-ui": "^2.42.0",
     "pinia": "^3.0.3",
     "vue": "^3.5.18",

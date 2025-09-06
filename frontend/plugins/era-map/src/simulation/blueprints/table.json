@@ -1,0 +1,42 @@
+{
+  "type": "TABLE",
+  "shape": {
+    "type": "rectangle",
+    "width": 120,
+    "height": 60
+  },
+  "physics": {
+    "density": 0.005,
+    "friction": 0.3,
+    "frictionAir": 0.05,
+    "restitution": 0.1
+  },
+  "collision": {
+    "groups": [
+      "FURNITURE",
+      "SOLID"
+    ]
+  },
+  "fieldGenerators": [
+    {
+      "fieldName": "FURNITURE_REPULSION",
+      "forceFormula": "50 / (r*r)",
+      "maxRange": 200
+    },
+    {
+      "fieldName": "CHAIR_ATTRACTION",
+      "forceFormula": "-20 / r",
+      "maxRange": 100
+    }
+  ],
+  "fieldResponders": [
+    {
+      "fieldName": "FURNITURE_REPULSION",
+      "responseFactor": 1
+    },
+    {
+      "fieldName": "WALL_REPULSION",
+      "responseFactor": 2
+    }
+  ]
+}

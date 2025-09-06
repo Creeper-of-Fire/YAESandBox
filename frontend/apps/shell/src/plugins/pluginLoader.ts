@@ -6,6 +6,7 @@ import type {PluginModule} from '@yaesandbox-frontend/core-services';
 import workbenchPlugin from '@yaesandbox-frontend/plugin-workbench';
 import dialogTestPlugin from '@yaesandbox-frontend/plugin-dialog-test';
 import eraLitePlugin from '@yaesandbox-frontend/plugin-era-lite';
+import eraMapPlugin from "@yaesandbox-frontend/plugin-era-map";
 import PluginProvider from "#/component/PluginProvider.vue";
 import {PluginUniqueNameKey} from "@yaesandbox-frontend/core-services/injectKeys";
 import type {RouteComponent, RouteRecordRaw} from "vue-router";
@@ -19,6 +20,7 @@ const localPlugins: PluginModule[] = [
     workbenchPlugin,
     dialogTestPlugin,
     eraLitePlugin,
+    eraMapPlugin
     // gamePlugin,
     // testHarnessPlugin,
     // dialogPlugin,

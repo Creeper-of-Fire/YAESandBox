@@ -27,6 +27,9 @@
     {
       "path": "./plugins/era-lite"
     },
+    {
+      "path": "./plugins/era-map"
+    },
     // --- 引用 Packages ---
     {
       "path": "./packages/core-services"

@@ -22,6 +22,7 @@
     "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/plugin-dialog-test": "workspace:*",
     "@yaesandbox-frontend/plugin-era-lite": "workspace:*",
+    "@yaesandbox-frontend/plugin-era-map": "workspace:*",
     "@yaesandbox-frontend/plugin-workbench": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
     "axios": "^1.11.0",
