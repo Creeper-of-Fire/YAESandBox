@@ -29,6 +29,7 @@ export interface ShapeRenderConfig extends BaseConfig {
 }
 
 export interface SpriteComponent {
+    tilesetId: string; // 指定使用哪个图集
     tileId: number;
     // 相对于物体原点(0,0)的偏移量，单位为网格
     offset: { x: number; y: number };

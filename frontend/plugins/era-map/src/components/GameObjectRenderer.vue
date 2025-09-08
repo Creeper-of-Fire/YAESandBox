@@ -23,15 +23,15 @@ import {computed, toRefs} from 'vue';
 import {GameObject} from '#/game/GameObject';
 import {RenderType, type ShapeRenderConfig, type SpriteComponent} from '#/game/types';
 import {TILE_SIZE} from "#/constant.ts";
-import type {Tileset} from "#/game/Tileset.ts"; // 注意：这是图集瓦片大小
+import type {Tileset} from "#/game/Tileset.ts";
+import { resourceManager } from '#/game/ResourceManager';
 
 // --- Props ---
 const props = defineProps<{
   gameObject: GameObject;
-  tileset: Tileset | null;
 }>();
 
-const {gameObject, tileset} = toRefs(props);
+const {gameObject} = toRefs(props);
 const renderConfig = computed(() => gameObject.value.config.renderConfig);
 
 // --- Konva 配置计算 ---
@@ -74,22 +74,23 @@ const shapeConfig = computed(() =>
 });
 
 function getSpriteComponentConfig(component: SpriteComponent) {
-  const { tileId, offset } = component;
+  const { tilesetId, tileId, offset } = component;
 
-  // 如果没有提供图集，则不渲染
-  if (!props.tileset) {
+  // 从资源管理器中获取正确的图集
+  const tileset = resourceManager.getTileset(tilesetId);
+  if (!tileset) {
+    // 在开发中可以抛出错误，生产环境中可以渲染一个占位符
+    console.error(`Tileset "${tilesetId}" not found for game object!`);
     return {};
   }
 
   return {
     x: offset.x * TILE_SIZE,
     y: offset.y * TILE_SIZE,
-    image: props.tileset.image,
-    // 目标渲染尺寸始终是TILE_SIZE
+    image: tileset.image,
     width: TILE_SIZE,
     height: TILE_SIZE,
-    // 使用tileset实例的方法来获取裁剪信息，不再硬编码
-    crop: props.tileset.getTileCrop(tileId),
+    crop: tileset.getTileCrop(tileId),
   };
 }
 

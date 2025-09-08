@@ -1,6 +1,10 @@
 ﻿import {type GameObjectConfig, RenderType} from './types';
 // 全局的TILE_SIZE，现在从constant.ts导入
 import {TILE_SIZE} from '../constant';
+// 定义图集ID常量，避免魔法字符串
+// TODO 之后可能改为配置项
+const TILESET_ID_TERRAIN = 'terrain_main';
+const TILESET_ID_CHARACTERS = 'characters';
 
 // 从Python脚本的颜色配置中获取灵感
 const COLORS = {
@@ -47,9 +51,9 @@ export const gameObjectRegistry: Record<string, GameObjectConfig> = {
             renderType: RenderType.SPRITE,
             components: [
                 // 第一个瓦片：床头，在物体的局部坐标 (0,0)
-                {tileId: TILE_ID_BED_HEAD, offset: {x: 0, y: 0}},
+                {tilesetId: TILESET_ID_TERRAIN, tileId: TILE_ID_BED_HEAD, offset: {x: 0, y: 0}},
                 // 第二个瓦片：床脚，在物体的局部坐标 (1,0)
-                {tileId: TILE_ID_BED_FOOT, offset: {x: 1, y: 0}}
+                {tilesetId: TILESET_ID_TERRAIN, tileId: TILE_ID_BED_FOOT, offset: {x: 1, y: 0}}
             ]
         }
     },
@@ -78,7 +82,7 @@ export const gameObjectRegistry: Record<string, GameObjectConfig> = {
         renderConfig: {
             renderType: RenderType.SPRITE,
             components: [
-                {tileId: TILE_ID_ELF, offset: {x: 0, y: 0}}
+                {tilesetId: TILESET_ID_TERRAIN, tileId: TILE_ID_ELF, offset: {x: 0, y: 0}}
             ]
         }
     },
