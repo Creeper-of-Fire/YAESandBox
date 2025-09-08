@@ -14,7 +14,7 @@ const COLORS = {
 };
 
 // 图集中的瓦片ID
-const TILE_ID_ELF = 72;
+const TILE_ID_ELF = 99;
 const TILE_ID_BED_HEAD = 80; // 假设床头是ID 80
 const TILE_ID_BED_FOOT = 81; // 假设床脚是ID 81
 

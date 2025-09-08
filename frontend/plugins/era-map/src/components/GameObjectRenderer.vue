@@ -22,15 +22,16 @@
 import {computed, toRefs} from 'vue';
 import {GameObject} from '#/game/GameObject';
 import {RenderType, type ShapeRenderConfig, type SpriteComponent} from '#/game/types';
-import {TILE_SIZE} from "#/constant.ts"; // 注意：这是图集瓦片大小
+import {TILE_SIZE} from "#/constant.ts";
+import type {Tileset} from "#/game/Tileset.ts"; // 注意：这是图集瓦片大小
 
 // --- Props ---
 const props = defineProps<{
   gameObject: GameObject;
-  tilesetImage: HTMLImageElement | null;
+  tileset: Tileset | null;
 }>();
 
-const {gameObject, tilesetImage} = toRefs(props);
+const {gameObject, tileset} = toRefs(props);
 const renderConfig = computed(() => gameObject.value.config.renderConfig);
 
 // --- Konva 配置计算 ---
@@ -72,32 +73,23 @@ const shapeConfig = computed(() =>
   return {};
 });
 
-// 精灵/图片渲染的配置
-const TILESET_TILE_SIZE = 16; // 图集中每个瓦片的原始像素尺寸
-const TILESET_COLUMNS = 12; // 图集的列数
+function getSpriteComponentConfig(component: SpriteComponent) {
+  const { tileId, offset } = component;
 
-function getSpriteComponentConfig(component: SpriteComponent)
-{
-  const {tileId, offset} = component;
-
-  // 计算瓦片在图集中的裁剪位置
-  const tileX = tileId % TILESET_COLUMNS;
-  const tileY = Math.floor(tileId / TILESET_COLUMNS);
+  // 如果没有提供图集，则不渲染
+  if (!props.tileset) {
+    return {};
+  }
 
   return {
-    // x, y 是相对于 v-group 的偏移量
     x: offset.x * TILE_SIZE,
     y: offset.y * TILE_SIZE,
-    image: props.tilesetImage,
+    image: props.tileset.image,
+    // 目标渲染尺寸始终是TILE_SIZE
     width: TILE_SIZE,
     height: TILE_SIZE,
-    crop: {
-      x: tileX * TILESET_TILE_SIZE,
-      y: tileY * TILESET_TILE_SIZE,
-      width: TILESET_TILE_SIZE,
-      height: TILESET_TILE_SIZE,
-    },
-    // 我们不再在单个图片上设置偏移，因为group已经处理了中心点
+    // 使用tileset实例的方法来获取裁剪信息，不再硬编码
+    crop: props.tileset.getTileCrop(tileId),
   };
 }
 
