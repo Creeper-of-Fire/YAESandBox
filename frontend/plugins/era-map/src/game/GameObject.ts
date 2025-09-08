@@ -29,16 +29,7 @@ export class GameObject {
         this.config = config;
         this.rotation = data.visual_angle;
 
-        // --- 存储两种位置 ---
-        // 1. 存储逻辑网格位置
-        this.gridPosition = { x: data.grid_pos[0], y: data.grid_pos[1] };
-
-        // 2. 计算用于渲染的精确像素位置
-        this.position = {
-            x: data.visual_pos[0] * TILE_SIZE,
-            y: data.visual_pos[1] * TILE_SIZE
-        };
-
+        // --- 首先计算尺寸 ---
         if (config.gridSize) {
             // 对于绑定到网格的物体，尺寸由配置决定
             this.size = {
@@ -50,5 +41,18 @@ export class GameObject {
             // 这里为了简单，先给个默认值
             this.size = { width: TILE_SIZE, height: TILE_SIZE };
         }
+
+        // --- 存储两种位置 ---
+        // 1. 存储逻辑网格位置 (这个不变)
+        this.gridPosition = { x: data.grid_pos[0], y: data.grid_pos[1] };
+
+        // 2. 计算用于渲染的中心点精确像素位置
+        const topLeftX = data.visual_pos[0] * TILE_SIZE;
+        const topLeftY = data.visual_pos[1] * TILE_SIZE;
+
+        this.position = {
+            x: topLeftX + this.size.width / 2,
+            y: topLeftY + this.size.height / 2
+        };
     }
 }
