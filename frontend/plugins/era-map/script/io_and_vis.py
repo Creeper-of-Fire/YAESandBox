@@ -1,4 +1,6 @@
 ﻿import json
+import math
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
@@ -12,12 +14,18 @@ from prototype import Settings
 # 1. 数据导出 (Data Export)
 # =============================================================================
 
-def export_context_to_json(context: GenerationContext, settings: Settings, filename="layout.json"):
-    """将生成上下文中的所有游戏对象导出为前端可以使用的JSON文件。"""
+def  export_context_to_json(context: GenerationContext, settings: Settings, filename="layout.json"):
+    """将生成上下文中的所有游戏对象和数据场导出为前端可以使用的JSON文件。"""
+
+    fields_data = {}
+    for field_name, field_array in context.fields.items():
+        # 将 numpy 数组转换为列表以便 JSON 序列化
+        fields_data[field_name] = field_array.tolist()
 
     meta_data = {
         "gridWidth": settings.GRID_WIDTH,
-        "gridHeight": settings.GRID_HEIGHT
+        "gridHeight": settings.GRID_HEIGHT,
+        "fields": fields_data
     }
 
     objects_data = []
@@ -65,6 +73,10 @@ class Visualizer:
         grime_small = [o for o in objects if o.obj_type == "GRIME_SMALL"]
         grime_large = [o for o in objects if o.obj_type == "GRIME_LARGE"]
 
+        # 环境装置类别
+        fixtures = [o for o in objects if o.obj_type in ["WINDOW", "TORCH"]]
+        characters = [o for o in objects if o.obj_type in ["ELF", "DWARF", "MUSHROOM_PERSON"]]
+
         if grime_small:
             positions = np.array([o.visual_pos for o in grime_small])
             ax.scatter(positions[:, 0], positions[:, 1], s=0.2*20, c=self.colors["GRIME_SMALL"], alpha=0.6, marker='o', edgecolors='none', zorder=0)
@@ -84,8 +96,21 @@ class Visualizer:
                 rect = patches.Rectangle((vx, vy), w, h, linewidth=1, edgecolor='black', facecolor=self.colors.get(obj.obj_type), angle=obj.visual_angle, rotation_point='center', zorder=10)
                 ax.add_patch(rect)
 
+        # 3. 环境装置 (窗户和火把) (z-order: 15)
+        for obj in fixtures:
+            if obj.grid_pos is not None and obj.grid_size is not None:
+                x, y = obj.grid_pos
+                w, h = obj.grid_size
+                # 使用一个简单的正方形来表示它们
+                rect = patches.Rectangle((x, y), w, h, linewidth=1.5, edgecolor='#333333', facecolor=self.colors.get(obj.obj_type), zorder=15)
+                ax.add_patch(rect)
+                # 为火把添加一个发光效果
+                if obj.obj_type == 'TORCH':
+                    glow = patches.Rectangle((x, y), w, h, linewidth=0, facecolor=self.colors.get(obj.obj_type), alpha=0.4, zorder=14)
+                    glow.set_transform(ax.transData + plt.matplotlib.transforms.Affine2D().scale(2.5).translate(-w*0.75, -h*0.75))
+                    ax.add_patch(glow)
+
         # 角色
-        characters = [o for o in objects if o.obj_type in ["ELF", "DWARF", "MUSHROOM_PERSON"]]
         for obj in characters:
             size = 0.8 # 默认角色大小
             ax.scatter(obj.visual_pos[0], obj.visual_pos[1], s=size*100, c=self.colors.get(obj.obj_type), alpha=1.0, marker='o', edgecolors='black', linewidth=1.5, zorder=20)
@@ -94,48 +119,101 @@ class Visualizer:
 
     def plot_layout_and_layers(self, context: GenerationContext):
         """
-        绘制最终的布局以及一些关键的调试数据层。
+        动态绘制最终布局以及所有在上下文中找到的数据层。
         """
         s = self.settings
 
-        fig = plt.figure(figsize=(20, 10))
-        gs = fig.add_gridspec(2, 3)
+        # 1. 自动发现在 layers 和 fields 中所有可绘制的数据
+        drawable_data = {**context.layers, **context.fields}
+        drawable_layers = {
+            name: layer for name, layer in drawable_data.items()
+            if isinstance(layer, np.ndarray) and layer.ndim == 2
+        }
+        num_layers = len(drawable_layers)
 
-        # --- 主布局图 ---
-        ax_main = fig.add_subplot(gs[:, 1:])
+        if num_layers == 0:
+            print("--- 可视化: 未找到任何可绘制的数据。只显示最终布局。---")
+            fig, ax_main = plt.subplots(figsize=(12, 8))
+            ax_main.set_title("Final Generated Layout")
+            self._setup_main_ax(ax_main)
+            self._draw_objects(ax_main, context.objects)
+            plt.tight_layout()
+            plt.show()
+            return
+
+        # 2. 动态计算子图布局
+        # 我们希望层视图占据左侧约 1/3 的空间，主视图占据右侧 2/3
+        # 我们将层视图排列成 N 行 2 列的网格 (如果层不多)
+        layer_cols = 2 if num_layers > 2 else 1
+        layer_rows = math.ceil(num_layers / layer_cols)
+
+        # 创建一个复杂的 Figure 布局
+        fig = plt.figure(figsize=(20, 5 + layer_rows * 2)) # 动态调整高度
+        # 使用 GridSpec 进行更灵活的布局
+        # 左侧给3个单位宽度，右侧给6个单位宽度
+        gs = fig.add_gridspec(layer_rows, layer_cols + 3)
+
+        # 主布局图占据右侧所有行和后3个单位的列
+        ax_main = fig.add_subplot(gs[:, layer_cols:])
         ax_main.set_title("Final Generated Layout")
-        ax_main.set_xlim(0, s.GRID_WIDTH)
-        ax_main.set_ylim(0, s.GRID_HEIGHT)
-        ax_main.set_xticks(np.arange(0, s.GRID_WIDTH + 1, 1))
-        ax_main.set_yticks(np.arange(0, s.GRID_HEIGHT + 1, 1))
-        ax_main.grid(which='major', color='#CCCCCC', linestyle='-', linewidth=0.8)
-        ax_main.set_xticklabels([])
-        ax_main.set_yticklabels([])
-        ax_main.minorticks_off()
-        ax_main.set_aspect('equal', adjustable='box')
-        ax_main.invert_yaxis()
+        self._setup_main_ax(ax_main)
+
+        # 在绘制对象之前，先绘制光照图作为背景
+        if 'light_level' in context.fields:
+            light_map = context.fields['light_level']
+            # 使用 imshow 绘制光照图。设置 zorder=-1 确保它在最底层。
+            # extent 参数确保图像的坐标与网格对齐。
+            ax_main.imshow(
+                light_map.T,
+                cmap='inferno',
+                origin='lower',
+                alpha=0.6,  # 半透明，这样还能看到下面的网格线
+                extent=(0, s.GRID_WIDTH, 0, s.GRID_HEIGHT),
+                interpolation='bicubic', # 使用更平滑的插值
+                zorder=-1
+            )
+
 
         self._draw_objects(ax_main, context.objects)
 
-        # --- 调试数据层图 ---
-        def plot_layer(ax, layer_name, title):
-            if layer_name in context.layers:
-                ax.set_title(title)
-                # 注意 imshow 需要转置 (T) 才能匹配我们的 (width, height) 坐标系
-                im = ax.imshow(context.layers[layer_name].T, cmap='viridis', origin='lower', interpolation='nearest')
-                ax.set_xticklabels([])
-                ax.set_yticklabels([])
-                # fig.colorbar(im, ax=ax) # 如果需要颜色条
+        # 3. 遍历并绘制所有数据层
+        layer_items = sorted(drawable_layers.items()) # 排序以保证每次绘制顺序一致
+
+        for i, (layer_name, layer_data) in enumerate(layer_items):
+            row = i // layer_cols
+            col = i % layer_cols
+            ax_layer = fig.add_subplot(gs[row, col])
+
+            ax_layer.set_title(layer_name, fontsize=10)
+
+            # 如果层名称包含 'light' 或 'temperature' 等，使用更合适的色图
+            if 'light' in layer_name.lower():
+                cmap = 'inferno'
+            elif 'temp' in layer_name.lower():
+                cmap = 'coolwarm'
             else:
-                ax.set_title(f"{title}\n(Layer not found)")
-                ax.set_xticks([])
-                ax.set_yticks([])
+                cmap = 'viridis'
 
-        ax1 = fig.add_subplot(gs[0, 0])
-        plot_layer(ax1, 'table_suitability', 'Table Suitability Map')
+            # 注意 imshow 需要转置 (T) 才能匹配我们的 (width, height) 坐标系
+            im = ax_layer.imshow(layer_data.T, cmap=cmap, origin='lower', interpolation='nearest')
+            ax_layer.set_xticks([])
+            ax_layer.set_yticks([])
+            # 添加一个颜色条来显示数值范围
+            fig.colorbar(im, ax=ax_layer, fraction=0.046, pad=0.04)
 
-        ax2 = fig.add_subplot(gs[1, 0])
-        plot_layer(ax2, 'grime_base', 'Final Grime Probability Map')
-
-        plt.tight_layout()
+        plt.tight_layout(pad=1.5, h_pad=2.0)
         plt.show()
+
+    def _setup_main_ax(self, ax: plt.Axes):
+        """辅助函数，用于统一设置主布局图的样式。"""
+        s = self.settings
+        ax.set_xlim(0, s.GRID_WIDTH)
+        ax.set_ylim(0, s.GRID_HEIGHT)
+        ax.set_xticks(np.arange(0, s.GRID_WIDTH + 1, 1))
+        ax.set_yticks(np.arange(0, s.GRID_HEIGHT + 1, 1))
+        ax.grid(which='major', color='#CCCCCC', linestyle='-', linewidth=0.5)
+        ax.set_xticklabels([])
+        ax.set_yticklabels([])
+        ax.minorticks_off()
+        ax.set_aspect('equal', adjustable='box')
+        ax.invert_yaxis()

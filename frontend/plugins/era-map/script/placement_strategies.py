@@ -1,35 +1,49 @@
-﻿from typing import Tuple
-import numpy as np
-import random
+﻿import random
+from typing import Tuple, Optional, Set, List
 
-from scipy.ndimage import gaussian_filter
+import numpy as np
 
 from core_types import GenerationContext, GameObject
 from modifiers import safe_normalize
 
-def place_by_weighted_sampling(
+
+def place_grid_objects_from_layer(
         ctx: GenerationContext,
         layer_name: str,
         num_to_place: int,
         obj_type: str,
         grid_size: Tuple[int, int],
+        blocked_by: Set[str],
         max_attempts_multiplier: int = 100
-) -> GenerationContext:
+)  -> Tuple[GenerationContext, List[GameObject]]:
     """
     使用真·加权采样在网格上放置物体，并进行碰撞检测。
     """
+    placed_objects = []
     if layer_name not in ctx.layers:
         print(f"警告: 概率层 '{layer_name}' 不存在。无法放置 '{obj_type}'。")
-        return ctx
+        return ctx, placed_objects
 
     prob_map = ctx.layers[layer_name]
     w, h = grid_size
 
-    # 预先计算所有不可放置的位置 (因为碰撞或边界)
+    # 预先计算所有不可放置的位置
     valid_mask = np.ones_like(prob_map, dtype=bool)
     for x in range(ctx.grid_width):
         for y in range(ctx.grid_height):
-            if np.any(ctx.occupancy_grid[x:x+w, y:y+h]) or (x+w > ctx.grid_width) or (y+h > ctx.grid_height):
+            is_blocked = False
+            # 检查目标区域内的每一个格子
+            for i in range(x, x + w):
+                for j in range(y, y + h):
+                    # 检查该格子的对象列表
+                    for occupant in ctx.occupancy_grid[i, j]:
+                        if occupant.obj_type in blocked_by:
+                            is_blocked = True
+                            break
+                    if is_blocked: break
+                if is_blocked: break
+
+            if is_blocked:
                 valid_mask[x, y] = False
 
     # 将无效位置的概率设为0
@@ -61,219 +75,145 @@ def place_by_weighted_sampling(
         )
         ctx.objects.append(new_obj)
         ctx.update_occupancy(new_obj)
+        placed_objects.append(new_obj)
 
         # 重要：更新 masked_probs 以防止在同一区域重复放置
-        masked_probs[x:x+w, y:y+h] = 0
+        masked_probs[x:x + w, y:y + h] = 0
 
         placed_count += 1
 
-    return ctx
+    return ctx, placed_objects
 
-def place_chairs_around_tables(
+def place_one_grid_object_from_layer(
         ctx: GenerationContext,
-        chairs_per_table_range: Tuple[int, int],
-        chair_size: Tuple[int, int] = (1, 1)
-) -> GenerationContext:
+        layer_name: str,
+        obj_type: str,
+        grid_size: Tuple[int, int],
+        blocked_by: Set[str]
+) -> Tuple[GenerationContext, Optional[GameObject]]:
     """
-    遍历所有桌子对象，并根据规则在它们周围放置椅子。
+    使用加权采样放置单个网格对齐的物体，并返回这个物体。
+    如果无法放置，则返回 None。
     """
-    print("--- 开始放置椅子 ---")
+    if layer_name not in ctx.layers:
+        print(f"警告: 概率层 '{layer_name}' 不存在。")
+        return ctx, None
 
-    tables = [obj for obj in ctx.objects if obj.obj_type == "TABLE"]
+    prob_map = ctx.layers[layer_name]
+    w, h = grid_size
 
-    for table in tables:
-        if table.grid_pos is None or table.grid_size is None:
-            continue
+    valid_mask = np.ones_like(prob_map, dtype=bool)
+    for x in range(ctx.grid_width):
+        for y in range(ctx.grid_height):
+            is_blocked = False
+            # 检查目标区域内的每一个格子
+            for i in range(x, x + w):
+                for j in range(y, y + h):
+                    # 检查该格子的对象列表
+                    for occupant in ctx.occupancy_grid[i, j]:
+                        if occupant.obj_type in blocked_by:
+                            is_blocked = True
+                            break
+                    if is_blocked: break
+                if is_blocked: break
 
-        num_chairs_to_place = random.randint(*chairs_per_table_range)
-        placed_chairs = 0
+            if is_blocked:
+                valid_mask[x, y] = False
 
-        tx, ty = table.grid_pos
-        tw, th = table.grid_size
+    masked_probs = prob_map * valid_mask
+    flat_map = masked_probs.flatten()
+    map_sum = np.sum(flat_map)
 
-        # 动态生成所有长边的候选位置
-        candidate_spots = []
-        if tw >= th: # 长边是水平的
-            # 上方
-            for i in range(tw): candidate_spots.append((tx + i, ty - 1))
-            # 下方
-            for i in range(tw): candidate_spots.append((tx + i, ty + th))
-        else: # 长边是垂直的
-            # 左侧
-            for i in range(th): candidate_spots.append((tx - 1, ty + i))
-            # 右侧
-            for i in range(th): candidate_spots.append((tx + tw, ty + i))
+    if map_sum < 1e-9:
+        print(f"警告: 没有有效的放置位置了，无法放置 {obj_type}。")
+        return ctx, None
 
-        random.shuffle(candidate_spots)
+    normalized_probs = flat_map / map_sum
+    chosen_index = np.random.choice(len(normalized_probs), p=normalized_probs)
+    x, y = np.unravel_index(chosen_index, prob_map.shape)
 
-        for spot_x, spot_y in candidate_spots:
-            if placed_chairs >= num_chairs_to_place:
-                break
+    grid_pos = np.array([x, y])
+    new_obj = GameObject(
+        obj_type=obj_type,
+        visual_pos=grid_pos.astype(float),
+        grid_pos=grid_pos,
+        grid_size=np.array(grid_size)
+    )
+    ctx.objects.append(new_obj)
+    ctx.update_occupancy(new_obj)
 
-            # 检查边界和占用情况
-            if (0 <= spot_x < ctx.grid_width and
-                    0 <= spot_y < ctx.grid_height and
-                    ctx.occupancy_grid[spot_x, spot_y] is None):
+    return ctx, new_obj
 
-                grid_pos = np.array([spot_x, spot_y])
-                new_chair = GameObject(
-                    obj_type="CHAIR",
-                    visual_pos=grid_pos.astype(float),
-                    grid_pos=grid_pos,
-                    grid_size=np.array(chair_size)
-                )
-                ctx.objects.append(new_chair)
-                ctx.update_occupancy(new_chair)
-                placed_chairs += 1
-
-    print(f"--- 椅子放置完毕 ---")
-    return ctx
-
-def place_grime(
+def place_floating_objects_from_layer(
         ctx: GenerationContext,
-        # --- 第1遍: 小脏污种子 ---
-        splatter_prob_layer: str,
-        splatter_count: int,
-        # --- 第2遍: 大脏污核心 ---
-        density_blur_sigma: float,
-        num_large_patches: int,
-        # --- 第3遍: 最终固化 ---
-        final_survival_prob: float,
-        core_influence_radius: float
-) -> GenerationContext:
-    """
-    一个多阶段的脏污放置策略：播种 -> 聚类成核 -> 固化。
-    """
-    print("--- 开始生成脏污 ---")
-
-    if splatter_prob_layer not in ctx.layers:
-        print(f"警告: 脏污概率层 '{splatter_prob_layer}' 不存在。无法生成脏污。")
-        return ctx
-
-    w, h = ctx.grid_width, ctx.grid_height
-    splatter_map = ctx.layers[splatter_prob_layer]
-
-    # === 1. 生成潜在的飞溅物种子 ===
-    potential_splatters = []
-    for _ in range(splatter_count):
-        x, y = random.uniform(0, w), random.uniform(0, h)
-        prob = splatter_map[int(x), int(y)]
-        if random.random() < prob:
-            potential_splatters.append(np.array([x, y]))
-    print(f"生成了 {len(potential_splatters)} 个潜在飞溅物。")
-
-    # === 2. 寻找聚集并生成大脏污核心 ===
-    density_map = np.zeros((w, h))
-    for p in potential_splatters:
-        ix, iy = int(p[0]), int(p[1])
-        if 0 <= ix < w and 0 <= iy < h:
-            density_map[ix, iy] += 1
-
-    blurred_density = gaussian_filter(density_map, sigma=density_blur_sigma)
-    large_grime_prob_map = safe_normalize(blurred_density)
-
-    large_grime_patches = []
-    if np.sum(large_grime_prob_map) > 1e-9:
-        flat_map = large_grime_prob_map.flatten()
-        normalized_probs = flat_map / np.sum(flat_map)
-
-        chosen_indices = np.random.choice(len(normalized_probs), size=num_large_patches, p=normalized_probs)
-        for index in chosen_indices:
-            ix, iy = np.unravel_index(index, large_grime_prob_map.shape)
-            # 添加一点随机偏移，使其不完全在格子中心
-            pos_x = ix + random.uniform(-0.5, 0.5)
-            pos_y = iy + random.uniform(-0.5, 0.5)
-            patch = GameObject(
-                obj_type="GRIME_LARGE",
-                visual_pos=np.array([pos_x, pos_y])
-            )
-            large_grime_patches.append(patch)
-            ctx.objects.append(patch)
-
-    print(f"生成了 {len(large_grime_patches)} 个大脏污核心。")
-
-    # === 3. 固化最终的小脏污 ===
-    for p_pos in potential_splatters:
-        survival_prob = final_survival_prob
-        for core in large_grime_patches:
-            dist = np.linalg.norm(p_pos - core.visual_pos)
-            if dist < core_influence_radius:
-                survival_prob += (1.0 - survival_prob) * (1.0 - dist / core_influence_radius)
-
-        if random.random() < survival_prob:
-            splatter = GameObject(
-                obj_type="GRIME_SMALL",
-                visual_pos=p_pos
-            )
-            ctx.objects.append(splatter)
-
-    print(f"--- 脏污生成完毕 ---")
-    return ctx
-
-def place_characters_by_preference(
-        ctx: GenerationContext,
-        character_type: str,
+        layer_name: str,
         num_to_place: int,
-        social_layer: str,
-        social_weight: float,
-        grime_layer: str,
-        grime_weight: float # 正数表示吸引，负数表示排斥
-) -> GenerationContext:
+        obj_type: str,
+        blocked_by: Set[str],
+        max_attempts_multiplier: int = 5  # TODO 目前没有用上？还需要吗？
+) -> Tuple[GenerationContext, List[GameObject]]:
     """
-    根据混合了社交和脏污偏好的舒适度地图来放置角色。
+    根据概率层，通过加权采样放置指定数量的非网格对齐的浮动对象。
     """
-    print(f"--- 开始放置角色: {character_type} ---")
+    print(f"--- 开始从层 '{layer_name}' 放置浮动对象: {obj_type} ---")
+    placed_objects = []
+    if layer_name not in ctx.layers:
+        print(f"警告: 概率层 '{layer_name}' 不存在。")
+        return ctx,placed_objects
 
-    # 1. 创建该角色的专属舒适度地图
-    social_map = ctx.layers.get(social_layer, np.zeros((ctx.grid_width, ctx.grid_height)))
-    grime_map = ctx.layers.get(grime_layer, np.zeros((ctx.grid_width, ctx.grid_height)))
+    prob_map = ctx.layers[layer_name].copy()
 
-    comfort_map = (social_map * social_weight) + (grime_map * grime_weight)
+    # 已经被占用的格子不能放置
+    # 1. 创建一个有效位置的掩码
+    valid_mask = np.ones_like(prob_map, dtype=bool)
+    w, h = ctx.grid_width, ctx.grid_height
 
-    # 确保舒适度不为负，并归一化为概率
-    comfort_map_clipped = np.clip(comfort_map, 0, None) # 裁剪掉负值
-    prob_map = safe_normalize(comfort_map_clipped)
+    # 2. 遍历每一个格子，检查是否被指定的 blocker 占用
+    for x in range(w):
+        for y in range(h):
+            is_blocked = False
+            for occupant in ctx.occupancy_grid[x, y]:
+                if occupant.obj_type in blocked_by:
+                    is_blocked = True
+                    break
+            if is_blocked:
+                valid_mask[x, y] = False
 
-    # 将被家具占用的地方概率设为0
-    prob_map[ctx.occupancy_grid != None] = 0
+    # 3. 将掩码应用到概率图上，无效位置的概率将变为 0
+    prob_map *= valid_mask
 
-    # 2. 使用加权采样放置角色（非网格对齐）
     if np.sum(prob_map) < 1e-9:
-        print(f"警告: {character_type} 没有有效的放置位置。")
-        return ctx
+        print(f"警告: {obj_type} 没有有效的放置位置。")
+        return ctx,placed_objects
 
     flat_map = prob_map.flatten()
     normalized_probs = flat_map / np.sum(flat_map)
 
-    # 防止角色生成在完全相同的位置
-    placed_coords = set()
-
+    # 为了避免在完全相同的位置生成多个，我们可以选择不放回采样，
+    # 或者像之前一样用一个集合来记录。这里我们选择一次性采样多个。
+    # `replace=True` 允许在同一个格子附近生成多个对象，这对于脏污是合理的。
     chosen_indices = np.random.choice(
         len(normalized_probs),
-        size=num_to_place * 5, # 多选一些以防重复
+        size=num_to_place,  # 直接采样目标数量
         p=normalized_probs,
         replace=True
     )
 
     placed_count = 0
     for index in chosen_indices:
-        if placed_count >= num_to_place:
-            break
-
         ix, iy = np.unravel_index(index, prob_map.shape)
-        if (ix, iy) in placed_coords:
-            continue
 
+        # 在选定的格子内添加随机偏移
         pos_x = ix + random.uniform(0, 1)
         pos_y = iy + random.uniform(0, 1)
 
-        new_char = GameObject(
-            obj_type=character_type,
+        new_obj = GameObject(
+            obj_type=obj_type,
             visual_pos=np.array([pos_x, pos_y])
         )
-        ctx.objects.append(new_char)
-        placed_coords.add((ix, iy))
+        ctx.objects.append(new_obj)
+        placed_objects.append(new_obj)
         placed_count += 1
 
-    print(f"成功放置了 {placed_count}/{num_to_place} 个 {character_type}。")
-    return ctx
+    print(f"成功放置了 {placed_count}/{num_to_place} 个 {obj_type}。")
+    return ctx,placed_objects

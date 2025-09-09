@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Any, cast
 
 import numpy as np
 import matplotlib.pyplot as plt
@@ -37,10 +37,11 @@ class GenerationContext:
     grid_width: int
     grid_height: int
 
-    # 使用字典来存储任意命名的数据层
-    # 键是字符串 (e.g., 'suitability', 'grime_potential')
-    # 值是 numpy 数组
+    # 用于生成过程中的临时数据层 (e.g., 'table_suitability', 'grime_probability')
     layers: Dict[str, np.ndarray]
+
+    # 用于最终导出的、描述世界状态的持久化数据场 (e.g., 'light_level', 'temperature')
+    fields: Dict[str, np.ndarray]
 
     # 存储所有已生成的游戏对象
     objects: List[GameObject]
@@ -53,7 +54,13 @@ class GenerationContext:
         if obj.grid_pos is not None and obj.grid_size is not None:
             x, y = obj.grid_pos
             w, h = obj.grid_size
-            self.occupancy_grid[x:x+w, y:y+h] = obj
+            for i in range(x, x + w):
+                for j in range(y, y + h):
+                    # 确保坐标在边界内
+                    if 0 <= i < self.grid_width and 0 <= j < self.grid_height:
+                        # self.occupancy_grid[i, j] 是一个列表
+                        cell_list = cast(List[GameObject], self.occupancy_grid[i, j])
+                        cell_list.append(obj)
 
 
 # 定义“修改器”和“放置策略”的函数签名

@@ -1,10 +1,11 @@
 ﻿import random
-from typing import List
+import time
+from typing import List, Callable, Tuple, Optional
+
+import numpy as np
+from perlin_noise import PerlinNoise
 
 from core_types import GenerationContext, GameObject
-from perlin_noise import PerlinNoise
-import numpy as np
-import time
 
 
 # --- 一些辅助函数 ---
@@ -21,72 +22,227 @@ def safe_normalize(data_map):
         # 如果数组是平坦的，返回一个全零数组
         return np.zeros_like(data_map)
 
+
 # --- 修改器 (Modifiers) ---
 
-def create_initial_suitability(width: int, height: int) -> np.ndarray:
-    """创建一个基础的适宜度地图 (全1)"""
-    return np.ones((width, height))
-
-def apply_central_attraction(ctx: GenerationContext, layer_name: str, strength: float) -> GenerationContext:
-    """在指定层上应用中心吸引力。"""
-    if layer_name not in ctx.layers:
-        print(f"警告: 层 '{layer_name}' 不在上下文中。跳过。")
-        return ctx
-
+def apply_perlin_noise(
+        ctx: GenerationContext,
+        target_layer_name: str,
+        scale: float,
+        strength: float,
+        base_layer_name: str = None
+) -> GenerationContext:
+    """在指定层上应用或创建一个柏林噪声层。"""
     w, h = ctx.grid_width, ctx.grid_height
-    x = np.arange(w)
-    y = np.arange(h)
-    xx, yy = np.meshgrid(x, y)
-    center_x, center_y = w / 2, h / 2
-    distance_from_center_sq = (xx - center_x) ** 2 + (yy - center_y) ** 2
 
-    # 吸引力应该使中心概率更高，所以我们从1中减去
-    # 我们转置以匹配numpy的 (width, height) 索引
-    attraction_multiplier = 1.0 - safe_normalize(distance_from_center_sq.T) * strength
-    ctx.layers[layer_name] *= attraction_multiplier
-    np.clip(ctx.layers[layer_name], 0, 1, out=ctx.layers[layer_name])
+    # 创建一个巨大的随机偏移量来打破采样规则性
+    # 这样即使用户输入 0.5 或 1.0 这样的“魔数”也能正常工作
+    random.seed(time.time())  # 确保每次运行的偏移量都不同
+    offset_x = random.random() * 10000
+    offset_y = random.random() * 10000
 
-    return ctx
-
-def apply_perlin_noise(ctx: GenerationContext, layer_name: str, scale: float, strength: float) -> GenerationContext:
-    """在指定层上应用柏林噪声。"""
-    if layer_name not in ctx.layers: return ctx
-
-    w, h = ctx.grid_width, ctx.grid_height
+    # 使用与时间相关的种子，确保每次运行的噪声都不同
     noise_gen = PerlinNoise(octaves=4, seed=int(time.time()))
-    noise = np.array([[noise_gen([i * scale, j * scale]) for j in range(h)] for i in range(w)])
+
+    # 在采样时应用偏移量
+    noise = np.array([[noise_gen([(i * scale) + offset_x, (j * scale) + offset_y]) for j in range(h)] for i in range(w)])
+
     noise_norm = safe_normalize(noise)
 
-    # 将噪声作为乘数应用
-    ctx.layers[layer_name] *= (1.0 - strength + strength * noise_norm)
-    np.clip(ctx.layers[layer_name], 0, 1, out=ctx.layers[layer_name])
+    if base_layer_name and base_layer_name in ctx.layers:
+        base_layer = ctx.layers[base_layer_name]
+        ctx.layers[target_layer_name] = base_layer * (1.0 - strength + strength * noise_norm)
+    else:
+        # 如果没有基础层，就直接创建噪声层
+        ctx.layers[target_layer_name] = noise_norm
 
+    np.clip(ctx.layers[target_layer_name], 0, 1, out=ctx.layers[target_layer_name])
+    print(f"--- 应用柏林噪声到层 '{target_layer_name}' ---")
     return ctx
 
-def apply_repulsion_from_objects(ctx: GenerationContext, layer_name: str, objects: List[GameObject], sigma: float, strength: float) -> GenerationContext:
-    """根据物体列表，在指定层上应用高斯排斥。"""
-    if layer_name not in ctx.layers or not objects: return ctx
 
+def create_uniform_layer(
+        ctx: GenerationContext,
+        target_layer_name: str,
+        value: float = 1.0
+) -> GenerationContext:
+    """创建一个填充了均匀值的层。"""
     w, h = ctx.grid_width, ctx.grid_height
+    ctx.layers[target_layer_name] = np.full((w, h), fill_value=value)
+    print(f"--- 创建了值为 {value} 的均匀层 '{target_layer_name}' ---")
+    return ctx
+
+
+def create_layer_from_coordinates(
+        ctx: GenerationContext,
+        target_layer_name: str,
+        coordinates: List[Tuple[int, int]],
+        value: float = 1.0,
+        base_layer: Optional[np.ndarray] = None
+) -> GenerationContext:
+    """
+    根据一个坐标列表创建一个新层。在这些坐标上的值为指定值，其他地方为0。
+    """
+    w, h = ctx.grid_width, ctx.grid_height
+    if base_layer is not None:
+        new_map = base_layer.copy()
+    else:
+        new_map = np.zeros((w, h))
+
+    for x, y in coordinates:
+        if 0 <= x < w and 0 <= y < h:
+            new_map[x, y] = value
+
+    ctx.layers[target_layer_name] = new_map
+    print(f"--- 从 {len(coordinates)} 个坐标点创建了层 '{target_layer_name}' ---")
+    return ctx
+
+
+def adjust_layer_contrast(
+        ctx: GenerationContext,
+        layer_name: str,
+        exponent: float,
+        target_layer_name: str = None
+) -> GenerationContext:
+    """
+    通过幂运算调整一个层的对比度。
+    exponent > 1: 增加对比度 (使高峰更突出)
+    0 < exponent < 1: 降低对比度 (使分布更平缓)
+    """
+    if layer_name not in ctx.layers:
+        print(f"警告: 层 '{layer_name}' 不存在，无法调整对比度。")
+        return ctx
+
+    if target_layer_name is None:
+        target_layer_name = layer_name
+
+    # 确保层的值在 [0, 1] 范围内
+    layer_data = safe_normalize(ctx.layers[layer_name])
+
+    adjusted_map = np.power(layer_data, exponent)
+
+    ctx.layers[target_layer_name] = safe_normalize(adjusted_map)  # 再次归一化
+    print(f"--- 调整层 '{layer_name}' 的对比度 (指数: {exponent}) -> '{target_layer_name}' ---")
+    return ctx
+
+
+def apply_influence_from_points(
+        ctx: GenerationContext,
+        target_layer_name: str,
+        points: List[Tuple[float, float]],
+        sigma: float,
+        strength: float = 1.0,
+        mode: str = 'add' # 'add', 'subtract', 'multiply', 'multiply_inverse'
+) -> GenerationContext:
+    """
+    基于一组坐标点计算影响，并按指定模式将其应用到一个目标层上。
+    此操作是幂等的：如果目标层不存在，会自动创建。
+    """
+    w, h = ctx.grid_width, ctx.grid_height
+
+    if not points:
+        return ctx
+
+    # 1. 幂等性：按需创建目标层
+    ctx = ensure_layer_exists(ctx, target_layer_name, fill_value=0.0)
+
+    # 2. 计算新产生的影响图 (不存入 ctx.layers)
+    new_influence_map = np.zeros((w, h))
+
     x_coords, y_coords = np.arange(w), np.arange(h)
     xx, yy = np.meshgrid(x_coords, y_coords)
+    sigma_sq = sigma ** 2
+    if sigma_sq <= 1e-9:
+        return ctx
 
-    total_repulsion = np.zeros((w, h))
-    for obj in objects:
-        center_pos = obj.center_visual_pos
-        distance_sq = (xx - center_pos[0]) ** 2 + (yy - center_pos[1]) ** 2
-        sigma_sq = sigma ** 2
-        if sigma_sq > 0:
-            gaussian_falloff = np.exp(-distance_sq / (2 * sigma_sq))
-            total_repulsion += gaussian_falloff.T
+    for p in points:
+        px, py = p
+        distance_sq = (xx - px) ** 2 + (yy - py) ** 2
+        new_influence_map += np.exp(-distance_sq / (2 * sigma_sq)).T * strength
 
-    # 归一化总排斥影响，防止叠加效果过强
-    total_repulsion = safe_normalize(total_repulsion)
-    multiplier = 1.0 - strength * total_repulsion
-    ctx.layers[layer_name] *= multiplier
-    np.clip(ctx.layers[layer_name], 0, 1, out=ctx.layers[layer_name])
+    new_influence_map = safe_normalize(new_influence_map)
 
+    # 3. 根据模式将新影响合并到目标层
+    target_layer = ctx.layers[target_layer_name]
+    if mode == 'add':
+        target_layer += new_influence_map
+    elif mode == 'subtract':
+        target_layer -= new_influence_map
+    elif mode == 'multiply':
+        target_layer *= new_influence_map
+    elif mode == 'multiply_inverse':
+        target_layer *= (1.0 - new_influence_map)
+    else:
+        print(f"警告: 在 apply_influence_from_points 中使用了未知的模式 '{mode}'。")
+        return ctx
+
+    # 3. 将新影响合并到目标层
+    ctx.layers[target_layer_name] += new_influence_map
+    ctx.layers[target_layer_name] = safe_normalize(ctx.layers[target_layer_name]) # 保证结果在 [0,1]
+
+    print(f"--- 向层 '{target_layer_name}' 应用了来自 {len(points)} 个点的影响 ---")
     return ctx
+
+
+def apply_influence_to_layer(
+        ctx: GenerationContext,
+        target_layer_name: str,
+        source_objects: List[GameObject],
+        sigma: float,
+        strength_multiplier: Callable[[GameObject], float] = lambda obj: 1.0,  # 按对象类型决定强度
+        mode: str = 'add'  # 'add', 'subtract', 'multiply', 'multiply_inverse'
+) -> GenerationContext:
+    """
+    计算一组源对象产生的影响，并按指定模式将其应用到一个目标层上。
+    此操作是幂等的：如果目标层不存在，会自动创建。
+    """
+    if not source_objects:
+        return ctx  # 如果没有源对象，什么都不做
+
+    # 1. 幂等性：按需创建目标层
+    ctx = ensure_layer_exists(ctx, target_layer_name, fill_value=(0.0 if mode == 'add' else 1.0))
+
+    # 2. 计算新产生的影响图 (不存入 ctx.layers)
+    w, h = ctx.grid_width, ctx.grid_height
+    new_influence_map = np.zeros((w, h))
+
+    x_coords, y_coords = np.arange(w), np.arange(h)
+    xx, yy = np.meshgrid(x_coords, y_coords)
+    sigma_sq = sigma ** 2
+    if sigma_sq <= 1e-9: return ctx
+
+    for obj in source_objects:
+        center_pos = obj.center_visual_pos
+        strength = strength_multiplier(obj)
+        if strength == 0: continue
+
+        distance_sq = (xx - center_pos[0]) ** 2 + (yy - center_pos[1]) ** 2
+        new_influence_map += np.exp(-distance_sq / (2 * sigma_sq)).T * strength
+
+    # 归一化新产生的影响，使其最大值为1，这样strength参数才可控
+    new_influence_map = safe_normalize(new_influence_map)
+
+    # 3. 将新影响直接合并到目标层
+    target_layer = ctx.layers[target_layer_name]
+    if mode == 'add':
+        target_layer += new_influence_map
+    elif mode == 'subtract':
+        target_layer -= new_influence_map
+    elif mode == 'multiply':
+        target_layer *= new_influence_map
+    elif mode == 'multiply_inverse':
+        target_layer *= (1.0 - new_influence_map)
+    else:
+        print(f"警告: 在 apply_influence_to_layer 中使用了未知的模式 '{mode}'。")
+        return ctx
+
+    # 保证最终结果仍在合理范围内
+    ctx.layers[target_layer_name] = np.clip(target_layer, 0, None) # 确保不出现负值
+    ctx.layers[target_layer_name] = safe_normalize(ctx.layers[target_layer_name])
+
+    print(f"--- 向层 '{target_layer_name}' 应用了来自 {len(source_objects)} 个对象的影响 ---")
+    return ctx
+
 
 def apply_visual_jitter(
         ctx: GenerationContext,
@@ -109,111 +265,40 @@ def apply_visual_jitter(
     print("--- 视觉抖动应用完毕 ---")
     return ctx
 
-def create_grime_base_map_from_occlusion(
+
+def combine_layers(
         ctx: GenerationContext,
-        layer_name: str,
-        occlusion_strength: float,
-        occlusion_sigma: float
+        target_layer_name: str,
+        layer_a_name: str,
+        layer_b_name: str,
+        mode: str = 'weighted_sum',  # 'add', 'multiply', 'weighted_sum'
+        weight_a: float = 0.5,
+        weight_b: float = 0.5
 ) -> GenerationContext:
     """
-    创建一个基础脏污概率图。脏污倾向于在物体下方和周围聚集。
+    将两个源层通过指定模式组合，并将结果存入目标层。
     """
-    w, h = ctx.grid_width, ctx.grid_height
-    activity_map = np.ones((w, h))
-
-    x_coords, y_coords = np.arange(w), np.arange(h)
-    xx, yy = np.meshgrid(x_coords, y_coords)
-
-    for obj in ctx.objects:
-        if obj.grid_pos is not None:
-            center_pos = obj.center_visual_pos
-            distance_sq = (xx - center_pos[0]) ** 2 + (yy - center_pos[1]) ** 2
-            sigma_sq = occlusion_sigma ** 2
-            if sigma_sq > 0:
-                # 物体周围的“活动”减少
-                activity_map -= np.exp(-distance_sq / (2 * sigma_sq)).T * occlusion_strength
-
-    # 低活动区域 = 高脏污概率
-    grime_prob = 1.0 - np.clip(activity_map, 0, 1)
-    ctx.layers[layer_name] = safe_normalize(grime_prob)
-
-    return ctx
-
-def blend_layers(
-        ctx: GenerationContext,
-        target_layer: str,
-        source_layer: str,
-        weight_target: float,
-        weight_source: float
-) -> GenerationContext:
-    """将两个层按权重混合到目标层中。"""
-    if target_layer not in ctx.layers or source_layer not in ctx.layers:
-        print("警告: 混合操作所需的层不存在。")
+    if layer_a_name not in ctx.layers or layer_b_name not in ctx.layers:
+        print(f"警告: 组合操作所需的源层 ({layer_a_name} 或 {layer_b_name}) 不存在。")
         return ctx
 
-    blended_map = (ctx.layers[target_layer] * weight_target) + (ctx.layers[source_layer] * weight_source)
-    ctx.layers[target_layer] = safe_normalize(blended_map)
-    return ctx
+    layer_a = ctx.layers[layer_a_name]
+    layer_b = ctx.layers[layer_b_name]
 
-def create_social_comfort_map(
-        ctx: GenerationContext,
-        layer_name: str,
-        attraction_sigma: float
-) -> GenerationContext:
-    """创建基于家具吸引力的社交舒适度地图。"""
-    w, h = ctx.grid_width, ctx.grid_height
-    social_map = np.zeros((w, h))
-
-    furniture = [obj for obj in ctx.objects if obj.obj_type in ["TABLE", "CHAIR"]]
-    if not furniture:
-        ctx.layers[layer_name] = social_map
+    if mode == 'add':
+        combined_map = layer_a + layer_b
+    elif mode == 'multiply':
+        combined_map = layer_a * layer_b
+    elif mode == 'weighted_sum':
+        combined_map = (layer_a * weight_a) + (layer_b * weight_b)
+    else:
+        print(f"警告: 未知的组合模式 '{mode}'。")
         return ctx
 
-    x_coords, y_coords = np.arange(w), np.arange(h)
-    xx, yy = np.meshgrid(x_coords, y_coords)
-
-    for obj in furniture:
-        center_pos = obj.center_visual_pos
-        distance_sq = (xx - center_pos[0]) ** 2 + (yy - center_pos[1]) ** 2
-        sigma_sq = attraction_sigma ** 2
-        if sigma_sq > 0:
-            social_map += np.exp(-distance_sq / (2 * sigma_sq)).T
-
-    ctx.layers[layer_name] = safe_normalize(social_map)
+    ctx.layers[target_layer_name] = safe_normalize(combined_map)
+    print(f"--- 组合层 '{layer_a_name}' 和 '{layer_b_name}' -> '{target_layer_name}' (模式: {mode}) ---")
     return ctx
 
-
-def create_grime_influence_map(
-        ctx: GenerationContext,
-        layer_name: str,
-        large_grime_multiplier: float
-) -> GenerationContext:
-    """创建脏污影响图，大脏污的影响力更强。"""
-    w, h = ctx.grid_width, ctx.grid_height
-    grime_map = np.zeros((w, h))
-
-    grime_objects = [obj for obj in ctx.objects if "GRIME" in obj.obj_type]
-    if not grime_objects:
-        ctx.layers[layer_name] = grime_map
-        return ctx
-
-    x_coords, y_coords = np.arange(w), np.arange(h)
-    xx, yy = np.meshgrid(x_coords, y_coords)
-
-    for grime in grime_objects:
-        center_pos = grime.visual_pos
-        distance_sq = (xx - center_pos[0]) ** 2 + (yy - center_pos[1]) ** 2
-
-        is_large = "LARGE" in grime.obj_type
-        sigma = 2.0 if is_large else 1.0 # 这可以变成参数
-        strength = large_grime_multiplier if is_large else 1.0
-
-        sigma_sq = sigma ** 2
-        if sigma_sq > 0:
-            grime_map += np.exp(-distance_sq / (2 * sigma_sq)).T * strength
-
-    ctx.layers[layer_name] = safe_normalize(grime_map)
-    return ctx
 
 def bind_floating_objects_to_grid(ctx: GenerationContext) -> GenerationContext:
     """
@@ -243,6 +328,45 @@ def bind_floating_objects_to_grid(ctx: GenerationContext) -> GenerationContext:
     print(f"--- 网格绑定完毕，更新了 {updated_count} 个对象 ---")
     return ctx
 
+
+def ensure_layer_exists(
+        ctx: GenerationContext,
+        layer_name: str,
+        fill_value: float = 0.0
+) -> GenerationContext:
+    """
+    确保指定的层存在。如果不存在，则创建一个以 fill_value 填充的新层。
+    这是一个幂等操作。
+    """
+    if layer_name not in ctx.layers:
+        print(f"--- 层 '{layer_name}' 不存在，正在按需创建 (填充值: {fill_value}) ---")
+        w, h = ctx.grid_width, ctx.grid_height
+        ctx.layers[layer_name] = np.full((w, h), fill_value=fill_value)
+    return ctx
+
+
+def promote_layer_to_field(
+        ctx: GenerationContext,
+        source_layer_name: str,
+        target_field_name: str,
+        remove_source: bool = True
+) -> GenerationContext:
+    """
+    将一个临时层“提升”为一个永久的场。
+    """
+    if source_layer_name not in ctx.layers:
+        print(f"警告: 源层 '{source_layer_name}' 不存在，无法提升为场。")
+        return ctx
+
+    print(f"--- 将层 '{source_layer_name}' 提升为场 '{target_field_name}' ---")
+    ctx.fields[target_field_name] = ctx.layers[source_layer_name].copy()
+
+    if remove_source:
+        del ctx.layers[source_layer_name]
+
+    return ctx
+
+
 def reserve_grid_margin(
         ctx: GenerationContext,
         margin_width: int,
@@ -265,22 +389,30 @@ def reserve_grid_margin(
     wall_placeholder = GameObject(obj_type=occupant_type, visual_pos=np.array([-1, -1]))
 
     # 上边缘
-    ctx.occupancy_grid[0:w, 0:margin_width] = wall_placeholder
+    for i in range(w):
+        for j in range(margin_width):
+            ctx.occupancy_grid[i, j].append(wall_placeholder)
     # 下边缘
-    ctx.occupancy_grid[0:w, h-margin_width:h] = wall_placeholder
+    for i in range(w):
+        for j in range(h - margin_width, h):
+            ctx.occupancy_grid[i, j].append(wall_placeholder)
     # 左边缘
-    ctx.occupancy_grid[0:margin_width, 0:h] = wall_placeholder
+    for i in range(margin_width):
+        for j in range(margin_width, h - margin_width):  # 避免重复计算角落
+            ctx.occupancy_grid[i, j].append(wall_placeholder)
     # 右边缘
-    ctx.occupancy_grid[w-margin_width:w, 0:h] = wall_placeholder
+    for i in range(w - margin_width, w):
+        for j in range(margin_width, h - margin_width):  # 避免重复计算角落
+            ctx.occupancy_grid[i, j].append(wall_placeholder)
 
     # (可选) 也可以在关键的数据层上直接将这些区域的概率设为0
     # 这可以提高后续采样放置器的效率，因为它们不必再考虑这些无效区域
     for layer_name, layer in ctx.layers.items():
         if isinstance(layer, np.ndarray) and layer.shape == (w, h):
             layer[0:margin_width, :] = 0
-            layer[w-margin_width:w, :] = 0
+            layer[w - margin_width:w, :] = 0
             layer[:, 0:margin_width] = 0
-            layer[:, h-margin_width:h] = 0
+            layer[:, h - margin_width:h] = 0
 
     print("--- 边缘预留完毕 ---")
     return ctx

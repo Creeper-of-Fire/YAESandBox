@@ -29,7 +29,7 @@ class Settings:
 
     # --- 阶段四: 脏污生成 ---
     # 第1遍: 小脏污种子
-    GRIME_SPLATTER_COUNT = 5000  # 初始“飞溅物”种子的数量
+    GRIME_SPLATTER_COUNT = 5000  # 小脏污的数量
     GRIME_SPLATTER_NOISE_SCALE = 0.5  # 飞溅物噪声更细碎
 
     # 第2遍: 大脏污核心
@@ -37,7 +37,6 @@ class Settings:
     NUM_LARGE_GRIME_PATCHES = 5  # 生成的大块脏污核心数量
 
     # 第3遍: 最终固化
-    GRIME_FINAL_SURVIVAL_PROB = 0.4  # 小脏污的“基础”存活率
     GRIME_CORE_INFLUENCE_RADIUS = 4.0  # 大核心能提升小脏污存活率的范围
 
     # --- 阶段五: 角色生成 ---
@@ -54,6 +53,12 @@ class Settings:
 
     MUSHROOM_GRIME_ATTRACTION = 4.5  # 蘑菇人对脏污的喜好
 
+    # --- 光源 ---
+    NUM_WINDOWS = 10
+    WINDOW_SIZE = (1, 1) # 假设窗户是1x1
+    NUM_TORCHES = 15
+    TORCH_SIZE = (1, 1)
+
     # --- 可视化 ---
     COLORS = {
         "TABLE": "#8B4513",  # 棕色
@@ -63,4 +68,6 @@ class Settings:
         "ELF": "#98FB98",  # 淡绿色
         "DWARF": "#F4A460",  # 沙棕色
         "MUSHROOM_PERSON": "#DC143C",  # 猩红色
+        "WINDOW": "#87CEEB",  # 天蓝色
+        "TORCH": "#FFA500",   # 橙色
     }
