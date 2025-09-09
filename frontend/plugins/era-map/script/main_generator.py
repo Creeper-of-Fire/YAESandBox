@@ -9,7 +9,7 @@ from modifiers import (
     apply_perlin_noise,
     apply_visual_jitter,
     bind_floating_objects_to_grid, reserve_grid_margin, apply_influence_to_layer, combine_layers, create_uniform_layer,
-    apply_influence_from_points, adjust_layer_contrast, create_layer_from_coordinates, ensure_layer_exists
+    apply_influence_from_points, adjust_layer_contrast, create_layer_from_coordinates, ensure_layer_exists, safe_normalize
 )
 from placement_strategies import (
     place_floating_objects_from_layer, place_one_grid_object_from_layer, place_grid_objects_from_layer
@@ -98,7 +98,7 @@ def chair_placement_pipeline(ctx: GenerationContext, settings: Settings) -> Gene
     """
     数据驱动的椅子放置管道。
     """
-    print("\n--- [V2 管道] 开始放置椅子 ---")
+    print("\n--- [管道] 开始放置椅子 ---")
 
     # 1. 找出所有桌子
     tables = [obj for obj in ctx.objects if obj.obj_type == "TABLE"]
@@ -142,7 +142,7 @@ def chair_placement_pipeline(ctx: GenerationContext, settings: Settings) -> Gene
     # 我们使用 place_grid_objects_from_layer (之前叫 place_by_weighted_sampling)
     ctx, _ = place_grid_objects_from_layer(
         ctx,
-        layer_name='chair_suitability_map',
+        layer_source='chair_suitability_map',
         num_to_place=num_chairs_total,
         obj_type="CHAIR",
         grid_size=settings.CHAIR_SIZE,
@@ -191,7 +191,7 @@ def grime_generation_pipeline(ctx: GenerationContext, settings: Settings) -> Gen
     # 步骤 4: 使用基础概率图，放置大脏污核心
     ctx, large_grime_patches = place_floating_objects_from_layer(
         ctx,
-        layer_name='grime_base_probability',
+        layer_source='grime_base_probability',
         num_to_place=settings.NUM_LARGE_GRIME_PATCHES,
         obj_type='GRIME_LARGE',
         blocked_by=set()
@@ -224,7 +224,7 @@ def grime_generation_pipeline(ctx: GenerationContext, settings: Settings) -> Gen
     # 步骤 7: 根据最终概率图，放置大量小脏污
     ctx, _ = place_floating_objects_from_layer(
         ctx,
-        layer_name='grime_small_final_prob',
+        layer_source='grime_small_final_prob',
         num_to_place=settings.GRIME_SPLATTER_COUNT,
         obj_type='GRIME_SMALL',
         blocked_by=set()
@@ -265,15 +265,19 @@ def lighting_pipeline(ctx: GenerationContext, settings: Settings) -> GenerationC
 
     placed_windows = []
     for i in range(settings.NUM_WINDOWS):
-        # 2.2: **在循环内部**，每次都重新计算黑暗图
-        ctx.layers['darkness_map'] = 1.0 - ctx.layers['global_light_map']
+        # 1. 从上下文中获取当前状态数据
+        current_light_map = ctx.layers['global_light_map']
+        window_base_prob = ctx.layers['window_base_prob']
 
-        # 2.3: 混合得到当前迭代的最终概率图
-        ctx = combine_layers(ctx, 'final_window_placement_prob', 'window_base_prob', 'darkness_map', mode='multiply')
+        # 2. 在局部变量中执行纯计算，不修改上下文
+        #    这是“显式传递”思想的核心
+        normalized_light = safe_normalize(current_light_map)
+        darkness_map = 1.0 - normalized_light
+        final_window_placement_prob = window_base_prob * darkness_map
 
         # 2.4: 放置 **一个** 窗户
         ctx, new_window = place_one_grid_object_from_layer(
-            ctx, 'final_window_placement_prob', "WINDOW", settings.WINDOW_SIZE,
+            ctx, final_window_placement_prob, "WINDOW", settings.WINDOW_SIZE,
             blocked_by={"TABLE", "CHAIR"}
         )
 
@@ -283,7 +287,7 @@ def lighting_pipeline(ctx: GenerationContext, settings: Settings) -> GenerationC
             placed_windows.append(new_window)
             ctx = apply_influence_to_layer(
                 ctx, 'global_light_map', [new_window], # 注意：只传入新窗户
-                sigma=6.0, strength_multiplier=lambda o: 0.8, mode='add'
+                sigma=8.0, strength_multiplier=lambda o: 0.4, mode='add'
             )
         else:
             print("  - 空间不足，无法放置更多窗户。")
@@ -301,24 +305,27 @@ def lighting_pipeline(ctx: GenerationContext, settings: Settings) -> GenerationC
         for y in range(h):
             if any(o.obj_type == "WALL_RESERVED" for o in ctx.occupancy_grid[x, y]):
                 wall_placeholders.append(GameObject("WALL_RESERVED", np.array([x, y], dtype=float)))
-    ctx = apply_influence_to_layer(ctx, 'wall_attraction_map', wall_placeholders, sigma=6.0)
+    ctx = apply_influence_to_layer(ctx, 'wall_attraction_map', wall_placeholders, sigma=6.0,strength_multiplier=lambda o: 0.3)
 
     placed_torches = []
     for i in range(settings.NUM_TORCHES):
-        # 3.2: **在循环内部**，每次都重新计算黑暗图
-        ctx.layers['darkness_map_after_windows'] = 1.0 - ctx.layers['global_light_map']
+        # 1. 获取状态
+        current_light_map = ctx.layers['global_light_map']
+        wall_attraction_map = ctx.layers['wall_attraction_map']
 
-        # 3.3: 混合得到当前迭代的最终概率图
-        ctx = combine_layers(
-            ctx, 'final_torch_placement_prob',
-            'wall_attraction_map', 'darkness_map_after_windows',
-            mode='multiply'
-        )
-        ctx = adjust_layer_contrast(ctx, 'final_torch_placement_prob', exponent=2.0)
+        # 2. 纯计算
+        normalized_light = safe_normalize(current_light_map)
+        darkness_map_after_windows = 1.0 - normalized_light
+        final_torch_placement_prob_raw = wall_attraction_map * darkness_map_after_windows
+        # adjust_layer_contrast 也可以被重构为一个纯函数
+        # 但为了最小化改动，我们暂时可以继续使用它，因为它至少会覆写目标层，而不是创建新层
+        ctx.layers['temp_torch_prob'] = final_torch_placement_prob_raw
+        ctx = adjust_layer_contrast(ctx, 'temp_torch_prob', exponent=2.0)
+        final_torch_placement_prob = ctx.layers['temp_torch_prob']
 
-        # 3.4: 放置 **一个** 火把
+        # 3. 传递临时数据
         ctx, new_torch = place_one_grid_object_from_layer(
-            ctx, 'final_torch_placement_prob', "TORCH", settings.TORCH_SIZE,
+            ctx, final_torch_placement_prob, "TORCH", settings.TORCH_SIZE,
             blocked_by={"TABLE", "CHAIR", "WINDOW"}
         )
 
@@ -394,7 +401,7 @@ def character_placement_pipeline(ctx: GenerationContext, settings: Settings) -> 
         # 3. 使用通用的浮动对象放置函数
         ctx, _ = place_floating_objects_from_layer(
             ctx,
-            layer_name=preference_map_name,
+            layer_source=preference_map_name,
             num_to_place=config["count"],
             obj_type=char_type,
             blocked_by={"TABLE", "WALL_RESERVED"}

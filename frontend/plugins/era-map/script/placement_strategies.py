@@ -1,15 +1,32 @@
 ﻿import random
-from typing import Tuple, Optional, Set, List
+from typing import Tuple, Optional, Set, List, Union
 
 import numpy as np
 
 from core_types import GenerationContext, GameObject
 from modifiers import safe_normalize
 
+def _resolve_prob_map(ctx: GenerationContext, layer_source: Union[str, np.ndarray]) -> Optional[np.ndarray]:
+    """根据输入是字符串还是numpy数组，返回概率图数据。"""
+    if isinstance(layer_source, str):
+        if layer_source not in ctx.layers:
+            print(f"警告: 概率层 '{layer_source}' 不存在。")
+            return None
+        return ctx.layers[layer_source]
+    elif isinstance(layer_source, np.ndarray):
+        # 安全检查：确保传入的数组维度与上下文匹配
+        if layer_source.shape != (ctx.grid_width, ctx.grid_height):
+            print(f"警告: 传入的概率图numpy数组维度 ({layer_source.shape}) 与网格维度 ({ctx.grid_width}, {ctx.grid_height}) 不匹配。")
+            return None
+        return layer_source
+    else:
+        print(f"警告: 未知的层源类型: {type(layer_source)}。")
+        return None
+
 
 def place_grid_objects_from_layer(
         ctx: GenerationContext,
-        layer_name: str,
+        layer_source: Union[str, np.ndarray],
         num_to_place: int,
         obj_type: str,
         grid_size: Tuple[int, int],
@@ -20,11 +37,9 @@ def place_grid_objects_from_layer(
     使用真·加权采样在网格上放置物体，并进行碰撞检测。
     """
     placed_objects = []
-    if layer_name not in ctx.layers:
-        print(f"警告: 概率层 '{layer_name}' 不存在。无法放置 '{obj_type}'。")
+    prob_map = _resolve_prob_map(ctx, layer_source)
+    if prob_map is None:
         return ctx, placed_objects
-
-    prob_map = ctx.layers[layer_name]
     w, h = grid_size
 
     # 预先计算所有不可放置的位置
@@ -86,7 +101,7 @@ def place_grid_objects_from_layer(
 
 def place_one_grid_object_from_layer(
         ctx: GenerationContext,
-        layer_name: str,
+        layer_source: Union[str, np.ndarray],
         obj_type: str,
         grid_size: Tuple[int, int],
         blocked_by: Set[str]
@@ -95,11 +110,10 @@ def place_one_grid_object_from_layer(
     使用加权采样放置单个网格对齐的物体，并返回这个物体。
     如果无法放置，则返回 None。
     """
-    if layer_name not in ctx.layers:
-        print(f"警告: 概率层 '{layer_name}' 不存在。")
+    prob_map = _resolve_prob_map(ctx, layer_source)
+    if prob_map is None:
         return ctx, None
 
-    prob_map = ctx.layers[layer_name]
     w, h = grid_size
 
     valid_mask = np.ones_like(prob_map, dtype=bool)
@@ -146,7 +160,7 @@ def place_one_grid_object_from_layer(
 
 def place_floating_objects_from_layer(
         ctx: GenerationContext,
-        layer_name: str,
+        layer_source: Union[str, np.ndarray],
         num_to_place: int,
         obj_type: str,
         blocked_by: Set[str],
@@ -155,13 +169,11 @@ def place_floating_objects_from_layer(
     """
     根据概率层，通过加权采样放置指定数量的非网格对齐的浮动对象。
     """
-    print(f"--- 开始从层 '{layer_name}' 放置浮动对象: {obj_type} ---")
     placed_objects = []
-    if layer_name not in ctx.layers:
-        print(f"警告: 概率层 '{layer_name}' 不存在。")
-        return ctx,placed_objects
-
-    prob_map = ctx.layers[layer_name].copy()
+    prob_map_original = _resolve_prob_map(ctx, layer_source)
+    if prob_map_original is None:
+        return ctx, []
+    prob_map = prob_map_original.copy()
 
     # 已经被占用的格子不能放置
     # 1. 创建一个有效位置的掩码

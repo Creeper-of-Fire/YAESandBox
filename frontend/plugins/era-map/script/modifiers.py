@@ -1,6 +1,6 @@
 ﻿import random
 import time
-from typing import List, Callable, Tuple, Optional
+from typing import List, Callable, Tuple, Optional, Union
 
 import numpy as np
 from perlin_noise import PerlinNoise
@@ -24,6 +24,26 @@ def safe_normalize(data_map):
 
 
 # --- 修改器 (Modifiers) ---
+
+def normalize_layer(
+        ctx: GenerationContext,
+        layer_name: str,
+        target_layer_name: Optional[str] = None
+) -> GenerationContext:
+    """
+    显式地将一个层归一化到 [0, 1] 范围。
+    这是一个独立的、意图明确的原子操作。
+    """
+    if layer_name not in ctx.layers:
+        print(f"警告: 层 '{layer_name}' 不存在，无法归一化。")
+        return ctx
+
+    if target_layer_name is None:
+        target_layer_name = layer_name
+
+    ctx.layers[target_layer_name] = safe_normalize(ctx.layers[layer_name])
+    print(f"--- 已显式归一化层 '{layer_name}' -> '{target_layer_name}' ---")
+    return ctx
 
 def apply_perlin_noise(
         ctx: GenerationContext,
@@ -132,7 +152,7 @@ def apply_influence_from_points(
         points: List[Tuple[float, float]],
         sigma: float,
         strength: float = 1.0,
-        mode: str = 'add' # 'add', 'subtract', 'multiply', 'multiply_inverse'
+        mode: str = 'add'  # 'add', 'subtract', 'multiply', 'multiply_inverse'
 ) -> GenerationContext:
     """
     基于一组坐标点计算影响，并按指定模式将其应用到一个目标层上。
@@ -178,7 +198,10 @@ def apply_influence_from_points(
 
     # 3. 将新影响合并到目标层
     ctx.layers[target_layer_name] += new_influence_map
-    ctx.layers[target_layer_name] = safe_normalize(ctx.layers[target_layer_name]) # 保证结果在 [0,1]
+
+    # 防止减法产生负值
+    if mode == 'subtract' or mode == 'multiply_inverse':
+        np.clip(target_layer, 0, None, out=target_layer)
 
     print(f"--- 向层 '{target_layer_name}' 应用了来自 {len(points)} 个点的影响 ---")
     return ctx
@@ -236,9 +259,9 @@ def apply_influence_to_layer(
         print(f"警告: 在 apply_influence_to_layer 中使用了未知的模式 '{mode}'。")
         return ctx
 
-    # 保证最终结果仍在合理范围内
-    ctx.layers[target_layer_name] = np.clip(target_layer, 0, None) # 确保不出现负值
-    ctx.layers[target_layer_name] = safe_normalize(ctx.layers[target_layer_name])
+    # 防止减法产生负值
+    if mode == 'subtract' or mode == 'multiply_inverse':
+        np.clip(target_layer, 0, None, out=target_layer)
 
     print(f"--- 向层 '{target_layer_name}' 应用了来自 {len(source_objects)} 个对象的影响 ---")
     return ctx
@@ -290,12 +313,15 @@ def combine_layers(
     elif mode == 'multiply':
         combined_map = layer_a * layer_b
     elif mode == 'weighted_sum':
+        # 注意：如果 a 和 b 都是 [0,1] 的概率图，加权和之后通常也希望是 [0,1]
+        # 但为了通用性，我们也移除归一化，让用户显式处理
         combined_map = (layer_a * weight_a) + (layer_b * weight_b)
     else:
         print(f"警告: 未知的组合模式 '{mode}'。")
         return ctx
 
-    ctx.layers[target_layer_name] = safe_normalize(combined_map)
+    ctx.layers[target_layer_name] = combined_map
+
     print(f"--- 组合层 '{layer_a_name}' 和 '{layer_b_name}' -> '{target_layer_name}' (模式: {mode}) ---")
     return ctx
 
