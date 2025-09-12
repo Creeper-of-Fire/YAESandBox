@@ -1,16 +1,18 @@
 ﻿<template>
   <div ref="mapContainerRef" class="map-container">
     <div v-if="isLoading">Loading...</div>
-    <v-stage v-else-if="gameMap" :config="stageConfig">
-      <v-layer>
-        <component
-            :is="layer.getRendererComponent()"
-            v-for="(layer, index) in gameMap.layers"
-            :key="index"
-            :layer="layer"
-        />
-      </v-layer>
-    </v-stage>
+    <div v-else-if="gameMap" :style="wrapperStyle" class="canvas-wrapper">
+      <v-stage :config="stageConfig">
+        <v-layer :config="{ imageSmoothingEnabled: false }">
+          <component
+              :is="layer.getRendererComponent()"
+              v-for="(layer, index) in gameMap.layers"
+              :key="index"
+              :layer="layer"
+          />
+        </v-layer>
+      </v-stage>
+    </div>
   </div>
 </template>
 <script lang="ts" setup>
@@ -20,49 +22,57 @@ import {resourceManager} from '#/game/ResourceManager';
 import {GameMap, ObjectLayer, TileLayer} from '#/game/GameMap';
 import {createGameObject} from '#/game/GameObjectFactory';
 import type {GameObject} from '#/game/GameObject';
-import { useElementSize } from '@vueuse/core';
+import {useElementSize} from '@vueuse/core';
 
 // 静态资源导入
 // @ts-ignore
-import tilesetAssetUrl from '#/assets/tilemap_packed.png';
+import tilesetAssetUrl from '#/assets/tilemap.png';
 import layoutJson from '#/assets/layout.json';
 
 // --- 响应式尺寸 ---
 // 创建一个 ref 来引用模板中的容器元素
 const mapContainerRef = ref<HTMLElement | null>(null);
 // 使用 useElementSize 实时获取容器的宽高，它们是响应式的 ref
-const { width: containerWidth, height: containerHeight } = useElementSize(mapContainerRef);
+const {width: containerWidth, height: containerHeight} = useElementSize(mapContainerRef);
 
 // --- 组件状态 ---
 const isLoading = ref(true);
 const gameMap = ref<GameMap | null>(null);
 
 // --- Konva舞台配置 ---
-const stageConfig = computed(() =>
-{
+const stageConfig = computed(() => {
+  if (!gameMap.value) {
+    return { width: 0, height: 0 };
+  }
+  // Konva Stage 永远以 1:1 的原始像素尺寸渲染
+  return {
+    width: gameMap.value.gridWidth * TILE_SIZE,
+    height: gameMap.value.gridHeight * TILE_SIZE,
+  };
+});
+
+// --- 计算CSS包装器的样式 ---
+const wrapperStyle = computed(() => {
   if (!gameMap.value || containerWidth.value === 0 || containerHeight.value === 0) {
-    return {width: 0, height: 0};
+    return {};
   }
 
-  // 地图的原始像素尺寸
   const mapPixelWidth = gameMap.value.gridWidth * TILE_SIZE;
   const mapPixelHeight = gameMap.value.gridHeight * TILE_SIZE;
 
-  // 计算缩放比例，确保地图能完整地显示在容器内
+  // 计算缩放比例，逻辑和之前一样
   const scaleX = containerWidth.value / mapPixelWidth;
   const scaleY = containerHeight.value / mapPixelHeight;
-  const scale = Math.min(scaleX, scaleY); // 取较小的比例，保证长宽都在容器内
+  const scale = Math.min(scaleX, scaleY);
 
   return {
-    // Konva Stage的尺寸应该等于容器的尺寸
-    width: containerWidth.value,
-    height: containerHeight.value,
-    // 动态计算缩放
-    scaleX: scale,
-    scaleY: scale,
-    // [可选优化] 将地图居中显示
-    offsetX: - (containerWidth.value / scale - mapPixelWidth) / 2,
-    offsetY: - (containerHeight.value / scale - mapPixelHeight) / 2,
+    // 使用 CSS transform 来进行缩放
+    transform: `scale(${scale})`,
+    // 我们可以设置 transform-origin 来决定缩放的中心点
+    'transform-origin': 'center center', // 或者 'center center'
+    // 关键：给包装器设置原始尺寸，以便 transform 有正确的基准
+    width: `${mapPixelWidth}px`,
+    height: `${mapPixelHeight}px`,
   };
 });
 
@@ -74,14 +84,20 @@ const stageConfig = computed(() =>
  * @param floorTileId - 地板的瓦片ID
  * @returns 二维数组
  */
-function createWalledRectangle(width: number, height: number, wallTileId: number, floorTileId: number): number[][] {
+function createWalledRectangle(width: number, height: number, wallTileId: number, floorTileId: number): number[][]
+{
   const layout: number[][] = [];
-  for (let y = 0; y < height; y++) {
+  for (let y = 0; y < height; y++)
+  {
     const row: number[] = [];
-    for (let x = 0; x < width; x++) {
-      if (y === 0 || y === height - 1 || x === 0 || x === width - 1) {
+    for (let x = 0; x < width; x++)
+    {
+      if (y === 0 || y === height - 1 || x === 0 || x === width - 1)
+      {
         row.push(wallTileId); // 边界是墙
-      } else {
+      }
+      else
+      {
         row.push(floorTileId); // 内部是地板
       }
     }
@@ -101,6 +117,7 @@ onMounted(async () =>
       url: tilesetAssetUrl,
       sourceTileSize: 16,
       columns: 12,
+      spacing: 1,
     });
     // 可以在这里加载更多图集, e.g. await resourceManager.loadTileset({ id: 'characters', ... })
 
@@ -149,5 +166,6 @@ onMounted(async () =>
   justify-content: center;
   align-items: center;
   background-color: #1a1a1a; /* 给个背景色，方便观察 TODO 之后改成 Naive的主题色 */
+  overflow: hidden; /* 防止缩放后的canvas溢出 */
 }
 </style>

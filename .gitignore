@@ -66,3 +66,4 @@ runtimes/
 */.idea/
 /.idea/
 /githubtoken.txt
+*.pyc
