@@ -3,13 +3,14 @@ from typing import List
 
 import numpy as np
 
-from core_types import GenerationContext, GameObject
+from core_types import GenerationContext, GameObject, convert_objects_to_particles
 from io_and_vis import export_context_to_json, Visualizer
 from modifiers import (
     apply_perlin_noise,
     apply_visual_jitter,
     bind_floating_objects_to_grid, reserve_grid_margin, apply_influence_to_layer, combine_layers, create_uniform_layer,
-    apply_influence_from_points, adjust_layer_contrast, create_layer_from_coordinates, ensure_layer_exists, safe_normalize
+    apply_influence_from_points, adjust_layer_contrast, create_layer_from_coordinates, ensure_layer_exists, safe_normalize,
+    promote_layer_to_field, normalize_layer
 )
 from placement_strategies import (
     place_floating_objects_from_layer, place_one_grid_object_from_layer, place_grid_objects_from_layer
@@ -254,13 +255,15 @@ def lighting_pipeline(ctx: GenerationContext, settings: Settings) -> GenerationC
     edge_coords = []
     margin = 0
     for x in range(margin, w - margin):
-        edge_coords.append((x, margin)); edge_coords.append((x, h - 1 - margin))
+        edge_coords.append((x, margin));
+        edge_coords.append((x, h - 1 - margin))
     for y in range(margin + 1, h - 1 - margin):
-        edge_coords.append((margin, y)); edge_coords.append((w - 1 - margin, y))
+        edge_coords.append((margin, y));
+        edge_coords.append((w - 1 - margin, y))
     ctx = create_layer_from_coordinates(ctx, 'window_edge_suitability', edge_coords)
 
-    symmetry_points = [(margin, h/2), (w-1-margin, h/2), (w/2, margin), (w/2, h-1-margin)]
-    ctx = apply_influence_from_points(ctx, 'symmetry_attraction', symmetry_points, sigma=w/4)
+    symmetry_points = [(margin, h / 2), (w - 1 - margin, h / 2), (w / 2, margin), (w / 2, h - 1 - margin)]
+    ctx = apply_influence_from_points(ctx, 'symmetry_attraction', symmetry_points, sigma=w / 4)
     ctx = combine_layers(ctx, 'window_base_prob', 'window_edge_suitability', 'symmetry_attraction', mode='multiply')
 
     placed_windows = []
@@ -283,10 +286,10 @@ def lighting_pipeline(ctx: GenerationContext, settings: Settings) -> GenerationC
 
         # 2.5: 如果成功放置，立刻更新全局光照图；否则，跳出循环
         if new_window:
-            print(f"  - 放置窗户 {i+1}/{settings.NUM_WINDOWS}...")
+            print(f"  - 放置窗户 {i + 1}/{settings.NUM_WINDOWS}...")
             placed_windows.append(new_window)
             ctx = apply_influence_to_layer(
-                ctx, 'global_light_map', [new_window], # 注意：只传入新窗户
+                ctx, 'global_light_map', [new_window],  # 注意：只传入新窗户
                 sigma=8.0, strength_multiplier=lambda o: 0.4, mode='add'
             )
         else:
@@ -305,7 +308,7 @@ def lighting_pipeline(ctx: GenerationContext, settings: Settings) -> GenerationC
         for y in range(h):
             if any(o.obj_type == "WALL_RESERVED" for o in ctx.occupancy_grid[x, y]):
                 wall_placeholders.append(GameObject("WALL_RESERVED", np.array([x, y], dtype=float)))
-    ctx = apply_influence_to_layer(ctx, 'wall_attraction_map', wall_placeholders, sigma=6.0,strength_multiplier=lambda o: 0.3)
+    ctx = apply_influence_to_layer(ctx, 'wall_attraction_map', wall_placeholders, sigma=6.0, strength_multiplier=lambda o: 0.3)
 
     placed_torches = []
     for i in range(settings.NUM_TORCHES):
@@ -331,10 +334,10 @@ def lighting_pipeline(ctx: GenerationContext, settings: Settings) -> GenerationC
 
         # 3.5: 如果成功放置，立刻更新全局光照图；否则，跳出循环
         if new_torch:
-            print(f"  - 放置火把 {i+1}/{settings.NUM_TORCHES}...")
+            print(f"  - 放置火把 {i + 1}/{settings.NUM_TORCHES}...")
             placed_torches.append(new_torch)
             ctx = apply_influence_to_layer(
-                ctx, 'global_light_map', [new_torch], # 注意：只传入新火把
+                ctx, 'global_light_map', [new_torch],  # 注意：只传入新火把
                 sigma=4.0, strength_multiplier=lambda o: 1.2, mode='add'
             )
         else:
@@ -433,6 +436,7 @@ if __name__ == "__main__":
         grid_height=settings.GRID_HEIGHT,
         layers={},
         fields={},
+        particles={},
         objects=[],
         occupancy_grid=init_grid,
     )
@@ -443,7 +447,7 @@ if __name__ == "__main__":
     context = chair_placement_pipeline(context, settings)
 
     # === 阶段三: 混沌感 ===
-    context = apply_visual_jitter(context, settings.POSITION_JITTER, settings.ANGLE_JITTER_DEGREES)
+    # context = apply_visual_jitter(context, settings.POSITION_JITTER, settings.ANGLE_JITTER_DEGREES)
 
     # 添加窗户和火把
     context = lighting_pipeline(context, settings)
@@ -462,11 +466,29 @@ if __name__ == "__main__":
     # === 阶段六: 后处理 - 网格绑定 ===
     context = bind_floating_objects_to_grid(context)
 
-    # 将最终的光照图从临时层提升为永久场
+    # === 阶段七: 数据结构转换 ===
+    # 7.1 将光照图从临时层提升为永久场
     if 'global_light_map' in context.layers:
-        from modifiers import promote_layer_to_field
-
+        print("--- 归一化最终的光照图 ---")
+        context = normalize_layer(context, 'global_light_map')
         context = promote_layer_to_field(context, 'global_light_map', 'light_level')
+
+    # 7.2 将小脏污 GameObject 转换为粒子层
+
+    # 定义前端所需的粒子生成配置
+    grime_particle_config = {
+        "colorRange": [settings.COLORS["GRIME_SMALL"], "#4B5320"],  # 暗一点的橄榄色
+        "sizeRange": [1, 3],  # 像素大小范围
+        "placement": "random_within_cell"
+    }
+
+    context = convert_objects_to_particles(
+        ctx=context,
+        object_type_to_convert="GRIME_SMALL",
+        target_particle_type="grime",
+        seed=19260817,  # 使用你喜欢的种子
+        particle_config=grime_particle_config
+    )
 
     # 导出到 JSON
     export_context_to_json(context, settings, "layout.json")

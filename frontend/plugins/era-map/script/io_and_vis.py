@@ -17,17 +17,22 @@ from prototype import Settings
 def  export_context_to_json(context: GenerationContext, settings: Settings, filename="layout.json"):
     """将生成上下文中的所有游戏对象和数据场导出为前端可以使用的JSON文件。"""
 
+    # --- 序列化 Fields ---
     fields_data = {}
     for field_name, field_array in context.fields.items():
-        # 将 numpy 数组转换为列表以便 JSON 序列化
         fields_data[field_name] = field_array.tolist()
 
-    meta_data = {
-        "gridWidth": settings.GRID_WIDTH,
-        "gridHeight": settings.GRID_HEIGHT,
-        "fields": fields_data
-    }
+    # --- 序列化 Particles ---
+    particles_data = {}
+    for particle_name, particle_layer in context.particles.items():
+        particles_data[particle_name] = {
+            "type": particle_layer.type,
+            "seed": particle_layer.seed,
+            "densityGrid": particle_layer.density_grid.tolist(),
+            "particleConfig": particle_layer.particle_config
+        }
 
+    # --- 序列化 Objects ---
     objects_data = []
     for obj in context.objects:
         obj_dict = {
@@ -47,7 +52,19 @@ def  export_context_to_json(context: GenerationContext, settings: Settings, file
 
         objects_data.append(obj_dict)
 
-    output_data = {"meta": meta_data, "objects": objects_data}
+
+    # --- 构建最终的JSON结构 ---
+    meta_data = {
+        "gridWidth": settings.GRID_WIDTH,
+        "gridHeight": settings.GRID_HEIGHT,
+    }
+
+    output_data = {
+        "meta": meta_data,
+        "objects": objects_data,
+        "fields": fields_data,
+        "particles": particles_data,
+    }
 
     try:
         with open(filename, 'w', encoding='utf-8') as f:

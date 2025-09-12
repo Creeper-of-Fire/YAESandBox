@@ -18,16 +18,15 @@
 <script lang="ts" setup>
 import {computed, onMounted, ref} from 'vue';
 import {TILE_SIZE} from '#/constant';
-import {resourceManager} from '#/game/ResourceManager';
-import {GameMap, ObjectLayer, TileLayer} from '#/game/GameMap';
+import {FieldLayer, GameMap, ObjectLayer, ParticleLayer, TileLayer} from '#/game/GameMap';
 import {createGameObject} from '#/game/GameObjectFactory';
 import type {GameObject} from '#/game/GameObject';
 import {useElementSize} from '@vueuse/core';
+import type {FullLayoutData} from '#/game/types';
 
 // 静态资源导入
-// @ts-ignore
-import tilesetAssetUrl from '#/assets/tilemap.png';
 import layoutJson from '#/assets/layout.json';
+import {registry, kenney_roguelike_rpg_pack} from "#/game/tilesetRegistry.ts";
 
 // --- 响应式尺寸 ---
 // 创建一个 ref 来引用模板中的容器元素
@@ -40,9 +39,11 @@ const isLoading = ref(true);
 const gameMap = ref<GameMap | null>(null);
 
 // --- Konva舞台配置 ---
-const stageConfig = computed(() => {
-  if (!gameMap.value) {
-    return { width: 0, height: 0 };
+const stageConfig = computed(() =>
+{
+  if (!gameMap.value)
+  {
+    return {width: 0, height: 0};
   }
   // Konva Stage 永远以 1:1 的原始像素尺寸渲染
   return {
@@ -52,8 +53,10 @@ const stageConfig = computed(() => {
 });
 
 // --- 计算CSS包装器的样式 ---
-const wrapperStyle = computed(() => {
-  if (!gameMap.value || containerWidth.value === 0 || containerHeight.value === 0) {
+const wrapperStyle = computed(() =>
+{
+  if (!gameMap.value || containerWidth.value === 0 || containerHeight.value === 0)
+  {
     return {};
   }
 
@@ -111,39 +114,56 @@ onMounted(async () =>
 {
   try
   {
+    // 类型断言，让TypeScript知道我们加载的是新结构
+    // @ts-ignore
+    const layoutData = layoutJson as FullLayoutData;
+
     // 1. 加载所有资产
-    await resourceManager.loadTileset({
-      id: 'terrain_main',
-      url: tilesetAssetUrl,
-      sourceTileSize: 16,
-      columns: 12,
-      spacing: 1,
-    });
-    // 可以在这里加载更多图集, e.g. await resourceManager.loadTileset({ id: 'characters', ... })
+    await registry()
 
-    // 2. 创建图层和GameMap
-    const w = 40; // 墙壁ID
-    const f = 0;  // 地板ID
+    // 2. 按渲染顺序创建所有图层类的实例
+    const layers = [];
+
+    // -- 渲染顺序 1: 背景瓦片 --
+    const w = kenney_roguelike_rpg_pack.tileItem.stone_floor, f = kenney_roguelike_rpg_pack.tileItem.wooden_floor;
     const backgroundLayout = createWalledRectangle(
-        layoutJson.meta.gridWidth,
-        layoutJson.meta.gridHeight,
-        w,
-        f
+        layoutData.meta.gridWidth,
+        layoutData.meta.gridHeight,
+        w, f
     );
-    const backgroundLayer = new TileLayer({
-      tilesetId: 'terrain_main',
+    layers.push(new TileLayer({
+      tilesetId: kenney_roguelike_rpg_pack.id,
       data: backgroundLayout,
-    });
+    }));
 
-    const gameObjects = layoutJson.objects
+    // -- 渲染顺序 2 (可选): 场图层 --
+    // 遍历所有场并为它们创建图层
+    for (const fieldName in layoutData.fields)
+    {
+      layers.push(new FieldLayer({
+        name: fieldName,
+        data: layoutData.fields[fieldName],
+      }));
+    }
+
+    // -- 渲染顺序 3 (可选): 粒子图层 --
+    // 遍历所有粒子层并为它们创建图层
+    for (const particleName in layoutData.particles)
+    {
+      layers.push(new ParticleLayer(layoutData.particles[particleName]));
+    }
+
+    // -- 渲染顺序 4: 实体对象 --
+    const gameObjects = layoutData.objects
         .map(createGameObject)
         .filter((o): o is GameObject => o !== null);
-    const objectLayer = new ObjectLayer(gameObjects);
+    layers.push(new ObjectLayer(gameObjects));
 
+    // 3. 创建 GameMap 实例
     gameMap.value = new GameMap({
-      gridWidth: layoutJson.meta.gridWidth,
-      gridHeight: layoutJson.meta.gridHeight,
-      layers: [backgroundLayer, objectLayer], // 按渲染顺序放入数组
+      gridWidth: layoutData.meta.gridWidth,
+      gridHeight: layoutData.meta.gridHeight,
+      layers: layers, // 将有序的图层数组传入
     });
 
   } catch (error)

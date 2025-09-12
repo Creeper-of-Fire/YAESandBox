@@ -1,18 +1,20 @@
 ﻿import {Tileset} from './Tileset';
 
+export type TileSetConfig = {
+    id: string;
+    url: string;
+    sourceTileSize: number;
+    columns: number;
+    spacing?: number;
+    margin?: number;
+}
+
 class ResourceManager
 {
     private tilesets = new Map<string, Tileset>();
     private imageCache = new Map<string, HTMLImageElement>();
 
-    public async loadTileset(config: {
-        id: string;
-        url: string;
-        sourceTileSize: number;
-        columns: number;
-        spacing?: number;
-        margin?: number;
-    }): Promise<Tileset>
+    public async loadTileset(config: TileSetConfig): Promise<Tileset>
     {
         if (this.tilesets.has(config.id))
         {
