@@ -29,6 +29,7 @@ import { resourceManager } from '#/game/ResourceManager';
 // --- Props ---
 const props = defineProps<{
   gameObject: GameObject;
+  highlight?: boolean;
 }>();
 
 const {gameObject} = toRefs(props);
@@ -55,6 +56,13 @@ const shapeConfig = computed(() =>
     stroke: config.stroke || 'transparent',
     strokeWidth: 2,
   };
+
+  // 如果高亮，添加描边
+  if (props.highlight) {
+    common.stroke = '#FFFFAA';
+    common.strokeWidth = 4;
+  }
+
   if (config.shape === 'rect')
   {
     return {
@@ -67,6 +75,9 @@ const shapeConfig = computed(() =>
   {
     return {
       ...common,
+      // 必须将圆心定位在对象边界框的中心
+      x: gameObject.value.size.width / 2,
+      y: gameObject.value.size.height / 2,
       radius: config.radius || gameObject.value.size.width / 2,
     };
   }
@@ -84,6 +95,13 @@ function getSpriteComponentConfig(component: SpriteComponent) {
     return {};
   }
 
+  const highlightEffect = props.highlight ? {
+    shadowColor: '#FFFFAA',
+    shadowBlur: 10,
+    shadowOpacity: 1,
+    shadowEnabled: true,
+  } : {};
+
   return {
     x: offset.x * TILE_SIZE,
     y: offset.y * TILE_SIZE,
@@ -91,6 +109,7 @@ function getSpriteComponentConfig(component: SpriteComponent) {
     width: TILE_SIZE,
     height: TILE_SIZE,
     crop: tileset.getTileCrop(tileId),
+    ...highlightEffect,
   };
 }
 

@@ -7,82 +7,14 @@
     {
       "obj_type": "TABLE",
       "visual_pos": [
-        27.0,
-        8.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
-        8
-      ],
-      "grid_size": [
-        2,
-        1
-      ]
-    },
-    {
-      "obj_type": "TABLE",
-      "visual_pos": [
-        23.0,
-        18.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        23,
-        18
-      ],
-      "grid_size": [
-        2,
-        1
-      ]
-    },
-    {
-      "obj_type": "TABLE",
-      "visual_pos": [
         15.0,
-        10.0
+        5.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         15,
-        10
-      ],
-      "grid_size": [
-        2,
-        1
-      ]
-    },
-    {
-      "obj_type": "TABLE",
-      "visual_pos": [
-        24.0,
-        3.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        24,
-        3
-      ],
-      "grid_size": [
-        2,
-        1
-      ]
-    },
-    {
-      "obj_type": "TABLE",
-      "visual_pos": [
-        11.0,
-        4.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        11,
-        4
+        5
       ],
       "grid_size": [
         2,
@@ -93,13 +25,13 @@
       "obj_type": "TABLE",
       "visual_pos": [
         3.0,
-        16.0
+        12.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         3,
-        16
+        12
       ],
       "grid_size": [
         2,
@@ -109,31 +41,14 @@
     {
       "obj_type": "TABLE",
       "visual_pos": [
-        8.0,
-        3.0
+        22.0,
+        12.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        8,
-        3
-      ],
-      "grid_size": [
-        2,
-        1
-      ]
-    },
-    {
-      "obj_type": "TABLE",
-      "visual_pos": [
-        25.0,
-        10.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        25,
-        10
+        22,
+        12
       ],
       "grid_size": [
         2,
@@ -144,12 +59,199 @@
       "obj_type": "TABLE",
       "visual_pos": [
         1.0,
+        5.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        1,
+        5
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        25.0,
+        14.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        25,
+        14
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        18.0,
+        3.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        18,
+        3
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        10.0,
+        4.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        10,
+        4
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        23.0,
+        14.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        23,
+        14
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        9.0,
+        15.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        9,
+        15
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        20.0,
+        11.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        20,
+        11
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        1.0,
+        14.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        1,
+        14
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        9.0,
+        10.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        9,
+        10
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        12.0,
+        1.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        12,
+        1
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        10.0,
+        5.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        10,
+        5
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        3.0,
         2.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        1,
+        3,
         2
       ],
       "grid_size": [
@@ -164,7 +266,7 @@
         18.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         2,
         18
@@ -177,13 +279,47 @@
     {
       "obj_type": "TABLE",
       "visual_pos": [
-        4.0,
+        24.0,
+        6.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        24,
+        6
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        2.0,
+        10.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        2,
+        10
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        21.0,
         1.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        4,
+        21,
         1
       ],
       "grid_size": [
@@ -194,14 +330,82 @@
     {
       "obj_type": "TABLE",
       "visual_pos": [
-        24.0,
-        8.0
+        25.0,
+        5.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        24,
-        8
+        25,
+        5
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        18.0,
+        13.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        18,
+        13
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        26.0,
+        17.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        26,
+        17
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        11.0,
+        18.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        11,
+        18
+      ],
+      "grid_size": [
+        2,
+        1
+      ]
+    },
+    {
+      "obj_type": "TABLE",
+      "visual_pos": [
+        3.0,
+        4.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        3,
+        4
       ],
       "grid_size": [
         2,
@@ -211,47 +415,13 @@
     {
       "obj_type": "CHAIR",
       "visual_pos": [
-        4.0,
-        15.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        4,
-        15
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        26.0,
-        9.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        26,
-        9
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        5.0,
+        13.0,
         2.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        5,
+        13,
         2
       ],
       "grid_size": [
@@ -262,82 +432,14 @@
     {
       "obj_type": "CHAIR",
       "visual_pos": [
-        25.0,
-        11.0
+        2.0,
+        4.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        25,
-        11
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        27.0,
-        9.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
-        9
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        25.0,
-        9.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        25,
-        9
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        12.0,
-        3.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        12,
-        3
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        25.0,
-        7.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        25,
-        7
+        2,
+        4
       ],
       "grid_size": [
         1,
@@ -348,13 +450,251 @@
       "obj_type": "CHAIR",
       "visual_pos": [
         1.0,
+        15.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        1,
+        15
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        2.0,
+        11.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        2,
+        11
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        3.0,
+        1.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        3,
+        1
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        22.0,
+        11.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        22,
+        11
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        10.0,
+        9.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        10,
+        9
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        19.0,
+        4.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        19,
+        4
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        4.0,
         3.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        1,
+        4,
         3
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        15.0,
+        6.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        15,
+        6
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        10.0,
+        11.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        10,
+        11
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        25.0,
+        4.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        25,
+        4
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        11.0,
+        17.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        11,
+        17
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        27.0,
+        18.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        27,
+        18
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        3.0,
+        13.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        3,
+        13
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        20.0,
+        10.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        20,
+        10
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        25.0,
+        13.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        25,
+        13
       ],
       "grid_size": [
         1,
@@ -365,13 +705,13 @@
       "obj_type": "CHAIR",
       "visual_pos": [
         9.0,
-        2.0
+        11.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         9,
-        2
+        11
       ],
       "grid_size": [
         1,
@@ -381,14 +721,14 @@
     {
       "obj_type": "CHAIR",
       "visual_pos": [
-        28.0,
-        7.0
+        10.0,
+        3.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        28,
-        7
+        10,
+        3
       ],
       "grid_size": [
         1,
@@ -398,13 +738,13 @@
     {
       "obj_type": "CHAIR",
       "visual_pos": [
-        8.0,
+        19.0,
         2.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        8,
+        19,
         2
       ],
       "grid_size": [
@@ -415,99 +755,14 @@
     {
       "obj_type": "CHAIR",
       "visual_pos": [
-        24.0,
-        7.0
+        10.0,
+        6.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        24,
-        7
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        24.0,
-        17.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        24,
-        17
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        2.0,
-        1.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        2,
-        1
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        15.0,
-        9.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        15,
-        9
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        2.0,
-        17.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        2,
-        17
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        4.0,
-        2.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        4,
-        2
+        10,
+        6
       ],
       "grid_size": [
         1,
@@ -518,13 +773,13 @@
       "obj_type": "CHAIR",
       "visual_pos": [
         25.0,
-        4.0
+        15.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         25,
-        4
+        15
       ],
       "grid_size": [
         1,
@@ -534,14 +789,14 @@
     {
       "obj_type": "CHAIR",
       "visual_pos": [
-        24.0,
-        9.0
+        25.0,
+        7.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        24,
-        9
+        25,
+        7
       ],
       "grid_size": [
         1,
@@ -551,65 +806,14 @@
     {
       "obj_type": "CHAIR",
       "visual_pos": [
-        12.0,
-        5.0
+        18.0,
+        2.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        12,
-        5
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        11.0,
-        3.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        11,
-        3
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        2.0,
-        3.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        2,
-        3
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "CHAIR",
-      "visual_pos": [
-        24.0,
-        4.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        24,
-        4
+        18,
+        2
       ],
       "grid_size": [
         1,
@@ -620,13 +824,64 @@
       "obj_type": "CHAIR",
       "visual_pos": [
         3.0,
-        17.0
+        11.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         3,
-        17
+        11
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        27.0,
+        16.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        27,
+        16
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        4.0,
+        5.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        4,
+        5
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        18.0,
+        14.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        18,
+        14
       ],
       "grid_size": [
         1,
@@ -637,12 +892,624 @@
       "obj_type": "CHAIR",
       "visual_pos": [
         23.0,
+        13.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        23,
+        13
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        9.0,
+        14.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        9,
+        14
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        11.0,
+        6.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        11,
+        6
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        20.0,
+        12.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        20,
+        12
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        21.0,
+        2.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        21,
+        2
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        9.0,
+        16.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        9,
+        16
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        26.0,
+        4.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        26,
+        4
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        3.0,
         17.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
+      "grid_pos": [
+        3,
+        17
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        26.0,
+        6.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        26,
+        6
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        22.0,
+        13.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        22,
+        13
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        10.0,
+        16.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        10,
+        16
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        21.0,
+        10.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        21,
+        10
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        1.0,
+        13.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        1,
+        13
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        23.0,
+        15.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
       "grid_pos": [
         23,
+        15
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        16.0,
+        4.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        16,
+        4
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        24.0,
+        15.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        24,
+        15
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        24.0,
+        7.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        24,
+        7
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        10.0,
+        14.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        10,
+        14
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        18.0,
+        4.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        18,
+        4
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        21.0,
+        12.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        21,
+        12
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        4.0,
+        13.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        4,
+        13
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        19.0,
+        12.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        19,
+        12
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        18.0,
+        12.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        18,
+        12
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        23.0,
+        11.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        23,
+        11
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        2.0,
+        15.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        2,
+        15
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        16.0,
+        6.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        16,
+        6
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        24.0,
+        5.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        24,
+        5
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        12.0,
+        17.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        12,
+        17
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        15.0,
+        4.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        15,
+        4
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        2.0,
+        9.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        2,
+        9
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        3.0,
+        3.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        3,
+        3
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        3.0,
+        9.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        3,
+        9
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        2.0,
+        13.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        2,
+        13
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        26.0,
+        18.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        26,
+        18
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        4.0,
+        11.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        4,
+        11
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        1.0,
+        4.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        1,
+        4
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        2.0,
+        17.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        2,
         17
       ],
       "grid_size": [
@@ -654,13 +1521,13 @@
       "obj_type": "CHAIR",
       "visual_pos": [
         4.0,
-        17.0
+        1.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         4,
-        17
+        1
       ],
       "grid_size": [
         1,
@@ -670,13 +1537,64 @@
     {
       "obj_type": "CHAIR",
       "visual_pos": [
-        25.0,
+        3.0,
+        5.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        3,
+        5
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        2.0,
+        6.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        2,
+        6
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        26.0,
+        15.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        26,
+        15
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "CHAIR",
+      "visual_pos": [
+        12.0,
         2.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        25,
+        12,
         2
       ],
       "grid_size": [
@@ -687,14 +1605,82 @@
     {
       "obj_type": "CHAIR",
       "visual_pos": [
-        16.0,
-        11.0
+        24.0,
+        13.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        16,
-        11
+        24,
+        13
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "WINDOW",
+      "visual_pos": [
+        11.0,
+        0.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        11,
+        0
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "WINDOW",
+      "visual_pos": [
+        17.0,
+        19.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        17,
+        19
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "WINDOW",
+      "visual_pos": [
+        29.0,
+        9.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        29,
+        9
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "WINDOW",
+      "visual_pos": [
+        20.0,
+        0.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        20,
+        0
       ],
       "grid_size": [
         1,
@@ -705,13 +1691,47 @@
       "obj_type": "WINDOW",
       "visual_pos": [
         18.0,
-        0.0
+        19.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         18,
-        0
+        19
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "WINDOW",
+      "visual_pos": [
+        0.0,
+        10.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        0,
+        10
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "WINDOW",
+      "visual_pos": [
+        0.0,
+        9.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        0,
+        9
       ],
       "grid_size": [
         1,
@@ -722,149 +1742,47 @@
       "obj_type": "WINDOW",
       "visual_pos": [
         29.0,
+        9.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        29,
+        9
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "WINDOW",
+      "visual_pos": [
+        29.0,
+        19.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        29,
+        19
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "WINDOW",
+      "visual_pos": [
+        0.0,
         18.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        29,
+        0,
         18
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "WINDOW",
-      "visual_pos": [
-        4.0,
-        19.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        4,
-        19
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "WINDOW",
-      "visual_pos": [
-        0.0,
-        14.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        0,
-        14
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "WINDOW",
-      "visual_pos": [
-        17.0,
-        0.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        17,
-        0
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "WINDOW",
-      "visual_pos": [
-        0.0,
-        5.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        0,
-        5
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "WINDOW",
-      "visual_pos": [
-        17.0,
-        19.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        17,
-        19
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "WINDOW",
-      "visual_pos": [
-        22.0,
-        19.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        22,
-        19
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "WINDOW",
-      "visual_pos": [
-        29.0,
-        11.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        29,
-        11
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "WINDOW",
-      "visual_pos": [
-        17.0,
-        19.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        17,
-        19
       ],
       "grid_size": [
         1,
@@ -874,14 +1792,31 @@
     {
       "obj_type": "TORCH",
       "visual_pos": [
-        3.0,
-        0.0
+        17.0,
+        3.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        3,
-        0
+        17,
+        3
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "TORCH",
+      "visual_pos": [
+        6.0,
+        18.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        6,
+        18
       ],
       "grid_size": [
         1,
@@ -892,13 +1827,13 @@
       "obj_type": "TORCH",
       "visual_pos": [
         26.0,
-        2.0
+        0.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         26,
-        2
+        0
       ],
       "grid_size": [
         1,
@@ -909,13 +1844,13 @@
       "obj_type": "TORCH",
       "visual_pos": [
         2.0,
-        11.0
+        3.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         2,
-        11
+        3
       ],
       "grid_size": [
         1,
@@ -925,14 +1860,14 @@
     {
       "obj_type": "TORCH",
       "visual_pos": [
-        22.0,
-        2.0
+        10.0,
+        0.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        22,
-        2
+        10,
+        0
       ],
       "grid_size": [
         1,
@@ -942,31 +1877,82 @@
     {
       "obj_type": "TORCH",
       "visual_pos": [
-        0.0,
-        2.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        0,
-        2
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "TORCH",
-      "visual_pos": [
-        12.0,
+        11.0,
         15.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        12,
+        11,
         15
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "TORCH",
+      "visual_pos": [
+        21.0,
+        0.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        21,
+        0
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "TORCH",
+      "visual_pos": [
+        6.0,
+        1.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        6,
+        1
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "TORCH",
+      "visual_pos": [
+        29.0,
+        2.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        29,
+        2
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "TORCH",
+      "visual_pos": [
+        1.0,
+        9.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        1,
+        9
       ],
       "grid_size": [
         1,
@@ -977,46 +1963,12 @@
       "obj_type": "TORCH",
       "visual_pos": [
         27.0,
-        17.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
-        17
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "TORCH",
-      "visual_pos": [
-        17.0,
-        1.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        17,
-        1
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "TORCH",
-      "visual_pos": [
-        28.0,
         14.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        28,
+        27,
         14
       ],
       "grid_size": [
@@ -1027,82 +1979,14 @@
     {
       "obj_type": "TORCH",
       "visual_pos": [
-        25.0,
-        0.0
+        27.0,
+        6.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        25,
-        0
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "TORCH",
-      "visual_pos": [
-        16.0,
-        2.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        16,
-        2
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "TORCH",
-      "visual_pos": [
-        28.0,
-        11.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        28,
-        11
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "TORCH",
-      "visual_pos": [
-        7.0,
-        10.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        7,
-        10
-      ],
-      "grid_size": [
-        1,
-        1
-      ]
-    },
-    {
-      "obj_type": "TORCH",
-      "visual_pos": [
-        3.0,
-        7.0
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        3,
-        7
+        27,
+        6
       ],
       "grid_size": [
         1,
@@ -1113,12 +1997,46 @@
       "obj_type": "TORCH",
       "visual_pos": [
         4.0,
+        17.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        4,
+        17
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "TORCH",
+      "visual_pos": [
+        12.0,
+        19.0
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        12,
+        19
+      ],
+      "grid_size": [
+        1,
+        1
+      ]
+    },
+    {
+      "obj_type": "TORCH",
+      "visual_pos": [
+        12.0,
         0.0
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        4,
+        12,
         0
       ],
       "grid_size": [
@@ -1129,505 +2047,479 @@
     {
       "obj_type": "GRIME_LARGE",
       "visual_pos": [
-        13.257501881442941,
-        4.3226790267819215
+        28.341852258344783,
+        16.622395770027463
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        13,
-        4
-      ]
-    },
-    {
-      "obj_type": "GRIME_LARGE",
-      "visual_pos": [
-        15.290553360696082,
-        9.325090987537056
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        15,
-        9
-      ]
-    },
-    {
-      "obj_type": "GRIME_LARGE",
-      "visual_pos": [
-        3.3634367948324826,
-        15.858991016611265
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        3,
-        15
-      ]
-    },
-    {
-      "obj_type": "GRIME_LARGE",
-      "visual_pos": [
-        3.5145020393770485,
-        17.557549259882443
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        3,
-        17
-      ]
-    },
-    {
-      "obj_type": "GRIME_LARGE",
-      "visual_pos": [
-        13.916915198262286,
-        7.50704084445836
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        13,
-        7
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        2.340316735238167,
-        3.354835757443386
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        2,
-        3
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        27.58899586545375,
-        3.031573045104461
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
-        3
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        26.533692829368892,
-        18.498314195963996
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        26,
-        18
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        25.094268206212433,
-        4.530167152707993
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        25,
-        4
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        26.103285290991977,
-        8.881885838357979
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        26,
-        8
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        2.531658108312341,
-        3.014388648856477
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        2,
-        3
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        25.150553506683284,
-        7.520436583973936
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        25,
-        7
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        2.9672241539495867,
-        4.6624290879159815
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        2,
-        4
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        2.8512406251278537,
-        5.7752775712968285
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        2,
-        5
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        27.82036623603838,
-        9.516961787669576
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
-        9
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        25.074380708583906,
-        13.081744773939517
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        25,
-        13
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        23.35718590963419,
-        16.323229398836673
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        23,
+        28,
         16
       ]
     },
     {
-      "obj_type": "ELF",
+      "obj_type": "GRIME_LARGE",
       "visual_pos": [
-        25.609156017927653,
-        5.134181409123228
+        11.208242486490402,
+        17.520061940863627
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        25,
-        5
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        26.864879018546322,
-        7.9806765876004135
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        26,
-        7
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        26.72718949617758,
-        17.197954632888468
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        26,
+        11,
         17
       ]
     },
     {
-      "obj_type": "ELF",
+      "obj_type": "GRIME_LARGE",
       "visual_pos": [
-        26.551733136959925,
-        3.7422056637020935
+        20.533664377337672,
+        10.372220152494064
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        26,
-        3
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        27.2055404620435,
-        11.395558203088452
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
-        11
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        26.679992395056537,
-        3.8110506290389163
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        26,
-        3
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        25.204924736882475,
-        18.470334343199315
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        25,
-        18
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        27.053389262217642,
-        10.34438689356668
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
+        20,
         10
       ]
     },
     {
-      "obj_type": "ELF",
+      "obj_type": "GRIME_LARGE",
       "visual_pos": [
-        26.121158800619774,
-        8.865526891570568
+        5.631565257097238,
+        1.403776270771155
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        26,
-        8
+        5,
+        1
+      ]
+    },
+    {
+      "obj_type": "GRIME_LARGE",
+      "visual_pos": [
+        6.533416323183587,
+        15.299775701816657
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        6,
+        15
       ]
     },
     {
       "obj_type": "ELF",
       "visual_pos": [
-        25.622762116431876,
-        5.014332741987337
+        27.689353424705008,
+        6.71497191895807
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        25,
-        5
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        2.374478140335181,
-        4.34502986960615
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        2,
-        4
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        26.526942046241537,
-        8.776877631793399
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        26,
-        8
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        25.64850952485354,
-        6.7292213019757865
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        25,
+        27,
         6
       ]
     },
     {
       "obj_type": "ELF",
       "visual_pos": [
-        26.139892297019912,
-        3.96032337410775
+        21.45166939514193,
+        3.4497765627147263
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        26,
+        21,
         3
       ]
     },
     {
       "obj_type": "ELF",
       "visual_pos": [
-        26.646603919971778,
-        7.096968917798546
+        12.270171461394218,
+        2.7236935091548777
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        26,
-        7
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        27.527025834517527,
-        11.407778302650813
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
-        11
-      ]
-    },
-    {
-      "obj_type": "ELF",
-      "visual_pos": [
-        3.857244907215675,
-        2.3911743636882035
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        3,
+        12,
         2
       ]
     },
     {
       "obj_type": "ELF",
       "visual_pos": [
-        27.932043268680562,
-        11.542575708205423
+        13.453354776984835,
+        3.6714538023563983
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        27,
-        11
+        13,
+        3
       ]
     },
     {
-      "obj_type": "DWARF",
+      "obj_type": "ELF",
       "visual_pos": [
-        23.939441214646028,
-        6.742034611813434
+        21.701328180106877,
+        3.4894688321075567
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        23,
+        21,
+        3
+      ]
+    },
+    {
+      "obj_type": "ELF",
+      "visual_pos": [
+        21.48349353461593,
+        2.771249101938042
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        21,
+        2
+      ]
+    },
+    {
+      "obj_type": "ELF",
+      "visual_pos": [
+        27.4297482191245,
+        6.635783474971668
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        27,
         6
       ]
     },
     {
-      "obj_type": "DWARF",
+      "obj_type": "ELF",
       "visual_pos": [
-        27.75056350741294,
-        6.299483660301227
+        27.42416636582228,
+        5.391486262917644
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         27,
-        6
+        5
+      ]
+    },
+    {
+      "obj_type": "ELF",
+      "visual_pos": [
+        20.203049961791873,
+        3.3804718133865026
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        20,
+        3
+      ]
+    },
+    {
+      "obj_type": "ELF",
+      "visual_pos": [
+        19.493324643983435,
+        4.297617338011625
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        19,
+        4
+      ]
+    },
+    {
+      "obj_type": "ELF",
+      "visual_pos": [
+        14.515062562138803,
+        1.582076045539144
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        14,
+        1
+      ]
+    },
+    {
+      "obj_type": "ELF",
+      "visual_pos": [
+        17.4234279349057,
+        4.478424343333136
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        17,
+        4
+      ]
+    },
+    {
+      "obj_type": "ELF",
+      "visual_pos": [
+        27.305994381877323,
+        5.4384092939904995
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        27,
+        5
+      ]
+    },
+    {
+      "obj_type": "ELF",
+      "visual_pos": [
+        14.668182731843265,
+        2.4018265576956384
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        14,
+        2
+      ]
+    },
+    {
+      "obj_type": "ELF",
+      "visual_pos": [
+        19.280000414150358,
+        2.64330498910483
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        19,
+        2
       ]
     },
     {
       "obj_type": "DWARF",
       "visual_pos": [
-        3.6337560750203997,
-        17.948815777641098
+        4.283729278590036,
+        10.645640028286959
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        3,
+        4,
+        10
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        10.201726042905719,
+        3.339690377297501
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        10,
+        3
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        12.469553462592746,
+        17.454771950434328
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        12,
         17
       ]
     },
     {
       "obj_type": "DWARF",
       "visual_pos": [
-        4.44132457842503,
-        3.080998016646219
+        19.758003038691154,
+        4.682531425210128
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
+      "grid_pos": [
+        19,
+        4
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        3.473019207423282,
+        13.511280238907311
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        3,
+        13
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        17.408937251694606,
+        5.5139396984754745
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        17,
+        5
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        3.782933687272694,
+        11.64345520812941
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        3,
+        11
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        1.682697954494887,
+        4.4888034784501
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        1,
+        4
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        26.497515088057188,
+        7.236563326319494
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        26,
+        7
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        2.6045869579398846,
+        16.488820747307614
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        2,
+        16
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        1.5543424267203803,
+        11.483911982019164
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        1,
+        11
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        18.743244551187153,
+        6.773146061108961
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        18,
+        6
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        3.64971856242665,
+        11.454937011033925
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        3,
+        11
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        27.432047242605748,
+        6.210823882718644
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        27,
+        6
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        19.38181919722496,
+        7.409879181090811
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        19,
+        7
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        6.613135709243684,
+        17.553036716471595
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        6,
+        17
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        4.424711813809332,
+        3.4865261456153367
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
       "grid_pos": [
         4,
         3
@@ -1636,245 +2528,11 @@
     {
       "obj_type": "DWARF",
       "visual_pos": [
-        16.03651139279969,
-        3.827577144778709
+        22.326017673934164,
+        14.562511660907647
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        16,
-        3
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        24.814479969024966,
-        9.681811000491212
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        24,
-        9
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        26.533007300894397,
-        6.46736075115497
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        26,
-        6
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        10.782190514953701,
-        2.1791589204093453
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        10,
-        2
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        5.422452211565389,
-        16.69212789263477
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        5,
-        16
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        7.661682995581517,
-        4.982375305869604
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        7,
-        4
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        10.936314697788355,
-        1.850766452370463
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        10,
-        1
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        27.02951610392727,
-        11.174649263695992
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
-        11
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        27.669982934700478,
-        18.66257613786358
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
-        18
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        27.61790532337681,
-        7.538307792742292
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        27,
-        7
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        13.598956833644609,
-        9.116549066476802
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        13,
-        9
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        8.337297578281479,
-        1.603436478359867
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        8,
-        1
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        21.506645425199636,
-        8.39547103306038
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        21,
-        8
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        7.270278003708889,
-        15.201686623655561
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        7,
-        15
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        17.593790964643084,
-        12.943276702577501
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        17,
-        12
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        21.057010052175464,
-        1.955612745823804
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        21,
-        1
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        5.892621196884784,
-        5.0707519445574984
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        5,
-        5
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        26.908427523873343,
-        7.472318431361044
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        26,
-        7
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        22.236680893905216,
-        14.251553955477418
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         22,
         14
@@ -1883,258 +2541,232 @@
     {
       "obj_type": "DWARF",
       "visual_pos": [
-        27.453884402845695,
-        9.736482519764037
+        12.261005470738082,
+        11.794425546161303
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        27,
+        12,
+        11
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        5.213422661746695,
+        10.609264934669664
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        5,
+        10
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        1.3970813398170432,
+        15.418905226565402
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        1,
+        15
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        26.577169270593913,
+        16.256992573170642
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        26,
+        16
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        20.512417202169175,
+        9.75718053298681
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        20,
         9
       ]
     },
     {
       "obj_type": "DWARF",
       "visual_pos": [
-        25.406230009878673,
-        5.690882227351277
+        27.619810533073235,
+        18.635428456415564
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        25,
-        5
+        27,
+        18
       ]
     },
     {
       "obj_type": "DWARF",
       "visual_pos": [
-        23.14139816468967,
-        17.16244598825503
+        20.374539416677198,
+        12.254152744463822
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        23,
-        17
+        20,
+        12
       ]
     },
     {
       "obj_type": "DWARF",
       "visual_pos": [
-        28.57631159202116,
-        14.65546874653478
+        4.444548629308549,
+        14.606717847830277
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        28,
+        4,
         14
       ]
     },
     {
       "obj_type": "DWARF",
       "visual_pos": [
-        5.427589546197396,
-        3.7146794363123647
+        5.428936600683371,
+        9.76932928031129
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         5,
-        3
+        9
       ]
     },
     {
       "obj_type": "DWARF",
       "visual_pos": [
-        14.690797572776372,
-        2.1297049884517305
+        24.450427030631964,
+        13.227747435733697
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        14,
-        2
-      ]
-    },
-    {
-      "obj_type": "DWARF",
-      "visual_pos": [
-        4.515488108455125,
-        7.31339669567835
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        4,
-        7
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        14.986037745062953,
-        5.867539699218138
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        14,
-        5
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        13.294884353119258,
-        6.44546488705183
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        13,
-        6
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        6.538532399912621,
-        11.931993315535577
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        6,
-        11
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        21.657617419012443,
-        13.92390354850642
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        21,
+        24,
         13
       ]
     },
     {
-      "obj_type": "MUSHROOM_PERSON",
+      "obj_type": "DWARF",
       "visual_pos": [
-        19.559322398022946,
-        10.168723612323491
+        19.76400912277731,
+        4.446572286202397
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         19,
+        4
+      ]
+    },
+    {
+      "obj_type": "DWARF",
+      "visual_pos": [
+        5.752945981506024,
+        10.598774435038601
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        5,
         10
       ]
     },
     {
       "obj_type": "MUSHROOM_PERSON",
       "visual_pos": [
-        15.581423041520091,
-        7.704176235154101
+        7.517108763834746,
+        17.548331843708134
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        15,
-        7
+        7,
+        17
       ]
     },
     {
       "obj_type": "MUSHROOM_PERSON",
       "visual_pos": [
-        6.715647865487586,
-        14.238028009617398
+        4.579574263253078,
+        15.529593222214883
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        6,
+        4,
+        15
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        22.46842973993528,
+        14.510124009432737
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        22,
         14
       ]
     },
     {
       "obj_type": "MUSHROOM_PERSON",
       "visual_pos": [
-        11.385625422810671,
-        3.8174058237321407
+        7.398427375544141,
+        16.254159525946836
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        11,
-        3
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        14.896815313892247,
-        11.151075492645308
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        14,
-        11
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        14.631395376510373,
-        7.592743034763396
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        14,
-        7
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        24.265072722884625,
-        16.81163402305057
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        24,
+        7,
         16
       ]
     },
     {
       "obj_type": "MUSHROOM_PERSON",
       "visual_pos": [
-        19.500014434980116,
-        7.9607112692119655
+        5.590372372121735,
+        17.399180715827168
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        19,
-        7
+        5,
+        17
       ]
     },
     {
       "obj_type": "MUSHROOM_PERSON",
       "visual_pos": [
-        7.267755072467995,
-        6.871791787166143
+        7.271516590048415,
+        6.683365888863319
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         7,
         6
@@ -2143,756 +2775,847 @@
     {
       "obj_type": "MUSHROOM_PERSON",
       "visual_pos": [
-        27.843260056048692,
-        9.71960297336452
+        7.4281917173232195,
+        2.6851181269111697
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
+      "grid_pos": [
+        7,
+        2
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        21.729265833889905,
+        13.613294225928094
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        21,
+        13
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        26.27371262917549,
+        12.316029932398658
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        26,
+        12
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        26.40731133549538,
+        16.474712046049703
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        26,
+        16
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        27.289461875003912,
+        14.668329961859067
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
       "grid_pos": [
         27,
-        9
+        14
       ]
     },
     {
       "obj_type": "MUSHROOM_PERSON",
       "visual_pos": [
-        13.169574017970195,
-        3.367709956462434
+        11.471138294779749,
+        15.312947678426868
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
-        13,
-        3
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        12.95828421711249,
-        9.636349948920316
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        12,
-        9
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        19.340151719303922,
-        9.616411739190154
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        19,
-        9
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        4.155146391611037,
-        8.529241002521049
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        4,
-        8
-      ]
-    },
-    {
-      "obj_type": "MUSHROOM_PERSON",
-      "visual_pos": [
-        5.429425752693099,
-        15.194390061909655
-      ],
-      "visual_angle": 0.0,
-      "uid": 2827672979488,
-      "grid_pos": [
-        5,
+        11,
         15
       ]
     },
     {
       "obj_type": "MUSHROOM_PERSON",
       "visual_pos": [
-        26.582737457045177,
-        7.489471157500774
+        26.454334121781674,
+        12.722938754940529
       ],
       "visual_angle": 0.0,
-      "uid": 2827672979488,
+      "uid": 2589133316016,
       "grid_pos": [
         26,
+        12
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        27.48905476215401,
+        15.50361640201811
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        27,
+        15
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        11.36078913721692,
+        7.376885705862205
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        11,
         7
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        23.494556398941135,
+        9.689381509269106
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        23,
+        9
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        22.203962849170807,
+        10.796158944200531
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        22,
+        10
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        13.73420725111453,
+        7.298645641422312
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        13,
+        7
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        23.670754871517648,
+        9.366695778040633
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        23,
+        9
+      ]
+    },
+    {
+      "obj_type": "MUSHROOM_PERSON",
+      "visual_pos": [
+        24.742467311835423,
+        11.53488902194352
+      ],
+      "visual_angle": 0.0,
+      "uid": 2589133316016,
+      "grid_pos": [
+        24,
+        11
       ]
     }
   ],
   "fields": {
     "light_level": [
       [
-        0.28743218150905153,
-        0.3768179012152109,
-        0.44086518086048043,
-        0.48015285250955525,
-        0.4994511332860746,
-        0.5057455467948262,
-        0.5057126936760905,
-        0.5036045305608691,
-        0.5002672230153253,
-        0.4935147930053767,
-        0.479546446561456,
-        0.4547581431799177,
-        0.41725146612249653,
-        0.3675541757312912,
-        0.30841910820486707,
-        0.24391457028647506,
-        0.1782351784137616,
-        0.11468452678765986,
-        0.055130466181385576,
-        0.0
+        0.0,
+        0.11620063934826248,
+        0.22618842962673383,
+        0.3252092831676433,
+        0.41040404790691287,
+        0.4807696406160131,
+        0.5364740519681058,
+        0.5779803075358053,
+        0.6055251556086271,
+        0.6192406292605015,
+        0.6197496385300421,
+        0.6087100941191291,
+        0.588774868562385,
+        0.5627985453459803,
+        0.532628609807946,
+        0.4981425919368258,
+        0.45712440948013744,
+        0.406150480404811,
+        0.3421295938671506,
+        0.26380973384040773
       ],
       [
-        0.3922232345983107,
-        0.48716137234997425,
-        0.5536737591588131,
-        0.5933311847141678,
-        0.6122144287302309,
-        0.618460462789742,
-        0.6193367217465308,
-        0.6189496245595453,
-        0.6173629428606002,
-        0.6112859635318342,
-        0.5958886486008366,
-        0.5669512445043468,
-        0.5225491492526292,
-        0.4637534169799125,
-        0.3942474450476923,
-        0.31915282761400093,
-        0.24358580946016795,
-        0.17146814031352858,
-        0.1049246470818938,
-        0.044322830316102624
+        0.10518931320469095,
+        0.23035112863856042,
+        0.3450816254551312,
+        0.44421552322424696,
+        0.5252636219500759,
+        0.5882740049112917,
+        0.6348827239807636,
+        0.6671186569831915,
+        0.6866227196285155,
+        0.6946307038657867,
+        0.6925336827090054,
+        0.6824177044300708,
+        0.6669783508244337,
+        0.6486259427745337,
+        0.6281795817196993,
+        0.6039160970989045,
+        0.5716493137996721,
+        0.5260075648351172,
+        0.4624470520652274,
+        0.3791446131461688
       ],
       [
-        0.4694701522254575,
-        0.5668537435147392,
-        0.6339390835574915,
-        0.673377357412402,
-        0.6924330346559464,
-        0.7001068103318496,
-        0.7039026484056589,
-        0.7074593432419619,
-        0.7098391187198974,
-        0.706555073157485,
-        0.6917636083446889,
-        0.660701412657391,
-        0.6114877542260013,
-        0.5457597062105979,
-        0.46808860835161964,
-        0.38455322203820363,
-        0.30107478274805805,
-        0.22209434059964142,
-        0.14994050251085697,
-        0.08492223166233756
+        0.2108638237024693,
+        0.3413721470637644,
+        0.45628067465588945,
+        0.5503555449175892,
+        0.6219206689874452,
+        0.6725459138059559,
+        0.7057751313402499,
+        0.7255760648917474,
+        0.7352770414769986,
+        0.7373865474108329,
+        0.734088723990442,
+        0.7277557903095689,
+        0.7208202814522858,
+        0.7148186352911146,
+        0.7090582769799482,
+        0.6997577904680486,
+        0.6803943243759525,
+        0.643409403145706,
+        0.5827034415665208,
+        0.49590073122934974
       ],
       [
-        0.5105237073275516,
-        0.6070454742003515,
-        0.6729038788800238,
-        0.7117732372916367,
-        0.7318194786361245,
-        0.7425122201077167,
-        0.7512162026761846,
-        0.7608476669782217,
-        0.7693741229214405,
-        0.7711577121635522,
-        0.7594569707352715,
-        0.7290694265795372,
-        0.6781851529700605,
-        0.6089260114081545,
-        0.5265730853758006,
-        0.43793275040867924,
-        0.3495119169559522,
-        0.26611673649076517,
-        0.19022048642880957,
-        0.12210786259373259
+        0.31397076695998055,
+        0.4455114036448526,
+        0.5555082674769739,
+        0.6391008992061049,
+        0.6959200176863609,
+        0.7295136012783906,
+        0.7456958992553651,
+        0.75062401550098,
+        0.7494541125527724,
+        0.7459974251961152,
+        0.7431400606089343,
+        0.7433196370749627,
+        0.7483711447896259,
+        0.7585612003917139,
+        0.771306033504654,
+        0.780477146291419,
+        0.7770573810574828,
+        0.751268630416973,
+        0.6955044703294487,
+        0.6069134045333751
       ],
       [
-        0.5119662003879438,
-        0.6045909825131386,
-        0.6677590888144604,
-        0.7059642318994906,
-        0.7278713336500681,
-        0.7429752004935639,
-        0.7581681665412067,
-        0.7755106871093054,
-        0.7919440778355666,
-        0.800876029658623,
-        0.7948798961281304,
-        0.7684369299429844,
-        0.719775223991157,
-        0.6513037331652362,
-        0.5686955667800471,
-        0.4791274919934257,
-        0.3893834202774514,
-        0.3044416184668086,
-        0.22687006501909746,
-        0.15700679273825532
+        0.41228276648503825,
+        0.5404500453426946,
+        0.6406290074288543,
+        0.7088168382412962,
+        0.7464298369017979,
+        0.7593734813896217,
+        0.7559653084142604,
+        0.7446399124293686,
+        0.7323520855375641,
+        0.7240942693884597,
+        0.7232516953733021,
+        0.7320519898411203,
+        0.7514133330780365,
+        0.7800289823986913,
+        0.8132126167735377,
+        0.8424285378793923,
+        0.8562643512550869,
+        0.8429267299422805,
+        0.7935176915017177,
+        0.7048433490226267
       ],
       [
-        0.47693519599172524,
-        0.5633205078433687,
-        0.6228173658778997,
-        0.6604224762470463,
-        0.6848439096102342,
-        0.7051847493109152,
-        0.7276365214328048,
-        0.7534283161944304,
-        0.7787145502722621,
-        0.7962869196032518,
-        0.7983273486138577,
-        0.7791298648071617,
-        0.7368653731684549,
-        0.6739242965178622,
-        0.5959324241728529,
-        0.5099751046006301,
-        0.4227382871496445,
-        0.33915875242963833,
-        0.26186834247301854,
-        0.19138028414673236
+        0.5043769318802611,
+        0.6253082446519315,
+        0.7116489623755675,
+        0.7607063406729997,
+        0.7760728041931926,
+        0.7662569422808002,
+        0.7421508973980054,
+        0.7143856787288863,
+        0.6915286621711101,
+        0.6795064972175691,
+        0.6819240192882264,
+        0.7005097475236352,
+        0.7350035581412027,
+        0.7823515702804651,
+        0.8357457954042397,
+        0.8844170557879191,
+        0.9149000208175588,
+        0.9138029371432911,
+        0.8712928757934073,
+        0.7840087801613103
       ],
       [
-        0.41492935630525035,
-        0.49371537805874743,
-        0.5490710106014696,
-        0.5861240164484687,
-        0.6131980867884531,
-        0.6386911825484893,
-        0.6680188558566204,
-        0.7017725668780105,
-        0.7357117726812586,
-        0.7624613822536233,
-        0.7741604495677177,
-        0.765042124097183,
-        0.7330750722332232,
-        0.6802480794962956,
-        0.6116185924267361,
-        0.5336536925852831,
-        0.45253064165969725,
-        0.37292665460743274,
-        0.2975262868937785,
-        0.22717172449288872
+        0.5891728041337951,
+        0.7000663138596744,
+        0.7699841218923907,
+        0.7978870414720447,
+        0.7897773107291779,
+        0.7568358443152804,
+        0.7124310435701997,
+        0.6691644179250544,
+        0.6369202890024864,
+        0.6222452301767879,
+        0.6286660843015132,
+        0.6571601852507544,
+        0.7061208370674228,
+        0.7707154734393058,
+        0.8421706600541755,
+        0.9078437801159097,
+        0.9527315249221234,
+        0.9623959613339098,
+        0.9265051798240251,
+        0.8417190654861773
       ],
       [
-        0.34007482922666366,
-        0.4110089361528504,
-        0.46220307780164877,
-        0.4985506249509493,
-        0.52766599670903,
-        0.5570913939603768,
-        0.5915692793733842,
-        0.6314027892342217,
-        0.6724599399681653,
-        0.707710888410462,
-        0.7296212771814237,
-        0.7324810024535425,
-        0.7138866813025648,
-        0.6750141379617819,
-        0.6198096405720939,
-        0.5535851899326673,
-        0.48160056771761656,
-        0.4080646304476149,
-        0.3357135422080565,
-        0.2658774388550896
+        0.6652535913449062,
+        0.7646782207790158,
+        0.8173366155753148,
+        0.8240112545375723,
+        0.7931373351135087,
+        0.7384360247094964,
+        0.6754949863810144,
+        0.6185590655219911,
+        0.5784893588093002,
+        0.5621431991182573,
+        0.5727203888167688,
+        0.6102823339410921,
+        0.6718262040939033,
+        0.750845016936641,
+        0.8368887080497344,
+        0.915910062434644,
+        0.9719540748753706,
+        0.9901198268705323,
+        0.9600095925753636,
+        0.8784670520946829
       ],
       [
-        0.26833142737435456,
-        0.3322340504912401,
-        0.37959717891542344,
-        0.41477009831148526,
-        0.44448340602107017,
-        0.47546317499813257,
-        0.5120552658481764,
-        0.5547429008336316,
-        0.6000610566877971,
-        0.6418424297775922,
-        0.6732312769633728,
-        0.6886781336320703,
-        0.6852449009123116,
-        0.662915924704964,
-        0.6240354515117577,
-        0.572280810152376,
-        0.5116317830554687,
-        0.44564253504364537,
-        0.37709304532727367,
-        0.30792806007505374
-      ],
-      [
-        0.2144112791282147,
-        0.27301310373776666,
-        0.3171344424625678,
-        0.3503530715307327,
-        0.37850296368420844,
-        0.40771381078815,
-        0.4423511537909244,
-        0.4836121549329575,
-        0.5292485031876545,
-        0.574419248304599,
-        0.6132438010217296,
-        0.6404183754688366,
-        0.6523464058015784,
-        0.6475370182656518,
-        0.6263698031786846,
-        0.5905353478877572,
-        0.5424639541014268,
-        0.4849050458342672,
-        0.4206498998616677,
-        0.3523121176580945
-      ],
-      [
-        0.1891607673212654,
-        0.2448437725811194,
-        0.2865014449672037,
-        0.31679883607223913,
-        0.34079921897152754,
-        0.36439137068941274,
-        0.3924586298527435,
-        0.42744783862100644,
-        0.4688071335629659,
-        0.5133813980204972,
-        0.556474761621919,
-        0.5930906399563288,
-        0.6189140244745457,
-        0.6308394418019587,
-        0.6271094581947778,
-        0.6072616695013405,
-        0.5720403084427178,
-        0.5232895591777121,
-        0.46374199582226905,
-        0.39663105283204436
-      ],
-      [
-        0.19789431196479576,
-        0.2533626715055419,
-        0.29346202682155625,
-        0.3198789976187929,
-        0.33712409972690194,
-        0.3512683136887838,
-        0.3682196533035967,
-        0.3921467177668307,
-        0.4245524327707617,
-        0.464187546657871,
-        0.5076447944378144,
-        0.5502702554950362,
-        0.5870468590931309,
-        0.6132840595320828,
-        0.6251359295286174,
-        0.6200358717243493,
-        0.5970594624941118,
-        0.557104023886642,
-        0.5027338384608205,
-        0.4376399530268601
-      ],
-      [
-        0.2398548857382012,
-        0.29776259615957806,
-        0.33725927676469436,
-        0.3590478521098562,
-        0.36734003446152125,
-        0.36880223701990333,
-        0.37080583831414926,
-        0.3795899166602928,
-        0.3989133732533322,
-        0.42949865957064476,
-        0.4692230426806669,
-        0.5137855233670731,
-        0.5575571986950275,
-        0.5944528225985322,
-        0.6187955328172721,
-        0.6261668997165046,
-        0.614138831135371,
-        0.5826809732557894,
-        0.5340511233878239,
-        0.47214046465101334
-      ],
-      [
-        0.30876502108583154,
-        0.37134322468759084,
-        0.41114178565625303,
-        0.42792303438963175,
-        0.4258379025855961,
-        0.4124795355856767,
-        0.39698493178919414,
-        0.38784315723784724,
-        0.3910963668840491,
-        0.40935636942693315,
-        0.4416864282388882,
-        0.4841275064657792,
-        0.53058589325803,
-        0.5738931804918551,
-        0.6069545861761824,
-        0.623903687880833,
-        0.621086624505204,
-        0.597618560638039,
-        0.5553064593708884,
-        0.49793314870552774
-      ],
-      [
-        0.3943350022463233,
-        0.46308506289180074,
-        0.5039293277040799,
-        0.5157737657868108,
-        0.5028925874986638,
-        0.4740025696610757,
-        0.4401259499504532,
-        0.41198853619156844,
-        0.3977733219025327,
-        0.401774513771181,
-        0.4240729669336335,
-        0.4610246250553941,
-        0.5062469474681202,
-        0.5518595766429418,
-        0.5898364833754993,
-        0.6133389627613878,
-        0.6178238773414118,
-        0.6016651341545084,
-        0.5660966552178612,
-        0.5144932074243634
-      ],
-      [
-        0.48450481808972645,
-        0.5600325614841628,
-        0.6024211275095273,
-        0.6098404757585685,
-        0.5867998922698207,
-        0.5431808936946205,
-        0.49181599879961563,
-        0.4454684276789192,
-        0.41417595030379134,
-        0.40361955557461976,
-        0.4146882530002393,
-        0.44401358334816,
-        0.48509619568909956,
-        0.5297064493732365,
-        0.5693585536710184,
-        0.5967030839688002,
-        0.6066432400729452,
-        0.5969473510436776,
-        0.5682024755597087,
-        0.5231434159535066
-      ],
-      [
-        0.5680199291654034,
-        0.6500631703485081,
-        0.6942200346074044,
-        0.6980743712437925,
-        0.6664133725746213,
-        0.6101843366329623,
-        0.5437896209724699,
-        0.48168502813436703,
-        0.4353797019930156,
-        0.4115994349502757,
-        0.4118171991202612,
-        0.43288791012717753,
-        0.4683312828189931,
-        0.5098624341916876,
-        0.5489170652828039,
-        0.5780109297514129,
-        0.5917783024727771,
-        0.5875229653122922,
-        0.5651766932620489,
-        0.5267129175868233
-      ],
-      [
-        0.6367206439961229,
-        0.7243650563504107,
-        0.7702733418443337,
-        0.771612909427439,
-        0.7334450477991403,
-        0.667593443628545,
-        0.5896904499563059,
-        0.5154633307928724,
-        0.457471894454908,
-        0.42314018789250796,
-        0.4143047342502174,
-        0.4279730884396412,
-        0.45775680615131215,
-        0.49549938962046347,
-        0.5328015115196781,
-        0.5622909910874492,
-        0.5785363553980719,
-        0.5785100137518441,
-        0.5615497896868101,
-        0.5288745458209584
-      ],
-      [
-        0.6868370473129246,
-        0.7788468455370968,
-        0.8263273657202598,
-        0.8262076100000619,
-        0.7838062359944675,
-        0.7116124786526005,
-        0.6261348953521932,
-        0.5439559661883182,
-        0.47828912704987936,
-        0.4369392147130105,
-        0.4218976829487419,
-        0.4302254254944874,
-        0.45561682484028854,
-        0.4900974861117796,
-        0.5255228591027011,
-        0.5547393269739199,
-        0.5723631038837196,
-        0.5751536609627347,
-        0.561979214961488,
-        0.5334325342739819
-      ],
-      [
-        0.7187982135704692,
-        0.8139429825838647,
-        0.8627447351028,
-        0.8620706216721155,
-        0.8175000497939147,
-        0.7420204373196088,
-        0.6527258995303833,
-        0.5667112019632063,
-        0.4975153970418808,
-        0.45305411933173484,
-        0.4352745457667632,
-        0.441151892494998,
-        0.4643645925509959,
-        0.4970463856081943,
-        0.5312559858938927,
-        0.5600408887087616,
-        0.5781006977459557,
-        0.5820864285364918,
-        0.5705714728373054,
-        0.5437497332128788
-      ],
-      [
-        0.7355901500575817,
-        0.8328537170903045,
-        0.8827267989017664,
-        0.8821834582978885,
-        0.8371061863670228,
-        0.7608930799909148,
-        0.6710371739684449,
-        0.5849081243755209,
-        0.5161273164242205,
-        0.472498062211128,
-        0.45572417316775377,
-        0.46250969373755024,
-        0.48633404247070183,
-        0.5192589894152336,
-        0.5533875284842701,
-        0.5818631230406826,
-        0.5994535273131038,
-        0.6028001459538905,
-        0.5903939130710404,
-        0.562326071674
-      ],
-      [
-        0.7403154831598158,
-        0.8389271697448312,
-        0.8896637606290536,
-        0.8897633569562767,
-        0.8454877468179068,
-        0.7706307276766857,
-        0.6829905878544668,
-        0.6000646514314185,
-        0.5353798423110523,
-        0.4964339191059357,
-        0.4844788083514122,
-        0.49571961621651617,
-        0.5231911881152844,
-        0.558635506349451,
-        0.5939818393699162,
-        0.6223243813407611,
-        0.638467742796558,
-        0.6391503007891798,
-        0.6230196749858046,
-        0.5903988093251522
-      ],
-      [
-        0.7339951788929221,
-        0.8333014003593273,
-        0.8847448038472293,
-        0.8859682525594138,
-        0.8436929106164743,
-        0.772116582787017,
-        0.6892839385787017,
-        0.6127073141125869,
-        0.5556657834865413,
-        0.5251643846805392,
-        0.5217837522128145,
-        0.540980696395852,
-        0.5750770407409476,
-        0.615231946616248,
-        0.6529807835915178,
-        0.6812342505167803,
-        0.694822058251357,
-        0.690707021188578,
-        0.6679480862702072,
-        0.6274404925240907
-      ],
-      [
-        0.7145771544461419,
-        0.8138349542581411,
-        0.8658621055221022,
-        0.8688218471723604,
-        0.8299332687644182,
-        0.7637580976250883,
-        0.6884824673930744,
-        0.6214839790204265,
-        0.5756157632503006,
-        0.5571918060427403,
-        0.5659047803632792,
-        0.5962310533725713,
-        0.6395432210294733,
-        0.6862009631697021,
-        0.7271818677405602,
-        0.7551367042697424,
-        0.7649563305054842,
-        0.7539819217071813,
-        0.7219363595130057,
-        0.6705972902442457
-      ],
-      [
-        0.6775878027735458,
-        0.7757850784939913,
-        0.8282666528143843,
-        0.8337939645710665,
-        0.8000375107400333,
-        0.7417700679258091,
-        0.6770992079919962,
-        0.6230244751310994,
-        0.5917395510671779,
-        0.5886588385333598,
-        0.6124037746294511,
-        0.6563076030747357,
-        0.7106523656480562,
-        0.764889608423597,
-        0.8093826996966245,
-        0.8365378353462812,
-        0.8414039552809275,
-        0.8218722187093391,
-        0.7785513461241664,
-        0.7143373097318121
-      ],
-      [
-        0.6181293105867478,
-        0.7139153195030984,
-        0.7666582597332087,
-        0.7757447811411108,
-        0.7491415953153916,
-        0.701537470145578,
-        0.6505990674401667,
-        0.6125948529092664,
-        0.5987721897908048,
-        0.6134503482382764,
-        0.6540717210540794,
-        0.7127872388311051,
-        0.7787981880915278,
-        0.8406958608056075,
-        0.888313384436058,
-        0.913932603302408,
-        0.9129108927255588,
-        0.8838531296459899,
-        0.8284059946560517,
-        0.750698955309057
-      ],
-      [
-        0.5333384084628063,
-        0.6250982248209116,
-        0.6777834298461547,
-        0.6913742614831941,
-        0.6738773452390288,
-        0.6394800887943425,
-        0.6049317027817818,
-        0.58533996423336,
-        0.590702140406824,
-        0.624098955759744,
-        0.6818021113884357,
-        0.7549037922018714,
-        0.8317183706279977,
-        0.9002022386127364,
-        0.949887341999799,
-        0.9731434029496449,
-        0.9658120449597022,
-        0.9273300036023031,
-        0.8604234711047045,
-        0.7704121769401671
-      ],
-      [
-        0.4242485690076094,
-        0.5102996414444734,
-        0.56243825668854,
-        0.581149918810077,
-        0.5741621442488715,
-        0.5546858618994155,
-        0.5380376010323359,
-        0.5377301073315162,
-        0.5622480987768741,
-        0.6133830479763701,
-        0.6863838465127775,
-        0.7715786532981499,
-        0.8567680278941026,
-        0.9296591538578534,
-        0.9798283481188604,
+        0.7303498460897294,
+        0.8183252978809848,
+        0.8546953501113891,
+        0.8420125604157642,
+        0.790926785891762,
+        0.7173597978865096,
+        0.6387253213745601,
+        0.570530450969214,
+        0.5242907003286373,
+        0.506935138920437,
+        0.5211921576149431,
+        0.5661679352135349,
+        0.637546069659763,
+        0.7273692829763021,
+        0.8238847697873749,
+        0.9121418419865156,
+        0.9757958058370275,
         1.0,
-        0.9866600682957601,
-        0.9401117600451572,
-        0.8640639366067061,
-        0.7648116475243942
+        0.97464506606941,
+        0.89685962311052
       ],
       [
-        0.2962960962559739,
-        0.3751436435333227,
-        0.4260779569169621,
-        0.4499577449891088,
-        0.4539072741507624,
-        0.44971626579023655,
-        0.4508122015938471,
-        0.46875943797026254,
-        0.5103676286403062,
-        0.5762061087477702,
-        0.6607817724063775,
-        0.7540932062984996,
-        0.8439317940327149,
-        0.9182453895379433,
-        0.9670589567614669,
-        0.9837199811142863,
-        0.965461817268643,
-        0.9133820938194351,
-        0.83193666171034,
-        0.7280318534558818
+        0.7813554782020773,
+        0.8592315302038357,
+        0.8819248774752421,
+        0.8534737504294936,
+        0.786281940465604,
+        0.6979389945508319,
+        0.6071844623775863,
+        0.530392416474681,
+        0.47947193850698755,
+        0.46129520524925716,
+        0.478109716720186,
+        0.5281680345534253,
+        0.6060530064912555,
+        0.7026810100078079,
+        0.8054180031461501,
+        0.8988911775238897,
+        0.9668433753688149,
+        0.9948744641870244,
+        0.9733932660969578,
+        0.8998314872464479
       ],
       [
-        0.15831574876063728,
-        0.22888768473549226,
-        0.27784979403726745,
-        0.3062795983411175,
-        0.32042790103881313,
-        0.3303323486032739,
-        0.3472215282541081,
-        0.38050976275369114,
-        0.4353068938021501,
-        0.511142901893693,
-        0.6021566649634115,
-        0.6985236283417764,
-        0.7885796692775457,
-        0.8610236424918739,
-        0.9067188952830847,
-        0.9198525142110929,
-        0.8984241439792806,
-        0.8441502932568046,
-        0.7618928074111668,
-        0.658715120469654
+        0.8150392792628656,
+        0.8852224903187569,
+        0.8981331947740221,
+        0.8588028971705925,
+        0.7807222485718704,
+        0.6824626058319448,
+        0.583519029298143,
+        0.5007520963674937,
+        0.44628369663830897,
+        0.4269183182497868,
+        0.4445444626695279,
+        0.49679013550219814,
+        0.5774593454528524,
+        0.6767405184976845,
+        0.781561980683255,
+        0.8765683846907285,
+        0.9459664808747021,
+        0.9760608670658462,
+        0.957881774716984,
+        0.8891028255169162
+      ],
+      [
+        0.8292729130087154,
+        0.8948432410592433,
+        0.9026281740997254,
+        0.8580176319488271,
+        0.7747931254458974,
+        0.671739093388491,
+        0.5685146452348739,
+        0.48212266537771226,
+        0.42479305206054424,
+        0.4033461246312884,
+        0.4195287470623797,
+        0.47065882950658877,
+        0.550150332975793,
+        0.6479009041988035,
+        0.7508448736589537,
+        0.8440389419968245,
+        0.9124456558412131,
+        0.9432293056472952,
+        0.9280536651429862,
+        0.8647228979951235
+      ],
+      [
+        0.8242760900807022,
+        0.8885276597211383,
+        0.8959632444466764,
+        0.8516552189559032,
+        0.7688654831133107,
+        0.6658384945964362,
+        0.5618464497463623,
+        0.47374464374825415,
+        0.41382225479704315,
+        0.3890476649956977,
+        0.4012800175675985,
+        0.44786432910532675,
+        0.5222212243262109,
+        0.6143857785276079,
+        0.7117137245526114,
+        0.8000213494085406,
+        0.8652598772469207,
+        0.8955512659103845,
+        0.8831671308160742,
+        0.8259249754778916
+      ],
+      [
+        0.8032688373073495,
+        0.8692170334692845,
+        0.8805053945717982,
+        0.8412930804894178,
+        0.7636311700679937,
+        0.6645984702104144,
+        0.5626360685419414,
+        0.47423058483590036,
+        0.41170931734776783,
+        0.3823141577288557,
+        0.3882396884444351,
+        0.427149135553108,
+        0.4928103437831535,
+        0.5757613535126228,
+        0.6641300310198863,
+        0.7447803761948967,
+        0.8048405927797119,
+        0.8334678830650915,
+        0.8235252305104667,
+        0.7727635933316187
+      ],
+      [
+        0.7721222567568596,
+        0.8420458781383832,
+        0.8601924336711598,
+        0.8294075668231058,
+        0.7600821481833584,
+        0.6677296005396615,
+        0.569676735188593,
+        0.4818955680204597,
+        0.4167267163303451,
+        0.38175187293186097,
+        0.3796342708780914,
+        0.40854259657056,
+        0.4628232056640294,
+        0.5337733965506835,
+        0.6105426743412615,
+        0.6812497483901463,
+        0.7343399497638756,
+        0.7600763072302666,
+        0.7519302552284789,
+        0.7075706498255984
+      ],
+      [
+        0.738042484793167,
+        0.8131581556625108,
+        0.839572551479183,
+        0.818690643160607,
+        0.7591120090661772,
+        0.6746664662220792,
+        0.5814683582625645,
+        0.49489750408409455,
+        0.4272514623447706,
+        0.3864221970957232,
+        0.3755488284819376,
+        0.3933573219572,
+        0.4348668428224165,
+        0.4922553182000617,
+        0.5558182073579143,
+        0.6150342401498753,
+        0.6597430694226302,
+        0.681369355413622,
+        0.6740424769881116,
+        0.6354023656038649
+      ],
+      [
+        0.7077808880812072,
+        0.7881507242036183,
+        0.8226017120841628,
+        0.8112593140261519,
+        0.7611231309386312,
+        0.68449478601092,
+        0.5963461367204523,
+        0.5114355401386946,
+        0.4419123667795463,
+        0.3958431868140912,
+        0.3767215966842416,
+        0.3837499759441748,
+        0.41258194864248476,
+        0.45626471414805514,
+        0.5062363793936787,
+        0.5533313838869048,
+        0.5887849944093322,
+        0.6052081575981633,
+        0.5974529533125312,
+        0.5632380524674931
+      ],
+      [
+        0.6860837610570937,
+        0.7708166479432655,
+        0.8117890672868155,
+        0.8082399875690512,
+        0.7660086286050558,
+        0.696225113267527,
+        0.6129032465562041,
+        0.5301729137882993,
+        0.4598828055110176,
+        0.41005419784277314,
+        0.38431802720785646,
+        0.3821751132627389,
+        0.39977517899681286,
+        0.430917209956744,
+        0.4680697447688014,
+        0.5033183597833378,
+        0.5292183126735811,
+        0.5395492191296222,
+        0.5299470150217219,
+        0.4983491263143418
+      ],
+      [
+        0.6749549300286577,
+        0.76267880921152,
+        0.808059084015877,
+        0.8099578667752285,
+        0.7736087201094843,
+        0.7094120371896504,
+        0.6306492880639938,
+        0.5508162887846835,
+        0.48128527096506424,
+        0.4297797583510369,
+        0.39981616999516517,
+        0.39097625601853847,
+        0.399716123016648,
+        0.4204022329651567,
+        0.4463434170585308,
+        0.4706941916745818,
+        0.4871901308358829,
+        0.4907211945233364,
+        0.4777549374346072,
+        0.44660085525685944
+      ],
+      [
+        0.6738870267508594,
+        0.7633720751571629,
+        0.8112737152527897,
+        0.8165616188043388,
+        0.7843799286512613,
+        0.7248011712965955,
+        0.6505726786085281,
+        0.5745457214627959,
+        0.5074600195797135,
+        0.4565252883991299,
+        0.424929517821212,
+        0.4121411046426742,
+        0.4147306882853354,
+        0.4274195531543978,
+        0.4441206581894849,
+        0.4588249026387246,
+        0.4662659996935462,
+        0.4623582379822303,
+        0.4444369970164134,
+        0.4113399636299204
+      ],
+      [
+        0.6807520525260498,
+        0.7714944557215485,
+        0.8209760561297849,
+        0.8286056295553759,
+        0.7997859223881677,
+        0.74452610619213,
+        0.6751658142559943,
+        0.603906660088365,
+        0.5407688693036196,
+        0.49233462102966385,
+        0.4613506795794176,
+        0.4470514369645611,
+        0.4459652246937255,
+        0.45295593788597394,
+        0.46228413729046886,
+        0.4685190351411069,
+        0.4671906282344517,
+        0.45514121909685157,
+        0.43060681487047725,
+        0.39310831021312775
+      ],
+      [
+        0.6927711229546581,
+        0.7853390617950384,
+        0.8367922627189087,
+        0.8470791683534195,
+        0.8219694951354962,
+        0.7714907129391297,
+        0.7076186726657964,
+        0.6419255984207272,
+        0.5837321751141779,
+        0.5390226974835667,
+        0.5101253766199786,
+        0.49601874027992615,
+        0.4930861313541349,
+        0.49614025513632853,
+        0.49953205694094893,
+        0.49814639878046824,
+        0.4881072317415105,
+        0.4670920623060542,
+        0.4342723700318364,
+        0.39000161562746233
+      ],
+      [
+        0.7070346910094832,
+        0.8030417465657758,
+        0.858128838616287,
+        0.8726433904895877,
+        0.8525910595851344,
+        0.8079277639414415,
+        0.7502450201679953,
+        0.6905486851829171,
+        0.6375969374602748,
+        0.5969499493998324,
+        0.5706701414951878,
+        0.5575524530377746,
+        0.553789238223666,
+        0.5539788639981928,
+        0.5523241328877576,
+        0.5437786956258005,
+        0.5248725590362725,
+        0.4940344713687713,
+        0.451403469632585,
+        0.3982964290185412
+      ],
+      [
+        0.7203775388736672,
+        0.8220638885954571,
+        0.8832266662889334,
+        0.9042848354089795,
+        0.8911718607492499,
+        0.8535651468579308,
+        0.802619081859063,
+        0.7488812955375783,
+        0.7007759509373305,
+        0.6637142893719289,
+        0.6397320085854274,
+        0.6275768971350668,
+        0.6232531175691752,
+        0.6210253120467025,
+        0.6147532254976394,
+        0.5992522944645844,
+        0.5712977164933832,
+        0.529990972270343,
+        0.47645080467422546,
+        0.41304556164980455
+      ],
+      [
+        0.7288456176738919,
+        0.8383745147976376,
+        0.9080672971082769,
+        0.9379987146529071,
+        0.9336429331404804,
+        0.9041473767436294,
+        0.8601732616687585,
+        0.8119439136689203,
+        0.7678117438919074,
+        0.7333403642563335,
+        0.7107950667222178,
+        0.6990331195322247,
+        0.6939110127989611,
+        0.6893010943616423,
+        0.6785998108849429,
+        0.6563452937060537,
+        0.6194361318196846,
+        0.5675649124907853,
+        0.502797364995767,
+        0.4285670916240377
+      ],
+      [
+        0.7272891958709767,
+        0.8459626853389457,
+        0.9258410863386025,
+        0.9662634379831727,
+        0.9718809788572248,
+        0.9510808483941826,
+        0.9139850328405762,
+        0.8706135846155559,
+        0.8294682849044596,
+        0.7965058834506265,
+        0.7744210646715077,
+        0.762313393877942,
+        0.7559604748574591,
+        0.7488625415791242,
+        0.7339375457352912,
+        0.7054015669655499,
+        0.6602046361199786,
+        0.5985373418573825,
+        0.5233119391374279,
+        0.4389389727387073
+      ],
+      [
+        0.7096065924723035,
+        0.8372386466316466,
+        0.9275410537738049,
+        0.9788472234420864,
+        0.9947257196194879,
+        0.9826362875784224,
+        0.9521202765095134,
+        0.913055918073964,
+        0.8742038090874018,
+        0.8420212691654979,
+        0.8197185751394779,
+        0.8067146783775037,
+        0.7987984681143756,
+        0.7892077418742309,
+        0.7704895482020818,
+        0.7366025205775639,
+        0.6845323914706499,
+        0.6148598837029878,
+        0.5311658277970569,
+        0.43863641600654024
+      ],
+      [
+        0.6698332483454513,
+        0.8044780281690825,
+        0.903771899359644,
+        0.9649545060234892,
+        0.9903991497352161,
+        0.9865481620518942,
+        0.9623087022156359,
+        0.9273810345373487,
+        0.8907379452171644,
+        0.8592737282222443,
+        0.8366621655945454,
+        0.8226501375672883,
+        0.8131430090048494,
+        0.8013101185514252,
+        0.7795518643430323,
+        0.7417377723248627,
+        0.6849278076980743,
+        0.6099744480266229,
+        0.5208824376770258,
+        0.4233147908321968
+      ],
+      [
+        0.6037911779185249,
+        0.7419190331612748,
+        0.8472713526023204,
+        0.9161001727086033,
+        0.9496216024350614,
+        0.9532393815852347,
+        0.9351452895182517,
+        0.9047143615463425,
+        0.8709254584523329,
+        0.8408834290495513,
+        0.8185483520282076,
+        0.8039419023131649,
+        0.7931975236556618,
+        0.7796689630373868,
+        0.7559166074418712,
+        0.7159633513607617,
+        0.6570238807420351,
+        0.5801044213911974,
+        0.4893534959936609,
+        0.3905566940340644
+      ],
+      [
+        0.5106485962785543,
+        0.6477247588114421,
+        0.7552302058141885,
+        0.8286964037793679,
+        0.8683420547180146,
+        0.8785608999150318,
+        0.8667181517790495,
+        0.8416246604135206,
+        0.8119398860477594,
+        0.7846409833645875,
+        0.763716993636128,
+        0.7493710593217259,
+        0.7380707486321034,
+        0.723623795605776,
+        0.6990832597695379,
+        0.6588937568928291,
+        0.6005258825420016,
+        0.5250356877257955,
+        0.43644334638393495,
+        0.3403059428746172
       ]
     ]
   },
@@ -2902,664 +3625,664 @@
       "seed": 19260817,
       "densityGrid": [
         [
-          4,
-          1,
-          7,
-          7,
-          4,
-          1,
-          1,
-          1,
           0,
-          3,
           2,
           1,
           2,
-          5,
-          8,
-          16,
-          14,
-          7,
           6,
-          6
-        ],
-        [
-          0,
+          1,
           2,
-          4,
-          3,
           1,
           3,
-          6,
           3,
           0,
           1,
-          4,
-          7,
-          14,
-          6,
-          11,
-          7,
-          24,
-          16,
-          28,
-          9
-        ],
-        [
           0,
-          4,
-          9,
           4,
           8,
-          4,
-          0,
-          3,
-          0,
-          4,
+          6,
+          1,
           1,
           0,
-          8,
-          16,
-          12,
-          20,
-          38,
-          30,
-          29,
-          23
-        ],
-        [
-          1,
-          8,
-          5,
-          10,
-          6,
-          2,
-          1,
-          3,
-          3,
-          0,
-          7,
-          8,
-          3,
-          6,
-          16,
-          34,
-          32,
-          24,
-          34,
-          29
-        ],
-        [
-          3,
-          7,
-          5,
-          10,
-          7,
-          7,
-          0,
-          3,
-          5,
-          2,
-          3,
-          11,
-          9,
-          9,
-          12,
-          22,
-          31,
-          35,
-          23,
-          25
-        ],
-        [
-          5,
-          3,
-          8,
-          7,
-          9,
-          4,
-          2,
-          0,
-          0,
-          2,
-          2,
-          8,
-          5,
-          6,
-          14,
-          16,
-          17,
-          31,
-          24,
-          21
-        ],
-        [
-          3,
-          1,
-          13,
-          7,
-          4,
-          3,
-          1,
-          5,
-          4,
-          4,
-          4,
-          7,
-          10,
-          5,
-          14,
-          25,
-          11,
-          24,
-          19,
-          18
-        ],
-        [
-          1,
-          3,
-          5,
-          7,
-          9,
-          6,
-          8,
-          7,
-          9,
-          3,
-          2,
-          8,
-          2,
-          11,
-          10,
-          14,
-          9,
-          15,
-          26,
-          6
-        ],
-        [
-          5,
-          6,
-          4,
-          6,
-          6,
-          13,
-          4,
-          7,
-          11,
-          0,
-          2,
-          11,
-          2,
-          6,
-          5,
-          5,
-          14,
-          5,
-          4,
-          9
-        ],
-        [
-          6,
-          10,
-          20,
-          8,
-          15,
-          15,
-          13,
-          11,
-          9,
-          12,
-          5,
-          7,
-          6,
-          8,
-          4,
-          4,
-          3,
-          5,
-          10,
-          6
-        ],
-        [
-          3,
-          14,
-          15,
-          16,
-          26,
-          19,
-          19,
-          8,
-          18,
-          14,
-          10,
-          8,
-          6,
-          6,
-          4,
-          9,
-          0,
-          2,
-          1,
-          1
-        ],
-        [
-          3,
-          11,
-          14,
-          20,
-          23,
-          37,
-          26,
-          22,
-          23,
-          22,
-          18,
-          18,
-          13,
-          3,
-          2,
-          5,
-          2,
-          5,
-          1,
-          3
-        ],
-        [
-          9,
-          9,
-          11,
-          28,
-          28,
-          38,
-          32,
-          29,
-          27,
-          34,
-          17,
-          7,
-          13,
-          3,
-          3,
-          7,
-          5,
-          2,
-          0,
-          2
-        ],
-        [
-          5,
-          5,
-          13,
-          22,
-          21,
-          35,
-          36,
-          46,
-          20,
-          45,
-          31,
-          11,
-          11,
-          6,
-          7,
-          1,
-          1,
-          1,
-          2,
           0
         ],
         [
+          4,
+          5,
+          4,
+          0,
+          3,
+          4,
+          1,
+          2,
+          7,
+          2,
+          4,
           2,
           6,
-          19,
-          16,
-          34,
-          38,
-          39,
-          24,
-          39,
-          33,
-          28,
-          25,
-          18,
-          8,
-          2,
-          3,
-          5,
-          2,
-          0,
-          2
-        ],
-        [
           4,
-          11,
-          21,
-          18,
-          16,
-          27,
-          31,
-          26,
-          30,
-          48,
-          39,
-          30,
-          8,
-          9,
-          5,
-          4,
-          5,
-          4,
-          1,
-          3
-        ],
-        [
-          1,
-          9,
-          9,
-          9,
-          23,
-          17,
-          30,
-          33,
-          17,
-          26,
-          34,
-          29,
           10,
-          12,
-          9,
+          5,
+          10,
           3,
-          0,
-          0,
-          0,
+          3,
           1
         ],
         [
-          6,
-          4,
-          7,
-          12,
-          4,
-          19,
-          21,
-          19,
-          20,
-          10,
-          30,
-          19,
-          12,
-          12,
-          6,
-          3,
-          3,
-          3,
-          3,
-          0
-        ],
-        [
-          2,
-          4,
-          5,
           1,
-          12,
+          9,
+          4,
+          11,
           13,
+          10,
+          4,
+          8,
+          6,
+          4,
+          6,
+          8,
+          10,
+          6,
+          11,
           12,
-          24,
-          13,
           14,
-          22,
-          18,
-          15,
-          5,
-          1,
-          1,
-          0,
-          1,
-          0,
-          1
-        ],
-        [
-          0,
-          9,
-          1,
-          1,
-          2,
           6,
-          9,
-          9,
-          13,
-          12,
-          7,
-          4,
-          11,
-          2,
-          1,
-          1,
-          0,
-          2,
-          0,
+          5,
           3
         ],
         [
+          2,
+          7,
+          17,
+          14,
+          23,
+          11,
+          9,
+          13,
           3,
-          5,
+          3,
+          7,
+          11,
+          15,
+          14,
+          21,
+          21,
           2,
           6,
-          1,
-          2,
-          4,
-          9,
-          5,
-          9,
-          4,
-          5,
-          4,
-          2,
-          4,
-          0,
-          4,
-          2,
-          1,
-          2
-        ],
-        [
-          1,
-          2,
-          5,
-          1,
-          4,
-          8,
-          3,
-          2,
-          9,
-          8,
           7,
-          7,
-          1,
-          3,
-          0,
-          3,
-          1,
-          0,
-          4,
-          1
-        ],
-        [
-          2,
-          1,
-          2,
-          0,
-          3,
-          2,
-          4,
-          3,
-          6,
-          4,
-          7,
-          2,
-          1,
-          2,
-          2,
-          5,
-          1,
-          2,
-          3,
           5
         ],
         [
-          0,
-          4,
-          6,
-          2,
-          4,
-          2,
-          7,
           3,
-          5,
-          13,
-          1,
-          5,
-          4,
-          4,
-          2,
-          1,
-          4,
-          3,
-          0,
-          3
-        ],
-        [
-          0,
-          3,
-          0,
-          3,
-          2,
-          5,
-          6,
-          2,
-          8,
           13,
           8,
-          8,
-          1,
-          1,
-          1,
-          5,
-          0,
-          4,
-          2,
-          3
-        ],
-        [
-          1,
-          1,
-          4,
-          2,
-          3,
-          1,
-          11,
-          12,
-          23,
-          19,
-          11,
-          5,
-          4,
-          0,
-          4,
-          2,
-          2,
-          4,
           6,
-          4
-        ],
-        [
-          3,
-          2,
-          1,
+          6,
+          13,
+          10,
           5,
           2,
-          9,
-          12,
-          4,
-          12,
+          6,
+          6,
+          5,
+          14,
+          17,
+          21,
           18,
-          16,
+          26,
           8,
-          8,
-          5,
-          0,
-          2,
-          1,
-          0,
-          3,
-          0
+          9,
+          8
         ],
         [
-          0,
+          10,
+          16,
+          27,
+          21,
+          17,
+          9,
+          12,
+          5,
+          10,
+          8,
+          8,
+          8,
+          21,
+          13,
+          27,
+          22,
+          24,
+          11,
+          13,
+          3
+        ],
+        [
+          11,
+          15,
+          21,
+          8,
+          11,
+          14,
+          8,
+          6,
+          4,
+          1,
+          10,
+          6,
+          18,
+          18,
+          13,
+          18,
+          24,
+          12,
+          22,
+          11
+        ],
+        [
+          6,
+          10,
+          4,
+          14,
+          10,
+          6,
+          6,
+          4,
+          4,
+          6,
+          2,
+          5,
+          8,
+          14,
+          22,
+          18,
+          23,
+          17,
+          17,
+          20
+        ],
+        [
+          4,
+          10,
+          8,
+          6,
+          5,
+          11,
+          2,
+          2,
+          5,
+          6,
+          4,
+          4,
+          15,
+          23,
+          26,
+          15,
+          34,
+          18,
+          27,
+          16
+        ],
+        [
+          5,
+          6,
+          5,
+          6,
+          6,
+          11,
+          5,
+          2,
+          3,
+          1,
+          10,
+          8,
+          20,
+          11,
+          22,
+          19,
+          29,
+          30,
+          15,
+          16
+        ],
+        [
+          1,
+          4,
+          8,
+          4,
+          7,
+          5,
+          4,
+          11,
+          6,
+          5,
+          6,
+          5,
+          14,
+          21,
+          22,
+          19,
+          36,
+          20,
+          22,
+          14
+        ],
+        [
+          1,
+          2,
+          2,
+          2,
+          8,
+          5,
+          2,
+          10,
+          7,
+          3,
+          6,
+          7,
+          7,
+          17,
+          24,
+          21,
+          29,
+          37,
+          33,
+          15
+        ],
+        [
+          3,
+          1,
+          4,
+          5,
+          5,
+          1,
+          2,
+          1,
+          6,
+          6,
+          2,
+          5,
+          10,
+          16,
+          15,
+          23,
+          22,
+          14,
+          27,
+          13
+        ],
+        [
           2,
           3,
           2,
           7,
-          8,
-          8,
-          4,
-          5,
-          11,
           6,
           5,
           3,
-          4,
+          0,
           1,
           3,
+          3,
+          5,
           4,
-          1,
+          3,
+          9,
+          14,
+          12,
+          16,
+          16,
+          8
+        ],
+        [
+          2,
           0,
-          0
+          0,
+          3,
+          0,
+          4,
+          5,
+          3,
+          1,
+          3,
+          5,
+          5,
+          3,
+          7,
+          9,
+          16,
+          7,
+          12,
+          12,
+          8
         ],
         [
           1,
-          0,
-          0,
-          3,
           2,
           1,
+          2,
+          5,
+          7,
+          4,
           6,
+          1,
+          8,
+          4,
+          0,
+          0,
+          7,
+          10,
+          16,
+          2,
           5,
+          4,
+          2
+        ],
+        [
+          2,
+          3,
+          0,
+          2,
+          7,
+          11,
           5,
+          4,
+          1,
           9,
           4,
           4,
+          7,
+          3,
+          14,
+          11,
+          7,
+          4,
+          2,
+          9
+        ],
+        [
           0,
           1,
           1,
+          5,
+          6,
+          10,
+          9,
+          7,
+          4,
+          4,
+          7,
+          9,
+          3,
+          12,
+          14,
+          8,
+          5,
           0,
           1,
+          3
+        ],
+        [
+          1,
+          3,
+          1,
+          2,
+          11,
+          5,
+          4,
+          7,
+          3,
+          9,
+          10,
+          4,
+          12,
+          9,
+          8,
+          5,
+          1,
+          4,
           0,
+          3
+        ],
+        [
           0,
+          2,
+          6,
+          4,
+          8,
+          3,
+          11,
+          6,
+          5,
+          16,
+          14,
+          20,
+          16,
+          24,
+          4,
+          8,
+          4,
+          0,
+          1,
+          1
+        ],
+        [
+          2,
+          4,
+          5,
+          1,
+          4,
+          4,
+          7,
+          7,
+          4,
+          11,
+          9,
+          27,
+          25,
+          17,
+          14,
+          6,
+          6,
+          5,
+          1,
           0
         ],
         [
+          1,
+          0,
+          2,
+          2,
+          7,
+          2,
           3,
-          0,
-          0,
-          0,
-          0,
+          11,
+          14,
+          7,
+          11,
+          27,
+          29,
+          20,
+          23,
+          6,
+          6,
+          7,
+          1,
+          0
+        ],
+        [
           2,
-          2,
+          1,
           2,
           4,
+          0,
+          3,
+          2,
+          13,
+          16,
+          19,
+          18,
+          26,
+          25,
+          42,
+          27,
+          8,
+          5,
+          2,
+          1,
+          3
+        ],
+        [
+          0,
+          0,
+          4,
+          2,
+          3,
+          9,
           4,
           4,
           6,
-          2,
-          0,
-          1,
-          0,
-          1,
-          1,
-          2,
+          9,
+          11,
+          15,
+          19,
+          35,
+          24,
+          10,
+          12,
+          16,
+          4,
           1
+        ],
+        [
+          0,
+          0,
+          0,
+          0,
+          3,
+          8,
+          11,
+          10,
+          13,
+          9,
+          13,
+          16,
+          24,
+          23,
+          33,
+          20,
+          14,
+          13,
+          7,
+          2
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          2,
+          2,
+          6,
+          3,
+          6,
+          6,
+          5,
+          9,
+          20,
+          19,
+          27,
+          21,
+          15,
+          8,
+          11,
+          10
+        ],
+        [
+          1,
+          0,
+          0,
+          4,
+          2,
+          7,
+          4,
+          4,
+          6,
+          6,
+          8,
+          8,
+          3,
+          13,
+          26,
+          17,
+          22,
+          21,
+          18,
+          12
+        ],
+        [
+          0,
+          0,
+          2,
+          1,
+          3,
+          2,
+          2,
+          4,
+          2,
+          1,
+          2,
+          1,
+          7,
+          15,
+          20,
+          16,
+          21,
+          15,
+          20,
+          10
+        ],
+        [
+          0,
+          0,
+          0,
+          1,
+          0,
+          3,
+          4,
+          2,
+          1,
+          1,
+          2,
+          6,
+          4,
+          6,
+          12,
+          6,
+          28,
+          20,
+          10,
+          17
+        ],
+        [
+          1,
+          0,
+          0,
+          1,
+          0,
+          2,
+          0,
+          0,
+          1,
+          3,
+          1,
+          1,
+          5,
+          3,
+          4,
+          10,
+          8,
+          8,
+          9,
+          8
         ]
       ],
       "particleConfig": {

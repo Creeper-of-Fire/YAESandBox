@@ -7,7 +7,7 @@ class Settings:
     GRID_HEIGHT = 20
 
     # --- 阶段一: 桌子生成 ---
-    NUM_TABLES = 12
+    NUM_TABLES = 24
     TABLE_SIZE = (2, 1)  # (width, height) in grid units
 
     # '适宜度地图' 参数
@@ -40,13 +40,13 @@ class Settings:
     GRIME_CORE_INFLUENCE_RADIUS = 4.0  # 大核心能提升小脏污存活率的范围
 
     # --- 阶段五: 角色生成 ---
-    NUM_ELVES = 30
+    NUM_ELVES = 15
     NUM_DWARVES = 30
     NUM_MUSHROOM_PEOPLE = 20
 
     # 舒适度地图权重
-    SOCIAL_ATTRACTION_STRENGTH = 1.0  # 对家具的吸引力
-    SOCIAL_ATTRACTION_SIGMA = 2.5  # 家具“人气”光环大小
+    SOCIAL_ATTRACTION_STRENGTH = 2.0  # 对家具的吸引力
+    SOCIAL_ATTRACTION_SIGMA = 1.5  # 家具“人气”光环大小
 
     ELF_GRIME_REPULSION = -2.5  # 精灵对脏污的厌恶
     ELF_LARGE_GRIME_MULTIPLIER = 40.0  # 大脏污对精灵的厌恶是小脏污的5倍

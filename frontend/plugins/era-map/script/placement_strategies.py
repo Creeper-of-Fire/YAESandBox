@@ -215,9 +215,14 @@ def place_floating_objects_from_layer(
     for index in chosen_indices:
         ix, iy = np.unravel_index(index, prob_map.shape)
 
-        # 在选定的格子内添加随机偏移
-        pos_x = ix + random.uniform(0, 1)
-        pos_y = iy + random.uniform(0, 1)
+        # 在格子中心附近随机抖动
+        # 这样可以确保视觉位置和逻辑位置（向下取整后）始终一致
+        center_x = ix + 0.5
+        center_y = iy + 0.5
+        # 抖动范围，例如在中心点 +/- 0.3 的范围内，确保不会越界
+        jitter = 0.3
+        pos_x = center_x + random.uniform(-jitter, jitter)
+        pos_y = center_y + random.uniform(-jitter, jitter)
 
         new_obj = GameObject(
             obj_type=obj_type,
