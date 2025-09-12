@@ -19,8 +19,8 @@
 
 <script lang="ts" setup>
 import { toRefs } from 'vue';
-import type { TileLayer } from '#/game/GameMap';
-import { resourceManager } from '#/game/ResourceManager';
+import type { TileLayer } from '#/game-render/GameMap';
+import { resourceManager } from '#/game-render/ResourceManager';
 import { TILE_SIZE } from '#/constant';
 
 // 1. 定义Props：明确声明该组件需要一个类型为 TileLayer 的 layer 属性。

@@ -5,7 +5,7 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
-import type { FieldLayer } from '#/game/GameMap';
+import type { FieldLayer } from '#/game-render/GameMap';
 import { TILE_SIZE } from '#/constant';
 
 const props = defineProps<{

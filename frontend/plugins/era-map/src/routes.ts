@@ -5,6 +5,6 @@ export const routeName: string = 'era-map';
 export const routes: RouteRecordRaw[] = [
     {
         path: `/${routeName}`,
-        component: () => import('#/MapView.vue'),
+        component: () => import('#/EraMapView.vue'),
     }
 ];

@@ -11,7 +11,7 @@
 </template>
 
 <script lang="ts" setup>
-import type { ObjectLayer } from '#/game/GameMap';
+import type { ObjectLayer } from '#/game-render/GameMap';
 import GameObjectRenderer from '#/components/GameObjectRenderer.vue';
 
 // 同样，明确定义Props，接收一个 ObjectLayer 实例。

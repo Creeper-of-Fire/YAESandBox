@@ -5,6 +5,7 @@
       <v-stage
           :config="stageConfig"
           @mousemove="handleMouseMove"
+          @click="handleMouseClick"
           @mouseleave="handleMouseLeave"
       >
         <!-- 静态渲染层 -->
@@ -18,9 +19,18 @@
         </v-layer>
         <!-- 交互/高亮层 -->
         <v-layer :config="{ imageSmoothingEnabled: false, listening: false }">
-          <!-- 高亮框 -->
-          <v-rect v-if="showPopover" :config="highlightBoxConfig"/>
-          <!-- 高亮对象 -->
+
+          <!-- 1. 渲染选中的格子框 (蓝色) -->
+          <!-- 只要有格子被选中，就始终显示它 -->
+          <v-rect v-if="isACellSelected" :config="selectionBoxConfig"/>
+
+          <!-- 2. 渲染悬浮的格子框 (黄色) -->
+          <!-- 仅当: (显示悬浮框) 且 (悬浮的格子不是已被选中的格子) 时才显示 -->
+          <!-- 这可以防止黄色框和蓝色框重叠绘制 -->
+          <v-rect v-if="showPopover && !isHoveringSelectedCell" :config="highlightBoxConfig"/>
+
+          <!-- 3. 渲染悬浮高亮的对象 (保持不变) -->
+          <!-- 即使在已选中的格子上悬浮，也应该高亮对象并显示popover -->
           <GameObjectRenderer
               v-for="obj in highlightedObjects"
               :key="`highlight-${obj.id}`"
@@ -65,16 +75,17 @@
 <script lang="ts" setup>
 import {computed, onMounted, ref} from 'vue';
 import {TILE_SIZE} from '#/constant';
-import {type CellData, FieldLayer, GameMap, ObjectLayer, ParticleLayer, TileLayer} from '#/game/GameMap';
-import {createGameObject} from '#/game/GameObjectFactory';
-import type {GameObject} from '#/game/GameObject';
+import {type CellData, FieldLayer, GameMap, ObjectLayer, ParticleLayer, TileLayer} from '#/game-render/GameMap';
+import {createGameObject} from '#/game-render/GameObjectFactory';
+import type {GameObject} from '#/game-render/GameObject';
 import {useElementSize} from '@vueuse/core';
-import type {FullLayoutData} from '#/game/types';
+import type {FullLayoutData} from '#/game-render/types';
 
 // 静态资源导入
 import layoutJson from '#/assets/layout.json';
-import {registry, kenney_roguelike_rpg_pack} from "#/game/tilesetRegistry.ts";
+import {registry, kenney_roguelike_rpg_pack} from "#/game-render/tilesetRegistry.ts";
 import GameObjectRenderer from "#/components/GameObjectRenderer.vue";
+import {useMapInteraction} from "#/composables/useMapInteraction.ts";
 
 // --- 响应式尺寸 ---
 // 创建一个 ref 来引用模板中的容器元素
@@ -86,19 +97,29 @@ const {width: containerWidth, height: containerHeight} = useElementSize(mapConta
 const isLoading = ref(true);
 const gameMap = ref<GameMap | null>(null);
 
-// --- 交互状态 ---
-const hoveredGridPos = ref({x: -1, y: -1});
-const hoveredCellInfo = ref<CellData | null>(null);
-const popoverTargetPosition = ref({x: 0, y: 0});
-const showPopover = ref(false);
+// --- 使用 Composable 管理交互 ---
+const {
+  // Hover
+  hoveredGridPos,
+  hoveredCellInfo,
+  popoverTargetPosition,
+  showPopover,
+  highlightedObjects,
+  hasHoveredData,
+  highlightBoxConfig,
 
-const highlightedObjects = computed(() => hoveredCellInfo.value?.objects || []);
-const hasHoveredData = computed(() =>
-    (hoveredCellInfo.value &&
-        (hoveredCellInfo.value.objects.length > 0 ||
-            hoveredCellInfo.value.fields.length > 0 ||
-            hoveredCellInfo.value.particles.length > 0))
-);
+  // Selection
+  selectionBoxConfig,
+  isACellSelected,
+
+  // Interaction
+  isHoveringSelectedCell,
+
+  // Handlers
+  handleMouseMove,
+  handleMouseLeave,
+  handleMouseClick,
+} = useMapInteraction(gameMap);
 
 // --- Konva舞台配置 ---
 const stageConfig = computed(() =>
@@ -236,62 +257,6 @@ onMounted(async () =>
     isLoading.value = false;
   }
 });
-
-const highlightBoxConfig = computed(() => ({
-  x: hoveredGridPos.value.x * TILE_SIZE,
-  y: hoveredGridPos.value.y * TILE_SIZE,
-  width: TILE_SIZE,
-  height: TILE_SIZE,
-  stroke: '#FFFFAA',
-  strokeWidth: 2,
-  listening: false,
-}));
-
-// --- 事件处理 ---
-const handleMouseMove = (event: any) => {
-  if (!gameMap.value) return;
-
-  const stage = event.target.getStage();
-  // 1. 获取【画布坐标】，用于计算网格位置
-  // getPointerPosition() 已经处理了CSS缩放，返回的是舞台内部的1:1坐标
-  const pointerPosition = stage.getPointerPosition();
-  if (!pointerPosition) {
-    handleMouseLeave();
-    return;
-  }
-
-  // 2. 获取【视口坐标】，用于定位 Popover
-  // event.evt 是原始的DOM事件
-  const POPOVER_OFFSET = 30;
-  popoverTargetPosition.value = {
-    x: event.evt.clientX + POPOVER_OFFSET,
-    y: event.evt.clientY - POPOVER_OFFSET
-  };
-
-  // 3. 计算网格坐标，【不需要】除以 scale
-  const gridX = Math.floor(pointerPosition.x / TILE_SIZE);
-  const gridY = Math.floor(pointerPosition.y / TILE_SIZE);
-
-  // 检查是否移出有效区域
-  if (gridX < 0 || gridX >= gameMap.value.gridWidth || gridY < 0 || gridY >= gameMap.value.gridHeight) {
-    handleMouseLeave();
-    return;
-  }
-
-  // 只有当格子变化时才重新获取数据，避免不必要的计算
-  if (gridX !== hoveredGridPos.value.x || gridY !== hoveredGridPos.value.y) {
-    hoveredGridPos.value = { x: gridX, y: gridY };
-    hoveredCellInfo.value = gameMap.value.getDataAtGridPosition(gridX, gridY);
-  }
-
-  showPopover.value = true;
-};
-
-const handleMouseLeave = () => {
-  hoveredGridPos.value = {x: -1, y: -1};
-  hoveredCellInfo.value = null;
-  showPopover.value = false;
-};
 </script>
 
 <style scoped>

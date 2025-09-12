@@ -7,7 +7,7 @@
 // 它接收一个 ParticleLayer 类型的prop，并使用其seed和densityGrid
 // 在 v-shape 的 sceneFunc 中高效绘制所有粒子。
 import { computed, onMounted, ref } from 'vue';
-import type { ParticleLayer } from '#/game/GameMap';
+import type { ParticleLayer } from '#/game-render/GameMap';
 import { TILE_SIZE } from '#/constant';
 import type { Context } from 'konva/lib/Context';
 
