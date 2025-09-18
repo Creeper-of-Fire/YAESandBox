@@ -66,10 +66,10 @@ export function createGameSaveService(deps: GameSaveServiceDependencies)
     async function _setActiveSlot(slotId: string | null)
     {
         activeSlotId.value = slotId;
-        await projectMetaStorage.setItem(LAST_ACTIVE_SLOT_ID_KEY, slotId);
         // 如果我们正在加载一个新游戏，那么它也成为了“最后激活”的游戏
         if (slotId)
         {
+            await projectMetaStorage.setItem(LAST_ACTIVE_SLOT_ID_KEY, slotId);
             lastActiveSlotId.value = slotId;
         }
     }
