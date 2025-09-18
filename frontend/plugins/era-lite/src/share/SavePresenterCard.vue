@@ -1,4 +1,4 @@
-﻿<!-- src/features/home/SaveManagerCard.vue -->
+﻿<!-- src/features/home/SavePresenterCard.vue -->
 <template>
   <n-card title="游戏存档管理">
     <n-space vertical>
@@ -32,8 +32,8 @@
 
 <script lang="ts" setup>
 import {NButton, NCard, NDivider, NH4, NList, NListItem, NSpace, NTag, NThing, NTime} from 'naive-ui';
-import {useSaveManagerCard} from "@yaesandbox-frontend/core-services/playerSave";
-import {useSaveManager} from "@yaesandbox-frontend/core-services/playerSave";
+import {useGameSavePresenterUI} from "@yaesandbox-frontend/core-services/playerSave";
+import {useGameSavePresenter} from "@yaesandbox-frontend/core-services/playerSave";
 
 const getSlotTypeName = (saveType: string) =>
 {
@@ -45,7 +45,7 @@ const getSlotTypeName = (saveType: string) =>
     return '未知';
 }
 
-const saveManager = useSaveManager();
+const saveManager = useGameSavePresenter();
 
 const {
   slots,
@@ -54,5 +54,5 @@ const {
   handleSlotClick,
   handleCreateAutosave,
   handleCreateSnapshot
-} = useSaveManagerCard(saveManager);
+} = useGameSavePresenterUI(saveManager);
 </script>

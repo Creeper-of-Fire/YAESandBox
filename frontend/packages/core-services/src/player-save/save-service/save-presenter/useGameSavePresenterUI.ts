@@ -1,18 +1,18 @@
 ﻿import {h, ref} from 'vue';
 import {NInput, useDialog, useMessage} from 'naive-ui';
-import type {ISaveManager} from "./ISaveUIManager.ts";
+import type {IGameSavePresenter} from "./IGameSavePresenter.ts";
 
 /**
- * 这是一个专门为 SaveManagerCard.vue 服务的 Composable (Presenter)。
+ * 这是一个为 GameSavePresenterUI 服务的 Composable (Presenter)。
  * 它包含了所有与UI交互相关的逻辑，如弹窗、确认、消息提示等。
  */
-export function useSaveManagerCard(saveManager: ISaveManager)
+export function useGameSavePresenterUI(savePresenter: IGameSavePresenter)
 {
     const dialog = useDialog();
     const message = useMessage();
-    const {slots, activeSlot, activeSlotId} = saveManager;
+    const {slots, activeSlot, activeSlotId} = savePresenter;
 
-    const saveSlotManager = saveManager;
+    const saveSlotPresenter = savePresenter;
 
     /**
      * 处理用户点击存档槽的核心逻辑。
@@ -25,14 +25,14 @@ export function useSaveManagerCard(saveManager: ISaveManager)
         if (targetSlot.type === 'autosave')
         {
             // 点击自动存档，直接切换
-            await saveSlotManager.loadAutosave(targetSlot.id);
+            await saveSlotPresenter.loadAutosave(targetSlot.id);
             message.success(`已切换到自动存档: ${targetSlot.name}`);
         }
         else
         {
             // 点击快照，检查是否存在同名自动存档
             const baseName = targetSlot.name;
-            const existingAutosave = saveSlotManager.findAutosaveByName(baseName);
+            const existingAutosave = saveSlotPresenter.findAutosaveByName(baseName);
 
             if (existingAutosave)
             {
@@ -45,7 +45,7 @@ export function useSaveManagerCard(saveManager: ISaveManager)
                     closable: true, // 允许用户点击关闭按钮取消操作
                     onPositiveClick: async () =>
                     {
-                        await saveSlotManager.loadAutosave(existingAutosave.id);
+                        await saveSlotPresenter.loadAutosave(existingAutosave.id);
                         message.info(`已切换到现有自动存档: ${existingAutosave.name}`);
                     },
                     onNegativeClick: async () =>
@@ -58,10 +58,10 @@ export function useSaveManagerCard(saveManager: ISaveManager)
                         {
                             newAutosaveName = `${baseName} (${counter})`;
                             counter++;
-                        } while (saveSlotManager.findAutosaveByName(newAutosaveName));
+                        } while (saveSlotPresenter.findAutosaveByName(newAutosaveName));
 
                         message.loading(`正在从快照创建新副本 "${newAutosaveName}"...`, {duration: 3000});
-                        await saveSlotManager.loadFromSnapshot(targetSlot.id, newAutosaveName);
+                        await saveSlotPresenter.loadFromSnapshot(targetSlot.id, newAutosaveName);
                         message.success(`已创建并加载新的自动存档: ${newAutosaveName}`);
                     }
                 });
@@ -70,7 +70,7 @@ export function useSaveManagerCard(saveManager: ISaveManager)
             else
             {
                 // 如果不存在同名自动存档，直接从快照加载
-                await saveSlotManager.loadFromSnapshot(targetSlot.id, baseName);
+                await saveSlotPresenter.loadFromSnapshot(targetSlot.id, baseName);
                 message.success(`已从快照 "${baseName}" 创建并加载新的自动存档`);
             }
         }
@@ -94,7 +94,7 @@ export function useSaveManagerCard(saveManager: ISaveManager)
             {
                 if (inputValue.value)
                 {
-                    await saveSlotManager.createAutosave(inputValue.value);
+                    await saveSlotPresenter.createAutosave(inputValue.value);
                     message.success(`自动存档 "${inputValue.value}" 已创建`);
                 }
             }
@@ -119,7 +119,7 @@ export function useSaveManagerCard(saveManager: ISaveManager)
             {
                 if (inputValue.value)
                 {
-                    await saveSlotManager.createSnapshot(inputValue.value);
+                    await saveSlotPresenter.createSnapshot(inputValue.value);
                     message.success(`快照 "${inputValue.value}" 已创建`);
                 }
             }

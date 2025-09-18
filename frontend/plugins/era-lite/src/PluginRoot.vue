@@ -1,14 +1,14 @@
 ﻿<!-- src/PluginRoot.vue -->
 <template>
-  <router-view v-if="gameMenu.activeSlot.value"/>
+  <router-view v-if="saveService.activeSlot.value"/>
   <StartupView v-else/>
 </template>
 
 <script lang="ts" setup>
 import StartupView from "#/features/home/StartupView.vue";
-import {createAndProvideEraLiteGameMenu} from "#/stores/useEraLiteSaveStore.ts";
+import {createAndProvideEraLiteGameSaveService} from "#/stores/useEraLiteSaveStore.ts";
 
-const gameMenu = createAndProvideEraLiteGameMenu();
+const saveService = createAndProvideEraLiteGameSaveService();
 
 defineOptions({
   name: 'era-lite:PluginRoot'

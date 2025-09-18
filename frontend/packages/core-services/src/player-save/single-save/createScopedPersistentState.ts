@@ -1,7 +1,7 @@
 ﻿import type {Ref} from 'vue';
 import {ref, toRaw, watch} from 'vue';
-import type {IScopedStorage} from "./storage/IScopedStorage.ts";
-import type {SaveSlot} from "./storage/ISaveSlotManager.ts";
+import type {IScopedStorage} from "../storage/IScopedStorage.ts";
+import type {SaveSlot} from "../storage/ISaveSlotManager.ts";
 import {cloneDeep} from "lodash-es";
 
 interface ScopedPersistentStateOptions<T>

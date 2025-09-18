@@ -1,22 +1,14 @@
-﻿import {computed, markRaw, provide, readonly, type Ref, ref} from "vue";
-import {defineStore, type StoreDefinition} from "pinia";
-import type {IScopedStorage} from "./storage/IScopedStorage";
-import type {SaveSlot} from "./storage/ISaveSlotManager";
-import {createScopedPersistentState} from "./createScopedPersistentState";
-import {createGameMenu} from "./createGameMenu.ts";
-import {ApiScopedStorage} from "./storage/ApiScopedStorage";
-import {ApiSaveSlotManager} from "./storage/ApiSaveSlotManager";
-import {ApiProjectMetaStorage} from "./storage/ApiProjectMetaStorage";
-import {GameMenuKey} from "./injectKeys.ts";
+﻿import {computed, markRaw, readonly, type Ref, ref} from "vue";
+import {defineStore} from "pinia";
+import type {IScopedStorage} from "../storage/IScopedStorage.ts";
+import type {SaveSlot} from "../storage/ISaveSlotManager.ts";
+import {createScopedPersistentState} from "./createScopedPersistentState.ts";
 
 export interface IPersistentState<T>
 {
     state: Ref<T>;
     isReady: Readonly<Ref<boolean>>;
 }
-
-
-export type IGameMenu = ReturnType<typeof createGameMenu>;
 
 
 // 定义初始化所需的依赖项接口
@@ -96,45 +88,4 @@ export function createScopedSaveStoreFactory(storeId: string)
             asScopedStateFactory,
         };
     });
-}
-
-interface GameMenuSystemOptions
-{
-    uniqueName: string;
-    /**
-     * 一个实现了 IScopedStateFactory 接口的实例，
-     * 通常是一个 Pinia store。
-     */
-    stateFactory: IScopedStateFactory;
-}
-
-
-/**
- * 【创建器】这是一个一次性的工厂函数，负责创建 gameMenu 的单例。
- * 它应该在应用的顶层组件的setup环境中被调用，并且它会provide。
- */
-export function createAndProvideApiGameMenu(options: GameMenuSystemOptions)
-{
-    const {uniqueName, stateFactory} = options;
-
-    const scopedStorage = new ApiScopedStorage();
-    const saveSlotManager = new ApiSaveSlotManager(uniqueName);
-    const projectMetaStorage = new ApiProjectMetaStorage(uniqueName, scopedStorage);
-
-    const gameMenu = createGameMenu({
-        saveSlotManager,
-        projectMetaStorage,
-    });
-
-    if (!stateFactory.isInitialized.value)
-    {
-        stateFactory.initialize({
-            scopedStorage: scopedStorage,
-            activeSlot: gameMenu.activeSlot,
-        });
-    }
-
-    provide(GameMenuKey, gameMenu);
-
-    return gameMenu;
 }

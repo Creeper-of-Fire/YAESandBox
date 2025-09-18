@@ -25,7 +25,7 @@
       </div>
     </n-card>
 
-    <SaveManagerCard/>
+    <SavePresenterCard/>
 
     <!-- 操作按钮 -->
     <n-card title="开始行动">
@@ -50,18 +50,18 @@ import {useSessionStore} from '#/stores/sessionStore.ts';
 import CharacterDisplayCard from './CharacterDisplayCard.vue';
 import {useRouter} from "vue-router";
 import {useChatStore} from '#/features/chat/chatStore.ts';
-import SaveManagerCard from "#/share/SaveManagerCard.vue";
-import {useGameMenu} from "@yaesandbox-frontend/core-services/playerSave";
+import {useGameSaveService} from "@yaesandbox-frontend/core-services/playerSave";
+import SavePresenterCard from "#/share/SavePresenterCard.vue";
 
 const router = useRouter();
 const sessionStore = useSessionStore();
 const chatStore = useChatStore();
 const message = useMessage();
-const gameMenu = useGameMenu();
+const saveService = useGameSaveService();
 
 function quitToMainMenu()
 {
-  gameMenu.quitToMainMenu();
+  saveService.quitToMainMenu();
 }
 
 function startInteraction()

@@ -1,9 +1,9 @@
 ﻿import {computed, readonly, ref} from 'vue';
-import type {IProjectMetaStorage} from "./storage/IProjectMetaStorage.ts";
-import type {ISaveSlotManager, SaveSlot} from "./storage/ISaveSlotManager.ts";
+import type {IProjectMetaStorage} from "../storage/IProjectMetaStorage.ts";
+import type {ISaveSlotManager, SaveSlot} from "../storage/ISaveSlotManager.ts";
 
-// 定义 useGameMenu 需要的依赖项接口
-export interface GameMenuDependencies
+// 定义 createSaveService 需要的依赖项接口
+export interface GameSaveServiceDependencies
 {
     saveSlotManager: ISaveSlotManager;
     projectMetaStorage: IProjectMetaStorage;
@@ -13,11 +13,11 @@ export interface GameMenuDependencies
 const LAST_ACTIVE_SLOT_ID_KEY = 'lastActiveSlotId';
 
 /**
- * 一个通用的、与具体应用无关的 Composable，用于处理游戏菜单的核心逻辑。
+ * 一个通用的、与具体应用无关的 Composable。
  * 它负责管理存档槽状态、与后端服务交互，并向上层提供响应式数据和操作方法。
  * @param deps - 包含所有已配置好的服务实例的对象。
  */
-export function createGameMenu(deps: GameMenuDependencies)
+export function createGameSaveService(deps: GameSaveServiceDependencies)
 {
     const {saveSlotManager, projectMetaStorage} = deps;
 
@@ -225,4 +225,3 @@ export function createGameMenu(deps: GameMenuDependencies)
     };
 }
 
-export type IGameMenu = ReturnType<typeof createGameMenu>;

@@ -1,14 +1,10 @@
-﻿export * from './storage/ApiSaveSlotManager'
-export * from './storage/ApiScopedStorage'
-export * from './storage/ApiProjectMetaStorage'
-export * from './storage/ISaveSlotManager'
-export * from './storage/IScopedStorage'
-export * from './storage/IProjectMetaStorage'
+﻿export * from './single-save/createScopedPersistentState'
+export * from './single-save/createScopedSaveStoreFactory'
 
-export * from './createScopedPersistentState'
-export * from './ISaveUIManager'
-export * from './ScopedSaveStoreFactory'
-export * from './useSaveManagerCard'
-export * from './useSaveManager'
+export * from './save-service/save-presenter/IGameSavePresenter.ts'
+export * from './save-service/save-presenter/useGameSavePresenterUI.ts'
+export * from './save-service/save-presenter/useGameSavePresenter.ts'
 
-export {useGameMenu} from './injectKeys'
+export * from "./save-service/createAndProvideApiGameSaveService.ts";
+export * from "./save-service/IGameSaveService.ts";
+export * from './save-service/injectKeys'

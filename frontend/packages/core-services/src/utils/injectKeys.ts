@@ -67,7 +67,7 @@ export const WorkflowConfigProviderKey: InjectionKey<IWorkflowConfigProvider> = 
 export function useProjectUniqueName(){
     const projectUniqueName = inject(PluginUniqueNameKey);
     if (!projectUniqueName) {
-        throw new Error("Could not resolve project unique name for creating GameMenu.");
+        throw new Error("插件的独有名称未被提供。");
     }
     return projectUniqueName
 }
