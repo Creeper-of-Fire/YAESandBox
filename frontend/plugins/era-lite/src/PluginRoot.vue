@@ -1,17 +1,14 @@
 ﻿<!-- src/PluginRoot.vue -->
 <template>
-  <router-view v-if="gameMenu.activeSlot.value" />
+  <router-view v-if="gameMenu.activeSlot.value"/>
   <StartupView v-else/>
 </template>
 
 <script lang="ts" setup>
-import {createEraLiteGameMenu} from "#/features/home/useEraLiteGameMenu.ts";
-import {GameMenuKey} from "@yaesandbox-frontend/core-services/injectKeys";
-import {provide} from "vue";
 import StartupView from "#/features/home/StartupView.vue";
+import {createAndProvideEraLiteGameMenu} from "#/stores/useEraLiteSaveStore.ts";
 
-const gameMenu = createEraLiteGameMenu();
-provide(GameMenuKey, gameMenu);
+const gameMenu = createAndProvideEraLiteGameMenu();
 
 defineOptions({
   name: 'era-lite:PluginRoot'

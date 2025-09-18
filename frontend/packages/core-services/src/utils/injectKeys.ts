@@ -1,11 +1,10 @@
 ﻿// src/utils/injectionKeys.ts
 
 // 定义选中项的类型
-import type {ComputedRef, InjectionKey, Ref} from "vue";
+import {type ComputedRef, inject, type InjectionKey, type Ref} from "vue";
 import type {GlobalResourceItem} from "../types";
 import type {WorkflowConfig} from "../types";
 import type {ApiRequestOptions} from "../types";
-import {useGameMenu} from "../player-save";
 
 /**
  * 用于在应用中注入是否为暗黑主题的状态
@@ -65,4 +64,10 @@ export interface IWorkflowConfigProvider
 export const WorkflowConfigProviderKey: InjectionKey<IWorkflowConfigProvider> = Symbol('WorkflowConfigProviderKey')
 
 
-export const GameMenuKey: InjectionKey<ReturnType<typeof useGameMenu>> = Symbol('GameMenu');;
+export function useProjectUniqueName(){
+    const projectUniqueName = inject(PluginUniqueNameKey);
+    if (!projectUniqueName) {
+        throw new Error("Could not resolve project unique name for creating GameMenu.");
+    }
+    return projectUniqueName
+}

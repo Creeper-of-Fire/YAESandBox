@@ -8,7 +8,7 @@
       vertical
   >
     <n-h1 style="font-size: 48px; margin-bottom: 48px;">Era-Lite</n-h1>
-    <n-space size="large" vertical style="width: 300px;">
+    <n-space size="large" style="width: 300px;" vertical>
       <n-button
           :disabled="!gameMenu.lastActiveSlotName.value"
           block
@@ -69,12 +69,12 @@
 import {ref, watch} from 'vue';
 import {NButton, NFlex, NH1, NInput, NModal, NSpace, useMessage} from 'naive-ui';
 import SaveManagerCard from "#/share/SaveManagerCard.vue";
-import {useEraLiteGameMenu} from "#/features/home/useEraLiteGameMenu.ts";
 import {HelpCircleIcon} from "@yaesandbox-frontend/shared-ui/icons";
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
+import {useGameMenu} from "@yaesandbox-frontend/core-services/playerSave";
 
 const message = useMessage();
-const gameMenu = useEraLiteGameMenu();
+const gameMenu = useGameMenu();
 const autoLoadEnabled = useScopedStorage('startup:auto-load-enabled', false);
 
 const showSaveManager = ref(false);
@@ -86,14 +86,18 @@ const newGameName = ref('新的冒险');
 watch(
     // 监听 gameMenu 是否初始化完成
     () => gameMenu.isInitialized.value,
-    (isReady) => {
+    (isReady) =>
+    {
       // 只有在初始化完成后才执行检查
-      if (isReady) {
+      if (isReady)
+      {
         // 检查开关是否开启，并且确实有上次的存档记录
-        if (autoLoadEnabled.value && gameMenu.lastActiveSlotName.value) {
+        if (autoLoadEnabled.value && gameMenu.lastActiveSlotName.value)
+        {
           message.loading('正在自动加载上次游戏...', {duration: 1500});
           // 延迟一小段时间给用户看清提示
-          setTimeout(() => {
+          setTimeout(() =>
+          {
             gameMenu.loadLastGame();
           }, 500);
         }
@@ -103,16 +107,20 @@ watch(
     {immediate: true}
 );
 
-async function handleContinue() {
+async function handleContinue()
+{
   await gameMenu.loadLastGame();
 }
 
-function handleNewGame() {
+function handleNewGame()
+{
   showNewGameModal.value = true;
 }
 
-async function confirmNewGame() {
-  if (!newGameName.value.trim()) {
+async function confirmNewGame()
+{
+  if (!newGameName.value.trim())
+  {
     message.error('存档名不能为空');
     return;
   }

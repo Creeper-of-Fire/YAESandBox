@@ -17,7 +17,7 @@ const LAST_ACTIVE_SLOT_ID_KEY = 'lastActiveSlotId';
  * 它负责管理存档槽状态、与后端服务交互，并向上层提供响应式数据和操作方法。
  * @param deps - 包含所有已配置好的服务实例的对象。
  */
-export function useGameMenu(deps: GameMenuDependencies)
+export function createGameMenu(deps: GameMenuDependencies)
 {
     const {saveSlotManager, projectMetaStorage} = deps;
 
@@ -224,3 +224,5 @@ export function useGameMenu(deps: GameMenuDependencies)
         createSnapshot,
     };
 }
+
+export type IGameMenu = ReturnType<typeof createGameMenu>;

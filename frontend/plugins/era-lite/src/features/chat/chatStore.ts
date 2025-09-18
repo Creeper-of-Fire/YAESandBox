@@ -5,7 +5,7 @@ import {nanoid} from 'nanoid';
 import type {ChatMessage, ChatMessagePayload, ChatSession, EnrichedChatSession} from '#/types/chat';
 import {useCharacterStore} from '#/features/characters/characterStore.ts';
 import {useSceneStore} from '#/features/scenes/sceneStore.ts';
-import {useEraLiteSaveStore} from "#/features/home/useEraLiteSaveStore.ts";
+import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
 
 const STORAGE_KEY_SESSIONS = 'era-lite-chat-sessions';
 const STORAGE_KEY_MESSAGES = 'era-lite-chat-messages';

@@ -51,13 +51,13 @@ import CharacterDisplayCard from './CharacterDisplayCard.vue';
 import {useRouter} from "vue-router";
 import {useChatStore} from '#/features/chat/chatStore.ts';
 import SaveManagerCard from "#/share/SaveManagerCard.vue";
-import {useEraLiteGameMenu} from "#/features/home/useEraLiteGameMenu.ts";
+import {useGameMenu} from "@yaesandbox-frontend/core-services/playerSave";
 
 const router = useRouter();
 const sessionStore = useSessionStore();
 const chatStore = useChatStore();
 const message = useMessage();
-const gameMenu = useEraLiteGameMenu();
+const gameMenu = useGameMenu();
 
 function quitToMainMenu()
 {

@@ -1,16 +1,15 @@
-﻿import {useEraLiteGameMenu} from "#/features/home/useEraLiteGameMenu.ts";
-import type {ISaveManager} from "@yaesandbox-frontend/core-services/playerSave";
-import type {SaveSlot} from "@yaesandbox-frontend/core-services/playerSave";
+﻿import type {SaveSlot} from "src/player-save/index.ts";
+import {type ISaveManager, useGameMenu} from "src/player-save/index.ts";
 
 /**
- * 这是 ISaveManager 接口的 Era-Lite 具体实现。
- * 它作为一个适配器，将 useEraLiteGameMenu 提供的通用功能
+ * 这是 ISaveManager 接口的具体实现。
+ * 它作为一个适配器，将 useGameMenu 提供的通用功能
  * 转换为 useSaveManagerCard UI Composable 所需的特定契约。
  */
-export function useEraLiteSaveManager(): ISaveManager
+export function useSaveManager(): ISaveManager
 {
     // 1. 获取底层的、包含所有核心业务逻辑的 gameMenu 实例
-    const gameMenu = useEraLiteGameMenu();
+    const gameMenu = useGameMenu();
 
     // 2. 实现 ISaveManager 接口的每一个部分
     // 查询方法

@@ -2,6 +2,7 @@
 import {ref, toRaw, watch} from 'vue';
 import type {IScopedStorage} from "./storage/IScopedStorage.ts";
 import type {SaveSlot} from "./storage/ISaveSlotManager.ts";
+import {cloneDeep} from "lodash-es";
 
 interface ScopedPersistentStateOptions<T>
 {
@@ -31,7 +32,7 @@ export function createScopedPersistentState<T>(
 {
     const {initialState, scopedStorage, activeSlot, deep = true} = options;
 
-    const state: Ref<T> = ref(JSON.parse(JSON.stringify(initialState))) as Ref<T>;
+    const state: Ref<T> = ref(cloneDeep(initialState)) as Ref<T>;
 
     // 表示“状态是否已与一个【具体的存档文件】同步”
     const isReady = ref(false);
@@ -46,12 +47,12 @@ export function createScopedPersistentState<T>(
             // 只有当存储中有值时才覆盖，否则保持 initialState
             state.value = storedValue !== null && storedValue !== undefined
                 ? storedValue
-                : JSON.parse(JSON.stringify(initialState)); // 使用深拷贝避免污染
+                : cloneDeep(initialState); // 使用深拷贝避免污染
         } catch (error)
         {
             console.error(`[createScopedPersistentState] 加载 [token: ${token.substring(0, 8)}... / ${fileName}] 时失败:`, error);
             // 加载失败时也恢复到初始状态
-            state.value = JSON.parse(JSON.stringify(initialState));
+            state.value = cloneDeep(initialState);
         } finally
         {
             // 无论成功与否，加载过程都已完成
@@ -80,7 +81,7 @@ export function createScopedPersistentState<T>(
      */
     function resetToInitial()
     {
-        state.value = JSON.parse(JSON.stringify(initialState));
+        state.value = cloneDeep(initialState);
         isReady.value = false;
     }
 

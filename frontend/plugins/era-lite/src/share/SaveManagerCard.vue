@@ -33,7 +33,7 @@
 <script lang="ts" setup>
 import {NButton, NCard, NDivider, NH4, NList, NListItem, NSpace, NTag, NThing, NTime} from 'naive-ui';
 import {useSaveManagerCard} from "@yaesandbox-frontend/core-services/playerSave";
-import {useEraLiteSaveManager} from "../features/home/useEraLiteSaveManager.ts";
+import {useSaveManager} from "@yaesandbox-frontend/core-services/playerSave";
 
 const getSlotTypeName = (saveType: string) =>
 {
@@ -45,7 +45,7 @@ const getSlotTypeName = (saveType: string) =>
     return '未知';
 }
 
-const saveManager = useEraLiteSaveManager();
+const saveManager = useSaveManager();
 
 const {
   slots,

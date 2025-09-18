@@ -7,5 +7,8 @@ export * from './storage/IProjectMetaStorage'
 
 export * from './createScopedPersistentState'
 export * from './ISaveUIManager'
-export * from './useGameMenu'
+export * from './ScopedSaveStoreFactory'
 export * from './useSaveManagerCard'
+export * from './useSaveManager'
+
+export {useGameMenu} from './injectKeys'
