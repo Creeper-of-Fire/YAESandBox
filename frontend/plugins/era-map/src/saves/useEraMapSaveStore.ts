@@ -5,17 +5,17 @@
 } from "@yaesandbox-frontend/core-services/playerSave";
 import {useProjectUniqueName} from "@yaesandbox-frontend/core-services/injectKeys";
 
-export const useEraLiteSaveStore = createScopedSaveStoreFactory('era-lite-save-store');
+export const useEraMapSaveStore = createScopedSaveStoreFactory('era-map-save-store');
 
 /**
  * 【EraLite 创建器】
  * 这是 EraLite 应用的顶层工厂函数，负责组装存档系统。
  */
-export function createAndProvideEraLiteGameSaveService(): IGameSaveService
+export function createAndProvideEraMapGameSaveService(): IGameSaveService
 {
     const projectUniqueName = useProjectUniqueName()
 
-    const saveStore = useEraLiteSaveStore();
+    const saveStore = useEraMapSaveStore();
 
     return createAndProvideApiGameSaveService({
         uniqueName: projectUniqueName,
@@ -37,10 +37,10 @@ saveStore使用时需要先声明好使用哪个存档。
 
 <script lang="ts" setup>
     import StartupView from "xxx/StartupView.vue";
-    import {createAndProvideEraLiteGameSaveService} from "xxx/useEraLiteSaveStore.ts";
+    import {createAndProvideEraMapGameSaveService} from "xxx/useEraMapSaveStore.ts";
     import {computed} from "vue";
 
-    const saveService = createAndProvideEraLiteGameSaveService();
+    const saveService = createAndProvideEraMapGameSaveService();
     const activeSlot = computed(()=>saveService.activeSlot.value)
 </script>
 后续：
@@ -49,7 +49,7 @@ function quitToMainMenu(){ saveService.quitToMainMenu(); }
 
 
 如何在Pinia中使用？
-const globalStore = useEraLiteSaveStore();
+const globalStore = useEraMapSaveStore();
 const {state: state, isReady: isReady} = globalStore.createState<T>(STORAGE_KEY_T, []);
 state直接是Ref<T>类型，然后它会自动被序列化，直接拿着修改就行了，注意别把响应式搞掉。
  */
