@@ -4,47 +4,72 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref,toRefs,watch } from 'vue';
 import { TILE_SIZE } from '#/constant';
-import {FieldLayer} from "#/game-logic/entity/field/render/FieldLayer.ts";
+import {FieldContainerLayer} from "#/game-logic/entity/field/render/FieldContainerLayer.ts";
+import type {FieldEntity} from "#/game-logic/entity/field/FieldEntity.ts";
+import {useWorldStateStore} from "#/stores/useWorldStateStore.ts";
 
 const props = defineProps<{
-  layer: FieldLayer;
+  layer: FieldContainerLayer;
 }>();
-
+const { layer } = toRefs(props);
 const imageRef = ref<HTMLCanvasElement | null>(null);
 
-// 在组件挂载时，一次性将场数据绘制到离屏Canvas上
-onMounted(() => {
-  const { data, name } = props.layer;
-  if (!data || data.length === 0) return;
+// 辅助函数：定义不同场的渲染策略
+function renderField(context: CanvasRenderingContext2D, entity: FieldEntity, width: number, height: number) {
+  const { name, data } = entity;
 
-  const width = data.length;
-  const height = data[0].length;
-
-  const canvas = document.createElement('canvas');
-  canvas.width = width * TILE_SIZE;
-  canvas.height = height * TILE_SIZE;
-  const context = canvas.getContext('2d')!;
-
-  // 示例：渲染光照场。我们可以根据场名称选择不同的渲染策略
-  // TODO 之后可以改成数据驱动的
+  // 我们可以根据场名称选择不同的渲染策略
   if (name === 'light_level') {
     for (let x = 0; x < width; x++) {
       for (let y = 0; y < height; y++) {
-        const intensity = data[x][y];
+        const intensity = data[x]?.[y] ?? 0;
         // 将光照强度转换为黑色遮罩的透明度
-        // intensity=1 -> a=0 (全亮)
-        // intensity=0 -> a=1 (全黑)
+        // intensity=1 -> alpha=0 (全亮)
+        // intensity=0 -> alpha=1 (全黑)
         context.fillStyle = `rgba(0, 0, 0, ${1 - intensity})`;
         context.fillRect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
       }
     }
   }
-  // 可以在这里添加 else if 来处理其他类型的场，如温度等
+  // 未来可以在这里添加 else if 来处理其他类型的场，如温度（渲染为红蓝色调的热图）等
+  // TODO 又或者使用fieldRegistry定义的方式来处理场
+  // else if (name === 'temperature') { ... }
+}
+
+// 核心渲染逻辑
+function drawFieldsToCanvas() {
+  if (layer.value.entities.length === 0) {
+    imageRef.value = null;
+    return;
+  }
+
+  // 从 world state 获取地图尺寸，这是更可靠的数据源
+  const worldState = useWorldStateStore();
+  const gridWidth = worldState.logicalGameMap?.gridWidth;
+  const gridHeight = worldState.logicalGameMap?.gridHeight;
+
+  if (!gridWidth || !gridHeight) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.width = gridWidth * TILE_SIZE;
+  canvas.height = gridHeight * TILE_SIZE;
+  const context = canvas.getContext('2d')!;
+
+  // 遍历容器层中的所有场实体，并将它们依次绘制到同一个 canvas 上
+  for (const entity of layer.value.entities) {
+    renderField(context, entity, gridWidth, gridHeight);
+  }
 
   imageRef.value = canvas;
-});
+}
+
+// 在组件挂载时进行首次绘制
+onMounted(drawFieldsToCanvas);
+
+// 如果场的实体列表可能发生变化（例如动态添加/移除场），可以添加一个监听器
+watch(() => layer.value.entities, drawFieldsToCanvas, { deep: true });
 
 const imageConfig = computed(() => ({
   image: imageRef.value,

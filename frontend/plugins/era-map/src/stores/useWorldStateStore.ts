@@ -1,14 +1,16 @@
-﻿import {defineStore} from 'pinia';
-import {computed, type Ref, ref} from 'vue';
-import {GameMap} from '#/game-logic/GameMap.ts';
-import {createGameObjectEntity} from '#/game-logic/entity/gameObject/GameObjectEntityFactory.ts';
-import type {GameObjectEntity} from '#/game-logic/entity/gameObject/GameObjectEntity.ts';
-import type {FullLayoutData} from '#/game-resource/types';
-import {kenney_roguelike_rpg_pack} from '#/game-resource/tilesetRegistry';
-import {ParticleLayer} from "#/game-logic/entity/particle/render/ParticleLayer.ts";
-import {FieldLayer} from "#/game-logic/entity/field/render/FieldLayer.ts";
-import {TileMapLayer} from "#/game-resource/TileMapLayer.ts";
-import {LogicalObjectLayer} from "#/game-logic/entity/gameObject/render/LogicalObjectLayer.ts";
+﻿import { defineStore } from 'pinia';
+import { computed, type Ref, ref } from 'vue';
+import { GameMap } from '#/game-logic/GameMap.ts';
+import { createGameObjectEntity } from '#/game-logic/entity/gameObject/GameObjectEntityFactory.ts';
+import type { GameObjectEntity } from '#/game-logic/entity/gameObject/GameObjectEntity.ts';
+import type { FullLayoutData } from '#/game-resource/types';
+import { kenney_roguelike_rpg_pack } from '#/game-resource/tilesetRegistry';
+import { TileMapLayer } from "#/game-resource/TileMapLayer.ts";
+import { LogicalObjectLayer } from "#/game-logic/entity/gameObject/render/LogicalObjectLayer.ts";
+import { FieldEntity } from "#/game-logic/entity/field/FieldEntity.ts";
+import { FieldContainerLayer } from "#/game-logic/entity/field/render/FieldContainerLayer.ts";
+import { ParticleEntity } from "#/game-logic/entity/particle/ParticleEntity.ts";
+import { ParticleContainerLayer } from "#/game-logic/entity/particle/render/ParticleContainerLayer.ts";
 
 // 一个辅助函数，暂时放在这里
 function createWalledRectangle(width: number, height: number, wallTileId: number, floorTileId: number): number[][]
@@ -60,23 +62,28 @@ export const useWorldStateStore = defineStore('world-state', () =>
         {
             const layers = [];
 
-            // 1. 创建渲染层 (瓦片、场、粒子) - 这部分逻辑和旧 TavernMap 类似
+            // 1. 创建渲染层 (瓦片、场、粒子)
             const w = kenney_roguelike_rpg_pack.tileItem.stone_wall;
             const f = kenney_roguelike_rpg_pack.tileItem.wooden_floor;
+            // TODO 之后改成更好的背景图生成
             const backgroundLayout = createWalledRectangle(layoutData.meta.gridWidth, layoutData.meta.gridHeight, w, f);
             layers.push(new TileMapLayer({
                 tilesetId: kenney_roguelike_rpg_pack.id,
                 data: backgroundLayout,
             }));
 
-            for (const fieldName in layoutData.fields)
-            {
-                layers.push(new FieldLayer({name: fieldName, data: layoutData.fields[fieldName]}));
+            const fieldEntities = Object.entries(layoutData.fields).map(([name, data]) => {
+                return new FieldEntity({ name, data });
+            });
+            if (fieldEntities.length > 0) {
+                layers.push(new FieldContainerLayer(fieldEntities));
             }
 
-            for (const particleName in layoutData.particles)
-            {
-                layers.push(new ParticleLayer(layoutData.particles[particleName]));
+            const particleEntities = Object.values(layoutData.particles).map(particleData => {
+                return new ParticleEntity(particleData);
+            });
+            if (particleEntities.length > 0) {
+                layers.push(new ParticleContainerLayer(particleEntities));
             }
 
             // 2. 创建逻辑对象层

@@ -1,9 +1,11 @@
 ﻿import type {ILayer} from "#/game-logic/entity/ILayer.ts";
-import type {GameObjectEntity} from "#/game-logic/entity/gameObject/GameObjectEntity.ts";
+import  {type GameObjectEntity} from "#/game-logic/entity/gameObject/GameObjectEntity.ts";
 import {type Component, defineAsyncComponent} from "vue";
+import type {IEntityContainer} from "#/game-logic/entity/IEntityContainer.ts";
+import type {IGameEntity} from "#/game-logic/entity/IGameEntity.ts";
 
-// LogicalObjectLayer 只是一个简单的容器，持有 ObjectEntity 数组
-export class LogicalObjectLayer implements ILayer
+
+export class LogicalObjectLayer implements ILayer,IEntityContainer
 {
 
     public readonly objects: GameObjectEntity[];
@@ -18,5 +20,9 @@ export class LogicalObjectLayer implements ILayer
         return defineAsyncComponent(() =>
             import('#/components/renderers/ObjectLayerRenderer.vue')
         );
+    }
+
+    public getEntitiesAt(gridX: number, gridY: number): IGameEntity[] {
+        return this.objects.filter(obj => obj.getInfoAt(gridX, gridY) !== null);
     }
 }

@@ -3,45 +3,51 @@
 import {defineStore} from 'pinia';
 import {computed, ref} from 'vue';
 import type {SelectionDetails} from './types';
-import type {IGameEntity} from "#/game-logic/entity/entity.ts";
-import {GameObjectEntity} from "#/game-logic/entity/gameObject/GameObjectEntity.ts";
+import type {IGameEntity} from "#/game-logic/entity/IGameEntity.ts";
+import {type EntityInfo, EntityInfoType} from "#/game-logic/entity/entityInfo.ts";
 
 export const useSelectionStore = defineStore('selection', () =>
 {
     // --- State ---
-    const selectedEntities = ref<IGameEntity[]>([]);
+    const selectedGridPos = ref<{ x: number, y: number } | null>(null);
+    const selectedEntitiesAtPos = ref<IGameEntity[]>([]);
 
     // --- Getters ---
-    const hasSelection = computed(() => selectedEntities.value.length > 0);
+    const hasSelection = computed(() => selectedEntitiesAtPos.value.length > 0);
 
-    const selectedObjects = computed(() =>
-    {
-        return selectedEntities.value
-            .filter((e): e is GameObjectEntity => e instanceof GameObjectEntity)
-            .map(obj => ({
-                id: obj.id,
-                type: obj.type,
-                // 未来可以在这里暴露更多用于UI的信息，如obj.properties.name
-            }));
+    const selectionDetails = computed((): EntityInfo[] => {
+        if (!selectedGridPos.value) return [];
+
+        const { x, y } = selectedGridPos.value;
+        return selectedEntitiesAtPos.value
+            .map(entity => entity.getInfoAt(x, y))
+            .filter((info): info is EntityInfo => info !== null);
     });
 
-    const selectedFields = computed(() => []);
-    const selectedParticles = computed(() =>  []);
-
+    const selectedObjects = computed(() =>
+        selectionDetails.value.filter(d => d.type === EntityInfoType.GameObject)
+    );
+    const selectedFields = computed(() =>
+        selectionDetails.value.filter(d => d.type === EntityInfoType.Field)
+    );
+    const selectedParticles = computed(() =>
+        selectionDetails.value.filter(d => d.type === EntityInfoType.Particle)
+    );
 
     // --- Actions ---
-    function selectEntities(entities: IGameEntity[])
-    {
-        selectedEntities.value = entities;
+    function selectEntities(entities: IGameEntity[], gridPos: { x: number, y: number }) {
+        selectedEntitiesAtPos.value = entities;
+        selectedGridPos.value = gridPos;
     }
 
-    function clearSelection()
-    {
-        selectedEntities.value = [];
+    function clearSelection() {
+        selectedEntitiesAtPos.value = [];
+        selectedGridPos.value = null;
     }
 
     return {
         // state (via computed)
+        selectionDetails,
         selectedObjects,
         selectedFields,
         selectedParticles,

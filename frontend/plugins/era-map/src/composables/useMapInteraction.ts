@@ -5,7 +5,7 @@ import {computed, ref} from 'vue';
 import {TILE_SIZE} from '#/constant';
 import {useSelectionStore} from '#/game-logic/selectionStore';
 import type {GameMap} from "#/game-logic/GameMap.ts";
-import type {IGameEntity} from "#/game-logic/entity/entity.ts";
+import type {IGameEntity} from "#/game-logic/entity/IGameEntity.ts";
 
 export function useMapInteraction(gameMap: Ref<GameMap | null>)
 {
@@ -133,7 +133,7 @@ export function useMapInteraction(gameMap: Ref<GameMap | null>)
 
         // 分支2: 获取数据、转换并更新 Pinia store
         const entities = gameMap.value.getEntitiesAtGridPosition(gridX, gridY);
-        selectionStore.selectEntities(entities);
+        selectionStore.selectEntities(entities, { x: gridX, y: gridY });
     }
 
 

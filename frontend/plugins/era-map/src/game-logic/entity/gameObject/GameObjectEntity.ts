@@ -1,5 +1,6 @@
 ﻿import type {GameObjectRender} from '#/game-logic/entity/gameObject/render/GameObjectRender.ts';
-import type {IGameEntity} from "#/game-logic/entity/entity.ts";
+import type {IGameEntity} from "#/game-logic/entity/IGameEntity.ts";
+import {type EntityInfo, EntityInfoType, type GameObjectInfo} from "#/game-logic/entity/entityInfo.ts";
 
 /**
  * 代表游戏世界中的一个逻辑实体。
@@ -51,7 +52,8 @@ export class GameObjectEntity implements IGameEntity
         };
     }
 
-    public getGridBoundingBox() {
+
+    private getGridBoundingBox() {
         const size = this.renderInfo.config.gridSize || { width: 1, height: 1 };
         return {
             x: this.renderInfo.gridPosition.x,
@@ -59,5 +61,19 @@ export class GameObjectEntity implements IGameEntity
             width: size.width,
             height: size.height,
         };
+    }
+
+    public getInfoAt(gridX: number, gridY: number): GameObjectInfo | null {
+        const box = this.getGridBoundingBox();
+        if (
+            gridX >= box.x && gridX < box.x + box.width &&
+            gridY >= box.y && gridY < box.y + box.height
+        ) {
+            return {
+                type: EntityInfoType.GameObject,
+                entity: this,
+            };
+        }
+        return null;
     }
 }

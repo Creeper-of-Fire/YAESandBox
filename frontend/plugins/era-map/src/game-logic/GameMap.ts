@@ -1,7 +1,8 @@
 ﻿import type {GameObjectEntity} from '#/game-logic/entity/gameObject/GameObjectEntity.ts';
-import type {IGameEntity} from "#/game-logic/entity/entity.ts";
+import type {IGameEntity} from "#/game-logic/entity/IGameEntity.ts";
 import {LogicalObjectLayer} from "#/game-logic/entity/gameObject/render/LogicalObjectLayer.ts";
 import type {ILayer} from "#/game-logic/entity/ILayer.ts";
+import type {IEntityContainer} from "#/game-logic/entity/IEntityContainer.ts";
 
 // GameMap 是我们的世界状态的顶层容器
 export class GameMap
@@ -39,31 +40,37 @@ export class GameMap
         return undefined;
     }
 
-    // TODO 现在问题很大，不包含其他类型，而且getGridBoundingBox感觉也不是最优解，应该还是让getGrid请求一个上下文进去，然后注册自身比较好？再看看
-    public getEntitiesAtGridPosition(gridX: number, gridY: number): IGameEntity[]
-    {
+    /**
+     * 在指定的网格位置获取所有实体。
+     */
+    public getEntitiesAtGridPosition(gridX: number, gridY: number): IGameEntity[] {
         const entities: IGameEntity[] = [];
 
-        for (const layer of this.layers)
-        {
-            // 假设层本身可以被查询，或者我们检查层的内容
-            // 这里我们假设 layer 包含一个 entities 数组
-            if ('objects' in layer && Array.isArray(layer.objects))
-            {
-                for (const entity of (layer as LogicalObjectLayer).objects)
-                {
-                    const box = entity.getGridBoundingBox();
-                    if (
-                        gridX >= box.x && gridX < box.x + box.width &&
-                        gridY >= box.y && gridY < box.y + box.height
-                    )
-                    {
-                        entities.push(entity);
-                    }
-                }
+        for (const layer of this.layers) {
+            // 关键：我们只关心这个层是不是一个“实体容器”。
+            // 我们使用 "in" 操作符进行类型守卫，这比 `instanceof` 更灵活。
+            if ('getEntitiesAt' in layer) {
+                const container = layer as ILayer & IEntityContainer;
+                entities.push(...container.getEntitiesAt(gridX, gridY));
             }
-            // 未来可以扩展到 FieldEntity, ParticleEntity 等
         }
         return entities;
+    }
+
+    public toJSON() {
+        return {
+            gridWidth: this.gridWidth,
+            gridHeight: this.gridHeight,
+            layers: this.layers.map(layer => {
+                // 每一层也需要 toJSON() 方法
+                // @ts-ignore
+                if (typeof layer.toJSON === 'function') {
+                    // @ts-ignore
+                    return layer.toJSON();
+                }
+                // 对于简单的层，可能直接返回其属性
+                return layer;
+            }),
+        };
     }
 }

@@ -48,11 +48,6 @@ import InstructionStreamPanel from '#/components/creator/InstructionStreamPanel.
 import {useWorldStateStore} from '#/stores/useWorldStateStore';
 import {useInstructionStreamStore} from '#/stores/useInstructionStreamStore';
 
-// 导入资产和类型
-import {registry} from "#/game-resource/tilesetRegistry.ts";
-// @ts-ignore
-import initLayoutJson from '#/assets/init_layout.json';
-import type {FullLayoutData} from '#/game-resource/types';
 import {InstructionType} from '#/game-logic/types';
 
 // --- 初始化 Store ---
@@ -68,16 +63,6 @@ const objectOptions = computed(() =>
     label: `${obj.type} (${obj.id.slice(0, 4)})`,
     value: obj.id,
   }));
-});
-
-// --- 加载初始数据 ---
-onMounted(async () =>
-{
-  // 确保资源已加载
-  await registry();
-  // 从JSON文件加载世界骨架
-  // @ts-ignore
-  worldState.loadInitialState(initLayoutJson as FullLayoutData);
 });
 
 // --- 事件处理 ---
