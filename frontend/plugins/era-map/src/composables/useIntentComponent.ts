@@ -70,7 +70,7 @@ export function useIntentComponent(instructionRef: Ref<Instruction>,workflowFilt
 
     /**
      * 触发AI生成。
-     * @param config - 由UI层（例如 WorkflowSelectorButton）传入的已选定工作流配置。
+     * @param config - 由UI层（例如 WorkflowSelectorButton.vue）传入的已选定工作流配置。
      */
     async function generate(config: WorkflowConfig) {
         instructionStore.updateInstruction(instructionRef.value.id, {

@@ -11,6 +11,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./composables": "./src/composables.ts",
+    "./workflow": "./src/workflow/index.ts",
     "./types": "./src/types/index.ts",
     "./injectKeys": "./src/utils/injectKeys.ts",
     "./playerSave": "./src/player-save/index.ts"

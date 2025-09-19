@@ -76,7 +76,7 @@
             style="flex-grow: 1;"
             type="textarea"
         />
-        <WorkflowProviderButton
+        <WorkflowSelectorButton
             ref="workflowBtnRef"
             :disabled="!userInput.trim() || isLoading"
             :filter="workflowFilter"
@@ -103,19 +103,19 @@ import {NButton, NFlex, NH2, NIcon, NInput, NLayout, NLayoutContent, NLayoutHead
 import {useChatStore} from './chatStore.ts';
 import ChatMessageDisplay from './ChatMessageDisplay.vue';
 import type {WorkflowConfig} from "@yaesandbox-frontend/core-services/types";
-import {useStructuredWorkflowStream} from "@yaesandbox-frontend/core-services/composables";
-import WorkflowProviderButton from "#/components/WorkflowProviderButton.vue";
+import {useScopedStorage, useStructuredWorkflowStream, type WorkflowFilter} from "@yaesandbox-frontend/core-services/composables";
+import {WorkflowSelectorButton} from '@yaesandbox-frontend/core-services/workflow'
 import {useCharacterStore} from "#/features/characters/characterStore.ts";
 import {useSceneStore} from "#/features/scenes/sceneStore.ts";
 import {EarthIcon} from "#/utils/icon.ts";
 import {CodeIcon, HelpCircleIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 import {defaultTransformMessageContent} from "#/features/chat/messageTransformer.ts";
 import ResizableMonacoEditorModal from "#/features/chat/ResizableMonacoEditorModal.vue";
 import {useScriptCompiler} from "#/features/chat/useScriptCompiler.ts";
 
-const workflowFilter = ref({
-  expectedInputs: ['history_json', 'playerCharacter_json', 'targetCharacter_json', 'scene_json']
+const workflowFilter = ref<WorkflowFilter>({
+  expectedInputs: ['history_json', 'playerCharacter_json', 'targetCharacter_json', 'scene_json'],
+  requiredTags: ['聊天'],
 });
 
 

@@ -53,14 +53,14 @@
         <n-form-item-gi v-if="isHistoryRelative" :span="2" label="Order" path="injection_order">
           <template #label>
             Order
-            <n-tooltip trigger="hover">
+            <n-popover trigger="hover">
               <template #trigger>
                 <n-icon class="ml-1 cursor-help">
                   <HelpCircleIcon/>
                 </n-icon>
               </template>
               当多个提示注入到相同的深度时，此值用于排序。值从小到大排列。
-            </n-tooltip>
+            </n-popover>
           </template>
           <n-input-number
               v-model:value="formData.injection_order"
@@ -130,7 +130,7 @@ import {
   NInputNumber,
   NSelect,
   NText,
-  NTooltip,
+  NPopover,
   useThemeVars,
 } from 'naive-ui';
 import {CloseIcon as CloseIcon, HelpCircleIcon, SaveIcon as SaveIcon} from '@yaesandbox-frontend/shared-ui/icons';

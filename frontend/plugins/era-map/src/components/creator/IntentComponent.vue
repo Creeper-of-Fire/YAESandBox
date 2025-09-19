@@ -90,7 +90,7 @@ import {Close as CloseIcon} from '@vicons/ionicons5';
 import type {Instruction} from '#/game-logic/types';
 import {useIntentComponent} from '#/composables/useIntentComponent';
 import {useWorldStateStore} from '#/stores/useWorldStateStore';
-import WorkflowSelectorButton from './WorkflowProviderButton.vue'
+import {WorkflowSelectorButton} from '@yaesandbox-frontend/core-services/workflow'
 import {type WorkflowFilter} from "@yaesandbox-frontend/core-services/composables";
 
 const props = defineProps<{

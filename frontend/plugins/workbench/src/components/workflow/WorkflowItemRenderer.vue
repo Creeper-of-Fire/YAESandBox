@@ -9,6 +9,13 @@
       <n-dynamic-tags v-model:value="workflowInputsRef"/>
     </n-card>
 
+    <n-card size="small" style="margin-bottom: 16px;" title="工作流标签">
+      <n-text depth="3" style="font-size: 12px; display: block; margin-bottom: 8px;">
+        为工作流添加描述性标签，便于在选择器中进行分类和筛选。
+      </n-text>
+      <n-dynamic-tags v-model:value="workflowTagsRef"/>
+    </n-card>
+
 
     <!-- 工作流的枢机列表 (可拖拽排序，接受来自全局资源的枢机) -->
     <CollapsibleConfigList
@@ -42,6 +49,15 @@ const props = defineProps<{
 const workflowInputsRef = computed({
   get: () => props.workflow?.workflowInputs || [],
   set: (value) => props.workflow.workflowInputs = Array.isArray(value) ? value : []
+});
+
+const workflowTagsRef = computed({
+  get: () => props.workflow?.tags || [],
+  set: (value) => {
+    if (props.workflow) {
+      props.workflow.tags = Array.isArray(value) ? value : [];
+    }
+  }
 });
 
 </script>

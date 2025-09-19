@@ -15,6 +15,7 @@
         :expected-inputs="['topic']"
         :schema="characterSchema"
         entity-name="角色"
+        :required-tags="['角色生成']"
         generation-prompt-label="输入你想要生成的角色描述，例如：一位从未来穿越而来的机器人武士"
         storage-key="character-generator"
         title="AI 角色生成器"

@@ -19,6 +19,7 @@
     <GeneratorPanel
         v-model="generatedItem"
         :expected-inputs="['topic']"
+        :required-tags="['物品生成']"
         :schema="itemSchema"
         entity-name="物品"
         generation-prompt-label="输入你想要生成的物品描述，例如：一把能斩断噩梦的短剑"

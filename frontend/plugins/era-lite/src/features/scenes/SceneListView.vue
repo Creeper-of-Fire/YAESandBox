@@ -15,6 +15,7 @@
         :expected-inputs="['topic']"
         :schema="sceneSchema"
         entity-name="场景"
+        :required-tags="['场景生成']"
         generation-prompt-label="输入你想要生成的场景描述，例如：一个悬浮在云海之上的古代图书馆"
         storage-key="scene-generator"
         title="AI 场景生成器"

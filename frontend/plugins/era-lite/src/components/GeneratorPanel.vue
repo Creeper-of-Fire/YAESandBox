@@ -1,4 +1,5 @@
-﻿<template>
+﻿<!-- GeneratorPanel.vue -->
+<template>
   <n-card :title="props.title">
     <n-flex :size="12" vertical>
       <!-- 用户输入区域 -->
@@ -10,7 +11,7 @@
       />
 
       <!-- 配置提供者按钮 -->
-      <WorkflowProviderButton
+      <WorkflowSelectorButton
           :filter="workflowFilter"
           :storage-key="props.storageKey"
           @click="handleGenerate"
@@ -75,7 +76,7 @@ import {
   useFlatDataWithSchema,
   useStructuredWorkflowStream, type WorkflowFilter
 } from '@yaesandbox-frontend/core-services/composables';
-import WorkflowProviderButton from "#/components/WorkflowProviderButton.vue";
+import {WorkflowSelectorButton} from '@yaesandbox-frontend/core-services/workflow'
 import EntityEditor from "#/components/EntityEditor.vue";
 import {useVModel} from "@vueuse/core";
 
@@ -84,6 +85,7 @@ const props = defineProps<{
   schema: EntityFieldSchema[];
   storageKey: string;
   expectedInputs: string[];
+  requiredTags?: string[];
   title: string;
   generationPromptLabel: string;
   entityName: string;
@@ -96,6 +98,7 @@ const emit = defineEmits<{
 
 const workflowFilter = ref<WorkflowFilter>({
   expectedInputs: props.expectedInputs,
+  requiredTags: props.requiredTags,
 });
 
 const message = useMessage();
