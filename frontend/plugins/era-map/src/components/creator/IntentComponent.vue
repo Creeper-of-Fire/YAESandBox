@@ -17,10 +17,10 @@
           type="textarea"
       />
       <WorkflowSelectorButton
-          :filter="enrichObjectWorkflowFilter"
+          :filter="workflowFilter"
           :storage-key="workflowStorageKey"
           style="margin-top: 8px;"
-          @select="generate"
+          @click="generate"
       />
     </div>
 
@@ -46,9 +46,9 @@
         <!-- TODO "重试"按钮需要一个 ref 来获取上次选择的工作流，但是实际上根本没有做 -->
         <WorkflowSelectorButton
             ref="retryButtonRef"
-            :filter="enrichObjectWorkflowFilter"
+            :filter="workflowFilter"
             :storage-key="workflowStorageKey"
-            @select="generate"
+            @click="generate"
         />
         <n-button size="small" type="primary" @click="applyProposal">应用</n-button>
       </n-space>
@@ -87,11 +87,12 @@ import {
   NText
 } from 'naive-ui';
 import {Close as CloseIcon} from '@vicons/ionicons5';
-import type {Instruction} from '#/game-logic/types';
-import {useIntentComponent} from '#/composables/useIntentComponent';
+import {useIntentComponent} from './useIntentComponent';
 import {useWorldStateStore} from '#/stores/useWorldStateStore';
 import {WorkflowSelectorButton} from '@yaesandbox-frontend/core-services/workflow'
 import {type WorkflowFilter} from "@yaesandbox-frontend/core-services/composables";
+import {type Instruction, InstructionType} from "#/components/creator/instruction.ts";
+import type {WorkflowConfig} from "@yaesandbox-frontend/core-services/types";
 
 const props = defineProps<{
   instruction: Instruction;
@@ -102,8 +103,19 @@ const worldState = useWorldStateStore();
 
 const enrichObjectWorkflowFilter = ref<WorkflowFilter>({
   expectedInputs: ['user_prompt', 'object_type', 'existing_properties'],
-  requiredTags: ['enrichment'],
+  requiredTags: ['丰富对象'],
 });
+
+const initializeComponentWorkflowFilter = ref<WorkflowFilter>({
+  expectedInputs: ['user_prompt', 'object_type', 'component_type'],
+  requiredTags: ['属性组初始化'],
+});
+
+const workflowFilter = computed(() => instruction.value.type === InstructionType.INITIALIZE_COMPONENT
+    ? initializeComponentWorkflowFilter.value
+    : enrichObjectWorkflowFilter.value
+)
+
 
 const {
   isGenerating,
@@ -112,7 +124,7 @@ const {
   generate,
   applyProposal,
   discard,
-} = useIntentComponent(instruction, enrichObjectWorkflowFilter);
+} = useIntentComponent(instruction);
 
 // --- UI 计算属性 ---
 const workflowStorageKey = computed(() => `intent-component-workflow--${instruction.value.type}`);
@@ -122,6 +134,12 @@ const targetObject = computed(() => worldState.logicalGameMap?.findObjectById(ta
 const cardTitle = computed(() =>
 {
   if (!targetObject.value) return `指令 ${instruction.value.id.slice(0, 4)}`;
-  return `丰富对象: ${targetObject.value.type} (${targetObject.value.id.slice(0, 4)})`;
+  const objectInfo = `${targetObject.value.type} (${targetObject.value.id.slice(0, 4)})`;
+
+  if (instruction.value.type === InstructionType.INITIALIZE_COMPONENT)
+  {
+    return `初始化组件 [${instruction.value.context.componentType}] for ${objectInfo}`;
+  }
+  return `丰富对象: ${objectInfo}`;
 });
 </script>

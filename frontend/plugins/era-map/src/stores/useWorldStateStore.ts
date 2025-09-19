@@ -81,33 +81,29 @@ export const useWorldStateStore = defineStore(WORLD_STATE_STORAGE_KEY, () =>
     watch(logicalGameMap, dehydrateForSave, { deep: true });
 
     /**
-     * 将AI的提案应用到指定对象上。
-     * 这是唯一允许修改世界状态中对象属性的入口点，保证了数据流的单向性。
-     * @param proposal - 包含目标对象ID和要合并的属性数据。
+     * 将AI提案应用到指定对象上。
+     * 它只接收最终计算好的、完整的属性对象，并直接替换掉旧的。
+     * @param payload - 包含目标对象ID和要应用的【全新】属性对象。
      */
-    function applyProposal(proposal: { targetObjectId: string; data: Record<string, any> })
+    function applyProposal(payload: {
+        targetObjectId: string;
+        newProperties: Record<string, any>;
+    })
     {
-        if (!logicalGameMap.value)
-        {
+        if (!logicalGameMap.value) {
             console.error("Cannot apply proposal: World state is not loaded.");
             return;
         }
 
-        const targetObject = logicalGameMap.value.findObjectById(proposal.targetObjectId);
+        const targetObject = logicalGameMap.value.findObjectById(payload.targetObjectId);
 
-        if (targetObject)
-        {
-            // 使用对象展开语法进行浅合并，这对于原型阶段足够了
-            // TODO 对于深层嵌套的属性，未来可能需要一个深合并工具函数
-            targetObject.properties = {
-                ...targetObject.properties,
-                ...proposal.data,
-            };
-            console.log(`Proposal applied to object ${proposal.targetObjectId}`, targetObject);
-        }
-        else
-        {
-            console.error(`Cannot apply proposal: Object with ID ${proposal.targetObjectId} not found.`);
+        if (targetObject) {
+            // 直接、完整地替换 `properties`
+            // 这保证了数据流的单向性和可预测性。
+            targetObject.properties = payload.newProperties;
+            console.log(`Properties for object ${payload.targetObjectId} have been updated.`, targetObject);
+        } else {
+            console.error(`Cannot apply proposal: Object with ID ${payload.targetObjectId} not found.`);
         }
     }
 

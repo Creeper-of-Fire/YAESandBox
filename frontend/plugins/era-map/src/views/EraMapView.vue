@@ -25,7 +25,7 @@
 import GameLayout from '#/layouts/GameLayout.vue';
 
 // 导入要填充到布局中的内容组件
-import InteractiveMapView from "#/components/creator/InteractiveMapView.vue";
+import InteractiveMapView from "#/components/InteractiveMapView.vue";
 import CharacterPanel from "#/components/panels/CharacterPanel.vue";
 import SelectionPanel from "#/components/panels/SelectionPanel.vue";
 import LogPanel from "#/components/panels/LogPanel.vue";

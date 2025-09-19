@@ -1,8 +1,7 @@
 ﻿import { defineStore } from 'pinia';
 import { ref, type Ref } from 'vue';
 import { v4 as uuidv4 } from 'uuid';
-import type { Instruction } from '#/game-logic/types';
-import { InstructionType, InstructionStatus } from '#/game-logic/types';
+import {type Instruction, InstructionStatus, InstructionType} from "#/components/creator/instruction.ts";
 
 export const useInstructionStreamStore = defineStore('instruction-stream', () => {
     // --- State ---

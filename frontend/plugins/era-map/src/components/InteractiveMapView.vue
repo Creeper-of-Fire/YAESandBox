@@ -49,7 +49,7 @@ import {useElementSize} from '@vueuse/core';
 import {GameMap} from '#/game-logic/GameMap.ts';
 
 // 导入渲染组件
-import {TILE_SIZE} from '#/constant';
+import {TILE_SIZE} from '#/constant.ts';
 import {useMapInteraction} from '#/composables/useMapInteraction.ts';
 import {GameObjectEntity} from "#/game-logic/entity/gameObject/GameObjectEntity.ts";
 import GameObjectRenderer from "#/components/GameObjectRenderer.vue";
