@@ -1,5 +1,5 @@
 ﻿import {computed} from 'vue';
-import {useWorkflowStream} from './useWorkflowStream';
+import {useWorkflowStream} from './base/useWorkflowStream.ts';
 import {extractAllThoughts} from './workflowParser.ts';
 import type {ComplexPropertyValue} from './streaming.ts';
 

@@ -20,7 +20,7 @@
 
 <script lang="ts" setup>
 import {computed, toRefs} from 'vue';
-import {GameObject} from '#/game-render/GameObject';
+import {GameObjectRender} from '#/game-render/GameObjectRender.ts';
 import {RenderType, type ShapeRenderConfig, type SpriteComponent} from '#/game-render/types';
 import {TILE_SIZE} from "#/constant.ts";
 import type {Tileset} from "#/game-render/Tileset.ts";
@@ -28,7 +28,7 @@ import { resourceManager } from '#/game-render/ResourceManager';
 
 // --- Props ---
 const props = defineProps<{
-  gameObject: GameObject;
+  gameObject: GameObjectRender;
   highlight?: boolean;
 }>();
 

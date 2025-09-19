@@ -1,6 +1,6 @@
 ﻿import { computed, ref, watch, type Ref } from 'vue';
-import type { EntityFieldSchema } from './entitySchema';
-import { getKey } from './entitySchema';
+import type { EntityFieldSchema } from './entitySchema.ts';
+import { getKey } from './entitySchema.ts';
 
 type FlatData = Record<string, string>;
 type TypedData = Record<string, string | number | null>;

@@ -1,0 +1,106 @@
+﻿<template>
+  <n-card :title="cardTitle" size="small" :bordered="false" style="background: #333;">
+    <template #header-extra>
+      <n-button text @click="discard" v-if="instruction.status !== 'APPLIED'">
+        <template #icon><n-icon :component="CloseIcon" /></template>
+      </n-button>
+    </template>
+
+    <!-- 状态 1: 等待用户输入 -->
+    <div v-if="instruction.status === 'PENDING_USER_INPUT'">
+      <n-input
+          v-model:value="instruction.userInput.prompt"
+          type="textarea"
+          placeholder="输入你的想法，例如：一张刻有神秘符文的桌子"
+          :autosize="{ minRows: 2 }"
+      />
+      <WorkflowSelectorButton
+          :storage-key="workflowSelector.storageKey"
+          :filter="workflowSelector.filter.value"
+          @select="generate"
+          style="margin-top: 8px;"
+      />
+    </div>
+
+    <!-- 状态 2: 正在生成 -->
+    <div v-if="isGenerating">
+      <n-progress type="line" status="processing" :percentage="100" :show-indicator="false" :processing="true" />
+      <n-text depth="3" style="font-size: 12px; margin-top: 8px;">思考中...</n-text>
+      <n-collapse v-if="thinkingProcess">
+        <n-collapse-item title="查看思考过程" name="1">
+          <pre style="white-space: pre-wrap; font-size: 12px;">{{ thinkingProcess }}</pre>
+        </n-collapse-item>
+      </n-collapse>
+    </div>
+
+    <!-- 状态 3: 提案已生成 -->
+    <div v-if="hasValidProposal">
+      <n-descriptions label-placement="top" bordered :column="1" size="small">
+        <n-descriptions-item v-for="(value, key) in instruction.aiProposal" :key="key" :label="key">
+          {{ value }}
+        </n-descriptions-item>
+      </n-descriptions>
+      <n-space justify="end" style="margin-top: 12px;">
+        <n-button size="small" @click="generate(workflowSelector.selectedWorkflowConfig.value!)" :disabled="!workflowSelector.selectedWorkflowConfig.value">重试</n-button>
+        <n-button size="small" type="primary" @click="applyProposal">应用</n-button>
+      </n-space>
+    </div>
+
+    <!-- 状态 4: 已应用 -->
+    <div v-if="instruction.status === 'APPLIED'">
+      <n-log :log="`提案已成功应用到对象 ${targetObjectId}`" />
+    </div>
+
+    <!-- 状态 5: 错误 -->
+    <div v-if="instruction.status === 'ERROR'">
+      <n-alert title="发生错误" type="error">
+        {{ instruction.error }}
+      </n-alert>
+    </div>
+
+  </n-card>
+</template>
+
+<script lang="ts" setup>
+import { computed, toRefs, defineAsyncComponent } from 'vue';
+import { NCard, NInput, NButton, NSpace, NProgress, NText, NCollapse, NCollapseItem, NDescriptions, NDescriptionsItem, NLog, NAlert, NIcon } from 'naive-ui';
+import { Close as CloseIcon } from '@vicons/ionicons5';
+import type { Instruction } from '#/game-logic/types';
+import { useIntentComponent } from '#/composables/useIntentComponent';
+import { useWorldStateStore } from '#/stores/useWorldStateStore';
+import WorkflowSelectorButton from './WorkflowProviderButton.vue'
+
+const props = defineProps<{
+  instruction: Instruction;
+}>();
+
+const { instruction } = toRefs(props);
+const worldState = useWorldStateStore();
+
+const {
+  isGenerating,
+  hasValidProposal,
+  thinkingProcess,
+  generate,
+  applyProposal,
+  discard,
+  workflowSelector,
+} = useIntentComponent(instruction);
+
+// --- UI 计算属性 ---
+const targetObjectId = computed(() => instruction.value.context.targetObjectId);
+const targetObject = computed(() => worldState.logicalGameMap?.findObjectById(targetObjectId.value || ''));
+
+const cardTitle = computed(() => {
+  if (!targetObject.value) return `指令 ${instruction.value.id.slice(0, 4)}`;
+  return `丰富对象: ${targetObject.value.type} (${targetObject.value.id.slice(0, 4)})`;
+});
+</script>
+
+<style scoped>
+pre {
+  background-color: #222;
+  padding: 8px;
+  border-radius: 4px;
+}
+</style>

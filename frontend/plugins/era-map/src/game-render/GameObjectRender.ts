@@ -2,7 +2,8 @@
 import { TILE_SIZE } from '../constant';
 import { v4 as uuidv4 } from 'uuid';
 
-export class GameObject {
+export class GameObjectRender
+{
     public readonly id: string;
     public readonly type: string;
     public readonly config: GameObjectConfig;
@@ -15,7 +16,7 @@ export class GameObject {
     // 尺寸信息（像素单位）
     public size: { width: number, height: number };
 
-    constructor(data: RawGameObjectData, config: GameObjectConfig) {
+    constructor(id: string, data: RawGameObjectData, config: GameObjectConfig) {
         if (data.grid_pos.length !== 2 || data.visual_pos.length !== 2) {
             // 抛出一个明确的错误，而不是静默失败
             throw new Error(`Invalid position data for object type "${data.obj_type}". Expected 2-element arrays.`);
@@ -24,7 +25,7 @@ export class GameObject {
             throw new Error(`Invalid grid_size for object type "${data.obj_type}". Expected a 2-element array.`);
         }
 
-        this.id = uuidv4(); // 为每个对象生成唯一ID，便于Vue的key绑定
+        this.id = id;
         this.type = data.obj_type;
         this.config = config;
         this.rotation = data.visual_angle;

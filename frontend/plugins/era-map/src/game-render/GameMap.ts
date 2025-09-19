@@ -1,4 +1,4 @@
-﻿import type { GameObject } from './GameObject';
+﻿import type { GameObjectRender } from './GameObjectRender.ts';
 import { defineAsyncComponent, type Component } from 'vue';
 import type { FieldLayerData, ParticleLayerData } from './types';
 
@@ -54,9 +54,9 @@ export class ParticleLayer implements ILayer {
 }
 
 export class ObjectLayer implements ILayer {
-    public readonly objects: GameObject[];
+    public readonly objects: GameObjectRender[];
 
-    constructor(objects: GameObject[]) {
+    constructor(objects: GameObjectRender[]) {
         this.objects = objects;
     }
 
@@ -68,7 +68,7 @@ export class ObjectLayer implements ILayer {
 }
 
 export interface CellData {
-    objects: GameObject[];
+    objects: GameObjectRender[];
     fields: { name: string; value: number }[];
     particles: { type: string; count: number }[];
 }

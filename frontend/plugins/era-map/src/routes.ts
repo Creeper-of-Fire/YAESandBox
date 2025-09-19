@@ -9,7 +9,7 @@ export const routes: RouteRecordRaw[] = [
         children: [
             {
                 path: '',
-                component: () => import('#/EraMapView.vue'),
+                component: () => import('#/views/CreatorView.vue'),
             }
         ]
     }

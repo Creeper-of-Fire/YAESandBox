@@ -1,5 +1,5 @@
 ﻿import {computed, type Ref} from 'vue';
-import {useWorkflowSelector} from './useWorkflowSelector';
+import {useWorkflowSelector} from './useWorkflowSelector.ts';
 
 /**
  * 定义了用于筛选工作流的条件。

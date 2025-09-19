@@ -14,7 +14,7 @@ from prototype import Settings
 # 1. 数据导出 (Data Export)
 # =============================================================================
 
-def  export_context_to_json(context: GenerationContext, settings: Settings, filename="layout.json"):
+def  export_context_to_json(context: GenerationContext, settings: Settings, filename="init_layout.json"):
     """将生成上下文中的所有游戏对象和数据场导出为前端可以使用的JSON文件。"""
 
     # --- 序列化 Fields ---

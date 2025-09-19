@@ -1,4 +1,4 @@
-﻿import type {ComplexPropertyValue} from './streaming';
+﻿import type {ComplexPropertyValue} from './streaming.ts';
 
 
 /**

@@ -75,14 +75,14 @@
 <script lang="ts" setup>
 import {computed, onMounted, ref} from 'vue';
 import {TILE_SIZE} from '#/constant';
-import {type CellData, FieldLayer, GameMap, ObjectLayer, ParticleLayer, TileLayer} from '#/game-render/GameMap';
+import {FieldLayer, GameMap, ObjectLayer, ParticleLayer, TileLayer} from '#/game-render/GameMap';
 import {createGameObject} from '#/game-render/GameObjectFactory';
-import type {GameObject} from '#/game-render/GameObject';
+import type {GameObjectRender} from '#/game-render/GameObjectRender.ts';
 import {useElementSize} from '@vueuse/core';
 import type {FullLayoutData} from '#/game-render/types';
 
 // 静态资源导入
-import layoutJson from '#/assets/layout.json';
+import initLayoutJson from '#/assets/init_layout.json';
 import {registry, kenney_roguelike_rpg_pack} from "#/game-render/tilesetRegistry.ts";
 import GameObjectRenderer from "#/components/GameObjectRenderer.vue";
 import {useMapInteraction} from "#/composables/useMapInteraction.ts";
@@ -199,7 +199,7 @@ onMounted(async () =>
   {
     // 类型断言，让TypeScript知道我们加载的是新结构
     // @ts-ignore
-    const layoutData = layoutJson as FullLayoutData;
+    const layoutData = initLayoutJson as FullLayoutData;
 
     // 1. 加载所有资产
     await registry()
@@ -239,7 +239,7 @@ onMounted(async () =>
     // -- 渲染顺序 4: 实体对象 --
     const gameObjects = layoutData.objects
         .map(createGameObject)
-        .filter((o): o is GameObject => o !== null);
+        .filter((o): o is GameObjectRender => o !== null);
     layers.push(new ObjectLayer(gameObjects));
 
     // 3. 创建 GameMap 实例
