@@ -31,17 +31,17 @@ export class GameMap
         // 保持类实例而不是纯对象
         keepDiscriminatorProperty: true,
     })
-    public readonly layers: ILayer[];
+    public layers: ILayer[];
 
-    constructor(config: {
-        gridWidth: number;
-        gridHeight: number;
-        layers: ILayer[];
-    })
+    constructor(
+        gridWidth: number,
+        gridHeight: number,
+        layers: ILayer[],
+    )
     {
-        this.gridWidth = config.gridWidth;
-        this.gridHeight = config.gridHeight;
-        this.layers = config.layers;
+        this.gridWidth = gridWidth;
+        this.gridHeight = gridHeight;
+        this.layers = layers;
     }
 
     // 我们可以添加一个辅助方法来方便地查找对象

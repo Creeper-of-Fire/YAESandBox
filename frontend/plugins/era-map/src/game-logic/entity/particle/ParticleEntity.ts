@@ -9,17 +9,23 @@ export class ParticleEntity implements IGameEntity
     @Expose()
     public readonly entityType: string = 'PARTICLE_ENTITY';
     @Expose()
-    public readonly id: string; // 就是 type
-    @Expose()
-    public readonly particleType: string;
-    @Expose()
     public readonly data: ParticleLayerData;
 
     constructor(data: ParticleLayerData)
     {
+        // 我们不能在构造函数中访问data的属性，因为class-transformer会调用这个构造函数，然后传入undefined
+        // 所以，我们把id和particleType从属性改为getter
         this.data = data;
-        this.particleType = data.type;
-        this.id = data.type;
+    }
+
+    public get id(): string
+    {
+        return this.data.type;
+    }
+
+    public get particleType(): string
+    {
+        return this.data.type;
     }
 
     public getInfoAt(gridX: number, gridY: number): ParticleInfo | null

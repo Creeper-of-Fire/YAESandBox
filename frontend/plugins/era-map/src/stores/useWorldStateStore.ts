@@ -5,28 +5,6 @@ import {LogicalObjectLayer} from "#/game-logic/entity/gameObject/render/LogicalO
 import {useEraMapSaveStore} from "#/saves/useEraMapSaveStore.ts";
 import { serializationService } from '#/services/SerializationService.ts';
 
-// 一个辅助函数，暂时放在这里
-function createWalledRectangle(width: number, height: number, wallTileId: number, floorTileId: number): number[][]
-{
-    const layout: number[][] = [];
-    for (let y = 0; y < height; y++)
-    {
-        const row: number[] = [];
-        for (let x = 0; x < width; x++)
-        {
-            if (y === 0 || y === height - 1 || x === 0 || x === width - 1)
-            {
-                row.push(wallTileId);
-            }
-            else
-            {
-                row.push(floorTileId);
-            }
-        }
-        layout.push(row);
-    }
-    return layout;
-}
 const WORLD_STATE_STORAGE_KEY = 'world-state';
 export const useWorldStateStore = defineStore(WORLD_STATE_STORAGE_KEY, () =>
 {

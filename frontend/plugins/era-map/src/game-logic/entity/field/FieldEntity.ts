@@ -8,17 +8,17 @@ export class FieldEntity implements IGameEntity
     @Expose()
     public readonly entityType: string = 'FIELD_ENTITY';
     @Expose()
-    public readonly id: string; // 就是 name
+    public readonly id: string;
     @Expose()
     public readonly name: string;
     @Expose()
     public readonly data: number[][];
 
-    constructor(config: { name: string; data: number[][] })
+    constructor(name: string, data: number[][])
     {
-        this.name = config.name;
-        this.id = config.name;
-        this.data = config.data;
+        this.name = name;
+        this.id = name;
+        this.data = data;
     }
 
     public getInfoAt(gridX: number, gridY: number): FieldInfo | null

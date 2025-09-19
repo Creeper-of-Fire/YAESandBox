@@ -12,10 +12,10 @@ export class TileMapLayer implements ILayer
     @Expose()
     public readonly layerType = LayerType.TileMapLayer;
 
-    constructor(config: { tilesetId: string; data: number[][] })
+    constructor( tilesetId: string, data: number[][] )
     {
-        this.tilesetId = config.tilesetId;
-        this.data = config.data;
+        this.tilesetId = tilesetId;
+        this.data = data;
     }
 
     public getRendererComponent(): Component

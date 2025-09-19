@@ -23,6 +23,20 @@ export class GameObjectRender
 
     constructor(id: string, data: RawGameObjectData, config: GameObjectConfig)
     {
+        // class-transformer必定会调用这个构造函数，然后传入一大堆undefined，我们在这里糊弄它和ts
+        // class-transformer传入的undefined本质上是无害的，因为它会立刻在调用构造函数后开始填充，但是如果在构造函数里面调用undefined对象的属性，就会抛出错误
+        if (!id || !data || !config)
+        {
+            this.id = '';
+            this.type = 'UNKNOWN';
+            this.config = {} as any;
+            this.gridPosition = { x: 0, y: 0 };
+            this.position = { x: 0, y: 0 };
+            this.rotation = 0;
+            this.size = { width: 0, height: 0 };
+            return
+        }
+
         if (data.grid_pos.length !== 2 || data.visual_pos.length !== 2)
         {
             // 抛出一个明确的错误，而不是静默失败
