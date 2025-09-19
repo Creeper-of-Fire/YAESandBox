@@ -35,4 +35,9 @@ public record WorkflowConfig
     /// 这是工作流数据流向的唯一依据。
     /// </summary>
     public List<WorkflowConnection>? Connections { get; init; } = [];
+    
+    /// <summary>
+    /// 工作流的标签，属于元数据，用于筛选等。
+    /// </summary>
+    public List<string>? Tags { get; init; }
 }

@@ -1,10 +1,53 @@
 ﻿import {computed} from 'vue';
-import {useWorkflowStream} from '@yaesandbox-frontend/core-services/composables';
-import {extractAllThoughts, getText, parseNumber} from '#/utils/workflowParser';
-import type {ComplexPropertyValue} from '#/types/streaming';
-import {type EntityFieldSchema, getKey} from "#/types/entitySchema.ts";
+import {useWorkflowStream} from './useWorkflowStream';
+import {extractAllThoughts} from './workflowParser.ts';
+import type {ComplexPropertyValue} from './streaming.ts';
 
 // --- 辅助函数 ---
+
+/**
+ * 递归地将 ComplexPropertyValue 对象扁平化为一个单层 Record<string, string>。
+ * 'think' 标签会被自动忽略。
+ * 路径由双下划线'__'连接。
+ * @param data - 要扁平化的对象
+ * @returns 扁平化后的对象
+ */
+export function flattenToText(data: ComplexPropertyValue | undefined): Record<string, string>
+{
+    const result: Record<string, string> = {};
+
+    function recurse(current: any, path: string[])
+    {
+        if (!current || typeof current !== 'object')
+        {
+            return;
+        }
+
+        // 如果存在 _text 属性，这是一个叶子节点
+        if (typeof current._text === 'string')
+        {
+            result[path.join('__')] = current._text;
+            return;
+        }
+
+        // 否则，继续遍历子属性
+        for (const key in current)
+        {
+            // 忽略 'think' 标签和 '_text' 自身
+            if (key !== 'think' && key !== '_text' && Object.prototype.hasOwnProperty.call(current, key))
+            {
+                recurse(current[key], [...path, key]);
+            }
+        }
+    }
+
+    if (data)
+    {
+        recurse(data, []);
+    }
+
+    return result;
+}
 
 /**
  * 根据路径从对象中安全地获取一个 ComplexPropertyValue。
@@ -40,17 +83,22 @@ function toXmlLikeString(data: ComplexPropertyValue | undefined, indent = 0): st
     {
         const value = anyData[key];
 
-        if (key === '_text') {
+        if (key === '_text')
+        {
             // 在其原始位置处理文本节点
-            if (typeof value === 'string' && value.trim()) {
+            if (typeof value === 'string' && value.trim())
+            {
                 parts.push(`${indentStr}${space}${value.trim()}`);
             }
-        } else if (value && typeof value === 'object') {
+        }
+        else if (value && typeof value === 'object')
+        {
             // 处理元素节点
             const childContent = toXmlLikeString(value, indent + 1);
 
             // 仅当子节点有内容，或是显式的空对象时（例如 <empty/>），才渲染标签
-            if (childContent || (Object.keys(value).length === 0)) {
+            if (childContent || (Object.keys(value).length === 0))
+            {
                 const formattedChild =
                     `${indentStr}${space}<${key}>\n` +
                     `${childContent}` +
@@ -71,9 +119,8 @@ function toXmlLikeString(data: ComplexPropertyValue | undefined, indent = 0): st
 /**
  * Composable 的配置选项。
  */
-interface StructuredStreamOptions {
-    /** 如果提供，将根据此 Schema 生成一个扁平化的数据对象 (`flatData`)。*/
-    schema?: EntityFieldSchema[];
+interface StructuredStreamOptions
+{
     /** 如果提供，将把此路径下的数据转换为一个类 XML 字符串 (`xmlLikeString`)。空数组[]表示根路径。*/
     xmlToStringPath?: string[];
 }
@@ -88,7 +135,7 @@ interface StructuredStreamOptions {
  */
 export function useStructuredWorkflowStream(options: StructuredStreamOptions = {})
 {
-    const { schema, xmlToStringPath } = options;
+    const {xmlToStringPath} = options;
 
     // 1. 核心：底层的流式数据源
     const {
@@ -99,22 +146,18 @@ export function useStructuredWorkflowStream(options: StructuredStreamOptions = {
         execute,
     } = useWorkflowStream<ComplexPropertyValue>();
 
-    // 2. 按需计算：扁平化的数据模型 (仅在提供了 schema 时)
-    const flatData = schema
-        ? computed<Record<string, string | number | null>>(() => {
-            if (!rawStreamData.value) return {};
-            return schema.reduce((acc, field) => {
-                const key = getKey(field);
-                const complexValue = getValueByPath(rawStreamData.value, field.path);
-                acc[key] = field.dataType === 'number' ? parseNumber(complexValue) : getText(complexValue);
-                return acc;
-            }, {} as Record<string, string | number | null>);
-        })
-        : undefined;
+    // 2. 计算属性：通用的扁平化数据模型
+    //    将所有路径展平，所有值提取为文本。
+    const flatTextData = computed<Record<string, string>>(() =>
+    {
+        if (!rawStreamData.value) return {};
+        return flattenToText(rawStreamData.value);
+    });
 
     // 3. 按需计算：类 XML 字符串 (仅在提供了 xmlToStringPath 时)
     const xmlLikeString = xmlToStringPath
-        ? computed<string>(() => {
+        ? computed<string>(() =>
+        {
             if (!rawStreamData.value) return '';
             const targetNode = getValueByPath(rawStreamData.value, xmlToStringPath);
             return toXmlLikeString(targetNode);
@@ -123,13 +166,15 @@ export function useStructuredWorkflowStream(options: StructuredStreamOptions = {
 
 
     // 4. 附加的辅助计算属性 (总是提供，因为它开销很小且通用)
-    const thinkingProcess = computed<string>(() => {
+    const thinkingProcess = computed<string>(() =>
+    {
         if (!rawStreamData.value) return '';
         return extractAllThoughts(rawStreamData.value);
     });
 
     // 5. 控制函数
-    function clear() {
+    function clear()
+    {
         rawStreamData.value = null;
     }
 
@@ -146,7 +191,7 @@ export function useStructuredWorkflowStream(options: StructuredStreamOptions = {
         thinkingProcess,
 
         // --- 条件返回的派生数据 ---
-        ...(flatData && { flatData }),
-        ...(xmlLikeString && { xmlLikeString }),
+        flatTextData,
+        ...(xmlLikeString && {xmlLikeString}),
     };
 }

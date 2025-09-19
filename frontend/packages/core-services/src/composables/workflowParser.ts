@@ -1,4 +1,4 @@
-﻿import type {ComplexPropertyValue} from '#/types/streaming';
+﻿import type {ComplexPropertyValue} from './streaming';
 
 
 /**
@@ -10,19 +10,6 @@
 export function getText(value: ComplexPropertyValue | undefined): string
 {
     return value?._text || '';
-}
-
-/**
- * 从 ComplexPropertyValue 中解析数字。这是一个视图或最终逻辑处理的辅助函数。
- * @param value 要解析的值
- * @returns 解析后的数字，如果无法解析则为 null
- */
-export function parseNumber(value: ComplexPropertyValue | undefined): number | null
-{
-    const textValue = getText(value);
-    if (textValue === '') return null;
-    const parsed = parseInt(textValue, 10);
-    return isNaN(parsed) ? null : parsed;
 }
 
 /**

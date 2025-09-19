@@ -69,10 +69,14 @@
 import {computed, type Ref, ref, watch} from 'vue';
 import {useMessage} from 'naive-ui';
 import type {WorkflowConfig} from '@yaesandbox-frontend/core-services/types';
-import {useStructuredWorkflowStream} from '#/composables/useStructuredWorkflowStream';
+import {
+  type EntityFieldSchema,
+  getKey,
+  useFlatDataWithSchema,
+  useStructuredWorkflowStream
+} from '@yaesandbox-frontend/core-services/composables';
 import WorkflowProviderButton from "#/components/WorkflowProviderButton.vue";
 import EntityEditor from "#/components/EntityEditor.vue";
-import {type EntityFieldSchema, getKey} from "#/types/entitySchema.ts";
 import {useVModel} from "@vueuse/core";
 
 const props = defineProps<{
@@ -98,14 +102,16 @@ const showEditor = ref(false);
 const internalModel = useVModel(props, 'modelValue', emit) as Ref<Partial<T> | null>;
 
 const {
-  flatData,
+  flatTextData,
   isLoading,
   error,
   isFinished,
   execute,
   thinkingProcess,
   clear: clearStream,
-} = useStructuredWorkflowStream({schema: props.schema});
+} = useStructuredWorkflowStream();
+
+const {typedData: flatData} = useFlatDataWithSchema(flatTextData, props.schema)
 
 if (flatData)
 {

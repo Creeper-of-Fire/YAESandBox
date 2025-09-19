@@ -1,5 +1,5 @@
 ﻿import {NInput, NInputNumber} from 'naive-ui';
-import type {EntityFieldSchema} from '#/types/entitySchema';
+import type {EntityFieldSchema} from '@yaesandbox-frontend/core-services/composables';
 
 /**
  * 角色的实体字段 Schema

@@ -103,7 +103,7 @@ import {NButton, NFlex, NH2, NIcon, NInput, NLayout, NLayoutContent, NLayoutHead
 import {useChatStore} from './chatStore.ts';
 import ChatMessageDisplay from './ChatMessageDisplay.vue';
 import type {WorkflowConfig} from "@yaesandbox-frontend/core-services/types";
-import {useStructuredWorkflowStream} from "#/composables/useStructuredWorkflowStream.ts";
+import {useStructuredWorkflowStream} from "@yaesandbox-frontend/core-services/composables";
 import WorkflowProviderButton from "#/components/WorkflowProviderButton.vue";
 import {useCharacterStore} from "#/features/characters/characterStore.ts";
 import {useSceneStore} from "#/features/scenes/sceneStore.ts";

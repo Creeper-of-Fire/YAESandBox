@@ -32,7 +32,7 @@ import {computed, ref, watch} from 'vue';
 import type {FormInst, FormRules} from 'naive-ui';
 import {NButton, NFlex, NForm, NFormItem, NModal, useMessage} from 'naive-ui';
 import {useRefHistory} from '@vueuse/core';
-import {type EntityFieldSchema, getKey} from "#/types/entitySchema.ts";
+import {type EntityFieldSchema, getKey} from "@yaesandbox-frontend/core-services/composables";
 
 // 组件的 props 定义，使用泛型 T 约束实体类型，TMode 约束工作模式
 const props = defineProps<{

@@ -26,5 +26,9 @@ export type WorkflowConfig = {
      * 这是工作流数据流向的唯一依据。
      */
     connections?: Array<WorkflowConnection> | null;
+    /**
+     * 工作流的标签，属于元数据，用于筛选等。
+     */
+    tags?: Array<string> | null;
 };
 

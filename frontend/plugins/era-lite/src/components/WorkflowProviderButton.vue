@@ -20,26 +20,50 @@
           <span v-else>{{ buttonText }}</span>
         </n-button>
       </template>
-      <!-- 根据不同状态显示不同的 Tooltip 内容 -->
-      <n-flex v-if="selectedWorkflowConfig" :size="4" vertical>
-        <n-space align="center">
-          <n-text>当前使用:</n-text>
-          <n-tag round size="small" type="primary">{{ selectedWorkflowConfig.name }}</n-tag>
-        </n-space>
-        <n-text :depth="3" style="font-size: 12px;">右键可重新选择或清除。</n-text>
-      </n-flex>
-      <n-flex v-else-if="props.expectedInputs && props.expectedInputs.length > 0" :size="4" vertical>
-        <n-text>点击选择生成器，此场景需要输入:</n-text>
-        <n-space>
-          <n-tag v-for="input in props.expectedInputs" :key="input" round size="small" type="success">
-            {{ input }}
-          </n-tag>
-        </n-space>
-        <n-text :depth="3" style="font-size: 12px;">右键可进行操作。</n-text>
-      </n-flex>
-      <n-flex v-else :size="4" vertical>
-        <n-text>点击选择 AI 生成器。</n-text>
-        <n-text :depth="3" style="font-size: 12px;">右键可进行操作。</n-text>
+      <n-flex :size="8" style="max-width: 300px;" vertical>
+
+        <!-- 状态一：已选择一个工作流 -->
+        <template v-if="selectedWorkflowConfig">
+          <n-text strong>当前已配置</n-text>
+          <n-thing>
+            <template #header>
+              <n-text type="info">{{ selectedWorkflowConfig.name }}</n-text>
+            </template>
+            <template #description>
+              <n-space size="small">
+                <n-tag v-for="tag in selectedWorkflowConfig.tags" :key="tag" round size="small">{{ tag }}</n-tag>
+              </n-space>
+            </template>
+          </n-thing>
+          <n-divider style="margin: 4px 0;"/>
+          <n-text :depth="3" style="font-size: 12px;">
+            左键点击以执行，右键点击可重新选择或清除。
+          </n-text>
+        </template>
+
+        <!-- 状态二：未选择，但有明确的输入需求 -->
+        <template v-else-if="filter.expectedInputs?.length">
+          <n-text strong>需要一个生成器</n-text>
+          <n-text>此场景需要一个能处理以下输入的AI工作流：</n-text>
+          <n-space>
+            <n-tag v-for="input in filter.expectedInputs" :key="input" round type="success">{{ input }}</n-tag>
+          </n-space>
+          <n-divider style="margin: 4px 0;"/>
+          <n-text :depth="3" style="font-size: 12px;">
+            点击按钮以从列表中选择一个匹配的工作流。
+          </n-text>
+        </template>
+
+        <!-- 状态三：未选择，且没有特定需求 -->
+        <template v-else>
+          <n-text strong>未配置</n-text>
+          <n-text>点击以选择一个通用的AI工作流来执行任务。</n-text>
+          <n-divider style="margin: 4px 0;"/>
+          <n-text :depth="3" style="font-size: 12px;">
+            右键点击可进行更多操作。
+          </n-text>
+        </template>
+
       </n-flex>
     </n-popover>
 
@@ -62,23 +86,28 @@
         style="width: 600px"
         title="选择一个工作流"
     >
-      <n-alert v-if="props.expectedInputs && props.expectedInputs.length > 0" style="margin-bottom: 16px;" title="当前需求" type="info">
-        此场景需要一个能接收以下输入的工作流:
+      <n-alert v-if="filter.expectedInputs?.length" style="margin-bottom: 1rem;" title="场景需求" type="info">
+        此任务期望生成器能处理以下输入：
         <n-space :style="{ marginTop: '8px' }">
-          <n-tag v-for="input in props.expectedInputs" :key="input" type="success">
-            {{ input }}
-          </n-tag>
+          <n-tag v-for="input in filter.expectedInputs" :key="input" type="success">{{ input }}</n-tag>
         </n-space>
       </n-alert>
       <n-list bordered clickable hoverable>
-        <n-list-item v-for="workflow in sortedAndEnhancedWorkflows" :key="workflow.id"
+        <n-list-item v-for="workflow in filteredAndSortedWorkflows" :key="workflow.id"
                      @click="selectWorkflow(workflow.id)">
           <n-thing v-if="workflow.resource" :title="workflow.resource.name">
             <template #description>
-              <n-space>
-                <n-tag v-for="tag in workflow.tags" :key="tag.label" :type="tag.type" round size="small">
-                  {{ tag.label }}
+              <n-space align="center" size="small">
+                <!-- 智能提示标签 -->
+                <n-tag v-if="workflow.score.missingInputs === 0 && workflow.score.extraInputs === 0" round size="small" type="success">
+                  完美匹配
                 </n-tag>
+                <n-tag v-if="workflow.score.missingInputs > 0" round size="small" type="warning">缺少 {{ workflow.score.missingInputs }}
+                  项输入
+                </n-tag>
+
+                <!-- 工作流自身标签 -->
+                <n-tag v-for="tag in workflow.resource.tags" :key="tag" round size="small">{{ tag }}</n-tag>
               </n-space>
             </template>
           </n-thing>
@@ -91,13 +120,13 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NButton, NDropdown, NList, NListItem, NModal, NSpace, NSpin, NTag, NThing} from 'naive-ui';
-import {useWorkflowSelector} from '@yaesandbox-frontend/core-services/composables';
+import {useFilteredWorkflowSelector, type WorkflowFilter} from '@yaesandbox-frontend/core-services/composables';
 import type {WorkflowConfig} from '@yaesandbox-frontend/core-services/types';
 
 // 定义 Props & Emits
 const props = defineProps<{
   storageKey: string;
-  expectedInputs?: string[];
+  filter: WorkflowFilter;
 }>();
 
 const emit = defineEmits<{
@@ -106,59 +135,18 @@ const emit = defineEmits<{
 }>();
 
 // --- 核心逻辑 ---
-
-const sortedAndEnhancedWorkflows = computed(() =>
-{
-  if (!availableWorkflows.value) return [];
-  const expected = new Set(props.expectedInputs || []);
-
-  const enhanced = availableWorkflows.value.map(workflow =>
-  {
-    const wfInputs = new Set(workflow.resource?.workflowInputs || []);
-    const matchedInputs = new Set([...expected].filter(x => wfInputs.has(x)));
-    const extraInputs = new Set([...wfInputs].filter(x => !expected.has(x)));
-
-    // 评分: 1. 优先满足缺失少的, 2. 其次是冗余少的
-    const missingCount = expected.size - matchedInputs.size;
-    const extraCount = extraInputs.size;
-
-    // 生成标签并排序（匹配的在前）
-    const tags = [
-      ...Array.from(matchedInputs).map(label => ({label, type: 'success' as const})),
-      ...Array.from(extraInputs).map(label => ({label, type: 'default' as const}))
-    ];
-
-    return {
-      ...workflow,
-      score: {missingCount, extraCount},
-      tags,
-    };
-  });
-
-  // 排序
-  return enhanced.sort((a, b) =>
-  {
-    // 优先按缺失数量升序排
-    if (a.score.missingCount !== b.score.missingCount)
-    {
-      return a.score.missingCount - b.score.missingCount;
-    }
-    // 缺失数量相同，按冗余数量升序排
-    return a.score.extraCount - b.score.extraCount;
-  });
-});
-
+const filterRef = ref(props.filter);
 
 // 1. 复用 useWorkflowSelector 来处理状态和持久化
 const {
   isModalVisible,
   selectedWorkflowConfig,
-  availableWorkflows,
   isProviderLoading,
   openSelectorModal,
   selectWorkflow,
   clearSelection,
-} = useWorkflowSelector(props.storageKey);
+  filteredAndSortedWorkflows,
+} = useFilteredWorkflowSelector(props.storageKey, filterRef);
 
 defineExpose({
   selectedWorkflowConfig: selectedWorkflowConfig
