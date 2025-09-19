@@ -1,33 +1,43 @@
 ﻿// src/game-logic/selectionStore.ts
 
 import {defineStore} from 'pinia';
-import {ref, computed} from 'vue';
+import {computed, ref} from 'vue';
 import type {SelectionDetails} from './types';
+import type {IGameEntity} from "#/game-logic/entity/entity.ts";
+import {GameObjectEntity} from "#/game-logic/entity/gameObject/GameObjectEntity.ts";
 
-export const useSelectionStore = defineStore('selection', () => {
+export const useSelectionStore = defineStore('selection', () =>
+{
     // --- State ---
-    const currentSelection = ref<SelectionDetails | null>(null);
+    const selectedEntities = ref<IGameEntity[]>([]);
 
     // --- Getters ---
-    const hasSelection = computed(() =>
-        currentSelection.value !== null &&
-        (currentSelection.value.objects.length > 0 ||
-            currentSelection.value.fields.length > 0 ||
-            currentSelection.value.particles.length > 0)
-    );
+    const hasSelection = computed(() => selectedEntities.value.length > 0);
 
-    const selectedObjects = computed(() => currentSelection.value?.objects ?? []);
-    const selectedFields = computed(() => currentSelection.value?.fields ?? []);
-    const selectedParticles = computed(() => currentSelection.value?.particles ?? []);
+    const selectedObjects = computed(() =>
+    {
+        return selectedEntities.value
+            .filter((e): e is GameObjectEntity => e instanceof GameObjectEntity)
+            .map(obj => ({
+                id: obj.id,
+                type: obj.type,
+                // 未来可以在这里暴露更多用于UI的信息，如obj.properties.name
+            }));
+    });
+
+    const selectedFields = computed(() => []);
+    const selectedParticles = computed(() =>  []);
 
 
     // --- Actions ---
-    function selectDetails(details: SelectionDetails) {
-        currentSelection.value = details;
+    function selectEntities(entities: IGameEntity[])
+    {
+        selectedEntities.value = entities;
     }
 
-    function clearSelection() {
-        currentSelection.value = null;
+    function clearSelection()
+    {
+        selectedEntities.value = [];
     }
 
     return {
@@ -38,7 +48,7 @@ export const useSelectionStore = defineStore('selection', () => {
         // getters
         hasSelection,
         // actions
-        selectDetails,
+        selectEntities,
         clearSelection,
     };
 });

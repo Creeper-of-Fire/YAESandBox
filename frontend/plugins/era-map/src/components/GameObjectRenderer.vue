@@ -20,16 +20,16 @@
 
 <script lang="ts" setup>
 import {computed, toRefs} from 'vue';
-import {GameObjectRender} from '#/game-render/GameObjectRender.ts';
-import {RenderType, type ShapeRenderConfig, type SpriteComponent} from '#/game-render/types';
+import {GameObjectRender} from '#/game-logic/entity/gameObject/render/GameObjectRender.ts';
+import {RenderType, type ShapeRenderConfig, type SpriteComponent} from '#/game-resource/types';
 import {TILE_SIZE} from "#/constant.ts";
-import type {Tileset} from "#/game-render/Tileset.ts";
-import { resourceManager } from '#/game-render/ResourceManager';
-import type {LogicalGameObject} from "#/game-logic/LogicalGameObject.ts";
+import type {Tileset} from "#/game-resource/Tileset.ts";
+import { resourceManager } from '#/game-resource/ResourceManager';
+import type {GameObjectEntity} from "#/game-logic/entity/gameObject/GameObjectEntity.ts";
 
 // --- Props ---
 const props = defineProps<{
-  gameObject: LogicalGameObject;
+  gameObject: GameObjectEntity;
   highlight?: boolean;
 }>();
 

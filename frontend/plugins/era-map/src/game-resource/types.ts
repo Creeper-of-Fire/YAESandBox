@@ -24,7 +24,6 @@ export interface ParticleLayerData {
     type: string;
     seed: number;
     densityGrid: number[][]; // 一般来说应该是整数
-    particleConfig: ParticleConfig;
 }
 
 export interface AllParticleLayersData {

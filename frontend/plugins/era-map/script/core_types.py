@@ -16,9 +16,6 @@ class ParticleLayer:
     type: str  # e.g., "GRIME_PARTICLE"
     seed: int
     density_grid: np.ndarray
-    # 我们用一个字典来存储前端生成粒子所需的其他配置
-    # TODO 应该是在前端定义才对，这里先不管
-    particle_config: Dict[str, Any]
 
 
 @dataclass
@@ -78,8 +75,7 @@ def convert_objects_to_particles(
         ctx: GenerationContext,
         object_type_to_convert: str,
         target_particle_type: str,
-        seed: int,
-        particle_config: Dict[str, Any]
+        seed: int
 ) -> GenerationContext:
     """
     查找指定类型的GameObject，将它们转换为一个ParticleLayer，
@@ -119,8 +115,7 @@ def convert_objects_to_particles(
     new_particle_layer = ParticleLayer(
         type=target_particle_type,
         seed=seed,
-        density_grid=density_grid,
-        particle_config=particle_config
+        density_grid=density_grid
     )
 
     # 5. 将新的粒子层添加到上下文中

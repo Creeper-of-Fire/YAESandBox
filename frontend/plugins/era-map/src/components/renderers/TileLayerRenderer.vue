@@ -19,14 +19,14 @@
 
 <script lang="ts" setup>
 import { toRefs } from 'vue';
-import type { TileLayer } from '#/game-render/GameMap';
-import { resourceManager } from '#/game-render/ResourceManager';
+import { resourceManager } from '#/game-resource/ResourceManager';
 import { TILE_SIZE } from '#/constant';
+import {TileMapLayer} from "#/game-resource/TileMapLayer.ts";
 
 // 1. 定义Props：明确声明该组件需要一个类型为 TileLayer 的 layer 属性。
 //    这提供了强大的类型安全保证。
 const props = defineProps<{
-  layer: TileLayer;
+  layer: TileMapLayer;
 }>();
 
 // 使用 toRefs 保持响应性，虽然在这里 layer 本身不会改变，但这是个好习惯。

@@ -1,4 +1,4 @@
-﻿import {resourceManager} from "#/game-render/ResourceManager.ts";
+﻿import {resourceManager} from "#/game-resource/ResourceManager.ts";
 // @ts-ignore
 import tilesetAssetUrl from "#/assets/tilemap.png";
 // @ts-ignore

@@ -75,18 +75,21 @@
 <script lang="ts" setup>
 import {computed, onMounted, ref} from 'vue';
 import {TILE_SIZE} from '#/constant';
-import {FieldLayer, GameMap, ObjectLayer, ParticleLayer, TileLayer} from '#/game-render/GameMap';
-import {createGameObject} from '#/game-render/GameObjectFactory';
-import type {GameObjectRender} from '#/game-render/GameObjectRender.ts';
+import {ObjectLayer} from '#/game-resource/OldGameMap.ts';
+import {createGameObject} from '#/game-resource/GameObjectFactory';
+import type {GameObjectRender} from '#/game-logic/entity/gameObject/render/GameObjectRender.ts';
 import {useElementSize} from '@vueuse/core';
-import type {FullLayoutData} from '#/game-render/types';
+import type {FullLayoutData} from '#/game-resource/types';
 
 // 静态资源导入
 // @ts-ignore
 import initLayoutJson from '#/assets/init_layout.json';
-import {registry, kenney_roguelike_rpg_pack} from "#/game-render/tilesetRegistry.ts";
+import {registry, kenney_roguelike_rpg_pack} from "#/game-resource/tilesetRegistry.ts";
 import GameObjectRenderer from "#/components/GameObjectRenderer.vue";
 import {useMapInteraction} from "#/composables/useMapInteraction.ts";
+import {ParticleLayer} from "#/game-logic/entity/particle/render/ParticleLayer.ts";
+import {FieldLayer} from "#/game-logic/entity/field/render/FieldLayer.ts";
+import {TileMapLayer} from "#/game-resource/TileMapLayer.ts";
 
 // --- 响应式尺寸 ---
 // 创建一个 ref 来引用模板中的容器元素
@@ -215,7 +218,7 @@ onMounted(async () =>
         layoutData.meta.gridHeight,
         w, f
     );
-    layers.push(new TileLayer({
+    layers.push(new TileMapLayer({
       tilesetId: kenney_roguelike_rpg_pack.id,
       data: backgroundLayout,
     }));

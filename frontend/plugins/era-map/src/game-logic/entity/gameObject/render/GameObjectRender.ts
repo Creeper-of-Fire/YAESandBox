@@ -1,6 +1,5 @@
-﻿import type { RawGameObjectData, GameObjectConfig } from './types';
-import { TILE_SIZE } from '../constant';
-import { v4 as uuidv4 } from 'uuid';
+﻿import type { RawGameObjectData, GameObjectConfig } from '#/game-resource/types.ts';
+import { TILE_SIZE } from '#/constant.ts';
 
 export class GameObjectRender
 {

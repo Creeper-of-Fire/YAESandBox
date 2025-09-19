@@ -475,19 +475,11 @@ if __name__ == "__main__":
 
     # 7.2 将小脏污 GameObject 转换为粒子层
 
-    # 定义前端所需的粒子生成配置
-    grime_particle_config = {
-        "colorRange": [settings.COLORS["GRIME_SMALL"], "#4B5320"],  # 暗一点的橄榄色
-        "sizeRange": [1, 3],  # 像素大小范围
-        "placement": "random_within_cell"
-    }
-
     context = convert_objects_to_particles(
         ctx=context,
         object_type_to_convert="GRIME_SMALL",
         target_particle_type="grime",
         seed=19260817,  # 使用你喜欢的种子
-        particle_config=grime_particle_config
     )
 
     # 导出到 JSON

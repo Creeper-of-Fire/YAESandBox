@@ -1,13 +1,14 @@
-﻿import type {GameObjectRender} from '#/game-render/GameObjectRender';
+﻿import type {GameObjectRender} from '#/game-logic/entity/gameObject/render/GameObjectRender.ts';
+import type {IGameEntity} from "#/game-logic/entity/entity.ts";
 
 /**
  * 代表游戏世界中的一个逻辑实体。
  * 这是 "世界状态" 的核心组成部分，包含了渲染信息和由AI生成的、丰富的逻辑属性。
  */
-export class LogicalGameObject
+export class GameObjectEntity implements IGameEntity
 {
 
-    public readonly entityType: string = 'LOGICAL_GAME_OBJECT' as const;
+    public readonly entityType: string = 'GAME_OBJECT_ENTITY' as const;
 
     /**
      * 对象的唯一标识符，是整个系统中的主键。
@@ -47,6 +48,16 @@ export class LogicalGameObject
             type: this.type,
             renderInfo: this.renderInfo, // renderInfo本身已经是POJO-like
             properties: this.properties,
+        };
+    }
+
+    public getGridBoundingBox() {
+        const size = this.renderInfo.config.gridSize || { width: 1, height: 1 };
+        return {
+            x: this.renderInfo.gridPosition.x,
+            y: this.renderInfo.gridPosition.y,
+            width: size.width,
+            height: size.height,
         };
     }
 }

@@ -5,8 +5,8 @@
 
 <script lang="ts" setup>
 import { computed, onMounted, ref } from 'vue';
-import type { FieldLayer } from '#/game-render/GameMap';
 import { TILE_SIZE } from '#/constant';
+import {FieldLayer} from "#/game-logic/entity/field/render/FieldLayer.ts";
 
 const props = defineProps<{
   layer: FieldLayer;

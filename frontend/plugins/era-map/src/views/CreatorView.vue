@@ -2,7 +2,7 @@
   <n-layout has-sider style="height: 100%;">
     <!-- 左侧：世界画布 -->
     <n-layout-content>
-      <TavernMapPlus v-if="worldState.logicalGameMap && worldState.isLoaded" :game-map="worldState.logicalGameMap"/>
+      <InteractiveMapView v-if="worldState.logicalGameMap && worldState.isLoaded" :game-map="worldState.logicalGameMap"/>
       <div v-else class="loading-container">
         <n-spin size="large"/>
         <n-text>正在加载世界状态...</n-text>
@@ -43,16 +43,16 @@ import {NLayout, NLayoutContent, NLayoutSider, NSpin, NText} from 'naive-ui';
 import {storeToRefs} from 'pinia';
 
 // 导入我们的UI组件和Stores
-import TavernMapPlus from '#/components/creator/TavernMapPlus.vue';
+import InteractiveMapView from '#/components/creator/InteractiveMapView.vue';
 import InstructionStreamPanel from '#/components/creator/InstructionStreamPanel.vue';
 import {useWorldStateStore} from '#/stores/useWorldStateStore';
 import {useInstructionStreamStore} from '#/stores/useInstructionStreamStore';
 
 // 导入资产和类型
-import {registry} from "#/game-render/tilesetRegistry.ts";
+import {registry} from "#/game-resource/tilesetRegistry.ts";
 // @ts-ignore
 import initLayoutJson from '#/assets/init_layout.json';
-import type {FullLayoutData} from '#/game-render/types';
+import type {FullLayoutData} from '#/game-resource/types';
 import {InstructionType} from '#/game-logic/types';
 
 // --- 初始化 Store ---

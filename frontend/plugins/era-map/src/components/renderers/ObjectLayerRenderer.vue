@@ -12,7 +12,8 @@
 
 <script lang="ts" setup>
 import GameObjectRenderer from '#/components/GameObjectRenderer.vue';
-import type {LogicalObjectLayer} from "#/game-logic/LogicalGameMap.ts";
+
+import {LogicalObjectLayer} from "#/game-logic/entity/gameObject/render/LogicalObjectLayer.ts";
 
 // 同样，明确定义Props，接收一个 ObjectLayer 实例。
 defineProps<{

@@ -1,11 +1,14 @@
 ﻿import {defineStore} from 'pinia';
 import {computed, type Ref, ref} from 'vue';
-import {LogicalGameMap, LogicalObjectLayer} from '#/game-logic/LogicalGameMap';
-import {FieldLayer, ParticleLayer, TileLayer} from '#/game-render/GameMap';
-import {createLogicalGameObject} from '#/game-logic/LogicalGameObjectFactory';
-import type {LogicalGameObject} from '#/game-logic/LogicalGameObject';
-import type {FullLayoutData} from '#/game-render/types';
-import {kenney_roguelike_rpg_pack} from '#/game-render/tilesetRegistry';
+import {GameMap} from '#/game-logic/GameMap.ts';
+import {createGameObjectEntity} from '#/game-logic/entity/gameObject/GameObjectEntityFactory.ts';
+import type {GameObjectEntity} from '#/game-logic/entity/gameObject/GameObjectEntity.ts';
+import type {FullLayoutData} from '#/game-resource/types';
+import {kenney_roguelike_rpg_pack} from '#/game-resource/tilesetRegistry';
+import {ParticleLayer} from "#/game-logic/entity/particle/render/ParticleLayer.ts";
+import {FieldLayer} from "#/game-logic/entity/field/render/FieldLayer.ts";
+import {TileMapLayer} from "#/game-resource/TileMapLayer.ts";
+import {LogicalObjectLayer} from "#/game-logic/entity/gameObject/render/LogicalObjectLayer.ts";
 
 // 一个辅助函数，暂时放在这里
 function createWalledRectangle(width: number, height: number, wallTileId: number, floorTileId: number): number[][]
@@ -33,7 +36,7 @@ function createWalledRectangle(width: number, height: number, wallTileId: number
 export const useWorldStateStore = defineStore('world-state', () =>
 {
     // --- State ---
-    const logicalGameMap: Ref<LogicalGameMap | null> = ref(null);
+    const logicalGameMap: Ref<GameMap | null> = ref(null);
     const isLoaded = ref(false);
     const error = ref<string | null>(null);
 
@@ -61,7 +64,7 @@ export const useWorldStateStore = defineStore('world-state', () =>
             const w = kenney_roguelike_rpg_pack.tileItem.stone_wall;
             const f = kenney_roguelike_rpg_pack.tileItem.wooden_floor;
             const backgroundLayout = createWalledRectangle(layoutData.meta.gridWidth, layoutData.meta.gridHeight, w, f);
-            layers.push(new TileLayer({
+            layers.push(new TileMapLayer({
                 tilesetId: kenney_roguelike_rpg_pack.id,
                 data: backgroundLayout,
             }));
@@ -78,12 +81,12 @@ export const useWorldStateStore = defineStore('world-state', () =>
 
             // 2. 创建逻辑对象层
             const logicalObjects = layoutData.objects
-                .map(createLogicalGameObject)
-                .filter((o): o is LogicalGameObject => o !== null);
+                .map(createGameObjectEntity)
+                .filter((o): o is GameObjectEntity => o !== null);
             layers.push(new LogicalObjectLayer(logicalObjects));
 
             // 3. 创建并存储 LogicalGameMap 实例
-            logicalGameMap.value = new LogicalGameMap({
+            logicalGameMap.value = new GameMap({
                 gridWidth: layoutData.meta.gridWidth,
                 gridHeight: layoutData.meta.gridHeight,
                 layers: layers,

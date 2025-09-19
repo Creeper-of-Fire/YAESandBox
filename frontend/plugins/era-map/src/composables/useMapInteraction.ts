@@ -1,42 +1,38 @@
 ﻿// src/composables/useMapInteraction.ts
 
-import { ref, computed } from 'vue';
-import type { Ref } from 'vue';
-import type { GameMap, CellData } from '#/game-render/GameMap';
-import { TILE_SIZE } from '#/constant';
-import { useSelectionStore } from '#/game-logic/selectionStore';
-import type { SelectionDetails } from '#/game-logic/types';
+import type {Ref} from 'vue';
+import {computed, ref} from 'vue';
+import {TILE_SIZE} from '#/constant';
+import {useSelectionStore} from '#/game-logic/selectionStore';
+import type {GameMap} from "#/game-logic/GameMap.ts";
+import type {IGameEntity} from "#/game-logic/entity/entity.ts";
 
-export function useMapInteraction(gameMap: Ref<GameMap | null>) {
+export function useMapInteraction(gameMap: Ref<GameMap | null>)
+{
     const selectionStore = useSelectionStore();
 
     // --- State: Hover (鼠标悬浮) ---
-    const hoveredGridPos = ref({ x: -1, y: -1 });
-    const hoveredCellInfo = ref<CellData | null>(null);
-    const popoverTargetPosition = ref({ x: 0, y: 0 });
+    const hoveredGridPos = ref({x: -1, y: -1});
+    const hoveredEntities = ref<IGameEntity[]>([]);
+    const popoverTargetPosition = ref({x: 0, y: 0});
     const showPopover = ref(false);
 
     // --- State: Selection (鼠标点击选中) ---
-    const selectedGridPos = ref({ x: -1, y: -1 });
+    const selectedGridPos = ref({x: -1, y: -1});
 
 
     // === Computed Properties ===
 
     // 1. Hover 相关
-    const highlightedObjects = computed(() => hoveredCellInfo.value?.objects || []);
-    const hasHoveredData = computed(() =>
-        hoveredCellInfo.value &&
-        (hoveredCellInfo.value.objects.length > 0 ||
-            hoveredCellInfo.value.fields.length > 0 ||
-            hoveredCellInfo.value.particles.length > 0)
-    );
+    const hasHoveredData = computed(() => hoveredEntities.value.length > 0);
 
     // 2. Selection 相关
     const isACellSelected = computed(() => selectedGridPos.value.x !== -1 && selectedGridPos.value.y !== -1);
 
     // 3. Hover 与 Selection 交互
     /** 计算当前悬浮的格子是否就是已被选中的格子 */
-    const isHoveringSelectedCell = computed(() => {
+    const isHoveringSelectedCell = computed(() =>
+    {
         return isACellSelected.value &&
             hoveredGridPos.value.x === selectedGridPos.value.x &&
             hoveredGridPos.value.y === selectedGridPos.value.y;
@@ -67,11 +63,13 @@ export function useMapInteraction(gameMap: Ref<GameMap | null>) {
     }));
 
     // --- Event Handlers ---
-    function handleMouseMove(event: any) {
+    function handleMouseMove(event: any)
+    {
         if (!gameMap.value) return;
         const stage = event.target.getStage();
         const pointerPosition = stage.getPointerPosition();
-        if (!pointerPosition) {
+        if (!pointerPosition)
+        {
             handleMouseLeave();
             return;
         }
@@ -85,26 +83,30 @@ export function useMapInteraction(gameMap: Ref<GameMap | null>) {
         const gridX = Math.floor(pointerPosition.x / TILE_SIZE);
         const gridY = Math.floor(pointerPosition.y / TILE_SIZE);
 
-        if (gridX < 0 || gridX >= gameMap.value.gridWidth || gridY < 0 || gridY >= gameMap.value.gridHeight) {
+        if (gridX < 0 || gridX >= gameMap.value.gridWidth || gridY < 0 || gridY >= gameMap.value.gridHeight)
+        {
             handleMouseLeave();
             return;
         }
 
-        if (gridX !== hoveredGridPos.value.x || gridY !== hoveredGridPos.value.y) {
-            hoveredGridPos.value = { x: gridX, y: gridY };
-            hoveredCellInfo.value = gameMap.value.getDataAtGridPosition(gridX, gridY);
+        if (gridX !== hoveredGridPos.value.x || gridY !== hoveredGridPos.value.y)
+        {
+            hoveredGridPos.value = {x: gridX, y: gridY};
+            hoveredEntities.value = gameMap.value.getEntitiesAtGridPosition(gridX, gridY);
         }
 
         showPopover.value = true;
     }
 
-    function handleMouseLeave() {
-        hoveredGridPos.value = { x: -1, y: -1 };
-        hoveredCellInfo.value = null;
+    function handleMouseLeave()
+    {
+        hoveredGridPos.value = {x: -1, y: -1};
+        hoveredEntities.value = [];
         showPopover.value = false;
     }
 
-    function handleMouseClick(event: any) {
+    function handleMouseClick(event: any)
+    {
         if (!gameMap.value) return;
 
         const stage = event.target.getStage();
@@ -115,9 +117,10 @@ export function useMapInteraction(gameMap: Ref<GameMap | null>) {
         const gridY = Math.floor(pointerPosition.y / TILE_SIZE);
 
         // 点击到地图有效区域之外
-        if (gridX < 0 || gridX >= gameMap.value.gridWidth || gridY < 0 || gridY >= gameMap.value.gridHeight) {
+        if (gridX < 0 || gridX >= gameMap.value.gridWidth || gridY < 0 || gridY >= gameMap.value.gridHeight)
+        {
             // 分支1: 清除地图内部的选中格子状态
-            selectedGridPos.value = { x: -1, y: -1 };
+            selectedGridPos.value = {x: -1, y: -1};
             // 分支2: 清除 Pinia store 中的选中详情
             selectionStore.clearSelection();
             return;
@@ -126,26 +129,20 @@ export function useMapInteraction(gameMap: Ref<GameMap | null>) {
         // --- 点击在有效区域内 ---
 
         // 分支1: 更新地图内部的选中格子状态
-        selectedGridPos.value = { x: gridX, y: gridY };
+        selectedGridPos.value = {x: gridX, y: gridY};
 
         // 分支2: 获取数据、转换并更新 Pinia store
-        const cellData = gameMap.value.getDataAtGridPosition(gridX, gridY);
-        const selectionDetails: SelectionDetails = {
-            objects: cellData.objects.map(obj => ({ id: obj.id, type: obj.type })),
-            fields: cellData.fields,
-            particles: cellData.particles,
-        };
-        selectionStore.selectDetails(selectionDetails);
+        const entities = gameMap.value.getEntitiesAtGridPosition(gridX, gridY);
+        selectionStore.selectEntities(entities);
     }
 
 
     return {
         // Hover related
         hoveredGridPos,
-        hoveredCellInfo,
+        hoveredEntities,
         popoverTargetPosition,
         showPopover,
-        highlightedObjects,
         hasHoveredData,
         highlightBoxConfig,
 

@@ -1,6 +1,6 @@
-﻿import {type GameObjectConfig, RenderType} from './types';
-import {kenney_roguelike_indoors, kenney_roguelike_rpg_pack, kenney_ting_dungeon} from './tilesetRegistry'
-import {TILE_SIZE} from '../constant';
+﻿import {type GameObjectConfig, RenderType} from '#/game-resource/types.ts';
+import {kenney_roguelike_indoors, kenney_roguelike_rpg_pack, kenney_ting_dungeon} from '#/game-resource/tilesetRegistry.ts'
+import {TILE_SIZE} from '#/constant.ts';
 
 // 从Python脚本的颜色配置中获取灵感
 const COLORS = {
