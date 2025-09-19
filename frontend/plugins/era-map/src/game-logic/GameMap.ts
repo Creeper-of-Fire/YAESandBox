@@ -3,13 +3,34 @@ import type {IGameEntity} from "#/game-logic/entity/IGameEntity.ts";
 import {LogicalObjectLayer} from "#/game-logic/entity/gameObject/render/LogicalObjectLayer.ts";
 import type {ILayer} from "#/game-logic/entity/ILayer.ts";
 import type {IEntityContainer} from "#/game-logic/entity/IEntityContainer.ts";
+import {Expose, Type} from "class-transformer";
+import {TileMapLayer} from "#/game-resource/TileMapLayer.ts";
+import {LayerType} from "#/game-logic/entity/LayerType.ts";
+import {FieldContainerLayer} from "#/game-logic/entity/field/render/FieldContainerLayer.ts";
+import {ParticleContainerLayer} from "#/game-logic/entity/particle/render/ParticleContainerLayer.ts";
 
 // GameMap 是我们的世界状态的顶层容器
 export class GameMap
 {
+    @Expose()
     public readonly gridWidth: number;
+    @Expose()
     public readonly gridHeight: number;
-    // 注意：图层现在是混合类型的
+    @Expose()
+    @Type(() => Object, {
+        // 关键：开启多态转换
+        discriminator: {
+            property: 'layerType', // 根据 'layerType' 属性来判断
+            subTypes: [
+                {value: TileMapLayer, name: LayerType.TileMapLayer},
+                {value: LogicalObjectLayer, name: LayerType.LogicalObjectLayer},
+                {value: FieldContainerLayer, name: LayerType.FieldContainerLayer},
+                {value: ParticleContainerLayer, name: LayerType.ParticleContainerLayer},
+            ],
+        },
+        // 保持类实例而不是纯对象
+        keepDiscriminatorProperty: true,
+    })
     public readonly layers: ILayer[];
 
     constructor(config: {
@@ -43,34 +64,20 @@ export class GameMap
     /**
      * 在指定的网格位置获取所有实体。
      */
-    public getEntitiesAtGridPosition(gridX: number, gridY: number): IGameEntity[] {
+    public getEntitiesAtGridPosition(gridX: number, gridY: number): IGameEntity[]
+    {
         const entities: IGameEntity[] = [];
 
-        for (const layer of this.layers) {
+        for (const layer of this.layers)
+        {
             // 关键：我们只关心这个层是不是一个“实体容器”。
             // 我们使用 "in" 操作符进行类型守卫，这比 `instanceof` 更灵活。
-            if ('getEntitiesAt' in layer) {
+            if ('getEntitiesAt' in layer)
+            {
                 const container = layer as ILayer & IEntityContainer;
                 entities.push(...container.getEntitiesAt(gridX, gridY));
             }
         }
         return entities;
-    }
-
-    public toJSON() {
-        return {
-            gridWidth: this.gridWidth,
-            gridHeight: this.gridHeight,
-            layers: this.layers.map(layer => {
-                // 每一层也需要 toJSON() 方法
-                // @ts-ignore
-                if (typeof layer.toJSON === 'function') {
-                    // @ts-ignore
-                    return layer.toJSON();
-                }
-                // 对于简单的层，可能直接返回其属性
-                return layer;
-            }),
-        };
     }
 }

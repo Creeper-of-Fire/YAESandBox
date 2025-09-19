@@ -1,4 +1,4 @@
-﻿import type {RawGameObjectData} from '#/game-resource/types.ts';
+﻿import type {RawGameObjectData} from '#/worldGeneration/types.ts';
 import {gameObjectRegistry} from '#/game-logic/entity/gameObject/render/gameObjectRegistry.ts';
 import {GameObjectRender} from '#/game-logic/entity/gameObject/render/GameObjectRender.ts';
 import {GameObjectEntity} from './GameObjectEntity.ts';

@@ -11,6 +11,9 @@
     },
     "moduleResolution": "Bundler",
 
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+
     "noEmit": false,
     "emitDeclarationOnly": true,
     "outDir": "dist", // 库需要指定输出目录

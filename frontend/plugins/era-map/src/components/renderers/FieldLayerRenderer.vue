@@ -47,6 +47,7 @@ function drawFieldsToCanvas() {
 
   // 从 world state 获取地图尺寸，这是更可靠的数据源
   const worldState = useWorldStateStore();
+
   const gridWidth = worldState.logicalGameMap?.gridWidth;
   const gridHeight = worldState.logicalGameMap?.gridHeight;
 

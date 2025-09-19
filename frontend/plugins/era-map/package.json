@@ -32,6 +32,8 @@
     "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
     "acorn": "^8.15.0",
+    "class-transformer": "^0.5.1",
+    "reflect-metadata": "^0.2.2",
     "konva": "^10.0.0",
     "matter-js": "^0.20.0",
     "nanoid": "^5.1.5",

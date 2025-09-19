@@ -1,16 +1,9 @@
-﻿import { defineStore } from 'pinia';
-import { computed, type Ref, ref } from 'vue';
-import { GameMap } from '#/game-logic/GameMap.ts';
-import { createGameObjectEntity } from '#/game-logic/entity/gameObject/GameObjectEntityFactory.ts';
-import type { GameObjectEntity } from '#/game-logic/entity/gameObject/GameObjectEntity.ts';
-import type { FullLayoutData } from '#/game-resource/types';
-import { kenney_roguelike_rpg_pack } from '#/game-resource/tilesetRegistry';
-import { TileMapLayer } from "#/game-resource/TileMapLayer.ts";
-import { LogicalObjectLayer } from "#/game-logic/entity/gameObject/render/LogicalObjectLayer.ts";
-import { FieldEntity } from "#/game-logic/entity/field/FieldEntity.ts";
-import { FieldContainerLayer } from "#/game-logic/entity/field/render/FieldContainerLayer.ts";
-import { ParticleEntity } from "#/game-logic/entity/particle/ParticleEntity.ts";
-import { ParticleContainerLayer } from "#/game-logic/entity/particle/render/ParticleContainerLayer.ts";
+﻿import {defineStore} from 'pinia';
+import {computed, type Ref, ref, watch} from 'vue';
+import {GameMap} from '#/game-logic/GameMap.ts';
+import {LogicalObjectLayer} from "#/game-logic/entity/gameObject/render/LogicalObjectLayer.ts";
+import {useEraMapSaveStore} from "#/saves/useEraMapSaveStore.ts";
+import { serializationService } from '#/services/SerializationService.ts';
 
 // 一个辅助函数，暂时放在这里
 function createWalledRectangle(width: number, height: number, wallTileId: number, floorTileId: number): number[][]
@@ -34,12 +27,11 @@ function createWalledRectangle(width: number, height: number, wallTileId: number
     }
     return layout;
 }
-
-export const useWorldStateStore = defineStore('world-state', () =>
+const WORLD_STATE_STORAGE_KEY = 'world-state';
+export const useWorldStateStore = defineStore(WORLD_STATE_STORAGE_KEY, () =>
 {
     // --- State ---
     const logicalGameMap: Ref<GameMap | null> = ref(null);
-    const isLoaded = ref(false);
     const error = ref<string | null>(null);
 
     // --- Getter ---
@@ -50,66 +42,65 @@ export const useWorldStateStore = defineStore('world-state', () =>
         return objectLayer ? (objectLayer as LogicalObjectLayer).objects : [];
     });
 
+    // --- Save Store Integration ---
+    const saveStore = useEraMapSaveStore();
+    // 创建一个响应式的、能被自动保存的状态
+    const {state: savedPlainWorld, isReady} = saveStore.createState<Record<string, any> | null>(WORLD_STATE_STORAGE_KEY, null);
+
     // --- Actions ---
 
     /**
-     * 从原始布局数据加载并初始化整个世界状态。
-     * 这是会话开始时调用的第一个关键操作。
+     * 【核心】用一个已存在的 GameMap 实例来设置当前世界状态。
+     * 这是唯一修改 logicalGameMap 的入口。
+     * @param gameMapInstance - 一个完整的 GameMap 实例。
      */
-    function loadInitialState(layoutData: FullLayoutData)
-    {
-        try
-        {
-            const layers = [];
+    function setWorldState(gameMapInstance: GameMap) {
+        logicalGameMap.value = gameMapInstance;
+        error.value = null;
+        console.log("World state has been set.", logicalGameMap.value);
+    }
 
-            // 1. 创建渲染层 (瓦片、场、粒子)
-            const w = kenney_roguelike_rpg_pack.tileItem.stone_wall;
-            const f = kenney_roguelike_rpg_pack.tileItem.wooden_floor;
-            // TODO 之后改成更好的背景图生成
-            const backgroundLayout = createWalledRectangle(layoutData.meta.gridWidth, layoutData.meta.gridHeight, w, f);
-            layers.push(new TileMapLayer({
-                tilesetId: kenney_roguelike_rpg_pack.id,
-                data: backgroundLayout,
-            }));
+    /**
+     * 清理世界状态，用于退出存档等场景。
+     */
+    function clearWorldState() {
+        logicalGameMap.value = null;
+        error.value = null;
+        savedPlainWorld.value = null; // 同时清空存档数据
+        console.log("World state has been cleared.");
+    }
 
-            const fieldEntities = Object.entries(layoutData.fields).map(([name, data]) => {
-                return new FieldEntity({ name, data });
-            });
-            if (fieldEntities.length > 0) {
-                layers.push(new FieldContainerLayer(fieldEntities));
-            }
-
-            const particleEntities = Object.values(layoutData.particles).map(particleData => {
-                return new ParticleEntity(particleData);
-            });
-            if (particleEntities.length > 0) {
-                layers.push(new ParticleContainerLayer(particleEntities));
-            }
-
-            // 2. 创建逻辑对象层
-            const logicalObjects = layoutData.objects
-                .map(createGameObjectEntity)
-                .filter((o): o is GameObjectEntity => o !== null);
-            layers.push(new LogicalObjectLayer(logicalObjects));
-
-            // 3. 创建并存储 LogicalGameMap 实例
-            logicalGameMap.value = new GameMap({
-                gridWidth: layoutData.meta.gridWidth,
-                gridHeight: layoutData.meta.gridHeight,
-                layers: layers,
-            });
-
-            isLoaded.value = true;
-            error.value = null;
-            console.log("World state initialized successfully.", logicalGameMap.value);
-
-        } catch (e)
-        {
-            console.error("Failed to load initial state:", e);
-            error.value = (e as Error).message;
-            isLoaded.value = false;
+    /**
+     * 【水合】从纯对象数据加载世界，将其转换为类实例后设置状态。
+     * @returns {boolean} - 返回 true 表示成功，false 表示失败。
+     */
+    function hydrateFromSave(plainData: Record<string, any>): boolean { // <-- 返回布尔值
+        try {
+            const gameMapInstance = serializationService.hydrate(plainData);
+            setWorldState(gameMapInstance);
+            console.log("World state hydrated successfully from saved data.");
+            return true; // <-- 成功时返回 true
+        } catch (e) {
+            console.error("Failed to hydrate world state from saved data:", e);
+            error.value = `加载存档失败: ${(e as Error).message}`;
+            logicalGameMap.value = null; // 清理可能存在的半成品状态
+            return false; // <-- 失败时返回 false
         }
     }
+
+    /**
+     * 【脱水】将当前世界状态转换为纯对象以供保存。
+     */
+    function dehydrateForSave()
+    {
+        if (logicalGameMap.value)
+        {
+            savedPlainWorld.value = serializationService.dehydrate(logicalGameMap.value);
+            console.log("World state dehydrated for saving.");
+        }
+    }
+
+    watch(logicalGameMap, dehydrateForSave, { deep: true });
 
     /**
      * 将AI的提案应用到指定对象上。
@@ -142,25 +133,20 @@ export const useWorldStateStore = defineStore('world-state', () =>
         }
     }
 
-    /**
-     * (未来功能) 序列化当前世界状态为可导出的JSON。
-     */
-    function exportState()
-    {
-        // TODO: 实现将 logicalGameMap 转换为 final_game_state.json 格式的逻辑
-        console.warn("exportState() is not yet implemented.");
-    }
-
     return {
         // State
         logicalGameMap,
-        isLoaded,
         error,
+        // Save System Related
+        isSaveSystemReady: isReady,
+        savedPlainWorld,
         // Getter
         allObjects,
         // Actions
-        loadInitialState,
+        setWorldState,
+        clearWorldState,
+
+        hydrateFromSave,
         applyProposal,
-        exportState,
     };
 });

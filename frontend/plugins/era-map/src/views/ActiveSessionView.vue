@@ -1,5 +1,5 @@
 ﻿<template>
-  <n-layout v-if="isLoaded" style="height: 100%; display: flex; flex-direction: column;">
+  <n-layout style="height: 100%; display: flex; flex-direction: column;">
     <!-- Tabs 作为控制器 -->
     <n-tabs
         v-model:value="activeTab"
@@ -29,17 +29,11 @@
       <EraMapView v-show="activeTab === 'player'" class="view-pane"/>
     </div>
   </n-layout>
-
-  <!-- 加载时显示的内容 (保持不变) -->
-  <div v-else class="loading-container">
-    <n-spin size="large"/>
-    <n-text>正在为你加载存档世界...</n-text>
-  </div>
 </template>
 
 <script lang="ts" setup>
 import {onMounted} from 'vue';
-import {NLayout, NSpin, NTab, NTabs, NText} from 'naive-ui';
+import {NLayout, NTab, NTabs} from 'naive-ui';
 import {useWorldInitializer} from '#/composables/useWorldInitializer';
 
 // 导入两个主视图
@@ -49,7 +43,7 @@ import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 // 当前激活的标签页
 const activeTab = useScopedStorage('activeGameSessionView', 'creator');
 // 使用初始化器
-const {initialize, isLoaded} = useWorldInitializer();
+const {initialize} = useWorldInitializer();
 
 // 在这个“会话”组件挂载时，执行一次且仅一次初始化
 onMounted(async () =>
@@ -59,13 +53,6 @@ onMounted(async () =>
 </script>
 
 <style scoped>
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  gap: 1rem;
-}
+
 
 </style>

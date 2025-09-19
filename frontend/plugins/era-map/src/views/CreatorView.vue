@@ -2,11 +2,7 @@
   <n-layout has-sider style="height: 100%;">
     <!-- 左侧：世界画布 -->
     <n-layout-content>
-      <InteractiveMapView v-if="worldState.logicalGameMap && worldState.isLoaded" :game-map="worldState.logicalGameMap"/>
-      <div v-else class="loading-container">
-        <n-spin size="large"/>
-        <n-text>正在加载世界状态...</n-text>
-      </div>
+      <InteractiveMapView :game-map="logicalGameMap"/>
     </n-layout-content>
 
     <!-- 右侧：指令流面板 -->
@@ -52,7 +48,7 @@ import {InstructionType} from '#/game-logic/types';
 
 // --- 初始化 Store ---
 const worldState = useWorldStateStore();
-const {allObjects} = storeToRefs(worldState);
+const {allObjects,logicalGameMap} = storeToRefs(worldState);
 const instructionStore = useInstructionStreamStore();
 
 // 选择器
@@ -93,12 +89,5 @@ function handleAddIntent()
 </script>
 
 <style scoped>
-.loading-container {
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  align-items: center;
-  height: 100%;
-  gap: 1rem;
-}
+
 </style>

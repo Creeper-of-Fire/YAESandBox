@@ -65,6 +65,11 @@ export function createScopedPersistentState<T>(
     {
         // 只有在数据加载完成后才允许保存，防止初始状态意外覆盖已有存档。
         if (!isReady.value) return;
+        if (value === null || value === undefined)
+        {
+            console.warn(`[createScopedPersistentState] State for "${fileName}" is null, but no removeItem method is available on storage. Skipping save.`);
+            return
+        }
 
         try
         {
@@ -89,7 +94,7 @@ export function createScopedPersistentState<T>(
 
     // 1. 监听作用域路径的变化。当路径改变时（切换存档），重新加载数据。
     watch(
-        () =>activeSlot.value?.token,
+        () => activeSlot.value?.token,
         (newToken) =>
         {
             if (newToken)

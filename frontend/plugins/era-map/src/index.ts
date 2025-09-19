@@ -1,4 +1,5 @@
-﻿import {type App} from 'vue';
+﻿import 'reflect-metadata';
+import {type App} from 'vue';
 import type {PluginModule} from '@yaesandbox-frontend/core-services';
 import {routeName, routes} from './routes';
 import VueKonva from 'vue-konva';
