@@ -25,32 +25,35 @@ import {RenderType, type ShapeRenderConfig, type SpriteComponent} from '#/game-r
 import {TILE_SIZE} from "#/constant.ts";
 import type {Tileset} from "#/game-render/Tileset.ts";
 import { resourceManager } from '#/game-render/ResourceManager';
+import type {LogicalGameObject} from "#/game-logic/LogicalGameObject.ts";
 
 // --- Props ---
 const props = defineProps<{
-  gameObject: GameObjectRender;
+  gameObject: LogicalGameObject;
   highlight?: boolean;
 }>();
 
-const {gameObject} = toRefs(props);
-const renderConfig = computed(() => gameObject.value.config.renderConfig);
+const gameObjectRender = computed(() =>props.gameObject.renderInfo);
+
+
+const renderConfig = computed(() => gameObjectRender.value.config.renderConfig);
 
 // --- Konva 配置计算 ---
 
 // v-group 用于处理定位和旋转，使其内部的形状/图片无需关心这些
 const groupConfig = computed(() => ({
-  x: gameObject.value.position.x,
-  y: gameObject.value.position.y,
-  rotation: gameObject.value.rotation,
+  x: gameObjectRender.value.position.x,
+  y: gameObjectRender.value.position.y,
+  rotation: gameObjectRender.value.rotation,
   // 设置偏移量，使旋转和定位的中心点在物体中心
-  offsetX: gameObject.value.size.width / 2,
-  offsetY: gameObject.value.size.height / 2,
+  offsetX: gameObjectRender.value.size.width / 2,
+  offsetY: gameObjectRender.value.size.height / 2,
 }));
 
 // 形状渲染的配置
 const shapeConfig = computed(() =>
 {
-  const config = gameObject.value.config.renderConfig as ShapeRenderConfig;
+  const config = gameObjectRender.value.config.renderConfig as ShapeRenderConfig;
   const common = {
     fill: config.fill,
     stroke: config.stroke || 'transparent',
@@ -67,8 +70,8 @@ const shapeConfig = computed(() =>
   {
     return {
       ...common,
-      width: gameObject.value.size.width,
-      height: gameObject.value.size.height,
+      width: gameObjectRender.value.size.width,
+      height: gameObjectRender.value.size.height,
     };
   }
   if (config.shape === 'circle')
@@ -76,9 +79,9 @@ const shapeConfig = computed(() =>
     return {
       ...common,
       // 必须将圆心定位在对象边界框的中心
-      x: gameObject.value.size.width / 2,
-      y: gameObject.value.size.height / 2,
-      radius: config.radius || gameObject.value.size.width / 2,
+      x: gameObjectRender.value.size.width / 2,
+      y: gameObjectRender.value.size.height / 2,
+      radius: config.radius || gameObjectRender.value.size.width / 2,
     };
   }
   return {};

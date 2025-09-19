@@ -79,7 +79,7 @@
         <WorkflowProviderButton
             ref="workflowBtnRef"
             :disabled="!userInput.trim() || isLoading"
-            :expected-inputs="['history_json', 'playerCharacter_json', 'targetCharacter_json', 'scene_json']"
+            :filter="workflowFilter"
             :storage-key="`chat-workflow-${sessionId}`"
             @click="handleSend"
         />
@@ -113,6 +113,10 @@ import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 import {defaultTransformMessageContent} from "#/features/chat/messageTransformer.ts";
 import ResizableMonacoEditorModal from "#/features/chat/ResizableMonacoEditorModal.vue";
 import {useScriptCompiler} from "#/features/chat/useScriptCompiler.ts";
+
+const workflowFilter = ref({
+  expectedInputs: ['history_json', 'playerCharacter_json', 'targetCharacter_json', 'scene_json']
+});
 
 
 const route = useRoute();

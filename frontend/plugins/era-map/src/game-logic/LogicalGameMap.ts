@@ -1,13 +1,20 @@
-﻿import type { TileLayer, FieldLayer, ParticleLayer } from '#/game-render/GameMap';
+﻿import type {TileLayer, FieldLayer, ParticleLayer, ILayer} from '#/game-render/GameMap';
 import type { LogicalGameObject } from '#/game-logic/LogicalGameObject';
+import {type Component, defineAsyncComponent} from "vue";
 
 // LogicalObjectLayer 只是一个简单的容器，持有 LogicalGameObject 数组
-export class LogicalObjectLayer {
+export class LogicalObjectLayer  implements ILayer{
 
     public readonly objects: LogicalGameObject[];
 
     constructor(objects: LogicalGameObject[]) {
         this.objects = objects;
+    }
+
+    public getRendererComponent(): Component {
+        return defineAsyncComponent(() =>
+            import('#/components/renderers/ObjectLayerRenderer.vue')
+        );
     }
 }
 

@@ -31,12 +31,12 @@
 
           <!-- 3. 渲染悬浮高亮的对象 (保持不变) -->
           <!-- 即使在已选中的格子上悬浮，也应该高亮对象并显示popover -->
-          <GameObjectRenderer
-              v-for="obj in highlightedObjects"
-              :key="`highlight-${obj.id}`"
-              :game-object="obj"
-              :highlight="true"
-          />
+<!--          <GameObjectRenderer-->
+<!--              v-for="obj in highlightedObjects"-->
+<!--              :key="`highlight-${obj.id}`"-->
+<!--              :game-object="obj"-->
+<!--              :highlight="true"-->
+<!--          />-->
         </v-layer>
       </v-stage>
     </div>
@@ -82,6 +82,7 @@ import {useElementSize} from '@vueuse/core';
 import type {FullLayoutData} from '#/game-render/types';
 
 // 静态资源导入
+// @ts-ignore
 import initLayoutJson from '#/assets/init_layout.json';
 import {registry, kenney_roguelike_rpg_pack} from "#/game-render/tilesetRegistry.ts";
 import GameObjectRenderer from "#/components/GameObjectRenderer.vue";

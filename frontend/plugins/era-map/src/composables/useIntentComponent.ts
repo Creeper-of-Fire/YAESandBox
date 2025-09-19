@@ -1,4 +1,4 @@
-﻿import type {Ref} from 'vue';
+﻿import {type Ref, toRefs} from 'vue';
 import {computed, watch} from 'vue';
 import type {Instruction} from '#/game-logic/types';
 import {InstructionStatus, InstructionType} from '#/game-logic/types';
@@ -10,17 +10,6 @@ import {
     type WorkflowFilter
 } from "@yaesandbox-frontend/core-services/composables";
 import type {WorkflowConfig} from "@yaesandbox-frontend/core-services/types";
-
-/**
- * 根据指令类型，定义对工作流的要求。
- * 这是连接业务意图和工作流能力的桥梁。
- */
-const WORKFLOW_REQUIREMENTS: Record<InstructionType, WorkflowFilter> = {
-    [InstructionType.ENRICH_OBJECT]: {
-        expectedInputs: ['user_prompt', 'object_type', 'existing_properties'],
-        requiredTags: ['enrichment'], // 假设我们用tag来做硬性筛选
-    }
-};
 
 
 /**
@@ -54,69 +43,49 @@ function unflattenObject(flatObject: Record<string, any>): Record<string, any>
 
 /**
  * 驱动单个 "意图组件" 的核心逻辑。
- * 它封装了工作流的选择、执行、状态管理和与全局Store的通信。
+ * 1. 接收工作流配置并执行。
+ * 2. 管理指令在执行->应用过程中的状态。
  * @param instructionRef - 对单个指令对象的响应式引用
+ * @param workflowFilter
  */
-export function useIntentComponent(instructionRef: Ref<Instruction>)
+export function useIntentComponent(instructionRef: Ref<Instruction>,workflowFilter: Ref<WorkflowFilter>)
 {
     const instructionStore = useInstructionStreamStore();
     const worldStateStore = useWorldStateStore();
 
-    // --- 1. 工作流选择 ---
-    const workflowFilter = computed<WorkflowFilter>(() => WORKFLOW_REQUIREMENTS[instructionRef.value.type]);
-
-    // 为每个意图组件实例创建一个唯一的 storageKey，用于持久化其工作流选择
-    const workflowStorageKey = `intent-component-workflow--${instructionRef.value.id}`;
-
-    const workflowSelector = useFilteredWorkflowSelector(workflowStorageKey, workflowFilter);
-    const {selectedWorkflowConfig} = workflowSelector;
-
-    // --- 2. 工作流执行 ---
+    // --- 1. 工作流执行 ---
     const stream = useStructuredWorkflowStream();
 
-    // --- 3. 状态与计算属性 ---
-    const isGenerating = computed(() => instructionRef.value.status === InstructionStatus.GENERATING);
+    // 2. 状态与计算属性
+    const { status, context, userInput } = toRefs(instructionRef.value);
+
+    const isGenerating = computed(() => status.value === InstructionStatus.GENERATING);
     const hasValidProposal = computed(() =>
-        instructionRef.value.status === InstructionStatus.PROPOSED &&
+        status.value === InstructionStatus.PROPOSED &&
         instructionRef.value.aiProposal &&
         Object.keys(instructionRef.value.aiProposal).length > 0
     );
 
-    // --- 4. 核心动作 ---
+    // --- 3. 核心动作 ---
 
     /**
      * 触发AI生成。
-     * 如果没有选择工作流，会由UI（WorkflowSelectorButton）引导用户选择。
-     * @param config - 由 WorkflowSelectorButton 点击时传入的已选定工作流配置。
+     * @param config - 由UI层（例如 WorkflowSelectorButton）传入的已选定工作流配置。
      */
-    async function generate(config: WorkflowConfig)
-    {
+    async function generate(config: WorkflowConfig) {
         instructionStore.updateInstruction(instructionRef.value.id, {
             status: InstructionStatus.GENERATING,
             aiProposal: null,
             error: null
         });
 
-        const targetObject = worldStateStore.logicalGameMap?.findObjectById(instructionRef.value.context.targetObjectId!);
+        const targetObject = worldStateStore.logicalGameMap?.findObjectById(context.value.targetObjectId!);
 
         const workflowInputs = {
-            user_prompt: instructionRef.value.userInput.prompt,
+            user_prompt: userInput.value.prompt,
             object_type: targetObject?.type ?? '',
             existing_properties: JSON.stringify(targetObject?.properties ?? {}, null, 2),
         };
-
-        // 检查所选工作流是否满足所有输入要求
-        const missingInputs = (workflowFilter.value.expectedInputs || []).filter(
-            input => !(config.workflowInputs || []).includes(input)
-        );
-
-        if (missingInputs.length > 0)
-        {
-            const errorMsg = `选择的工作流缺少必需的输入: ${missingInputs.join(', ')}`;
-            console.error(errorMsg);
-            instructionStore.updateInstruction(instructionRef.value.id, {status: InstructionStatus.ERROR, error: errorMsg});
-            return;
-        }
 
         await stream.execute(config, workflowInputs);
     }
@@ -193,14 +162,10 @@ export function useIntentComponent(instructionRef: Ref<Instruction>)
         isGenerating,
         hasValidProposal,
         thinkingProcess: stream.thinkingProcess, // 透传思考过程
-        rawProposalData: stream.rawStreamData, // 透传原始数据以供调试或复杂渲染
 
         // 动作
         generate,
         applyProposal,
         discard,
-
-        // 子Composable实例，供UI直接使用
-        workflowSelector,
     };
 }

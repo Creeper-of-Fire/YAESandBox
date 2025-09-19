@@ -11,7 +11,7 @@
 
       <!-- 配置提供者按钮 -->
       <WorkflowProviderButton
-          :expected-inputs="props.expectedInputs"
+          :filter="workflowFilter"
           :storage-key="props.storageKey"
           @click="handleGenerate"
       />
@@ -73,7 +73,7 @@ import {
   type EntityFieldSchema,
   getKey,
   useFlatDataWithSchema,
-  useStructuredWorkflowStream
+  useStructuredWorkflowStream, type WorkflowFilter
 } from '@yaesandbox-frontend/core-services/composables';
 import WorkflowProviderButton from "#/components/WorkflowProviderButton.vue";
 import EntityEditor from "#/components/EntityEditor.vue";
@@ -93,6 +93,10 @@ const emit = defineEmits<{
   (e: 'update:modelValue', value: Partial<T> | null): void;
   (e: 'accept', value: Omit<T, 'id'>): void;
 }>();
+
+const workflowFilter = ref<WorkflowFilter>({
+  expectedInputs: props.expectedInputs,
+});
 
 const message = useMessage();
 const generationTopic = ref('');

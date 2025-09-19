@@ -1,8 +1,10 @@
 ﻿<template>
-  <n-card :title="cardTitle" size="small" :bordered="false" style="background: #333;">
+  <n-card :bordered="false" :title="cardTitle" size="small">
     <template #header-extra>
-      <n-button text @click="discard" v-if="instruction.status !== 'APPLIED'">
-        <template #icon><n-icon :component="CloseIcon" /></template>
+      <n-button v-if="instruction.status !== 'APPLIED'" text @click="discard">
+        <template #icon>
+          <n-icon :component="CloseIcon"/>
+        </template>
       </n-button>
     </template>
 
@@ -10,24 +12,24 @@
     <div v-if="instruction.status === 'PENDING_USER_INPUT'">
       <n-input
           v-model:value="instruction.userInput.prompt"
-          type="textarea"
-          placeholder="输入你的想法，例如：一张刻有神秘符文的桌子"
           :autosize="{ minRows: 2 }"
+          placeholder="输入你的想法，例如：一张刻有神秘符文的桌子"
+          type="textarea"
       />
       <WorkflowSelectorButton
-          :storage-key="workflowSelector.storageKey"
-          :filter="workflowSelector.filter.value"
-          @select="generate"
+          :filter="enrichObjectWorkflowFilter"
+          :storage-key="workflowStorageKey"
           style="margin-top: 8px;"
+          @select="generate"
       />
     </div>
 
     <!-- 状态 2: 正在生成 -->
     <div v-if="isGenerating">
-      <n-progress type="line" status="processing" :percentage="100" :show-indicator="false" :processing="true" />
+      <n-progress :percentage="100" :processing="true" :show-indicator="false" type="line"/>
       <n-text depth="3" style="font-size: 12px; margin-top: 8px;">思考中...</n-text>
       <n-collapse v-if="thinkingProcess">
-        <n-collapse-item title="查看思考过程" name="1">
+        <n-collapse-item name="1" title="查看思考过程">
           <pre style="white-space: pre-wrap; font-size: 12px;">{{ thinkingProcess }}</pre>
         </n-collapse-item>
       </n-collapse>
@@ -35,20 +37,26 @@
 
     <!-- 状态 3: 提案已生成 -->
     <div v-if="hasValidProposal">
-      <n-descriptions label-placement="top" bordered :column="1" size="small">
+      <n-descriptions :column="1" bordered label-placement="top" size="small">
         <n-descriptions-item v-for="(value, key) in instruction.aiProposal" :key="key" :label="key">
           {{ value }}
         </n-descriptions-item>
       </n-descriptions>
       <n-space justify="end" style="margin-top: 12px;">
-        <n-button size="small" @click="generate(workflowSelector.selectedWorkflowConfig.value!)" :disabled="!workflowSelector.selectedWorkflowConfig.value">重试</n-button>
+        <!-- TODO "重试"按钮需要一个 ref 来获取上次选择的工作流，但是实际上根本没有做 -->
+        <WorkflowSelectorButton
+            ref="retryButtonRef"
+            :filter="enrichObjectWorkflowFilter"
+            :storage-key="workflowStorageKey"
+            @select="generate"
+        />
         <n-button size="small" type="primary" @click="applyProposal">应用</n-button>
       </n-space>
     </div>
 
     <!-- 状态 4: 已应用 -->
     <div v-if="instruction.status === 'APPLIED'">
-      <n-log :log="`提案已成功应用到对象 ${targetObjectId}`" />
+      <n-log :log="`提案已成功应用到对象 ${targetObjectId}`"/>
     </div>
 
     <!-- 状态 5: 错误 -->
@@ -62,20 +70,40 @@
 </template>
 
 <script lang="ts" setup>
-import { computed, toRefs, defineAsyncComponent } from 'vue';
-import { NCard, NInput, NButton, NSpace, NProgress, NText, NCollapse, NCollapseItem, NDescriptions, NDescriptionsItem, NLog, NAlert, NIcon } from 'naive-ui';
-import { Close as CloseIcon } from '@vicons/ionicons5';
-import type { Instruction } from '#/game-logic/types';
-import { useIntentComponent } from '#/composables/useIntentComponent';
-import { useWorldStateStore } from '#/stores/useWorldStateStore';
+import {computed, ref, toRefs} from 'vue';
+import {
+  NAlert,
+  NButton,
+  NCard,
+  NCollapse,
+  NCollapseItem,
+  NDescriptions,
+  NDescriptionsItem,
+  NIcon,
+  NInput,
+  NLog,
+  NProgress,
+  NSpace,
+  NText
+} from 'naive-ui';
+import {Close as CloseIcon} from '@vicons/ionicons5';
+import type {Instruction} from '#/game-logic/types';
+import {useIntentComponent} from '#/composables/useIntentComponent';
+import {useWorldStateStore} from '#/stores/useWorldStateStore';
 import WorkflowSelectorButton from './WorkflowProviderButton.vue'
+import {type WorkflowFilter} from "@yaesandbox-frontend/core-services/composables";
 
 const props = defineProps<{
   instruction: Instruction;
 }>();
 
-const { instruction } = toRefs(props);
+const {instruction} = toRefs(props);
 const worldState = useWorldStateStore();
+
+const enrichObjectWorkflowFilter = ref<WorkflowFilter>({
+  expectedInputs: ['user_prompt', 'object_type', 'existing_properties'],
+  requiredTags: ['enrichment'],
+});
 
 const {
   isGenerating,
@@ -84,23 +112,16 @@ const {
   generate,
   applyProposal,
   discard,
-  workflowSelector,
-} = useIntentComponent(instruction);
+} = useIntentComponent(instruction, enrichObjectWorkflowFilter);
 
 // --- UI 计算属性 ---
+const workflowStorageKey = computed(() => `intent-component-workflow--${instruction.value.type}`);
 const targetObjectId = computed(() => instruction.value.context.targetObjectId);
 const targetObject = computed(() => worldState.logicalGameMap?.findObjectById(targetObjectId.value || ''));
 
-const cardTitle = computed(() => {
+const cardTitle = computed(() =>
+{
   if (!targetObject.value) return `指令 ${instruction.value.id.slice(0, 4)}`;
   return `丰富对象: ${targetObject.value.type} (${targetObject.value.id.slice(0, 4)})`;
 });
 </script>
-
-<style scoped>
-pre {
-  background-color: #222;
-  padding: 8px;
-  border-radius: 4px;
-}
-</style>
