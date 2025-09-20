@@ -1,0 +1,44 @@
+{
+  "name": "@yaesandbox-frontend/plugin-custom-component",
+  "private": true,
+  "license": "MIT",
+  "version": "1.0.0",
+  "description": "一个轻量级的测试用era游戏插件",
+  "main": "src/index.ts",
+  "module": "src/index.ts",
+  "type": "module",
+  "imports": {
+    "#/*": "./src/*"
+  },
+  "scripts": {
+    "build": "pnpm vue-tsc -b && vite build",
+    "checkTsc": "pnpm vue-tsc -b"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./*": "./src/*"
+  },
+  "peerDependencies": {
+    "@vueuse/core": "^13.6.0",
+    "axios": "^1.11.0",
+    "naive-ui": "^2.42.0",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1"
+  },
+  "dependencies": {
+    "@yaesandbox-frontend/core-services": "workspace:*",
+    "@yaesandbox-frontend/shared-ui": "workspace:*",
+    "acorn": "^8.15.0",
+    "nanoid": "^5.1.5",
+    "sucrase": "^3.35.0"
+  },
+  "devDependencies": {
+    "@vueuse/core": "^13.6.0",
+    "axios": "^1.11.0",
+    "naive-ui": "^2.42.0",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.18",
+    "vue-router": "^4.5.1"
+  }
+}

@@ -5,9 +5,6 @@
     "baseUrl": ".", // baseUrl 必须在这里定义
     "paths": {
       "#/*": ["src/*"], // 路径别名也在这里定义
-
-      "@yaesandbox-frontend/plugin-workbench/*": ["../workbench/src/*"],
-      "@yaesandbox-frontend/plugin-workbench": ["../workbench/src/index.ts"]
     },
     "moduleResolution": "Bundler",
 

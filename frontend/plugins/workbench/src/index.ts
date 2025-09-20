@@ -1,6 +1,6 @@
 ﻿import type {App} from 'vue';
 import type {PluginModule} from '@yaesandbox-frontend/core-services';
-import {routes} from './routes';
+import {routes,routeName} from './routes';
 import {useWorkflowConfigProviderStore} from "#/stores/workflowConfigProviderStore.ts";
 import {type IWorkflowConfigProvider, WorkflowConfigProviderKey} from "@yaesandbox-frontend/core-services/injectKeys";
 import {type Pinia, storeToRefs} from "pinia";
@@ -39,7 +39,7 @@ const WorkbenchPluginModule: PluginModule = {
     routes,
     // 插件的元数据
     meta: {
-        name: 'workbench',
+        name: routeName,
         uniqueName: 'workbench-D1D3E394-8025-45A5-AD6E-9C1B8BCF3B38',
         navEntry: {
             label: '编辑器',

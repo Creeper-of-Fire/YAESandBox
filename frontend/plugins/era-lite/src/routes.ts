@@ -1,9 +1,10 @@
 ﻿import type {RouteRecordRaw} from 'vue-router';
 
+export const routeName: string = 'era-lite';
 export const routes: RouteRecordRaw[] = [
     {
         // 插件的根路径，组件是我们的控制中心 PluginRoot.vue
-        path: '/era-lite',
+        path: `/${routeName}`,
         component: () => import('#/PluginRoot.vue'),
 
         // 当 PluginRoot 中的 v-if 为 true (有存档) 时，
@@ -21,47 +22,47 @@ export const routes: RouteRecordRaw[] = [
                         path: '', // 默认子路由，匹配 /era-lite
                         name: 'Era_Lite_Home',
                         component: () => import('#/features/home/HomeView.vue'),
-                        meta: { title: '主菜单' }
+                        meta: {title: '主菜单'}
                     },
                     {
                         path: 'home', // 别名
-                        redirect: { name: 'Era_Lite_Home' },
+                        redirect: {name: 'Era_Lite_Home'},
                     },
                     {
                         path: 'characters',
                         name: 'Era_Lite_Characters',
                         component: () => import('#/features/characters/CharacterListView.vue'),
-                        meta: { title: '角色列表' }
+                        meta: {title: '角色列表'}
                     },
                     {
                         path: 'scenes',
                         name: 'Era_Lite_Scenes',
                         component: () => import('#/features/scenes/SceneListView.vue'),
-                        meta: { title: '场景列表' }
+                        meta: {title: '场景列表'}
                     },
                     {
                         path: 'shop',
                         name: 'Era_Lite_Shop',
                         component: () => import('#/features/shop/ShopView.vue'),
-                        meta: { title: '道具商店' }
+                        meta: {title: '道具商店'}
                     },
                     {
                         path: 'backpack',
                         name: 'Era_Lite_Backpack',
                         component: () => import('#/features/backpack/BackpackView.vue'),
-                        meta: { title: '我的背包' }
+                        meta: {title: '我的背包'}
                     },
                     {
                         path: 'chat',
                         name: 'Era_Lite_Chat_List',
                         component: () => import('#/features/chat/ChatListView.vue'),
-                        meta: { title: '对话记录' }
+                        meta: {title: '对话记录'}
                     },
                     {
                         path: 'chat/:sessionId',
                         name: 'Era_Lite_Chat_View',
                         component: () => import('#/features/chat/ChatView.vue'),
-                        meta: { title: '对话' }
+                        meta: {title: '对话'}
                     }
                 ]
             }

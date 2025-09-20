@@ -30,6 +30,9 @@
     {
       "path": "./plugins/era-map"
     },
+    {
+      "path": "./plugins/custom-component"
+    },
     // --- 引用 Packages ---
     {
       "path": "./packages/core-services"

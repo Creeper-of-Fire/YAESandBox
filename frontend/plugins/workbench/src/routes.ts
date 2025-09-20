@@ -1,8 +1,10 @@
 ﻿import type { RouteRecordRaw } from 'vue-router';
 
+export const routeName: string = 'workbench';
+
 export const routes: RouteRecordRaw[] = [
     {
-        path: '/workbench',
+        path: `/${routeName}`,
         name: 'Plugin_Workbench_Main',
         component: ()=>import('./WorkbenchView.vue'),
         meta: {

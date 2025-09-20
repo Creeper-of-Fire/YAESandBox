@@ -19,11 +19,12 @@
   "dependencies": {
     "@guolao/vue-monaco-editor": "^1.5.5",
     "@vueuse/core": "^13.6.0",
-    "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/plugin-dialog-test": "workspace:*",
     "@yaesandbox-frontend/plugin-era-lite": "workspace:*",
     "@yaesandbox-frontend/plugin-era-map": "workspace:*",
     "@yaesandbox-frontend/plugin-workbench": "workspace:*",
+    "@yaesandbox-frontend/plugin-custom-component": "workspace:*",
+    "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
     "axios": "^1.11.0",
     "form-data": "^4.0.4",

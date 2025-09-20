@@ -19,6 +19,7 @@
     { "path": "../../plugins/workbench" },
     { "path": "../../plugins/dialog-test" },
     { "path": "../../plugins/era-lite" },
-    { "path": "../../plugins/era-map" }
+    { "path": "../../plugins/era-map" },
+    { "path": "../../plugins/custom-component" }
   ]
 }

@@ -1,5 +1,10 @@
 ﻿import {type App, type Component, h} from 'vue';
 import type {PluginModule} from '@yaesandbox-frontend/core-services';
+import PluginProvider from "#/component/PluginProvider.vue";
+import {PluginUniqueNameKey} from "@yaesandbox-frontend/core-services/injectKeys";
+import type {RouteComponent, RouteRecordRaw} from "vue-router";
+import type {Pinia} from "pinia";
+
 
 // --- 开发时：静态导入所有插件 ---
 // 这种方式能提供最好的开发体验
@@ -7,23 +12,15 @@ import workbenchPlugin from '@yaesandbox-frontend/plugin-workbench';
 import dialogTestPlugin from '@yaesandbox-frontend/plugin-dialog-test';
 import eraLitePlugin from '@yaesandbox-frontend/plugin-era-lite';
 import eraMapPlugin from "@yaesandbox-frontend/plugin-era-map";
-import PluginProvider from "#/component/PluginProvider.vue";
-import {PluginUniqueNameKey} from "@yaesandbox-frontend/core-services/injectKeys";
-import type {RouteComponent, RouteRecordRaw} from "vue-router";
-import type {Pinia} from "pinia";
-// import gamePlugin from '@yaesandbox-frontend/plugin-game';
-// import testHarnessPlugin from '@yaesandbox-frontend/plugin-dialog-test-harness';
-// import dialogPlugin from '@yaesandbox-frontend/plugin-dialog';
+import customComponent from "@yaesandbox-frontend/plugin-custom-component"
 
 // 将所有静态导入的插件放入一个数组
 const localPlugins: PluginModule[] = [
     workbenchPlugin,
     dialogTestPlugin,
     eraLitePlugin,
-    eraMapPlugin
-    // gamePlugin,
-    // testHarnessPlugin,
-    // dialogPlugin,
+    eraMapPlugin,
+    customComponent
 ];
 
 type Lazy<T> = () => Promise<T>;
