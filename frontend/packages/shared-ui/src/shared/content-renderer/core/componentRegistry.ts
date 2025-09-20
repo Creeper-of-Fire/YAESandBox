@@ -70,6 +70,24 @@ export function registerComponents(newRegistrations: Record<string, ComponentReg
     registrationMap.value = newMap;
 }
 
+/**
+ * 从全局注册表中注销一个或多个组件。
+ * @param tagNames 要注销的组件标签名数组。
+ */
+export function unregisterComponents(tagNames: string[]): void {
+    const newMap = new Map(registrationMap.value);
+    let changed = false;
+    for (const tagName of tagNames) {
+        if (newMap.delete(tagName.toLowerCase())) {
+            changed = true;
+        }
+    }
+    // 仅在确实有组件被删除时才更新 ref，以避免不必要的重渲染
+    if (changed) {
+        registrationMap.value = newMap;
+    }
+}
+
 
 // --- 4. 提供给系统其他部分使用的公共 API ---
 

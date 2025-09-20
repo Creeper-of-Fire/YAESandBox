@@ -23,6 +23,7 @@ export { default as ContentRenderer } from './ContentRenderer.vue';
 export {
     registerComponents,     // 注册新的组件及其契约
     resolveComponent,     // 根据标签名解析 Vue 组件
+    unregisterComponents, // 卸载已注册的组件
     contractsMap          // 获取响应式的、只读的组件契约 Map
 } from './core/componentRegistry';
 
