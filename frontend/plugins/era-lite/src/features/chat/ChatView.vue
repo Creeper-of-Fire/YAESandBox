@@ -148,7 +148,7 @@ const scene = computed(() =>
 
 const userInput = ref('');
 const scrollContainerRef = ref<HTMLElement | null>(null);
-const workflowBtnRef = ref<InstanceType<typeof WorkflowProviderButton> | null>(null);
+const workflowBtnRef = ref<InstanceType<typeof WorkflowSelectorButton> | null>(null);
 const filterThinkEnabled = useScopedStorage("chat-view-filter-think-enabled", true);
 
 // --- 自定义脚本逻辑 ---

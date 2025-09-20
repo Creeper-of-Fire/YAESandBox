@@ -50,7 +50,7 @@ function loadScript(url: string): Promise<void>
 function loadStyle(url: string): Promise<void>
 {
     if (loadedStyleUrls.has(url))
-    { // <--- 关键修正：去重判断
+    { // 去重判断
         return Promise.resolve();
     }
     return new Promise((resolve, reject) =>
@@ -60,7 +60,7 @@ function loadStyle(url: string): Promise<void>
         link.href = url;
         link.onload = () =>
         {
-            loadedStyleUrls.add(url); // <--- 关键修正：标记为已加载
+            loadedStyleUrls.add(url); // 标记为已加载
             resolve();
         };
         link.onerror = () => reject(new Error(`无法加载样式: ${url}`));

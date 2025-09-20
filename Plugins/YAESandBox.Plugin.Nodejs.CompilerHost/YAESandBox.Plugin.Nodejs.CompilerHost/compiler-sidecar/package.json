@@ -1,0 +1,29 @@
+{
+  "name": "@yaesandbox-backend/compiler-sidecar",
+  "version": "1.0.0",
+  "description": "A CLI tool to compile a single Vue/JSX component file.",
+  "main": "src/compiler-cli.js",
+  "scripts": {
+    "build": "pnpm build:blob && pnpm build:sea",
+    "build:blob": "node --experimental-sea-config sea.config.json",
+    "build:sea": "node scripts/create-sea.js"
+  },
+  "dependencies": {
+    "@fastify/cors": "^11.1.0",
+    "esbuild": "^0.25.10",
+    "fastify": "^5.6.0",
+    "unplugin-vue": "^7.0.1",
+    "yargs": "^18.0.0"
+  },
+  "devDependencies": {
+  },
+  "bin": "compiler-cli.js",
+  "keywords": [
+    "compiler",
+    "sidecar",
+    "vue",
+    "jsx"
+  ],
+  "author": "Creeper_of_Fire",
+  "license": "MIT"
+}

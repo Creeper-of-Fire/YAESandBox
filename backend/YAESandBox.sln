@@ -28,6 +28,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Plugin.TextParse
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.PlayerServices.Save", "YAESandBox.PlayerServices.Save\YAESandBox.PlayerServices.Save.csproj", "{B9E48131-12F9-4BFD-B1FB-88A8CFCFDDB0}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Plugin.Nodejs.CompilerHost", "..\Plugins\YAESandBox.Plugin.Nodejs.CompilerHost\YAESandBox.Plugin.Nodejs.CompilerHost\YAESandBox.Plugin.Nodejs.CompilerHost.csproj", "{8CAC4C1C-60A6-42B1-BF3C-C8B7254E922C}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -86,6 +88,10 @@ Global
 		{B9E48131-12F9-4BFD-B1FB-88A8CFCFDDB0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{B9E48131-12F9-4BFD-B1FB-88A8CFCFDDB0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{B9E48131-12F9-4BFD-B1FB-88A8CFCFDDB0}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8CAC4C1C-60A6-42B1-BF3C-C8B7254E922C}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8CAC4C1C-60A6-42B1-BF3C-C8B7254E922C}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8CAC4C1C-60A6-42B1-BF3C-C8B7254E922C}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8CAC4C1C-60A6-42B1-BF3C-C8B7254E922C}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D1EBAAAC-8B93-49DE-B4CA-192C2BFC7BB7} = {5E79B2C8-4893-4D49-B459-B3FCBC122FA7}
