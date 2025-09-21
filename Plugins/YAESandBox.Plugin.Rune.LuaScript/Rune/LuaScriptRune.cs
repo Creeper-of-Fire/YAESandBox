@@ -117,7 +117,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
     // Group 1: (可选) 类型名称 (e.g., 'string')
     // Group 2: (可选) 描述信息
     // Group 3: 变量名称
-    [GeneratedRegex(@"(?:--\s*@type[:]?(?:\s*(\S+))(?:\s+(.*?))?\s*\r?\n)?\s*ctx\.get\s*\(\s*['""]([^'""]+)['""]\s*\)", RegexOptions.Multiline)]
+    [GeneratedRegex(@"(?:--\s*@type[:]?(?:\s*(\S+))(?:\s+(.*?))?\s*\r?\n)?\s*^\s*.*?ctx\.get\s*\(\s*['""]([^'""]+)['""]\s*\)", RegexOptions.Multiline)]
     private static partial Regex ConsumedVariableRegex();
 
     // 正则表达式用于匹配 ctx.set('...') 或 ctx.set("...")
