@@ -3,6 +3,7 @@ using System.Reflection;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
+using YAESandBox.Workflow.VarSpec;
 
 namespace YAESandBox.Workflow.Core.Analysis;
 
@@ -15,13 +16,13 @@ public record RuneAnalysisResult
     /// 符文消费的输入参数
     /// </summary>
     [Required]
-    public List<string> ConsumedVariables { get; init; } = [];
+    public List<ConsumedSpec> ConsumedVariables { get; init; } = [];
 
     /// <summary>
     /// 符文生产的输出参数
     /// </summary>
     [Required]
-    public List<string> ProducedVariables { get; init; } = [];
+    public List<ProducedSpec> ProducedVariables { get; init; } = [];
 
     /// <summary>
     /// 针对该符文的校验信息列表。
@@ -44,8 +45,8 @@ public class RuneAnalysisService
     {
         return new RuneAnalysisResult
         {
-            ConsumedVariables = runeConfig.GetConsumedSpec().Select(spec => spec.Name).ToList(),
-            ProducedVariables = runeConfig.GetProducedSpec().Select(spec => spec.Name).ToList(),
+            ConsumedVariables = runeConfig.GetConsumedSpec().ToList(),
+            ProducedVariables = runeConfig.GetProducedSpec().ToList(),
             RuneMessages = []
         };
     }

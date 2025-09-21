@@ -1,11 +1,12 @@
-﻿<template>
-  <n-popover :style="{ maxWidth: '300px' }" placement="right" trigger="hover">
+﻿<!-- VarWithSpecTag -->
+<template>
+  <n-popover :placement="placement" :style="{ maxWidth: '300px' }" trigger="hover">
     <!-- 触发器: 显示给用户看的标签部分 -->
     <template #trigger>
       <n-flex :size="4" :wrap="false" align="center">
         <!-- ✨ type 直接由 props 决定 -->
         <n-tag :size="size" :type="tagType">
-          {{ specDef.typeName }}
+          {{ varName }}
         </n-tag>
       </n-flex>
     </template>
@@ -29,6 +30,7 @@
 <script lang="ts" setup>
 import {NFlex, NPopover, NTag, NText} from 'naive-ui';
 import type {VarSpecDef} from "#/types/generated/workflow-config-api-client";
+import type {Placement} from "vueuc/lib/binder/src/interface";
 
 type TagType = 'default' | 'success' | 'warning' | 'error' | 'info';
 
@@ -36,6 +38,7 @@ const props = withDefaults(defineProps<{
   specDef: VarSpecDef;
   varName?: string | null;
   isOptional?: boolean;
+  placement?: Placement;
   size?: 'small' | 'medium' | 'large';
   /**
    * 由外部直接提供标签的类型，决定其颜色。
@@ -44,6 +47,7 @@ const props = withDefaults(defineProps<{
 }>(), {
   name: null,
   isOptional: undefined,
+  placement: 'right',
   size: 'small',
   tagType: 'default', // 提供一个安全的默认值
 });

@@ -98,7 +98,7 @@ import {computed, h, ref, type VNodeChild, watch} from 'vue';
 import {NAutoComplete, NButton, NCard, NEmpty, NFlex, NIcon, NText} from 'naive-ui';
 import type {ConsumedSpec, ProducedSpec, TuumInputMapping, TuumOutputMapping} from "#/types/generated/workflow-config-api-client";
 import {AddIcon, ArrowForwardIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import VarSpecTag from "#/components/share/VarSpecTag.vue";
+import VarSpecTag from "#/components/share/varSpec/VarSpecTag.vue";
 
 // --- 类型定义 ---
 type MappingItem = TuumOutputMapping | TuumInputMapping;

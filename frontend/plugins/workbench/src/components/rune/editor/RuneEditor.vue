@@ -16,7 +16,7 @@
         </n-form-item>
       </n-flex>
 
-      <!-- 新的变量显示区 -->
+      <!-- 变量显示区 -->
       <n-blockquote
           v-if="hasConsumedVariables || hasProducedVariables"
           class="variable-display-box"
@@ -25,17 +25,28 @@
           <div v-if="runeAnalysisResult && hasConsumedVariables">
             <strong>输入变量:</strong>
             <n-flex :wrap="true" style="margin-top: 4px;">
-              <n-tag v-for="variable in runeAnalysisResult.consumedVariables" :key="variable" type="info">
-                {{ variable }}
-              </n-tag>
+              <VarWithSpecTag
+                  v-for="spec in runeAnalysisResult.consumedVariables"
+                  :key="spec.name"
+                  :is-optional="'isOptional' in spec ? spec.isOptional : undefined"
+                  placement='top'
+                  :spec-def="spec.def"
+                  :tag-type="'isOptional' in spec ? (spec.isOptional ? 'default' : 'success') : 'info'"
+                  :var-name="spec.name"
+              />
             </n-flex>
           </div>
           <div v-if="runeAnalysisResult && hasProducedVariables">
             <strong>输出变量:</strong>
             <n-flex :wrap="true" style="margin-top: 4px;">
-              <n-tag v-for="variable in runeAnalysisResult.producedVariables" :key="variable" type="success">
-                {{ variable }}
-              </n-tag>
+              <VarWithSpecTag
+                  v-for="spec in runeAnalysisResult.producedVariables"
+                  placement='bottom'
+                  :key="spec.name"
+                  :spec-def="spec.def"
+                  :tag-type="'info'"
+                  :var-name="spec.name"
+              />
             </n-flex>
           </div>
         </n-flex>
@@ -78,6 +89,7 @@ import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext
 import {useRuneAnalysis} from "#/composables/useRuneAnalysis.ts";
 import TuumEditor from "#/components/tuum/editor/TuumEditor.vue";
 import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
+import VarWithSpecTag from "#/components/share/varSpec/VarWithSpecTag.vue";
 
 // --- Props ---
 const props = defineProps<{
