@@ -87,6 +87,15 @@ public static class CoreVarDefs
     /// </summary>
     public static VarSpecDef Image { get; } = new("Image", 
         "图片数据：代表一张图片，通常用于UI预览或多模态AI输入。");
+    
+    /// <summary>
+    /// **上下文 (Context)**: 一个键为字符串、值为任意类型的键值对集合。
+    /// <para>它被用作一个“数据包”，在不同的符文之间聚合和传递多个相关的变量。</para>
+    /// <para>当一个符文将 `Context` 作为输入时，其内部的键值对通常会被自动解包，以便在符文内部直接使用（例如，用于填充模板占位符）。</para>
+    /// <para>当一个符文产生 `Context` 作为输出时，它通常会将多个独立的变量自动打包进这个集合中。</para>
+    /// </summary>
+    public static VarSpecDef Context { get; } = new("Context",
+        "上下文：一个键为字符串、值为任意类型（通常为string）的键值对集合，用作聚合和传递多个变量的“数据包”。");
 
     /// <summary>
     /// **提示词列表 (PromptList)**: 一个结构化的、用于与AI模型交互的提示词对象列表。

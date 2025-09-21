@@ -44,7 +44,12 @@ internal partial class PromptGenerationRuneProcessor(WorkflowRuntimeService work
     /// <returns></returns>
     public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
-        string substitutedContent = this.SubstitutePlaceholdersAsync(this.Config.Template, tuumProcessorContent);
+        // 1. 从 Tuum 上下文中获取输入的 Context 对象，如果不存在则使用空字典
+        var inputContext = tuumProcessorContent.GetTuumVar<Dictionary<string, object?>>(this.Config.InputContextName) 
+                           ?? [];
+
+        // 2. 使用获取到的 Context 来填充模板占位符
+        string substitutedContent = this.SubstitutePlaceholders(this.Config.Template, inputContext);
         this.DebugDto.FinalPromptContent = substitutedContent;
 
         var newPrompt = new RoledPromptDto
@@ -130,66 +135,38 @@ internal partial class PromptGenerationRuneProcessor(WorkflowRuntimeService work
 
         return Task.FromResult(Result.Ok());
     }
-
-
-    private string SubstitutePlaceholdersAsync(
+    
+    /// <summary>
+    /// 使用提供的上下文(Context)字典来替换模板中的占位符。
+    /// </summary>
+    /// <param name="template">包含[[placeholder]]的模板字符串。</param>
+    /// <param name="context">用于查找占位符值的键值对字典。</param>
+    /// <returns>替换完成的字符串。</returns>
+    private string SubstitutePlaceholders(
         string template,
-        TuumProcessorContent tuumContent)
+        IReadOnlyDictionary<string, object?> context)
     {
-        var resolvedValues = new Dictionary<string, string?>();
-
-        var uniquePlaceholderNames = PromptGenerationRuneConfig.PlaceholderRegex().Matches(template)
-            .Select(m => m.Groups[1].Value)
-            .Distinct()
-            .ToList();
-
-        foreach (string placeholderName in uniquePlaceholderNames)
+        if (string.IsNullOrEmpty(template))
         {
-            string? value = null;
-            bool found = false;
-
-            // 尝试从 TuumVariable (dynamic, 假设其内部是 IDictionary<string, object>)
-            try
-            {
-                if (tuumContent.TuumVariable is IDictionary<string, object> tuumInputDict &&
-                    tuumInputDict.TryGetValue(placeholderName, out object? tuumValObj))
-                {
-                    value = tuumValObj.ToString();
-                    found = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                // 记录尝试从TuumInput获取时的潜在错误到调试信息
-                this.DebugDto.AddResolutionAttemptLog($"尝试从 TuumVariable 获取 '{placeholderName}' 失败: {ex.Message}");
-            }
-
-
-            if (found)
-            {
-                resolvedValues[placeholderName] = value;
-                this.DebugDto.ResolvedPlaceholdersWithValue[placeholderName] = value ?? "[null]";
-            }
-            else
-            {
-                // 如果未找到，则替换为空字符串 (根据用户要求隐式处理)
-                resolvedValues[placeholderName] = string.Empty;
-                this.DebugDto.UnresolvedPlaceholders.Add(placeholderName);
-                this.DebugDto.AddResolutionAttemptLog($"占位符 '{placeholderName}' 未在任何来源中找到，将替换为空字符串。");
-            }
+            return string.Empty;
         }
 
-        // 执行替换
-        string resultText = template;
-        foreach (var kvp in resolvedValues)
+        return PromptGenerationRuneConfig.PlaceholderRegex().Replace(template, match =>
         {
-            // 使用 Regex.Escape 对占位符名称进行转义，以防包含正则表达式特殊字符
-            // 但由于我们是从 {} 中提取的，通常不需要，除非占位符名称本身很奇怪
-            // 为了简单起见，这里直接替换，假设占位符名称是常规文本
-            resultText = resultText.Replace($"[[{kvp.Key}]]", kvp.Value ?? string.Empty, StringComparison.OrdinalIgnoreCase);
-        }
+            string placeholderName = match.Groups[1].Value;
 
-        return resultText;
+            if (context.TryGetValue(placeholderName, out object? value) && value != null)
+            {
+                var stringValue = value.ToString() ?? string.Empty;
+                this.DebugDto.ResolvedPlaceholdersWithValue[placeholderName] = stringValue;
+                return stringValue;
+            }
+            
+            // 未找到或值为null
+            this.DebugDto.UnresolvedPlaceholders.Add(placeholderName);
+            this.DebugDto.AddResolutionAttemptLog($"占位符 '{placeholderName}' 在提供的 Context 中未找到或值为null，将替换为空字符串。");
+            return string.Empty;
+        });
     }
 
 
@@ -269,21 +246,28 @@ internal partial class PromptGenerationRuneProcessor(WorkflowRuntimeService work
 internal partial record PromptGenerationRuneConfig
 {
     // 使用 Regex.Matches 获取所有唯一的占位符名称
-    // 使用 lookahead 和 lookbehind 来确保我们只匹配 [[}} 包裹的内容，并且不能处理嵌套 [[}} 的情况
-    // 简单正则：\{\{([^\{\}]+?)\}\} 匹配非贪婪的、不包含花括号的内容
+    // 使用 lookahead 和 lookbehind 来确保我们只匹配 [[]] 包裹的内容，并且不能处理嵌套 [[]] 的情况
     [GeneratedRegex(@"\[\[([^\[\]]+?)\]\]")]
     internal static partial Regex PlaceholderRegex();
 
     /// <inheritdoc />
     public override List<ConsumedSpec> GetConsumedSpec()
     {
-        var namesSpec = PlaceholderRegex().Matches(this.Template)
-            .Select(m => m.Groups[1].Value)
-            .Distinct()
-            .Select(n => new ConsumedSpec(n, CoreVarDefs.String))
-            .ToList();
-        namesSpec.Add(new ConsumedSpec(this.PromptsName, CoreVarDefs.PromptList) { IsOptional = true });
-        return namesSpec;
+        var specs = new List<ConsumedSpec>
+        {
+            // 提示词列表输入总是存在的，但可选
+            new(this.PromptsName, CoreVarDefs.PromptList) { IsOptional = true }
+        };
+
+        // 根据模板是否使用占位符，决定Context是否为必需
+        bool requiresContext = !string.IsNullOrEmpty(this.Template) && PlaceholderRegex().IsMatch(this.Template);
+
+        specs.Add(new ConsumedSpec(this.InputContextName, CoreVarDefs.Context)
+        {
+            // 如果模板需要填充，则Context是必需的；否则是可选的。
+            IsOptional = !requiresContext
+        });
+        return specs;
     }
 
     public override List<ProducedSpec> GetProducedSpec() => [new(this.PromptsName, CoreVarDefs.PromptList)];
@@ -298,7 +282,19 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
 {
     private const string RoleGroupName = "提示词角色";
     private const string InsertGroupName = "插入";
+    private const string DefaultContextName = "Context";
 
+    /// <summary>
+    /// 包含模板所需变量的 Context 对象的名称。
+    /// </summary>
+    [Required]
+    [DefaultValue(DefaultContextName)]
+    [Display(
+        Name = "输入上下文变量名",
+        Description = "指定一个 Context 对象，其内部的键值对将用于填充下面的提示词模板。"
+    )]
+    public string InputContextName { get; init; } = DefaultContextName;
+    
     /// <summary>
     /// 使用的提示词列表变量的名称（若存在则在列表中添加，若不存在则创建）。
     /// </summary>

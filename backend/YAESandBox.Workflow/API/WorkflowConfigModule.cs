@@ -75,6 +75,7 @@ public class WorkflowConfigModule :
         typeof(HistoryAppendRuneConfig),
         typeof(StaticVariableRuneConfig),
         typeof(TuumRuneConfig),
-        typeof(SillyTavernRuneConfig)
+        typeof(SillyTavernRuneConfig),
+        typeof(ContextBuilderRuneConfig)
     ];
 }
