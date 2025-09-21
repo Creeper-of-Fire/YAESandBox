@@ -174,10 +174,86 @@ public class LuaRegexBridge : ILuaBridge
         // 注册 regex.*
         luaState.NewTable(this.BridgeName);
         var regexTable = (LuaTable)luaState[this.BridgeName];
-        regexTable["is_match"] = (string input, string pattern, LuaTable? options) => is_match(input, pattern, options, logger);
-        regexTable["match"] = (string input, string pattern, LuaTable? options) => match(input, pattern, options, luaState, logger);
-        regexTable["match_all"] = (string input, string pattern, LuaTable? options) => match_all(input, pattern, options, luaState, logger);
-        regexTable["replace"] = (string input, string pattern, string replacement, LuaTable? options) =>
-            replace(input, pattern, replacement, options, logger);
+            // --- is_match ---
+    // 重载1: 接受 options table
+    regexTable["is_match"] = (string input, string pattern, LuaTable? options) => 
+        is_match(input, pattern, options, logger);
+    // 重载2: 不接受 options table，自动传入 null
+    regexTable["is_match_no_options"] = (string input, string pattern) => 
+        is_match(input, pattern, null, logger);
+    // 使用一个小的 Lua shim 来允许多个签名
+    luaState.DoString(@"
+        local original_is_match = regex.is_match
+        local no_options_is_match = regex.is_match_no_options
+        regex.is_match_no_options = nil -- 清理临时函数
+        regex.is_match = function(input, pattern, options)
+            if options == nil then
+                return no_options_is_match(input, pattern)
+            else
+                return original_is_match(input, pattern, options)
+            end
+        end
+    ");
+
+
+    // --- match ---
+    // 重载1: 接受 options table
+    regexTable["match"] = (string input, string pattern, LuaTable? options) => 
+        match(input, pattern, options, luaState, logger);
+    // 重载2: 不接受 options table，自动传入 null
+    regexTable["match_no_options"] = (string input, string pattern) => 
+        match(input, pattern, null, luaState, logger);
+    luaState.DoString(@"
+        local original_match = regex.match
+        local no_options_match = regex.match_no_options
+        regex.match_no_options = nil
+        regex.match = function(input, pattern, options)
+            if options == nil then
+                return no_options_match(input, pattern)
+            else
+                return original_match(input, pattern, options)
+            end
+        end
+    ");
+
+    // --- match_all ---
+    // 重载1: 接受 options table
+    regexTable["match_all"] = (string input, string pattern, LuaTable? options) => 
+        match_all(input, pattern, options, luaState, logger);
+    // 重载2: 不接受 options table，自动传入 null
+    regexTable["match_all_no_options"] = (string input, string pattern) => 
+        match_all(input, pattern, null, luaState, logger);
+    luaState.DoString(@"
+        local original_match_all = regex.match_all
+        local no_options_match_all = regex.match_all_no_options
+        regex.match_all_no_options = nil
+        regex.match_all = function(input, pattern, options)
+            if options == nil then
+                return no_options_match_all(input, pattern)
+            else
+                return original_match_all(input, pattern, options)
+            end
+        end
+    ");
+
+    // --- replace ---
+    // 重载1: 接受 options table
+    regexTable["replace"] = (string input, string pattern, string replacement, LuaTable? options) =>
+        replace(input, pattern, replacement, options, logger);
+    // 重载2: 不接受 options table，自动传入 null
+    regexTable["replace_no_options"] = (string input, string pattern, string replacement) =>
+        replace(input, pattern, replacement, null, logger);
+    luaState.DoString(@"
+        local original_replace = regex.replace
+        local no_options_replace = regex.replace_no_options
+        regex.replace_no_options = nil
+        regex.replace = function(input, pattern, replacement, options)
+            if options == nil then
+                return no_options_replace(input, pattern, replacement)
+            else
+                return original_replace(input, pattern, replacement, options)
+            end
+        end
+    ");
     }
 }
