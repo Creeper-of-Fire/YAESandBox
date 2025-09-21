@@ -1,0 +1,103 @@
+﻿[regex]
+documentation = "全局正则表达式对象，用于强大的字符串匹配、提取和替换。"
+
+[[regex.methods]]
+documentation = '''
+检查输入字符串是否匹配指定的正则表达式模式。
+
+**Options Table (可选):**
+- `ignore_case` (boolean): 忽略大小写 (等同于正则模式 `i`)。
+- `multiline` (boolean): 多行模式 (等同于正则模式 `m`)。使 `^` 和 `$` 匹配行的开始和结束，而不仅仅是整个字符串的开始和结束。
+- `dotall` (boolean): 点号匹配所有字符 (等同于正则模式 `s`)。使 `.` 匹配包括换行符在内的任何字符。
+
+**示例:**
+```lua
+-- 检查是否包含 'hello'，不区分大小写
+local found = regex.is_match("world, Hello!", "hello", { ignore_case = true })
+-- found 将是 true
+```'''
+insertText = "is_match('${1:input}', '${2:pattern}', { ignore_case = ${3:false} })"
+kind = "Function"
+name = "is_match"
+signature = "regex.is_match(input: string, pattern: string, options?: table): boolean"
+
+[[regex.methods]]
+documentation = '''
+返回第一个匹配项及其所有捕获组的 table。如果无匹配则返回 nil。
+返回的 table 中，索引 1 是完整的匹配，索引 2 是第一个捕获组，以此类推。
+
+**Options Table (可选):**
+- `ignore_case` (boolean): 忽略大小写 (模式 `i`)。
+- `multiline` (boolean): 多行模式 (模式 `m`)。
+- `dotall` (boolean): 点号匹配所有字符 (模式 `s`)。
+
+**示例:**
+```lua
+local text = "用户: John Doe"
+local result = regex.match(text, "用户: (%a+) (%a+)")
+-- result 将是 { "用户: John Doe", "John", "Doe" }
+if result then
+  log.info("全名: " .. result[1])
+  log.info("姓: " .. result[3])
+end
+```'''
+insertText = "match('${1:input}', '${2:pattern}')"
+name = "match"
+signature = "regex.match(input: string, pattern: string, options?: table): table | nil"
+
+[[regex.methods]]
+documentation = '''
+返回一个包含所有匹配项的 table。每个匹配项本身也是一个包含其捕获组的 table。
+
+**Options Table (可选):**
+- `ignore_case` (boolean): 忽略大小写 (模式 `i`)。
+- `multiline` (boolean): 多行模式 (模式 `m`)。
+- `dotall` (boolean): 点号匹配所有字符 (模式 `s`)。
+
+**示例:**
+```lua
+local text = "a=1, b=2, c=3"
+local all_pairs = regex.match_all(text, "(%a+)=(%d+)")
+-- all_pairs 将是 { { "a=1", "a", "1" }, { "b=2", "b", "2" }, { "c=3", "c", "3" } }
+for _, pair in ipairs(all_pairs) do
+  log.info("键: " .. pair[2] .. ", 值: " .. pair[3])
+end
+```'''
+insertText = "match_all('${1:input}', '${2:pattern}')"
+kind = "Function"
+name = "match_all"
+signature = "regex.match_all(input: string, pattern: string, options?: table): table"
+
+[[regex.methods]]
+documentation = '''
+在输入字符串中查找并替换匹配项。
+
+**Replacement String:**
+- 使用 `${name}` 或 `$1` 来引用捕获组。
+
+**Options Table (可选):**
+- `ignore_case` (boolean): 忽略大小写 (模式 `i`)。
+- `multiline` (boolean): 多行模式 (模式 `m`)。
+- `dotall` (boolean): 点号匹配所有字符 (模式 `s`)。
+- `count` (number): 要替换的最大匹配数。0 或省略表示全部替换。
+
+**示例 1: 基本替换**
+```lua
+local text = "你好, 世界"
+local new_text = regex.replace(text, "世界", "Lua")
+-- new_text 将是 "你好, Lua"
+```
+**示例 2: 使用捕获组和选项**
+```lua
+local text = "apples, ORANGES, bananas"
+-- 将水果名首字母大写，并只替换前两个
+local new_text = regex.replace(text, "(%a+)", function(m)
+  return m[2]:sub(1,1):upper() .. m[2]:sub(2):lower()
+end, { ignore_case = true, count = 2 })
+-- NLua 也支持将 Lua 函数作为替换参数，非常强大！
+-- new_text 结果将是 "Apples, Oranges, bananas"
+```'''
+insertText = "replace('${1:input}', '${2:pattern}', '${3:replacement}')"
+kind = "Function"
+name = "replace"
+signature = "regex.replace(input: string, pattern: string, replacement: string, options?: table): string"

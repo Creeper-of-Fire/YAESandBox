@@ -1,0 +1,46 @@
+﻿[json]
+documentation = "全局 JSON 处理对象，用于 Lua 值与 JSON 字符串之间的相互转换。基于 rxi/json.lua 库，行为符合 JSON 标准。"
+
+[[json.methods]]
+documentation = '''
+将一个 Lua 值（例如 table, string, number, boolean, nil）序列化为 JSON 字符串。
+
+**特性:**
+- 自动区分数组和对象。
+- 正确处理字符串转义。
+- 会因循环引用而报错。
+
+**示例:**
+```lua
+local user = { id = 1, name = "Alice", roles = {"admin", "editor"} }
+local user_json = json.encode(user)
+-- user_json 的值为 '{"id":1,"name":"Alice","roles":["admin","editor"]}'
+```'''
+insertText = "encode(${1:lua_value})"
+kind = "Function"
+name = "encode"
+signature = "json.encode(value: table | any): string"
+
+[[json.methods]]
+documentation = '''
+将一个 JSON 字符串反序列化为等效的 Lua 值。
+
+**特性:**
+- 能解析复杂的嵌套对象和数组。
+- 严格遵守 JSON 格式，对于无效的 JSON 字符串会报错。
+
+**示例:**
+```lua
+local json_str = '{"id":1,"name":"Alice","is_active":true,"metadata":null}'
+local user_data = json.decode(json_str)
+
+log.info('用户名: ' .. user_data.name) -- 输出 'Alice'
+log.info('是否激活: ' .. tostring(user_data.is_active)) -- 输出 'true'
+if user_data.metadata == nil then
+  log.info('元数据为空')
+end
+```'''
+insertText = "decode('${1:json_string}')"
+kind = "Function"
+name = "decode"
+signature = "json.decode(jsonString: string): table | any"

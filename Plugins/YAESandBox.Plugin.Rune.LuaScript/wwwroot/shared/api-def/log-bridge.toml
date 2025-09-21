@@ -1,0 +1,41 @@
+﻿[log]
+documentation = "全局日志对象，用于在调试输出中记录信息。"
+
+[[log.methods]]
+documentation = '''
+记录一条信息级别的日志。
+
+**示例:**
+```lua
+log.info("处理用户数据...")
+```'''
+insertText = "info('${1:message}')"
+kind = "Function"
+name = "info"
+signature = "log.info(message: string): void"
+
+[[log.methods]]
+documentation = '''
+记录一条警告级别的日志。
+
+**示例:**
+```lua
+log.warn("某个字段值为空")
+```'''
+insertText = "warn('${1:message}')"
+kind = "Function"
+name = "warn"
+signature = "log.warn(message: string): void"
+
+[[log.methods]]
+documentation = '''
+记录一条错误级别的日志。
+
+**示例:**
+```lua
+log.error("无法连接到数据库")
+```'''
+insertText = "error('${1:message}')"
+kind = "Function"
+name = "error"
+signature = "log.error(message: string): void"

@@ -1,4 +1,6 @@
-﻿/**
+﻿import TOML from 'https://esm.sh/@ltd/j-toml@1.38.0';
+
+/**
  * 深度合并两个或多个对象。
  * 对于数组，它会连接它们并去重。对于对象，它会递归地合并它们的属性。
  * @param {...Object} objects - 要合并的对象。
@@ -61,11 +63,25 @@ export async function loadAndMergeApis(manifestUrl)
             // 使用 `new URL()` 来正确解析相对路径
             const apiUrl = new URL(filePath, manifestUrl).href;
             console.log(`[Lua Service] 发现 API 定义: ${apiUrl}`);
-            return fetch(apiUrl).then(res =>
-            {
-                if (!res.ok) throw new Error(`加载 ${apiUrl} 失败`);
-                return res.json();
-            });
+            return fetch(apiUrl)
+                .then(res =>
+                {
+                    if (!res.ok) throw new Error(`加载 ${apiUrl} 失败`);
+                    return res.text(); // 1. 获取原始文本内容
+                })
+                .then(tomlText =>
+                {
+                    try
+                    {
+                        // 2. 使用 j-toml 解析 TOML 文本
+                        // j-toml 的 parse 方法返回一个 Map，我们用 parseAsObject 直接得到 JS 对象
+                        return TOML.parse(tomlText, { joiner: '\n', bigInt: false });
+                    } catch (e)
+                    {
+                        console.error(`解析 TOML 文件 ${apiUrl} 失败:`, e);
+                        throw new Error(`解析 TOML 文件 ${apiUrl} 失败: ${e.message}`);
+                    }
+                });
         });
 
         // 并行等待所有 API 文件加载完成

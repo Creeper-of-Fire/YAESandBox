@@ -1,0 +1,28 @@
+﻿[ctx]
+documentation = "全局上下文对象，用于在工作流节点之间传递数据。"
+
+[[ctx.methods]]
+documentation = '''
+从上下文中读取一个变量。
+
+**示例:**
+```lua
+local user_name = ctx.get("username")
+```'''
+insertText = "get('${1:variableName}')"
+kind = "Function"
+name = "get"
+signature = "ctx.get(variableName: string): any"
+
+[[ctx.methods]]
+documentation = '''
+向上下文中写入或更新一个变量。
+
+**示例:**
+```lua
+ctx.set("user_id", 12345)
+```'''
+insertText = "set('${1:variableName}', ${2:value})"
+kind = "Function"
+name = "set"
+signature = "ctx.set(variableName: string, value: any): void"

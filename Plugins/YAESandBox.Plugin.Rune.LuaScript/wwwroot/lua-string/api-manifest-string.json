@@ -1,10 +1,10 @@
 ﻿{
   "apiFiles": [
-    "../shared/api-def/stdlib-api-safe.json",
-    "../shared/api-def/log-bridge.json",
-    "../shared/api-def/json-bridge.json",
-    "../shared/api-def/regex-bridge.json",
-    "../shared/api-def/datetime-bridge.json",
-    "./api-def/custom-api-string.json"
+    "../shared/api-def/stdlib-api-safe.toml",
+    "../shared/api-def/log-bridge.toml",
+    "../shared/api-def/json-bridge.toml",
+    "../shared/api-def/regex-bridge.toml",
+    "../shared/api-def/datetime-bridge.toml",
+    "./api-def/custom-api-string.toml"
   ]
 }
