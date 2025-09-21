@@ -1,4 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.Reflection;
+using YAESandBox.Depend.Schema.SchemaProcessor;
+using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;
@@ -70,6 +73,9 @@ public partial class TuumAnalysisService
         // 步骤 0: 执行独立的校验和分析
         var tuumMappingUniqueMessages = this.ValidateTuumMappingUniqueness(tuumConfig).ToList();
 
+        // 校验枢机内部所有符文的属性规则
+        var runeAttributeMessages = this.ValidateRuneAttributeRules(tuumConfig).ToList();
+
         // 步骤 1: 确定所有内部变量的类型定义
         var (internalTypeDefs, typeValidationMessages) = this.AnalyzeVariableTypes(tuumConfig);
         var inputTypeValidationMessages = this.AnalyzeInputTypes(tuumConfig, internalTypeDefs);
@@ -106,7 +112,11 @@ public partial class TuumAnalysisService
             InternalVariableDefinitions = internalTypeDefs,
             ConsumedEndpoints = consumedEndpoints,
             ProducedEndpoints = producedEndpoints,
-            Messages = [..tuumMappingUniqueMessages, ..typeValidationMessages, ..inputTypeValidationMessages, ..dataFlowMessages],
+            Messages =
+            [
+                ..tuumMappingUniqueMessages, ..runeAttributeMessages, ..typeValidationMessages, ..inputTypeValidationMessages,
+                ..dataFlowMessages
+            ],
         };
     }
 
@@ -134,6 +144,76 @@ public partial class TuumAnalysisService
                 Message = $"输出映射冲突：外部端点 '{duplicateEndpoint}' 被多个内部变量驱动，它只能有一个数据源。",
                 RuleSource = "MappingUniqueness"
             };
+        }
+    }
+
+    /// <summary>
+    /// 辅助方法，获取类型的别名以生成更友好的消息
+    /// </summary>
+    private static string getRuneAlias(Type runeType) => runeType.GetCustomAttribute<ClassLabelAttribute>()?.Label ?? runeType.Name;
+
+    /// <summary>
+    /// **分析函数 0.5: 符文属性规则校验**
+    /// <para>职责：校验枢机内部的所有符文是否满足其Attribute定义的规则（如唯一性、顺序等）。</para>
+    /// </summary>
+    private IEnumerable<ValidationMessage> ValidateRuneAttributeRules(TuumConfig tuumConfig)
+    {
+        var tuumRunes = tuumConfig.Runes;
+
+        for (int i = 0; i < tuumRunes.Count; i++)
+        {
+            var runeConfig = tuumRunes[i];
+            var runeType = runeConfig.GetType();
+
+            // 规则: [SingleInTuum]
+            if (runeType.GetCustomAttribute<SingleInTuumAttribute>() != null)
+            {
+                if (tuumRunes.Count(r => r.GetType() == runeType) > 1)
+                {
+                    yield return new ValidationMessage
+                    {
+                        Severity = RuleSeverity.Warning,
+                        Message = $"规则冲突：符文 '{runeConfig.Name}' (类型: {runeType.Name}) 在此枢机中出现了多次，但它被建议只使用一次。",
+                        RuleSource = "SingleInTuum"
+                    };
+                }
+            }
+
+            // 规则: [InFrontOf]
+            if (runeType.GetCustomAttribute<InFrontOfAttribute>() is { } inFrontOfAttr)
+            {
+                foreach (var targetType in inFrontOfAttr.InFrontOfType)
+                {
+                    int targetIndex = tuumRunes.FindIndex(m => m.GetType() == targetType);
+                    if (targetIndex != -1 && i > targetIndex)
+                    {
+                        yield return new ValidationMessage
+                        {
+                            Severity = RuleSeverity.Warning,
+                            Message = $"顺序警告：符文 '{runeConfig.Name}' 应该在 '{getRuneAlias(targetType)}' 之前执行。",
+                            RuleSource = "InFrontOf"
+                        };
+                    }
+                }
+            }
+
+            // 规则: [Behind]
+            if (runeType.GetCustomAttribute<BehindAttribute>() is { } behindAttr)
+            {
+                foreach (var targetType in behindAttr.BehindType)
+                {
+                    int targetIndex = tuumRunes.FindIndex(m => m.GetType() == targetType);
+                    if (targetIndex != -1 && i < targetIndex)
+                    {
+                        yield return new ValidationMessage
+                        {
+                            Severity = RuleSeverity.Warning,
+                            Message = $"顺序警告：符文 '{runeConfig.Name}' 应该在 '{getRuneAlias(targetType)}' 之后执行。",
+                            RuleSource = "Behind"
+                        };
+                    }
+                }
+            }
         }
     }
 

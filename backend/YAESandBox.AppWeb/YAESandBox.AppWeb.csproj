@@ -41,8 +41,8 @@
         主入口 Target: 这个 Target 在 Build 之后触发。
         它的唯一职责就是按顺序调用其他两个 Target。
       -->
-<!--    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true'">-->
-    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="false AND '$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true'">
+    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true'">
+<!--    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="false AND '$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true'">-->
         <CallTarget Targets="CollectSwaggerDocs"/>
         <CallTarget Targets="GenerateSwaggerFromReferences"/>
     </Target>

@@ -39,12 +39,6 @@ public class WorkflowAnalysisController(
         /// </summary>
         [Required]
         public required AbstractRuneConfig RuneToAnalyze { get; init; }
-
-        /// <summary>
-        /// （可选）该符文所在的枢机的完整配置，作为校验上下文。
-        /// 提供此上下文可以进行依赖顺序等更深入的校验。
-        /// </summary>
-        public TuumConfig? TuumContext { get; init; }
     }
 
     /// <summary>
@@ -59,7 +53,7 @@ public class WorkflowAnalysisController(
     [Produces("application/json")]
     [ProducesResponseType(typeof(RuneAnalysisResult), StatusCodes.Status200OK)]
     public ActionResult<RuneAnalysisResult> AnalyzeRune([FromBody] RuneAnalysisRequest request) =>
-        this.Ok(this.RuneAnalysisService.Analyze(request.RuneToAnalyze, request.TuumContext));
+        this.Ok(this.RuneAnalysisService.Analyze(request.RuneToAnalyze));
 
     /// <summary>
     /// 对单个枢机（Tuum）配置草稿进行高级分析（不包含符文级校验）。

@@ -7,10 +7,8 @@ import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 /**
  * 一个 Vue Composable，用于对符文（Rune）配置进行实时分析。
  * @param rune 包含符文配置的响应式 Ref。
- * @param configId 符文的唯一ID Ref。
- * @param tuumContext (可选) 包含符文所在枢机上下文的响应式 Ref。
  */
-export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: Ref<string>, tuumContext: Ref<TuumConfig | null>)
+export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>)
 {
     const runeAnalysisStore = useRuneAnalysisStore();
     const workbenchStore = useWorkbenchStore();
@@ -26,7 +24,7 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: 
 
     const debouncedExecuteAnalysis = useDebounceFn(executeAnalysis, 300);
 
-    async function executeAnalysis(newRune: AbstractRuneConfig | null, context: TuumConfig | null): Promise<void>
+    async function executeAnalysis(newRune: AbstractRuneConfig | null): Promise<void>
     {
         try
         {
@@ -41,9 +39,7 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: 
             if (newRune)
             {
                 analysisResult.value = await runeAnalysisStore.analyzeRune(
-                    newRune,
-                    newRune.configId,
-                    context
+                    newRune
                 ) || null;
                 if (!analysisResult.value)
                 {
@@ -57,23 +53,23 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>, configId: 
             // console.log(`[useRuneAnalysis] 分析结果: `, analysisResult.value);
         } catch (error: any)
         {
-            console.error(`[useRuneAnalysis] 在分析符文 ${configId.value} 时失败: `, error);
+            console.error(`[useRuneAnalysis] 在分析符文 ${rune.value?.configId} 时失败: `, error);
             analysisResult.value = null; // 失败时也清空结果
         }
     }
 
     // 同时监听符文和其上下文的变化
-    watch([rune, tuumContext], ([newRune, newContext]) =>
+    watch(rune, (newRune) =>
     {
-        debouncedExecuteAnalysis(newRune, newContext)
+        debouncedExecuteAnalysis(newRune)
     }, {immediate: false, deep: true});
 
-    onMounted(() => executeAnalysis(rune.value, tuumContext.value));
+    onMounted(() => executeAnalysis(rune.value));
 
     return {
         analysisResult,
         hasConsumedVariables,
         hasProducedVariables,
-        refresh: () => executeAnalysis(rune.value, tuumContext.value)
+        refresh: () => executeAnalysis(rune.value)
     };
 }
