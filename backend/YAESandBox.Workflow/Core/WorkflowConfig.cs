@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using System.ComponentModel;
+using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.Tuum;
 
@@ -29,15 +30,39 @@ public record WorkflowConfig
     [Required]
     [HiddenInForm(true)]
     public List<TuumConfig> Tuums { get; init; } = [];
-    
+
     /// <summary>
-    /// 定义了工作流中所有枢机之间的显式连接。
-    /// 这是工作流数据流向的唯一依据。
+    /// 定义了工作流中所有枢机(Tuum)的图结构和连接行为。
+    /// <para>如果此对象为null，系统将默认采用自动连接模式。</para>
     /// </summary>
-    public List<WorkflowConnection>? Connections { get; init; } = [];
-    
+    [HiddenInForm(true)]
+    [Display(Name = "工作流图配置", Description = "配置工作流中所有枢机的连接方式，包括手动连接和是否启用自动连接等。")]
+    public WorkflowGraphConfig? Graph { get; init; }
+
     /// <summary>
     /// 工作流的标签，属于元数据，用于筛选等。
     /// </summary>
     public List<string>? Tags { get; init; }
+}
+
+/// <summary>
+/// 封装了工作流中枢机(Tuum)图的连接配置。
+/// </summary>
+public record WorkflowGraphConfig
+{
+    /// <summary>
+    /// 控制是否启用基于命名约定的自动连接功能。
+    /// <para>当为 true 时，系统会尝试自动连接所有枢机，忽略下面的 Connections 列表。</para>
+    /// <para>当为 false 时，系统将严格使用 Connections 列表进行手动连接。</para>
+    /// </summary>
+    [Required]
+    [DefaultValue(true)]
+    [Display(Name = "启用自动连接", Description = "如果启用，将根据枢机的顺序和端口名自动连接。如果禁用，则必须手动提供所有连接。")]
+    public bool EnableAutoConnect { get; init; } = true;
+
+    /// <summary>
+    /// 当 EnableAutoConnect 为 false 时，用于定义工作流中所有枢机之间的显式连接。
+    /// </summary>
+    [Display(Name = "手动连接列表", Description = "当禁用自动连接时，在此处定义所有枢机之间的数据流向。")]
+    public List<WorkflowConnection>? Connections { get; init; } = [];
 }

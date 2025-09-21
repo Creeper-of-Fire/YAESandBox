@@ -1,9 +1,11 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Collections.Concurrent;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Graph;
 using YAESandBox.Workflow.Rune;
 
 namespace YAESandBox.Workflow.Tuum;
@@ -74,9 +76,10 @@ public class TuumProcessor(
             {
                 return value;
             }
+
             return default;
         }
-        
+
         /// <summary>
         /// 尝试获得枢机的变量，带有类型转换，并且有序列化尝试。
         /// </summary>
@@ -87,7 +90,7 @@ public class TuumProcessor(
         public bool TryGetTuumVar<T>(string valueName, [MaybeNullWhen(false)] out T value)
         {
             object? rawValue = this.GetTuumVar(valueName);
-            
+
             // Case 1: 变量不存在或其值就是 null。
             if (rawValue is null)
             {
@@ -105,11 +108,11 @@ public class TuumProcessor(
             try
             {
                 string json;
-                if (rawValue  is string stringTryGetValue)
+                if (rawValue is string stringTryGetValue)
                     json = stringTryGetValue;
                 else
                     // 将 C# 对象序列化成 JSON 字符串
-                    json = JsonSerializer.Serialize(rawValue );
+                    json = JsonSerializer.Serialize(rawValue);
 
                 var result = JsonSerializer.Deserialize<T>(json, YaeSandBoxJsonHelper.JsonSerializerOptions);
 
@@ -137,6 +140,8 @@ public class TuumProcessor(
         }
     }
 
+    private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
+
     /// <summary>
     /// 此枢机声明的所有输入端点的名称。
     /// </summary>
@@ -150,60 +155,150 @@ public class TuumProcessor(
     private List<IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto>> Runes { get; } =
         config.Runes.Select(rune => rune.ToRuneProcessor(workflowRuntimeService)).ToList();
 
-    /// <summary>
-    /// 启动枢机流程。
-    /// </summary>
-    /// <param name="inputs">一个字典，Key是输入端点的名称，Value是输入的数据。</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>一个包含此枢机所有输出的字典，Key是输出端点的名称。</returns>
+    // 缓存所有Rune的运行时实例，以ConfigId为键
+    private Dictionary<string, IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto>> RuneProcessors { get; } =
+        config.Runes.ToDictionary(
+            runeConfig => runeConfig.ConfigId,
+            runeConfig => runeConfig.ToRuneProcessor(workflowRuntimeService)
+        );
+
     public async Task<Result<Dictionary<string, object?>>> ExecuteAsync(
         IReadOnlyDictionary<string, object?> inputs, CancellationToken cancellationToken = default)
     {
-        // 1. 根据输入端点的数据，填充枢机的内部变量池
-        // 遍历新的输入映射: "内部变量名" -> "外部端点名"
-        // 这个循环的每一次迭代都只处理一个内部变量和它的唯一数据源。
-        foreach ((string internalName, string endpointName) in this.Config.InputMappings)
-        {
-            // 从工作流提供的总输入中，为当前内部变量查找其数据源 (外部端点) 的值。
-            // 如果上游没有提供数据，endpointValue 将为 null。
-            // 校验阶段应确保所有必要的输入都已被连接，以避免此处出现非预期的 null。
-            inputs.TryGetValue(endpointName, out object? endpointValue);
+        // --- 1. 预处理阶段：构建完整的Rune图 ---
 
-            // 直接将获取到的值赋给对应的内部变量。
-            // 逻辑非常清晰：一个内部变量，一个赋值操作。
-            this.TuumContent.SetTuumVar(internalName, endpointValue);
+        // a. 创建虚拟输入/输出节点实例
+        var virtualInputNode = new VirtualInputRune(this.Config, inputs);
+        var virtualOutputNode = new VirtualOutputRune(this.Config);
+
+        // b. 将真实Rune转换为RuneGraphNode
+        var enabledRunes = this.Config.Runes.Where(r => r.Enabled).ToList();
+        var realRuneNodes = RuneGraphNodeBuilder.BuildRuneGraphNodes(enabledRunes);
+
+        // c. 组合成完整的节点列表
+        var allGraphNodes = new List<IGraphNode<string>> { virtualInputNode };
+        allGraphNodes.AddRange(realRuneNodes);
+        allGraphNodes.Add(virtualOutputNode);
+
+        // --- 2. 确定连接关系 ---
+        List<GraphConnection<string>> connections;
+        if (this.Config.Graph?.Connections is null or { Count: 0 } || this.Config.Graph.EnableAutoConnect)
+        {
+            // 自动连接：注意，自动连接的输入是 allGraphNodes，这样虚拟节点也能参与连接
+            var autoConnectResult = GraphExecutor.TryAutoConnect<IGraphNode<string>, string>(allGraphNodes);
+            if (autoConnectResult.TryGetError(out var autoConnectError, out var autoConnectValue))
+                return autoConnectError;
+            connections = autoConnectValue;
+        }
+        else
+        {
+            // 手动连接：需要将 TuumConfig.Connections 转换为 GraphConnection<string>
+            connections = this.Config.Graph.Connections.Select(c =>
+                new GraphConnection<string>(
+                    new GraphConnectionEndpoint<string>(c.Source.RuneConfigId, c.Source.PortName),
+                    new GraphConnectionEndpoint<string>(c.Target.RuneConfigId, c.Target.PortName)
+                )).ToList();
         }
 
-        // 2. 依次执行所有符文
-        foreach (var rune in this.Runes)
+        // --- 3. 执行阶段：调用通用执行器 ---
+
+        // a. 准备初始数据：只有虚拟输入节点会产生初始数据
+        var initialData = new Dictionary<GraphConnectionEndpoint<string>, object?>();
+        var initialOutputs = virtualInputNode.ProduceOutputs();
+        foreach (var (portName, value) in initialOutputs)
         {
-            if (!rune.Config.Enabled)
-                continue;
+            initialData[new GraphConnectionEndpoint<string>(VirtualInputRune.VIRTUAL_INPUT_ID, portName)] = value;
+        }
+
+        // b. 定义节点执行委托
+        var runeProcessorsCache = new ConcurrentDictionary<string, IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto>>();
+
+        // c. 调用执行器
+        var executionResult = await GraphExecutor.ExecuteAsync(
+            realRuneNodes, // 我们只要求执行器执行真实的Rune
+            connections,
+            initialData,
+            ExecuteNodeAsync,
+            cancellationToken);
+
+        if (executionResult.TryGetError(out var execError, out var finalDataStore))
+        {
+            return Result.Fail($"Tuum '{this.Config.ConfigId}' 图执行失败: {execError.Message}");
+        }
+
+        // --- 4. 后处理阶段：收集结果 ---
+
+        // a. 提取流向虚拟输出节点的数据
+        var inputsForOutputNode = new Dictionary<string, object?>();
+        var connectionsToOutputNode = connections.Where(c => c.Target.NodeId == VirtualOutputRune.VIRTUAL_OUTPUT_ID);
+        foreach (var conn in connectionsToOutputNode)
+        {
+            if (finalDataStore.TryGetValue(conn.Source, out var value))
+            {
+                inputsForOutputNode[conn.Target.PortName] = value;
+            }
+        }
+
+        // b. 调用虚拟输出节点的收集方法
+        var tuumOutputs = virtualOutputNode.CollectInputs(inputsForOutputNode);
+
+        // TODO: 更新DebugDto
+
+        return Result.Ok(tuumOutputs);
+
+        async Task<Result<Dictionary<string, object?>>> ExecuteNodeAsync(
+            IGraphNode<string> node, IReadOnlyDictionary<string, object?> nodeInputs, CancellationToken ct)
+        {
+            if (node is not RuneGraphNode runeNode)
+            {
+                // 虚拟节点在此阶段不执行任何操作
+                return new Dictionary<string, object?>();
+            }
+
+            var processor = runeProcessorsCache.GetOrAdd(
+                runeNode.Id,
+                _ => runeNode.Config.ToRuneProcessor(this.WorkflowRuntimeService)
+            );
+
+            // --- 适配器 ---
+
+            // 1. 创建一个临时的、为本次执行定制的 TuumProcessorContent
+            var transientTuumContent = new TuumProcessorContent(
+                this.Config, // 父Tuum的配置
+                this.WorkflowRuntimeService
+            );
+
+            // 2. 将图执行器提供的输入，填充到临时 TuumVariable 池中
+            foreach (var (portName, value) in nodeInputs)
+            {
+                transientTuumContent.SetTuumVar(portName, value);
+            }
+
+            // 3. 调用 Rune 原本的 ExecuteAsync 方法
             // (仅处理INormalRune，未来可扩展)
-            if (rune is INormalRune<AbstractRuneConfig, IRuneProcessorDebugDto> normalRune)
+            if (processor is INormalRune<AbstractRuneConfig, IRuneProcessorDebugDto> normalRune)
             {
-                var result = await normalRune.ExecuteAsync(this.TuumContent, cancellationToken);
-                if (result.TryGetError(out var error))
-                    return error; // 如果任何一个符文失败，整个枢机失败
+                var runeResult = await normalRune.ExecuteAsync(transientTuumContent, ct);
+                // 4. 检查 Rune 执行是否失败
+                if (runeResult.TryGetError(out var runeError))
+                {
+                    return runeError;
+                }
             }
-        }
 
-        // 3. 根据输出映射，从内部变量池收集所有输出
-        var tuumOutputs = new Dictionary<string, object?>();
-        // 遍历输出映射: "内部变量名" -> [ "外部端点名1", "外部端点名2", ... ]
-        foreach ((string internalName, var endpointNames) in this.Config.OutputMappings)
-        {
-            // 从内部变量池中查找由符文产生的局部变量的值
-            object? internalValue = this.TuumContent.TuumVariable.GetValueOrDefault(internalName);
-
-            // 将这个内部变量的值赋给所有映射到的外部输出端点 (Fan-out)
-            foreach (string endpointName in endpointNames)
+            // 5. 从临时的 TuumVariable 池中，提取出 Rune 的输出
+            var outputs = new Dictionary<string, object?>();
+            // 我们根据 Rune 的声明 (ProducedSpec) 来精确提取输出，而不是猜测
+            foreach (var producedSpec in runeNode.Config.GetProducedSpec())
             {
-                tuumOutputs[endpointName] = internalValue;
+                // GetTuumVar 会返回 null 如果 key 不存在，这符合预期
+                var outputValue = transientTuumContent.GetTuumVar(producedSpec.Name);
+                outputs[producedSpec.Name] = outputValue;
             }
-        }
 
-        return tuumOutputs;
+            // 6. 将提取出的输出返回给图执行器
+            return outputs;
+        }
     }
 
 

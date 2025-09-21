@@ -3,7 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { TuumConfig } from './TuumConfig';
-import type { WorkflowConnection } from './WorkflowConnection';
+import type { WorkflowGraphConfig } from './WorkflowGraphConfig';
 /**
  * 工作流的配置
  */
@@ -21,11 +21,7 @@ export type WorkflowConfig = {
      * 一个工作流含有的枢机（有序）
      */
     tuums: Array<TuumConfig>;
-    /**
-     * 定义了工作流中所有枢机之间的显式连接。
-     * 这是工作流数据流向的唯一依据。
-     */
-    connections?: Array<WorkflowConnection> | null;
+    graph?: WorkflowGraphConfig;
     /**
      * 工作流的标签，属于元数据，用于筛选等。
      */
