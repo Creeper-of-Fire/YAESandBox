@@ -1,16 +1,18 @@
 ﻿<template>
   <div class="editor-layout">
     <!-- 左侧：组件列表 -->
-    <n-card title="已注册组件" class="components-pane">
+    <n-card class="components-pane" title="已注册组件">
       <template #header-extra>
-        <n-button type="primary" size="small" @click="handleNewComponent">
-          <template #icon><n-icon :component="AddIcon" /></template>
+        <n-button size="small" type="primary" @click="handleNewComponent">
+          <template #icon>
+            <n-icon :component="AddIcon"/>
+          </template>
           新建组件
         </n-button>
       </template>
 
       <n-spin :show="!isStoreReady">
-        <n-list hoverable clickable>
+        <n-list clickable hoverable>
           <n-list-item v-for="comp in allComponents" :key="comp.id" @click="loadComponentIntoEditor(comp)">
             <n-thing :title="comp.id">
               <template #description>
@@ -18,12 +20,14 @@
               </template>
               <template #header-extra>
                 <n-button text type="error" @click.stop="handleDelete(comp.id)">
-                  <template #icon><n-icon :component="TrashIcon" /></template>
+                  <template #icon>
+                    <n-icon :component="TrashIcon"/>
+                  </template>
                 </n-button>
               </template>
             </n-thing>
           </n-list-item>
-          <n-empty v-if="isStoreReady && allComponents.length === 0" description="暂无组件" />
+          <n-empty v-if="isStoreReady && allComponents.length === 0" description="暂无组件"/>
         </n-list>
       </n-spin>
     </n-card>
@@ -81,13 +85,14 @@
 </template>
 
 <script lang="ts" setup>
-import {ref, computed} from 'vue';
+import {computed, ref} from 'vue';
 import {type DynamicComponentState, useComponentStore} from '../stores/useComponentStore';
-import {NCard, NInput, NButton, NAlert,useDialog} from 'naive-ui';
+import {NAlert, NButton, NCard, NInput, useDialog} from 'naive-ui';
 // 导入我们强大的 ContentRenderer
 import {ContentRenderer} from '@yaesandbox-frontend/shared-ui/content-renderer';
 import {exampleCode, exampleContent, exampleName} from "#/views/example.ts";
-import {TrashIcon,AddIcon} from "@yaesandbox-frontend/shared-ui/icons";
+import {AddIcon, TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
+import {useCodeSafetyCheck} from "@yaesandbox-frontend/core-services/composables";
 
 const dialog = useDialog();
 const store = useComponentStore();
@@ -105,44 +110,64 @@ const isCompiling = computed(() => componentState.value?.status === 'compiling')
 const errorMessage = computed(() => componentState.value?.error);
 
 // 事件处理
-const handleCompile = () =>
+const {checkCodeSafety} = useCodeSafetyCheck();
+const handleCompile = async () =>
 {
   if (!componentId.value || !sourceCode.value)
   {
     alert('Component tag name and source code cannot be empty.');
     return;
   }
+
+  // 2. 在执行任何操作前，调用安全检查
+  const canProceed = await checkCodeSafety(sourceCode.value);
+
+  // 3. 如果用户取消，则直接返回
+  if (!canProceed)
+  {
+    console.log('用户取消了编译操作。');
+    return;
+  }
+
+  // 4. 如果用户同意，则继续执行原有的逻辑
   store.addOrUpdateComponent(componentId.value, sourceCode.value, testContent.value);
 };
 
-const loadComponentIntoEditor = (comp: DynamicComponentState) => {
+
+const loadComponentIntoEditor = (comp: DynamicComponentState) =>
+{
   componentId.value = comp.id;
   sourceCode.value = comp.source;
   testContent.value = comp.testContent;
 };
 
-const handleNewComponent = () => {
+const handleNewComponent = () =>
+{
   componentId.value = exampleName;
   sourceCode.value = exampleCode;
   testContent.value = exampleContent;
 };
 
-const handleDelete = (id: string) => {
+const handleDelete = (id: string) =>
+{
   dialog.warning({
     title: '确认删除',
     content: `你确定要永久删除组件 "${id}" 吗？`,
     positiveText: '删除',
     negativeText: '取消',
-    onPositiveClick: () => {
+    onPositiveClick: () =>
+    {
       store.deleteComponent(id);
-      if (componentId.value.toLowerCase() === id.toLowerCase()) {
+      if (componentId.value.toLowerCase() === id.toLowerCase())
+      {
         componentId.value = '';
         sourceCode.value = '';
       }
     },
   });
 };
-const statusType = (status: string) => {
+const statusType = (status: string) =>
+{
   if (status === 'ready') return 'success';
   if (status === 'error') return 'error';
   return 'default';
@@ -155,15 +180,19 @@ const statusType = (status: string) => {
   gap: 16px;
   padding: 16px;
 }
+
 .components-pane {
   flex: 0 0 300px;
 }
+
 .editor-pane {
   flex: 2;
 }
+
 .preview-pane {
   flex: 1;
 }
+
 .preview-box {
   border: 1px dashed #ccc;
   padding: 16px;

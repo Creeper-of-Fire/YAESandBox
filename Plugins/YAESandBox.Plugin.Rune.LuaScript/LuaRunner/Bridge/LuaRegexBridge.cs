@@ -123,7 +123,7 @@ public class LuaRegexBridge : ILuaBridge
     }
 
     /// <summary>
-    /// 【新增】在输入字符串中查找并替换匹配项。
+    /// 在输入字符串中查找并替换匹配项。
     /// </summary>
     private static string? replace(string input, string pattern, string replacement, LuaTable? options, LuaLogBridge logger)
     {
