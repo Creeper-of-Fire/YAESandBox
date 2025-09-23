@@ -84,6 +84,9 @@ import type {AbstractRuneConfig} from "#/types/generated/workflow-config-api-cli
 import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
 import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
 
+import '@vue-flow/core/dist/style.css';
+import '@vue-flow/core/dist/theme-default.css';
+
 defineOptions({
   name: 'WorkbenchView'
 });

@@ -9,7 +9,7 @@
     <!-- 2. 根据 session 是否存在，渲染不同的内部视图 -->
     <HeaderAndBodyLayout v-if="session && session.getData().value">
       <template #header>
-        <n-h4 class="sidebar-title-bar">
+        <n-h4 class="sidebar-title-bar" @click="selectCurrentSessionItem">
           <span class="title-text">编辑{{ currentConfigName }}</span>
           <n-popover trigger="hover">
             <template #trigger>
@@ -83,8 +83,8 @@
 
         <template v-else-if="session.type === 'rune' && runeData">
           <RuneItemRenderer
-              :rune="runeData"
-              :parent-tuum="null"/>
+              :parent-tuum="null"
+              :rune="runeData"/>
         </template>
       </template>
     </HeaderAndBodyLayout>
@@ -114,17 +114,18 @@
 
 
 <script lang="ts" setup>
-import {computed, ref} from 'vue';
+import {computed, inject, ref} from 'vue';
 import {NH4, NIcon, useDialog, useMessage, useThemeVars} from 'naive-ui';
 import type {ConfigType, EditSession} from "#/services/EditSession.ts";
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "#/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "#/components/workflow/WorkflowItemRenderer.vue";
-import {AddBoxIcon, SwapHorizIcon,CloseIcon} from '@yaesandbox-frontend/shared-ui/icons';
+import {AddBoxIcon, CloseIcon, SwapHorizIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 import RuneItemRenderer from "#/components/rune/RuneItemRenderer.vue";
+import {SelectedConfigItemKey} from "#/utils/injectKeys.ts";
 
 const props = defineProps<{
   session: EditSession | null;
@@ -137,6 +138,22 @@ const emit = defineEmits<{
 
 const dialog = useDialog();
 const message = useMessage();
+
+// 工作流点击
+// TODO之后转移到工作流内部
+const selectedConfigItem = inject(SelectedConfigItemKey);
+
+function selectCurrentSessionItem()
+{
+  if (props.session)
+  {
+    const sessionData = props.session.getData().value;
+    if (sessionData)
+    {
+      selectedConfigItem?.update({data: sessionData});
+    }
+  }
+}
 
 // --- 状态 ---
 // 覆盖层的显隐状态
@@ -336,6 +353,8 @@ const themeVars = useThemeVars();
   display: flex;
   justify-content: space-between;
   align-items: center;
+  cursor: pointer; /* <--- 添加鼠标手势，提示用户这里可以点击 */
+  transition: color 0.2s;
 }
 
 .action-bar {

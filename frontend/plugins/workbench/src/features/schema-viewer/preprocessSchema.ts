@@ -6,6 +6,7 @@ import MyCustomStringAutoComplete from "#/features/schema-viewer/field-widget/My
 import SliderWithInputWidget from "#/features/schema-viewer/field-widget/SliderWithInputWidget.vue";
 import {NAutoComplete, NCheckbox, NInput, NInputNumber, NSelect, NSwitch} from "naive-ui";
 import RadioGroupWidget from "#/features/schema-viewer/field-widget/RadioGroupWidget.vue";
+import DynamicStringList from "#/features/schema-viewer/field-widget/DynamicStringList.vue";
 
 // =================================================================
 // 1. 组件注册表
@@ -35,6 +36,7 @@ const COMPONENT_MAP: Record<string, Component> = {
     'MonacoEditorWidget': markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/MonacoEditorWidget.vue'))),
     'WebComponentWrapper': markRaw(WebComponentWrapper),
     'RadioGroupWidget': markRaw(RadioGroupWidget),
+    'DynamicStringList': markRaw(DynamicStringList),
 
     // 插件和内建组件
     ...MAIN_APP_WIDGETS,
@@ -173,7 +175,21 @@ function processNode(
         case 'array':
             // vee-validate 使用 useFieldArray 处理数组，这里暂时简化
             // 可以创建一个自定义组件来管理数组项的增删
-            console.warn(`Array type at path "${path}" is not fully supported in this simplified conversion.`);
+
+            // 新增: 处理数组类型的逻辑
+            // 我们只处理 "字符串数组" 这种情况
+            if (node.items && !Array.isArray(node.items) && (getPrimaryType(node.items.type))) {
+                const vm = createFieldViewModel(node, path, requiredFields);
+                // 强制使用我们新的 DynamicStringList 组件
+                vm.component = 'DynamicStringList';
+                // 可以从 ui:options 传递 props 给组件
+                vm.props.tagLabel = node['ui:options']?.tagLabel || '添加一项';
+                vm.props.placeholder = node.items.description || '请输入...';
+                vm.props.max = node.maxItems;
+                return [vm];
+            }
+
+            console.warn(`Array type at path "${path}" with non-string items is not yet supported.`);
             return [];
         default:
             // 基本类型 (string, number, boolean)

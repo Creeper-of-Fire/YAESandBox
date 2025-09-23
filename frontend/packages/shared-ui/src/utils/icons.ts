@@ -35,4 +35,6 @@ export {default as RefreshIcon}from'@vicons/ionicons5/es/Refresh';
 export {default as CodeIcon}from'@vicons/ionicons5/es/CodeSlashOutline';
 export {default as FullscreenExitIcon}from'@vicons/material/es/FullscreenExitOutlined';
 export {default as FullscreenIcon}from'@vicons/material/es/FullscreenOutlined';
+export {default as LoginIcon}from'@vicons/ionicons5/es/LogInOutline';
+export {default as HubIcon}from'@vicons/material/es/HubOutlined';
 // export {default as }from'@vicons/ionicons5/es/';

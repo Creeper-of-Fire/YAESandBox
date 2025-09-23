@@ -59,7 +59,7 @@ import zh_CN from '@vee-validate/i18n/dist/locale/zh_CN.json';
 import {type FormFieldViewModel, preprocessSchemaForVeeValidate} from '#/features/schema-viewer/preprocessSchema.ts';
 import FormFieldWrapper from "#/features/schema-viewer/FormFieldWrapper.vue";
 import {NSpin, useThemeVars} from "naive-ui";
-import {isEqual, merge, set} from 'lodash-es';
+import {isArray, isEqual, merge, mergeWith, set} from 'lodash-es';
 
 // --- VeeValidate 全局配置 ---
 Object.keys(all).forEach(rule =>
@@ -152,6 +152,14 @@ const groupedFields = computed(() =>
   return result;
 });
 
+// 自定义合并逻辑
+function customizer(objValue:any, srcValue:any) {
+  if (isArray(srcValue)) {
+    return srcValue; // 如果源值是数组，直接返回它（替换）
+  }
+  // 对于其他类型，回退到 lodash 的默认合并行为
+}
+
 // --- 核心逻辑: 监听 Schema 变化并重新处理 ---
 watch(() => props.schema,
     async (newSchema) =>
@@ -175,7 +183,7 @@ watch(() => props.schema,
         schemaDefaults.value = buildDefaultsFromFields(fields);
 
         // 步骤 3: 结合当前 modelValue 和新的 schema 默认值，计算出完整的初始值
-        const initialValues = merge({}, schemaDefaults.value, props.modelValue ?? {});
+        const initialValues = mergeWith({}, schemaDefaults.value, props.modelValue ?? {}, customizer);
 
         // 步骤 4: 等待 DOM 更新后，使用 VeeValidate API 重置整个表单
         await nextTick();
@@ -212,7 +220,7 @@ watch(() => props.modelValue,
 
       console.log('[DynamicForm] External modelValue changed, syncing values...');
       // 只更新值，不重新解析 schema
-      const valuesToSet = merge({}, schemaDefaults.value, newModelValue ?? {});
+      const valuesToSet = mergeWith({}, schemaDefaults.value, newModelValue ?? {}, customizer);
       veeFormRef.value.resetForm({
         values: valuesToSet,
       });
@@ -259,7 +267,7 @@ async function handleValueUpdate(
     const currentValues = veeFormRef.value.getValues();
     const currentErrors = veeFormRef.value.errors;
 
-    const mergedData = merge({}, props.modelValue, currentValues);
+    const mergedData = mergeWith({}, props.modelValue, currentValues, customizer);
 
     // 立即向外触发事件，实现 v-model 和 @change
     emit('update:modelValue', mergedData);

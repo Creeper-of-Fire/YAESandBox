@@ -4,11 +4,12 @@
 import type {InjectionKey, Ref} from "vue";
 import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
 import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
+import type {WorkflowEditorContext} from "#/components/workflow/editor/WorkflowEditorContext.ts";
 
 export interface SelectedConfigItem
 {
-    readonly data: Ref<TuumEditorContext | RuneEditorContext | null>;
-    update: (item: TuumEditorContext | RuneEditorContext) => void;
+    readonly data: Ref<WorkflowEditorContext | TuumEditorContext | RuneEditorContext | null>;
+    update: (item: WorkflowEditorContext | TuumEditorContext | RuneEditorContext) => void;
 }
 
 export const SelectedConfigItemKey: InjectionKey<SelectedConfigItem> = Symbol('selectedConfigItem'); // 提供一个函数来更新
