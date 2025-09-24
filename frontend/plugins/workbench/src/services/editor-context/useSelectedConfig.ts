@@ -1,11 +1,11 @@
-﻿import {inject, type InjectionKey,computed, provide, readonly, ref, type Ref} from "vue";
+﻿import {computed, inject, type InjectionKey, provide, readonly, ref, type Ref, shallowRef} from "vue";
 import {EditorContext} from "#/services/editor-context/EditorContext.ts";
-import type {ConfigType} from "#/services/GlobalEditSession.ts";
+import type {AnyConfigObject, ConfigType} from "#/services/GlobalEditSession.ts";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 import {useDialog, useMessage} from "naive-ui";
 
-
-const ActiveEditorContextKey: InjectionKey<Ref<EditorContext | null>> = Symbol('ActiveEditorContext');
+type EditorContextRef = Ref<EditorContext | null>;
+const ActiveEditorContextKey: InjectionKey<EditorContextRef> = Symbol('ActiveEditorContext');
 
 /**
  * @description 在顶层组件（如 WorkbenchView）中创建并提供 activeEditorContext。
@@ -22,7 +22,7 @@ export function createActiveEditorContextProvider()
     const dialog = useDialog();
 
     // --- 内部状态 ---
-    const _activeContext = ref<EditorContext | null>(null);
+    const _activeContext = shallowRef<EditorContext | null>(null);
     const _isLoading = ref(false);
 
     /**
@@ -33,7 +33,7 @@ export function createActiveEditorContextProvider()
     async function switchContext(type: ConfigType, id: string): Promise<void>
     {
         // 防止重复加载同一个会话
-        if (_activeContext.value?.session.globalId === id)
+        if (_activeContext.value?.globalId === id)
         {
             return;
         }
@@ -72,7 +72,7 @@ export function createActiveEditorContextProvider()
         const context = _activeContext.value;
         if (!context) return;
 
-        if (context.isDirty.value)
+        if (context.isDirty)
         {
             dialog.warning({
                 title: '关闭前确认',
@@ -81,7 +81,7 @@ export function createActiveEditorContextProvider()
                 negativeText: '取消',
                 onPositiveClick: () =>
                 {
-                    workbenchStore.closeSession(context.session);
+                    workbenchStore.closeSession(context.globalId);
                     _activeContext.value = null;
                     message.info('编辑会话已关闭。');
                 },
@@ -89,7 +89,7 @@ export function createActiveEditorContextProvider()
         }
         else
         {
-            workbenchStore.closeSession(context.session);
+            workbenchStore.closeSession(context.globalId);
             _activeContext.value = null;
         }
     }
@@ -128,15 +128,26 @@ export function useActiveEditorContext()
     return activeContext;
 }
 
-export function useSelectedConfig()
+export function useSelectedConfig(selfID?: Ref<string>)
 {
     const activeContext = useActiveEditorContext();
-    const selectedContext = computed(() => activeContext.value?.selectedContext.value);
+    const selectedContext = computed(() => activeContext.value?.selectedContext.value ?? null);
     const selectedType = computed(() => selectedContext.value?.type);
-    const updateSelectedConfig = activeContext.value?.select;
+    const updateSelectedConfig = (configObject: (AnyConfigObject | null)) =>
+    {
+        return activeContext.value?.select(configObject);
+    };
+    const isSelected = computed(() =>
+    {
+        if (!selfID)
+            return false;
+        return activeContext.value?.selectedId.value === selfID.value;
+    });
     return {
         selectedContext,
         selectedType,
         updateSelectedConfig,
+        activeContext,
+        isSelected,
     };
 }

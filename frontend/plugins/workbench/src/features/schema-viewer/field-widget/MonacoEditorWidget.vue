@@ -76,6 +76,7 @@ const editorOptions = {
   minimap: {enabled: true},
   wordWrap: 'on' as const,
   scrollBeyondLastLine: false,
+  fixedOverflowWidgets: true
 };
 
 // 使用防抖来更新 v-model，避免在快速输入时频繁触发

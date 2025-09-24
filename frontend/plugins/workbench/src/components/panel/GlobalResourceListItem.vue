@@ -87,7 +87,11 @@ const emit = defineEmits<{
 
 // *** 检查当前项是否变脏 ***
 const workbenchStore = useWorkbenchStore();
-const isDirty = computed(() => workbenchStore.isDirty(props.id));
+
+// const isDirty = computed(() => workbenchStore.isDirty(props.id));
+// TODO 由于重构，目前去除全局内容的脏检查功能
+const isDirty = computed(() => false);
+
 
 // 实现长按逻辑
 const listItemRef = ref<HTMLElement | null>(null);

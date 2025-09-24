@@ -1,22 +1,19 @@
 ﻿<!-- src/app-workbench/components/.../MainEditPanel.vue -->
 <template>
-  <n-empty v-if="!selectedConfig" description="无激活的编辑会话" style="margin-top: 20%;"/>
+  <n-empty v-if="!selectedContext" description="无激活的编辑会话" style="margin-top: 20%;"/>
   <div v-else style="overflow: auto;">
     <n-scrollbar>
       <div v-if="selectedType ==='workflow'" class="main-content-wrapper">
         <WorkflowEditor
-            :key="selectedConfig?.data.configId"
-            :workflow-context="selectedConfig as WorkflowEditorContext"/>
+            :workflow-context="selectedContext as WorkflowEditorContext"/>
       </div>
       <div v-if="selectedType ==='tuum'" class="main-content-wrapper">
         <TuumEditor
-            :key="selectedConfig?.data.configId"
-            :tuum-context="selectedConfig as TuumEditorContext"/>
+            :tuum-context="selectedContext as TuumEditorContext"/>
       </div>
       <div v-if="selectedType === 'rune'" class="main-content-wrapper">
         <RuneEditor
-            :key="selectedConfig?.data.configId"
-            :rune-context="selectedConfig as RuneEditorContext"/>
+            :rune-context="selectedContext as RuneEditorContext"/>
       </div>
     </n-scrollbar>
   </div>
@@ -30,26 +27,16 @@ import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext
 import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
 import WorkflowEditor from "#/components/workflow/editor/WorkflowEditor.vue";
 import type {WorkflowEditorContext} from "#/components/workflow/editor/WorkflowEditorContext.ts";
-import {useSelectedConfig} from "#/composables/useSelectedConfig.ts";
+import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
+import {getConfigObjectType} from "#/services/GlobalEditSession";
 
-const {selectedConfig} = useSelectedConfig();
+const {selectedContext} = useSelectedConfig();
 const selectedType = computed(() =>
 {
-  const data = selectedConfig.value?.data;
+  const data = selectedContext.value?.data;
   if (!data) return null;
-
-  if ('workflowInputs' in data && 'tuums' in data)
-  {
-    return 'workflow';
-  }
-
-  // 检查是否包含 AbstractRuneConfig 的特征属性（runeType）
-  if ('runeType' in data)
-  {
-    return 'rune';  // 符文类型
-  }
-
-  return 'tuum';   // 枢机类型
+  const {type} = getConfigObjectType(data)
+  return type;
 });
 
 </script>

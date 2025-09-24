@@ -1,6 +1,6 @@
 // --- START OF FILE frontend/src/app-workbench/services/GlobalEditSession.ts ---
 
-import {computed, ref, type Ref} from 'vue';
+import {computed, isReactive, isRef, ref, type Ref, watch} from 'vue';
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig,} from '#/types/generated/workflow-config-api-client';
 import {type SaveResult, useWorkbenchStore} from '#/stores/workbenchStore.ts';
 import {cloneDeep} from "lodash-es";
@@ -10,16 +10,52 @@ import {isEquivalent} from "@yaesandbox-frontend/core-services";
 export type ConfigType = 'workflow' | 'tuum' | 'rune';
 export type AnyConfigObject = WorkflowConfig | TuumConfig | AbstractRuneConfig;
 
-export function getConfigObjectType(obj: AnyConfigObject): ConfigType
+export function getConfigObjectType(config: AnyConfigObject)
 {
-    let type;
-    if ('workflowInputs' in obj && 'tuums' in obj)
-        type = 'workflow' as const;
-    else if ('runes' in obj)
-        type = 'tuum' as const;
+    if ('workflowInputs' in config && 'tuums' in config)
+        return {type: 'workflow' as const, config: config as WorkflowConfig};
+    else if ('runes' in config)
+        return {type: 'tuum' as const, config: config as TuumConfig};
     else
-        type = 'rune' as const;
-    return type
+        return {type: 'rune' as const, config: config as AbstractRuneConfig};
+}
+
+function createDebuggableRef(initialValue:any) {
+    let innerValue = initialValue;
+    // Vue 的 ref 对象
+    const actualRef = ref(initialValue);
+
+    // 用 Proxy 包裹实际的 ref 对象
+    return new Proxy(actualRef, {
+        get(target, prop, receiver) {
+            if (prop === 'value') {
+                // 在访问 .value 时打印信息
+                console.groupCollapsed(`DEBUG: Accessing ${prop} of ref (current value: ${target.value})`);
+                console.trace('Call stack for get');
+                console.groupEnd();
+            }
+            return Reflect.get(target, prop, receiver);
+        },
+        set(target, prop, newValue, receiver) {
+            if (prop === 'value') {
+                console.groupCollapsed(`DEBUG: Setting ${prop} of ref from ${target.value} to ${newValue}`);
+                console.trace('Call stack for set');
+                console.groupEnd();
+
+                // 检查 newValue 是否为非响应式对象
+                if (typeof newValue === 'object' && newValue !== null && !isRef(newValue) && !isReactive(newValue)) {
+                    console.warn(`Potential issue: ref.value is being set to a non-reactive object.`, newValue);
+                }
+            }
+
+            // 如果整个 ref 对象被替换，这里也能捕获到
+            if (prop === 'value' && target.value === undefined && newValue === undefined) {
+                console.warn(`DEBUG: Ref might be losing its value reference entirely!`, { target, newValue });
+            }
+
+            return Reflect.set(target, prop, newValue, receiver);
+        }
+    });
 }
 
 /**
@@ -68,7 +104,7 @@ export class GlobalEditSession
      */
     public getData(): Ref<AnyConfigObject>
     {
-        return this.draftData;
+        return computed(() => this.draftData.value);
     }
 
     /**
@@ -76,7 +112,8 @@ export class GlobalEditSession
      */
     public getIsDirty(): Ref<boolean>
     {
-        return computed(() => !isEquivalent(this.draftData.value, JSON.parse(this.originalState)));
+        const data = this.draftData.value;
+        return computed(() => !isEquivalent(data, JSON.parse(this.originalState)));
     }
 
     /**

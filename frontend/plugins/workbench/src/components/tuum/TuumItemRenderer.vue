@@ -55,12 +55,12 @@ import {KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@yaesandbox-frontend/s
 import ConfigItemBase from '#/components/share/renderer/ConfigItemBase.vue'; // 导入基础组件
 import RuneItemRenderer from '#/components/rune/RuneItemRenderer.vue'; // 导入符文渲染器
 import type {TuumConfig, WorkflowConfig} from '#/types/generated/workflow-config-api-client';
-import {computed, inject, provide, ref, toRef} from "vue";
+import {computed, provide, ref, toRef} from "vue";
 import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "#/components/share/ConfigItemActionsMenu.vue";
 import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
-import {useSelectedConfig} from "#/composables/useSelectedConfig.ts";
+import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 
 // 定义组件的 props
 const props = withDefaults(defineProps<{
@@ -78,17 +78,13 @@ const props = withDefaults(defineProps<{
 const isExpanded = ref(true);
 
 // Inject
-const {selectedConfig,updateSelectedConfig} = useSelectedConfig();
+const selfId = computed(() => props.tuum.configId)
+const {updateSelectedConfig, isSelected} = useSelectedConfig(selfId);
 
 function handleItemClick()
 {
-  updateSelectedConfig({data: props.tuum});
+  updateSelectedConfig(props.tuum);
 }
-
-const isSelected = computed(() =>
-{
-  return selectedConfig?.value?.data.configId === props.tuum.configId;
-});
 
 // 使用可组合函数获取动作
 const {getActions: getItemActions} = useConfigItemActions({

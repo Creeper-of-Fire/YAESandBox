@@ -58,30 +58,28 @@ export async function loadAndMergeApis(manifestUrl)
         const manifest = await manifestResponse.json();
 
         // 创建一个包含所有 API 文件 fetch 操作的 Promise 数组
-        const fetchPromises = manifest.apiFiles.map(filePath =>
+        const fetchPromises = manifest.apiFiles.map(async filePath =>
         {
             // 使用 `new URL()` 来正确解析相对路径
             const apiUrl = new URL(filePath, manifestUrl).href;
             console.log(`[Lua Service] 发现 API 定义: ${apiUrl}`);
-            return fetch(apiUrl)
-                .then(res =>
-                {
-                    if (!res.ok) throw new Error(`加载 ${apiUrl} 失败`);
-                    return res.text(); // 1. 获取原始文本内容
-                })
-                .then(tomlText =>
-                {
-                    try
-                    {
-                        // 2. 使用 j-toml 解析 TOML 文本
-                        // j-toml 的 parse 方法返回一个 Map，我们用 parseAsObject 直接得到 JS 对象
-                        return TOML.parse(tomlText, { joiner: '\n', bigInt: false });
-                    } catch (e)
-                    {
-                        console.error(`解析 TOML 文件 ${apiUrl} 失败:`, e);
-                        throw new Error(`解析 TOML 文件 ${apiUrl} 失败: ${e.message}`);
-                    }
-                });
+            const response = await fetch(apiUrl);
+            if (!response.ok)
+            {
+                throw new Error(`无法加载 API 文件: ${response.statusText}`);
+            }
+            const tomlText = await response.text();
+
+            try
+            {
+                // 2. 使用 j-toml 解析 TOML 文本
+                // j-toml 的 parse 方法返回一个 Map，我们用 parseAsObject 直接得到 JS 对象
+                return TOML.parse(tomlText, {joiner: '\n', bigInt: false});
+            } catch (e)
+            {
+                console.error(`解析 TOML 文件 ${apiUrl} 失败:`, e);
+                throw new Error(`解析 TOML 文件 ${apiUrl} 失败: ${e.message}`);
+            }
         });
 
         // 并行等待所有 API 文件加载完成

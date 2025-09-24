@@ -85,7 +85,7 @@ import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "#/components/share/ConfigItemActionsMenu.vue";
 import {useThemeVars} from "naive-ui";
 import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
-import {useSelectedConfig} from "#/composables/useSelectedConfig.ts";
+import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
@@ -120,17 +120,13 @@ const analysisIconColor = computed(() =>
   return showAnalysisPopover.value ? normalIconColor.value : dimIconColor.value;
 });
 
-const {selectedConfig,updateSelectedConfig} = useSelectedConfig();
+const selfId = computed(()=>props.rune.configId);
+const {updateSelectedConfig,isSelected} = useSelectedConfig(selfId);
 
 function handleItemClick()
 {
-  updateSelectedConfig({data: props.rune});
+  updateSelectedConfig(props.rune);
 }
-
-const isSelected = computed(() =>
-{
-  return selectedConfig.value?.data.configId === props.rune.configId;
-});
 
 const workbenchStore = useWorkbenchStore();
 

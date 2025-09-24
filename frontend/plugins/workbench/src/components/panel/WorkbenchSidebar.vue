@@ -116,7 +116,7 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NH4, NIcon, useDialog, useMessage, useThemeVars} from 'naive-ui';
-import type {ConfigType, GlobalEditSession} from "#/services/GlobalEditSession.ts";
+import type {ConfigType} from "#/services/GlobalEditSession.ts";
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "#/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "#/components/workflow/WorkflowItemRenderer.vue";
@@ -125,11 +125,9 @@ import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 import RuneItemRenderer from "#/components/rune/RuneItemRenderer.vue";
-import {useSelectedConfig} from "#/composables/useSelectedConfig.ts";
+import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 
-const props = defineProps<{
-  session: GlobalEditSession | null;
-}>();
+const props = defineProps<{}>();
 
 const emit = defineEmits<{
   (e: 'start-editing', payload: { type: ConfigType; id: string }): void;
@@ -141,16 +139,17 @@ const message = useMessage();
 
 // 工作流点击
 // TODO之后转移到工作流内部
-const {selectedConfig, updateSelectedConfig} = useSelectedConfig();
+const {selectedContext, updateSelectedConfig, activeContext} = useSelectedConfig();
+const session = computed(() => activeContext?.value?.session);
 
 function selectCurrentSessionItem()
 {
-  if (props.session)
+  if (session.value)
   {
-    const sessionData = props.session.getData().value;
+    const sessionData = session.value.getData().value;
     if (sessionData)
     {
-      updateSelectedConfig({data: sessionData});
+      updateSelectedConfig(sessionData);
     }
   }
 }
@@ -161,15 +160,15 @@ const isDragOverContainer = ref(false);
 
 // --- 计算属性 ---
 // 通过 session 获取 isDirty 状态
-const isDirty = computed(() => props.session?.getIsDirty().value ?? false);
+const isDirty = computed(() => session.value?.getIsDirty().value ?? false);
 
 // --- 按钮事件处理 ---
 
 async function handleSave()
 {
-  if (!props.session) return;
+  if (!session.value) return;
 
-  const result = await props.session.save();
+  const result = await session.value.save();
   if (result.success)
   {
     message.success(`“${result.name}” 已保存!`);
@@ -186,7 +185,7 @@ async function handleSave()
 
 function handleDiscard()
 {
-  if (!props.session) return;
+  if (!session.value) return;
   dialog.warning({
     title: '放弃更改',
     content: '您确定要放弃所有未保存的更改吗？此操作不可撤销。',
@@ -194,7 +193,7 @@ function handleDiscard()
     negativeText: '取消',
     onPositiveClick: () =>
     {
-      props.session?.discard();
+      session.value?.discard();
       message.info("更改已放弃。");
       // 放弃后，数据会恢复原状，但会话依然存在。
     },
@@ -203,12 +202,14 @@ function handleDiscard()
 
 function handleClose()
 {
-  emit('close-session');
+  if (!session.value)
+    return
+  emit('close-session', {id: session.value.globalId});
 }
 
 // --- 从 composable 获取动作 ---
 const {getActions: getItemActions} = useConfigItemActions({
-  itemRef: computed(() => props.session?.getData().value ?? null),
+  itemRef: computed(() => session.value?.getData().value ?? null),
   parentContextRef: ref(null), // 侧边栏是顶级编辑，没有父级
 });
 // --- 等级定义和比较逻辑 ---
@@ -253,14 +254,14 @@ function handleDragEnter(event: DragEvent)
   }
 
   // 如果当前没有编辑会话，任何可识别的拖拽都应该显示覆盖层
-  if (!props.session)
+  if (!session.value)
   {
     isDragOverContainer.value = true;
     return;
   }
 
   // 获取当前会话和拖拽物的等级
-  const currentSessionType = props.session.type;
+  const currentSessionType = session.value.type;
   const draggedLevel = typeHierarchy[draggedType];
   const currentLevel = typeHierarchy[currentSessionType];
 
@@ -310,20 +311,20 @@ function handleDrop(event: DragEvent)
 
 // --- 为不同编辑类型创建独立的计算属性，使模板更清晰 ---
 const workflowData = computed(() =>
-    props.session?.type === 'workflow' ? props.session.getData().value as WorkflowConfig : null
+    session.value?.type === 'workflow' ? session.value.getData().value as WorkflowConfig : null
 );
 const tuumData = computed(() =>
-    props.session?.type === 'tuum' ? props.session.getData().value as TuumConfig : null
+    session.value?.type === 'tuum' ? session.value.getData().value as TuumConfig : null
 );
 const runeData = computed(() =>
-    props.session?.type === 'rune' ? props.session.getData().value as AbstractRuneConfig : null
+    session.value?.type === 'rune' ? session.value.getData().value as AbstractRuneConfig : null
 );
 const currentConfigName = computed(() =>
 {
-  if (!props.session) return ''; // 如果没有会话，返回空字符串
-  if (props.session.type === 'workflow' && workflowData.value) return `工作流: ${workflowData.value.name}`;
-  if (props.session.type === 'tuum' && tuumData.value) return `枢机: ${tuumData.value.name}`;
-  if (props.session.type === 'rune' && runeData.value) return `符文: ${runeData.value.name}`;
+  if (!session.value) return ''; // 如果没有会话，返回空字符串
+  if (session.value.type === 'workflow' && workflowData.value) return `工作流: ${workflowData.value.name}`;
+  if (session.value.type === 'tuum' && tuumData.value) return `枢机: ${tuumData.value.name}`;
+  if (session.value.type === 'rune' && runeData.value) return `符文: ${runeData.value.name}`;
   return '未知';
 });
 

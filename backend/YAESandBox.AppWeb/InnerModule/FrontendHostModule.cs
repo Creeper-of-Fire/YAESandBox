@@ -8,6 +8,7 @@ namespace YAESandBox.AppWeb.InnerModule;
 internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProgramAtLastConfigurator
 {
     private static ILogger Logger { get; } = AppLogging.CreateLogger<FrontendHostModule>();
+
     /// <inheritdoc />
     public void RegisterServices(IServiceCollection service) { }
 
@@ -31,11 +32,10 @@ internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProg
 
         if (frontendAbsolutePath == null) return;
 
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            FileProvider = new PhysicalFileProvider(frontendAbsolutePath),
-            RequestPath = ""
-        });
+        app.UseStaticFiles(StaticAssetModuleExtensions.DefaultStaticFileOptions.CloneAndReBond(
+            fileProvider: new PhysicalFileProvider(frontendAbsolutePath),
+            requestPath:""
+        ));
     }
 
     /// <summary>

@@ -28,7 +28,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, h, ref} from 'vue';
+import {computed, h, ref, shallowRef} from 'vue';
 import {type DropdownOption, NButton, NDropdown, NIcon, useDialog} from 'naive-ui';
 import InlineInputPopover from './InlineInputPopover.vue';
 import {EllipsisHorizontalIcon} from '@yaesandbox-frontend/shared-ui/icons';
@@ -45,7 +45,7 @@ const dialog = useDialog();
 const popoverRef = ref<InstanceType<typeof InlineInputPopover> | null>(null);
 const activePopoverAction = ref<EnhancedAction | null>(null);
 
-const calculatedActions = ref<EnhancedAction[]>([]);
+const calculatedActions = shallowRef<EnhancedAction[]>([]);
 
 function handleUpdateShow(show: boolean)
 {

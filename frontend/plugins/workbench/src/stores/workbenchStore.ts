@@ -1,7 +1,7 @@
 ﻿// --- START OF FILE frontend/src/app-workbench/stores/workbenchStore.ts ---
 
 import {defineStore} from 'pinia';
-import {computed, type Reactive, reactive, ref} from 'vue';
+import {computed, markRaw, type Reactive, reactive, ref, shallowRef} from 'vue';
 import {v4 as uuidv4} from 'uuid';
 import {type AnyConfigObject, type ConfigType, GlobalEditSession, getConfigObjectType,} from '#/services/GlobalEditSession.ts';
 import type {AbstractRuneConfig, RuneSchemasResponse, TuumConfig, WorkflowConfig,} from "#/types/generated/workflow-config-api-client";
@@ -275,7 +275,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * @description 存储所有活跃的 GlobalEditSession 实例。
      * Key 是 session.globalId。
      */
-    const activeSessions = ref<Record<string, GlobalEditSession>>({});
+    const activeSessions = shallowRef<Record<string, GlobalEditSession>>({});
+    const getActiveSession = computed(() =>activeSessions.value);
 
     // =================================================================
     // 内部 Getter & Action (加下划线表示，约定不对外暴露)
@@ -363,7 +364,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         const newGlobalConfig = deepCloneWithNewIds(configToSave);
         const newGlobalId = uuidv4(); // 为这个新的全局资源创建一个全新的顶级ID
 
-        const type: ConfigType = getConfigObjectType(newGlobalConfig);
+        const {type} = getConfigObjectType(newGlobalConfig);
         const handler = resourceHandlers[type];
 
         // 执行保存和刷新
@@ -442,7 +443,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         const session = new GlobalEditSession(type, globalId, sourceItem.data, false);
 
         // 将新会话存入 activeSessions
-        activeSessions.value[session.globalId] = session;
+        activeSessions.value[session.globalId] = markRaw(session);
 
         return session;
     }
@@ -460,7 +461,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         const session = new GlobalEditSession(type, newGlobalId, blankConfig, true);
 
         // 2. 将其添加到活跃会话中
-        activeSessions.value[session.globalId] = session;
+        activeSessions.value[session.globalId] = markRaw(session);
 
         return session;
     }
@@ -510,6 +511,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         runeMetadata,
 
         hasDirtyDrafts,
+        getActiveSession,
 
         // --- 核心服务方法 ---
         acquireEditSession,

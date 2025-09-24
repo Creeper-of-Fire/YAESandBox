@@ -15,7 +15,7 @@
         <!-- 右侧的全局操作按钮 -->
         <n-flex class="header-right-controls">
           <n-button
-              :disabled="!workbenchStore.hasDirtyDrafts" :loading="isSavingAll" secondary
+              :disabled="!allDirty" :loading="isSavingAll" secondary
               strong
               type="primary"
               @click="handleSaveAll"
@@ -37,8 +37,7 @@
       <!-- 当前编辑结构插槽 -->
       <template #editor-panel>
         <WorkbenchSidebar
-            :key="activeSession?.globalId ?? 'empty-session'"
-            :session="activeSession"
+            :key="activeContext?.globalId ?? 'empty-session'"
             @closeSession="handleCloseSession"
             @start-editing="handleStartEditing"
         />
@@ -68,25 +67,23 @@
 </template>
 
 <script lang="ts" setup>
-import {onBeforeUnmount, onMounted, provide, ref} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import {NButton, NH3, useDialog, useMessage, useThemeVars} from 'naive-ui';
 import {SaveIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useWorkbenchStore} from '#/stores/workbenchStore';
-import {type ConfigType, type GlobalEditSession} from '#/services/GlobalEditSession.ts';
+import {type ConfigType} from '#/services/GlobalEditSession.ts';
 
 import EditorLayout from '#/layouts/EditorLayout.vue';
 import GlobalResourcePanel from '#/components/panel/GlobalResourcePanel.vue';
 import WorkbenchSidebar from '#/components/panel/WorkbenchSidebar.vue';
 import AiConfigEditorPanel from "#/features/ai-config-panel/AiConfigEditorPanel.vue";
 import MainEditPanel from "#/components/panel/MainEditPanel.vue";
-import type {AbstractRuneConfig} from "#/types/generated/workflow-config-api-client";
-import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
-import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
 
+//@ts-ignore
 import '@vue-flow/core/dist/style.css';
+//@ts-ignore
 import '@vue-flow/core/dist/theme-default.css';
-import {useActiveEditorContext} from "#/components/panel/useActiveEditorContext.ts";
-import {createActiveEditorContextProvider, createSelectedConfigProvider} from "#/composables/useSelectedConfig.ts";
+import {createActiveEditorContextProvider} from "#/services/editor-context/useSelectedConfig.ts";
 
 defineOptions({
   name: 'WorkbenchView'
@@ -94,7 +91,7 @@ defineOptions({
 
 // --- 使用 Composable ---
 const workbenchStore = useWorkbenchStore();
-const { activeContext, switchContext, closeContext, isLoading } = createActiveEditorContextProvider();
+const {activeContext, switchContext, closeContext, isLoading} = createActiveEditorContextProvider();
 
 
 // TODO 使用vueuse的useStore来存储单例的UI状态
@@ -114,30 +111,24 @@ const showAiConfigModal = ref(false);
  * 处理“开始编辑”事件。
  * 直接调用 Composable 中的方法。
  */
-async function handleStartEditing({ type, id }: { type: ConfigType; id: string }) {
-  // 切换新会话前，重置UI状态
-  updateSelectedConfig(null);
-  await switchSession(type, id);
-
-  // 在会话切换成功后，处理默认选中逻辑
-  const session = activeSession.value; // 从 Composable 获取最新的 session
-  if (session && session.type === 'rune') {
-    const runeData = session.getData().value as AbstractRuneConfig | null;
-    if (runeData) {
-      updateSelectedConfig({ data: runeData });
-    }
-  }
+async function handleStartEditing({type, id}: { type: ConfigType; id: string })
+{
+  await switchContext(type, id);
 }
 
 /**
  * 处理关闭会话的请求。
  * 直接调用 Composable 中的方法。
  */
-function handleCloseSession() {
-  closeSession(id);
-  updateSelectedConfig(null); // 关闭会话时，清空选中项
+function handleCloseSession()
+{
+  closeContext();
 }
 
+const allDirty = computed(() =>
+{
+  return workbenchStore.hasDirtyDrafts;
+});
 
 /**
  * *** 处理全局保存操作 ***
@@ -181,14 +172,13 @@ async function handleSaveAll()
 }
 
 
-
 /**
  * 浏览器关闭前的警告，防止用户意外丢失未保存的草稿。
  * @param {BeforeUnloadEvent} event
  */
 const beforeUnloadHandler = (event: BeforeUnloadEvent) =>
 {
-  if (workbenchStore.hasDirtyDrafts)
+  if (allDirty.value)
   {
     event.preventDefault();
   }

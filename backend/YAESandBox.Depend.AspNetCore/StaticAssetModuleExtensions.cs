@@ -1,4 +1,6 @@
 ﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.StaticFiles.Infrastructure;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Logging;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
@@ -11,6 +13,61 @@ namespace YAESandBox.Depend.AspNetCore;
 public static class StaticAssetModuleExtensions
 {
     private static ILogger Logger { get; } = AppLogging.CreateLogger(nameof(StaticAssetModuleExtensions));
+
+    /// <summary>
+    /// 项目的默认静态文件配置
+    /// </summary>
+    public static StaticFileOptions DefaultStaticFileOptions { get; } = new()
+    {
+        // 允许提供未知文件类型的文件
+        ServeUnknownFileTypes = true,
+
+        // 为所有未知文件类型设置默认的 Content-Type
+        // 'text/plain' 是一个安全且通用的选择
+        DefaultContentType = "text/plain"
+    };
+
+    /// <summary>
+    /// 创建一个 StaticFileOptions 对象的浅克隆。
+    /// 这允许我们重用一个通用的模板配置，并为每个特定用途覆盖个别属性。
+    /// </summary>
+    /// <param name="options">要克隆的源对象。</param>
+    /// <returns>一个新的 StaticFileOptions 实例，其属性与源对象相同。</returns>
+    public static StaticFileOptions Clone(this StaticFileOptions options)
+    {
+        var newSharedOptions = new SharedOptions
+        {
+            RedirectToAppendTrailingSlash = options.RedirectToAppendTrailingSlash
+        };
+
+        var newOptions = new StaticFileOptions(newSharedOptions)
+        {
+            // 手动将所有相关属性从源对象复制到一个新实例中
+            ContentTypeProvider = options.ContentTypeProvider,
+            DefaultContentType = options.DefaultContentType,
+            ServeUnknownFileTypes = options.ServeUnknownFileTypes,
+            OnPrepareResponse = options.OnPrepareResponse,
+            OnPrepareResponseAsync = options.OnPrepareResponseAsync,
+            HttpsCompression = options.HttpsCompression
+        };
+        return newOptions;
+    }
+
+    /// <summary>
+    /// 创建一个 StaticFileOptions 对象的浅克隆。并且为每个特定用途覆盖个别属性。
+    /// 这允许我们重用一个通用的模板配置，并为每个特定用途覆盖个别属性。
+    /// </summary>
+    /// <param name="options">要克隆的源对象。</param>
+    /// <param name="fileProvider"></param>
+    /// <param name="requestPath"></param>
+    /// <returns>一个新的 StaticFileOptions 实例，其属性与源对象相同。</returns>
+    public static StaticFileOptions CloneAndReBond(this StaticFileOptions options, IFileProvider fileProvider, PathString requestPath)
+    {
+        var newOptions = options.Clone();
+        newOptions.RequestPath = requestPath;
+        newOptions.FileProvider = fileProvider;
+        return newOptions;
+    }
 
     /// <summary>
     /// 为实现了 IProgramModule 的模块挂载其内嵌的 "wwwroot" 目录作为静态文件服务。
@@ -35,11 +92,10 @@ public static class StaticAssetModuleExtensions
         // 空字串表示根目录，依旧是有效的，所以我们这里只判断 null，不判断是否是空字符串
         string requestPath = requestPathOverwrite ?? module.ToRequestPath();
 
-        app.UseStaticFiles(new StaticFileOptions
-        {
-            FileProvider = new PhysicalFileProvider(wwwRootPath),
-            RequestPath = requestPath
-        });
+        app.UseStaticFiles(DefaultStaticFileOptions.CloneAndReBond(
+            fileProvider: new PhysicalFileProvider(wwwRootPath),
+            requestPath: requestPath)
+        );
         Logger.LogInformation("[{ModuleTypeName}] 已通过 UseModuleWwwRoot 挂载 wwwroot: {WwwRootPath} -> '{RequestPath}'",
             moduleType.Name, wwwRootPath, requestPath);
     }
