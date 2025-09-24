@@ -39,22 +39,27 @@
 </template>
 
 <script lang="ts" setup>
-import {Handle, Position, type NodeProps} from '@vue-flow/core'
+import {Handle, type NodeProps, Position} from '@vue-flow/core'
 import type {TuumConfig} from "#/types/generated/workflow-config-api-client";
-import {computed} from "vue";
+import {computed, toRefs} from "vue";
 import {useTuumAnalysis} from "#/composables/useTuumAnalysis.ts";
 import {NIcon, useThemeVars} from "naive-ui";
 import {HubIcon as TuumIcon} from '@yaesandbox-frontend/shared-ui/icons'
-import VarSpecTag from "#/components/share/varSpec/VarSpecTag.vue";
 import VarWithSpecTag from "#/components/share/varSpec/VarWithSpecTag.vue";
+import {useColorHash} from "#/components/share/renderer/useColorHash.ts";
 
-interface TuumNodeData {
+interface TuumNodeData
+{
   tuum: TuumConfig;
 }
 
 const props = defineProps<NodeProps<TuumNodeData>>();
 const tuum = computed(() => props.data.tuum);
 const {analysisResult} = useTuumAnalysis(tuum);
+const name = computed(() => tuum.value.name)
+const {color: highlightColor} = useColorHash(name);
+
+const headerColor = computed(() => `${highlightColor.value}60`);
 
 const themeVars = useThemeVars();
 </script>
@@ -78,7 +83,7 @@ const themeVars = useThemeVars();
   align-items: center;
   gap: 8px;
   padding: 8px;
-  background-color: v-bind('themeVars.actionColor');
+  background-color: v-bind(headerColor);
   border-top-left-radius: 7px;
   border-top-right-radius: 7px;
   font-weight: bold;
@@ -118,16 +123,5 @@ const themeVars = useThemeVars();
   color: v-bind('themeVars.textColor3');
   text-align: center;
   padding: 4px;
-}
-
-:deep(.vue-flow__handle) {
-  width: 8px;
-  height: 8px;
-  background-color: v-bind('themeVars.primaryColor');
-}
-
-/* 隐藏自带的选中边框 */
-:deep(.vue-flow__node-tuum.selected) {
-  box-shadow: 0 0 0 2px v-bind('themeVars.primaryColor');
 }
 </style>

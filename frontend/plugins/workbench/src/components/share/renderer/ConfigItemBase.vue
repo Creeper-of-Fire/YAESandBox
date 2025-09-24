@@ -1,8 +1,8 @@
 <!-- src/app-workbench/components/.../ConfigItemBase.vue -->
 <template>
   <div
-      v-lazy-render="renderActions"
       ref="rootElement"
+      v-lazy-render="renderActions"
       :class="{ 'is-selected': isSelected , 'is-disabled': !enabled || isParentDisabled }"
       class="config-item-base"
       @click="$emit('click')"
@@ -20,7 +20,7 @@
 
     <!-- 主内容区插槽 -->
     <div class="item-content-wrapper">
-      <slot name="content" :title-class="$style.title"></slot>
+      <slot :title-class="$style.title" name="content"></slot>
     </div>
 
     <div class="item-actions">
@@ -47,11 +47,10 @@
 <script lang="ts" setup>
 import {NIcon, useThemeVars} from 'naive-ui';
 import {DragHandleOutlined} from '@yaesandbox-frontend/shared-ui/icons';
-import {computed, inject, onMounted, onUnmounted, ref} from "vue";
-import ColorHash from "color-hash";
+import {computed, inject, ref, toRefs} from "vue";
 import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
-import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
 import {vLazyRender} from '@yaesandbox-frontend/shared-ui'
+import {useColorHash} from "#/components/share/renderer/useColorHash.ts";
 
 // 定义组件的 props
 const props = defineProps<{
@@ -72,56 +71,9 @@ const isParentDisabled = inject(IsParentDisabledKey, ref(false));
 
 const themeVars = useThemeVars();
 
-const isDarkTheme = computed(() => inject(IsDarkThemeKey)?.value);
+const {highlightColorCalculator} = toRefs(props);
 
-/**
- * 判断当前是否为深色模式的正确方法。
- * 我们通过检查一个基础背景色（如 cardColor）的亮度来判断。
- * 这里简单地假设 #fff 系列为浅色，其他为深色。
- * 一个更鲁棒的方法是计算颜色的亮度，但对于 Naive UI 的默认主题，
- * 检查第一个字符是否为 #f 就足够了。
- */
-const isDarkMode = computed(() =>
-{
-  if (isDarkTheme.value !== undefined)
-    return isDarkTheme.value;
-  // themeVars.value.cardColor 在浅色模式下通常是 '#ffffff'，深色模式是 '#18181c'
-  // 我们可以简单地检查颜色值。一个简单的技巧是检查它是否“亮”。
-  // 这里我们用一个简化的方法：如果颜色不是以 '#ff' 开头，就认为是深色。
-  // 在实践中，这对于默认主题是足够可靠的。
-  const color = themeVars.value.cardColor.toLowerCase();
-  return !color.startsWith('#fff');
-});
-
-// 创建一个响应式的 ColorHash 实例
-// 这个计算属性会在主题变化时重新运行，返回一个为新主题配置好的新实例
-const colorHashInstance = computed(() =>
-{
-
-  if (isDarkMode.value)
-  {
-    // 深色模式配置：颜色更亮、饱和度稍低，以在深色背景上更柔和
-    return new ColorHash({
-      lightness: [0.70, 0.75, 0.80],
-      saturation: [0.45, 0.55, 0.65], // 降低饱和度避免刺眼
-      hash: 'bkdr'
-    });
-  }
-  else
-  {
-    // 浅色模式配置：颜色更深、饱和度更高，以在浅色背景上更突出
-    return new ColorHash({
-      lightness: [0.50, 0.55, 0.60], // 降低亮度使其变深
-      saturation: [0.65, 0.75, 0.85], // 保持或增加饱和度
-      hash: 'bkdr'
-    });
-  }
-});
-
-const highlightColor = computed(() =>
-{
-  return colorHashInstance.value.hex(props.highlightColorCalculator);
-});
+const {color: highlightColor} = useColorHash(highlightColorCalculator);
 
 // 定义组件触发的事件
 defineEmits(['click', 'dblclick', 'update:enabled']);

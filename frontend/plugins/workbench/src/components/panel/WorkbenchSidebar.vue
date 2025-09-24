@@ -12,20 +12,20 @@
         <n-h4 class="sidebar-title-bar">
           <span class="title-text" @click="selectCurrentSessionItem">{{ currentConfigName }}</span>
 
-          <n-popover trigger="hover">
-            <template #trigger>
-              <!-- 只有当编辑的是工作流时才显示此按钮 -->
-              <n-button
-                  v-if="session.type === 'workflow'"
-                  style="font-size: 20px;"
-                  text
-                  @click="selectCurrentSessionItem"
-              >
+          <div v-if="session.type === 'workflow'" class="view-switch-bar">
+            <n-button
+                block
+                secondary
+                strong
+                type="primary"
+                @click="selectCurrentSessionItem"
+            >
+              <template #icon>
                 <n-icon :component="GraphIcon"/>
-              </n-button>
-            </template>
-            进入图编辑视图
-          </n-popover>
+              </template>
+              进入图编辑视图
+            </n-button>
+          </div>
 
           <n-popover trigger="hover">
             <template #trigger>
@@ -136,7 +136,7 @@ import type {ConfigType} from "#/services/GlobalEditSession.ts";
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "#/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "#/components/workflow/WorkflowItemRenderer.vue";
-import {AddBoxIcon, CloseIcon, SwapHorizIcon, GraphIcon} from '@yaesandbox-frontend/shared-ui/icons';
+import {AddBoxIcon, CloseIcon, GraphIcon, SwapHorizIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import InlineInputPopover from "#/components/share/InlineInputPopover.vue";

@@ -7,6 +7,7 @@
         :edges="edges"
         :max-zoom="4"
         :min-zoom="0.2"
+        :multiSelectionKeyCode="'Control'"
         :nodes="nodes"
         class="vue-flow-instance"
         fit-view-on-init
@@ -14,7 +15,7 @@
         @edges-remove="onEdgesRemove"
         @node-drag-stop="onNodeDragStop"
     >
-      <template #node-input="props">
+      <template #node-workflow-input="props">
         <InputNode v-bind="props"/>
       </template>
 
@@ -29,6 +30,9 @@
         <n-text depth="3">
           选中连线后，按 <strong>Backspace</strong> 键可删除。
           目前不支持删除节点的逻辑。
+        </n-text>
+        <n-text depth="3">
+          按 <strong>Control</strong> 键可以同时选择多个节点。
         </n-text>
       </div>
     </VueFlow>
@@ -74,7 +78,7 @@ const nodes = computed<Node[]>(() =>
     const nodeId = `input-${inputName}`;
     newNodes.push({
       id: nodeId,
-      type: 'input',
+      type: 'workflow-input',
       position: nodePositions.value[nodeId] ?? {x: 50, y: index * 100 + 50},
       data: {label: inputName},
     });
@@ -252,5 +256,8 @@ const themeVars = useThemeVars()
   height: calc(100vh - 180px); /* 减去头部和一些边距的高度 */
   border: 1px solid v-bind('themeVars.borderColor');
   border-radius: 4px;
+}
+:deep(.vue-flow__node.selected) {
+  box-shadow: 0 0 0 2px v-bind('themeVars.primaryColor');
 }
 </style>

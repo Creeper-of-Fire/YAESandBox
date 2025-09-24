@@ -83,6 +83,10 @@ import MainEditPanel from "#/components/panel/MainEditPanel.vue";
 import '@vue-flow/core/dist/style.css';
 //@ts-ignore
 import '@vue-flow/core/dist/theme-default.css';
+
+// @ts-ignore
+import '@vue-flow/controls/dist/style.css';
+
 import {createActiveEditorContextProvider} from "#/services/editor-context/useSelectedConfig.ts";
 
 defineOptions({
