@@ -177,7 +177,7 @@
 import {computed, h, nextTick, onMounted, reactive, ref} from 'vue';
 import {type DropdownOption, NAlert, NButton, NEmpty, NFlex, NH4, NIcon, NSpin, NTab, NTabs, useDialog, useMessage} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore';
-import type {ConfigObject, ConfigType} from "#/services/EditSession";
+import type {AnyConfigObject, ConfigType} from "#/services/GlobalEditSession.ts";
 import {VueDraggable as draggable} from "vue-draggable-plus";
 import type {GlobalResourceItem} from "@yaesandbox-frontend/core-services/types";
 import GlobalResourceListItem from './GlobalResourceListItem.vue';
@@ -384,10 +384,10 @@ async function handleCreateNew(payload: { name?: string, type?: string })
  * 注意，从本页面拖拽到编辑中的draggable包裹的列表时，会走:clone prop调用deepCloneWithNewIds，于是configId会自动刷新。
  * 而从本页面到acquireEditSession走的是HTML5的原生路径，不会触发configId的刷新。
  * （如果这引入了什么问题，也可以重新在acquireEditSession中进行修改，目前来看这样最好。）
- * @param {DraggableResourceItem<ConfigObject>} originalResourceItem - 原始的资源列表项。
- * @returns {ConfigObject | null} - 克隆并刷新 ID 后的纯数据对象，作为拖拽的数据负载。
+ * @param {DraggableResourceItem<AnyConfigObject>} originalResourceItem - 原始的资源列表项。
+ * @returns {AnyConfigObject | null} - 克隆并刷新 ID 后的纯数据对象，作为拖拽的数据负载。
  */
-function handleResourceClone(originalResourceItem: DraggableResourceItem<ConfigObject>): ConfigObject | null
+function handleResourceClone(originalResourceItem: DraggableResourceItem<AnyConfigObject>): AnyConfigObject | null
 {
   if (originalResourceItem.item.isSuccess)
   {

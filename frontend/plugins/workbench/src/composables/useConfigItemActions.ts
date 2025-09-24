@@ -1,7 +1,7 @@
 ﻿// 文件路径: src/app-workbench/composables/useConfigItemActions.ts
 import {type Component, computed, type Ref} from 'vue';
 import {type SelectOption, useMessage} from 'naive-ui';
-import type {ConfigObject} from '#/services/EditSession';
+import type {AnyConfigObject} from '#/services/GlobalEditSession.ts';
 import {useWorkbenchStore} from '#/stores/workbenchStore';
 import {AddIcon, EditIcon, SaveIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {createBlankConfig} from "#/utils/createBlankConfig.ts";
@@ -11,8 +11,8 @@ import {createBlankConfig} from "#/utils/createBlankConfig.ts";
  */
 interface UseConfigItemActionsParams
 {
-    itemRef: Ref<ConfigObject | null>;
-    parentContextRef: Ref<{ parent: ConfigObject; list: ConfigObject[] } | null>;
+    itemRef: Ref<AnyConfigObject | null>;
+    parentContextRef: Ref<{ parent: AnyConfigObject; list: AnyConfigObject[] } | null>;
 }
 
 export type ActionsProvider = () => EnhancedAction[];

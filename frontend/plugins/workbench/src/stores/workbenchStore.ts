@@ -3,7 +3,7 @@
 import {defineStore} from 'pinia';
 import {computed, type Reactive, reactive, ref} from 'vue';
 import {v4 as uuidv4} from 'uuid';
-import {type ConfigObject, type ConfigType, EditSession, getConfigObjectType,} from '#/services/EditSession.ts';
+import {type AnyConfigObject, type ConfigType, GlobalEditSession, getConfigObjectType,} from '#/services/GlobalEditSession.ts';
 import type {AbstractRuneConfig, RuneSchemasResponse, TuumConfig, WorkflowConfig,} from "#/types/generated/workflow-config-api-client";
 import {RuneConfigService, TuumConfigService, WorkflowConfigService,} from "#/types/generated/workflow-config-api-client";
 import {useAsyncState, type UseAsyncStateReturn} from "@vueuse/core";
@@ -122,7 +122,7 @@ export function deepCloneWithNewIds<T extends object>(obj: T): T
 interface Draft
 {
     type: ConfigType;
-    data: ConfigObject;
+    data: AnyConfigObject;
     originalState: string;
 }
 
@@ -135,7 +135,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     /**
      * @description 定义一个通用的资源处理器接口，用于统一不同资源类型的操作。
      */
-    interface IResourceHandler<T extends ConfigObject>
+    interface IResourceHandler<T extends AnyConfigObject>
     {
         // 每种资源的异步状态管理
         asyncState: Reactive<UseAsyncStateReturn<Record<string, GlobalResourceItem<T>>, any[], true>>;
@@ -272,10 +272,10 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     });
 
     /**
-     * @description 存储所有活跃的 EditSession 实例。
+     * @description 存储所有活跃的 GlobalEditSession 实例。
      * Key 是 session.globalId。
      */
-    const activeSessions = ref<Record<string, EditSession>>({});
+    const activeSessions = ref<Record<string, GlobalEditSession>>({});
 
     // =================================================================
     // 内部 Getter & Action (加下划线表示，约定不对外暴露)
@@ -291,7 +291,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
     // TODO 没写好校验逻辑
     // _saveDraft 现在接收 globalId
-    const saveSessionData = async (session: EditSession): Promise<SaveResult> =>
+    const saveSessionData = async (session: GlobalEditSession): Promise<SaveResult> =>
     {
         const {type, globalId} = session;
         const draftData = session.getData().value;
@@ -339,10 +339,11 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         try
         {
             await handler.api.delete(id);
-            if (handler.asyncState.state[id]) {
+            if (handler.asyncState.state[id])
+            {
                 delete handler.asyncState.state[id];
             }
-            closeSessionByID(id)
+            closeSession(id)
             return true;
         } catch (error)
         {
@@ -356,7 +357,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * 将一个已有的配置对象保存为新的全局配置。
      * @param configToSave - 要保存为全局的配置对象。
      */
-    async function createGlobalConfig(configToSave: ConfigObject)
+    async function createGlobalConfig(configToSave: AnyConfigObject)
     {
         // 深克隆并确保ID是全新的（即使是克隆来的）
         const newGlobalConfig = deepCloneWithNewIds(configToSave);
@@ -381,9 +382,9 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * 获取（申请）一个编辑会话。这是进行任何修改操作的唯一入口。
      * @param type - 要编辑的配置类型
      * @param globalId - 全局配置的ID
-     * @returns 如果成功，返回一个 EditSession 实例；如果已被锁定或找不到，返回 null。
+     * @returns 如果成功，返回一个 GlobalEditSession 实例；如果已被锁定或找不到，返回 null。
      */
-    async function acquireEditSession(type: ConfigType, globalId: string): Promise<EditSession | null>
+    async function acquireEditSession(type: ConfigType, globalId: string): Promise<GlobalEditSession | null>
     {
 
         // 1. 如果已存在此会话，直接返回
@@ -394,7 +395,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
         // 2. 根据类型，选择对应的异步状态对象
         const handler = resourceHandlers[type];
-        if (!handler) {
+        if (!handler)
+        {
             console.error(`未知的配置类型: ${type}`);
             return null;
         }
@@ -436,8 +438,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             return null;
         }
 
-        // 创建新的 EditSession 实例
-        const session = new EditSession(type, sourceItem.data, false);
+        // 创建新的 GlobalEditSession 实例
+        const session = new GlobalEditSession(type, globalId, sourceItem.data, false);
 
         // 将新会话存入 activeSessions
         activeSessions.value[session.globalId] = session;
@@ -450,10 +452,12 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * @param type - 资源类型
      * @param blankConfig - 一个空白的配置对象
      */
-    function createNewDraftSession(type: ConfigType, blankConfig: ConfigObject): EditSession
+    function createNewDraftSession(type: ConfigType, blankConfig: AnyConfigObject): GlobalEditSession
     {
-        // 1. 直接用空白配置创建一个新的 EditSession 实例
-        const session = new EditSession(type, blankConfig, true);
+        const newGlobalId = uuidv4();
+
+        // 1. 直接用空白配置创建一个新的 GlobalEditSession 实例
+        const session = new GlobalEditSession(type, newGlobalId, blankConfig, true);
 
         // 2. 将其添加到活跃会话中
         activeSessions.value[session.globalId] = session;
@@ -464,15 +468,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     /**
      * @description 关闭一个会话，并从活跃列表中移除。
      */
-    function closeSession(session: EditSession | null)
-    {
-        closeSessionByID(session?.globalId ?? null)
-    }
-
-    /**
-     * @description 关闭一个会话，并从活跃列表中移除。
-     */
-    function closeSessionByID(sessionID: string | null)
+    function closeSession(sessionID: string)
     {
         if (sessionID && activeSessions.value[sessionID])
         {
@@ -499,7 +495,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     }
 
 
-    // 我们需要把所有 EditSession 需要的“私有”方法也 return 出去，
+    // 我们需要把所有 GlobalEditSession 需要的“私有”方法也 return 出去，
     // 这样注入的 storeInstance 才拥有这些方法。
     const internalApi = {
         saveSessionData
@@ -525,7 +521,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         createGlobalConfig,
         deleteGlobalConfig,
 
-        // --- 内部方法，供 EditSession 使用 ---
+        // --- 内部方法，供 GlobalEditSession 使用 ---
         // Vue 3 的 defineStore setup 语法不允许真正意义上的私有化，
         // 我们通过命名约定（下划线），来表示它们是内部API。
         ...internalApi

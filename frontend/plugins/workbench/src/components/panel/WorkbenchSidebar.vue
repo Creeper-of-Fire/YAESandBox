@@ -116,7 +116,7 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NH4, NIcon, useDialog, useMessage, useThemeVars} from 'naive-ui';
-import type {ConfigType, EditSession} from "#/services/EditSession.ts";
+import type {ConfigType, GlobalEditSession} from "#/services/GlobalEditSession.ts";
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "#/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "#/components/workflow/WorkflowItemRenderer.vue";
@@ -128,12 +128,12 @@ import RuneItemRenderer from "#/components/rune/RuneItemRenderer.vue";
 import {useSelectedConfig} from "#/composables/useSelectedConfig.ts";
 
 const props = defineProps<{
-  session: EditSession | null;
+  session: GlobalEditSession | null;
 }>();
 
 const emit = defineEmits<{
   (e: 'start-editing', payload: { type: ConfigType; id: string }): void;
-  (e: 'close-session'): void;
+  (e: 'close-session', payload: { id: string }): void;
 }>();
 
 const dialog = useDialog();
@@ -141,7 +141,7 @@ const message = useMessage();
 
 // 工作流点击
 // TODO之后转移到工作流内部
-const {selectedConfig,updateSelectedConfig} = useSelectedConfig();
+const {selectedConfig, updateSelectedConfig} = useSelectedConfig();
 
 function selectCurrentSessionItem()
 {
@@ -177,7 +177,7 @@ async function handleSave()
   else
   {
     const error = result.error;
-    // 捕获 EditSession.save 抛出的错误
+    // 捕获 GlobalEditSession.save 抛出的错误
     message.error(`保存失败：${result.name}，请检查内容或查看控制台。`);
     console.error(`${result.name} 保存失败，详情:`, error);
   }

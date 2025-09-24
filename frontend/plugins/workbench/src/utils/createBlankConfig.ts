@@ -1,6 +1,6 @@
 ﻿// 文件路径: src/app-workbench/utils/createBlankConfig.ts
 import {v4 as uuidv4} from 'uuid';
-import type {ConfigObject, ConfigType,} from '#/services/EditSession';
+import type {AnyConfigObject, ConfigType,} from '#/services/GlobalEditSession.ts';
 import {
     type AbstractRuneConfig,
     RuneConfigService,
@@ -33,7 +33,7 @@ export async function createBlankConfig(
     type: ConfigType,
     name: string,
     options?: { runeType?: string }
-): Promise<ConfigObject>
+): Promise<AnyConfigObject>
 {
     const newConfigId = uuidv4();
     let newConfig;

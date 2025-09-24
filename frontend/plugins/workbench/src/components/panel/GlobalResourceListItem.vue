@@ -68,14 +68,14 @@
 import {NButton, NIcon, useThemeVars} from 'naive-ui';
 import {onLongPress} from '@vueuse/core'
 import {EditIcon, FindInPageIcon, LinkOffIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import type {ConfigObject, ConfigType} from '#/services/EditSession';
+import type {AnyConfigObject, ConfigType} from '#/services/GlobalEditSession.ts';
 import type {GlobalResourceItem} from '@yaesandbox-frontend/core-services/types';
 import {computed, ref} from "vue";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 
 const props = defineProps<{
   id: string; // 原始 Record 的 key (资源的唯一ID)
-  item: GlobalResourceItem<ConfigObject>; // 包含成功/失败状态和数据的资源项
+  item: GlobalResourceItem<AnyConfigObject>; // 包含成功/失败状态和数据的资源项
   type: ConfigType; // 资源的类型 ('workflow', 'tuum', 'rune')
 }>();
 

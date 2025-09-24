@@ -72,7 +72,7 @@ import {onBeforeUnmount, onMounted, provide, ref} from 'vue';
 import {NButton, NH3, useDialog, useMessage, useThemeVars} from 'naive-ui';
 import {SaveIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useWorkbenchStore} from '#/stores/workbenchStore';
-import {type ConfigType, type EditSession} from '#/services/EditSession';
+import {type ConfigType, type GlobalEditSession} from '#/services/GlobalEditSession.ts';
 
 import EditorLayout from '#/layouts/EditorLayout.vue';
 import GlobalResourcePanel from '#/components/panel/GlobalResourcePanel.vue';
@@ -85,8 +85,8 @@ import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext
 
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
-import {useActiveEditSession} from "#/components/panel/useActiveEditSession.ts";
-import {createSelectedConfigProvider} from "#/composables/useSelectedConfig.ts";
+import {useActiveEditorContext} from "#/components/panel/useActiveEditorContext.ts";
+import {createActiveEditorContextProvider, createSelectedConfigProvider} from "#/composables/useSelectedConfig.ts";
 
 defineOptions({
   name: 'WorkbenchView'
@@ -94,8 +94,7 @@ defineOptions({
 
 // --- 使用 Composable ---
 const workbenchStore = useWorkbenchStore();
-const { activeSession, switchSession, closeSession } = useActiveEditSession();
-const { selectedConfig, updateSelectedConfig } =createSelectedConfigProvider();
+const { activeContext, switchContext, closeContext, isLoading } = createActiveEditorContextProvider();
 
 
 // TODO 使用vueuse的useStore来存储单例的UI状态
@@ -135,7 +134,7 @@ async function handleStartEditing({ type, id }: { type: ConfigType; id: string }
  * 直接调用 Composable 中的方法。
  */
 function handleCloseSession() {
-  closeSession();
+  closeSession(id);
   updateSelectedConfig(null); // 关闭会话时，清空选中项
 }
 
