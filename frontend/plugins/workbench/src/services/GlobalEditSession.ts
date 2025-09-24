@@ -74,7 +74,7 @@ export class GlobalEditSession
      */
     private readonly _store: ReturnType<typeof useWorkbenchStore>;
     private readonly draftData: Ref<AnyConfigObject>;
-    private originalState: string; // JSON 字符串快照，用于脏检查
+    private originalState: Ref<string>; // JSON 字符串快照，用于脏检查
 
 
     /**
@@ -93,7 +93,7 @@ export class GlobalEditSession
 
         // 深度克隆源数据作为草稿的初始状态
         this.draftData = ref(cloneDeep(sourceData));
-        this.originalState = JSON.stringify(sourceData);
+        this.originalState = ref(JSON.stringify(sourceData));
     }
 
     // --- 公共API (供UI组件使用) ---
@@ -113,7 +113,7 @@ export class GlobalEditSession
     public getIsDirty(): Ref<boolean>
     {
         const data = this.draftData.value;
-        return computed(() => !isEquivalent(data, JSON.parse(this.originalState)));
+        return computed(() => !isEquivalent(data, JSON.parse(this.originalState.value)));
     }
 
     /**
@@ -143,7 +143,7 @@ export class GlobalEditSession
     public commitChanges(): void
     {
         // 更新原始状态快照为当前草稿的状态
-        this.originalState = JSON.stringify(this.draftData.value);
+        this.originalState.value = JSON.stringify(this.draftData.value);
         // 如果这是一个新创建的会话，那么在第一次成功保存后，它就不再是“新的”了
         if (this.isNew)
         {
@@ -174,6 +174,6 @@ export class GlobalEditSession
      */
     public discard(): void
     {
-        this.draftData.value = JSON.parse(this.originalState);
+        this.draftData.value = JSON.parse(this.originalState.value);
     }
 }

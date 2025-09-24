@@ -65,9 +65,20 @@ export function createActiveEditorContextProvider()
 
     /**
      * 关闭当前激活的会话。
-     * 如果有未保存的更改，会弹出确认框。
+     * 只是简单的关闭，不会关闭“后台”的会话。
      */
     function closeContext(): void
+    {
+        const context = _activeContext.value;
+        if (!context) return;
+        _activeContext.value = null;
+    }
+
+    /**
+     * 彻底关闭当前激活的会话。
+     * 如果有未保存的更改，会弹出确认框。
+     */
+    function deepCloseContext(): void
     {
         const context = _activeContext.value;
         if (!context) return;

@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text;
+using System.Text.Json.Serialization;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema.SchemaProcessor;
@@ -61,7 +62,7 @@ internal class AiRuneProcessor(AiRuneConfig config, WorkflowRuntimeService workf
         if (aiProcessor == null)
             return NormalError.Conflict($"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiRuneType}");
 
-        var prompts = tuumProcessorContent.GetTuumVar<List<RoledPromptDto>>(this.Config.PromptsName) ?? [];
+        var prompts = tuumProcessorContent.GetTuumVar<List<RoledPromptDto>>(AiRuneConfig.PromptsName) ?? [];
         this.DebugDto.Prompts = prompts;
 
         var executionResult = aiConfig.IsStream
@@ -254,13 +255,8 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     /// <summary>
     /// 输入的提示词列表变量的名称
     /// </summary>
-    [Required]
-    [DefaultValue(PromptsDefaultName)]
-    [Display(
-        Name = "提示词列表变量名",
-        Description = "输入的提示词列表变量的名称。"
-    )]
-    public string PromptsName { get; init; } = PromptsDefaultName;
+    [JsonIgnore]
+    public static string PromptsName => PromptsDefaultName;
 
     /// <summary>
     /// 输出的AI输出变量的名称
@@ -338,7 +334,7 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     public string StreamingMode { get; init; } = nameof(UpdateMode.Incremental);
 
     /// <inheritdoc />
-    public override List<ConsumedSpec> GetConsumedSpec() => [new(this.PromptsName, CoreVarDefs.PromptList)];
+    public override List<ConsumedSpec> GetConsumedSpec() => [new(PromptsName, CoreVarDefs.PromptList)];
 
     /// <inheritdoc />
     public override List<ProducedSpec> GetProducedSpec()

@@ -34,17 +34,14 @@ internal partial class StaticVariableRuneProcessor(WorkflowRuntimeService workfl
     /// </summary>
     public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
-        // 1. 解析脚本内容为键值对
+        // 所有复杂的解析逻辑都委托给了状态机解析器
         var parsedVariables = ScriptParser.Parse(this.Config.ScriptContent);
 
-        // 2. 将解析结果转换为 object 类型的值，以符合 Context 的定义
-        var contextPayload = parsedVariables.ToDictionary(kvp => kvp.Key, object? (kvp) => kvp.Value);
-        
-        // 3. 将打包好的 Context 设置到 Tuum 变量中
-        tuumProcessorContent.SetTuumVar(this.Config.OutputContextName, contextPayload);
-        
-        // 4. 更新调试信息
-        this.DebugDto.PackedContext = contextPayload;
+        foreach (var variable in parsedVariables)
+        {
+            tuumProcessorContent.SetTuumVar(variable.Key, variable.Value);
+            this.DebugDto.DefinedVariables[variable.Key] = variable.Value;
+        }
 
         return Task.FromResult(Result.Ok());
     }
@@ -55,9 +52,9 @@ internal partial class StaticVariableRuneProcessor(WorkflowRuntimeService workfl
     internal class StaticVariableRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         /// <summary>
-        /// 在本次执行中成功打包并输出的 Context 内容。
+        /// 在本次执行中成功定义并注入的变量及其值。
         /// </summary>
-        public Dictionary<string, object?> PackedContext { get; set; } = [];
+        public Dictionary<string, string> DefinedVariables { get; } = [];
     }
 }
 
@@ -67,11 +64,18 @@ internal partial record StaticVariableRuneConfig
     public override List<ConsumedSpec> GetConsumedSpec() => [];
 
     /// <inheritdoc />
-    public override List<ProducedSpec> GetProducedSpec() =>
-    [
-        // 明确声明此符文只产生一个名为 OutputContextName 的 Context 类型变量
-        new(this.OutputContextName, CoreVarDefs.Context)
-    ];
+    public override List<ProducedSpec> GetProducedSpec()
+    {
+        // 静态分析和运行时使用完全相同的、可预测的解析器
+        var parsedVariables = ScriptParser.Parse(this.ScriptContent);
+
+        var specs = parsedVariables
+            .Select(kvp => new ProducedSpec(kvp.Key, CoreVarDefs.String))
+            .DistinctBy(p => p.Name)
+            .ToList();
+
+        return specs;
+    }
 }
 
 /// <summary>
@@ -81,16 +85,6 @@ internal partial record StaticVariableRuneConfig
 [ClassLabel("🤔静态变量")]
 internal partial record StaticVariableRuneConfig : AbstractRuneConfig<StaticVariableRuneProcessor>
 {
-    private const string DefaultOutputContextName = "Context";
-    
-    /// <summary>
-    /// 输出的 Context 变量的名称。
-    /// </summary>
-    [Required]
-    [DefaultValue(DefaultOutputContextName)]
-    [Display(Name = "输出变量名", Description = "指定包含所有已定义变量的 Context 对象的名称。")]
-    public string OutputContextName { get; init; } = DefaultOutputContextName;
-    
     /// <summary>
     /// 定义变量的脚本内容。
     /// </summary>
