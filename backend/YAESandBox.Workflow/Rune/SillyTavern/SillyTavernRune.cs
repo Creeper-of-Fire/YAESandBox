@@ -51,13 +51,13 @@ internal record SillyTavernRuneConfig : AbstractRuneConfig<SillyTavernRuneProces
     [InlineGroup(groupName: GroupInputs)]
     [Required]
     [DefaultValue(HistoryAppendRuneConfig.HistoryDefaultName)]
-    [Display(Name = "输入历史记录", GroupName = GroupInputs, Description = "要处理的原始聊天记录提示词列表的变量名。")]
+    [Display(Name = "输入历史记录", GroupName = GroupInputs, Description = "要处理的原始聊天记录提示词列表的变量名。[注意：当前版本不会替换历史记录中的宏。]")]
     public string HistoryVariableName { get; init; } = HistoryAppendRuneConfig.HistoryDefaultName;
 
     [InlineGroup(groupName: GroupInputs)]
     [Required]
     [DefaultValue("worldInfoList")]
-    [Display(Name = "世界书JSON列表", Description = "包含多个世界书JSON字符串的列表变量名。")]
+    [Display(Name = "世界书JSON列表", Description = "包含多个世界书JSON字符串的列表变量名。[注意：当前版本不会替换世界书内容中的宏。]")]
     public string WorldInfoJsonsVariableName { get; init; } = "worldInfoList";
 
     [InlineGroup(groupName: GroupInputs)]
@@ -119,6 +119,11 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
 
     public Task<Result> ExecuteAsync(TuumProcessorContent tuumContent, CancellationToken cancellationToken = default)
     {
+        // TODO: [宏扩展范围] 当前宏替换仅作用于预设(Preset)内容。
+        // 传入的历史记录(History)和世界书(World Info)中的宏不会被解析。
+        // 长期方案: 应当创建一个独立的、通用的 "宏替换符文(Macro Expansion Rune)"，
+        // 可以在工作流的任意阶段对提示词列表进行处理，以实现更灵活的控制。
+        
         this.DebugDto.AddLog("SillyTavern符文开始执行。");
 
         // --- 1. 获取所有输入 ---
@@ -196,7 +201,8 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
 
         foreach (var item in presetProcessResult.Template)
         {
-            var fillResult = item.FillTemplate(variables, playerInfo, targetInfo);
+            // 将 history 传给 FillTemplate
+            var fillResult = item.FillTemplate(variables, playerInfo, targetInfo, history); 
 
             filledTemplateItems.Add(fillResult.FilledItem);
 
@@ -205,7 +211,6 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
                 variables[key] = value;
             }
         }
-
         this.DebugDto.FinalProducedVariables.Clear();
         foreach (var pair in variables) this.DebugDto.FinalProducedVariables.Add(pair.Key, pair.Value);
         this.DebugDto.AddLog($"变量填充完成。共生成 {variables.Count} 个变量。");
