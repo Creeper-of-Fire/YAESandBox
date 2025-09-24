@@ -1,7 +1,7 @@
 ﻿import {useRoute} from 'vue-router';
 import type {RemovableRef, StorageLike, UseStorageOptions} from '@vueuse/core';
 import {useStorage} from '@vueuse/core';
-import {getCurrentInstance, inject} from 'vue';
+import {getCurrentInstance, inject,type Ref} from 'vue';
 import {PluginUniqueNameKey} from "../utils/injectKeys.ts";
 
 /**
@@ -64,7 +64,7 @@ function getComponentScope(): string | null
  * @returns RemovableRef<T>
  */
 export function useScopedStorage<T>(
-    localKey: string,
+    localKey: string | Ref<string>,
     initialValue: T,
     storage?: StorageLike | undefined,
     componentScopeRewrite?: string | undefined,
@@ -72,6 +72,8 @@ export function useScopedStorage<T>(
 ): RemovableRef<T>
 {
     const route = useRoute();
+
+    const localKeyString = typeof localKey === 'string' ? localKey : localKey.value;
 
     // 1. 尝试注入插件运行时 ID (最高优先级)
     const pluginId = inject(PluginUniqueNameKey, null);
@@ -96,7 +98,7 @@ export function useScopedStorage<T>(
 
     const scope = scopeParts.join(':') || 'global'; // 如果都为空，则有个默认值
 
-    const globalKey = `storage:${scope}:${localKey}`;
+    const globalKey = `storage:${scope}:${localKeyString}`;
 
     return useStorage(globalKey, initialValue, storage, options);
 }

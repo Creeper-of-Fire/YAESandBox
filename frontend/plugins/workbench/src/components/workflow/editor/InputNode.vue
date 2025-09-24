@@ -17,13 +17,22 @@
 </template>
 
 <script lang="ts" setup>
-import {Handle, Position} from '@vue-flow/core'
+import {Handle, Position, type NodeProps} from '@vue-flow/core'
 import {LoginIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {NIcon} from 'naive-ui';
+import {computed} from "vue";
 
-defineProps<{
+// 定义节点 data 对象的类型
+interface InputNodeData {
   label: string;
-}>();
+}
+
+// 接收完整的 NodeProps，这才是标准做法
+const props = defineProps<NodeProps<InputNodeData>>();
+
+// 从 props.data 中安全地获取 label
+const label = computed(() => props.data.label);
+
 </script>
 
 <style scoped>

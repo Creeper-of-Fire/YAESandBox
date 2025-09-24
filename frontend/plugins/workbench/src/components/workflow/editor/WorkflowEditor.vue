@@ -11,9 +11,10 @@
         fit-view-on-init
         @connect="onConnect"
         @edges-remove="onEdgesRemove"
+        @node-drag-stop="onNodeDragStop"
     >
       <template #node-input="props">
-        <InputNode v-bind="props.data"/>
+        <InputNode v-bind="props"/>
       </template>
 
       <template #node-tuum="props">
@@ -28,14 +29,15 @@
 
 <script lang="ts" setup>
 import {ref, watchEffect} from 'vue';
-import {type Connection, type Edge, type Node, VueFlow} from '@vue-flow/core'
-import { Background } from '@vue-flow/background';
-import { Controls } from '@vue-flow/controls';
+import {type Connection, type Edge, type Node, type NodeDragEvent, VueFlow} from '@vue-flow/core'
+import {Background} from '@vue-flow/background';
+import {Controls} from '@vue-flow/controls';
 import type {WorkflowEditorContext} from "#/components/workflow/editor/WorkflowEditorContext.ts";
 import TuumNode from "#/components/workflow/editor/TuumNode.vue";
 import InputNode from "#/components/workflow/editor/InputNode.vue";
 import type {TuumConnectionEndpoint, WorkflowConnection} from "#/types/generated/workflow-config-api-client";
 import {useThemeVars} from "naive-ui";
+import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 
 // 定义一个特殊的 ID，用于标识来自工作流输入的连接源
 const WORKFLOW_INPUT_SOURCE_ID = '__workflow_input__';
@@ -46,6 +48,14 @@ const props = defineProps<{
 
 const nodes = ref<Node[]>([]);
 const edges = ref<Edge[]>([]);
+
+// 使用 useScopedStorage 创建一个持久化的位置存储
+// 它会返回一个 ref，其内容会自动与 localStorage 同步
+// key 会是类似 'yae-storage-WORKFLOW_GLOBAL_ID-node-positions' 的形式
+const nodePositions = useScopedStorage<{ [nodeId: string]: { x: number, y: number } }>(
+    props.workflowContext.globalId + 'node-positions', // 使用 workflow 的 globalId 作为作用域
+    {} // 默认值为空对象
+);
 
 // 核心逻辑：监听 workflow config 的变化，并将其转换为 nodes 和 edges
 watchEffect(() =>
@@ -64,10 +74,14 @@ watchEffect(() =>
   // 1. 创建工作流输入节点
   workflow.workflowInputs.forEach((inputName, index) =>
   {
+    const nodeId = `input-${inputName}`;
+    const defaultPosition = {x: 50, y: index * 100 + 50};
+    const position = nodePositions.value[nodeId] || defaultPosition;
+
     newNodes.push({
-      id: `input-${inputName}`,
+      id: nodeId,
       type: 'input',
-      position: {x: 50, y: index * 100 + 50},
+      position: position,
       data: {label: inputName},
     });
   });
@@ -75,10 +89,14 @@ watchEffect(() =>
   // 2. 创建枢机节点
   workflow.tuums.forEach((tuum, index) =>
   {
+    const nodeId = tuum.configId;
+    const defaultPosition = {x: 350, y: index * 180};
+    const position = nodePositions.value[nodeId] || defaultPosition;
+
     newNodes.push({
-      id: tuum.configId,
+      id: nodeId,
       type: 'tuum',
-      position: {x: 350, y: index * 180},
+      position: position,
       data: {tuum},
     });
   });
@@ -106,6 +124,19 @@ watchEffect(() =>
   nodes.value = newNodes;
   edges.value = newEdges;
 });
+
+const onNodeDragStop = (event: NodeDragEvent) =>
+{
+  // event.nodes 包含了本次拖拽操作中所有移动过的节点
+  // 即使同时拖动多个节点，也能正确处理
+  for (const node of event.nodes)
+  {
+    if (node.id && node.position)
+    {
+      nodePositions.value[node.id] = {x: node.position.x, y: node.position.y};
+    }
+  }
+};
 
 // 处理用户连接操作
 const onConnect = (params: Connection) =>

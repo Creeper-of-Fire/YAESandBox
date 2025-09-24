@@ -3,9 +3,9 @@
   <n-empty v-if="!selectedContext" description="无激活的编辑会话" style="margin-top: 20%;"/>
   <div v-else style="overflow: auto;">
     <n-scrollbar>
-      <div v-if="selectedType ==='workflow'" class="main-content-wrapper">
+      <div v-if="selectedType ==='workflow' && workflowEditorContext" class="main-content-wrapper">
         <WorkflowEditor
-            :workflow-context="selectedContext as WorkflowEditorContext"/>
+            :workflow-context="workflowEditorContext"/>
       </div>
       <div v-if="selectedType ==='tuum'" class="main-content-wrapper">
         <TuumEditor
@@ -29,12 +29,30 @@ import WorkflowEditor from "#/components/workflow/editor/WorkflowEditor.vue";
 import type {WorkflowEditorContext} from "#/components/workflow/editor/WorkflowEditorContext.ts";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 import {getConfigObjectType} from "#/services/GlobalEditSession";
+import {type WorkflowSelectionContext} from "#/services/editor-context/SelectionContext";
 
-const {selectedContext} = useSelectedConfig();
+const {selectedContext, activeContext} = useSelectedConfig();
+
+const workflowEditorContext = computed((): WorkflowEditorContext | null =>
+{
+  // 确保当前选中的是工作流
+  if (selectedContext.value?.type === 'workflow')
+  {
+    // 从 selectedContext 中安全地提取 globalId 和 data
+    const context = selectedContext.value as WorkflowSelectionContext;
+    return {
+      globalId: context.context.globalId,
+      data: context.data
+    };
+  }
+  return null;
+});
+
 const selectedType = computed(() =>
 {
   const data = selectedContext.value?.data;
-  if (!data) return null;
+  if (!data)
+    return null;
   const {type} = getConfigObjectType(data)
   return type;
 });
