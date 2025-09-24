@@ -9,8 +9,24 @@
     <!-- 2. 根据 session 是否存在，渲染不同的内部视图 -->
     <HeaderAndBodyLayout v-if="session && session.getData().value">
       <template #header>
-        <n-h4 class="sidebar-title-bar" @click="selectCurrentSessionItem">
-          <span class="title-text">编辑{{ currentConfigName }}</span>
+        <n-h4 class="sidebar-title-bar">
+          <span class="title-text" @click="selectCurrentSessionItem">{{ currentConfigName }}</span>
+
+          <n-popover trigger="hover">
+            <template #trigger>
+              <!-- 只有当编辑的是工作流时才显示此按钮 -->
+              <n-button
+                  v-if="session.type === 'workflow'"
+                  style="font-size: 20px;"
+                  text
+                  @click="selectCurrentSessionItem"
+              >
+                <n-icon :component="GraphIcon"/>
+              </n-button>
+            </template>
+            进入图编辑视图
+          </n-popover>
+
           <n-popover trigger="hover">
             <template #trigger>
               <n-button style="font-size: 20px;" text @click="handleClose">
@@ -120,7 +136,7 @@ import type {ConfigType} from "#/services/GlobalEditSession.ts";
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "#/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "#/components/workflow/WorkflowItemRenderer.vue";
-import {AddBoxIcon, CloseIcon, SwapHorizIcon} from '@yaesandbox-frontend/shared-ui/icons';
+import {AddBoxIcon, CloseIcon, SwapHorizIcon, GraphIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
@@ -348,6 +364,7 @@ const themeVars = useThemeVars();
   text-overflow: ellipsis;
   white-space: nowrap;
   margin-right: 8px; /* 和关闭按钮之间留点空隙 */
+  cursor: pointer;
 }
 
 .sidebar-title-bar {

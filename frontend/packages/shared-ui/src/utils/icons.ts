@@ -37,4 +37,5 @@ export {default as FullscreenExitIcon}from'@vicons/material/es/FullscreenExitOut
 export {default as FullscreenIcon}from'@vicons/material/es/FullscreenOutlined';
 export {default as LoginIcon}from'@vicons/ionicons5/es/LogInOutline';
 export {default as HubIcon}from'@vicons/material/es/HubOutlined';
+export {default as GraphIcon}from'@vicons/material/es/AutoGraphOutlined';
 // export {default as }from'@vicons/ionicons5/es/';

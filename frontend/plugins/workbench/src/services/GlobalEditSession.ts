@@ -1,6 +1,6 @@
 // --- START OF FILE frontend/src/app-workbench/services/GlobalEditSession.ts ---
 
-import {computed, isReactive, isRef, ref, type Ref, watch} from 'vue';
+import {computed, isReactive, isRef, readonly, ref, type Ref, watch} from 'vue';
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig,} from '#/types/generated/workflow-config-api-client';
 import {type SaveResult, useWorkbenchStore} from '#/stores/workbenchStore.ts';
 import {cloneDeep} from "lodash-es";
@@ -76,6 +76,9 @@ export class GlobalEditSession
     private readonly draftData: Ref<AnyConfigObject>;
     private originalState: Ref<string>; // JSON 字符串快照，用于脏检查
 
+    private readonly _version = ref(0);
+    public readonly version: Readonly<Ref<number>> = readonly(this._version);
+
 
     /**
      * @param type - 配置项类型
@@ -149,6 +152,7 @@ export class GlobalEditSession
         {
             this.isNew = false;
         }
+        this._version.value++;
     }
 
     /**
@@ -175,5 +179,6 @@ export class GlobalEditSession
     public discard(): void
     {
         this.draftData.value = JSON.parse(this.originalState.value);
+        this._version.value++;
     }
 }

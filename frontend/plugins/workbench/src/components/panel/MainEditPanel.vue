@@ -1,22 +1,25 @@
 ﻿<!-- src/app-workbench/components/.../MainEditPanel.vue -->
 <template>
-  <n-empty v-if="!selectedContext" description="无激活的编辑会话" style="margin-top: 20%;"/>
-  <div v-else style="overflow: auto;">
+  <div v-if="selectedContext && activeContext" style="overflow: auto;">
     <n-scrollbar>
       <div v-if="selectedType ==='workflow' && workflowEditorContext" class="main-content-wrapper">
         <WorkflowEditor
+            :key="`${activeContext.globalId}-${activeContext.version.value}`"
             :workflow-context="workflowEditorContext"/>
       </div>
       <div v-if="selectedType ==='tuum'" class="main-content-wrapper">
         <TuumEditor
+            :key="`${activeContext.globalId}-${activeContext.version.value}`"
             :tuum-context="selectedContext as TuumEditorContext"/>
       </div>
       <div v-if="selectedType === 'rune'" class="main-content-wrapper">
         <RuneEditor
+            :key="`${activeContext.globalId}-${activeContext.version.value}`"
             :rune-context="selectedContext as RuneEditorContext"/>
       </div>
     </n-scrollbar>
   </div>
+  <n-empty v-else description="无激活的编辑会话" style="margin-top: 20%;"/>
 </template>
 
 <script lang="ts" setup>

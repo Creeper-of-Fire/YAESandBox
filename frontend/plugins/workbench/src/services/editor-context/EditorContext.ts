@@ -1,5 +1,5 @@
 ﻿import type {AnyConfigObject, GlobalEditSession} from "#/services/GlobalEditSession.ts";
-import {computed, type DeepReadonly, readonly, ref, type Ref, watch} from 'vue';
+import {computed, type DeepReadonly, readonly, ref, type Ref} from 'vue';
 import {get} from 'lodash-es';
 import {type AnySelectionContext, createSelectionContext} from "#/services/editor-context/SelectionContext.ts";
 import {findPathByReference} from '#/utils/pathFinder';
@@ -64,6 +64,10 @@ export class EditorContext
         return this.session.getIsDirty();
     }
 
+    public get version(): Readonly<Ref<number>>
+    {
+        return this.session.version;
+    }
 
     /**
      * 核心方法：只接受被选中的对象。

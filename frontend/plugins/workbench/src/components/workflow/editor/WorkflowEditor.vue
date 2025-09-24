@@ -1,12 +1,13 @@
 ﻿<!-- src/components/workflow/editor/WorkflowEditor.vue -->
 <template>
   <div class="workflow-editor-wrapper">
+    <!-- 暂时不实现 @nodes-remove="onNodesRemove" -->
     <VueFlow
-        v-model:edges="edges"
-        v-model:nodes="nodes"
         :default-viewport="{ zoom: 1 }"
+        :edges="edges"
         :max-zoom="4"
         :min-zoom="0.2"
+        :nodes="nodes"
         class="vue-flow-instance"
         fit-view-on-init
         @connect="onConnect"
@@ -23,12 +24,19 @@
 
       <Background/>
       <Controls/>
+
+      <div class="custom-controls-info">
+        <n-text depth="3">
+          选中连线后，按 <strong>Backspace</strong> 键可删除。
+          目前不支持删除节点的逻辑。
+        </n-text>
+      </div>
     </VueFlow>
   </div>
 </template>
 
 <script lang="ts" setup>
-import {ref, watchEffect} from 'vue';
+import {computed} from 'vue'; // 引入 computed
 import {type Connection, type Edge, type Node, type NodeDragEvent, VueFlow} from '@vue-flow/core'
 import {Background} from '@vue-flow/background';
 import {Controls} from '@vue-flow/controls';
@@ -39,112 +47,146 @@ import type {TuumConnectionEndpoint, WorkflowConnection} from "#/types/generated
 import {useThemeVars} from "naive-ui";
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 
-// 定义一个特殊的 ID，用于标识来自工作流输入的连接源
 const WORKFLOW_INPUT_SOURCE_ID = '__workflow_input__';
 
 const props = defineProps<{
   workflowContext: WorkflowEditorContext;
 }>();
 
-const nodes = ref<Node[]>([]);
-const edges = ref<Edge[]>([]);
-
-// 使用 useScopedStorage 创建一个持久化的位置存储
-// 它会返回一个 ref，其内容会自动与 localStorage 同步
-// key 会是类似 'yae-storage-WORKFLOW_GLOBAL_ID-node-positions' 的形式
 const nodePositions = useScopedStorage<{ [nodeId: string]: { x: number, y: number } }>(
-    props.workflowContext.globalId + 'node-positions', // 使用 workflow 的 globalId 作为作用域
-    {} // 默认值为空对象
+    props.workflowContext.globalId + 'node-positions',
+    {}
 );
 
-// 核心逻辑：监听 workflow config 的变化，并将其转换为 nodes 和 edges
-watchEffect(() =>
+// --- 2. 核心重构：使用 computed 派生视图状态 ---
+
+// 从 watchEffect 改为 computed，这是更健壮的 Vue 模式
+const nodes = computed<Node[]>(() =>
 {
   const workflow = props.workflowContext.data;
-  if (!workflow)
-  {
-    nodes.value = [];
-    edges.value = [];
-    return;
-  }
+  if (!workflow) return [];
 
   const newNodes: Node[] = [];
-  const newEdges: Edge[] = [];
 
-  // 1. 创建工作流输入节点
+  // 创建工作流输入节点
   workflow.workflowInputs.forEach((inputName, index) =>
   {
     const nodeId = `input-${inputName}`;
-    const defaultPosition = {x: 50, y: index * 100 + 50};
-    const position = nodePositions.value[nodeId] || defaultPosition;
-
     newNodes.push({
       id: nodeId,
       type: 'input',
-      position: position,
+      position: nodePositions.value[nodeId] ?? {x: 50, y: index * 100 + 50},
       data: {label: inputName},
     });
   });
 
-  // 2. 创建枢机节点
+  // 创建枢机节点
   workflow.tuums.forEach((tuum, index) =>
   {
     const nodeId = tuum.configId;
-    const defaultPosition = {x: 350, y: index * 180};
-    const position = nodePositions.value[nodeId] || defaultPosition;
-
     newNodes.push({
       id: nodeId,
       type: 'tuum',
-      position: position,
+      position: nodePositions.value[nodeId] ?? {x: 350, y: index * 180},
       data: {tuum},
     });
   });
 
-  // 3. 创建连接线 (Edges)
-  if (workflow.graph?.connections)
-  {
-    workflow.graph.connections.forEach(conn =>
-    {
-      const sourceId = conn.source.tuumId === WORKFLOW_INPUT_SOURCE_ID
-          ? `input-${conn.source.endpointName}`
-          : conn.source.tuumId;
-
-      newEdges.push({
-        id: `e-${sourceId}-${conn.source.endpointName}-${conn.target.tuumId}-${conn.target.endpointName}`,
-        source: sourceId,
-        target: conn.target.tuumId,
-        sourceHandle: conn.source.endpointName,
-        targetHandle: conn.target.endpointName,
-        animated: true,
-      });
-    });
-  }
-
-  nodes.value = newNodes;
-  edges.value = newEdges;
+  return newNodes;
 });
 
-const onNodeDragStop = (event: NodeDragEvent) =>
+// 创建连接线 (Edges)
+const edges = computed<Edge[]>(() =>
 {
-  // event.nodes 包含了本次拖拽操作中所有移动过的节点
-  // 即使同时拖动多个节点，也能正确处理
-  for (const node of event.nodes)
+  const workflow = props.workflowContext.data;
+  if (!workflow?.graph?.connections) return [];
+
+  return workflow.graph.connections.map(conn =>
   {
-    if (node.id && node.position)
+    const sourceId = conn.source.tuumId === WORKFLOW_INPUT_SOURCE_ID
+        ? `input-${conn.source.endpointName}`
+        : conn.source.tuumId;
+
+    return {
+      id: `e-${sourceId}-${conn.source.endpointName}-${conn.target.tuumId}-${conn.target.endpointName}`,
+      source: sourceId,
+      target: conn.target.tuumId,
+      sourceHandle: conn.source.endpointName,
+      targetHandle: conn.target.endpointName,
+      animated: true,
+    };
+  });
+});
+
+/**
+ * 删除节点的事件处理器 (未使用)
+ * @deprecated
+ * @param removedNodes
+ */
+const onNodesRemove = (removedNodes: Node[]) =>
+{
+  const workflow = props.workflowContext.data;
+  if (!workflow) return;
+
+  const removedNodeIds = new Set(removedNodes.map(n => n.id));
+
+  // 遍历被删除的节点，从源数据中移除它们
+  removedNodes.forEach(node =>
+  {
+    if (node.type === 'tuum')
     {
-      nodePositions.value[node.id] = {x: node.position.x, y: node.position.y};
+      // 从 tuums 数组中删除
+      const index = workflow.tuums.findIndex(t => t.configId === node.id);
+      if (index > -1)
+      {
+        workflow.tuums.splice(index, 1);
+      }
     }
+    else if (node.type === 'input')
+    {
+      // 从 workflowInputs 数组中删除
+      const inputName = node.data.label;
+      const index = workflow.workflowInputs.indexOf(inputName);
+      if (index > -1)
+      {
+        workflow.workflowInputs.splice(index, 1);
+      }
+    }
+  });
+
+  // 同样重要的是，删除与这些节点相关的所有连接
+  if (workflow.graph?.connections)
+  {
+    workflow.graph.connections = workflow.graph.connections.filter(conn =>
+    {
+      const sourceNodeId = conn.source.tuumId === WORKFLOW_INPUT_SOURCE_ID
+          ? `input-${conn.source.endpointName}`
+          : conn.source.tuumId;
+      const targetNodeId = conn.target.tuumId;
+
+      // 如果连接的源或目标节点在被删除的节点ID集合中，则过滤掉这条连接
+      return !removedNodeIds.has(sourceNodeId) && !removedNodeIds.has(targetNodeId);
+    });
   }
 };
 
-// 处理用户连接操作
+
+const onNodeDragStop = (event: NodeDragEvent) =>
+{
+  if (event.nodes && event.nodes.length > 0)
+  {
+    event.nodes.forEach(node =>
+    {
+      nodePositions.value[node.id] = node.position;
+    });
+  }
+};
+
 const onConnect = (params: Connection) =>
 {
   const workflow = props.workflowContext.data;
   if (!workflow) return;
 
-  // 确保 graph 和 connections 数组存在
   if (!workflow.graph)
   {
     workflow.graph = {enableAutoConnect: false, connections: []};
@@ -154,12 +196,10 @@ const onConnect = (params: Connection) =>
     workflow.graph.connections = [];
   }
 
-  // 从 Vue Flow 的连接参数中解析出我们的数据结构
   const sourceNode = nodes.value.find(n => n.id === params.source);
   if (!sourceNode) return;
 
   let source: TuumConnectionEndpoint;
-
   if (sourceNode.type === 'input')
   {
     source = {
@@ -183,17 +223,15 @@ const onConnect = (params: Connection) =>
     },
   };
 
-  // 添加到数据模型中
   workflow.graph.connections.push(newConnection);
 };
 
-// 处理用户删除连接线操作
-const onEdgesRemove = (params: Edge[]) =>
+const onEdgesRemove = (removedEdges: Edge[]) =>
 {
   const workflow = props.workflowContext.data;
   if (!workflow || !workflow.graph?.connections) return;
 
-  const removedEdgeIds = new Set(params.map(e => e.id));
+  const removedEdgeIds = new Set(removedEdges.map(e => e.id));
 
   workflow.graph.connections = workflow.graph.connections.filter(conn =>
   {
@@ -204,6 +242,7 @@ const onEdgesRemove = (params: Edge[]) =>
     return !removedEdgeIds.has(edgeId);
   });
 }
+
 const themeVars = useThemeVars()
 </script>
 
