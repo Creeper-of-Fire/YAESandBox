@@ -367,7 +367,9 @@ async function handleCreateNew(payload: { name?: string, type?: string })
                 ? await createBlankConfig('workflow', name)
                 : await createBlankConfig('tuum', name);
 
-    await workbenchStore.createGlobalConfig(blankConfig);
+    const newSession = workbenchStore.createNewDraftSession(resourceType, blankConfig);
+    emit('start-editing', {type: newSession.type, id: newSession.globalId });
+
     message.success(`成功创建全局${currentTabLabel.value}“${name}”！`);
   } catch (e)
   {

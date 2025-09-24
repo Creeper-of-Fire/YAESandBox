@@ -114,7 +114,7 @@
 
 
 <script lang="ts" setup>
-import {computed, inject, ref} from 'vue';
+import {computed, ref} from 'vue';
 import {NH4, NIcon, useDialog, useMessage, useThemeVars} from 'naive-ui';
 import type {ConfigType, EditSession} from "#/services/EditSession.ts";
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "#/types/generated/workflow-config-api-client";
@@ -125,7 +125,7 @@ import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 import RuneItemRenderer from "#/components/rune/RuneItemRenderer.vue";
-import {SelectedConfigItemKey} from "#/utils/injectKeys.ts";
+import {useSelectedConfig} from "#/composables/useSelectedConfig.ts";
 
 const props = defineProps<{
   session: EditSession | null;
@@ -141,7 +141,7 @@ const message = useMessage();
 
 // 工作流点击
 // TODO之后转移到工作流内部
-const selectedConfigItem = inject(SelectedConfigItemKey);
+const {selectedConfig,updateSelectedConfig} = useSelectedConfig();
 
 function selectCurrentSessionItem()
 {
@@ -150,7 +150,7 @@ function selectCurrentSessionItem()
     const sessionData = props.session.getData().value;
     if (sessionData)
     {
-      selectedConfigItem?.update({data: sessionData});
+      updateSelectedConfig({data: sessionData});
     }
   }
 }
@@ -353,8 +353,6 @@ const themeVars = useThemeVars();
   display: flex;
   justify-content: space-between;
   align-items: center;
-  cursor: pointer; /* <--- 添加鼠标手势，提示用户这里可以点击 */
-  transition: color 0.2s;
 }
 
 .action-bar {

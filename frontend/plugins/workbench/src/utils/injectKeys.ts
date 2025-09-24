@@ -2,17 +2,6 @@
 
 // 定义选中项的类型
 import type {InjectionKey, Ref} from "vue";
-import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
-import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
-import type {WorkflowEditorContext} from "#/components/workflow/editor/WorkflowEditorContext.ts";
-
-export interface SelectedConfigItem
-{
-    readonly data: Ref<WorkflowEditorContext | TuumEditorContext | RuneEditorContext | null>;
-    update: (item: WorkflowEditorContext | TuumEditorContext | RuneEditorContext) => void;
-}
-
-export const SelectedConfigItemKey: InjectionKey<SelectedConfigItem> = Symbol('selectedConfigItem'); // 提供一个函数来更新
 
 /**
  * 用于在配置项组件树中传播父容器禁用状态的 InjectionKey。

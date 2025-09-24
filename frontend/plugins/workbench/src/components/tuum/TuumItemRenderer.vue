@@ -7,7 +7,7 @@
         :is-collapsible="isCollapsible"
         :is-draggable="isDraggable"
         :is-selected="isSelected"
-        @click="updateSelectedConfig"
+        @click="handleItemClick"
         @dblclick="handleDoubleClick"
     >
       <!-- 使用插槽来自定义 Tuum 的标题部分 -->
@@ -56,10 +56,11 @@ import ConfigItemBase from '#/components/share/renderer/ConfigItemBase.vue'; // 
 import RuneItemRenderer from '#/components/rune/RuneItemRenderer.vue'; // 导入符文渲染器
 import type {TuumConfig, WorkflowConfig} from '#/types/generated/workflow-config-api-client';
 import {computed, inject, provide, ref, toRef} from "vue";
-import {IsParentDisabledKey, SelectedConfigItemKey} from "#/utils/injectKeys.ts";
+import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "#/components/share/ConfigItemActionsMenu.vue";
 import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
+import {useSelectedConfig} from "#/composables/useSelectedConfig.ts";
 
 // 定义组件的 props
 const props = withDefaults(defineProps<{
@@ -77,13 +78,11 @@ const props = withDefaults(defineProps<{
 const isExpanded = ref(true);
 
 // Inject
-const selectedConfigItem = inject(SelectedConfigItemKey);
+const {selectedConfig,updateSelectedConfig} = useSelectedConfig();
 
-const selectedConfig = selectedConfigItem?.data;
-
-function updateSelectedConfig()
+function handleItemClick()
 {
-  selectedConfigItem?.update({data: props.tuum});
+  updateSelectedConfig({data: props.tuum});
 }
 
 const isSelected = computed(() =>

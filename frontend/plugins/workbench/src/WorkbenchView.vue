@@ -79,91 +79,66 @@ import GlobalResourcePanel from '#/components/panel/GlobalResourcePanel.vue';
 import WorkbenchSidebar from '#/components/panel/WorkbenchSidebar.vue';
 import AiConfigEditorPanel from "#/features/ai-config-panel/AiConfigEditorPanel.vue";
 import MainEditPanel from "#/components/panel/MainEditPanel.vue";
-import {type SelectedConfigItem, SelectedConfigItemKey} from "#/utils/injectKeys.ts";
 import type {AbstractRuneConfig} from "#/types/generated/workflow-config-api-client";
 import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
 import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
 
 import '@vue-flow/core/dist/style.css';
 import '@vue-flow/core/dist/theme-default.css';
+import {useActiveEditSession} from "#/components/panel/useActiveEditSession.ts";
+import {createSelectedConfigProvider} from "#/composables/useSelectedConfig.ts";
 
 defineOptions({
   name: 'WorkbenchView'
 });
 
-const selectedConfig = ref<TuumEditorContext | RuneEditorContext | null>(null);
-
-provide<SelectedConfigItem>(SelectedConfigItemKey, {
-  data: selectedConfig,
-  update: (config) =>
-  {
-    try
-    {
-      selectedConfig.value = config;
-    } catch (e)
-    {
-      console.error(e);
-    }
-    // if (!config)
-    // {
-    //   selectedConfig.value = null;
-    //   return;
-    // }
-    //
-    // // --- 这是核心修改部分 ---
-    //
-    // // 1. 确保 Schema 已加载
-    // // 这里的判断逻辑可能需要根据你的实现调整，这里假设是符文配置
-    // const isRune = 'runeType' in config.data;
-    // if (!isRune)
-    // {
-    //   // 如果不是符文（例如是 Workflow 或 Tuum），直接赋值
-    //   selectedConfig.value = config;
-    //   return;
-    // }
-    //
-    // const runeConfig = config as RuneEditorContext;
-    // if (!workbenchStore.runeSchemasAsync.isReady)
-    // {
-    //   await workbenchStore.runeSchemasAsync.execute();
-    // }
-    // const schema = workbenchStore.runeSchemasAsync.state[runeConfig.data.runeType];
-    //
-    // if (!schema)
-    // {
-    //   // 如果找不到 Schema，作为降级策略，直接使用原始数据
-    //   console.warn(`未找到类型为 "${runeConfig.data.runeType}" 的 Schema，无法同步模型。`);
-    //   selectedConfig.value = config;
-    //   return;
-    // }
-    //
-    // // 2. 使用 Schema 来“水合”数据模型
-    // const hydratedConfig = synchronizeModelWithSchema(runeConfig.data, schema);
-    //
-    // Object.assign(runeConfig, {data: hydratedConfig});
-    //
-    // selectedConfig.value = runeConfig;
-  }
-});
+// --- 使用 Composable ---
+const workbenchStore = useWorkbenchStore();
+const { activeSession, switchSession, closeSession } = useActiveEditSession();
+const { selectedConfig, updateSelectedConfig } =createSelectedConfigProvider();
 
 
 // TODO 使用vueuse的useStore来存储单例的UI状态
 
-const workbenchStore = useWorkbenchStore();
 const message = useMessage();
 const dialog = useDialog();
 
 // --- 核心状态 ---
-const activeSession = ref<EditSession | null>(null);
-
-
-// 用于“正在请求新编辑视图”的加载状态
-const isAcquiringSession = ref(false);
 // 用于“全部保存”按钮的加载状态
 const isSavingAll = ref(false);
 
 // --- UI 控制状态 ---
 const showAiConfigModal = ref(false);
+
+
+/**
+ * 处理“开始编辑”事件。
+ * 直接调用 Composable 中的方法。
+ */
+async function handleStartEditing({ type, id }: { type: ConfigType; id: string }) {
+  // 切换新会话前，重置UI状态
+  updateSelectedConfig(null);
+  await switchSession(type, id);
+
+  // 在会话切换成功后，处理默认选中逻辑
+  const session = activeSession.value; // 从 Composable 获取最新的 session
+  if (session && session.type === 'rune') {
+    const runeData = session.getData().value as AbstractRuneConfig | null;
+    if (runeData) {
+      updateSelectedConfig({ data: runeData });
+    }
+  }
+}
+
+/**
+ * 处理关闭会话的请求。
+ * 直接调用 Composable 中的方法。
+ */
+function handleCloseSession() {
+  closeSession();
+  updateSelectedConfig(null); // 关闭会话时，清空选中项
+}
+
 
 /**
  * *** 处理全局保存操作 ***
@@ -206,78 +181,7 @@ async function handleSaveAll()
   }
 }
 
-/**
- * *** 处理关闭会话的请求 ***
- */
-function handleCloseSession()
-{
-  activeSession.value = null;
-}
 
-/**
- * 处理从左侧面板点击“编辑”按钮或双击列表项的事件。或者其他的“开始编辑”事件
- * @param {object} payload - 包含类型和ID的对象。
- */
-async function handleStartEditing({type, id: globalId}: { type: ConfigType; id: string })
-{
-  if (isAcquiringSession.value) return;
-
-  // 如果点击的是当前已激活的会话，则根据类型辅助性地打开面板，然后直接返回
-  // TODO 暂时移除相关逻辑
-  // if (activeSession.value && activeSession.value.globalId === globalId)
-  // {
-  //   if (type !== 'rune')
-  //   {
-  //     isEditorPanelVisible.value = true;
-  //   }
-  //   return;
-  // }
-
-  // 切换新会话前，重置UI状态
-  selectedConfig.value = null;
-  isAcquiringSession.value = true;
-  activeSession.value = null; // 先清空，让UI显示加载状态
-
-  try
-  {
-    const session = await workbenchStore.acquireEditSession(type, globalId);
-    if (session)
-    {
-      activeSession.value = session;
-
-      // 如果编辑的是一个独立的符文，则默认选中它自己，
-      // 以便在右侧的 EditorTargetRenderer 中立即显示其配置表单。
-      if (session.type === 'rune')
-      {
-        const runeData = session.getData().value as AbstractRuneConfig | null;
-        if (runeData)
-        {
-          selectedConfig.value = {data: runeData};
-        }
-      }
-      // --- 修复逻辑结束 ---
-
-      // 辅助性UI逻辑：如果编辑的不是符文，自动打开“当前编辑”面板
-      // TODO 暂时移除相关逻辑
-      // if (type !== 'rune')
-      // {
-      //   isEditorPanelVisible.value = true;
-      // }
-    }
-    else
-    {
-      message.error(`无法开始编辑 “${globalId}”。资源可能不存在或已损坏。`);
-    }
-  } catch (error)
-  {
-    console.error('获取编辑会话时发生意外错误:', error);
-    message.error('开始编辑时发生未知错误。');
-    activeSession.value = null;
-  } finally
-  {
-    isAcquiringSession.value = false;
-  }
-}
 
 /**
  * 浏览器关闭前的警告，防止用户意外丢失未保存的草稿。

@@ -1,41 +1,31 @@
 // --- START OF FILE frontend/src/app-workbench/services/EditSession.ts ---
 
-import {computed, type Ref} from 'vue';
+import {computed,ref, type Ref} from 'vue';
 import type {
     AbstractRuneConfig,
     TuumConfig,
     WorkflowConfig,
 } from '#/types/generated/workflow-config-api-client';
 import {type SaveResult, useWorkbenchStore} from '#/stores/workbenchStore.ts';
+import {v4 as uuidv4} from "uuid";
+import {cloneDeep} from "lodash-es";
+import {isEquivalent} from "@yaesandbox-frontend/core-services";
 
 // 定义了可编辑配置的类型别名，方便在整个应用中重用。
 export type ConfigType = 'workflow' | 'tuum' | 'rune';
 export type ConfigObject = WorkflowConfig | TuumConfig | AbstractRuneConfig;
 
-// /**
-//  * EditSession 的公共接口 (契约)。
-//  * 组件应该依赖这个接口，而不是具体的 EditSession 类。
-//  * 这解决了类实例与其响应式代理之间的类型兼容性问题。
-//  */
-// export interface IEditSession {
-//     readonly type: ConfigType;
-//     readonly globalId: string;
-//     readonly globalId: string;
-//
-//     // 注意：这里的 Ref<T> 类型与 computed 的返回类型完全匹配
-//     readonly data: Ref<ConfigObject | null>;
-//     readonly isDirty: Ref<boolean>;
-//
-//     updateData(updatedData: Partial<ConfigObject>): void;
-//     save(): Promise<void>;
-//     close(): boolean;
-//
-//     // UI 状态管理
-//     getSelectedItemId(): Ref<string | null>;
-//     selectItem(itemId: string | null): void;
-//     isTuumExpanded(tuumId: string): Ref<boolean>;
-//     toggleTuumExpansion(tuumId: string): void;
-// }
+export function getConfigObjectType(obj: ConfigObject): ConfigType
+{
+    let type;
+    if ('workflowInputs' in obj && 'tuums' in obj)
+        type = 'workflow' as const;
+    else if ('runes' in obj)
+        type = 'tuum' as const;
+    else
+        type = 'rune' as const;
+    return type
+}
 
 /**
  * 编辑会话句柄 (The "Little Package")
@@ -46,27 +36,38 @@ export type ConfigObject = WorkflowConfig | TuumConfig | AbstractRuneConfig;
 export class EditSession
 {
     /**
-     * @internal - 对 workbenchStore 的引用
+     * @internal - 对 workbenchStore 的引用，用于后端交互
      */
-    _getStore()
-    {
-        return useWorkbenchStore();
-    }
+    private readonly _store: ReturnType<typeof useWorkbenchStore>;
 
     public readonly type: ConfigType;
     public readonly globalId: string; // 原始全局ID，用于识别锁定和可能的保存目标
+    public isNew: boolean; // 标记这是否是一个全新的、尚未保存的草稿
+
+    private readonly draftData: Ref<ConfigObject>;
+    private originalState: string; // JSON 字符串快照，用于脏检查
+
 
     /**
-     * @internal - 这个构造函数只应该被 workbenchStore 调用。
-     * 我们用 @internal JSDoc 标签来标记它，IDE会给出提示，表示它不应被外部直接调用。
-     * 这是实现“友元类”效果的一种约定。
      * @param type - 配置项类型
-     * @param globalId - 此会话对应的原始全局配置ID
+     * @param sourceData - 用于创建会话的源数据对象
+     * @param isNew - 标记是否为新创建的项
      */
-    constructor(type: ConfigType, globalId: string)
-    {
+    constructor(type: ConfigType, sourceData: ConfigObject, isNew: boolean = false) {
+        this._store = useWorkbenchStore();
         this.type = type;
-        this.globalId = globalId;
+        this.isNew = isNew;
+
+        // 为新会话分配一个唯一的ID
+        // 如果是编辑现有项，globalId 就是其持久化ID
+        // 如果是新建项，我们给一个临时的UUID
+        this.globalId = ('configId' in sourceData && sourceData.configId)
+            ? sourceData.configId
+            : (isNew ? uuidv4() : (sourceData as WorkflowConfig).name); // WorkflowConfig 没有 configId，用 name
+
+        // 深度克隆源数据作为草稿的初始状态
+        this.draftData = ref(cloneDeep(sourceData));
+        this.originalState = JSON.stringify(sourceData);
     }
 
     // --- 公共API (供UI组件使用) ---
@@ -75,27 +76,25 @@ export class EditSession
      * 获取当前正在编辑的数据对象。
      * 返回一个响应式的计算属性，当底层Store中的数据变化时，UI会自动更新。
      */
-    public getData(): Ref<ConfigObject | null>
+    public getData(): Ref<ConfigObject>
     {
-        return computed(() => this._getStore()._getDraftData(this.globalId));
+        return this.draftData;
     }
 
     /**
      * 检查会话是否有未保存的更改。
-     * 返回一个响应式的计算属性。
      */
-    public getIsDirty(): Ref<boolean>
-    {
-        return computed(() => this._getStore()._isDirty(this.globalId));
+    public getIsDirty(): Ref<boolean> {
+        return computed(() => !isEquivalent(this.draftData.value, JSON.parse(this.originalState)));
     }
 
     /**
-     * 更新草稿数据。UI组件中的表单修改会调用此方法。
+     * 更新草稿数据。
      * @param updatedData - 包含部分或全部更新字段的对象。
      */
-    public updateData(updatedData: Partial<ConfigObject>): void
-    {
-        this._getStore()._updateDraftData(this.globalId, updatedData);
+    public updateData(updatedData: Partial<ConfigObject>): void {
+        // 使用 Object.assign 来合并更新，确保 Ref 的响应性
+        Object.assign(this.draftData.value, updatedData);
     }
 
     /**
@@ -109,21 +108,39 @@ export class EditSession
     }
 
     /**
-     * 保存当前会话的更改到后端。
+     * @description 提交更改，将当前草稿状态设为新的基准线。
+     *  这个方法应该在后端成功保存后被调用。
      */
-    public async save(): Promise<SaveResult>
-    {
-        return await this._getStore()._saveDraft(this.type, this.globalId);
+    public commitChanges(): void {
+        // 更新原始状态快照为当前草稿的状态
+        this.originalState = JSON.stringify(this.draftData.value);
+        // 如果这是一个新创建的会话，那么在第一次成功保存后，它就不再是“新的”了
+        if (this.isNew) {
+            this.isNew = false;
+        }
     }
 
     /**
-     * close() 重命名为 discard()，并且不再返回布尔值。
-     * 调用此方法会无条件地丢弃当前会话的草稿。
-     * 这应该只在用户明确想要“撤销所有更改”时使用。
+     * 保存当前会话的更改。
+     * 它将调用 store 提供的后端服务接口。
      */
-    public discard(): void
-    {
-        this._getStore()._discardDraft(this.globalId);
+    public async save(): Promise<SaveResult> {
+        // 调用 store 的统一保存方法，将自身和当前草稿数据传递过去
+        const result = await this._store.saveSessionData(this);
+
+        if (result.success) {
+            // 如果后端保存成功，就调用 commitChanges 来更新本会话的状态
+            this.commitChanges();
+        }
+
+        return result;
+    }
+
+    /**
+     * 放弃所有未保存的更改，将草稿数据恢复到原始状态。
+     */
+    public discard(): void {
+        this.draftData.value = JSON.parse(this.originalState);
     }
 }
 

@@ -5,7 +5,7 @@
       :highlight-color-calculator="props.rune.runeType"
       :is-selected="isSelected"
       is-draggable
-      @click="updateSelectedConfig"
+      @click="handleItemClick"
       @dblclick="handleDoubleClick"
   >
     <template #content="{ titleClass }">
@@ -78,13 +78,14 @@ import ConfigItemBase from '#/components/share/renderer/ConfigItemBase.vue';
 import type {AbstractRuneConfig, TuumConfig} from '#/types/generated/workflow-config-api-client';
 import {computed, inject, provide, ref, toRef} from "vue";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
-import {IsParentDisabledKey, SelectedConfigItemKey} from "#/utils/injectKeys.ts";
+import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 import {FindInPageIcon, InfoIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useRuneAnalysis} from "#/composables/useRuneAnalysis.ts";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "#/components/share/ConfigItemActionsMenu.vue";
 import {useThemeVars} from "naive-ui";
 import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
+import {useSelectedConfig} from "#/composables/useSelectedConfig.ts";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
@@ -119,18 +120,16 @@ const analysisIconColor = computed(() =>
   return showAnalysisPopover.value ? normalIconColor.value : dimIconColor.value;
 });
 
-const selectedConfigItem = inject(SelectedConfigItemKey);
+const {selectedConfig,updateSelectedConfig} = useSelectedConfig();
 
-function updateSelectedConfig()
+function handleItemClick()
 {
-  selectedConfigItem?.update({data: props.rune});
+  updateSelectedConfig({data: props.rune});
 }
-
-const selectedConfig = selectedConfigItem?.data;
 
 const isSelected = computed(() =>
 {
-  return selectedConfig?.value?.data.configId === props.rune.configId;
+  return selectedConfig.value?.data.configId === props.rune.configId;
 });
 
 const workbenchStore = useWorkbenchStore();

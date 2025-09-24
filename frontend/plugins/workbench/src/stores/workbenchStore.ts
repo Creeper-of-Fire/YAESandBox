@@ -1,15 +1,13 @@
 ﻿// --- START OF FILE frontend/src/app-workbench/stores/workbenchStore.ts ---
 
 import {defineStore} from 'pinia';
-import {computed, reactive, ref} from 'vue';
+import {computed, type Reactive, reactive, ref} from 'vue';
 import {v4 as uuidv4} from 'uuid';
-import {type ConfigObject, type ConfigType, EditSession,} from '#/services/EditSession.ts';
+import {type ConfigObject, type ConfigType, EditSession, getConfigObjectType,} from '#/services/EditSession.ts';
 import type {AbstractRuneConfig, RuneSchemasResponse, TuumConfig, WorkflowConfig,} from "#/types/generated/workflow-config-api-client";
 import {RuneConfigService, TuumConfigService, WorkflowConfigService,} from "#/types/generated/workflow-config-api-client";
-import {useAsyncState} from "@vueuse/core";
+import {useAsyncState, type UseAsyncStateReturn} from "@vueuse/core";
 import type {GlobalResourceItem} from "@yaesandbox-frontend/core-services/types";
-import {isEquivalent} from "@yaesandbox-frontend/core-services";
-import {cloneDeep} from "lodash-es";
 import {type DynamicAsset, loadAndRegisterPlugins} from "#/features/schema-viewer/plugin-loader";
 
 // 导出类型
@@ -60,6 +58,7 @@ export interface RuneMetadata
     rules?: WorkflowRuneRules;
     classLabel?: string;
 }
+
 
 /**
  * 辅助函数：将后端返回的 DTO 转换为我们前端的统一视图模型数组
@@ -130,29 +129,79 @@ interface Draft
 export const useWorkbenchStore = defineStore('workbench', () =>
 {
     // =================================================================
+    // 资源处理器注册表 (Resource Handler Registry)
+    // =================================================================
+
+    /**
+     * @description 定义一个通用的资源处理器接口，用于统一不同资源类型的操作。
+     */
+    interface IResourceHandler<T extends ConfigObject>
+    {
+        // 每种资源的异步状态管理
+        asyncState: Reactive<UseAsyncStateReturn<Record<string, GlobalResourceItem<T>>, any[], true>>;
+        // API 调用函数
+        api: {
+            // 保存或更新资源
+            save: (id: string, requestBody: T) => Promise<any>;
+            // 删除资源
+            delete: (id: string) => Promise<any>;
+        };
+        // API 调用时，ID参数的名称 (e.g., 'workflowId')
+        idParamName: string;
+    }
+
+    /**
+     * @description 资源处理器注册表。
+     * 这是本次优化的核心。它将每种资源类型的特定实现（API调用、状态管理）集中配置，
+     * 使得后续的操作函数可以变得通用，从而消除重复的 switch-case 逻辑。
+     * 如果未来要增加新的资源类型（例如 'plugin'），只需在此处添加一个新的条目即可。
+     */
+    const resourceHandlers: { [K in ConfigType]: IResourceHandler<any> } = {
+        workflow: {
+            asyncState: reactive(useAsyncState(
+                () => WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows().then(processDtoToViewModel),
+                {} as Record<string, WorkflowResourceItem>,
+                {immediate: false, shallow: false}
+            )),
+            api: {
+                save: (workflowId, requestBody) => WorkflowConfigService.putApiV1WorkflowsConfigsGlobalWorkflows({workflowId, requestBody}),
+                delete: (workflowId) => WorkflowConfigService.deleteApiV1WorkflowsConfigsGlobalWorkflows({workflowId}),
+            },
+            idParamName: 'workflowId',
+        },
+        tuum: {
+            asyncState: reactive(useAsyncState(
+                () => TuumConfigService.getApiV1WorkflowsConfigsGlobalTuums().then(processDtoToViewModel),
+                {} as Record<string, TuumResourceItem>,
+                {immediate: false, shallow: false}
+            )),
+            api: {
+                save: (tuumId, requestBody) => TuumConfigService.putApiV1WorkflowsConfigsGlobalTuums({tuumId, requestBody}),
+                delete: (tuumId) => TuumConfigService.deleteApiV1WorkflowsConfigsGlobalTuums({tuumId}),
+            },
+            idParamName: 'tuumId',
+        },
+        rune: {
+            asyncState: reactive(useAsyncState(
+                () => RuneConfigService.getApiV1WorkflowsConfigsGlobalRunes().then(processDtoToViewModel),
+                {} as Record<string, RuneResourceItem>,
+                {immediate: false, shallow: false}
+            )),
+            api: {
+                save: (runeId, requestBody) => RuneConfigService.putApiV1WorkflowsConfigsGlobalRunes({runeId, requestBody}),
+                delete: (runeId) => RuneConfigService.deleteApiV1WorkflowsConfigsGlobalRunes({runeId}),
+            },
+            idParamName: 'runeId',
+        },
+    };
+
+    // =================================================================
     // 内部 State (完全封装)
     // =================================================================
 
-    const globalWorkflowsAsync = reactive(useAsyncState(
-        () => WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows()
-            .then(processDtoToViewModel),
-        {} as Record<string, WorkflowResourceItem>,
-        {immediate: false, shallow: false}
-    ));
-
-    const globalTuumsAsync = reactive(useAsyncState(
-        () => TuumConfigService.getApiV1WorkflowsConfigsGlobalTuums()
-            .then(processDtoToViewModel),
-        {} as Record<string, TuumResourceItem>,
-        {immediate: false, shallow: false}
-    ));
-
-    const globalRunesAsync = reactive(useAsyncState(
-        () => RuneConfigService.getApiV1WorkflowsConfigsGlobalRunes()
-            .then(processDtoToViewModel),
-        {} as Record<string, RuneResourceItem>,
-        {immediate: false, shallow: false}
-    ));
+    const globalWorkflowsAsync = computed(() => resourceHandlers.workflow.asyncState);
+    const globalTuumsAsync = computed(() => resourceHandlers.tuum.asyncState);
+    const globalRunesAsync = computed(() => resourceHandlers.rune.asyncState);
 
     /**
      * 存储所有符文类型的 Schema
@@ -223,104 +272,48 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     });
 
     /**
-     * 存储所有活跃的草稿会话。
-     * Key 是临时的 draftId (UUID)。
+     * @description 存储所有活跃的 EditSession 实例。
+     * Key 是 session.globalId。
      */
-    const drafts = ref<Record<string, Draft>>({});
+    const activeSessions = ref<Record<string, EditSession>>({});
 
     // =================================================================
     // 内部 Getter & Action (加下划线表示，约定不对外暴露)
     // =================================================================
 
-    // 方法现在接收 globalId
-    const _getDraftData = (globalId: string): ConfigObject | null => drafts.value[globalId]?.data ?? null;
-
-    const _isDirty = (globalId: string): boolean =>
+    /**
+     * @description 计算是否存在任何一个变脏的会话。
+     */
+    const hasDirtyDrafts = computed(() =>
     {
-        const draft = drafts.value[globalId];
-        if (!draft) return false;
-        // 1. 将原始状态的字符串解析回对象
-        const originalData = JSON.parse(draft.originalState);
-
-        // 2. 使用 isEqual进行深度比较
-        const isDirty = !isEquivalent(draft.data, originalData);
-
-        return isDirty;
-    };
-
-    const _updateDraftData = (globalId: string, updatedData: Partial<ConfigObject>) =>
-    {
-        const draft = drafts.value[globalId];
-        if (draft)
-        {
-            draft.data = {...draft.data, ...updatedData};
-        }
-    };
+        return Object.values(activeSessions.value).some(session => session.getIsDirty().value);
+    });
 
     // TODO 没写好校验逻辑
     // _saveDraft 现在接收 globalId
-    const _saveDraft = async (type: ConfigType, globalId: string): Promise<SaveResult> =>
+    const saveSessionData = async (session: EditSession): Promise<SaveResult> =>
     {
-        const draft = drafts.value[globalId];
-        if (!draft)
-            return {success: false, name: "【未找到草稿】", id: globalId, type, error: '草稿未找到'};
+        const {type, globalId} = session;
+        const draftData = session.getData().value;
+        const name = draftData.name;
 
-        let savePromise: Promise<any>;
-        let refreshPromise: () => Promise<any>;
-
-        switch (type)
+        const handler = resourceHandlers[type];
+        if (!handler)
         {
-            case 'workflow':
-                savePromise = WorkflowConfigService.putApiV1WorkflowsConfigsGlobalWorkflows({
-                    workflowId: globalId,
-                    requestBody: draft.data as WorkflowConfig
-                });
-                refreshPromise = () => globalWorkflowsAsync.execute();
-                break;
-            case 'tuum':
-                savePromise = TuumConfigService.putApiV1WorkflowsConfigsGlobalTuums({
-                    tuumId: globalId,
-                    requestBody: draft.data as TuumConfig
-                });
-                refreshPromise = () => globalTuumsAsync.execute();
-                break;
-            case 'rune':
-                savePromise = RuneConfigService.putApiV1WorkflowsConfigsGlobalRunes({
-                    runeId: globalId,
-                    requestBody: draft.data as AbstractRuneConfig
-                });
-                refreshPromise = () => globalRunesAsync.execute();
-                break;
-            default:
-                console.error('保存失败：未知的草稿类型。');
-                return {success: false, name: draft.data.name, id: globalId, type, error: '未知的草稿类型'};
+            const error = `保存失败：未知的草稿类型 '${type}'。`;
+            console.error(error);
+            return {success: false, name, id: globalId, type, error};
         }
 
         try
         {
-            await savePromise;
-            draft.originalState = JSON.stringify(draft.data);
-            await refreshPromise();
-            return {success: true, name: draft.data.name, id: globalId, type};
+            await handler.api.save(globalId, draftData);
+            await handler.asyncState.execute();
+            return {success: true, id: globalId, name, type};
         } catch (error)
         {
             console.error(`保存 ${type} 草稿到后端时发生错误:`, error);
-            return {success: false, name: draft.data.name, id: globalId, type, error};
-        }
-    };
-
-    /**
-     * _discardDraft 将草稿数据恢复为原始状态，而不是删除草稿。
-     * 它的作用是撤销所有未保存的更改，使草稿回到初始状态。
-     * @param globalId - 要放弃更改的草稿的全局ID。
-     */
-    const _discardDraft = (globalId: string) =>
-    {
-        const draft = drafts.value[globalId];
-        if (draft)
-        {
-            // 将数据恢复为创建草稿时的原始状态
-            draft.data = JSON.parse(draft.originalState);
+            return {success: false, id: globalId, name, type, error};
         }
     };
 
@@ -336,48 +329,20 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      */
     async function deleteGlobalConfig(type: ConfigType, id: string): Promise<boolean>
     {
-        let deletePromise: Promise<any>;
-
-        switch (type)
+        const handler = resourceHandlers[type];
+        if (!handler)
         {
-            case 'workflow':
-                deletePromise = WorkflowConfigService.deleteApiV1WorkflowsConfigsGlobalWorkflows({workflowId: id});
-                break;
-            case 'tuum':
-                deletePromise = TuumConfigService.deleteApiV1WorkflowsConfigsGlobalTuums({tuumId: id});
-                break;
-            case 'rune':
-                deletePromise = RuneConfigService.deleteApiV1WorkflowsConfigsGlobalRunes({runeId: id});
-                break;
-            default:
-                console.error('删除失败：未知的配置类型。');
-                return false;
+            console.error(`删除失败：未知的配置类型 '${type}'。`);
+            return false;
         }
 
         try
         {
-            await deletePromise;
-
-            // 从对应的全局资源状态中移除
-            switch (type)
-            {
-                case 'workflow':
-                    if (globalWorkflowsAsync.state[id]) delete globalWorkflowsAsync.state[id];
-                    break;
-                case 'tuum':
-                    if (globalTuumsAsync.state[id]) delete globalTuumsAsync.state[id];
-                    break;
-                case 'rune':
-                    if (globalRunesAsync.state[id]) delete globalRunesAsync.state[id];
-                    break;
+            await handler.api.delete(id);
+            if (handler.asyncState.state[id]) {
+                delete handler.asyncState.state[id];
             }
-
-            // 如果这个项正在被编辑（存在于草稿中），也一并移除草稿
-            if (drafts.value[id])
-            {
-                delete drafts.value[id];
-            }
-
+            closeSessionByID(id)
             return true;
         } catch (error)
         {
@@ -393,96 +358,24 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      */
     async function createGlobalConfig(configToSave: ConfigObject)
     {
-        // 1. 深克隆并确保ID是全新的（即使是克隆来的）
+        // 深克隆并确保ID是全新的（即使是克隆来的）
         const newGlobalConfig = deepCloneWithNewIds(configToSave);
         const newGlobalId = uuidv4(); // 为这个新的全局资源创建一个全新的顶级ID
 
-        let type: ConfigType;
-        let savePromise: Promise<any>;
-        let refreshPromise: () => Promise<any>;
+        const type: ConfigType = getConfigObjectType(newGlobalConfig);
+        const handler = resourceHandlers[type];
 
-        // 2. 判断类型并准备API调用
-        if ('tuums' in newGlobalConfig)
-        {
-            type = 'workflow';
-            savePromise = WorkflowConfigService.putApiV1WorkflowsConfigsGlobalWorkflows({
-                workflowId: newGlobalId,
-                requestBody: newGlobalConfig,
-            });
-            refreshPromise = () => globalWorkflowsAsync.execute();
-        }
-        else if ('runes' in newGlobalConfig)
-        {
-            type = 'tuum';
-            savePromise = TuumConfigService.putApiV1WorkflowsConfigsGlobalTuums({
-                tuumId: newGlobalId,
-                requestBody: newGlobalConfig,
-            });
-            refreshPromise = () => globalTuumsAsync.execute();
-        }
-        else
-        {
-            type = 'rune';
-            savePromise = RuneConfigService.putApiV1WorkflowsConfigsGlobalRunes({
-                runeId: newGlobalId,
-                requestBody: newGlobalConfig,
-            });
-            refreshPromise = () => globalRunesAsync.execute();
-        }
-
-        // 3. 执行保存和刷新
+        // 执行保存和刷新
         try
         {
-            await savePromise;
-            await refreshPromise();
+            await handler.api.save(newGlobalId, newGlobalConfig);
+            await handler.asyncState.execute();
         } catch (error)
         {
             console.error(`将配置“${newGlobalConfig.name}”保存为全局 ${type} 时失败:`, error);
             throw error;
         }
     }
-
-
-    /**
-     * 计算属性，用于判断整个工作台是否存在任何未保存的更改。
-     * 这将用于在用户关闭浏览器标签页时发出警告。
-     */
-    const hasDirtyDrafts = computed(() =>
-    {
-        return Object.keys(drafts.value).some(globalId => _isDirty(globalId));
-    });
-
-    /**
-     * 保存所有未保存的更改，并返回详细结果。
-     * @returns 返回一个 Promise，该 Promise 解析为一个包含成功和失败列表的对象。
-     */
-    async function saveAllDirtyDrafts(): Promise<{ saved: SaveResult[], failed: SaveResult[] }>
-    {
-        const dirtyDrafts = Object.keys(drafts.value).filter(id => _isDirty(id));
-
-        if (dirtyDrafts.length === 0)
-        {
-            console.log("没有需要保存的更改。");
-            return {saved: [], failed: []};
-        }
-
-        console.log(`准备保存 ${dirtyDrafts.length} 个已修改的草稿...`);
-
-        const savePromises = dirtyDrafts.map(async id =>
-        {
-            const draft = drafts.value[id];
-            return await _saveDraft(draft.type, id);
-        });
-
-        const results = await Promise.all(savePromises);
-
-        const saved = results.filter(r => r.success);
-        const failed = results.filter(r => !r.success);
-
-        console.log("所有更改已成功保存。");
-        return {saved, failed};
-    }
-
 
     /**
      * 获取（申请）一个编辑会话。这是进行任何修改操作的唯一入口。
@@ -493,32 +386,20 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     async function acquireEditSession(type: ConfigType, globalId: string): Promise<EditSession | null>
     {
 
-        // 检查是否已存在同名草稿
-        if (drafts.value[globalId])
+        // 1. 如果已存在此会话，直接返回
+        if (activeSessions.value[globalId])
         {
-            console.warn(`“${globalId}” 正在被编辑。`);
-            // 如果需要，可以返回已存在的会话实例
-            return new EditSession(type, globalId);
+            return activeSessions.value[globalId];
         }
 
         // 2. 根据类型，选择对应的异步状态对象
-        let stateObject;
-        switch (type)
-        {
-            case 'workflow':
-                stateObject = globalWorkflowsAsync;
-                break;
-            case 'tuum':
-                stateObject = globalTuumsAsync;
-                break;
-            case 'rune':
-                stateObject = globalRunesAsync;
-                break;
-            default:
-                // 不太可能发生，但作为防御性编程
-                console.error(`未知的配置类型: ${type}`);
-                return null;
+        const handler = resourceHandlers[type];
+        if (!handler) {
+            console.error(`未知的配置类型: ${type}`);
+            return null;
         }
+
+        const stateObject = handler.asyncState;
 
         // 3. 确保相关数据已加载
         // 如果 isReady 是 false，说明数据还没加载过或正在加载中
@@ -555,31 +436,73 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             return null;
         }
 
-        // --- 如果一切正常，开始创建草稿 ---
-        const sourceConfig = sourceItem.data; // 现在我们拿到了干净的数据
+        // 创建新的 EditSession 实例
+        const session = new EditSession(type, sourceItem.data, false);
 
-        // 因为是请求编辑，所以不会对ConfigID进行修改。如果需要修改，请在外面先改好。
-        const draftData = cloneDeep(sourceConfig); // 深度克隆，避免修改原始 store 数据
+        // 将新会话存入 activeSessions
+        activeSessions.value[session.globalId] = session;
 
-        // 使用 globalId 作为键
-        drafts.value[globalId] = {
-            type: type,
-            data: draftData,
-            originalState: JSON.stringify(draftData), // 创建快照
-        };
-
-        // 返回只包含 type 和 globalId 的会话
-        return new EditSession(type, globalId);
+        return session;
     }
+
+    /**
+     * @description 为全新的、未保存的配置项创建一个编辑会话。
+     * @param type - 资源类型
+     * @param blankConfig - 一个空白的配置对象
+     */
+    function createNewDraftSession(type: ConfigType, blankConfig: ConfigObject): EditSession
+    {
+        // 1. 直接用空白配置创建一个新的 EditSession 实例
+        const session = new EditSession(type, blankConfig, true);
+
+        // 2. 将其添加到活跃会话中
+        activeSessions.value[session.globalId] = session;
+
+        return session;
+    }
+
+    /**
+     * @description 关闭一个会话，并从活跃列表中移除。
+     */
+    function closeSession(session: EditSession | null)
+    {
+        closeSessionByID(session?.globalId ?? null)
+    }
+
+    /**
+     * @description 关闭一个会话，并从活跃列表中移除。
+     */
+    function closeSessionByID(sessionID: string | null)
+    {
+        if (sessionID && activeSessions.value[sessionID])
+        {
+            delete activeSessions.value[sessionID];
+        }
+    }
+
+    async function saveAllDirtyDrafts(): Promise<{ saved: SaveResult[], failed: SaveResult[] }>
+    {
+        const dirtySessions = Object.values(activeSessions.value).filter(s => s.getIsDirty().value);
+
+        if (dirtySessions.length === 0)
+        {
+            return {saved: [], failed: []};
+        }
+
+        const savePromises = dirtySessions.map(session => session.save());
+        const results = await Promise.all(savePromises);
+
+        const saved = results.filter(r => r.success);
+        const failed = results.filter(r => !r.success);
+
+        return {saved, failed};
+    }
+
 
     // 我们需要把所有 EditSession 需要的“私有”方法也 return 出去，
     // 这样注入的 storeInstance 才拥有这些方法。
     const internalApi = {
-        _getDraftData,
-        _isDirty,
-        _updateDraftData,
-        _saveDraft,
-        _discardDraft,
+        saveSessionData
     };
 
     return {
@@ -591,11 +514,12 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         runeMetadata,
 
         hasDirtyDrafts,
-        isDirty: _isDirty,
 
         // --- 核心服务方法 ---
-        saveAllDirtyDrafts,
         acquireEditSession,
+        createNewDraftSession,
+        saveAllDirtyDrafts,
+        closeSession,
 
         // 其他
         createGlobalConfig,

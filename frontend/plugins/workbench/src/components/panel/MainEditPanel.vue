@@ -24,24 +24,22 @@
 
 <script lang="ts" setup>
 import RuneEditor from "#/components/rune/editor/RuneEditor.vue";
-import {computed, inject} from "vue";
-import {SelectedConfigItemKey} from "#/utils/injectKeys.ts";
+import {computed} from "vue";
 import TuumEditor from "#/components/tuum/editor/TuumEditor.vue";
 import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
 import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext.ts";
 import WorkflowEditor from "#/components/workflow/editor/WorkflowEditor.vue";
 import type {WorkflowEditorContext} from "#/components/workflow/editor/WorkflowEditorContext.ts";
+import {useSelectedConfig} from "#/composables/useSelectedConfig.ts";
 
-const selectedConfigItem = inject(SelectedConfigItemKey);
-const selectedConfig = computed(() =>
-    selectedConfigItem?.data.value || null
-);
+const {selectedConfig} = useSelectedConfig();
 const selectedType = computed(() =>
 {
   const data = selectedConfig.value?.data;
   if (!data) return null;
 
-  if ('workflowInputs' in data && 'tuums' in data) {
+  if ('workflowInputs' in data && 'tuums' in data)
+  {
     return 'workflow';
   }
 
