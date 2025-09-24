@@ -111,6 +111,7 @@ public class WorkflowProcessor(
             connections,
             initialData,
             ExecuteTuumNodeAsync,
+            this.CloneAndSanitizeForFanOut,
             cancellationToken);
 
         if (executionResult.TryGetError(out var execError, out var finalDataStore))
@@ -200,15 +201,5 @@ public class WorkflowProcessor(
         // 对于未知的引用类型，我们只能传递引用，并依赖开发者约定
         // 这里可以加一条警告日志，如果需要严格模式的话
         return originalValue;
-    }
-
-    /// <summary>
-    /// 辅助类：用于构建依赖图的节点
-    /// </summary>
-    private class ExecutionNode(TuumProcessor tuum)
-    {
-        public TuumProcessor Tuum { get; } = tuum;
-        public HashSet<ExecutionNode> Dependencies { get; } = []; // 它依赖谁
-        public HashSet<ExecutionNode> Dependents { get; } = []; // 谁依赖它
     }
 }

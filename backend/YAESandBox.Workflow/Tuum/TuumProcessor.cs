@@ -219,6 +219,7 @@ public class TuumProcessor(
             connections,
             initialData,
             ExecuteNodeAsync,
+            null,
             cancellationToken);
 
         if (executionResult.TryGetError(out var execError, out var finalDataStore))

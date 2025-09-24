@@ -8,7 +8,7 @@ public class WorkflowValidationService
     /// <summary>
     /// 一个特殊的TuumId，用于表示工作流的入口。
     /// </summary>
-    private const string WorkflowInputSourceId = "@workflow";
+    private const string WorkflowInputSourceId = "__workflow_input__";
 
     /// <summary>
     /// 对整个工作流配置进行静态校验。

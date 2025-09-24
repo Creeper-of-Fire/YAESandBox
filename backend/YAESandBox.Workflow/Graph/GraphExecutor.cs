@@ -133,6 +133,9 @@ public static class GraphExecutor
     /// <param name="connections">定义节点间数据流的连接列表。</param>
     /// <param name="initialData">图执行开始前，预置的初始数据。Key是端点，Value是数据。</param>
     /// <param name="executeNodeAsync">一个委托，定义了如何执行单个节点。它接收节点本身和其输入数据，并返回其输出数据。</param>
+    /// <param name="postProcessOutput">一个委托，用于在存储节点输出之前对其进行处理。
+    /// 主要用于克隆或净化数据，以防止在扇出场景中发生数据污染。
+    /// 如果为 null，则不进行任何处理。</param>
     /// <param name="cancellationToken">用于取消操作的CancellationToken。</param>
     /// <returns>执行完成后，整个图的数据存储区。</returns>
     public static async Task<Result<ConcurrentDictionary<GraphConnectionEndpoint<TNodeId>, object?>>> ExecuteAsync<TNode, TNodeId>(
@@ -140,6 +143,7 @@ public static class GraphExecutor
         IEnumerable<GraphConnection<TNodeId>> connections,
         IReadOnlyDictionary<GraphConnectionEndpoint<TNodeId>, object?> initialData,
         Func<TNode, IReadOnlyDictionary<string, object?>, CancellationToken, Task<Result<Dictionary<string, object?>>>> executeNodeAsync,
+        Func<object?, object?>? postProcessOutput = null,
         CancellationToken cancellationToken = default)
         where TNode : IGraphNode<TNodeId>
         where TNodeId : notnull
@@ -147,6 +151,7 @@ public static class GraphExecutor
         var dataStore = new ConcurrentDictionary<GraphConnectionEndpoint<TNodeId>, object?>(initialData);
         var executionNodes = nodes.ToDictionary(n => n.Id, n => new ExecutionNode<TNode, TNodeId>(n));
         var connectionList = connections.ToList();
+        var outputProcessor = postProcessOutput ?? (val => val);
 
         // 1. 构建依赖图
         foreach (var connection in connectionList)
@@ -184,7 +189,8 @@ public static class GraphExecutor
             }
 
             var tasks = currentBatch.Select(node =>
-                ExecuteSingleNodeInternalAsync(node, connectionList, dataStore, executeNodeAsync, cancellationToken)).ToList();
+                    ExecuteSingleNodeInternalAsync(node, connectionList, dataStore, executeNodeAsync, outputProcessor, cancellationToken))
+                .ToList();
 
             var results = await Task.WhenAll(tasks);
 
@@ -216,6 +222,7 @@ public static class GraphExecutor
         IEnumerable<GraphConnection<TNodeId>> connections,
         ConcurrentDictionary<GraphConnectionEndpoint<TNodeId>, object?> dataStore,
         Func<TNode, IReadOnlyDictionary<string, object?>, CancellationToken, Task<Result<Dictionary<string, object?>>>> executeNodeAsync,
+        Func<object?, object?> postProcessOutput,
         CancellationToken cancellationToken)
         where TNode : IGraphNode<TNodeId>
         where TNodeId : notnull
@@ -248,7 +255,7 @@ public static class GraphExecutor
         foreach (var (portName, value) in nodeOutputs)
         {
             var outputEndpoint = new GraphConnectionEndpoint<TNodeId>(node.Node.Id, portName);
-            dataStore[outputEndpoint] = value;
+            dataStore[outputEndpoint] = postProcessOutput(value);
         }
 
         return Result.Ok(node);

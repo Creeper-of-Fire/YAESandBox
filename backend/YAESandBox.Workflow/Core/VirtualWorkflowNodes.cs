@@ -10,7 +10,7 @@ internal class VirtualWorkflowInputNode(WorkflowConfig config, IReadOnlyDictiona
     : IGraphNode<string>
 {
     // ReSharper disable once InconsistentNaming
-    public const string VIRTUAL_INPUT_ID = "@workflow_input";
+    public const string VIRTUAL_INPUT_ID = "__workflow_input__";
         
     private IReadOnlyList<string> WorkflowInputNames { get; } = config.WorkflowInputs;
     private IReadOnlyDictionary<string, object?> WorkflowInitialInputs { get; } = workflowInitialInputs;

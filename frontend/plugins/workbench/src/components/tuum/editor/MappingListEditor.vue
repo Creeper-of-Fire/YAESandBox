@@ -43,15 +43,16 @@
             :render-label="renderAutocompleteOption"
             blur-after-select
             class="col-key"
-            clearable>
+            clearable
+            @select="handleInternalNameSelect(item)">
           <template #suffix>
             <VarSpecTag
-                v-if="findSelectedOption(item.internalName, keyOptionsWithMeta)"
-                :is-optional="getSpecTagProps(findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta).isOptional"
+                v-if="findSelectedOption(item.internalName, keyOptionsWithMeta) && findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta"
+                :is-optional="getSpecTagProps(findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta!).isOptional"
                 :size="'small'"
-                :spec-def="findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta.def"
-                :tag-type="getSpecTagProps(findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta).tagType"
-                :var-name="findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta.name"
+                :spec-def="findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta!.def"
+                :tag-type="getSpecTagProps(findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta!).tagType"
+                :var-name="findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta!.name"
             />
           </template>
         </n-auto-complete>
@@ -70,12 +71,12 @@
             clearable>
           <template #suffix>
             <VarSpecTag
-                v-if="findSelectedOption(item.endpointName, valueOptionsWithMeta)"
-                :is-optional="getSpecTagProps(findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta).isOptional"
+                v-if="findSelectedOption(item.endpointName, valueOptionsWithMeta) && findSelectedOption(item.internalName, keyOptionsWithMeta)!.meta"
+                :is-optional="getSpecTagProps(findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta!).isOptional"
                 :size="'small'"
-                :spec-def="findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta.def"
-                :tag-type="getSpecTagProps(findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta).tagType"
-                :var-name="findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta.name"
+                :spec-def="findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta!.def"
+                :tag-type="getSpecTagProps(findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta!).tagType"
+                :var-name="findSelectedOption(item.endpointName, valueOptionsWithMeta)!.meta!.name"
             />
           </template>
         </n-auto-complete>
@@ -133,6 +134,18 @@ const localItems = ref<MappingItem[]>([]);
 //     }
 // );
 
+/**
+ * 当内部变量输入框被选择时触发。
+ * @param item - 当前正在编辑的映射项
+ */
+const handleInternalNameSelect = (item: MappingItem) => {
+  // 检查外部端点名称是否为空或只包含空白字符
+  if (!item.endpointName || item.endpointName.trim() === '') {
+    // 如果是，则用内部变量的名称自动填充它
+    item.endpointName = item.internalName;
+  }
+};
+
 // --- 方法 ---
 const addMapping = () =>
 {
@@ -167,7 +180,7 @@ watch(localItems, (newVal) =>
 
 // --- 自动补全选项渲染 ---
 // 为选项附加元数据，以便渲染函数使用
-type SpecOptionWithMeta = { label: string, value: string, meta: SpecOption };
+type SpecOptionWithMeta = { label: string, value: string, meta?: SpecOption };
 const toComputedOptions: (options: SpecOption[]) => SpecOptionWithMeta[]
     = (options: SpecOption[]) =>
 {
@@ -218,7 +231,20 @@ const getFilteredAndSortedOptions = (inputValue: string, sourceOptions: SpecOpti
       ? sourceOptions.filter(opt => opt.label.toLowerCase().includes(lowerCaseInput))
       : [...sourceOptions]; // 如果输入为空，则显示所有选项
 
-  return sortOptions(filtered);
+  const finalSortedOptions = sortOptions(filtered);
+
+  // 如果输入框有内容，并且这个内容不在已过滤和排序的列表中
+  if (inputValue && !finalSortedOptions.some(opt => opt.value === inputValue))
+  {
+    // 在列表开头插入当前输入值作为一个新选项
+    finalSortedOptions.unshift({
+      label: inputValue,
+      value: inputValue,
+      meta: undefined // 自定义输入没有元数据
+    });
+  }
+
+  return finalSortedOptions;
 };
 
 const keyOptionsWithMeta = computed(() => toComputedOptions(props.keyOptions));
