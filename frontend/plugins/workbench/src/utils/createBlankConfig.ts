@@ -86,7 +86,7 @@ export async function createBlankConfig(
             {
                 // 如果 API 调用失败，将错误抛出，让上层代码的 try/catch 块可以捕获它
                 console.error(`从后端获取新的符文配置 '${options.runeType}' 失败:`, error);
-                throw new Error(`无法创建符文: 后端服务调用失败。`);
+                throw error;
             }
         default:
             throw new Error(`未知的配置类型: ${type}`);

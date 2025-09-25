@@ -1,5 +1,7 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Rune;
 
 namespace YAESandBox.Workflow.Utility;
@@ -34,70 +36,112 @@ internal class RuneConfigConverter : JsonConverter<AbstractRuneConfig>
         using var jsonDocument = JsonDocument.ParseValue(ref reader);
         var jsonObject = jsonDocument.RootElement;
 
-        string? runeTypeNameFromInput = null;
-        bool runeTypePropertyFound = false;
-        string actualPropertyNameFound = string.Empty; // 用于错误消息
 
-        // 遍历 JSON 对象的属性，不区分大小写地查找 RuneType 属性。
-        foreach (var property in jsonObject.EnumerateObject())
+        try
         {
-            // JsonProperty.NameEquals 方法支持不区分大小写的比较。
-            if (string.Equals(property.Name, ExpectedRuneTypePropertyName, StringComparison.OrdinalIgnoreCase))
-            {
-                if (property.Value.ValueKind == JsonValueKind.String)
-                {
-                    runeTypeNameFromInput = property.Value.GetString();
-                }
-                else
-                {
-                    // RuneType 属性的值不是字符串类型。
-                    throw new JsonException(
-                        $"反序列化 AbstractRuneConfig 失败：属性 '{property.Name}' 的值必须是字符串，但实际类型为 {property.Value.ValueKind}。");
-                }
+            return TryCreateRuneConfig(jsonObject, options);
+        }
+        catch (JsonException jsonEx)
+        {
+            // 捕获所有内部的JsonException，例如类型不匹配
+            string typeName = jsonObject.TryGetProperty(ExpectedRuneTypePropertyName, out var prop) &&
+                              prop.ValueKind == JsonValueKind.String
+                ? prop.GetString() ?? "未知"
+                : "未知";
+            return CreateFallback(jsonObject, $"JSON反序列化到目标类型时出错：{jsonEx.Message}", typeName);
+        }
+        catch (Exception ex)
+        {
+            // 捕获其他意外异常
+            string typeName =
+                jsonObject.TryGetProperty(ExpectedRuneTypePropertyName, out var prop) && prop.ValueKind == JsonValueKind.String
+                    ? prop.GetString() ?? "未知"
+                    : "未知";
+            return CreateFallback(jsonObject, $"发生意外错误：{ex.Message}", typeName);
+        }
+    }
 
-                runeTypePropertyFound = true;
-                actualPropertyNameFound = property.Name; // 记录实际找到的属性名
-                break; // 找到后即可退出循环
-            }
+    private static AbstractRuneConfig? TryCreateRuneConfig(JsonElement jsonObject, JsonSerializerOptions options)
+    {
+        // 不区分大小写地查找 RuneType 属性
+        var runeTypeProperty = jsonObject.EnumerateObject()
+            .FirstOrDefault(p => string.Equals(p.Name, ExpectedRuneTypePropertyName, StringComparison.OrdinalIgnoreCase));
+
+        if (runeTypeProperty.Name == null) // 即 FirstOrDefault 返回了默认值
+        {
+            return CreateFallback(jsonObject,
+                $"反序列化失败：JSON对象中缺少必需的 '{ExpectedRuneTypePropertyName}' 属性。");
         }
 
-        if (!runeTypePropertyFound)
+        string actualPropertyNameFound = runeTypeProperty.Name; // 用于错误消息
+        if (runeTypeProperty.Value.ValueKind != JsonValueKind.String)
         {
-            // 未能在JSON对象中找到期望的 RuneType 属性。
-            throw new JsonException(
-                $"反序列化 AbstractRuneConfig 失败：无法在JSON对象中找到属性 '{ExpectedRuneTypePropertyName}' (忽略大小写)，该属性用于确定具体的符文配置类型。");
+            return CreateFallback(jsonObject,
+                $"反序列化失败：属性 '{actualPropertyNameFound}' 的值必须是字符串，但实际类型为 {runeTypeProperty.Value.ValueKind}。", "类型错误");
         }
 
+        string? runeTypeNameFromInput = runeTypeProperty.Value.GetString();
         if (string.IsNullOrWhiteSpace(runeTypeNameFromInput))
         {
-            // RuneType 属性的值为空或空白。
-            throw new JsonException($"反序列化 AbstractRuneConfig 失败：属性 '{actualPropertyNameFound}' 的值不能为空或仅包含空白字符。");
+            return CreateFallback(jsonObject,
+                $"反序列化失败：属性 '{actualPropertyNameFound}' 的值不能为空。", "空类型名");
         }
 
-        // 使用辅助类查找对应的具体类型。
-        // RuneConfigTypeResolver 内部也应该使用不区分大小写的比较。
-        var concreteType = RuneConfigTypeResolver.FindRuneConfigType(runeTypeNameFromInput);
 
+        // 2. 查找对应的 .NET 类型
+        var concreteType = RuneConfigTypeResolver.FindRuneConfigType(runeTypeNameFromInput);
         if (concreteType == null)
         {
-            // 未找到与 RuneType 值对应的 .NET 实现类型。
-            throw new JsonException(
-                $"反序列化 AbstractRuneConfig 失败：未找到与符文类型 '{runeTypeNameFromInput}' (来自属性 '{actualPropertyNameFound}') 对应的 .NET 实现类型。请确保存在一个名为 '{runeTypeNameFromInput}' (忽略大小写) 且实现了 AbstractRuneConfig 接口的公共非抽象类。");
+            return CreateFallback(jsonObject,
+                $"反序列化失败：未找到与符文类型 '{runeTypeNameFromInput}' 对应的.NET实现。", runeTypeNameFromInput);
         }
 
-        // 使用 JsonElement 的 Deserialize 方法将 JSON 对象反序列化为找到的具体类型。
-        // 这会利用 JsonSerializer 的所有功能，包括处理其他属性和嵌套对象。
-        var runeConfig = jsonObject.Deserialize(concreteType, options) as AbstractRuneConfig;
-
-        if (runeConfig == null && jsonObject.EnumerateObject().Any()) // 如果反序列化结果为 null 但 JSON 对象非空，可能类型不匹配或构造函数问题
+        // 3. 尝试反序列化为具体类型
+        // 这里是可能抛出异常的地方，例如属性类型不匹配
+        if (jsonObject.Deserialize(concreteType, options) is not AbstractRuneConfig runeConfig)
         {
-            // 这种情况理论上不应发生，因为 concreteType 是从 RuneConfigTypeResolver 获取的，且 Deserialize 应该能处理。
-            // 但作为健壮性检查，如果发生，则指示更深层次的问题。
-            throw new JsonException(
-                $"反序列化 AbstractRuneConfig 失败：成功将 JSON 元素反序列化为类型 '{concreteType.FullName}' 后得到 null。请检查该类型的构造函数和属性设置。");
+            // 这种情况很少见，但为了健壮性也处理一下
+            return CreateFallback(jsonObject,
+                $"反序列化失败：成功将JSON元素反序列化为类型 '{concreteType.FullName}' 后得到null。", runeTypeNameFromInput);
         }
 
         return runeConfig;
+    }
+
+    /// <summary>
+    /// 当尝试将 JSON 反序列化为 AbstractRuneConfig 时发生错误，于是创建一个UnknownRuneConfig
+    /// </summary>
+    private static UnknownRuneConfig CreateFallback(JsonElement jsonObject, string errorMessage, string? originalRuneType = null)
+    {
+        // 尝试从原始JSON中读取通用属性，以便在UI中更好地识别
+        string? name = jsonObject.TryGetProperty(nameof(AbstractRuneConfig.Name), out var nameProp) ? nameProp.GetString() : "未知名称";
+        string? configId = jsonObject.TryGetProperty(nameof(AbstractRuneConfig.ConfigId), out var idProp)
+            ? idProp.GetString()
+            : Guid.NewGuid().ToString();
+        
+        // 1. 先用 Create 创建一个临时的 JsonObject 包装器
+        var tempRawJsonNode = JsonObject.Create(jsonObject);
+
+        // 2. 如果创建成功，就使用 CloneJsonNode 方法来创建深拷贝
+        JsonObject finalRawJsonData;
+        if (tempRawJsonNode != null && tempRawJsonNode.CloneJsonNode(out var clonedNode) && clonedNode is JsonObject clonedObject)
+        {
+            finalRawJsonData = clonedObject;
+        }
+        else
+        {
+            // 如果克隆失败，则回退到一个空的 JsonObject
+            finalRawJsonData = new JsonObject();
+        }
+
+        return new UnknownRuneConfig
+        {
+            Name = name ?? "读取名称失败",
+            ConfigId = configId ?? "读取ID失败",
+            OriginalRuneType = originalRuneType ?? "未知",
+            ErrorMessage = errorMessage,
+            RawJsonData = finalRawJsonData,
+        };
     }
 
     /// <inheritdoc />

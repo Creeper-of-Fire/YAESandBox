@@ -15,7 +15,8 @@ import DynamicStringList from "#/features/schema-viewer/field-widget/DynamicStri
 // 主应用内建的、通过键名引用的自定义组件
 const MAIN_APP_WIDGETS: Record<string, Component> = {
     'AiConfigEditorWidget': markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/AiConfigEditorWidget.vue'))),
-    'SillyTavernPresetEditor': markRaw(defineAsyncComponent(() => import('#/features/sillytavern-widget/PresetEditor.vue')))
+    'SillyTavernPresetEditor': markRaw(defineAsyncComponent(() => import('#/features/sillytavern-widget/PresetEditor.vue'))),
+    'UnknownRuneEditor': markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/rune-widget/UnknownRuneEditor.vue'))),
     // ... 其他内建组件
 };
 
@@ -136,10 +137,12 @@ function processNode(
         return [vm];
     }
 
-    const customRendererKey = node['x-custom-renderer-property'] as string;
-    if (customRendererKey && MAIN_APP_WIDGETS[customRendererKey])
+    // 处理内建的类级别自定义渲染器
+    const customClassRendererKey = node['x-custom-renderer-class'] as string;
+    if (customClassRendererKey && MAIN_APP_WIDGETS[customClassRendererKey])
     {
-        return [createFieldViewModel(node, path, requiredFields, customRendererKey)];
+        // 如果找到了对应的内建组件，则使用它来渲染整个对象
+        return [createFieldViewModel(node, path, requiredFields, customClassRendererKey)];
     }
 
     // 根据类型处理
@@ -241,6 +244,12 @@ function determineComponentAndProps(node: FieldProps): { component: string; prop
 {
     const props: Record<string, any> = {placeholder: node.description || ''};
     let component = 'Input'; // 默认组件
+
+    const customWidgetKey = node['x-custom-renderer-property'] as string;
+    if (customWidgetKey && MAIN_APP_WIDGETS[customWidgetKey])
+    {
+        return { component: customWidgetKey, props };
+    }
 
     // 插件或WebComponent
     const vuePlugin = node['x-vue-component-property'] as string;

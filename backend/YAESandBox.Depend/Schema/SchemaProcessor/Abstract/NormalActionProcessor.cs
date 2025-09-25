@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 
-namespace YAESandBox.Depend.Schema.SchemaProcessor;
+namespace YAESandBox.Depend.Schema.SchemaProcessor.Abstract;
 
 /// <summary>
 /// 一个抽象基类，用于简化处理【仅应用于属性】的 Attribute。
