@@ -46,6 +46,6 @@ public class TextParserPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvide
     public IReadOnlyList<Type> RuneConfigTypes =>
     [
         typeof(TagParserRuneConfig),
-        typeof(RegexGeneratorRuneConfig)
+        typeof(RegexParserRuneConfig)
     ];
 }

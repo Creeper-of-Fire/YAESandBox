@@ -1,20 +1,32 @@
 ﻿<template>
   <div class="editor-container">
     <NForm :model="formValue" :style="{ maxWidth: '800px' }" label-placement="left" label-width="auto">
-      <!-- 组合通用配置组件 -->
+      <!-- 组合通用配置组件，通过 v-model 绑定到嵌套对象 -->
       <TextOperationConfigEditor v-model="formValue.textOperation"/>
 
-      <NDivider>标签解析专属配置</NDivider>
+      <NDivider>正则专属配置</NDivider>
 
-      <!-- 仅保留标签解析专属的表单项 -->
-      <NFormItem label="CSS 选择器" path="selector">
-        <NInput v-model:value="formValue.selector" :autosize="{ minRows: 2 }" type="textarea"/>
+      <!-- 仅保留正则专属的表单项 -->
+      <NFormItem label="正则表达式" path="pattern">
+        <NInput v-model:value="formValue.pattern" :autosize="{ minRows: 2 }"
+                placeholder="例如：姓名：(?<name>\S+)\s+年龄：(?<age>\d+)" type="textarea"/>
       </NFormItem>
-      <NFormItem label="内容目标" path="matchContentMode">
-        <NSelect v-model:value="formValue.matchContentMode" :options="matchContentModeOptions"/>
+      <NFormItem label="高级选项">
+        <NGrid :cols="3" :x-gap="12">
+          <NFormItemGi>
+            <NCheckbox v-model:checked="formValue.ignoreCase">忽略大小写 (i)</NCheckbox>
+          </NFormItemGi>
+          <NFormItemGi>
+            <NCheckbox v-model:checked="formValue.multiline">多行模式 (m)</NCheckbox>
+          </NFormItemGi>
+          <NFormItemGi>
+            <NCheckbox v-model:checked="formValue.dotall">点号匹配所有 (s)</NCheckbox>
+          </NFormItemGi>
+        </NGrid>
       </NFormItem>
-      <NFormItem v-if="formValue.matchContentMode === 'Attribute'" label="属性名" path="attributeName">
-        <NInput v-model:value="formValue.attributeName" placeholder="例如：src, href, data-id"/>
+      <NFormItem label="最大处理次数" path="maxMatches">
+        <NInputNumber v-model:value="formValue.maxMatches" :min="0"/>
+        <template #feedback>设置为 0 表示不限制次数。</template>
       </NFormItem>
     </NForm>
 
@@ -33,7 +45,7 @@
           </NAlert>
           <div v-if="formattedResult" :style="{ marginTop: '16px' }">
             <p><strong>最终输出:</strong></p>
-            <NCode :code="formattedResult" language="html" word-wrap/>
+            <NCode :code="formattedResult" language="text" word-wrap/>
             <p v-if="testDebugInfo" :style="{ marginTop: '10px' }"><strong>调试信息:</strong></p>
             <NCode v-if="testDebugInfo" :code="formattedDebugInfo" language="json" word-wrap/>
           </div>
@@ -45,62 +57,53 @@
 
 <script lang="ts" setup>
 import {ref} from 'vue';
-import type {SelectOption} from 'naive-ui';
-import {NAlert, NButton, NCode, NCollapseTransition, NDivider, NForm, NFormItem, NInput, NSelect} from 'naive-ui';
+import {
+  NAlert,
+  NButton,
+  NCheckbox,
+  NCode,
+  NCollapseTransition,
+  NDivider,
+  NForm,
+  NFormItem,
+  NFormItemGi,
+  NGrid,
+  NInput,
+  NInputNumber
+} from 'naive-ui';
 import {useVModel} from "@vueuse/core";
 import TextOperationConfigEditor from './TextOperationConfigEditor.vue';
 import {useRuneTester} from '../composables/useRuneTester';
 
-const props = defineProps<{
-  modelValue: any; // 接收配置对象
-}>();
+const props = defineProps<{ modelValue: any; }>();
 const emit = defineEmits(['update:modelValue']);
 
-// 定义默认值，以便在 props.modelValue 未提供时使用
 const createDefaultValue = () => ({
+  // 必须匹配后端的嵌套结构
   textOperation: {
     inputDataType: 'String',
     inputVariableName: 'inputText',
     outputVariableName: 'outputText',
     operationMode: 'Extract',
-    replacementTemplate: '<span>已替换: ${match}</span>',
-    returnFormat: 'First',
+    replacementTemplate: "姓名: ${name}",
+    returnFormat: 'AsList',
   },
-  selector: 'div.product a',
-  matchContentMode: 'Attribute',
-  attributeName: 'href',
+  pattern: '姓名：(?<name>\\S+)',
+  ignoreCase: true,
+  multiline: false,
+  dotall: true,
+  maxMatches: 0,
 });
 
-// 使用 useVModel 创建一个可写的、与父组件同步的 ref
-// 当你修改 formValue.value.xxx 时，它会自动 emit('update:modelValue', ...)
-// 当 props.modelValue 变化时，formValue.value 会自动更新
-// passive: true 和 defaultValue 确保了即使 props.modelValue 是 undefined，组件也能正常工作
 const formValue = useVModel(props, 'modelValue', emit, {
   passive: true, // 仅在 modelValue 存在时才进行双向绑定
   defaultValue: createDefaultValue(), // 如果 modelValue 是 undefined，则使用这个默认值
   deep: true, // 对对象进行深度监听和响应
 });
 
-// 将原有的 extractionModeOptions 重命名为 matchContentModeOptions，因为它现在对两种模式都生效
-const matchContentModeOptions: SelectOption[] = [
-  {label: '纯文本 (TextContent)', value: 'TextContent'},
-  {label: '内部HTML (InnerHtml)', value: 'InnerHtml'},
-  {label: '完整HTML (OuterHtml)', value: 'OuterHtml'},
-  {label: '属性值 (Attribute)', value: 'Attribute'},
-];
-
-// 提供一个更适合测试替换功能的示例文本
 const sampleInput = ref(
-    `<div name="product">
-  <h3>产品A</h3>
-  <p class="price">价格: ￥99</p>
-  <a href="/product/a" class="link">查看详情</a>
-</div>
-<div class="product">
-  <h3>产品B</h3>
-  <p class="price">价格: ￥199</p>
-  <a href="/product/b" class="link">查看详情</a>
-</div>`);
+    `第一个人，姓名：爱丽丝。\n第二个人，姓名：Bob。\n第三个人，姓名：查理。`
+);
 
 const {isLoading, testError, testDebugInfo, formattedResult, formattedDebugInfo, runTest} = useRuneTester(formValue, sampleInput);
 </script>
@@ -121,6 +124,10 @@ const {isLoading, testError, testDebugInfo, formattedResult, formattedDebugInfo,
   padding: 16px;
   background-color: #f7f7f7;
   border-radius: 4px;
-  overflow-x: auto;
+}
+
+pre {
+  white-space: pre-wrap;
+  word-wrap: break-word;
 }
 </style>

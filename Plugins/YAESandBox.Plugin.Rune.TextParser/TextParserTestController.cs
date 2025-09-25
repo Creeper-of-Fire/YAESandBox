@@ -82,13 +82,13 @@ public class TextParserTestController : ControllerBase
         {
             case TagParserRuneConfig tagConfig:
                 processor = new TagParserRuneProcessor(tagConfig);
-                inputVariableName = tagConfig.InputVariableName;
-                outputVariableName = tagConfig.OutputVariableName;
+                inputVariableName = tagConfig.TextOperation.InputVariableName;
+                outputVariableName = tagConfig.TextOperation.OutputVariableName;
                 break;
-            case RegexGeneratorRuneConfig regexConfig:
-                processor = new RegexGeneratorRuneProcessor(regexConfig);
-                inputVariableName = regexConfig.InputVariableName;
-                outputVariableName = regexConfig.OutputVariableName;
+            case RegexParserRuneConfig regexConfig:
+                processor = new RegexParserRuneProcessor(regexConfig);
+                inputVariableName = regexConfig.TextOperation.InputVariableName;
+                outputVariableName = regexConfig.TextOperation.OutputVariableName;
                 break;
             default:
                 return this.BadRequest(new TestResponseDto { IsSuccess = false, ErrorMessage = "不支持的符文配置类型。" });
