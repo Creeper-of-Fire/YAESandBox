@@ -1,6 +1,6 @@
 ﻿<!-- src/app-workbench/components/.../GlobalResourcePanel.vue -->
 <template>
-  <div ref="panelRoot">
+  <div ref="panelRoot" class="global-resource-panel-wrapper">
     <HeaderAndBodyLayout>
       <template #header>
         <n-flex justify="space-between">
@@ -11,18 +11,12 @@
               :action="createNewAction"
               @confirm="handleCreateNew"
           >
-            <n-popover trigger="hover">
-              <template #trigger>
-                <n-button
-                    tag="h4"
-                    text
-                    type="primary"
-                >
-                  新建{{ currentTabLabel }}
-                </n-button>
+            <n-button secondary size="small" type="primary">
+              <template #icon>
+                <n-icon :component="AddIcon"/>
               </template>
-              新建全局{{ currentTabLabel }}
-            </n-popover>
+              新建
+            </n-button>
           </InlineInputPopover>
         </n-flex>
 
@@ -49,13 +43,11 @@
             :animated="false"
             class="global-resource-tabs"
             justify-content="space-evenly"
+            size="small"
             type="segment"
         >
-          <!-- 工作流标签页 -->
           <n-tab name="workflow" tab="工作流"/>
-          <!-- 枢机标签页 -->
           <n-tab name="tuum" tab="枢机"/>
-          <!-- 符文标签页 -->
           <n-tab name="rune" tab="符文"/>
         </n-tabs>
 
@@ -368,7 +360,7 @@ async function handleCreateNew(payload: { name?: string, type?: string })
                 : await createBlankConfig('tuum', name);
 
     const newSession = workbenchStore.createNewDraftSession(resourceType, blankConfig);
-    emit('start-editing', {type: newSession.type, id: newSession.globalId });
+    emit('start-editing', {type: newSession.type, id: newSession.globalId});
 
     message.success(`成功创建全局${currentTabLabel.value}“${name}”！`);
   } catch (e)
@@ -565,6 +557,12 @@ function onDragEnd()
 </script>
 
 <style scoped>
+.global-resource-panel-wrapper {
+  height: 100%;
+  display: flex; /* 让子元素 HeaderAndBodyLayout 的 flex:1 生效 */
+  flex-direction: column;
+}
+
 .panel-state-wrapper {
   display: flex;
   align-items: center;

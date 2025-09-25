@@ -14,7 +14,7 @@
     </template>
 
     <!-- Popover 内部的内容 -->
-    <n-flex vertical>
+    <n-flex vertical v-if="action">
       <n-h5 style="margin: 0 0 8px 0;">{{ action.popoverTitle }}</n-h5>
 
       <!-- 不同的内容类型渲染 -->
