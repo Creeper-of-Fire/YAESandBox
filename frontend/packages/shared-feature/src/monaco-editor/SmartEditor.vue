@@ -40,26 +40,28 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, inject, ref} from 'vue';
+import {computed, inject, onBeforeUnmount, ref, watch} from 'vue';
 import {nanoid} from 'nanoid';
 import {NFlex, NInput, NSwitch, useThemeVars} from 'naive-ui';
 import {type MonacoEditor, VueMonacoEditor} from '@guolao/vue-monaco-editor';
 import {useScopedStorage} from '@yaesandbox-frontend/core-services/composables';
 import {IsDarkThemeKey} from '@yaesandbox-frontend/core-services/injectKeys';
 import {useVModel} from '@vueuse/core';
+import type {MonacoLanguageEnhancer} from "./types.ts";
 
-import {parse} from '@babel/parser';
-//@ts-ignore
-import traverse from '@babel/traverse';
-//@ts-ignore
-import MonacoJSXHighlighter, {makeBabelParse} from 'monaco-jsx-highlighter';
+interface ExtraLib
+{
+  content: string;
+  filePath: string;
+}
 
 const props = defineProps<{
   modelValue: string;
   storageKey: string; // 用于持久化切换状态的唯一键
   language?: 'javascript' | 'typescript' | 'json' | string;
-  isJsx?: boolean;
+  extraLibs?: ExtraLib[];
   height?: string | number;
+  enhancer?: MonacoLanguageEnhancer;
 }>();
 
 const emit = defineEmits<{
@@ -101,56 +103,33 @@ const editorHeight = computed(() =>
   return props.height || '400px';
 });
 
-// --- JSX 高亮逻辑 ---
-// 定义一个类型，用于存放清理函数
-// @guolao/vue-monaco-editor 的 @mount 事件会提供 editor 和 monaco 实例
+const editorInstance = ref<MonacoEditor | null>(null);
+const monacoInstance = ref<MonacoEditor | null>(null);
+let activeEnhancer: MonacoLanguageEnhancer | null = null;
+
+// --- 状态管理 ---
 const handleEditorMount = (editor: any, monaco: MonacoEditor) =>
 {
-  if (!props.isJsx) return;
-  // 只在语言是 JS/TS 时才启用 JSX 高亮
-  if (props.language === 'javascript' || props.language === 'typescript')
+  editorInstance.value = editor; // 保存编辑器实例
+  monacoInstance.value = monaco;
+
+  // 当编辑器挂载时，如果传入了 enhancer，就使用它
+  if (props.enhancer)
   {
-    console.log(`启用 ${props.language} 的 JSX 高亮...`);
-
-    // 1. 创建 Babel 解析函数
-    const babelParse = makeBabelParse(parse, props.language === 'typescript');
-    console.log('makeBabelParse:', makeBabelParse);
-    console.log('babelParse:', babelParse);
-
-    // 2. 实例化高亮器
-    const monacoJSXHighlighter = new MonacoJSXHighlighter(
-        monaco,
-        babelParse,
-        traverse,
-        editor
-    );
-
-    // 1. 保存原始的 extractAllDecorators 方法
-    const originalExtractAllDecorators = monacoJSXHighlighter.extractAllDecorators.bind(monacoJSXHighlighter);
-
-    // 2. 用我们自己的安全版本覆盖它
-    monacoJSXHighlighter.extractAllDecorators = (jsxManager: any) =>
-    {
-      // **这就是我们的安全检查！**
-      // 如果编辑器实例或其模型已经不存在了，就直接返回一个空数组，
-      // 什么也不做，从而避免崩溃。
-      if (!monacoJSXHighlighter.monacoEditor?.getModel())
-      {
-        // console.warn('MonacoJSXHighlighter: Editor disposed, skipping decoration.');
-        return [];
-      }
-
-      // 如果编辑器还存在，就调用原始的方法
-      return originalExtractAllDecorators(jsxManager);
-    };
-
-    console.log('MonacoJSXHighlighter has been monkey-patched for safety.');
-
-    // 3. 激活高亮 (在内容变化时) 和 JSX 注释命令
-    monacoJSXHighlighter.highlightOnDidChangeModelContent(100); // 100ms延迟
-    monacoJSXHighlighter.addJSXCommentCommand();
+    activeEnhancer = props.enhancer;
+    activeEnhancer.setup(editor, monaco, props.extraLibs || []);
   }
 };
+
+onBeforeUnmount(() =>
+{
+  // 组件卸载时，清理当前的 enhancer
+  if (activeEnhancer)
+  {
+    activeEnhancer.dispose();
+    activeEnhancer = null;
+  }
+});
 </script>
 
 <style scoped>

@@ -33,6 +33,14 @@
     </n-card>
     <!-- 中间：代码编辑区 -->
     <n-card class="editor-pane" title="JSX Component Editor">
+      <n-flex align="center" style="margin-bottom: 16px;">
+        <label>语言：</label>
+        <n-radio-group v-model:value="monacoLanguage" name="language-mode">
+          <n-radio-button value="typescript">TypeScript (TSX)</n-radio-button>
+          <n-radio-button value="javascript">JavaScript (JSX)</n-radio-button>
+        </n-radio-group>
+      </n-flex>
+
       <n-input
           v-model:value="componentId"
           placeholder="Component Tag Name (e.g., my-button)"
@@ -40,10 +48,13 @@
       />
       <SmartEditor
           v-model:model-value="sourceCode"
-          storage-key="jsx-editor-mode"
-          language="javascript"
+          :enhancer="jsxEnhancer"
+          :key="monacoLanguage"
+          :extra-libs="editorExtraLibs"
           :is-jsx="true"
+          :language="monacoLanguage"
           height="calc(100vh - 400px)"
+          storage-key="jsx-editor-mode"
       />
       <template #footer>
         <n-button :loading="isCompiling" type="primary" @click="handleCompile">
@@ -88,16 +99,25 @@
 import {computed, ref} from 'vue';
 import {type DynamicComponentState, useComponentStore} from '../stores/useComponentStore';
 import {NAlert, NButton, NCard, NInput, useDialog} from 'naive-ui';
-// 导入我们强大的 ContentRenderer
 import {ContentRenderer} from '@yaesandbox-frontend/shared-ui/content-renderer';
 import {exampleCode, exampleContent, exampleName} from "#/views/example.ts";
 import {AddIcon, TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
-import {useCodeSafetyCheck} from "@yaesandbox-frontend/core-services/composables";
-import {SmartEditor} from "@yaesandbox-frontend/shared-feature"
+import {useCodeSafetyCheck, useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
+import {JsxTsLanguageEnhancer, SmartEditor} from "@yaesandbox-frontend/shared-feature"
+import {injectionDtsContent, injectionDtsPath} from '../monaco-injection-types';
 
+const editorExtraLibs = [
+  {
+    content: injectionDtsContent,
+    filePath: injectionDtsPath
+  }
+];
 const dialog = useDialog();
 const store = useComponentStore();
 const isStoreReady = computed(() => store.isReady);
+
+const monacoLanguage = useScopedStorage<'typescript' | 'javascript'>('jsx-monaco-editor-language','typescript');
+const jsxEnhancer = computed(() => new JsxTsLanguageEnhancer(monacoLanguage.value));
 
 // 编辑器状态
 const testContent = ref('');
