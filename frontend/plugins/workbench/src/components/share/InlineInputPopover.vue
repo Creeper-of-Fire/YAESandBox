@@ -89,23 +89,12 @@ const emit = defineEmits<{
 // --- 内部状态 ---
 const isPopoverVisible = ref(false);
 const inputRef = ref<InputInst | null>(null);
-const inputValueString = ref<string>('');
 const selectValue = ref<string | null>(null);
+const inputValue = ref<string>('');
 
 // --- 计算属性 ---
 const contentType = computed(() => props.action.popoverContentType);
 const selectOptions = computed(() => props.action.popoverSelectOptions || []);
-const inputValue = computed<string>({
-      get()
-      {
-        return inputValueString.value || props.action.popoverInitialValue || '';
-      },
-      set(newValue)
-      {
-        inputValueString.value = newValue;
-      },
-    }
-);
 
 const showNameInput = computed(() =>
 {
