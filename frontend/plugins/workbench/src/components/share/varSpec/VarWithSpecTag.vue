@@ -1,36 +1,19 @@
 ﻿<!-- VarWithSpecTag -->
 <template>
-  <n-popover :placement="placement" :style="{ maxWidth: '300px' }" trigger="hover">
-    <!-- 触发器: 显示给用户看的标签部分 -->
-    <template #trigger>
-      <n-flex :size="4" :wrap="false" align="center">
-        <!-- ✨ type 直接由 props 决定 -->
-        <n-tag :size="size" :type="tagType">
-          {{ varName }}
-        </n-tag>
-      </n-flex>
-    </template>
-
-    <!-- 浮动卡片: 显示详细信息 -->
-    <n-flex vertical>
-      <n-text strong>变量名：{{ varName }}</n-text>
-      <n-text>类型: {{ specDef.typeName }}</n-text>
-
-      <!-- 只有当 isOptional 字段存在时，才渲染这一行 -->
-      <n-text v-if="isOptional !== undefined">
-        可选性:
-        <n-tag :size="size" :type="tagType">{{ isOptional ? '可选' : '必需' }}</n-tag>
-      </n-text>
-
-      <n-text depth="3">描述: {{ specDef.description || '无' }}</n-text>
+  <VarSpecPopover v-bind="props">
+    <n-flex :size="4" :wrap="false" align="center">
+      <n-tag :size="size" :type="tagType">
+        {{ varName }}
+      </n-tag>
     </n-flex>
-  </n-popover>
+  </VarSpecPopover>
 </template>
 
 <script lang="ts" setup>
-import {NFlex, NPopover, NTag, NText} from 'naive-ui';
+import {NFlex, NTag} from 'naive-ui';
 import type {VarSpecDef} from "#/types/generated/workflow-config-api-client";
 import type {Placement} from "vueuc/lib/binder/src/interface";
+import VarSpecPopover from "#/components/share/varSpec/VarSpecPopover.vue";
 
 type TagType = 'default' | 'success' | 'warning' | 'error' | 'info';
 
@@ -45,7 +28,7 @@ const props = withDefaults(defineProps<{
    */
   tagType?: TagType;
 }>(), {
-  name: null,
+  varName: null,
   isOptional: undefined,
   placement: 'right',
   size: 'small',
