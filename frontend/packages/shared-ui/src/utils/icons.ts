@@ -39,4 +39,6 @@ export {default as LoginIcon}from'@vicons/ionicons5/es/LogInOutline';
 export {default as HubIcon}from'@vicons/material/es/HubOutlined';
 export {default as GraphIcon}from'@vicons/material/es/AutoGraphOutlined';
 export {default as SparklesIcon}from'@vicons/ionicons5/es/SparklesOutline';
+export {default as ErrorIcon}from'@vicons/material/es/ErrorOutlined';
+export {default as WarningIcon}from'@vicons/material/es/WarningOutlined';
 // export {default as }from'@vicons/ionicons5/es/';

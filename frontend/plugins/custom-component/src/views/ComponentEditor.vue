@@ -38,12 +38,12 @@
           placeholder="Component Tag Name (e.g., my-button)"
           style="margin-bottom: 16px;"
       />
-      <n-input
-          v-model:value="sourceCode"
-          :rows="20"
-          placeholder="Write your JSX code here..."
-          style="font-family: monospace;"
-          type="textarea"
+      <SmartEditor
+          v-model:model-value="sourceCode"
+          storage-key="jsx-editor-mode"
+          language="javascript"
+          :is-jsx="true"
+          height="calc(100vh - 400px)"
       />
       <template #footer>
         <n-button :loading="isCompiling" type="primary" @click="handleCompile">
@@ -93,6 +93,7 @@ import {ContentRenderer} from '@yaesandbox-frontend/shared-ui/content-renderer';
 import {exampleCode, exampleContent, exampleName} from "#/views/example.ts";
 import {AddIcon, TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
 import {useCodeSafetyCheck} from "@yaesandbox-frontend/core-services/composables";
+import {SmartEditor} from "@yaesandbox-frontend/shared-feature"
 
 const dialog = useDialog();
 const store = useComponentStore();

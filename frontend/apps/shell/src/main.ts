@@ -30,16 +30,27 @@ import type {ApiRequestOptions} from "@yaesandbox-frontend/core-services/types";
 import {getBaseUrl} from '@yaesandbox-frontend/core-services';
 import {loader} from '@guolao/vue-monaco-editor'
 
-const MONACO_EDITOR_CDN = 'https://cdn.bootcdn.net/ajax/libs/monaco-editor/0.52.2/min/vs'
+
+
+const MONACO_EDITOR_PATH = '/monaco-editor/min/vs';
+
+// @ts-ignore
+self.MonacoEnvironment = {
+    getWorkerUrl: function (moduleId: string, label: string) {
+        return `${MONACO_EDITOR_PATH}/base/worker/workerMain.js`;
+    }
+};
 
 loader.config({
     paths: {
-        vs: MONACO_EDITOR_CDN
+        vs: MONACO_EDITOR_PATH
     },
     'vs/nls': {
         availableLanguages: {'*': 'zh-cn'}
     }
 })
+
+await loader.init()
 const app = createApp(App);
 const pinia = createPinia();
 app.use(pinia)

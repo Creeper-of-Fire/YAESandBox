@@ -55,7 +55,11 @@ export function createMonorepoViteConfig(options: MonorepoViteConfigOptions): Us
                 ],
             }),
             ...plugins,
-        ]
+        ],
+        define: {
+            // 这是一个常见的 Vite 配置，用于解决依赖库中对 process.env 的访问问题
+            'process.env': {}
+        },
     };
 
     // 2. 根据类型定义特定配置

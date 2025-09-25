@@ -1,0 +1,39 @@
+{
+  "name": "@yaesandbox-frontend/shared-feature",
+  "private": true,
+  "license": "MIT",
+  "version": "1.0.0",
+  "description": "YAESandBox的共享特性，比较重，依赖其他package",
+  "main": "src/index.ts",
+  "scripts": {
+    "checkTsc": "vue-tsc -b --declaration"
+  },
+  "exports": {
+    ".": "./src/index.ts",
+    "./icons": "./src/utils/icons.ts",
+    "./content-renderer": "./src/shared/content-renderer/index.ts"
+  },
+  "peerDependencies": {
+    "@guolao/vue-monaco-editor": "^1.5.5",
+    "monaco-languageclient": "^9.8.0",
+    "naive-ui": "^2.42.0",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.18"
+  },
+  "dependencies": {
+    "@babel/parser": "^7.28.4",
+    "@babel/traverse": "^7.28.4",
+    "@vueuse/core": "^13.9.0",
+    "@yaesandbox-frontend/core-services": "workspace:*",
+    "@yaesandbox-frontend/shared-ui": "workspace:*",
+    "monaco-jsx-highlighter": "^2.77.77",
+    "nanoid": "^5.1.6"
+  },
+  "devDependencies": {
+    "@guolao/vue-monaco-editor": "^1.5.5",
+    "monaco-languageclient": "^9.8.0",
+    "naive-ui": "^2.42.0",
+    "pinia": "^3.0.3",
+    "vue": "^3.5.18"
+  }
+}

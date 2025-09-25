@@ -22,6 +22,8 @@
       </template>
 
       <template #actions>
+        <!-- 校验状态指示器 -->
+        <ValidationStatusIndicator :validation-info="validationInfo"/>
         <!-- 枢机的操作按钮 -->
         <ConfigItemActionsMenu :actions-provider="getItemActions"/>
       </template>
@@ -51,16 +53,19 @@
 
 <script lang="ts" setup>
 import {NButton, NCollapseTransition, NIcon, useThemeVars} from 'naive-ui';
-import {KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@yaesandbox-frontend/shared-ui/icons';
+import {ErrorIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon, WarningIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import ConfigItemBase from '#/components/share/renderer/ConfigItemBase.vue'; // 导入基础组件
 import RuneItemRenderer from '#/components/rune/RuneItemRenderer.vue'; // 导入符文渲染器
-import type {TuumConfig, WorkflowConfig} from '#/types/generated/workflow-config-api-client';
+import {RuleSeverity, type TuumConfig, type WorkflowConfig} from '#/types/generated/workflow-config-api-client';
 import {computed, provide, ref, toRef} from "vue";
 import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import ConfigItemActionsMenu from "#/components/share/ConfigItemActionsMenu.vue";
 import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
+import {useTuumAnalysis} from "#/composables/useTuumAnalysis.ts";
+import {useValidationInfo} from "#/components/share/validationInfo/useValidationInfo.ts";
+import ValidationStatusIndicator from "#/components/share/validationInfo/ValidationStatusIndicator.vue";
 
 // 定义组件的 props
 const props = withDefaults(defineProps<{
@@ -95,6 +100,12 @@ const {getActions: getItemActions} = useConfigItemActions({
           : null
   ),
 });
+
+const tuumRef = computed(() => props.tuum);
+const {analysisResult} = useTuumAnalysis(tuumRef);
+const messagesRef = computed(() => analysisResult.value?.messages);
+const {validationInfo} = useValidationInfo(messagesRef);
+
 
 /**
  * 方法，用于处理 ConfigItemBase 的双击事件。

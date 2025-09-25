@@ -1,0 +1,1 @@
+﻿export { default as SmartEditor } from './monaco-editor/SmartEditor.vue';

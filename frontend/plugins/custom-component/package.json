@@ -29,6 +29,7 @@
   "dependencies": {
     "@yaesandbox-frontend/core-services": "workspace:*",
     "@yaesandbox-frontend/shared-ui": "workspace:*",
+    "@yaesandbox-frontend/shared-feature": "workspace:*",
     "acorn": "^8.15.0",
     "nanoid": "^5.1.5",
     "sucrase": "^3.35.0"

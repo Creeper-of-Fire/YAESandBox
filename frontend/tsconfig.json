@@ -12,7 +12,6 @@
     {
       "path": "./tsconfig.node.json"
     },
-
     // --- 引用 Apps ---
     {
       "path": "./apps/shell"
@@ -39,6 +38,9 @@
     },
     {
       "path": "./packages/shared-ui"
+    },
+    {
+      "path": "./packages/shared-feature"
     }
   ]
 }

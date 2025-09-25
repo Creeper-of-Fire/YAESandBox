@@ -20,7 +20,10 @@
     </template>
 
     <template #actions>
-      <n-popover v-if="rulesForThisRune" trigger ="hover">
+      <!-- 校验状态指示器，不过目前没有校验内容可供使用 -->
+      <ValidationStatusIndicator :validation-info="validationInfo"/>
+
+      <n-popover v-if="rulesForThisRune" trigger="hover">
         <template #trigger>
           <n-icon :color="normalIconColor" :component="InfoIcon"/>
         </template>
@@ -29,6 +32,7 @@
           <n-li v-for="ruleText in ruleDescriptions" :key="ruleText">{{ ruleText }}</n-li>
         </n-ul>
       </n-popover>
+
       <n-popover
           :disabled="!showAnalysisPopover"
           trigger="hover">
@@ -36,16 +40,16 @@
           <n-icon :color="analysisIconColor" :component="FindInPageIcon"/>
         </template>
         <div v-if="hasConsumedVariables&&runeAnalysisResult">
-          <n-h4>输入:</n-h4>
-          <n-ul>
-            <n-li v-for="variable in runeAnalysisResult.consumedVariables" :key="variable">{{ variable }}</n-li>
-          </n-ul>
+          输入:
+          <div v-for="variable in runeAnalysisResult.consumedVariables" :key="variable.name">
+            <VarWithSpecTag :is-optional="variable.isOptional" :spec-def="variable.def" :var-name="variable.name"/>
+          </div>
         </div>
         <div v-if="hasProducedVariables&&runeAnalysisResult">
-          <n-h4>输出:</n-h4>
-          <n-ul>
-            <n-li v-for="variable in runeAnalysisResult.producedVariables" :key="variable">{{ variable }}</n-li>
-          </n-ul>
+          输出:
+          <div v-for="variable in runeAnalysisResult.producedVariables" :key="variable.name">
+            <VarWithSpecTag :spec-def="variable.def" :var-name="variable.name"/>
+          </div>
         </div>
       </n-popover>
 
@@ -86,6 +90,9 @@ import ConfigItemActionsMenu from "#/components/share/ConfigItemActionsMenu.vue"
 import {useThemeVars} from "naive-ui";
 import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
+import ValidationStatusIndicator from "#/components/share/validationInfo/ValidationStatusIndicator.vue";
+import {useValidationInfo} from "#/components/share/validationInfo/useValidationInfo.ts";
+import VarWithSpecTag from "#/components/share/varSpec/VarWithSpecTag.vue";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
@@ -101,6 +108,8 @@ const {
 } = useRuneAnalysis(
     computed(() => props.rune)
 );
+const messagesRef = computed(() => runeAnalysisResult.value?.runeMessages);
+const {validationInfo} = useValidationInfo(messagesRef);
 
 // 创建一个计算属性来控制分析结果 Popover 的显示
 const showAnalysisPopover = computed(() =>
@@ -120,8 +129,8 @@ const analysisIconColor = computed(() =>
   return showAnalysisPopover.value ? normalIconColor.value : dimIconColor.value;
 });
 
-const selfId = computed(()=>props.rune.configId);
-const {updateSelectedConfig,isSelected} = useSelectedConfig(selfId);
+const selfId = computed(() => props.rune.configId);
+const {updateSelectedConfig, isSelected} = useSelectedConfig(selfId);
 
 function handleItemClick()
 {

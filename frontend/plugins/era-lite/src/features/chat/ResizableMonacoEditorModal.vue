@@ -10,12 +10,6 @@
       <n-space align="center" justify="space-between" style="width: 100%;">
         <span>{{ title }}</span>
         <n-space :size="12" align="center">
-          <!-- Monaco模式切换 -->
-          <n-flex align="center" size="small">
-            <label :for="switchId" style="font-size: 12px; color: #999; cursor: pointer; white-space: nowrap;">高级编辑模式</label>
-            <n-switch :id="switchId" v-model:value="isUseMonaco"/>
-          </n-flex>
-
           <n-button
               :title="isModalFullscreen ? '退出全屏' : '全屏'"
               circle
@@ -42,22 +36,11 @@
           </n-alert>
         </slot>
 
-        <VueMonacoEditor
-            v-if="isUseMonaco"
-            v-model:value="scriptInEditor"
+        <SmartEditor
+            v-model:model-value="scriptInEditor"
             :height="editorHeight"
-            :options="monacoOptions"
-            :style="{ border: `1px solid ${isCurrentlyDark ? '#333' : '#ddd'}`, borderRadius: '4px' }"
-            :theme="editorTheme"
+            :storage-key="`${storageKeyPrefix}-use-monaco-editor-mode`"
             language="javascript"
-        />
-        <n-input
-            v-else
-            v-model:value="scriptInEditor"
-            :autosize="{minRows: 3}"
-            :style="{ height: editorHeight, fontFamily: 'monospace' }"
-            placeholder="请输入脚本..."
-            type="textarea"
         />
 
         <n-alert v-if="editorScriptError" title="实时编译错误" type="error">
@@ -94,11 +77,10 @@
 import {computed, inject, ref, watch} from 'vue';
 import {nanoid} from 'nanoid';
 import {NAlert, NButton, NCode, NFlex, NIcon, NModal, NSpace} from 'naive-ui';
-import {VueMonacoEditor} from '@guolao/vue-monaco-editor';
 import {useScopedStorage} from '@yaesandbox-frontend/core-services/composables';
-import {IsDarkThemeKey} from '@yaesandbox-frontend/core-services/injectKeys';
 import {FullscreenExitIcon, FullscreenIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useScriptCompiler} from "#/features/chat/useScriptCompiler.ts";
+import {SmartEditor} from "@yaesandbox-frontend/shared-feature";
 
 const props = defineProps<{
   show: boolean;
@@ -117,24 +99,12 @@ const emit = defineEmits<{
 // --- 内部状态 ---
 const scriptInEditor = ref('');
 const isModalFullscreen = ref(false);
-const isUseMonaco = useScopedStorage(`${props.storageKeyPrefix}-use-monaco-editor-mode`, false);
-const switchId = `downgrade-switch-${nanoid(5)}`;
 
 // --- 脚本验证逻辑 ---
 const {error: editorScriptError} = useScriptCompiler({
   scriptRef: scriptInEditor, // 将内部的 ref 传递给 Composable
   expectedFunctionName: props.expectedFunctionName,
 });
-
-// --- 主题和编辑器选项 ---
-const isCurrentlyDark = inject(IsDarkThemeKey, ref(false));
-const editorTheme = computed(() => (isCurrentlyDark.value ? 'vs-dark' : 'light'));
-const monacoOptions = {
-  automaticLayout: true,
-  minimap: {enabled: false},
-  wordWrap: 'on' as const,
-  scrollBeyondLastLine: false,
-};
 
 // --- 尺寸控制 ---
 const modalWidth = useScopedStorage(`${props.storageKeyPrefix}-modal-width`, 800);
