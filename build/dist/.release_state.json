@@ -1,7 +1,7 @@
 {
     "hashes": {
         "launcher": "aebe2ad900ba295356a50e22938f42bcf78673cc1d1036a18598b7bdddd10130",
-        "app": "500213e363134a3a608ad196ceae46e0fe9c40440a93cf508a9f3789cd12a980",
+        "app": "0242ba9449e9879a2a3f04a515fd52037b48a672a4bb8f505a9b6a6f2c80084d",
         "backend": "a8c56210f69ab2fa7e576321689f2f9b1ed1d1777cfc0347bc8fc8027e68ff7f",
         "backend-slim": "525f241f3a1eba62307681020b76edd1d0caccec2ac8367c7b09c016620ac781",
         "plugins": {
@@ -23,10 +23,10 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.29",
-                    "notes": "### Release v0.0.29\n\n本次更新主要聚焦于提升应用的稳定性和核心编辑体验，同时对项目结构进行了优化，并增强了工作台的界面反馈。\n\n#### ✨ 新特性与体验优化 (Features & Enhancements)\n\n1.  **统一的智能编辑器 (`SmartEditor`)**:\n    *   我们引入了一个全新的 `SmartEditor` 组件，它无缝集成了 Monaco Editor (高级模式) 和标准文本域 (基础模式)。\n    *   现在，所有需要代码输入的地方都支持模式切换，用户可以根据偏好选择带有语法高亮、代码提示的高级模式，或更轻量的基础模式。\n    *   编辑器会自动适配应用的主题（亮色/暗色），并为 JSX 提供了更好的语法高亮支持。\n\n2.  **配置校验状态可视化**:\n    *   为工作台中的枢机 (Tuum) 和符文 (Rune) 添加了校验状态指示器。当配置存在错误或警告时，界面上会直接显示对应的图标，鼠标悬停即可查看详情，帮助用户快速识别和定位问题。\n\n#### ♻️ 架构重构与代码质量 (Refactoring & Architecture)\n\n1.  **新增 `@yaesandbox-frontend/shared-feature` 包**:\n    *   为了更好地组织代码，我们创建了一个新的共享包，专门用于存放像 `SmartEditor` 这样功能复杂、依赖较多的共享特性组件。这使得项目结构更清晰，也更易于维护。\n\n2.  **修复数据绑定问题**:\n    *   通过在 `SmartEditor` 内部使用 `useVModel`，彻底解决了之前版本中编辑器内容与父组件状态同步不稳定的问题，确保了数据的双向流动是可靠的。\n\n#### ⚙️ 构建与稳定性 (Build & Stability)\n\n1.  **Monaco Editor 资源本地化**:\n    *   **核心变更**: 我们不再依赖外部 CDN 来加载 Monaco Editor。现在，其资源文件会在项目安装 (`pnpm install`) 时通过脚本自动复制到应用的 `public` 目录中，并随应用一同打包。\n    *   **带来的好处**:\n        *   **离线可用**: 应用在没有网络连接的情况下也能正常使用高级编辑器。\n        *   **加载更快**: 消除了网络请求延迟，编辑器加载速度显著提升。\n        *   **更稳定**: 不再受 CDN 服务稳定性的影响。\n    *   **注意**: 此举会增加最终打包产物的体积。\n\n2.  **依赖版本强一致性**:\n    *   通过 `pnpm overrides` 机制，我们将工作空间内的 `monaco-editor` 版本统一锁定为 `0.52.2`。这是因为从 `0.53.0` 版本开始，Monaco Editor 停止了对 AMD 打包格式的支持，锁定版本可确保构建的稳定性。",
-                    "hash": "ff91690397f71bc369221600e51103612eade2e301b8109f9297e5f8beb1eb03",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.29/app.zip"
+                    "version": "0.0.30",
+                    "notes": "### Release v0.0.30\n\n#### feat(monaco-editor): 实现 JSX/TSX 语言增强功能\n\n本次更新为 `SmartEditor` 组件引入了针对 JSX 和 TSX 的语言支持，通过一个可插拔的语言增强器 (`JsxTsLanguageEnhancer`) 实现。此更新显著提升了在编辑器内编写动态组件的开发体验。\n\n**主要特性与改进:**\n\n*   **JSX/TSX 支持**:\n    *   新增 `JsxTsLanguageEnhancer` 类，为 Monaco Editor 提供了 JSX/TSX 语法高亮、智能注释 (`{/* */}`) 和基础语法验证。\n    *   动态配置 Babel 解析器，以支持包括 Class Properties、Decorators 在内的现代 JavaScript/TypeScript 语法。\n\n*   **编辑器核心增强**:\n    *   `SmartEditor` 组件现已集成语言增强器接口，实现了核心编辑器与特定语言功能的逻辑解耦。\n    *   为 `monaco-jsx-highlighter` 库应用了必要的补丁，修复了 JSX 注释快捷键 (`Ctrl+/`) 失效的问题，并增强了编辑器卸载时的稳定性。\n\n*   **类型与智能提示**:\n    *   支持通过 `extraLibs` prop 向 Monaco Editor 的语言服务中注入外部类型定义（`.d.ts` 文件）。\n    *   新增了一个工具，可根据项目中的全局注入变量（如 UI 组件、Hooks）自动生成一个基本的 `.d.ts` 类型声明文件，为动态组件开发提供初步的代码提示。\n\n*   **功能集成**:\n    *   在 JSX 组件编辑器视图中，添加了在 TypeScript (TSX) 和 JavaScript (JSX) 模式之间切换的功能，编辑器会相应地进行重载以应用正确的语言配置。\n    *   从 `@yaesandbox-frontend/shared-feature` 中导出了 `JsxTsLanguageEnhancer`，以便上层应用可以按需创建和配置。",
+                    "hash": "b236dc838771fea589fae51624f9320db4287977e07792c1446e6474dc83eab7",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.30/app.zip"
                 },
                 {
                     "id": "backend",
@@ -51,10 +51,10 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "version": "0.0.29",
-                    "notes": "### Release v0.0.29\n\n本次更新主要聚焦于提升应用的稳定性和核心编辑体验，同时对项目结构进行了优化，并增强了工作台的界面反馈。\n\n#### ✨ 新特性与体验优化 (Features & Enhancements)\n\n1.  **统一的智能编辑器 (`SmartEditor`)**:\n    *   我们引入了一个全新的 `SmartEditor` 组件，它无缝集成了 Monaco Editor (高级模式) 和标准文本域 (基础模式)。\n    *   现在，所有需要代码输入的地方都支持模式切换，用户可以根据偏好选择带有语法高亮、代码提示的高级模式，或更轻量的基础模式。\n    *   编辑器会自动适配应用的主题（亮色/暗色），并为 JSX 提供了更好的语法高亮支持。\n\n2.  **配置校验状态可视化**:\n    *   为工作台中的枢机 (Tuum) 和符文 (Rune) 添加了校验状态指示器。当配置存在错误或警告时，界面上会直接显示对应的图标，鼠标悬停即可查看详情，帮助用户快速识别和定位问题。\n\n#### ♻️ 架构重构与代码质量 (Refactoring & Architecture)\n\n1.  **新增 `@yaesandbox-frontend/shared-feature` 包**:\n    *   为了更好地组织代码，我们创建了一个新的共享包，专门用于存放像 `SmartEditor` 这样功能复杂、依赖较多的共享特性组件。这使得项目结构更清晰，也更易于维护。\n\n2.  **修复数据绑定问题**:\n    *   通过在 `SmartEditor` 内部使用 `useVModel`，彻底解决了之前版本中编辑器内容与父组件状态同步不稳定的问题，确保了数据的双向流动是可靠的。\n\n#### ⚙️ 构建与稳定性 (Build & Stability)\n\n1.  **Monaco Editor 资源本地化**:\n    *   **核心变更**: 我们不再依赖外部 CDN 来加载 Monaco Editor。现在，其资源文件会在项目安装 (`pnpm install`) 时通过脚本自动复制到应用的 `public` 目录中，并随应用一同打包。\n    *   **带来的好处**:\n        *   **离线可用**: 应用在没有网络连接的情况下也能正常使用高级编辑器。\n        *   **加载更快**: 消除了网络请求延迟，编辑器加载速度显著提升。\n        *   **更稳定**: 不再受 CDN 服务稳定性的影响。\n    *   **注意**: 此举会增加最终打包产物的体积。\n\n2.  **依赖版本强一致性**:\n    *   通过 `pnpm overrides` 机制，我们将工作空间内的 `monaco-editor` 版本统一锁定为 `0.52.2`。这是因为从 `0.53.0` 版本开始，Monaco Editor 停止了对 AMD 打包格式的支持，锁定版本可确保构建的稳定性。",
-                    "hash": "ff91690397f71bc369221600e51103612eade2e301b8109f9297e5f8beb1eb03",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.29/app.zip"
+                    "version": "0.0.30",
+                    "notes": "### Release v0.0.30\n\n#### feat(monaco-editor): 实现 JSX/TSX 语言增强功能\n\n本次更新为 `SmartEditor` 组件引入了针对 JSX 和 TSX 的语言支持，通过一个可插拔的语言增强器 (`JsxTsLanguageEnhancer`) 实现。此更新显著提升了在编辑器内编写动态组件的开发体验。\n\n**主要特性与改进:**\n\n*   **JSX/TSX 支持**:\n    *   新增 `JsxTsLanguageEnhancer` 类，为 Monaco Editor 提供了 JSX/TSX 语法高亮、智能注释 (`{/* */}`) 和基础语法验证。\n    *   动态配置 Babel 解析器，以支持包括 Class Properties、Decorators 在内的现代 JavaScript/TypeScript 语法。\n\n*   **编辑器核心增强**:\n    *   `SmartEditor` 组件现已集成语言增强器接口，实现了核心编辑器与特定语言功能的逻辑解耦。\n    *   为 `monaco-jsx-highlighter` 库应用了必要的补丁，修复了 JSX 注释快捷键 (`Ctrl+/`) 失效的问题，并增强了编辑器卸载时的稳定性。\n\n*   **类型与智能提示**:\n    *   支持通过 `extraLibs` prop 向 Monaco Editor 的语言服务中注入外部类型定义（`.d.ts` 文件）。\n    *   新增了一个工具，可根据项目中的全局注入变量（如 UI 组件、Hooks）自动生成一个基本的 `.d.ts` 类型声明文件，为动态组件开发提供初步的代码提示。\n\n*   **功能集成**:\n    *   在 JSX 组件编辑器视图中，添加了在 TypeScript (TSX) 和 JavaScript (JSX) 模式之间切换的功能，编辑器会相应地进行重载以应用正确的语言配置。\n    *   从 `@yaesandbox-frontend/shared-feature` 中导出了 `JsxTsLanguageEnhancer`，以便上层应用可以按需创建和配置。",
+                    "hash": "b236dc838771fea589fae51624f9320db4287977e07792c1446e6474dc83eab7",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.0.30/app.zip"
                 },
                 {
                     "id": "backend",
