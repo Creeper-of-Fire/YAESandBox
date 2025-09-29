@@ -6,7 +6,7 @@ using YAESandBox.Depend.Storage;
 #pragma warning disable CS8974 // 将方法组转换为非委托类型
 
 // ReSharper disable InconsistentNaming
-namespace YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
+namespace YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
 
 /// <summary>
 /// 向 Lua 暴露安全的正则表达式功能。

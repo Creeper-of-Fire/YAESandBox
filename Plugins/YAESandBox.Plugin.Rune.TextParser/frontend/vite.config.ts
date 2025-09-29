@@ -31,7 +31,7 @@ export default defineConfig({
             // 入口文件，它会导出我们所有的组件
             entry: path.resolve(__dirname, 'src/main.ts'),
             // 库的名字，主程序可以通过这个名字访问
-            name: 'YAESandBox_Plugin_TextParser',
+            name: 'YAESandBox_Plugin_Rune_TextParser',
             // 输出格式为 iife (立即执行函数)，适合通过 <script> 标签加载
             formats: ['iife'],
             // 输出的文件名

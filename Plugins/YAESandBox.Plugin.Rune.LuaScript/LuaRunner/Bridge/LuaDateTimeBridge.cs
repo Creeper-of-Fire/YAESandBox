@@ -5,7 +5,7 @@ using NLua;
 
 // ReSharper disable InconsistentNaming
 #pragma warning disable CS1591 // 缺少对公共可见类型或成员的 XML 注释
-namespace YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
+namespace YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
 
 /// <summary>
 /// 日期时间符文的工厂类，暴露给 Lua 作为 'datetime'。

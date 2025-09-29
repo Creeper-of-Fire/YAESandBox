@@ -5,7 +5,7 @@ using YAESandBox.Workflow.Tuum;
 
 // ReSharper disable InconsistentNaming
 
-namespace YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
+namespace YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
 
 /// <summary>
 /// 作为 C# 与 Lua 脚本之间交互的安全桥梁。

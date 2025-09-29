@@ -3,7 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.API.Schema;
 
-namespace YAESandBox.Plugin.TextParser.Rune;
+namespace YAESandBox.Plugin.Rune.TextParser.Rune;
 
 /// <summary>
 /// 一个可重用的配置记录，封装了通用的文本处理（提取/替换）操作的设置。

@@ -1,12 +1,12 @@
 ﻿using System.Text;
 using NLua;
 using YAESandBox.Depend.Results;
-using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
+using YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow.DebugDto;
 
 #pragma warning disable CS8974 // 将方法组转换为非委托类型
 
-namespace YAESandBox.Plugin.LuaScript.LuaRunner;
+namespace YAESandBox.Plugin.Rune.LuaScript.LuaRunner;
 
 /// <summary>
 /// 通用的 Lua 脚本执行器。

@@ -2,24 +2,22 @@
 using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Plugin.LuaScript.LuaRunner;
-using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
+using YAESandBox.Plugin.Rune.LuaScript.LuaRunner;
+using YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;
-using static YAESandBox.Plugin.LuaScript.Rune.LuaScriptRuneProcessor;
-using static YAESandBox.Plugin.LuaScript.Rune.LuaStringProcessorRuneProcessor;
 
-namespace YAESandBox.Plugin.LuaScript.Rune;
+namespace YAESandBox.Plugin.Rune.LuaScript.Rune;
 
 /// <summary>
 /// Lua 字符串处理符文处理器。
 /// 专注于接收一个字符串，通过 Lua 脚本处理，并输出一个字符串。
 /// </summary>
 public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config)
-    : INormalRune<LuaStringProcessorRuneConfig, LuaStringProcessorRuneDebugDto>
+    : INormalRune<LuaStringProcessorRuneConfig, LuaStringProcessorRuneProcessor.LuaStringProcessorRuneDebugDto>
 {
     /// <inheritdoc />
     public LuaStringProcessorRuneConfig Config { get; } = config;
@@ -75,7 +73,7 @@ public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config
     }
 
     /// <inheritdoc />
-    public class LuaStringProcessorRuneDebugDto : LuaScriptRuneProcessorDebugDto;
+    public class LuaStringProcessorRuneDebugDto : LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto;
 }
 
 /// <summary>

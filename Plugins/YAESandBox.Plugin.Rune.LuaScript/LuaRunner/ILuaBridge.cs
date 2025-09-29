@@ -1,7 +1,7 @@
 ﻿using NLua;
-using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
+using YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
 
-namespace YAESandBox.Plugin.LuaScript.LuaRunner;
+namespace YAESandBox.Plugin.Rune.LuaScript.LuaRunner;
 
 /// <summary>
 /// 定义了一个可以被注册到 Lua 运行环境中的功能桥的接口。

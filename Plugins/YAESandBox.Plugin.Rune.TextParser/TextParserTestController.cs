@@ -1,12 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
-using YAESandBox.Plugin.TextParser.Rune;
+using YAESandBox.Plugin.Rune.TextParser.Rune;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
-namespace YAESandBox.Plugin.TextParser;
+namespace YAESandBox.Plugin.Rune.TextParser;
 
 /// <summary>
 /// 为文本处理器插件提供私有的、用于即时测试的API终结点。

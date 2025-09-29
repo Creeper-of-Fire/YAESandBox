@@ -2,7 +2,7 @@
 using NLua;
 
 // ReSharper disable InconsistentNaming
-namespace YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
+namespace YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
 
 /// <summary>
 /// 一个功能桥，负责向 Lua 环境中注入一个功能完备的 JSON 库。

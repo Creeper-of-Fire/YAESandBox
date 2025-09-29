@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
-using YAESandBox.Plugin.LuaScript.Rune;
+using YAESandBox.Plugin.Rune.LuaScript.Rune;
 using YAESandBox.Workflow.API;
 
-namespace YAESandBox.Plugin.LuaScript;
+namespace YAESandBox.Plugin.Rune.LuaScript;
 
 /// <inheritdoc cref="IYaeSandBoxPlugin"/>
 public class LuaPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IProgramModuleStaticAssetConfigurator
@@ -16,7 +16,7 @@ public class LuaPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IPro
 
     /// <inheritdoc />
     public PluginMetadata Metadata { get; } = new(
-        Id: "YAESandBox.Plugin.LuaScript",
+        Id: "YAESandBox.Plugin.Rune.LuaScript",
         Name: "Lua 脚本插件",
         Version: "1.0.0",
         Author: "Creeper_of_Fire",

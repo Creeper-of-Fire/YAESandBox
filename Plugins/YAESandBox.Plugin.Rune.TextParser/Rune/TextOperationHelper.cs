@@ -2,7 +2,7 @@
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService;
 
-namespace YAESandBox.Plugin.TextParser.Rune;
+namespace YAESandBox.Plugin.Rune.TextParser.Rune;
 
 /// <summary>
 /// 一个数据传输对象，用于封装文本处理操作的多种可能输入类型。

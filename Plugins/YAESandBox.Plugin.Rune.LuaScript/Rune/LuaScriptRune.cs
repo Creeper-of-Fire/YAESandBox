@@ -3,19 +3,18 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Plugin.LuaScript.LuaRunner;
-using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
+using YAESandBox.Plugin.Rune.LuaScript.LuaRunner;
+using YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.VarSpec;
-using static YAESandBox.Plugin.LuaScript.Rune.LuaScriptRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
 
-namespace YAESandBox.Plugin.LuaScript.Rune;
+namespace YAESandBox.Plugin.Rune.LuaScript.Rune;
 
 /// <summary>
 /// Lua 脚本符文处理器。
@@ -23,7 +22,7 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 /// </summary>
 /// <param name="config">符文配置。</param>
 public partial class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
-    : INormalRune<LuaScriptRuneConfig, LuaScriptRuneProcessorDebugDto>
+    : INormalRune<LuaScriptRuneConfig, LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto>
 {
     /// <inheritdoc />
     public LuaScriptRuneConfig Config { get; } = config;
