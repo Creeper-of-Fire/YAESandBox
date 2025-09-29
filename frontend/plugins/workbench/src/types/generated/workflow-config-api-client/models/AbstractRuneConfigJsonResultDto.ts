@@ -6,7 +6,7 @@ import type { AbstractRuneConfig } from './AbstractRuneConfig';
 export type AbstractRuneConfigJsonResultDto = {
     isSuccess: boolean;
     data: AbstractRuneConfig;
-    errorMessage: string | null;
+    errorDetails?: string | null;
     originJsonString: string | null;
 };
 

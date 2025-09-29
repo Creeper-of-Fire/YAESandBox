@@ -47,11 +47,11 @@
 import {computed, type PropType} from 'vue';
 import {NBadge, NDivider, NFlex, NH5, NIcon, NList, NListItem, NPopover, useThemeVars} from 'naive-ui';
 import {ErrorIcon, WarningIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import type {ValidationCounts} from "#/composables/useValidationInfo.ts";
+import type {ValidationInfo} from "#/components/share/validationInfo/useValidationInfo";
 
 const props = defineProps({
   validationInfo: {
-    type: Object as PropType<ValidationCounts | null>,
+    type: Object as PropType<ValidationInfo | null>,
     default: null,
   },
 });

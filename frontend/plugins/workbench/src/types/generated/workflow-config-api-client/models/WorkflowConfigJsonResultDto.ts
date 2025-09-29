@@ -6,7 +6,7 @@ import type { WorkflowConfig } from './WorkflowConfig';
 export type WorkflowConfigJsonResultDto = {
     isSuccess: boolean;
     data: WorkflowConfig;
-    errorMessage: string | null;
+    errorDetails?: string | null;
     originJsonString: string | null;
 };
 

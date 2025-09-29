@@ -28,7 +28,7 @@ interface IJsonResultDto<T>
 {
     isSuccess: boolean;
     data: T;
-    errorMessage: string | null;
+    errorDetails?: string | null;
     originJsonString: string | null;
 }
 
@@ -77,10 +77,10 @@ function processDtoToViewModel<T>(dto: Record<string, IJsonResultDto<T>>): Recor
         {
             viewModelItems[id] = {
                 isSuccess: false,
-                errorMessage: item.errorMessage || '未知错误，配置已损坏',
+                errorMessage: item.errorDetails || '未知错误，配置已损坏',
                 originJsonString: item.originJsonString,
             }
-            console.warn(`加载 ID 为 '${id}' 的全局配置失败: ${item.errorMessage}`);
+            console.warn(`加载 ID 为 '${id}' 的全局配置失败: ${item.errorDetails}`);
         }
     }
     return viewModelItems;

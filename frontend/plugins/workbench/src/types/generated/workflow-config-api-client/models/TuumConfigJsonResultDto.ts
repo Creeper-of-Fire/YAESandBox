@@ -6,7 +6,7 @@ import type { TuumConfig } from './TuumConfig';
 export type TuumConfigJsonResultDto = {
     isSuccess: boolean;
     data: TuumConfig;
-    errorMessage: string | null;
+    errorDetails?: string | null;
     originJsonString: string | null;
 };
 
