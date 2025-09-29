@@ -5,19 +5,90 @@ namespace YAESandBox.Depend.Results;
 /// <summary>
 /// 错误的基类
 /// </summary>
-/// <param name="Message"></param>
-public record Error(string Message)
+/// <param name="Message">错误信息。</param>
+/// <param name="Exception">可选的内部异常。</param>
+public record Error(string Message, Exception? Exception = null)
 {
     /// <summary>
     /// 错误信息
     /// </summary>
-    public string Message { get; } = Message;
+    internal string Message { get; } = Message;
+
+    /// <summary>
+    /// 关联的异常（可能为 null）
+    /// </summary>
+    internal Exception? Exception { get; init; } = Exception;
+
+    /// <summary>
+    /// 从一个 Exception 对象创建一个 Error。错误信息将使用 Exception.Message。
+    /// </summary>
+    /// <param name="exception">异常对象。</param>
+    public Error(Exception exception) : this(exception.Message, exception) { }
 
     /// <summary>
     /// 转换为 Result
     /// </summary>
     /// <returns></returns>
     public virtual Result ToResult() => this;
+    
+    /// <summary>
+    /// 转换为 Result&lt;T&gt;
+    /// </summary>
+    /// <returns></returns>
+    public virtual Result<T> ToResult<T>() => this;
+}
+
+/// <summary>
+/// 错误的扩展方法
+/// </summary>
+public static class ErrorExtension
+{
+    /// <summary>
+    /// 附加一个异常作为错误的原因，并返回一个新的 Error 实例。
+    /// </summary>
+    /// <param name="error">错误。</param>
+    /// <param name="exception">导致此错误的异常。</param>
+    /// <returns>一个包含异常信息的新 Error 实例。</returns>
+    public static TError CauseBy<TError>(this TError error, Exception? exception) where TError : Error
+    {
+        return error with { Exception = exception };
+    }
+}
+
+/// <summary>
+/// Result 到 Task 的转换
+/// </summary>
+public static class ResultExtensionToTask
+{
+    /// <summary>
+    /// 将 Error 对象包装到一个已完成的、失败状态的 Task&lt;Result&gt; 中。
+    /// </summary>
+    /// <param name="error">要包装的 Error 对象。</param>
+    /// <returns>一个表示异步操作已失败的 Task。</returns>
+    public static Task<Result> AsCompletedTask(this Error error)
+    {
+        return Task.FromResult(error.ToResult());
+    }
+    
+    /// <summary>
+    /// 将 Error 对象包装到一个已完成的、失败状态的 Task&lt;Result&lt;T&gt;&gt; 中。
+    /// </summary>
+    /// <param name="error">要包装的 Error 对象。</param>
+    /// <returns>一个表示异步操作已失败的 Task。</returns>
+    public static Task<Result<T>> AsCompletedTask<T>(this Error error)
+    {
+        return Task.FromResult(error.ToResult<T>());
+    }
+    
+    /// <summary>
+    /// 将 Result 对象包装到一个已完成状态的 Task&lt;Result&gt; 中。
+    /// </summary>
+    /// <param name="result">要包装的 Result 对象。</param>
+    /// <returns>一个表示异步操作已失败的 Task。</returns>
+    public static Task<Result> AsCompletedTask(this Result result)
+    {
+        return Task.FromResult(result);
+    }
 }
 
 public partial record Result
@@ -92,8 +163,17 @@ public partial record Result
     /// 失败
     /// </summary>
     /// <param name="errorMessage"></param>
+    /// <param name="error"></param>
     /// <returns></returns>
-    public static Error Fail(string errorMessage) => new(errorMessage);
+    public static Error Fail(string errorMessage, Error error) => new(errorMessage, error.Exception);
+
+    /// <summary>
+    /// 失败
+    /// </summary>
+    /// <param name="errorMessage"></param>
+    /// <param name="exception"></param>
+    /// <returns></returns>
+    public static Error Fail(string errorMessage, Exception? exception = null) => new(errorMessage, exception);
 
     /// <summary>
     /// 隐式转换
