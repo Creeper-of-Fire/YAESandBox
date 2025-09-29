@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.Results;
 
-namespace YAESandBox.Depend.AspNetCore;
+namespace YAESandBox.Depend.AspNetCore.Controller.ResultToAction;
 
 /// <summary>
 /// 提供将 <see cref="Result"/> 对象转换为 ASP.NET Core <see cref="ActionResult"/> 的异步扩展方法。

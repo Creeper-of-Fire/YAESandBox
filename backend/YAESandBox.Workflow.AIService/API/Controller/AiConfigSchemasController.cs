@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Nito.Disposables.Internals;
 using YAESandBox.Authentication;
+using YAESandBox.Depend.AspNetCore.Controller;
 using YAESandBox.Depend.Schema;
 using YAESandBox.Workflow.AIService.AiConfig;
 
@@ -85,7 +86,7 @@ public class AiConfigSchemasController : AuthenticatedApiControllerBase
         {
             // 任何一个类型的 Schema 生成失败，都会导致整个请求失败，并记录详细错误
             // Log the exception: ex
-            return this.StatusCode(StatusCodes.Status500InternalServerError, $"生成 AI 配置类型定义列表时发生内部错误: {ex.Message}");
+            return this.InternalServerError(ex,"生成 AI 配置类型定义列表时发生内部错误");
         }
     }
 

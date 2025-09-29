@@ -1,4 +1,5 @@
-﻿using YAESandBox.Depend.Results;
+﻿using System.Text;
+using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Workflow.AIService.Shared;
 
@@ -32,7 +33,7 @@ public record AiStructuredChunk(string? Reasoning, string? Content)
         }
 
         // 使用 StringBuilder 以获得最佳性能
-        var sb = new System.Text.StringBuilder();
+        var sb = new StringBuilder();
 
         if (!string.IsNullOrEmpty(this.Reasoning))
         {

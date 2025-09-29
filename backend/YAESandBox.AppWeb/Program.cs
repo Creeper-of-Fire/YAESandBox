@@ -1,6 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Reflection;
 using System.Runtime.Loader;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 using DotNetEnv;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.OpenApi.Any;
@@ -22,7 +25,7 @@ using YAESandBox.Workflow.AIService.API;
 using YAESandBox.Workflow.API;
 using YAESandBox.Workflow.Test.API;
 
-Console.OutputEncoding = System.Text.Encoding.UTF8;
+Console.OutputEncoding = Encoding.UTF8;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Logging.ClearProviders();
@@ -59,13 +62,13 @@ bool secretsWereGenerated = false;
 
 if (string.IsNullOrEmpty(jwtKey))
 {
-    jwtKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(32)); // 256-bit key
+    jwtKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(32)); // 256-bit key
     secretsWereGenerated = true;
 }
 
 if (string.IsNullOrEmpty(dataProtectionKey))
 {
-    dataProtectionKey = Convert.ToBase64String(System.Security.Cryptography.RandomNumberGenerator.GetBytes(64));
+    dataProtectionKey = Convert.ToBase64String(RandomNumberGenerator.GetBytes(64));
     secretsWereGenerated = true;
 }
 
@@ -76,8 +79,8 @@ if (secretsWereGenerated)
         ["Jwt:Key"] = jwtKey,
         ["DataProtectionKey"] = dataProtectionKey
     };
-    string json = System.Text.Json.JsonSerializer.Serialize(newSecrets,
-        new System.Text.Json.JsonSerializerOptions { WriteIndented = true });
+    string json = JsonSerializer.Serialize(newSecrets,
+        new JsonSerializerOptions { WriteIndented = true });
     File.WriteAllText(secretsFilePath, json);
     Console.WriteLine($"新的安全密钥存储并且保存到：{secretsFilePath}");
 }
@@ -288,7 +291,7 @@ namespace YAESandBox.AppWeb
     {
         // 一个静态字典来持有我们创建的所有插件加载上下文
         private static readonly Dictionary<string, PluginAssemblyLoadContext> PluginLoadContexts = new();
-        private static bool _isResolvingEventHooked = false;
+        private static bool _isResolvingEventHooked;
 
         /// <summary>
         /// 发现并加载所有模块，包括内置模块和来自插件目录的动态模块。

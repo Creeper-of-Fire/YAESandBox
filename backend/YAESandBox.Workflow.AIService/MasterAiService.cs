@@ -1,5 +1,7 @@
 ﻿using YAESandBox.Workflow.AIService.AiConfig;
-using YAESandBox.Workflow.AIService.ConfigManagement; // 用于缓存 IAiProcessor 实例 (可选)
+using YAESandBox.Workflow.AIService.ConfigManagement;
+
+// 用于缓存 IAiProcessor 实例 (可选)
 
 namespace YAESandBox.Workflow.AIService;
 

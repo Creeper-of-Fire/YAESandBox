@@ -174,7 +174,7 @@ public static class SwaggerHelper
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "加载 Contracts XML 注释时出错: {ExMessage}", ex.Message);
+            Logger.LogError(ex, "加载 Contracts XML 注释时出错。");
         }
     }
 }

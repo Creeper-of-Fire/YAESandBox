@@ -130,12 +130,8 @@ public class TuumProcessor(
             catch (Exception ex)
             {
                 value = default;
-                return false;
-                // 提供详细的错误信息
-                // TODO 应该记录在Tuum的Debug里面
-
-                // throw new InvalidCastException(
-                // $"无法将值'{valueName}'(类型: {tryGetValue.GetType().FullName})转换为 {typeof(T).FullName}。JSON 转换失败: {ex.Message}", ex);
+                throw new InvalidCastException(
+                    $"无法将值'{valueName}'(类型: {rawValue.GetType().FullName})转换为 {typeof(T).FullName}：JSON 转换失败。", ex);
             }
         }
     }
@@ -224,7 +220,7 @@ public class TuumProcessor(
 
         if (executionResult.TryGetError(out var execError, out var finalDataStore))
         {
-            return Result.Fail($"Tuum '{this.Config.ConfigId}' 图执行失败: {execError.Message}");
+            return Result.Fail($"Tuum '{this.Config.ConfigId}' 图执行失败。", execError);
         }
 
         // --- 4. 后处理阶段：收集结果 ---

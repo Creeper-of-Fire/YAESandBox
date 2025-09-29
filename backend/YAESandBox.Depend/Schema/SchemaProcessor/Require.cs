@@ -25,6 +25,5 @@ internal class RequiredProcessor : YaePropertyAttributeProcessor<RequiredAttribu
 
         // 1. 在属性自己的 Schema 上添加一个临时标记。
         schema["x-temp-is-required"] = true;
-        return;
     }
 }

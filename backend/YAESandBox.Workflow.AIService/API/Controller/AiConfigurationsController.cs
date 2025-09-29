@@ -2,7 +2,7 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Authentication;
-using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Depend.AspNetCore.Controller.ResultToAction;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService.AiConfig;
@@ -86,7 +86,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         }
 
         return upsertType == UpsertResultType.Created
-            ? this.CreatedAtAction(nameof(this.GetConfigurationByUuid), new { uuid = uuid }, config)
+            ? this.CreatedAtAction(nameof(this.GetConfigurationByUuid), new { uuid }, config)
             : this.NoContent();
     }
 
@@ -142,7 +142,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
                 OnFinalResponseReceivedAsync = response =>
                 {
                     tcs.TrySetResult(Result.Ok(response.ToLegacyThinkString()));
-                    return Task.FromResult(Result.Ok());
+                    return Result.Ok().AsCompletedTask();
                 }
             };
 
@@ -165,7 +165,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         catch (Exception ex)
         {
             // 捕获创建或执行过程中的任何同步/异步异常
-            tcs.TrySetResult(Result.Fail($"测试AI配置时发生意外错误: {ex.Message}"));
+            tcs.TrySetResult(Result.Fail("测试AI配置时发生意外错误。",ex));
         }
 
         // 6. 等待 TaskCompletionSource 的 Task 完成，并获取其结果

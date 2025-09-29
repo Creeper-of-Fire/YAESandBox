@@ -24,18 +24,18 @@ public sealed class TextProcessingInput
     /// <summary>
     /// 指示当前输入是否为字符串。
     /// </summary>
-    public bool IsString => Text is not null;
+    public bool IsString => this.Text is not null;
 
     /// <summary>
     /// 指示当前输入是否为提示词列表。
     /// </summary>
-    public bool IsPromptList => Prompts is not null;
+    public bool IsPromptList => this.Prompts is not null;
 
     // 私有构造函数，强制使用静态工厂方法
     private TextProcessingInput(string? text, List<RoledPromptDto>? prompts)
     {
-        Text = text;
-        Prompts = prompts;
+        this.Text = text;
+        this.Prompts = prompts;
     }
 
     /// <summary>
@@ -85,14 +85,13 @@ public static class TextOperationHelper
                     .ToList();
                 return FormatOutput(allExtractedValues, returnFormat);
             }
-            else // OperationModeEnum.Replace
-            {
-                // 替换模式：遍历所有prompt，对每个Content应用替换，返回一个新的PromptList
-                var newPrompts = prompts
-                    .Select(p => p with { Content = replacer(p.Content) })
-                    .ToList();
-                return newPrompts;
-            }
+
+            // OperationModeEnum.Replace
+            // 替换模式：遍历所有prompt，对每个Content应用替换，返回一个新的PromptList
+            var newPrompts = prompts
+                .Select(p => p with { Content = replacer(p.Content) })
+                .ToList();
+            return newPrompts;
         }
 
         // 默认处理时，调用字符串处理逻辑
@@ -123,10 +122,9 @@ public static class TextOperationHelper
             var extractedValues = extractor(inputText);
             return FormatOutput(extractedValues, returnFormat);
         }
-        else // OperationModeEnum.Replace
-        {
-            return replacer(inputText);
-        }
+
+        // OperationModeEnum.Replace
+        return replacer(inputText);
     }
 
     /// <summary>

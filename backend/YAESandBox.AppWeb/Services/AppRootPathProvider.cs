@@ -1,5 +1,4 @@
 ﻿using System.Diagnostics;
-using YAESandBox.Depend;
 using YAESandBox.Depend.AspNetCore.Services;
 
 namespace YAESandBox.AppWeb.Services;
@@ -24,7 +23,7 @@ public class AppRootPathProvider : IRootPathProvider
         {
             // === 设计时工具模式 ===
             this.RootPath = Path.GetTempPath();
-            Console.WriteLine($"[AppRootPathProvider] 检测到设计时工具 '{processName}'。使用当前工作目录作为根目录: {RootPath}");
+            Console.WriteLine($"[AppRootPathProvider] 检测到设计时工具 '{processName}'。使用当前工作目录作为根目录: {this.RootPath}");
             return;
         }
 
@@ -32,7 +31,7 @@ public class AppRootPathProvider : IRootPathProvider
         {
             // === 开发模式逻辑 ===
             this.RootPath = FindProjectRootDirectory() ?? throw new DirectoryNotFoundException("在开发模式下无法找到项目根目录（.sln 文件所在目录）。");
-            Console.WriteLine($"[AppRootPathProvider] 物理应用根路径解析为: {RootPath}");
+            Console.WriteLine($"[AppRootPathProvider] 物理应用根路径解析为: {this.RootPath}");
             return;
         }
 
@@ -79,7 +78,7 @@ public class AppRootPathProvider : IRootPathProvider
         }
 
         // 在启动时打印日志，方便调试
-        Console.WriteLine($"[AppRootPathProvider] 物理应用根路径解析为: {RootPath}");
+        Console.WriteLine($"[AppRootPathProvider] 物理应用根路径解析为: {this.RootPath}");
     }
 
     /// <summary>

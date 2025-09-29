@@ -20,9 +20,9 @@ public record ResultDto<TValue>
     public required TValue? Data { get; init; }
 
     /// <summary>
-    /// 失败时，返回错误的信息
+    /// 失败时，返回由 Error.ToDetailString() 生成的完整、详细的错误信息。
     /// </summary>
-    public required string? ErrorMessage { get; init; }
+    public string? ErrorDetails { get; init; }
 }
 
 /// <summary>
@@ -52,7 +52,7 @@ public static class ResultConversionExtensions
     {
         if (result.TryGetValue(out var data, out var error))
         {
-            return new ResultDto<T> { IsSuccess = true, Data = data, ErrorMessage = null };
+            return new ResultDto<T> { IsSuccess = true, Data = data, ErrorDetails = null };
         }
 
         if (error is IErrorCanBeDto errorCanBeDto)
@@ -60,7 +60,7 @@ public static class ResultConversionExtensions
             return errorCanBeDto.ToDto<T>();
         }
 
-        return new ResultDto<T> { IsSuccess = false, Data = default, ErrorMessage = error.Message };
+        return new ResultDto<T> { IsSuccess = false, Data = default, ErrorDetails = error.ToDetailString() };
     }
 
     /// <summary>

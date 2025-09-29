@@ -135,9 +135,6 @@ public static partial class SillyTavernProcessor
 
                 // 其他标记（如 scenario 等）在此阶段被忽略，
                 // 因为我们没有对应的数据源来填充它们。
-                default:
-                    // 可以选择性地在这里添加日志，以报告未处理的标记
-                    break;
             }
         }
 

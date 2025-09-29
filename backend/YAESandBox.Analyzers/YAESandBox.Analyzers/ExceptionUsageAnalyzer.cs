@@ -30,7 +30,7 @@ public class ExceptionUsageAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSyntaxNodeAction(AnalyzeCatchClause, SyntaxKind.CatchClause);
+        context.RegisterSyntaxNodeAction(this.AnalyzeCatchClause, SyntaxKind.CatchClause);
     }
 
     private void AnalyzeCatchClause(SyntaxNodeAnalysisContext context)
@@ -61,7 +61,7 @@ public class ExceptionUsageAnalyzer : DiagnosticAnalyzer
         if (dataFlowAnalysis != null && !dataFlowAnalysis.ReadInside.Contains(exceptionSymbol))
         {
             // 变量根本没被读取，报告错误
-            ReportDiagnostic(context, catchClause.Declaration);
+            this.ReportDiagnostic(context, catchClause.Declaration);
             return;
         }
 
@@ -103,7 +103,7 @@ public class ExceptionUsageAnalyzer : DiagnosticAnalyzer
         // 5. 如果遍历完所有用法，都没有找到一个“完整使用”，则报告错误。
         if (!hasValidUsage)
         {
-            ReportDiagnostic(context, catchClause.Declaration);
+            this.ReportDiagnostic(context, catchClause.Declaration);
         }
     }
 

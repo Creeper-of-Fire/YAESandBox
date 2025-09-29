@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.RegularExpressions;
 using NLua;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 
 #pragma warning disable CS8974 // 将方法组转换为非委托类型
@@ -57,7 +58,7 @@ public class LuaRegexBridge : ILuaBridge
         }
         catch (Exception ex)
         {
-            logger.error($"{callingMethodName} 转换结果失败: {ex.Message}");
+            logger.error($"{callingMethodName} 转换结果失败。{ex.ToFormattedString()}");
             return null;
         }
     }
@@ -73,7 +74,7 @@ public class LuaRegexBridge : ILuaBridge
         }
         catch (Exception ex)
         {
-            logger.error($"regex.is_match 失败: {ex.Message}");
+            logger.error($"regex.is_match 失败。{ex.ToFormattedString()}");
             return false;
         }
     }
@@ -97,7 +98,7 @@ public class LuaRegexBridge : ILuaBridge
         }
         catch (Exception ex)
         {
-            logger.error($"regex.match 失败: {ex.Message}");
+            logger.error($"regex.match 失败。{ex.ToFormattedString()}");
             return null;
         }
     }
@@ -117,7 +118,7 @@ public class LuaRegexBridge : ILuaBridge
         }
         catch (Exception ex)
         {
-            logger.error($"regex.match_all 失败: {ex.Message}");
+            logger.error($"regex.match_all 失败。{ex.ToFormattedString()}");
             return null;
         }
     }
@@ -145,7 +146,7 @@ public class LuaRegexBridge : ILuaBridge
                 catch (Exception ex) when (ex is FormatException or OverflowException)
                 {
                     // 如果用户提供了一个无法转换为整数的值（如 "abc"），则记录警告并忽略该选项
-                    logger.warn($"regex.replace 的 'count' 选项值 ('{countObj}') 无效，已忽略。错误: {ex.Message}");
+                    logger.warn($"regex.replace 的 'count' 选项值 ('{countObj}') 无效，已忽略。{ex.ToFormattedString()}");
                     countLimit = 0; // 重置为不限制
                 }
             }
@@ -160,7 +161,7 @@ public class LuaRegexBridge : ILuaBridge
         }
         catch (Exception ex)
         {
-            logger.error($"regex.replace 失败: {ex.Message}");
+            logger.error($"regex.replace 失败。{ex.ToFormattedString()}");
             return null;
         }
     }

@@ -165,7 +165,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
                 if (!string.IsNullOrWhiteSpace(plainText))
                 {
                     // 纯文本直接追加到当前基础路径
-                    this.SetRawContent(basePath, plainText, UpdateMode.Incremental);
+                    this.SetRawContent(basePath, plainText);
                 }
             }
 
@@ -177,7 +177,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
             //    这样，标签内的内容也会被同样地解析和路由。
             //    模式强制为 Incremental，因为 FullSnapshot 已在顶层处理。
             string subPath = string.IsNullOrEmpty(basePath) ? tagName : $"{basePath}.{tagName}";
-            this.ParseAndRouteContent(subPath, tagValue, UpdateMode.Incremental);
+            this.ParseAndRouteContent(subPath, tagValue);
 
             // d. 更新索引，跳过已处理的部分
             lastIndex = match.Index + match.Length;
@@ -190,7 +190,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
             if (!string.IsNullOrWhiteSpace(remainingPlainText))
             {
                 // 剩余的纯文本也追加到当前基础路径
-                this.SetRawContent(basePath, remainingPlainText, UpdateMode.Incremental);
+                this.SetRawContent(basePath, remainingPlainText);
             }
         }
     }

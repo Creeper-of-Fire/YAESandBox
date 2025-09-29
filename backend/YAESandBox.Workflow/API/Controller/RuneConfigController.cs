@@ -7,6 +7,8 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Authentication;
 using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Depend.AspNetCore.Controller;
+using YAESandBox.Depend.AspNetCore.Controller.ResultToAction;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.AspNetCore.Services;
 using YAESandBox.Depend.ResultsExtend;
@@ -174,8 +176,8 @@ public class RuneConfigController(
             }
             catch (Exception ex)
             {
-                return Task.FromResult<ActionResult<RuneSchemasResponse>>(this.StatusCode(StatusCodes.Status500InternalServerError,
-                    $"为类型 '{type.Name}' 生成 Schema 时发生错误: {ex.Message}"));
+                return Task.FromResult<ActionResult<RuneSchemasResponse>>(
+                    this.InternalServerError(ex, $"为类型 '{type.Name}' 生成 Schema 时发生错误"));
             }
         }
 
@@ -331,8 +333,7 @@ public class RuneConfigController(
         }
         catch (Exception ex)
         {
-            return this.StatusCode(StatusCodes.Status500InternalServerError,
-                $"为类型 '{runeTypeName}' 创建新实例时发生错误: {ex.Message}");
+            return this.InternalServerError(ex, $"为类型 '{runeTypeName}' 创建新实例时发生错误。");
         }
     }
 }

@@ -11,6 +11,24 @@ namespace YAESandBox.Depend.ResultsExtend;
 public partial record NormalError(string Message, ServerErrorType Code) : Error(Message)
 {
     /// <summary>
+    /// 创建一个表示“服务器内部错误”的 NormalError 实例。
+    /// </summary>
+    /// <param name="message">错误描述信息，不能为空。</param>
+    /// <param name="exception"></param>
+    /// <returns>一个新的 NormalError 实例，其 Code 为 <see cref="ServerErrorType.InternalServerError"/></returns>
+    public static NormalError Internal(string message, Exception? exception = null) =>
+        new NormalError(message, ServerErrorType.InternalServerError).CauseBy(exception);
+
+    /// <summary>
+    /// 创建一个表示“服务器内部错误”的 NormalError 实例。
+    /// </summary>
+    /// <param name="message">错误描述信息，不能为空。</param>
+    /// <param name="exception"></param>
+    /// <returns>一个新的 NormalError 实例，其 Code 为 <see cref="ServerErrorType.InternalServerError"/></returns>
+    public static NormalError Error(string message, Exception? exception = null) =>
+        new NormalError(message, ServerErrorType.InternalServerError).CauseBy(exception);
+
+    /// <summary>
     /// 创建一个表示“未知错误”的 NormalError 实例。
     /// </summary>
     /// <param name="message">错误描述信息，不能为空。</param>
@@ -79,20 +97,6 @@ public partial record NormalError(string Message, ServerErrorType Code) : Error(
     /// <param name="message">错误描述信息，不能为空。</param>
     /// <returns>一个新的 NormalError 实例，其 Code 为 <see cref="ServerErrorType.TooManyRequests"/></returns>
     public static NormalError TooManyRequests(string message) => new(message, ServerErrorType.TooManyRequests);
-
-    /// <summary>
-    /// 创建一个表示“服务器内部错误”的 NormalError 实例。
-    /// </summary>
-    /// <param name="message">错误描述信息，不能为空。</param>
-    /// <returns>一个新的 NormalError 实例，其 Code 为 <see cref="ServerErrorType.InternalServerError"/></returns>
-    public static NormalError Internal(string message) => new(message, ServerErrorType.InternalServerError);
-
-    /// <summary>
-    /// 创建一个表示“服务器内部错误”的 NormalError 实例。
-    /// </summary>
-    /// <param name="message">错误描述信息，不能为空。</param>
-    /// <returns>一个新的 NormalError 实例，其 Code 为 <see cref="ServerErrorType.InternalServerError"/></returns>
-    public static NormalError Error(string message) => new(message, ServerErrorType.InternalServerError);
 
     /// <summary>
     /// 创建一个表示“服务不可用”的 NormalError 实例。

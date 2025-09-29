@@ -64,7 +64,7 @@ internal static class ConnectionIdentifier
     {
         // 使用JSON序列化来确保一个稳定、可读的ID。
         // 使用紧凑的选项以避免格式化差异。
-        return JsonSerializer.Serialize(connection, options: new JsonSerializerOptions() { WriteIndented = false });
+        return JsonSerializer.Serialize(connection, options: new JsonSerializerOptions { WriteIndented = false });
     }
 }
 

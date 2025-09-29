@@ -96,11 +96,11 @@ internal class GeminiAiProcessor(AiProcessorDependencies dependencies, GeminiAiP
         }
         catch (HttpRequestException ex)
         {
-            return AiError.Error($"与 Gemini API 通信失败: {ex.Message}");
+            return AiError.Error("与 Gemini API 通信失败。", ex);
         }
         catch (Exception ex)
         {
-            return AiError.Error($"处理 Gemini 请求时发生未知错误: {ex.Message}");
+            return AiError.Error("处理 Gemini 请求时发生未知错误。", ex);
         }
     }
 
@@ -131,11 +131,11 @@ internal class GeminiAiProcessor(AiProcessorDependencies dependencies, GeminiAiP
         }
         catch (HttpRequestException ex)
         {
-            return AiError.Error($"与 Gemini API 通信失败: {ex.Message}");
+            return AiError.Error($"与 Gemini API 通信失败。", ex);
         }
         catch (Exception ex)
         {
-            return AiError.Error($"处理 Gemini 请求时发生未知错误: {ex.Message}");
+            return AiError.Error($"处理 Gemini 请求时发生未知错误。", ex);
         }
     }
 

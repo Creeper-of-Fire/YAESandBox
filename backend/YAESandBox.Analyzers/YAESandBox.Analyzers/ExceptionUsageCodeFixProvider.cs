@@ -37,7 +37,7 @@ public class ExceptionUsageCodeFixProvider : CodeFixProvider
         context.RegisterCodeFix(
             CodeAction.Create(
                 title: "添加 'throw;' 以重新抛出异常",
-                createChangedDocument: c => AddRethrowAsync(context.Document, catchClause, c),
+                createChangedDocument: c => this.AddRethrowAsync(context.Document, catchClause, c),
                 equivalenceKey: "AddRethrow"),
             diagnostic);
     }

@@ -42,7 +42,7 @@ public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config
 
         // 3. 创建一个回调函数，供 Lua 设置输出值
         //    使用 object? 接收，以应对 Lua 可能返回非字符串类型的情况
-        Action<object?> setOutputCallback = (luaResult) => { finalOutput = luaResult?.ToString() ?? string.Empty; };
+        Action<object?> setOutputCallback = luaResult => { finalOutput = luaResult?.ToString() ?? string.Empty; };
 
         // 4. 使用构建器创建一个不含 "ctx" 桥的精简版 Lua 运行器
         var runner = new LuaRunnerBuilder(tuumProcessorContent, this.DebugDto)
@@ -69,7 +69,7 @@ public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config
         // 6. 将处理后的结果写回枢机上下文
         tuumProcessorContent.SetTuumVar(this.Config.OutputVariableName, finalOutput);
 
-        return Task.FromResult(Result.Ok());
+        return Result.Ok().AsCompletedTask();
     }
 
     /// <inheritdoc />

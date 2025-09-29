@@ -1,5 +1,6 @@
 ﻿using System.Globalization;
 using NLua;
+using YAESandBox.Depend.Results;
 
 #pragma warning disable CS8974 // 将方法组转换为非委托类型
 
@@ -69,7 +70,7 @@ public class LuaDateTimeBridge : ILuaBridge
         }
         catch (Exception ex)
         {
-            logger.error($"datetime.parse 失败: {ex.Message}");
+            logger.error($"datetime.parse 失败。{ex.ToFormattedString()}");
             return null;
         }
     }
@@ -131,7 +132,7 @@ public class LuaDateTimeObject(DateTimeOffset dateTimeOffset, LuaLogBridge logge
             }
             catch (Exception ex)
             {
-                this.Logger.error($"add_years 失败: {ex.Message}");
+                this.Logger.error($"add_years 失败。{ex.ToFormattedString()}");
                 return this; // 返回原始对象
             }
         }
@@ -164,7 +165,7 @@ public class LuaDateTimeObject(DateTimeOffset dateTimeOffset, LuaLogBridge logge
         }
         catch (Exception ex)
         {
-            this.Logger.error($"datetime.format 失败: {ex.Message}");
+            this.Logger.error($"datetime.format 失败。{ex.ToFormattedString()}");
             return this.Dto.ToString("o"); // ISO 8601 格式
         }
     }

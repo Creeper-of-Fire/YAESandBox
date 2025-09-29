@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Workflow.API.Schema;
 
 namespace YAESandBox.Plugin.Rune.TextParser.Rune;
 

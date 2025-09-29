@@ -60,11 +60,11 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
         }
         catch (HttpRequestException ex)
         {
-            return AiError.Error($"与豆包 API 通信失败: {ex.Message}");
+            return AiError.Error("与豆包 API 通信失败。",ex);
         }
         catch (Exception ex)
         {
-            return AiError.Error($"处理豆包请求时发生未知错误: {ex.Message}");
+            return AiError.Error("处理豆包请求时发生未知错误。",ex);
         }
     }
 
@@ -94,11 +94,11 @@ internal class DoubaoAiProcessor(AiProcessorDependencies dependencies, DoubaoAiP
         }
         catch (HttpRequestException ex)
         {
-            return AiError.Error($"与豆包 API 通信失败: {ex.Message}");
+            return AiError.Error("与豆包 API 通信失败。",ex);
         }
         catch (Exception ex)
         {
-            return AiError.Error($"处理豆包请求时发生未知错误: {ex.Message}");
+            return AiError.Error("处理豆包请求时发生未知错误。",ex);
         }
     }
 

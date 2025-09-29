@@ -42,7 +42,7 @@ internal class HistoryAppendRuneProcessor(WorkflowRuntimeService workflowRuntime
         // 1. 获取历史记录列表 (必需)
         var historyList = tuumProcessorContent.GetTuumVar<ImmutableList<RoledPromptDto>>(this.Config.HistoryVariableName);
         if (historyList == null)
-            return Task.FromResult(Result.Fail($"必须的历史记录变量 '{this.Config.HistoryVariableName}' 未提供、类型错误或为空。").ToResult());
+            return Result.Fail($"必须的历史记录变量 '{this.Config.HistoryVariableName}' 未提供、类型错误或为空。").AsCompletedTask();
 
         this.DebugDto.HistoryPromptCount = historyList.Count;
 
@@ -60,7 +60,7 @@ internal class HistoryAppendRuneProcessor(WorkflowRuntimeService workflowRuntime
         this.DebugDto.LogOperation(
             $"成功从 '{this.Config.HistoryVariableName}' 添加 {this.DebugDto.HistoryPromptCount} 项历史记录到 '{this.Config.PromptsVariableName}'。");
 
-        return Task.FromResult(Result.Ok());
+        return Result.Ok().AsCompletedTask();
     }
 
     /// <summary>

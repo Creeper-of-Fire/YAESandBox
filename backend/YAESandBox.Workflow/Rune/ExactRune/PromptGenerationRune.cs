@@ -21,7 +21,7 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// </summary>
 /// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
 /// <param name="config">符文配置。</param>
-internal partial class PromptGenerationRuneProcessor(WorkflowRuntimeService workflowRuntimeService, PromptGenerationRuneConfig config)
+internal class PromptGenerationRuneProcessor(WorkflowRuntimeService workflowRuntimeService, PromptGenerationRuneConfig config)
     : INormalRune<PromptGenerationRuneConfig, PromptGenerationRuneProcessorDebugDto>
 {
     private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
@@ -65,7 +65,7 @@ internal partial class PromptGenerationRuneProcessor(WorkflowRuntimeService work
             prompts.Add(newPrompt);
             tuumProcessorContent.SetTuumVar(PromptGenerationRuneConfig.PromptsName, prompts);
 
-            return Task.FromResult(Result.Ok());
+            return Result.Ok().AsCompletedTask();
         }
 
         // 计算目标索引
@@ -129,7 +129,7 @@ internal partial class PromptGenerationRuneProcessor(WorkflowRuntimeService work
 
         tuumProcessorContent.SetTuumVar(PromptGenerationRuneConfig.PromptsName, prompts);
 
-        return Task.FromResult(Result.Ok());
+        return Result.Ok().AsCompletedTask();
     }
 
 
@@ -162,7 +162,7 @@ internal partial class PromptGenerationRuneProcessor(WorkflowRuntimeService work
             catch (Exception ex)
             {
                 // 记录尝试从TuumInput获取时的潜在错误到调试信息
-                this.DebugDto.AddResolutionAttemptLog($"尝试从 TuumVariable 获取 '{placeholderName}' 失败: {ex.Message}");
+                this.DebugDto.AddResolutionAttemptLog($"尝试从 TuumVariable 获取 '{placeholderName}' 失败。{ex.ToFormattedString()}");
             }
 
 

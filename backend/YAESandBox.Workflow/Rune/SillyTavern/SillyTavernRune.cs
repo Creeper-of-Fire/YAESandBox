@@ -136,14 +136,14 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
         {
             string errorMsg = $"未能找到玩家角色信息变量: '{this.Config.PlayerCharacterVariableName}'";
             this.DebugDto.AddLog($"错误: {errorMsg}");
-            return Task.FromResult(Result.Fail(errorMsg).ToResult());
+            return Result.Fail(errorMsg).AsCompletedTask();
         }
 
         if (!tuumContent.TryGetTuumVar<ThingInfo>(this.Config.TargetCharacterVariableName, out var targetInfo))
         {
             string errorMsg = $"未能找到目标角色信息变量: '{this.Config.TargetCharacterVariableName}'";
             this.DebugDto.AddLog($"错误: {errorMsg}");
-            return Task.FromResult(Result.Fail(errorMsg).ToResult());
+            return Result.Fail(errorMsg).AsCompletedTask();
         }
 
         this.DebugDto.AddLog($"已加载玩家 '{playerInfo.Name}' 和目标 '{targetInfo.Name}' 的角色信息。");
@@ -153,8 +153,8 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
         var presetResult = SillyTavernDeserializer.DeserializePreset(this.Config.PresetJson);
         if (presetResult.TryGetError(out var error, out var preset))
         {
-            this.DebugDto.AddLog($"预设解析失败: {error.Message}");
-            return Task.FromResult(error.ToResult());
+            this.DebugDto.AddLog($"预设解析失败: {error.ToDetailString()}");
+            return error.AsCompletedTask();
         }
 
         this.DebugDto.AddLog("预设解析成功。");
@@ -170,7 +170,7 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
             }
             else if (result.TryGetError(out var wiError))
             {
-                this.DebugDto.WorldInfoParsingLogs[i] = $"解析失败: {wiError.Message}";
+                this.DebugDto.WorldInfoParsingLogs[i] = $"解析失败: {wiError.ToDetailString()}";
             }
         }
 
@@ -232,7 +232,7 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
 
         this.DebugDto.AddLog("所有输出变量已设置。执行成功。");
 
-        return Task.FromResult(Result.Ok());
+        return Result.Ok().AsCompletedTask();
     }
 
     /// <summary>
@@ -293,7 +293,7 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
 
         internal void AddLog(string message)
         {
-            Logs.Add($"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}");
+            this.Logs.Add($"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}");
         }
     }
 }

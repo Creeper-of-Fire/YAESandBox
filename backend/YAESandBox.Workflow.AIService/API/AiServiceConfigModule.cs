@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
-using YAESandBox.Depend.AspNetCore;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Workflow.AIService.API.Controller;
 using YAESandBox.Workflow.AIService.ConfigManagement;
 

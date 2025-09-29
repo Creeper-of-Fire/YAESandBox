@@ -36,7 +36,7 @@ internal class AiRuneProcessor(AiRuneConfig config, WorkflowRuntimeService workf
     internal class AiRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         public IList<RoledPromptDto> Prompts { get; set; } = [];
-        public int TokenUsage { get; set; } = 0;
+        public int TokenUsage { get; set; }
         public string? FinalReasoning { get; set; }
         public string? FinalContent { get; set; }
 
@@ -231,7 +231,7 @@ internal class AiRuneProcessor(AiRuneConfig config, WorkflowRuntimeService workf
             {
                 reasoning = finalResponse.Reasoning ?? string.Empty;
                 content = finalResponse.Content ?? string.Empty;
-                return Task.FromResult(Result.Ok());
+                return Result.Ok().AsCompletedTask();
             },
             TokenUsage = tokenCount => { this.DebugDto.TokenUsage = tokenCount; }
         };
@@ -364,7 +364,7 @@ public record RuneAiConfig
 
     /// <summary>是否为流式传输</summary>
     [Required]
-    public bool IsStream { get; init; } = false;
+    public bool IsStream { get; init; }
 }
 
 /// <summary>

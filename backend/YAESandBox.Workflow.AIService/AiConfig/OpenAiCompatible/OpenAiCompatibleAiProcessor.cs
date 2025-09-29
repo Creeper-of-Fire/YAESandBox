@@ -56,11 +56,11 @@ internal class OpenAiCompatibleAiProcessor(AiProcessorDependencies dependencies,
         }
         catch (HttpRequestException ex)
         {
-            return AiError.Error($"与通用 OpenAI API ({this.Config.BaseUrl}) 通信失败: {ex.Message}");
+            return AiError.Error($"与通用 OpenAI API ({this.Config.BaseUrl}) 通信失败。",ex);
         }
         catch (Exception ex)
         {
-            return AiError.Error($"处理通用 OpenAI 请求时发生未知错误: {ex.Message}");
+            return AiError.Error($"处理通用 OpenAI 请求时发生未知错误。",ex);
         }
     }
     
@@ -89,11 +89,11 @@ internal class OpenAiCompatibleAiProcessor(AiProcessorDependencies dependencies,
         }
         catch (HttpRequestException ex)
         {
-            return AiError.Error($"与通用 OpenAI API ({this.Config.BaseUrl}) 通信失败: {ex.Message}");
+            return AiError.Error($"与通用 OpenAI API ({this.Config.BaseUrl}) 通信失败。",ex);
         }
         catch (Exception ex)
         {
-            return AiError.Error($"处理通用 OpenAI 请求时发生未知错误: {ex.Message}");
+            return AiError.Error($"处理通用 OpenAI 请求时发生未知错误。",ex);
         }
     }
 

@@ -37,7 +37,7 @@ public class AbstractAiProcessorConfigConverter : JsonConverter<AbstractAiProces
         // 期望一个 JSON 对象的开始
         if (reader.TokenType != JsonTokenType.StartObject)
         {
-            throw new JsonException("JSON payload expected to start with an object token '{'.");
+            throw new JsonException("JSON 数据应以对象起始符 '{' 开始。");
         }
 
         // 由于 Utf8JsonReader 是只进的，我们需要先将 JSON 对象解析为 JsonElement
@@ -62,7 +62,7 @@ public class AbstractAiProcessorConfigConverter : JsonConverter<AbstractAiProces
                 else
                 {
                     // 如果 ConfigType 存在但不是字符串，则视为错误
-                    throw new JsonException($"Property '{ConfigTypePropertyName}' must be a string value.");
+                    throw new JsonException($"属性 '{ConfigTypePropertyName}' 的值必须是字符串类型。");
                 }
 
                 configTypeFound = true;
@@ -74,27 +74,26 @@ public class AbstractAiProcessorConfigConverter : JsonConverter<AbstractAiProces
         if (!configTypeFound)
         {
             throw new JsonException(
-                $"Required property '{ConfigTypePropertyName}' not found in JSON object to determine the concrete type of AbstractAiProcessorConfig.");
+                $"JSON 对象中缺少必需的属性 '{ConfigTypePropertyName}'，无法确定其具体类型。");
         }
 
         if (string.IsNullOrWhiteSpace(configTypeValue))
         {
-            throw new JsonException($"Property '{ConfigTypePropertyName}' cannot be null, empty, or whitespace.");
+            throw new JsonException($"属性 '{ConfigTypePropertyName}' 的值不能为空或仅包含空白字符。");
         }
 
         // 使用 ConfigSchemasHelper 获取具体的 AI 配置类型
         var actualTargetType = ConfigSchemasHelper.GetAiConfigTypeByName(configTypeValue);
         if (actualTargetType == null)
         {
-            throw new JsonException(
-                $"Unknown or unsupported '{ConfigTypePropertyName}': '{configTypeValue}'. Cannot find a corresponding .NET type.");
+            throw new JsonException($"未知或不支持的 '{ConfigTypePropertyName}': '{configTypeValue}'。找不到对应的 .NET 类型。");
         }
 
         // 检查获取到的类型是否确实是 AbstractAiProcessorConfig 的派生类
         if (!typeof(AbstractAiProcessorConfig).IsAssignableFrom(actualTargetType))
         {
             throw new JsonException(
-                $"The type '{actualTargetType.FullName}' found for '{ConfigTypePropertyName}' value '{configTypeValue}' does not inherit from '{nameof(AbstractAiProcessorConfig)}'.");
+                $"根据 '{ConfigTypePropertyName}' 的值 '{configTypeValue}' 找到的类型 '{actualTargetType.FullName}' 未继承自 '{nameof(AbstractAiProcessorConfig)}'。");
         }
 
         // 现在我们有了目标具体类型，可以将原始 JSON (jsonObject.GetRawText())
@@ -110,23 +109,20 @@ public class AbstractAiProcessorConfigConverter : JsonConverter<AbstractAiProces
             if (result == null && Nullable.GetUnderlyingType(actualTargetType) == null)
             {
                 // 这通常不应该发生，除非反序列化逻辑对于特定类型返回了 null
-                throw new JsonException(
-                    $"Deserialization of '{configTypeValue}' to type '{actualTargetType.FullName}' resulted in null, but the type is not nullable.");
+                throw new JsonException($"将 '{configTypeValue}' 反序列化到类型 '{actualTargetType.FullName}' 的结果为 null，但该类型不可为空。");
             }
 
             return result;
         }
         catch (JsonException ex)
         {
-            // 重新抛出，可能添加更多上下文
-            throw new JsonException(
-                $"Error deserializing JSON to concrete type '{actualTargetType.FullName}' for ConfigType '{configTypeValue}'. InnerException: {ex.Message}",
-                ex);
+            // 重新抛出，添加更多上下文
+            throw new JsonException($"将 JSON 反序列化为配置类型 '{configTypeValue}' 的具体类型 '{actualTargetType.FullName}' 时出错。", ex);
         }
         catch (Exception ex) // 捕获其他可能的反序列化异常
         {
             throw new JsonException(
-                $"An unexpected error occurred while deserializing to target type '{actualTargetType.FullName}': {ex.Message}", ex);
+                $"反序列化到目标类型 '{actualTargetType.FullName}' 时发生意外错误。", ex);
         }
     }
 

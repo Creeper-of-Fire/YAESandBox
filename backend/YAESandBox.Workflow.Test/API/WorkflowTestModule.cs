@@ -1,15 +1,14 @@
-﻿using Microsoft.AspNetCore.Routing;
-using YAESandBox.Workflow.Core.Abstractions;
-using YAESandBox.Workflow.Test.API.GameHub;
-
-namespace YAESandBox.Workflow.Test.API;
-
-using Microsoft.AspNetCore.Builder;
+﻿using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
-using Depend.AspNetCore;
-using Controller;
+using YAESandBox.Depend.AspNetCore;
+using YAESandBox.Workflow.Core.Abstractions;
+using YAESandBox.Workflow.Test.API.Controller;
+using YAESandBox.Workflow.Test.API.GameHub;
+
+namespace YAESandBox.Workflow.Test.API;
 
 /// <summary>
 /// 用于测试工作流执行功能的模块。

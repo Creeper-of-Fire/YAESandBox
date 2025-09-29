@@ -1,7 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using Microsoft.AspNetCore.Mvc;
-using YAESandBox.Workflow.Utility;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using YAESandBox.Authentication;
 using YAESandBox.Depend.Results;
@@ -9,6 +8,7 @@ using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.Test.API.GameHub;
+using YAESandBox.Workflow.Utility;
 
 namespace YAESandBox.Workflow.Test.API.Controller;
 
@@ -130,7 +130,7 @@ public class WorkflowExecutionController(
             catch (Exception ex)
             {
                 // 捕获意外异常
-                var exceptionMessage = new StreamMessage("error", $"[Backend Error] {ex.Message}");
+                var exceptionMessage = new StreamMessage("error", $"工作流执行期间发生未处理的异常：{ex.ToFormattedString()}");
                 // 确保即使在取消的情况下也尝试通知客户端
                 await this.WorkflowHubContext.Clients.Client(request.ConnectionId)
                     .SendAsync("ReceiveWorkflowUpdate", exceptionMessage, CancellationToken.None);

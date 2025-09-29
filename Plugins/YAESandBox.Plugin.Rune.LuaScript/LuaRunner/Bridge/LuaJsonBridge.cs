@@ -1,5 +1,6 @@
 ﻿using System.Reflection;
 using NLua;
+using YAESandBox.Depend.Results;
 
 // ReSharper disable InconsistentNaming
 namespace YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
@@ -33,7 +34,7 @@ public class LuaJsonBridge : ILuaBridge
         }
         catch (Exception ex)
         {
-            logger.error($"加载JSON库失败: {ex.Message}");
+            logger.error($"加载JSON库失败。{ex.ToFormattedString()}");
 
             // 回退到内置简单实现
             luaState.DoString(

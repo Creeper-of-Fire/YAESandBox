@@ -1,5 +1,6 @@
 ﻿using System.Text.Json;
 using NLua;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Tuum;
 
@@ -51,7 +52,7 @@ public class LuaContextBridge(TuumProcessor.TuumProcessorContent tuumContent) : 
         }
         catch (Exception ex)
         {
-            logger.error($"ctx.get('{name}') 失败: {ex.Message}");
+            logger.error($"ctx.get('{name}') 失败。{ex.ToFormattedString()}");
             return null; // 向 Lua 返回 nil
         }
     }
@@ -72,7 +73,7 @@ public class LuaContextBridge(TuumProcessor.TuumProcessorContent tuumContent) : 
         }
         catch (Exception ex)
         {
-            logger.error($"ctx.set('{name}') 失败: {ex.Message}");
+            logger.error($"ctx.set('{name}') 失败。{ex.ToFormattedString()}");
         }
     }
 

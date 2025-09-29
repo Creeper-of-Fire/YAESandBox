@@ -1,6 +1,5 @@
 ﻿// 文件路径: YAESandBox.Workflow.AIService/AiConfig/DeepSeek/DeepSeekAiProcessor.cs
 
-using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using YAESandBox.Depend;
 using YAESandBox.Depend.Results;
@@ -67,13 +66,13 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
         }
         catch (HttpRequestException ex)
         {
-            Logger.LogError(ex, "与 DeepSeek API 通信失败: {ErrorMessage}", ex.Message);
-            return AiError.Error($"与 DeepSeek API 通信失败: {ex.Message}");
+            Logger.LogError(ex, "与 DeepSeek API 通信失败。");
+            return AiError.Error("与 DeepSeek API 通信失败。",ex);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "处理 DeepSeek 请求时发生未知错误: {ErrorMessage}", ex.Message);
-            return AiError.Error($"处理 DeepSeek 请求时发生未知错误: {ex.Message}");
+            Logger.LogError(ex, "处理 DeepSeek 请求时发生未知错误");
+            return AiError.Error("处理 DeepSeek 请求时发生未知错误",ex);
         }
     }
 
@@ -102,11 +101,11 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
         }
         catch (HttpRequestException ex)
         {
-            return AiError.Error($"与 DeepSeek API 通信失败: {ex.Message}");
+            return AiError.Error("与 DeepSeek API 通信失败。",ex);
         }
         catch (Exception ex)
         {
-            return AiError.Error($"处理 DeepSeek 请求时发生未知错误: {ex.Message}");
+            return AiError.Error("处理 DeepSeek 请求时发生未知错误。",ex);
         }
     }
 

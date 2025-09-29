@@ -1,5 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Mvc;
+using YAESandBox.Depend.Results;
 using YAESandBox.Plugin.Rune.TextParser.Rune;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
@@ -112,7 +113,7 @@ public class TextParserTestController : ControllerBase
             return this.Ok(new TestResponseDto
             {
                 IsSuccess = false,
-                ErrorMessage = error.Message,
+                ErrorMessage = error.ToDetailString(),
                 DebugInfo = processor.DebugDto
             });
         }

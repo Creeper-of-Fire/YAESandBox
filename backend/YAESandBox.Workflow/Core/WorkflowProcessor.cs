@@ -82,7 +82,7 @@ public class WorkflowProcessor(
         {
             var autoConnectResult = GraphExecutor.TryAutoConnect<IGraphNode<string>, string>(allGraphNodes);
             if (autoConnectResult.TryGetError(out var error, out var autoConnections))
-                return new WorkflowExecutionResult(false, error.Message, "AutoConnectionFailed");
+                return new WorkflowExecutionResult(false, error.ToDetailString(), "AutoConnectionFailed");
             connections = autoConnections;
         }
         else
@@ -116,7 +116,7 @@ public class WorkflowProcessor(
 
         if (executionResult.TryGetError(out var execError, out var finalDataStore))
         {
-            return new WorkflowExecutionResult(false, execError.Message, "TuumExecutionFailed");
+            return new WorkflowExecutionResult(false, execError.ToDetailString(), "TuumExecutionFailed");
         }
 
         // --- 4. 后处理阶段：执行成功 ---

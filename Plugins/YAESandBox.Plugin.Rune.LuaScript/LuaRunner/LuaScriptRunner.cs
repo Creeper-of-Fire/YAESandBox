@@ -14,7 +14,7 @@ namespace YAESandBox.Plugin.Rune.LuaScript.LuaRunner;
 /// </summary>
 /// <param name="debugDto">用于记录日志和错误的调试对象。</param>
 /// <param name="bridges"></param>
-public partial class LuaScriptRunner(IDebugDtoWithLogs debugDto, IEnumerable<ILuaBridge> bridges)
+public class LuaScriptRunner(IDebugDtoWithLogs debugDto, IEnumerable<ILuaBridge> bridges)
 {
     private IDebugDtoWithLogs DebugDto { get; } = debugDto;
     private IEnumerable<ILuaBridge> Bridges { get; } = bridges;
@@ -30,7 +30,7 @@ public partial class LuaScriptRunner(IDebugDtoWithLogs debugDto, IEnumerable<ILu
     {
         if (string.IsNullOrWhiteSpace(script))
         {
-            return Task.FromResult(Result.Ok());
+            return Result.Ok().AsCompletedTask();
         }
 
         try
@@ -68,7 +68,7 @@ public partial class LuaScriptRunner(IDebugDtoWithLogs debugDto, IEnumerable<ILu
                 }
                 catch (Exception ex)
                 {
-                    logger.error($"注册功能桥 '{bridge.BridgeName}' 时失败: {ex.Message}");
+                    logger.error($"注册功能桥 '{bridge.BridgeName}' 时失败。{ex.ToFormattedString()}");
                     // 注册失败时，可以选择继续或中止，这里我们选择记录错误并继续
                 }
             }
@@ -79,7 +79,7 @@ public partial class LuaScriptRunner(IDebugDtoWithLogs debugDto, IEnumerable<ILu
             // --- 执行主脚本 ---
             lua.DoString(script);
 
-            return Task.FromResult(Result.Ok());
+            return Result.Ok().AsCompletedTask();
         }
         catch (Exception ex)
         {
@@ -90,7 +90,7 @@ public partial class LuaScriptRunner(IDebugDtoWithLogs debugDto, IEnumerable<ILu
             if (this.DebugDto is { } loggableDto)
             {
                 loggableDto.RuntimeError = conciseErrorMessage;
-                loggableDto.Logs.Add($"[FATAL] 脚本执行异常. 详细信息如下:");
+                loggableDto.Logs.Add("[FATAL] 脚本执行异常. 详细信息如下:");
                 using var reader = new StringReader(fullErrorDetails);
                 for (string? line = reader.ReadLine(); line != null; line = reader.ReadLine())
                 {
@@ -104,7 +104,7 @@ public partial class LuaScriptRunner(IDebugDtoWithLogs debugDto, IEnumerable<ILu
                 builder.AppendLine(log + "\n");
             }
 
-            return Task.FromResult(Result.Fail(fullErrorDetails + "\n" + builder).ToResult());
+            return Result.Fail(fullErrorDetails + "\n" + builder,ex).AsCompletedTask();
         }
     }
 }

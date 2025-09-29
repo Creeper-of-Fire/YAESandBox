@@ -1,9 +1,8 @@
 ﻿using System.Diagnostics;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.Results;
 
-namespace YAESandBox.Depend.AspNetCore;
+namespace YAESandBox.Depend.AspNetCore.Controller.ResultToAction;
 
 /// <summary>
 /// 提供将 FluentResults.Result 对象转换为 ASP.NET Core ActionResult 的扩展方法。
@@ -38,33 +37,12 @@ public static partial class ResultToActionExtensions
     public static ObjectResult Get500ErrorResult(this ControllerBase controller, Result result)
     {
         if (result.TryGetError(out var error))
+        {
             // 返回 500 Internal Server Error 和错误消息
-            return controller.StatusCode(StatusCodes.Status500InternalServerError, error);
+            return controller.InternalServerError(error);
+        }
+
         // 防御性编程：检查是否错误地传入了成功的结果
         throw new UnreachableException($"GetErrorResult: {result} 必定是失败的，但却输入了成功的情况。"); // 如果成功，则表示逻辑错误
     }
-}
-
-/// <summary>
-/// 定义错误数据传输对象（DTO）的接口。
-/// 确保所有错误 DTO 实现都具有 Message 属性。
-/// </summary>
-public interface IErrorDto
-{
-    /// <summary>
-    /// 获取或设置错误消息。
-    /// </summary>
-    string Message { get; set; }
-}
-
-/// <summary>
-/// 表示一个标准的错误数据传输对象（DTO）。
-/// 用于在 API 响应中序列化错误信息。
-/// </summary>
-public class ErrorDto : IErrorDto
-{
-    /// <summary>
-    /// 获取或设置错误消息。
-    /// </summary>
-    public string Message { get; set; } = string.Empty; // 初始化以避免 null
 }

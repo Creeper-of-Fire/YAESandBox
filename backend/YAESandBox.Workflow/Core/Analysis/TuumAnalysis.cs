@@ -60,7 +60,7 @@ public record TuumAnalysisResult
 /// <summary>
 /// 封装了对单个枢机（Tuum）配置进行静态分析和校验的所有逻辑。
 /// </summary>
-public partial class TuumAnalysisService
+public class TuumAnalysisService
 {
     /// <summary>
     /// 对指定的枢机配置进行全面的静态分析和规则校验。

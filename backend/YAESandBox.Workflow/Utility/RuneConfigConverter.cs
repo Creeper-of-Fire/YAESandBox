@@ -1,6 +1,7 @@
 ﻿using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Rune;
 
@@ -48,7 +49,7 @@ internal class RuneConfigConverter : JsonConverter<AbstractRuneConfig>
                               prop.ValueKind == JsonValueKind.String
                 ? prop.GetString() ?? "未知"
                 : "未知";
-            return CreateFallback(jsonObject, $"JSON反序列化到目标类型时出错：{jsonEx.Message}", typeName);
+            return CreateFallback(jsonObject, $"JSON反序列化到目标类型时出错。{jsonEx.ToFormattedString()}", typeName);
         }
         catch (Exception ex)
         {
@@ -57,7 +58,7 @@ internal class RuneConfigConverter : JsonConverter<AbstractRuneConfig>
                 jsonObject.TryGetProperty(ExpectedRuneTypePropertyName, out var prop) && prop.ValueKind == JsonValueKind.String
                     ? prop.GetString() ?? "未知"
                     : "未知";
-            return CreateFallback(jsonObject, $"发生意外错误：{ex.Message}", typeName);
+            return CreateFallback(jsonObject, $"发生意外错误。{ex.ToFormattedString()}", typeName);
         }
     }
 

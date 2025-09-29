@@ -94,7 +94,7 @@ public static class YaeSandBoxJsonHelper
                     // 可以选择记录日志，某些属性即使 CanWrite 返回 true，也可能由于内部状态而不允许修改
                     // 例如，在 JsonSerializerOptions 被标记为只读后。
                     // 但在 MVC AddJsonOptions 配置期间，通常是可写的。
-                    Logger.LogError(ex, "复制属性 {PropName} 时出错: {ExMessage}", prop.Name, ex.Message);
+                    Logger.LogError(ex, "复制属性 {PropName} 时出错。", prop.Name);
                 }
             }
         }
@@ -294,7 +294,7 @@ public static class YaeSandBoxJsonHelper
         }
         catch (Exception ex) // 捕获所有可能的异常，如 JsonException, NotSupportedException 等
         {
-            return Result.Fail($"深拷贝失败：在序列化或反序列化过程中发生错误。详情: {ex.Message}");
+            return Result.Fail("深拷贝失败：在序列化或反序列化过程中发生错误。",ex);
         }
     }
 }

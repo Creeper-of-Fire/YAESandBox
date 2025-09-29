@@ -31,7 +31,7 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRoo
     private Result<FilePath> GetValidatedFilePath(string fileName, params string[] subDirectories)
     {
         var allParts = subDirectories.Append(fileName).ToArray();
-        var validationResult = GetValidatedFullPath(allParts);
+        var validationResult = this.GetValidatedFullPath(allParts);
         
         if (validationResult.TryGetError(out var error))
             return error;
@@ -99,7 +99,7 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRoo
         }
         catch (Exception ex) // 捕获文件写入等潜在错误
         {
-            return Result.Fail($"保存文件时出错 ({filePath.TotalPath}): {ex.Message}");
+            return Result.Fail($"保存文件时出错 ({filePath.TotalPath})。",ex);
         }
     }
 
@@ -121,7 +121,7 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRoo
         }
         catch (Exception ex)
         {
-            return Result.Fail($"加载文件时出错 ({filePath.TotalPath}): {ex.Message}");
+            return Result.Fail($"加载文件时出错 ({filePath.TotalPath})。",ex);
         }
     }
 
@@ -144,7 +144,7 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRoo
         }
         catch (Exception ex) // 捕获文件写入等潜在错误
         {
-            return Result.Fail($"保存配置时出错 ({filePath.TotalPath}): {ex.Message}");
+            return Result.Fail($"保存配置时出错 ({filePath.TotalPath})。",ex);
         }
     }
 }

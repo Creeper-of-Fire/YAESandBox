@@ -5,7 +5,7 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using static YAESandBox.Depend.ResultsExtend.NormalError;
 
-namespace YAESandBox.Depend.AspNetCore;
+namespace YAESandBox.Depend.AspNetCore.Controller.ResultToAction;
 
 public static partial class ResultToActionExtensions
 {
@@ -28,13 +28,11 @@ public static partial class ResultToActionExtensions
         }
 
         // 处理失败情况
-        string errorMessage = error.Message;
-
-        if (ServerErrorToActionResult(error, errorMessage, out var actionResult))
+        if (ServerErrorToActionResult(error, out var actionResult))
             return actionResult;
 
-        // 传统流程/默认行为：如果不是 NormalError 或没有特定 Code，返回 500
-        return new ObjectResult(errorMessage) { StatusCode = StatusCodes.Status500InternalServerError };
+        // 委托给非泛型版本处理错误
+        return ToActionResult(error.ToResult(), options);
     }
 
     /// <summary>
@@ -56,13 +54,11 @@ public static partial class ResultToActionExtensions
         }
 
         // 处理失败情况
-        string errorMessage = error.Message;
-
-        if (ServerErrorToActionResult(error, errorMessage, out var actionResult))
+        if (ServerErrorToActionResult(error, out var actionResult))
             return actionResult;
 
         // 传统流程/默认行为：如果不是 NormalError 或没有特定 Code，返回 500
-        return new ObjectResult(errorMessage) { StatusCode = StatusCodes.Status500InternalServerError };
+        return new ObjectResult(error.ToDetailString()) { StatusCode = StatusCodes.Status500InternalServerError };
     }
 
     /// <summary>
@@ -135,13 +131,16 @@ public static partial class ResultToActionExtensions
         return new OkObjectResult(responseDto);
     }
 
-    private static bool ServerErrorToActionResult(Error error, string? errorMessage, [NotNullWhen(true)] out ActionResult? actionResult)
+    private static bool ServerErrorToActionResult(Error error, [NotNullWhen(true)] out ActionResult? actionResult)
     {
         actionResult = null;
         if (error is not NormalError serverError)
             return false;
         (int statusCode, string defaultServerErrorMessage) = MapServerErrorTypeToHttpStatusCodeAndDefaultMessage(serverError.Code);
-        actionResult = new ObjectResult(errorMessage ?? defaultServerErrorMessage) { StatusCode = statusCode };
+        string errorMessage = error.ToDetailString();
+        if (string.IsNullOrEmpty(errorMessage))
+            errorMessage = defaultServerErrorMessage;
+        actionResult = new ObjectResult(errorMessage) { StatusCode = statusCode };
         return true;
     }
 

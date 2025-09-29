@@ -21,7 +21,7 @@ namespace YAESandBox.Plugin.Rune.TextParser.Rune;
 /// “标签解析”符文的运行时处理器。
 /// </summary>
 public class TagParserRuneProcessor(TagParserRuneConfig config)
-    : INormalRune<TagParserRuneConfig, TagParserRuneProcessor.TagParserRuneDebugDto>
+    : INormalRune<TagParserRuneConfig, TagParserRuneDebugDto>
 {
     /// <inheritdoc />
     public TagParserRuneConfig Config { get; } = config;
@@ -72,12 +72,12 @@ public class TagParserRuneProcessor(TagParserRuneConfig config)
             // 设置输出变量
             tuumProcessorContent.SetTuumVar(this.Config.TextOperation.OutputVariableName, finalOutput);
 
-            return Task.FromResult(Result.Ok());
+            return Result.Ok().AsCompletedTask();
         }
         catch (Exception ex)
         {
-            this.DebugDto.RuntimeError = $"解析失败: {ex.Message}";
-            return Task.FromResult<Result>(Result.Fail($"标签解析符文执行失败: {ex.Message}"));
+            this.DebugDto.RuntimeError = $"解析失败。{ex.ToFormattedString()}";
+            return Result.Fail("标签解析符文执行失败。", ex).AsCompletedTask();
         }
     }
 

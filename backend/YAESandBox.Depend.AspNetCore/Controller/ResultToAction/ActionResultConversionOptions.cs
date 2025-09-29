@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 
-namespace YAESandBox.Depend.AspNetCore;
+namespace YAESandBox.Depend.AspNetCore.Controller.ResultToAction;
 
 /// <summary>
 /// 为 Result 到 ActionResult 的转换提供配置选项。

@@ -62,7 +62,7 @@ public partial class JsonFileJsonStorage
         }
         catch (JsonException ex)
         {
-            return JsonError.Error(jsonContent, $"反序列化数据为类型 {typeof(T).Name} 时出错: {ex.Message}");
+            return JsonError.Error(jsonContent, $"反序列化数据为类型 {typeof(T).Name} 时出错。",ex);
         }
     }
 
@@ -91,7 +91,7 @@ public partial class JsonFileJsonStorage
     public virtual async Task<Result<IEnumerable<string>>> ListFileNamesAsync(
         ListFileOption? listOption = null, params string[] subDirectories)
     {
-        var pathResult = GetValidatedFullPath(subDirectories);
+        var pathResult = this.GetValidatedFullPath(subDirectories);
         if (pathResult.TryGetError(out var error, out var directoryPath))
             return error;
 
@@ -118,13 +118,13 @@ public partial class JsonFileJsonStorage
                 catch (Exception ex)
                 {
                     // 从 lambda 内部返回失败的 Result
-                    return NormalError.Error($"在后台线程列出文件名时出错 (路径: {directoryPath}): {ex.Message}");
+                    return NormalError.Error($"在后台线程列出文件名时出错 (路径: {directoryPath})。",ex);
                 }
             });
         }
         catch (Exception ex) // 捕获 await Task.Run() 可能重新抛出的异常
         {
-            return NormalError.Error($"列出文件名时发生顶层错误: {ex.Message}");
+            return NormalError.Error("列出文件名时发生顶层错误。",ex);
         }
     }
 
@@ -132,7 +132,7 @@ public partial class JsonFileJsonStorage
     public virtual async Task<Result<IEnumerable<string>>> ListFoldersAsync(
         ListFileOption? listOption = null, params string[] subDirectories)
     {
-        var pathResult = GetValidatedFullPath(subDirectories);
+        var pathResult = this.GetValidatedFullPath(subDirectories);
         if (pathResult.TryGetError(out var error, out var directoryPath))
             return error;
 
@@ -159,16 +159,16 @@ public partial class JsonFileJsonStorage
                 catch (Exception ex)
                 {
                     // 从 lambda 内部返回失败的 Result
-                    return NormalError.Error($"在后台线程列出文件名时出错 (路径: {directoryPath}): {ex.Message}");
+                    return NormalError.Error($"在后台线程列出文件名时出错 (路径: {directoryPath})。",ex);
                 }
             });
         }
         catch (Exception ex) // 捕获 await Task.Run() 可能重新抛出的异常
         {
-            return NormalError.Error($"列出文件名时发生顶层错误: {ex.Message}");
+            return NormalError.Error("列出文件名时发生顶层错误。",ex);
         }
     }
-    
+
     /// <inheritdoc />
     public virtual async Task<Result> DeleteFileAsync(string fileName, params string[] subDirectories)
     {
@@ -194,22 +194,22 @@ public partial class JsonFileJsonStorage
                     }
                     catch (IOException ex) // 例如，文件被占用
                     {
-                        return Result.Fail($"删除文件 '{filePath.TotalPath}' 时发生IO错误: {ex.Message}");
+                        return Result.Fail($"删除文件 '{filePath.TotalPath}' 时发生IO错误。", ex);
                     }
                     catch (UnauthorizedAccessException ex) // 权限不足
                     {
-                        return Result.Fail($"删除文件 '{filePath.TotalPath}' 时权限不足: {ex.Message}");
+                        return Result.Fail($"删除文件 '{filePath.TotalPath}' 时权限不足。", ex);
                     }
                     catch (Exception ex) // 其他潜在异常
                     {
-                        return Result.Fail($"删除文件 '{filePath.TotalPath}' 时发生未知错误: {ex.Message}");
+                        return Result.Fail($"删除文件 '{filePath.TotalPath}' 时发生未知错误。", ex);
                     }
                 });
             }
             catch (Exception ex) // 捕获 LockAsync 或 Task.Run 本身可能抛出的异常
             {
                 // 这种情况比较少见，但为了完整性可以捕获
-                return Result.Fail($"执行删除文件操作 '{filePath.TotalPath}' 时发生外部错误: {ex.Message}");
+                return Result.Fail($"执行删除文件操作 '{filePath.TotalPath}' 时发生外部错误。", ex);
             }
         }
     }
@@ -217,7 +217,7 @@ public partial class JsonFileJsonStorage
     /// <inheritdoc />
     public virtual async Task<Result> DeleteDirectoryAsync(DirectoryDeleteOption deleteOption, params string[] subDirectories)
     {
-        var pathResult = GetValidatedFullPath(subDirectories);
+        var pathResult = this.GetValidatedFullPath(subDirectories);
         if (pathResult.TryGetError(out var error, out var directoryPath))
             return error;
 
@@ -250,21 +250,21 @@ public partial class JsonFileJsonStorage
                 }
                 catch (IOException ex)
                 {
-                    return Result.Fail($"删除目录 '{directoryPath}' 时发生IO错误: {ex.Message}");
+                    return Result.Fail($"删除目录 '{directoryPath}' 时发生IO错误。",ex);
                 }
                 catch (UnauthorizedAccessException ex)
                 {
-                    return Result.Fail($"删除目录 '{directoryPath}' 时权限不足: {ex.Message}");
+                    return Result.Fail($"删除目录 '{directoryPath}' 时权限不足。",ex);
                 }
                 catch (Exception ex)
                 {
-                    return Result.Fail($"删除目录 '{directoryPath}' 时发生未知错误: {ex.Message}");
+                    return Result.Fail($"删除目录 '{directoryPath}' 时发生未知错误。",ex);
                 }
             });
         }
         catch (Exception ex)
         {
-            return Result.Fail($"执行删除目录操作 '{directoryPath}' 时发生外部错误: {ex.Message}");
+            return Result.Fail($"执行删除目录操作 '{directoryPath}' 时发生外部错误。",ex);
         }
     }
 
@@ -304,7 +304,7 @@ public partial class JsonFileJsonStorage
         }
         catch (Exception ex)
         {
-            return Result.Fail($"在递归删除空目录 '{directoryPath}' 时发生错误: {ex.Message}");
+            return Result.Fail($"在递归删除空目录 '{directoryPath}' 时发生错误。",ex);
         }
     }
 }

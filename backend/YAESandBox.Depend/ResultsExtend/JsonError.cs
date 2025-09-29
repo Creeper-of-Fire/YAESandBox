@@ -4,21 +4,21 @@ using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Depend.ResultsExtend;
 
-internal record JsonError(string? OriginJsonString, string Message) : Error(Message), IErrorCanBeDto
+internal record JsonError(string? OriginJsonString, string Message, Exception? Exception = null) : Error(Message, Exception), IErrorCanBeDto
 {
-    internal static JsonError Error(string? originJsonString, string message)
+    internal static JsonError Error(string? originJsonString, string message, Exception? exception = null)
     {
-        return new JsonError(originJsonString, message);
+        return new JsonError(originJsonString, message, exception);
     }
 
-    internal static JsonError Error(JsonNode? originJsonNode, string message)
+    internal static JsonError Error(JsonNode? originJsonNode, string message, Exception? exception = null)
     {
-        return new JsonError(originJsonNode?.ToJsonString(), message);
+        return new JsonError(originJsonNode?.ToJsonString(), message, exception);
     }
 
     /// <inheritdoc />
     public ResultDto<TValue> ToDto<TValue>() => new JsonResultDto<TValue>
-        { ErrorMessage = this.Message, Data = default, IsSuccess = false, OriginJsonString = this.OriginJsonString };
+        { ErrorDetails = this.ToDetailString(), Data = default, IsSuccess = false, OriginJsonString = this.OriginJsonString };
 }
 
 /// <inheritdoc />
@@ -44,7 +44,7 @@ public record JsonResultDto<TData> : ResultDto<TData>
         {
             IsSuccess = resultDto.IsSuccess,
             Data = resultDto.Data,
-            ErrorMessage = resultDto.ErrorMessage,
+            ErrorDetails = resultDto.ErrorDetails,
             OriginJsonString = null
         };
     }

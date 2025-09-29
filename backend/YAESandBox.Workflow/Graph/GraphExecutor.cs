@@ -248,7 +248,7 @@ public static class GraphExecutor
         var executeResult = await executeNodeAsync(node.Node, nodeInputs, cancellationToken);
         if (executeResult.TryGetError(out var error, out var nodeOutputs))
         {
-            return Result.Fail($"节点 '{node.Node.Id}' 执行失败: {error.Message}");
+            return Result.Fail("节点 '{node.Node.Id}' 执行失败。", error);
         }
 
         // 3. 存储输出

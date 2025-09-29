@@ -1,7 +1,6 @@
 ﻿// 文件: YAESandBox.AppWeb/DefaultPluginDiscoveryService.cs
 
 using System.Collections.ObjectModel;
-using YAESandBox.Depend;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 
 namespace YAESandBox.AppWeb.Services;
@@ -42,7 +41,7 @@ public class DefaultPluginDiscoveryService : IPluginDiscoveryService
             }
 
             this.DiscoveredPlugins = new ReadOnlyCollection<DiscoveredPlugin>(plugins);
-            Console.WriteLine($"发现 {DiscoveredPlugins.Count} 个插件。");
+            Console.WriteLine($"发现 {this.DiscoveredPlugins.Count} 个插件。");
         }
     }
 

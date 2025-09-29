@@ -20,7 +20,7 @@ namespace YAESandBox.Plugin.Rune.TextParser.Rune;
 /// “正则生成”符文的运行时处理器。
 /// </summary>
 public class RegexParserRuneProcessor(RegexParserRuneConfig config)
-    : INormalRune<RegexParserRuneConfig, RegexParserRuneProcessor.RegexParserDebugDto>
+    : INormalRune<RegexParserRuneConfig, RegexParserDebugDto>
 {
     /// <inheritdoc />
     public RegexParserRuneConfig Config { get; } = config;
@@ -40,7 +40,7 @@ public class RegexParserRuneProcessor(RegexParserRuneConfig config)
                 ? string.Empty
                 : TextOperationHelper.FormatOutput([], this.Config.TextOperation.ReturnFormat);
             tuumProcessorContent.SetTuumVar(this.Config.TextOperation.OutputVariableName, emptyResult);
-            return Task.FromResult(Result.Ok());
+            return Result.Ok().AsCompletedTask();
         }
 
         try
@@ -75,12 +75,12 @@ public class RegexParserRuneProcessor(RegexParserRuneConfig config)
             this.DebugDto.FinalOutput = finalOutput;
             tuumProcessorContent.SetTuumVar(this.Config.TextOperation.OutputVariableName, finalOutput);
 
-            return Task.FromResult(Result.Ok());
+            return Result.Ok().AsCompletedTask();
         }
         catch (Exception ex)
         {
-            this.DebugDto.RuntimeError = $"正则执行失败: {ex.Message}";
-            return Task.FromResult(Result.Fail($"正则解析符文执行失败: {ex.Message}").ToResult());
+            this.DebugDto.RuntimeError = $"正则执行失败。{ex.ToFormattedString()}";
+            return Result.Fail("正则解析符文执行失败。",ex).AsCompletedTask();
         }
     }
 

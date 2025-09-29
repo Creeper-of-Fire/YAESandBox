@@ -43,7 +43,7 @@ public static class SillyTavernDeserializer
         catch (JsonException ex)
         {
             // 捕获JSON解析异常，并返回一个友好的错误信息
-            return Result.Fail($"预设JSON格式错误，无法解析: {ex.Message}");
+            return Result.Fail("预设JSON格式错误，无法解析。",ex);
         }
     }
 
@@ -81,7 +81,7 @@ public static class SillyTavernDeserializer
         }
         catch (JsonException ex)
         {
-            return Result.Fail($"世界书JSON格式错误，无法解析: {ex.Message}");
+            return Result.Fail("世界书JSON格式错误，无法解析。",ex);
         }
     }
 }

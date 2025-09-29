@@ -1,6 +1,5 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
-using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.API.Schema;
@@ -18,7 +17,7 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// </summary>
 /// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
 /// <param name="config">符文配置。</param>
-internal partial class StaticVariableRuneProcessor(WorkflowRuntimeService workflowRuntimeService, StaticVariableRuneConfig config)
+internal class StaticVariableRuneProcessor(WorkflowRuntimeService workflowRuntimeService, StaticVariableRuneConfig config)
     : INormalRune<StaticVariableRuneConfig, StaticVariableRuneProcessorDebugDto>
 {
     private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
@@ -43,7 +42,7 @@ internal partial class StaticVariableRuneProcessor(WorkflowRuntimeService workfl
             this.DebugDto.DefinedVariables[variable.Key] = variable.Value;
         }
 
-        return Task.FromResult(Result.Ok());
+        return Result.Ok().AsCompletedTask();
     }
 
     /// <summary>

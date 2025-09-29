@@ -2,7 +2,6 @@
 using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.AspNetCore.Secret.Mark;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Workflow.AIService.AiConfig.Doubao;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.OpenAiCompatible;
 

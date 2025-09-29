@@ -73,7 +73,7 @@ internal record GeminiGenerateContentResponse : IAiResponseMessagePart
     [JsonPropertyName("candidates")] public IReadOnlyList<GeminiCandidate>? Candidates { get; init; }
 
     // 为 AiResponseFormatter 提供统一的内容获取方法
-    public string? GetContent() => Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text;
+    public string? GetContent() => this.Candidates?.FirstOrDefault()?.Content?.Parts?.FirstOrDefault()?.Text;
 
     // Gemini 没有独立的 reasoning_content 字段，这里返回 null
     public string? GetReasoningContent() => null;
