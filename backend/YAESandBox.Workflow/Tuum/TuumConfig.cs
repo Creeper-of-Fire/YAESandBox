@@ -41,14 +41,6 @@ public record TuumConfig
     [Required]
     [HiddenInForm(true)]
     public List<AbstractRuneConfig> Runes { get; init; } = [];
-    
-    /// <summary>
-    /// 定义了枢机内部Rune的图结构和连接行为。
-    /// <para>如果此对象为null，系统将默认采用自动连接模式。</para>
-    /// </summary>
-    [Display(Name = "内部图配置", Description = "配置枢机内部Rune的连接方式，包括手动连接和是否启用自动连接等。")]
-    [HiddenInForm(true)]
-    public TuumGraphConfig? Graph { get; init; }
 
     /// <summary>
     /// 定义了内部变量所需数据的来源，即从哪个外部输入端点获取。
@@ -147,45 +139,3 @@ public record TuumOutputMapping
     [Required(AllowEmptyStrings = true)]
     public string EndpointName { get; init; } = string.Empty;
 }
-
-/// <summary>
-/// 封装了Tuum内部Rune图的连接配置。
-/// </summary>
-public record TuumGraphConfig
-{
-    /// <summary>
-    /// 控制是否启用基于命名约定的自动连接功能。
-    /// <para>当为 true 时，系统会尝试自动连接所有Rune，忽略下面的 Connections 列表。</para>
-    /// <para>当为 false 时，系统将严格使用 Connections 列表进行手动连接。</para>
-    /// </summary>
-    [Required]
-    [DefaultValue(true)]
-    [Display(Name = "启用自动连接", Description = "如果启用，将根据Rune的顺序和端口名自动连接。如果禁用，则必须手动提供所有连接。")]
-    public bool EnableAutoConnect { get; init; } = true;
-
-    /// <summary>
-    /// 当 EnableAutoConnect 为 false 时，用于定义枢机内部所有Rune之间的显式连接。
-    /// </summary>
-    [Display(Name = "手动连接列表", Description = "当禁用自动连接时，在此处定义所有Rune之间的数据流向。")]
-    public List<RuneConnection>? Connections { get; init; } = [];
-}
-
-/// <summary>
-/// 定义一个可连接的Rune端点（端口）。
-/// </summary>
-/// <param name="RuneConfigId">端点所属Rune的ConfigId。</param>
-/// <param name="PortName">端口的名称（即内部变量名）。</param>
-public record RuneConnectionEndpoint(
-    [property: Required(AllowEmptyStrings = true)] string RuneConfigId,
-    [property: Required(AllowEmptyStrings = true)] string PortName
-);
-
-/// <summary>
-/// 定义了Tuum内部两个Rune端口之间的一条有向连接。
-/// </summary>
-/// <param name="Source">数据来源的输出端口。</param>
-/// <param name="Target">数据流向的输入端口。</param>
-public record RuneConnection(
-    [property: Required] RuneConnectionEndpoint Source,
-    [property: Required] RuneConnectionEndpoint Target
-);

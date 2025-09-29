@@ -1,4 +1,4 @@
-﻿using YAESandBox.Workflow.Graph;
+﻿using YAESandBox.Workflow.Core.Graph;
 
 namespace YAESandBox.Workflow.Core;
 

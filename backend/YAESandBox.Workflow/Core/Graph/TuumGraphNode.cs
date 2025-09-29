@@ -1,6 +1,6 @@
 ﻿using YAESandBox.Workflow.Tuum;
 
-namespace YAESandBox.Workflow.Graph;
+namespace YAESandBox.Workflow.Core.Graph;
 
 /// <summary>
 /// 一个Tuum在Workflow图中的最终、不可变表示 (DTO)。

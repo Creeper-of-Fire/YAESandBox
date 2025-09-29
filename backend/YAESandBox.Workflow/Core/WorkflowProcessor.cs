@@ -2,8 +2,8 @@
 using System.Collections.Immutable;
 using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.Core.Abstractions;
+using YAESandBox.Workflow.Core.Graph;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Graph;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.Utility;
 

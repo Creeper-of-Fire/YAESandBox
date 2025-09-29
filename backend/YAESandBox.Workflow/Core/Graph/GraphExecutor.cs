@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using YAESandBox.Depend.Results;
 
-namespace YAESandBox.Workflow.Graph;
+namespace YAESandBox.Workflow.Core.Graph;
 
 /// <summary>
 /// 定义一个可执行图中的通用节点。

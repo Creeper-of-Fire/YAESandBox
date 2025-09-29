@@ -3,7 +3,6 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AbstractRuneConfig } from './AbstractRuneConfig';
-import type { TuumGraphConfig } from './TuumGraphConfig';
 import type { TuumInputMapping } from './TuumInputMapping';
 import type { TuumOutputMapping } from './TuumOutputMapping';
 /**
@@ -27,7 +26,6 @@ export type TuumConfig = {
      * TuumProcessor 在执行时会严格按照此列表的顺序执行符文。
      */
     runes: Array<AbstractRuneConfig>;
-    graph?: TuumGraphConfig;
     /**
      * 定义内部变量数据来源的列表。这是持久化和与前端交互的主要字段。
      */
