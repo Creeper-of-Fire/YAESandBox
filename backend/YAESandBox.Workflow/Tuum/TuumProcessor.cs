@@ -1,6 +1,6 @@
-﻿using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
+using YAESandBox.Depend.Logger;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.Core;
@@ -19,6 +19,7 @@ public class TuumProcessor(
     TuumConfig config)
     : IProcessorWithDebugDto<ITuumProcessorDebugDto>
 {
+    private static IAppLogger Logger { get; } = AppLogging.CreateLogger<TuumProcessor>();
     private TuumConfig Config { get; } = config;
 
     /// <summary>

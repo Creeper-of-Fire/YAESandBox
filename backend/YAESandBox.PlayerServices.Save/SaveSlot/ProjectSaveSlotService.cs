@@ -33,7 +33,7 @@ public class ProjectSaveSlotService(IUserScopedStorageFactory userStorageFactory
             return error;
 
         var slots = new List<SaveSlot>();
-        foreach (var slotId in slotIds)
+        foreach (string slotId in slotIds)
         {
             var metaResult = await projectStorage.LoadAllAsync<SaveSlotMeta>(MetaFileName, slotId);
             if (metaResult.TryGetValue(out var meta) && meta is not null)
@@ -95,7 +95,7 @@ public class ProjectSaveSlotService(IUserScopedStorageFactory userStorageFactory
             return error;
 
         var copyResult = await CopyDirectoryAsync(projectStorage, sourceSlotId, projectStorage);
-        if (copyResult.TryGetError(out error, out var newSlotId))
+        if (copyResult.TryGetError(out error, out string? newSlotId))
             return error;
 
         // 使用请求中提供的数据创建新的元数据，并覆盖掉刚复制的旧 meta.json
@@ -165,9 +165,9 @@ public class ProjectSaveSlotService(IUserScopedStorageFactory userStorageFactory
         var filesResult = await storage.ListFileNamesAsync(ListFileOption.Default, sourceDir);
         if (filesResult.TryGetError(out var error, out var filesToCopy)) return error;
 
-        var newDirectoryName = Guid.NewGuid().ToString("N");
+        string newDirectoryName = Guid.NewGuid().ToString("N");
 
-        foreach (var fileName in filesToCopy)
+        foreach (string fileName in filesToCopy)
         {
             var contentResult = await storage.LoadRawStringAsync(fileName, sourceDir);
             if (contentResult.TryGetError(out error, out string? content))

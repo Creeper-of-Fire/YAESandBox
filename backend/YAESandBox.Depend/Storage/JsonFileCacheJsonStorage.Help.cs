@@ -75,7 +75,7 @@ public partial class JsonFileCacheJsonStorage
         var keysToRemove = this.Cache.Keys.Where(key => 
             key.StartsWith(directoryPrefix, StringComparison.OrdinalIgnoreCase)).ToList();
 
-        foreach (var key in keysToRemove)
+        foreach (string key in keysToRemove)
         {
             this.Cache.TryRemove(key, out _);
         }

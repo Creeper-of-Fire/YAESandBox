@@ -1,13 +1,13 @@
 ﻿using Microsoft.Extensions.FileProviders;
-using YAESandBox.Depend;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.Services;
+using YAESandBox.Depend.Logger;
 
 namespace YAESandBox.AppWeb.InnerModule;
 
 internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProgramAtLastConfigurator
 {
-    private static ILogger Logger { get; } = AppLogging.CreateLogger<FrontendHostModule>();
+    private static IAppLogger Logger { get; } = AppLogging.CreateLogger<FrontendHostModule>();
 
     /// <inheritdoc />
     public void RegisterServices(IServiceCollection service) { }
@@ -60,11 +60,11 @@ internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProg
 
         if (!Directory.Exists(absolutePath))
         {
-            Logger.LogError("[FrontendHost] 错误: 前端路径不存在, 已尝试组合的绝对路径为: {AbsolutePath}", absolutePath);
+            Logger.Error("[FrontendHost] 错误: 前端路径不存在, 已尝试组合的绝对路径为: {AbsolutePath}", absolutePath);
             return null;
         }
 
-        Logger.LogInformation("[FrontendHost] 成功找到前端资源目录: {AbsolutePath}", absolutePath);
+        Logger.Info("[FrontendHost] 成功找到前端资源目录: {AbsolutePath}", absolutePath);
         return absolutePath;
     }
 }

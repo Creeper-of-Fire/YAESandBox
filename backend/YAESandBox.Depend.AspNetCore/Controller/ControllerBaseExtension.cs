@@ -18,7 +18,7 @@ public static class ControllerBaseExtension
     public static ObjectResult InternalServerError(this ControllerBase controller, Error error)
     {
         // 统一使用 Error.ToDetailString() 来生成响应体
-        var responseBody = error.ToDetailString();
+        string responseBody = error.ToDetailString();
         return controller.StatusCode(StatusCodes.Status500InternalServerError, responseBody);
     }
     

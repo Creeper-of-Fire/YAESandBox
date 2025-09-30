@@ -36,7 +36,7 @@ public class RegexParserRuneProcessor(RegexParserRuneConfig config)
         if (string.IsNullOrEmpty(this.Config.Pattern))
         {
             // 如果没有提供正则表达式，则不执行任何操作，直接返回空结果
-            var emptyResult = this.Config.TextOperation.OperationMode == OperationModeEnum.Replace
+            object emptyResult = this.Config.TextOperation.OperationMode == OperationModeEnum.Replace
                 ? string.Empty
                 : TextOperationHelper.FormatOutput([], this.Config.TextOperation.ReturnFormat);
             tuumProcessorContent.SetTuumVar(this.Config.TextOperation.OutputVariableName, emptyResult);

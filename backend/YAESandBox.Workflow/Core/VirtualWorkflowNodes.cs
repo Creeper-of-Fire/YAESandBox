@@ -30,9 +30,9 @@ internal class VirtualWorkflowInputNode(WorkflowConfig config, IReadOnlyDictiona
     public Dictionary<string, object?> ProduceOutputs()
     {
         var outputs = new Dictionary<string, object?>();
-        foreach (var inputName in this.WorkflowInputNames)
+        foreach (string inputName in this.WorkflowInputNames)
         {
-            this.WorkflowInitialInputs.TryGetValue(inputName, out var value);
+            this.WorkflowInitialInputs.TryGetValue(inputName, out object? value);
             outputs[inputName] = value;
         }
         return outputs;

@@ -30,7 +30,7 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRoo
 
     private Result<FilePath> GetValidatedFilePath(string fileName, params string[] subDirectories)
     {
-        var allParts = subDirectories.Append(fileName).ToArray();
+        string[] allParts = subDirectories.Append(fileName).ToArray();
         var validationResult = this.GetValidatedFullPath(allParts);
         
         if (validationResult.TryGetError(out var error))
@@ -47,7 +47,7 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRoo
     private Result<string> GetValidatedFullPath(params string[] pathParts)
     {
         // 1. 检查每个路径部分是否包含非法字符或遍历序列
-        foreach (var part in pathParts)
+        foreach (string part in pathParts)
         {
             if (string.IsNullOrEmpty(part)) continue; // 允许空部分，Path.Combine会处理
             if (part.Contains("..") || part.Contains(':') || part.Contains('/') || part.Contains('\\'))

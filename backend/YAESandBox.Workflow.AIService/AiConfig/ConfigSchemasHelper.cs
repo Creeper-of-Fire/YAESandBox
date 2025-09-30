@@ -2,8 +2,7 @@
 
 using System.Collections.ObjectModel;
 using System.Reflection;
-using Microsoft.Extensions.Logging;
-using YAESandBox.Depend;
+using YAESandBox.Depend.Logger;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;
 
@@ -14,7 +13,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig;
 /// </summary>
 internal static class ConfigSchemasHelper // 改为静态类，因为所有成员都是静态的
 {
-    private static ILogger Logger { get; } = AppLogging.CreateLogger(nameof(ConfigSchemasHelper));
+    private static IAppLogger Logger { get; } = AppLogging.CreateLogger(nameof(ConfigSchemasHelper));
 
     // 假设 AbstractAiProcessorConfig 是定义 AI 处理器配置的基类
     private static Type AbstractAiProcessorConfigType { get; } = typeof(AbstractAiProcessorConfig);
@@ -37,7 +36,7 @@ internal static class ConfigSchemasHelper // 改为静态类，因为所有成�
 
         if (targetAssembly == null)
         {
-            Logger.LogError("[ERROR] 无法获取类型 '{FullName}' 所在的程序集。AI 配置类型将无法被发现。", AbstractAiProcessorConfigType.FullName);
+            Logger.Error("[ERROR] 无法获取类型 '{FullName}' 所在的程序集。AI 配置类型将无法被发现。", AbstractAiProcessorConfigType.FullName);
             AvailableAiConfigTypesCache = new ReadOnlyDictionary<string, Type>(temporaryDictionary); // 初始化为空字典
             return;
         }
@@ -60,7 +59,7 @@ internal static class ConfigSchemasHelper // 改为静态类，因为所有成�
             // 处理类型名称冲突 (忽略大小写)
             if (temporaryDictionary.TryGetValue(typeName, out var existingType))
             {
-                Logger.LogError(
+                Logger.Error(
                     "[ERROR] AI 配置类型名称冲突：类型 '{TypeFullName}' 和 '{ExistingTypeFullName}' 都具有相同的类名 '{TypeName}' (忽略大小写)。类名必须在该上下文中唯一。",
                     type.FullName, existingType.FullName, typeName);
                 // 可以选择抛出异常或跳过冲突的类型，这里选择记录错误并跳过后来者（或先来者，取决于字典行为）
@@ -74,10 +73,10 @@ internal static class ConfigSchemasHelper // 改为静态类，因为所有成�
 
         AvailableAiConfigTypesCache = new ReadOnlyDictionary<string, Type>(temporaryDictionary);
 
-        Logger.LogInformation("[INFO] ConfigSchemasHelper: 已发现 {Count} 个 AI 配置类型。", AvailableAiConfigTypesCache.Count);
-        foreach (var (name, type) in AvailableAiConfigTypesCache)
+        Logger.Info("[INFO] ConfigSchemasHelper: 已发现 {Count} 个 AI 配置类型。", AvailableAiConfigTypesCache.Count);
+        foreach ((string name, var type) in AvailableAiConfigTypesCache)
         {
-            Logger.LogDebug("[DEBUG] ConfigSchemasHelper: 发现 AI 配置: {Name} -> {TypeFullName}", name, type.FullName);
+            Logger.Debug("[DEBUG] ConfigSchemasHelper: 发现 AI 配置: {Name} -> {TypeFullName}", name, type.FullName);
         }
     }
 

@@ -6,7 +6,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using System.Text.Json.Serialization.Metadata;
-using Microsoft.Extensions.Logging;
+using YAESandBox.Depend.Logger;
 using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Depend.Storage;
@@ -16,7 +16,7 @@ namespace YAESandBox.Depend.Storage;
 /// </summary>
 public static class YaeSandBoxJsonHelper
 {
-    private static ILogger Logger { get; } = AppLogging.CreateLogger(nameof(YaeSandBoxJsonHelper));
+    private static IAppLogger Logger { get; } = AppLogging.CreateLogger(nameof(YaeSandBoxJsonHelper));
 
     /// <summary>
     /// 项目通用的JsonSerializerOptions
@@ -94,7 +94,7 @@ public static class YaeSandBoxJsonHelper
                     // 可以选择记录日志，某些属性即使 CanWrite 返回 true，也可能由于内部状态而不允许修改
                     // 例如，在 JsonSerializerOptions 被标记为只读后。
                     // 但在 MVC AddJsonOptions 配置期间，通常是可写的。
-                    Logger.LogError(ex, "复制属性 {PropName} 时出错。", prop.Name);
+                    Logger.Error(ex, "复制属性 {PropName} 时出错。", prop.Name);
                 }
             }
         }

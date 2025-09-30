@@ -86,7 +86,7 @@ public static class GraphExecutor
             var outputPorts = currentNode.GetOutputPortNames();
 
             // 1. 为当前节点的输入端口查找源
-            foreach (var inputPortName in inputPorts)
+            foreach (string inputPortName in inputPorts)
             {
                 if (availableOutputs.TryGetValue(inputPortName, out var sourceEndpoint))
                 {
@@ -101,7 +101,7 @@ public static class GraphExecutor
             }
 
             // 2. 将当前节点的输出端口更新为新的可用源，并进行覆盖检查
-            foreach (var outputPortName in outputPorts)
+            foreach (string outputPortName in outputPorts)
             {
                 // **核心规则：检查是否存在非法覆盖**
                 // 条件1: 该输出端口名在之前已经存在 (availableOutputs.ContainsKey)
@@ -178,7 +178,7 @@ public static class GraphExecutor
 
             if (readyToExecute.IsEmpty)
             {
-                var remainingNodeIds = string.Join(", ", executionNodes.Keys.Except(completedNodes.Keys));
+                string remainingNodeIds = string.Join(", ", executionNodes.Keys.Except(completedNodes.Keys));
                 return Result.Fail($"图存在循环依赖或连接断裂，无法继续执行。剩余节点: {remainingNodeIds}");
             }
 
@@ -232,7 +232,7 @@ public static class GraphExecutor
         var connectionsToThisNode = connections.Where(c => c.Target.NodeId.Equals(node.Node.Id));
         foreach (var connection in connectionsToThisNode)
         {
-            if (dataStore.TryGetValue(connection.Source, out var sourceValue))
+            if (dataStore.TryGetValue(connection.Source, out object? sourceValue))
             {
                 nodeInputs[connection.Target.PortName] = sourceValue;
             }
@@ -252,7 +252,7 @@ public static class GraphExecutor
         }
 
         // 3. 存储输出
-        foreach (var (portName, value) in nodeOutputs)
+        foreach ((string portName, object? value) in nodeOutputs)
         {
             var outputEndpoint = new GraphConnectionEndpoint<TNodeId>(node.Node.Id, portName);
             dataStore[outputEndpoint] = postProcessOutput(value);

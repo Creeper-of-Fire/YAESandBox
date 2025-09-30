@@ -118,14 +118,14 @@ public static partial class SillyTavernTemplateExtensions
             // 2.2 替换 getvar
             // 合并已有变量和本轮新产生的变量，以供 getvar 使用
             var availableVars = new Dictionary<string, string>(variables);
-            foreach (var (key, value) in producedVariables)
+            foreach ((string key, string value) in producedVariables)
             {
                 availableVars[key] = value;
             }
             currentContent = GetVarRegex.Replace(currentContent, match =>
             {
                 string varName = match.Groups[1].Value.Trim();
-                if (availableVars.TryGetValue(varName, out var value))
+                if (availableVars.TryGetValue(varName, out string? value))
                 {
                     changedInThisPass = true;
                     return value;
@@ -137,13 +137,13 @@ public static partial class SillyTavernTemplateExtensions
             // 2.3 替换带参数的、需要计算的宏
             currentContent = RandomParenRegex.Replace(currentContent, match =>
             {
-                var options = match.Groups[1].Value.Split(',');
+                string[] options = match.Groups[1].Value.Split(',');
                 changedInThisPass = true;
                 return options.Length > 0 ? options[Random.Shared.Next(options.Length)].Trim() : string.Empty;
             });
             currentContent = RandomDoubleColonRegex.Replace(currentContent, match =>
             {
-                var options = match.Groups[1].Value.Split("::");
+                string[] options = match.Groups[1].Value.Split("::");
                 changedInThisPass = true;
                 return options.Length > 0 ? options[Random.Shared.Next(options.Length)].Trim() : string.Empty;
             });
@@ -170,8 +170,8 @@ public static partial class SillyTavernTemplateExtensions
         }
 
         // --- 3. 最终替换无参数的上下文宏 ---
-        var lastUserMessage = history.LastOrDefault(p => p.Role == PromptRoleType.User)?.Content ?? string.Empty;
-        var lastCharMessage = history.LastOrDefault(p => p.Role == PromptRoleType.Assistant)?.Content ?? string.Empty;
+        string lastUserMessage = history.LastOrDefault(p => p.Role == PromptRoleType.User)?.Content ?? string.Empty;
+        string lastCharMessage = history.LastOrDefault(p => p.Role == PromptRoleType.Assistant)?.Content ?? string.Empty;
 
         currentContent = currentContent.Replace("{{newline}}", "\n", StringComparison.OrdinalIgnoreCase);
         currentContent = currentContent.Replace("{{user}}", playerCharacter.Name, StringComparison.OrdinalIgnoreCase);

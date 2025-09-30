@@ -3,9 +3,9 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Logging;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
+using YAESandBox.Depend.Logger;
 
 namespace YAESandBox.Depend.AspNetCore;
 
@@ -149,7 +149,7 @@ public interface IProgramAtLastConfigurator : IProgramModule
 /// </summary>
 public static class SwaggerHelper
 {
-    private static ILogger Logger { get; } = AppLogging.CreateLogger(nameof(SwaggerHelper));
+    private static IAppLogger Logger { get; } = AppLogging.CreateLogger(nameof(SwaggerHelper));
 
     /// <summary>
     /// 为Swagger添加XML注释文档
@@ -165,16 +165,16 @@ public static class SwaggerHelper
             if (File.Exists(xmlFilePath))
             {
                 options.IncludeXmlComments(xmlFilePath);
-                Logger.LogInformation("加载 XML 注释: {XmlFilePath}", xmlFilePath);
+                Logger.Info("加载 XML 注释: {XmlFilePath}", xmlFilePath);
             }
             else
             {
-                Logger.LogWarning("警告: 未找到 XML 注释文件: {XmlFilePath}", xmlFilePath);
+                Logger.Warn("警告: 未找到 XML 注释文件: {XmlFilePath}", xmlFilePath);
             }
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "加载 Contracts XML 注释时出错。");
+            Logger.Error(ex, "加载 Contracts XML 注释时出错。");
         }
     }
 }

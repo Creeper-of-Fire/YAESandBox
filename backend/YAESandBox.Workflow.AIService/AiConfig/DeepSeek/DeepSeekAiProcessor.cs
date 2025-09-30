@@ -1,7 +1,6 @@
 ﻿// 文件路径: YAESandBox.Workflow.AIService/AiConfig/DeepSeek/DeepSeekAiProcessor.cs
 
-using Microsoft.Extensions.Logging;
-using YAESandBox.Depend;
+using YAESandBox.Depend.Logger;
 using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService.Shared;
 
@@ -29,7 +28,7 @@ file static class DeepSeekPromptMapper
 internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSeekAiProcessorConfig config) : IAiProcessor
 {
     private DeepSeekAiProcessorConfig Config { get; } = config;
-    private static ILogger Logger { get; } = AppLogging.CreateLogger<DeepSeekAiProcessor>();
+    private static IAppLogger Logger { get; } = AppLogging.CreateLogger<DeepSeekAiProcessor>();
 
     private FlexibleAiClient Client { get; } = new(dependencies.HttpClient, new ApiClientConfig(
         BaseUrl: "https://api.deepseek.com/",
@@ -66,12 +65,12 @@ internal class DeepSeekAiProcessor(AiProcessorDependencies dependencies, DeepSee
         }
         catch (HttpRequestException ex)
         {
-            Logger.LogError(ex, "与 DeepSeek API 通信失败。");
+            Logger.Error(ex, "与 DeepSeek API 通信失败。");
             return AiError.Error("与 DeepSeek API 通信失败。",ex);
         }
         catch (Exception ex)
         {
-            Logger.LogError(ex, "处理 DeepSeek 请求时发生未知错误");
+            Logger.Error(ex, "处理 DeepSeek 请求时发生未知错误");
             return AiError.Error("处理 DeepSeek 请求时发生未知错误",ex);
         }
     }

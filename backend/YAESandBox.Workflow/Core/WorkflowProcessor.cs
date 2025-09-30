@@ -100,7 +100,7 @@ public class WorkflowProcessor(
         // a. 准备初始数据
         var initialData = new Dictionary<GraphConnectionEndpoint<string>, object?>();
         var initialOutputs = virtualInputNode.ProduceOutputs();
-        foreach (var (portName, value) in initialOutputs)
+        foreach ((string portName, object? value) in initialOutputs)
         {
             initialData[new GraphConnectionEndpoint<string>(VirtualWorkflowInputNode.VIRTUAL_INPUT_ID, portName)] = value;
         }

@@ -92,7 +92,7 @@ public partial class JsonFileJsonStorage
         ListFileOption? listOption = null, params string[] subDirectories)
     {
         var pathResult = this.GetValidatedFullPath(subDirectories);
-        if (pathResult.TryGetError(out var error, out var directoryPath))
+        if (pathResult.TryGetError(out var error, out string? directoryPath))
             return error;
 
         try // 这个try-catch捕获Task.Run本身可能抛出的问题（例如线程池拒绝）或Task中未处理的异常
@@ -133,7 +133,7 @@ public partial class JsonFileJsonStorage
         ListFileOption? listOption = null, params string[] subDirectories)
     {
         var pathResult = this.GetValidatedFullPath(subDirectories);
-        if (pathResult.TryGetError(out var error, out var directoryPath))
+        if (pathResult.TryGetError(out var error, out string? directoryPath))
             return error;
 
         try // 这个try-catch捕获Task.Run本身可能抛出的问题（例如线程池拒绝）或Task中未处理的异常
@@ -218,7 +218,7 @@ public partial class JsonFileJsonStorage
     public virtual async Task<Result> DeleteDirectoryAsync(DirectoryDeleteOption deleteOption, params string[] subDirectories)
     {
         var pathResult = this.GetValidatedFullPath(subDirectories);
-        if (pathResult.TryGetError(out var error, out var directoryPath))
+        if (pathResult.TryGetError(out var error, out string? directoryPath))
             return error;
 
         try
@@ -278,7 +278,7 @@ public partial class JsonFileJsonStorage
         try
         {
             // 1. 遍历所有文件系统条目（文件和子目录）
-            foreach (var entry in Directory.EnumerateFileSystemEntries(directoryPath))
+            foreach (string entry in Directory.EnumerateFileSystemEntries(directoryPath))
             {
                 // 2. 如果找到任何文件，立即失败
                 if (File.Exists(entry))

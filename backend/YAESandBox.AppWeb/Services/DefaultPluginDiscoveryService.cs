@@ -2,6 +2,7 @@
 
 using System.Collections.ObjectModel;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
+using YAESandBox.Depend.Logger;
 
 namespace YAESandBox.AppWeb.Services;
 
@@ -11,6 +12,7 @@ namespace YAESandBox.AppWeb.Services;
 /// </summary>
 public class DefaultPluginDiscoveryService : IPluginDiscoveryService
 {
+    private static IAppLogger Logger { get; }= AppLogging.CreateLogger<DefaultPluginDiscoveryService>();
     private ReadOnlyCollection<DiscoveredPlugin> DiscoveredPlugins { get; } 
     private Lock DiscoveryLock { get; } = new(); // C# 13 的新特性，用于线程安全
 
@@ -41,7 +43,7 @@ public class DefaultPluginDiscoveryService : IPluginDiscoveryService
             }
 
             this.DiscoveredPlugins = new ReadOnlyCollection<DiscoveredPlugin>(plugins);
-            Console.WriteLine($"发现 {this.DiscoveredPlugins.Count} 个插件。");
+            Logger.Info("发现 {DiscoveredPluginsCount} 个插件。", this.DiscoveredPlugins.Count);
         }
     }
 

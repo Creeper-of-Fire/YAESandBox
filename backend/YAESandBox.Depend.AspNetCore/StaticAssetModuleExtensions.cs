@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.StaticFiles.Infrastructure;
 using Microsoft.Extensions.FileProviders;
-using Microsoft.Extensions.Logging;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
+using YAESandBox.Depend.Logger;
 
 namespace YAESandBox.Depend.AspNetCore;
 
@@ -12,7 +12,7 @@ namespace YAESandBox.Depend.AspNetCore;
 /// </summary>
 public static class StaticAssetModuleExtensions
 {
-    private static ILogger Logger { get; } = AppLogging.CreateLogger(nameof(StaticAssetModuleExtensions));
+    private static IAppLogger Logger { get; } = AppLogging.CreateLogger(nameof(StaticAssetModuleExtensions));
 
     /// <summary>
     /// 项目的默认静态文件配置
@@ -96,7 +96,7 @@ public static class StaticAssetModuleExtensions
             fileProvider: new PhysicalFileProvider(wwwRootPath),
             requestPath: requestPath)
         );
-        Logger.LogInformation("[{ModuleTypeName}] 已通过 UseModuleWwwRoot 挂载 wwwroot: {WwwRootPath} -> '{RequestPath}'",
+        Logger.Info("[{ModuleTypeName}] 已通过 UseModuleWwwRoot 挂载 wwwroot: {WwwRootPath} -> '{RequestPath}'",
             moduleType.Name, wwwRootPath, requestPath);
     }
 
