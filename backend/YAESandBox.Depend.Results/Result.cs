@@ -30,7 +30,7 @@ public record Error(string Message, Exception? Exception = null)
     /// </summary>
     /// <returns></returns>
     public virtual Result ToResult() => this;
-    
+
     /// <summary>
     /// 转换为 Result&lt;T&gt;
     /// </summary>
@@ -69,7 +69,7 @@ public static class ResultExtensionToTask
     {
         return Task.FromResult(error.ToResult());
     }
-    
+
     /// <summary>
     /// 将 Error 对象包装到一个已完成的、失败状态的 Task&lt;Result&lt;T&gt;&gt; 中。
     /// </summary>
@@ -79,7 +79,7 @@ public static class ResultExtensionToTask
     {
         return Task.FromResult(error.ToResult<T>());
     }
-    
+
     /// <summary>
     /// 将 Result 对象包装到一个已完成状态的 Task&lt;Result&gt; 中。
     /// </summary>
@@ -102,6 +102,11 @@ public partial record Result
     /// 错误
     /// </summary>
     protected Error? Error { get; }
+
+    /// <summary>
+    /// 获取错误信息
+    /// </summary>
+    public Exception? ErrorException => this.Error?.Exception;
 
     /// <summary>
     /// 成功

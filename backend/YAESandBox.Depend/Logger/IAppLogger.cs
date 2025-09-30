@@ -62,20 +62,20 @@ public interface IAppLogger
     public void Warn(
         [StructuredMessageTemplate] string message, params object?[] args
     );
-
+#pragma warning disable CA2254
     /// <summary>
     /// 记录 Error 级别的日志。
     /// <p>表示由于失败导致当前执行流程中断。</p>
     /// </summary>
-    public void Error(
+    public sealed void Error(
         [StructuredMessageTemplate] string message, params object?[] args
-    );
+    ) => this.Error(null, message, args);
 
     /// <summary>
     /// 记录 Error 级别的日志，并包含异常信息。
     /// <p>表示由于失败导致当前执行流程中断。</p>
     /// </summary>
-    public void Error(Exception exception,
+    public void Error(Exception? exception,
         [StructuredMessageTemplate] string message, params object?[] args
     );
 
@@ -86,9 +86,9 @@ public interface IAppLogger
     /// <remarks>
     /// Critical 和 Fatal 互为别名关系，使用完全相同的内部方法。
     /// </remarks>
-    public void Critical(
+    public sealed void Critical(
         [StructuredMessageTemplate] string message, params object?[] args
-    );
+    ) => this.Critical(null, message, args);
 
     /// <summary>
     /// 记录 Critical/Fatal 级别的日志，并包含异常信息。
@@ -97,10 +97,10 @@ public interface IAppLogger
     /// <remarks>
     /// Critical 和 Fatal 互为别名关系，使用完全相同的内部方法。
     /// </remarks>
-    public void Critical(Exception exception,
+    public void Critical(Exception? exception,
         [StructuredMessageTemplate] string message, params object?[] args
     );
-#pragma warning disable CA2254
+
     /// <summary>
     /// 记录 Critical/Fatal 级别的日志。
     /// <p>表示不可恢复的应用程序或系统崩溃，或需要立即关注的灾难性故障。</p>

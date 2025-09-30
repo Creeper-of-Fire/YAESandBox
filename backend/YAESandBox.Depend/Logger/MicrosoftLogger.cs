@@ -39,19 +39,11 @@ file class MicrosoftLogger(ILogger microsoftLogger) : IAppLogger
         this.Logger.LogWarning(message, args);
 
     /// <inheritdoc />
-    public void Error(string message, params object?[] args) =>
-        this.Logger.LogError(message, args);
-
-    /// <inheritdoc />
-    public void Error(Exception exception, string message, params object?[] args) =>
+    public void Error(Exception? exception, string message, params object?[] args) =>
         this.Logger.LogError(exception, message, args);
 
     /// <inheritdoc />
-    public void Critical(string message, params object?[] args) =>
-        this.Logger.LogCritical(message, args);
-
-    /// <inheritdoc />
-    public void Critical(Exception exception, string message, params object?[] args) =>
+    public void Critical(Exception? exception, string message, params object?[] args) =>
         this.Logger.LogCritical(exception, message, args);
 #pragma warning restore CA2254
 }

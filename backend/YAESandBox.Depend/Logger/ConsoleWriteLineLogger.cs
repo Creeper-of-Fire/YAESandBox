@@ -86,18 +86,10 @@ internal partial class ConsoleWriteLineLogger(string categoryName) : IAppLogger
         Console.WriteLine($"[Warn:{this.CategoryName}]{FormatMessage(message, args)}");
 
     /// <inheritdoc />
-    public void Error(string message, params object?[] args) =>
-        Console.WriteLine($"[Error:{this.CategoryName}]{FormatMessage(message, args)}");
-
-    /// <inheritdoc />
-    public void Error(Exception exception, string message, params object?[] args) =>
+    public void Error(Exception? exception, string message, params object?[] args) =>
         Console.WriteLine($"[Error:{this.CategoryName}]{exception}\n{FormatMessage(message, args)}");
 
     /// <inheritdoc />
-    public void Critical(string message, params object?[] args) =>
-        Console.WriteLine($"[Critical:{this.CategoryName}]{FormatMessage(message, args)}");
-
-    /// <inheritdoc />
-    public void Critical(Exception exception, string message, params object?[] args) =>
+    public void Critical(Exception? exception, string message, params object?[] args) =>
         Console.WriteLine($"[Critical:{this.CategoryName}]{exception}\n{FormatMessage(message, args)}");
 }
