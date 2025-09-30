@@ -82,6 +82,8 @@ public class WorkflowExecutionController(
     {
         // 1. StructuredContentBuilder 用于在内存中聚合状态
         var contentBuilder = new StructuredContentBuilder("response");
+        
+        string userId = this.UserId; 
 
         // 2. 定义新的 EmitterCallback，它将通过 SignalR Hub 发送消息
         var callback = new EmitterCallback(
@@ -114,7 +116,7 @@ public class WorkflowExecutionController(
                 var mockDataAccess = new MockWorkflowDataAccess();
                 var processor = request.WorkflowConfig.ToWorkflowProcessor(
                     request.WorkflowInputs,
-                    this.MasterAiService.ToSubAiService(this.UserId),
+                    this.MasterAiService.ToSubAiService(userId),
                     mockDataAccess,
                     callback
                 );
