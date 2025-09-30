@@ -336,7 +336,7 @@ def main():
     # --- 6. 执行发布 ---
     console.print("\n[bold]Step 6: 执行发布...[/bold]")
 
-    # 6a. 创建 Release
+    # 6a. 创建 Release (注意：此时不设为 latest)
     try:
         release_data = {
             "tag_name": version,
@@ -344,7 +344,7 @@ def main():
             "body": release_notes,
             "draft": False,
             "prerelease": False,
-            "make_latest": str(is_latest).lower()
+            "make_latest": "false"
         }
         headers = {"Authorization": f"token {token}", "Accept": "application/vnd.github.v3+json"}
         response = requests.post(f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/releases", headers=headers, json=release_data)
@@ -411,6 +411,22 @@ def main():
                             comp['url'] = f"{release_info['html_url'].replace('tag', 'download')}/{comp_zip_name}"
 
                 progress.advance(upload_task)
+
+    console.print(f"✅ [green]所有文件上传成功！[/green]")
+
+    # 6c. 更新 Release 状态 (如果需要)
+    if is_latest:
+        console.print("\n➡️  [bold]正在将 Release 更新为 'latest'...[/bold]")
+        try:
+            update_data = {"make_latest": "true"}
+            release_id = release_info['id']
+            update_url = f"https://api.github.com/repos/{REPO_OWNER}/{REPO_NAME}/releases/{release_id}"
+            response = requests.patch(update_url, headers=headers, json=update_data)
+            response.raise_for_status()
+            console.print(f"✅ [green]Release 已成功标记为 'latest'！[/green]")
+        except requests.exceptions.RequestException as e:
+            console.print(f"[bold red]❌ 更新 Release 状态失败: {e}\n响应内容: {e.response.text}[/bold red]")
+            console.print("[yellow]警告: 文件已全部上传，但 Release 未能标记为 'latest'。您可能需要手动去 GitHub 页面设置。[/yellow]")
 
     # --- 7. 保存状态 ---
     new_manifests_state = {"full": new_full_manifest, "slim": new_slim_manifest, "plugins": new_plugins_manifest}
