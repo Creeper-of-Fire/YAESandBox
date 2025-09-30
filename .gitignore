@@ -67,3 +67,6 @@ runtimes/
 /.idea/
 /githubtoken.txt
 *.pyc
+
+# JetBrains Rider/ReSharper user-specific settings
+*.DotSettings.user
