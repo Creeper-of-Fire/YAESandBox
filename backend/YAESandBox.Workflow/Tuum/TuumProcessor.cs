@@ -1,4 +1,5 @@
-﻿using System.Diagnostics.CodeAnalysis;
+﻿using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
 using System.Text.Json;
 using YAESandBox.Depend.Logger;
 using YAESandBox.Depend.Results;
@@ -187,12 +188,23 @@ public class TuumProcessor(
         {
             if (!rune.Config.Enabled)
                 continue;
-            // (仅处理INormalRune，未来可扩展)
-            if (rune is INormalRune<AbstractRuneConfig, IRuneProcessorDebugDto> normalRune)
+            var stopwatch = Stopwatch.StartNew();
+            var result = Result.Ok();
+            try
             {
-                var result = await normalRune.ExecuteAsync(this.TuumContent, cancellationToken);
-                if (result.TryGetError(out var error))
-                    return error; // 如果任何一个符文失败，整个枢机失败
+                // (仅处理INormalRune，未来可扩展)
+                if (rune is INormalRune<AbstractRuneConfig, IRuneProcessorDebugDto> normalRune)
+                {
+                    result = await normalRune.ExecuteAsync(this.TuumContent, cancellationToken);
+                    if (result.TryGetError(out var error))
+                        return error; // 如果任何一个符文失败，整个枢机失败
+                }
+            }
+            finally
+            {
+                stopwatch.Stop();
+                // 无论成功或失败，都调用专门的函数来记录符文的执行细节
+                this.LogRuneExecutionDetails(rune, result, stopwatch.Elapsed);
             }
         }
 
@@ -212,6 +224,50 @@ public class TuumProcessor(
         }
 
         return tuumOutputs;
+    }
+
+
+    /// <summary>
+    /// 记录单个符文执行后的详细信息，包括其状态、元数据和完整的DebugDto快照。
+    /// </summary>
+    /// <param name="rune">执行的符文实例。</param>
+    /// <param name="result">符文的执行结果。</param>
+    /// <param name="duration">执行耗时。</param>
+    private void LogRuneExecutionDetails(
+        IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto> rune,
+        Result result,
+        TimeSpan duration)
+    {
+        var config = rune.Config;
+        string status = result.IsSuccess ? "成功" : "失败";
+
+        if (result.IsSuccess)
+        {
+            Logger.Info(
+                "符文执行 | 状态: {Status}, 名称: {RuneName}, 类型: {RuneType}, ID: {RuneId}, 耗时: {DurationMs:F2}ms | Debug信息: {@DebugDto}",
+                status,
+                config.Name,
+                config.RuneType,
+                config.ConfigId,
+                duration.TotalMilliseconds,
+                rune.DebugDto
+            );
+        }
+        else
+        {
+            // 对于失败的符文，将异常/错误对象作为第一个参数
+            // 结构化日志库会自动处理它
+            Logger.Error(
+                result.ErrorException, // 底层的错误/异常对象
+                "符文执行 | 状态: {Status}, 名称: {RuneName}, 类型: {RuneType}, ID: {RuneId}, 耗时: {DurationMs:F2}ms | Debug信息: {@DebugDto}",
+                status,
+                config.Name,
+                config.RuneType,
+                config.ConfigId,
+                duration.TotalMilliseconds,
+                rune.DebugDto
+            );
+        }
     }
 
 
