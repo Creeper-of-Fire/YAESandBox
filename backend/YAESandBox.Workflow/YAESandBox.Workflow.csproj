@@ -3,13 +3,14 @@
     <PropertyGroup>
         <TargetFramework>net9.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
+        <LangVersion>preview</LangVersion>
         <Nullable>enable</Nullable>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <AnalysisModeConfigureAwait>Library</AnalysisModeConfigureAwait>
     </PropertyGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.Authentication\YAESandBox.Authentication.csproj" />
+        <ProjectReference Include="..\YAESandBox.Authentication\YAESandBox.Authentication.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
         <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
             <_Parameter1>YAESandBox.Workflow.Test</_Parameter1>
@@ -17,21 +18,22 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+        <PackageReference Include="JetBrains.Annotations" Version="2025.2.2"/>
+        <PackageReference Include="UUIDNext" Version="4.2.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <Compile Update="Module\ExactModule\LuaRunner\LuaScriptRunner.LuaBridge.cs">
-        <DependentUpon>LuaScriptRunner.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Module\ExactModule\LuaRunner\LuaScriptRunner.LuaDateTimeBridge.cs">
-        <DependentUpon>LuaScriptRunner.cs</DependentUpon>
-      </Compile>
-      <Compile Update="Rune\ExactRune\ScriptParser.cs">
-        <DependentUpon>StaticVariableRune.cs</DependentUpon>
-      </Compile>
+        <Compile Update="Module\ExactModule\LuaRunner\LuaScriptRunner.LuaBridge.cs">
+            <DependentUpon>LuaScriptRunner.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Module\ExactModule\LuaRunner\LuaScriptRunner.LuaDateTimeBridge.cs">
+            <DependentUpon>LuaScriptRunner.cs</DependentUpon>
+        </Compile>
+        <Compile Update="Rune\ExactRune\ScriptParser.cs">
+            <DependentUpon>StaticVariableRune.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
-    
+
     <ItemGroup>
         <!-- 
           - Identity (Include): Swagger 文档的名称，必须和 C# 代码中的 docName 完全一致。

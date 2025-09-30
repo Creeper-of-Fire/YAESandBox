@@ -2,12 +2,13 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Rune.Interface;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.Utility;
 using YAESandBox.Workflow.VarSpec;
 
-namespace YAESandBox.Workflow.Rune;
+namespace YAESandBox.Workflow.Rune.Config;
 
 /// <summary>
 /// 符文的配置
@@ -48,10 +49,9 @@ public abstract record AbstractRuneConfig
     /// <summary>
     /// 转为实例化的运行时状态
     /// </summary>
-    /// <param name="workflowRuntimeService"></param>
+    /// <param name="creatingContext"></param>
     /// <returns></returns>
-    internal abstract IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto> ToRuneProcessor(
-        WorkflowRuntimeService workflowRuntimeService);
+    internal abstract IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto> ToRuneProcessor(ICreatingContext creatingContext);
 
     /// <summary>
     /// 获得符文的输入变量
@@ -67,8 +67,8 @@ public abstract record AbstractRuneConfig
 }
 
 /// <inheritdoc />
-public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
-    where T : IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto>
+public abstract record AbstractRuneConfig<TProcessor> : AbstractRuneConfig
+    where TProcessor : IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto>
 {
     /// <inheritdoc />
     protected AbstractRuneConfig()
@@ -79,14 +79,13 @@ public abstract record AbstractRuneConfig<T> : AbstractRuneConfig
     /// <inheritdoc/>
     public sealed override string RuneType { get; init; }
 
-    internal override IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto> ToRuneProcessor(
-        WorkflowRuntimeService workflowRuntimeService) =>
-        this.ToCurrentRune(workflowRuntimeService);
+    internal override IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto> ToRuneProcessor(ICreatingContext creatingContext) =>
+        this.ToCurrentRune(creatingContext);
 
     /// <summary>
     /// 用于将当前配置转为运行时对象，提供了类型提示，而非通用的接口
     /// </summary>
-    /// <param name="workflowRuntimeService"></param>
+    /// <param name="creatingContext"></param>
     /// <returns></returns>
-    protected abstract T ToCurrentRune(WorkflowRuntimeService workflowRuntimeService);
+    protected abstract TProcessor ToCurrentRune(ICreatingContext creatingContext);
 }

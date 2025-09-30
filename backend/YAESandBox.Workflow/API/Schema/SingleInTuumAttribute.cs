@@ -1,5 +1,5 @@
 ﻿using JetBrains.Annotations;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
 
 namespace YAESandBox.Workflow.API.Schema;
 

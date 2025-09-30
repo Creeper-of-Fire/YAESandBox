@@ -5,8 +5,9 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Rune.ExactRune.HistoryAppendRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
@@ -17,24 +18,16 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// 历史记录追加符文处理器。
 /// 将一个提示词列表（历史记录）追加到另一个提示词列表的末尾。
 /// </summary>
-/// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
+/// <param name="creatingContext"></param>
 /// <param name="config">符文配置。</param>
-internal class HistoryAppendRuneProcessor(WorkflowRuntimeService workflowRuntimeService, HistoryAppendRuneConfig config)
-    : INormalRune<HistoryAppendRuneConfig, HistoryAppendRuneProcessorDebugDto>
+internal class HistoryAppendRuneProcessor(HistoryAppendRuneConfig config, ICreatingContext creatingContext)
+    : NormalRune<HistoryAppendRuneConfig, HistoryAppendRuneProcessorDebugDto>(config, creatingContext)
 {
-    /// <inheritdoc />
-    public HistoryAppendRuneConfig Config { get; } = config;
-
-    /// <inheritdoc />
-    public HistoryAppendRuneProcessorDebugDto DebugDto { get; } = new();
-
     /// <summary>
     /// 执行历史记录追加流程。
     /// </summary>
-    /// <param name="tuumProcessorContent">枢机执行的上下文内容。</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns>执行结果。</returns>
-    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
         this.DebugDto.HistoryVariableName = this.Config.HistoryVariableName;
         this.DebugDto.PromptsVariableName = this.Config.PromptsVariableName;
@@ -157,6 +150,5 @@ internal record HistoryAppendRuneConfig : AbstractRuneConfig<HistoryAppendRunePr
     ];
 
     /// <inheritdoc />
-    protected override HistoryAppendRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
-        new(workflowRuntimeService, this);
+    protected override HistoryAppendRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 }

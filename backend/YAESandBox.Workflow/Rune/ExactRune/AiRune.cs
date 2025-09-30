@@ -8,9 +8,10 @@ using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.AIService.Shared;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Rune.ExactRune.AiRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
@@ -21,18 +22,10 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// Ai调用符文，Ai的配置保存在外部的Tuum，并且注入到执行函数中，所以这里只需要保存一些临时的调试信息到生成它的<see cref="AiRuneConfig"/>里面。
 /// </summary>
 /// <param name="config"></param>
-/// <param name="workflowRuntimeService"></param>
-internal class AiRuneProcessor(AiRuneConfig config, WorkflowRuntimeService workflowRuntimeService)
-    : INormalRune<AiRuneConfig, AiRuneProcessorDebugDto>
+/// <param name="creatingContext"></param>
+internal class AiRuneProcessor(AiRuneConfig config, ICreatingContext creatingContext)
+    : NormalRune<AiRuneConfig, AiRuneProcessorDebugDto>(config, creatingContext)
 {
-    /// <inheritdoc />
-    public AiRuneConfig Config { get; } = config;
-
-    private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-
-    /// <inheritdoc />
-    public AiRuneProcessorDebugDto DebugDto { get; } = new();
-
     internal record AiRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         public IList<RoledPromptDto> Prompts { get; set; } = [];
@@ -47,30 +40,42 @@ internal class AiRuneProcessor(AiRuneConfig config, WorkflowRuntimeService workf
     }
 
     /// <inheritdoc />
-    public async Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent,
+    public override async Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent,
         CancellationToken cancellationToken = default)
     {
-        var aiConfig = this.Config.AiConfiguration;
-        var workflowRuntimeService = tuumProcessorContent.WorkflowRuntimeService;
-
-        if (aiConfig.SelectedAiRuneType == null || aiConfig.AiProcessorConfigUuid == null)
-            return NormalError.Conflict($"枢机 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI符文。");
-
-        var aiProcessor = workflowRuntimeService.AiService.CreateAiProcessor(
-            aiConfig.AiProcessorConfigUuid,
-            aiConfig.SelectedAiRuneType);
-        if (aiProcessor == null)
-            return NormalError.Conflict($"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiRuneType}");
+        var persistenceService = this.WorkflowRuntimeService.PersistenceService;
+        var runeInstanceId = this.ProcessorContext.InstanceId;
 
         var prompts = tuumProcessorContent.GetTuumVar<List<RoledPromptDto>>(AiRuneConfig.PromptsName) ?? [];
-        this.DebugDto.Prompts = prompts;
 
-        var executionResult = aiConfig.IsStream
-            ? await this.ExecuteStreamAsync(aiProcessor, prompts, cancellationToken)
-            : await this.ExecuteNonStreamAsync(aiProcessor, prompts, cancellationToken);
+        var result = await persistenceService.WithPersistence(runeInstanceId, prompts).ExecuteAsync(async currentPrompts =>
+            {
+                this.DebugDto.Prompts = currentPrompts;
+                var aiConfig = this.Config.AiConfiguration;
+                var workflowRuntimeService = this.WorkflowRuntimeService;
 
-        if (executionResult.TryGetError(out var error, out var fullResponse))
+                if (aiConfig.SelectedAiRuneType == null || aiConfig.AiProcessorConfigUuid == null)
+                    return NormalError.Conflict($"枢机 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI符文。");
+
+                var aiProcessor = workflowRuntimeService.AiService.CreateAiProcessor(
+                    aiConfig.AiProcessorConfigUuid,
+                    aiConfig.SelectedAiRuneType);
+                if (aiProcessor == null)
+                    return NormalError.Conflict($"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiRuneType}");
+
+
+                var aiCallResult = aiConfig.IsStream
+                    ? await this.ExecuteStreamAsync(aiProcessor, prompts, cancellationToken)
+                    : await this.ExecuteNonStreamAsync(aiProcessor, prompts, cancellationToken);
+
+                return aiCallResult;
+            }
+        );
+
+        if (result.TryGetError(out var error, out var fullResponse))
+        {
             return error;
+        }
 
         return this.ProcessFinalResult(tuumProcessorContent, fullResponse.finalReasoning, fullResponse.finalContent);
     }
@@ -348,7 +353,8 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
         return produced;
     }
 
-    protected override AiRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this, workflowRuntimeService);
+    /// <inheritdoc />
+    protected override AiRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 }
 
 /// <summary>

@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Authentication;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Analysis;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
 using YAESandBox.Workflow.Tuum;
 
 namespace YAESandBox.Workflow.API.Controller;

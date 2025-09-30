@@ -1,7 +1,7 @@
 ﻿using System.Text.Json.Nodes;
 using System.Text.Json.Schema;
 using YAESandBox.Depend.Schema;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
 
 namespace YAESandBox.Workflow.API.Schema;
 

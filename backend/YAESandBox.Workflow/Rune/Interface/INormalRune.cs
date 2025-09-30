@@ -1,8 +1,9 @@
 ﻿using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Rune.Config;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
-namespace YAESandBox.Workflow.Rune;
+namespace YAESandBox.Workflow.Rune.Interface;
 
 /// <summary>
 /// 普通的符文

@@ -1,4 +1,5 @@
-﻿using YAESandBox.Depend.Results;
+﻿using YAESandBox.Depend.Logger;
+using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Depend.ResultsExtend;
 
@@ -7,6 +8,21 @@ namespace YAESandBox.Depend.ResultsExtend;
 /// </summary>
 public static class ErrorHelper
 {
+    /// <inheritdoc cref="IAppLogger.Error(string, object?[])"/>
+    public static void Error(this IAppLogger logger, Error error)
+    {
+        logger.Error("{ErrorDetail}", error.ToDetailString());
+    }
+
+    /// <inheritdoc cref="IAppLogger.Critical(string, object?[])"/>
+    public static void Critical(this IAppLogger logger, Error error)
+    {
+        logger.Critical("{ErrorDetail}", error.ToDetailString());
+    }
+
+    /// <inheritdoc cref="IAppLogger.Fatal(string, object?[])"/>
+    public static void Fatal(this IAppLogger logger, Error error) => Critical(logger, error);
+
     /// <summary>
     /// 选择成功的 FluentResults.Result
     /// </summary>

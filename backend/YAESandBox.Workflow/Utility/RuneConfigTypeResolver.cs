@@ -1,7 +1,7 @@
 ﻿using System.Collections.ObjectModel;
 using YAESandBox.Depend.Logger;
 using YAESandBox.Workflow.API;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
 
 namespace YAESandBox.Workflow.Utility;
 

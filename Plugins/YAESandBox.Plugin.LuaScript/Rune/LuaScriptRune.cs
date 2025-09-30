@@ -6,9 +6,10 @@ using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Plugin.LuaScript.LuaRunner;
 using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
@@ -21,19 +22,15 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 /// 负责执行用户提供的 Lua 脚本，并通过一个安全桥接器与枢机上下文交互。
 /// </summary>
 /// <param name="config">符文配置。</param>
-public class LuaScriptRuneProcessor(LuaScriptRuneConfig config)
-    : INormalRune<LuaScriptRuneConfig, LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto>
+public class LuaScriptRuneProcessor(LuaScriptRuneConfig config,ICreatingContext creatingContext)
+    : NormalRune<LuaScriptRuneConfig, LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto>(config, creatingContext)
 {
-    /// <inheritdoc />
-    public LuaScriptRuneConfig Config { get; } = config;
-
-    /// <inheritdoc />
-    public LuaScriptRuneProcessorDebugDto DebugDto { get; } = new();
 
     /// <summary>
     /// 执行 Lua 脚本。
     /// </summary>
-    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
         string script = this.Config.Script ?? "";
         this.DebugDto.ExecutedScript = script;
@@ -108,7 +105,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
     public string Script { get; init; } = "";
 
     /// <inheritdoc />
-    protected override LuaScriptRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this);
+    protected override LuaScriptRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this,creatingContext);
 
     // --- 变量静态分析 ---
 

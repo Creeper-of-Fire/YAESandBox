@@ -2,7 +2,7 @@
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
 using YAESandBox.Workflow.Tuum;
 using static YAESandBox.Depend.Storage.ScopedStorageFactory;
 

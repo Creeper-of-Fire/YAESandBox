@@ -3,7 +3,10 @@ using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.Results;
 using YAESandBox.Plugin.TextParser.Rune;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Rune.Interface;
+using YAESandBox.Workflow.Runtime;
+using YAESandBox.Workflow.TestDoubles;
 using YAESandBox.Workflow.Tuum;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
@@ -79,15 +82,18 @@ public class TextParserTestController : ControllerBase
         string inputVariableName;
         string outputVariableName;
 
+        var workflowRuntimeService = new FakeWorkflowRuntimeService();
+        var context = ProcessorContext.CreateRoot(Guid.NewGuid(), workflowRuntimeService);
+        
         switch (request.RuneConfig)
         {
             case TagParserRuneConfig tagConfig:
-                processor = new TagParserRuneProcessor(tagConfig);
+                processor = new TagParserRuneProcessor(tagConfig,context);
                 inputVariableName = tagConfig.TextOperation.InputVariableName;
                 outputVariableName = tagConfig.TextOperation.OutputVariableName;
                 break;
             case RegexParserRuneConfig regexConfig:
-                processor = new RegexParserRuneProcessor(regexConfig);
+                processor = new RegexParserRuneProcessor(regexConfig,context);
                 inputVariableName = regexConfig.TextOperation.InputVariableName;
                 outputVariableName = regexConfig.TextOperation.OutputVariableName;
                 break;
@@ -100,7 +106,7 @@ public class TextParserTestController : ControllerBase
             // 这两个参数在本次测试中不会被用到，可以传入null或默认值
             // 但为了健壮性，我们还是创建它们
             tuumConfig: new TuumConfig { ConfigId = "test-tuum" },
-            workflowRuntimeService: null! // 警告被抑制，因为我们知道这个测试不会访问它
+            processorContext: context.ExtractContext()
         );
 
         // 3. 将示例文本注入到模拟上下文中

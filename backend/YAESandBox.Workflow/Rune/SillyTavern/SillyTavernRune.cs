@@ -3,9 +3,10 @@ using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.AIService;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Rune.Config;
 using YAESandBox.Workflow.Rune.ExactRune;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Rune.SillyTavern.SillyTavernRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
@@ -83,8 +84,7 @@ internal record SillyTavernRuneConfig : AbstractRuneConfig<SillyTavernRuneProces
     #endregion
 
     /// <inheritdoc />
-    protected override SillyTavernRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
-        new(workflowRuntimeService, this);
+    protected override SillyTavernRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 
     #region Consumed & Produced Spec
 
@@ -109,21 +109,17 @@ internal record SillyTavernRuneConfig : AbstractRuneConfig<SillyTavernRuneProces
     #endregion
 }
 
-internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeService, SillyTavernRuneConfig config)
-    : INormalRune<SillyTavernRuneConfig, SillyTavernRuneProcessorDebugDto>
+internal class SillyTavernRuneProcessor(SillyTavernRuneConfig config, ICreatingContext creatingContext)
+    : NormalRune<SillyTavernRuneConfig, SillyTavernRuneProcessorDebugDto>(config, creatingContext)
 {
-    public SillyTavernRuneConfig Config { get; init; } = config;
-    public SillyTavernRuneProcessorDebugDto DebugDto { get; init; } = new();
-    private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-
-
-    public Task<Result> ExecuteAsync(TuumProcessorContent tuumContent, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override Task<Result> ExecuteAsync(TuumProcessorContent tuumContent, CancellationToken cancellationToken = default)
     {
         // TODO: [宏扩展范围] 当前宏替换仅作用于预设(Preset)内容。
         // 传入的历史记录(History)和世界书(World Info)中的宏不会被解析。
         // 长期方案: 应当创建一个独立的、通用的 "宏替换符文(Macro Expansion Rune)"，
         // 可以在工作流的任意阶段对提示词列表进行处理，以实现更灵活的控制。
-        
+
         this.DebugDto.AddLog("SillyTavern符文开始执行。");
 
         // --- 1. 获取所有输入 ---
@@ -202,7 +198,7 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
         foreach (var item in presetProcessResult.Template)
         {
             // 将 history 传给 FillTemplate
-            var fillResult = item.FillTemplate(variables, playerInfo, targetInfo, history); 
+            var fillResult = item.FillTemplate(variables, playerInfo, targetInfo, history);
 
             filledTemplateItems.Add(fillResult.FilledItem);
 
@@ -211,6 +207,7 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
                 variables[key] = value;
             }
         }
+
         this.DebugDto.FinalProducedVariables.Clear();
         foreach (var pair in variables) this.DebugDto.FinalProducedVariables.Add(pair.Key, pair.Value);
         this.DebugDto.AddLog($"变量填充完成。共生成 {variables.Count} 个变量。");

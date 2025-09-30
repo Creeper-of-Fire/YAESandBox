@@ -7,8 +7,9 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Rune.ExactRune.PromptGenerationRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
@@ -19,18 +20,13 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// 提示词生成符文处理器。
 /// 根据配置的模板和上下文数据，生成一个RoledPromptDto。
 /// </summary>
-/// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
+/// <param name="creatingContext"></param>
 /// <param name="config">符文配置。</param>
-internal class PromptGenerationRuneProcessor(WorkflowRuntimeService workflowRuntimeService, PromptGenerationRuneConfig config)
-    : INormalRune<PromptGenerationRuneConfig, PromptGenerationRuneProcessorDebugDto>
+internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config,ICreatingContext creatingContext)
+    : NormalRune<PromptGenerationRuneConfig, PromptGenerationRuneProcessorDebugDto>(config,creatingContext)
 {
-    private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-
     /// <inheritdoc />
-    public PromptGenerationRuneConfig Config { get; init; } = config;
-
-    /// <inheritdoc />
-    public PromptGenerationRuneProcessorDebugDto DebugDto { get; init; } = new()
+    public override PromptGenerationRuneProcessorDebugDto DebugDto { get; init; } = new()
     {
         OriginalTemplate = config.Template,
         ConfiguredRole = PromptRoleTypeExtension.ToPromptRoleType(config.RoleType),
@@ -40,10 +36,8 @@ internal class PromptGenerationRuneProcessor(WorkflowRuntimeService workflowRunt
     /// <summary>
     /// 启动枢机流程
     /// </summary>
-    /// <param name="tuumProcessorContent">枢机执行的上下文内容。</param>
-    /// <param name="cancellationToken"></param>
-    /// <returns></returns>
-    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public  override Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
         string substitutedContent = this.SubstitutePlaceholdersAsync(this.Config.Template, tuumProcessorContent);
         this.DebugDto.FinalPromptContent = substitutedContent;
@@ -393,8 +387,7 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
 
 
     /// <inheritdoc />
-    protected override PromptGenerationRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
-        new(workflowRuntimeService, this);
+    protected override PromptGenerationRuneProcessor  ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 }
 
 file enum InsertionPositionEnum

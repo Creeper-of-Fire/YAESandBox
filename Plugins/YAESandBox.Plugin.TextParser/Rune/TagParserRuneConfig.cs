@@ -8,9 +8,10 @@ using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;
 
@@ -19,19 +20,14 @@ namespace YAESandBox.Plugin.TextParser.Rune;
 /// <summary>
 /// “标签解析”符文的运行时处理器。
 /// </summary>
-public class TagParserRuneProcessor(TagParserRuneConfig config)
-    : INormalRune<TagParserRuneConfig, TagParserRuneProcessor.TagParserRuneDebugDto>
+public class TagParserRuneProcessor(TagParserRuneConfig config,ICreatingContext creatingContext)
+    : NormalRune<TagParserRuneConfig, TagParserRuneProcessor.TagParserRuneDebugDto>(config, creatingContext)
 {
-    /// <inheritdoc />
-    public TagParserRuneConfig Config { get; } = config;
-
-    /// <inheritdoc />
-    public TagParserRuneDebugDto DebugDto { get; } = new();
-
     /// <summary>
     /// 执行标签解析或替换逻辑。
     /// </summary>
-    public Task<Result> ExecuteAsync(TuumProcessor.TuumProcessorContent tuumProcessorContent,
+    /// <inheritdoc />
+    public override Task<Result> ExecuteAsync(TuumProcessor.TuumProcessorContent tuumProcessorContent,
         CancellationToken cancellationToken = default)
     {
         // 获取输入文本
@@ -308,7 +304,7 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
     }
 
     /// <inheritdoc />
-    protected override TagParserRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this);
+    protected override TagParserRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this,creatingContext);
 
     #endregion
 }

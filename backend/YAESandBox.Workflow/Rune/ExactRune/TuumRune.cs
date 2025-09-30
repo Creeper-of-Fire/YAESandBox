@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Analysis;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Rune.Interface;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.Utility;
 using YAESandBox.Workflow.VarSpec;
@@ -14,17 +16,11 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// <summary>
 /// “枢机符文”的运行时处理器。它将一个完整的枢机（Tuum）封装并作为一个独立的符文来执行。
 /// </summary>
-/// <param name="workflowRuntimeService">工作流运行时服务。</param>
+/// <param name="creatingContext"></param>
 /// <param name="config">枢机符文的配置。</param>
-internal class TuumRuneProcessor(WorkflowRuntimeService workflowRuntimeService, TuumRuneConfig config)
-    : INormalRune<TuumRuneConfig, TuumRuneProcessor.TuumRuneProcessorDebugDto>
+internal class TuumRuneProcessor(TuumRuneConfig config, ICreatingContext creatingContext)
+    : NormalRune<TuumRuneConfig, TuumRuneProcessor.TuumRuneProcessorDebugDto>(config, creatingContext)
 {
-    /// <inheritdoc />
-    public TuumRuneConfig Config { get; } = config;
-
-    /// <inheritdoc />
-    public TuumRuneProcessorDebugDto DebugDto { get; } = new();
-
     /// <summary>
     /// 枢机符文的调试信息。
     /// </summary>
@@ -40,10 +36,13 @@ internal class TuumRuneProcessor(WorkflowRuntimeService workflowRuntimeService, 
     /// <summary>
     /// 执行封装的枢机。
     /// </summary>
-    public async Task<Result> ExecuteAsync(TuumProcessorContent outerTuumContent, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override async Task<Result> ExecuteAsync(TuumProcessorContent outerTuumContent, CancellationToken cancellationToken = default)
     {
         // 1. 创建内部枢机的运行时处理器
-        var innerTuumProcessor = this.Config.InnerTuum.ToTuumProcessor(workflowRuntimeService);
+        var innerTuumConfig = this.Config.InnerTuum;
+        var innerTuumCreatingContext = this.ProcessorContext.CreateChildWithScope(innerTuumConfig.ConfigId);
+        var innerTuumProcessor = innerTuumConfig.ToTuumProcessor(innerTuumCreatingContext);
 
         // 2. 准备内部枢机的输入
         // 枢机符文所消费的变量，就是其内部枢机的输入端点。
@@ -122,5 +121,5 @@ internal record TuumRuneConfig : AbstractRuneConfig<TuumRuneProcessor>, IHasInne
     }
 
     /// <inheritdoc />
-    protected override TuumRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(workflowRuntimeService, this);
+    protected override TuumRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 }

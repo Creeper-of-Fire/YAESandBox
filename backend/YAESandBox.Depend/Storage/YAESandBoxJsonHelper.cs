@@ -19,6 +19,29 @@ public static class YaeSandBoxJsonHelper
     private static IAppLogger Logger { get; } = AppLogging.CreateLogger(nameof(YaeSandBoxJsonHelper));
 
     /// <summary>
+    /// 一个使用了 <see cref="JsonSerializerOptions"/> 的 <see cref="JsonSerializer.Deserialize{T}(string, System.Text.Json.JsonSerializerOptions?)"/> 方法
+    /// </summary>
+    /// <param name="jsonString"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static T? Deserialize<T>([StringSyntax("Json")] string jsonString)
+    {
+        return JsonSerializer.Deserialize<T>(jsonString, JsonSerializerOptions);
+    }
+
+
+    /// <summary>
+    /// 一个使用了 <see cref="JsonSerializerOptions"/> 的 <see cref="JsonSerializer.Serialize{T}(T, System.Text.Json.JsonSerializerOptions?)"/> 方法
+    /// </summary>
+    /// <param name="tObject"></param>
+    /// <typeparam name="T"></typeparam>
+    /// <returns></returns>
+    public static string Serialize<T>(T tObject)
+    {
+        return JsonSerializer.Serialize(tObject, JsonSerializerOptions);
+    }
+
+    /// <summary>
     /// 项目通用的JsonSerializerOptions
     /// </summary>
     public static JsonSerializerOptions JsonSerializerOptions { get; set; } = new()
@@ -294,7 +317,7 @@ public static class YaeSandBoxJsonHelper
         }
         catch (Exception ex) // 捕获所有可能的异常，如 JsonException, NotSupportedException 等
         {
-            return Result.Fail("深拷贝失败：在序列化或反序列化过程中发生错误。",ex);
+            return Result.Fail("深拷贝失败：在序列化或反序列化过程中发生错误。", ex);
         }
     }
 }

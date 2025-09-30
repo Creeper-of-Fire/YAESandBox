@@ -7,6 +7,7 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Abstractions;
+using YAESandBox.Workflow.Runtime.RuntimePersistence;
 using YAESandBox.Workflow.Test.API.GameHub;
 using YAESandBox.Workflow.Utility;
 
@@ -82,8 +83,8 @@ public class WorkflowExecutionController(
     {
         // 1. StructuredContentBuilder 用于在内存中聚合状态
         var contentBuilder = new StructuredContentBuilder("response");
-        
-        string userId = this.UserId; 
+
+        string userId = this.UserId;
 
         // 2. 定义新的 EmitterCallback，它将通过 SignalR Hub 发送消息
         var callback = new EmitterCallback(
@@ -115,10 +116,12 @@ public class WorkflowExecutionController(
             {
                 var mockDataAccess = new MockWorkflowDataAccess();
                 var processor = request.WorkflowConfig.ToWorkflowProcessor(
+                    InstanceIdGenerator.CreateForNewWorkflow(),
                     request.WorkflowInputs,
                     this.MasterAiService.ToSubAiService(userId),
                     mockDataAccess,
-                    callback
+                    callback,
+                    new WorkflowPersistenceService()
                 );
                 var result = await processor.ExecuteWorkflowAsync(cancellationToken);
 

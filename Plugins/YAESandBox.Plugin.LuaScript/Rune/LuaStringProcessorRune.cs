@@ -5,10 +5,11 @@ using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Plugin.LuaScript.LuaRunner;
 using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Rune;
-using YAESandBox.Workflow.Tuum;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.VarSpec;
+using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 namespace YAESandBox.Plugin.LuaScript.Rune;
 
@@ -16,19 +17,14 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 /// Lua 字符串处理符文处理器。
 /// 专注于接收一个字符串，通过 Lua 脚本处理，并输出一个字符串。
 /// </summary>
-public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config)
-    : INormalRune<LuaStringProcessorRuneConfig, LuaStringProcessorRuneProcessor.LuaStringProcessorRuneDebugDto>
+public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config, ICreatingContext creatingContext)
+    : NormalRune<LuaStringProcessorRuneConfig, LuaStringProcessorRuneProcessor.LuaStringProcessorRuneDebugDto>(config, creatingContext)
 {
-    /// <inheritdoc />
-    public LuaStringProcessorRuneConfig Config { get; } = config;
-
-    /// <inheritdoc />
-    public LuaStringProcessorRuneDebugDto DebugDto { get; } = new();
-
     /// <summary>
     /// 执行 Lua 字符串处理脚本。
     /// </summary>
-    public Task<Result> ExecuteAsync(TuumProcessor.TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
         string script = this.Config.Script ?? "";
         this.DebugDto.ExecutedScript = script;
@@ -126,7 +122,7 @@ public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcess
     public string Script { get; init; } = DefaultScript;
 
     /// <inheritdoc />
-    protected override LuaStringProcessorRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this);
+    protected override LuaStringProcessorRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 
     /// <inheritdoc />
     public override List<ConsumedSpec> GetConsumedSpec() => [new(this.InputVariableName, CoreVarDefs.String) { IsOptional = false }];

@@ -2,7 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
 
 namespace YAESandBox.Workflow.Tuum;
 

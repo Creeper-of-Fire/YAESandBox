@@ -1,8 +1,6 @@
 ﻿using System.Collections.Immutable;
 using System.Linq;
 using Microsoft.CodeAnalysis;
-using Microsoft.CodeAnalysis.CSharp;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.CodeAnalysis.Diagnostics;
 
 namespace YAESandBox.Analyzers;
@@ -52,7 +50,7 @@ public class RequireRecordImplementationAnalyzer : DiagnosticAnalyzer
         foreach (var implementedInterface in namedTypeSymbol.AllInterfaces)
         {
             // 检查接口是否有我们定义的那个属性
-            var hasAttribute = implementedInterface.GetAttributes()
+            bool hasAttribute = implementedInterface.GetAttributes()
                 .Any(attr => SymbolEqualityComparer.Default.Equals(attr.AttributeClass, requiredAttributeSymbol));
 
             if (hasAttribute)

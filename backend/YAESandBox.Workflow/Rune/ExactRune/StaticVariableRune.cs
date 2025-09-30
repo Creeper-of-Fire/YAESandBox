@@ -3,8 +3,9 @@ using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Rune.ExactRune.StaticVariableRuneProcessor;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
@@ -15,23 +16,16 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// 静态变量脚本符文处理器。
 /// 在工作流运行时，执行脚本来定义多个字符串变量。
 /// </summary>
-/// <param name="workflowRuntimeService"><see cref="WorkflowRuntimeService"/></param>
+/// <param name="creatingContext"></param>
 /// <param name="config">符文配置。</param>
-internal class StaticVariableRuneProcessor(WorkflowRuntimeService workflowRuntimeService, StaticVariableRuneConfig config)
-    : INormalRune<StaticVariableRuneConfig, StaticVariableRuneProcessorDebugDto>
+internal class StaticVariableRuneProcessor(StaticVariableRuneConfig config,ICreatingContext creatingContext)
+    : NormalRune<StaticVariableRuneConfig, StaticVariableRuneProcessorDebugDto>(config,creatingContext)
 {
-    private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-
-    /// <inheritdoc />
-    public StaticVariableRuneConfig Config { get; init; } = config;
-
-    /// <inheritdoc />
-    public StaticVariableRuneProcessorDebugDto DebugDto { get; init; } = new();
-
     /// <summary>
     /// 执行脚本，将定义的变量注入到Tuum上下文中。
     /// </summary>
-    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
         // 所有复杂的解析逻辑都委托给了状态机解析器
         var parsedVariables = ScriptParser.Parse(this.Config.ScriptContent);
@@ -112,6 +106,5 @@ internal partial record StaticVariableRuneConfig : AbstractRuneConfig<StaticVari
     public string ScriptContent { get; init; } = string.Empty;
 
     /// <inheritdoc />
-    protected override StaticVariableRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
-        new(workflowRuntimeService, this);
+    protected override StaticVariableRuneProcessor  ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 }

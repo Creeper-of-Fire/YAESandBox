@@ -2,7 +2,7 @@
 using System.Reflection;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;
 

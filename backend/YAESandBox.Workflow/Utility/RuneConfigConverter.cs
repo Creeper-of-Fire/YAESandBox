@@ -3,7 +3,7 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
 
 namespace YAESandBox.Workflow.Utility;
 

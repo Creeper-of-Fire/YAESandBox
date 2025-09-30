@@ -16,7 +16,7 @@ using YAESandBox.Depend.Schema;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
 using YAESandBox.Workflow.Utility;
 
 namespace YAESandBox.Workflow.API.Controller;

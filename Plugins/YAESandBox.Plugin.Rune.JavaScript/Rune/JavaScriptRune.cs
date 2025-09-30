@@ -5,9 +5,10 @@ using Jint;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
@@ -20,21 +21,16 @@ namespace YAESandBox.Plugin.Rune.JavaScript.Rune;
 /// 负责执行用户提供的 JS 脚本，并通过直接暴露的上下文与枢机交互。
 /// </summary>
 /// <param name="config">符文配置。</param>
-public class JavaScriptRuneProcessor(JavaScriptRuneConfig config)
-    : INormalRune<JavaScriptRuneConfig, JavaScriptRuneProcessor.JavaScriptRuneProcessorDebugDto>
+public class JavaScriptRuneProcessor(JavaScriptRuneConfig config,ICreatingContext creatingContext)
+    : NormalRune<JavaScriptRuneConfig, JavaScriptRuneProcessor.JavaScriptRuneProcessorDebugDto>(config, creatingContext)
 {
-    /// <inheritdoc />
-    public JavaScriptRuneConfig Config { get; } = config;
-
-    /// <inheritdoc />
-    public JavaScriptRuneProcessorDebugDto DebugDto { get; } = new();
-
     /// <summary>
     /// 执行 JavaScript 脚本。
     /// </summary>
-    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
+    /// <inheritdoc />
+    public override Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
-        string script = this.Config.Script ?? "";
+        string script = this.Config.Script;
         this.DebugDto.ExecutedScript = script;
 
         try
@@ -128,7 +124,7 @@ public partial record JavaScriptRuneConfig : AbstractRuneConfig<JavaScriptRunePr
     public string Script { get; init; } = "";
 
     /// <inheritdoc />
-    protected override JavaScriptRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) => new(this);
+    protected override JavaScriptRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this,creatingContext);
 
     // --- 变量静态分析 ---
 

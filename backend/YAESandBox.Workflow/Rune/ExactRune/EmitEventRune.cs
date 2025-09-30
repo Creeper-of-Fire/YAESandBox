@@ -4,9 +4,10 @@ using System.Text.Json;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Depend.Storage;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Runtime;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Rune.ExactRune.EmitEventRuneProcessor;
@@ -17,18 +18,10 @@ namespace YAESandBox.Workflow.Rune.ExactRune;
 /// 发射事件符文的运行时
 /// </summary>
 /// <param name="config"></param>
-/// <param name="workflowRuntimeService"></param>
-internal class EmitEventRuneProcessor(EmitEventRuneConfig config, WorkflowRuntimeService workflowRuntimeService)
-    : INormalRune<EmitEventRuneConfig, EmitEventRuneProcessorDebugDto>
+/// <param name="creatingContext"></param>
+internal class EmitEventRuneProcessor(EmitEventRuneConfig config, ICreatingContext creatingContext)
+    : NormalRune<EmitEventRuneConfig, EmitEventRuneProcessorDebugDto>(config, creatingContext)
 {
-    /// <inheritdoc />
-    public EmitEventRuneConfig Config { get; } = config;
-
-    private WorkflowRuntimeService WorkflowRuntimeService { get; } = workflowRuntimeService;
-
-    /// <inheritdoc />
-    public EmitEventRuneProcessorDebugDto DebugDto { get; } = new();
-
     /// <inheritdoc />
     internal record EmitEventRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
@@ -43,7 +36,8 @@ internal class EmitEventRuneProcessor(EmitEventRuneConfig config, WorkflowRuntim
         public string? EmittedDataPreview { get; set; } // 预览发射的数据
     }
 
-    public async Task<Result> ExecuteAsync(TuumProcessor.TuumProcessorContent tuumProcessorContent,
+    /// <inheritdoc />
+    public override async Task<Result> ExecuteAsync(TuumProcessor.TuumProcessorContent tuumProcessorContent,
         CancellationToken cancellationToken = default)
     {
         // 填充调试信息
@@ -133,6 +127,5 @@ internal record EmitEventRuneConfig : AbstractRuneConfig<EmitEventRuneProcessor>
         [];
 
     /// <inheritdoc />
-    protected override EmitEventRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService) =>
-        new(this, workflowRuntimeService);
+    protected override EmitEventRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 }

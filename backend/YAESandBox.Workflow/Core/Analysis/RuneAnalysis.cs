@@ -1,5 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using YAESandBox.Workflow.Rune;
+using YAESandBox.Workflow.Rune.Config;
 using YAESandBox.Workflow.VarSpec;
 
 namespace YAESandBox.Workflow.Core.Analysis;

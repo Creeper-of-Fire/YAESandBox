@@ -1,6 +1,8 @@
 ﻿using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Abstractions;
+using YAESandBox.Workflow.Runtime;
+using YAESandBox.Workflow.Runtime.RuntimePersistence;
 using YAESandBox.Workflow.Tuum;
 
 namespace YAESandBox.Workflow.Utility;
@@ -11,19 +13,23 @@ namespace YAESandBox.Workflow.Utility;
 internal static class ToProcessor
 {
     internal static TuumProcessor ToTuumProcessor(this TuumConfig tuumConfig,
-        WorkflowRuntimeService workflowRuntimeService)
+        ICreatingContext creatingContext)
     {
-        return new TuumProcessor(workflowRuntimeService, tuumConfig);
+        return new TuumProcessor(tuumConfig, creatingContext);
     }
 
     internal static WorkflowProcessor ToWorkflowProcessor(
         this WorkflowConfig workflowConfig,
+        Guid workflowRunnerId,
         IReadOnlyDictionary<string, string> workflowInputs,
         SubAiService aiService,
         IWorkflowDataAccess dataAccess,
-        IWorkflowCallback callback)
+        IWorkflowCallback callback,
+        WorkflowPersistenceService persistenceService
+    )
     {
-        var content = new WorkflowRuntimeService(aiService, dataAccess, callback);
-        return new WorkflowProcessor(content, workflowConfig, workflowInputs.ToDictionary());
+        var workflowRuntimeService = new WorkflowRuntimeService(aiService, dataAccess, callback, persistenceService);
+        var context = ProcessorContext.CreateRoot(workflowRunnerId, workflowRuntimeService);
+        return new WorkflowProcessor(workflowConfig, context, workflowInputs.ToDictionary());
     }
 }

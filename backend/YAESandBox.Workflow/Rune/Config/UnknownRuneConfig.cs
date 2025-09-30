@@ -2,10 +2,11 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Rune.Interface;
+using YAESandBox.Workflow.Runtime;
 
-namespace YAESandBox.Workflow.Rune;
+namespace YAESandBox.Workflow.Rune.Config;
 
 /// <summary>
 /// 一个特殊的符文配置，用于表示在反序列化过程中未能成功解析的符文。
@@ -44,7 +45,7 @@ public sealed record UnknownRuneConfig : AbstractRuneConfig<UnknownRuneProcessor
 
     // 这个符文不可执行，所以它的 Processor 应该抛出异常。
     /// <inheritdoc />
-    protected override UnknownRuneProcessor ToCurrentRune(WorkflowRuntimeService workflowRuntimeService)
+    protected override UnknownRuneProcessor ToCurrentRune(ICreatingContext creatingContext)
     {
         // 或者直接在这里抛出异常，因为它根本不应该被执行
         throw new NotSupportedException("UnknownRuneConfig 是一个不可执行的回退配置，它代表一个解析失败的符文。");
@@ -61,4 +62,7 @@ public class UnknownRuneProcessor : IRuneProcessor<UnknownRuneConfig, IRuneProce
 
     /// <inheritdoc />
     public IRuneProcessorDebugDto DebugDto => throw new NotSupportedException();
+
+    /// <inheritdoc />
+    public ProcessorContext ProcessorContext => throw new NotSupportedException();
 }
