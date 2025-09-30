@@ -37,6 +37,12 @@ public static class YaeSchemaExporter
         };
     }
 
+    /// <summary>
+    /// 生成JSON Schema，并返回JSON字符串。
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="configureOptions"></param>
+    /// <returns></returns>
     public static string GenerateSchemaJson(Type type, Action<YaeSchemaOptions>? configureOptions = null)
     {
         var schema = GenerateSchema(type, configureOptions);
@@ -44,6 +50,12 @@ public static class YaeSchemaExporter
         return schema.ToJsonString(YaeSandBoxJsonHelper.JsonSerializerOptions);
     }
 
+    /// <summary>
+    /// 生成JSON Schema，并返回JsonNode。
+    /// </summary>
+    /// <param name="type"></param>
+    /// <param name="configureOptions"></param>
+    /// <returns></returns>
     public static JsonNode GenerateSchema(Type type, Action<YaeSchemaOptions>? configureOptions = null)
     {
         // 1. 创建并配置 YaeSchemaOptions

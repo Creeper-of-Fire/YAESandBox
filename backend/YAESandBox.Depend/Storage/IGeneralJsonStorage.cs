@@ -84,6 +84,9 @@ public interface IGeneralJsonStorage:IWorkPathProvider
     /// </summary>
     public record ListFileOption
     {
+        /// <summary>
+        /// 文件筛选选项的默认值
+        /// </summary>
         public static ListFileOption Default { get; } = new();
 
         /// <summary>

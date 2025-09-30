@@ -15,7 +15,16 @@ public class WorkflowRuntimeService(
     IWorkflowDataAccess dataAccess,
     IWorkflowCallback callback)
 {
+    /// <summary>
+    /// 使用的AI服务
+    /// </summary>
     public SubAiService AiService { get; } = aiService;
+    /// <summary>
+    /// 数据访问服务
+    /// </summary>
     public IWorkflowDataAccess DataAccess { get; } = dataAccess;
+    /// <summary>
+    /// 回调服务
+    /// </summary>
     public IWorkflowCallback Callback { get; } = callback;
 }

@@ -61,7 +61,8 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRoo
         }
 
         // 2. 组合路径
-        string combinedPath = Path.Combine([this.WorkPath, ..pathParts]);
+        string relativePath = Path.Combine(pathParts);
+        string combinedPath = Path.Combine(this.WorkPath, relativePath);
 
         // 3. 规范化路径并进行最终验证
         string fullWorkPath = Path.GetFullPath(this.WorkPath);
