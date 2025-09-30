@@ -33,7 +33,7 @@ internal class AiRuneProcessor(AiRuneConfig config, WorkflowRuntimeService workf
     /// <inheritdoc />
     public AiRuneProcessorDebugDto DebugDto { get; } = new();
 
-    internal class AiRuneProcessorDebugDto : IRuneProcessorDebugDto
+    internal record AiRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         public IList<RoledPromptDto> Prompts { get; set; } = [];
         public int TokenUsage { get; set; }

@@ -197,7 +197,7 @@ internal class PromptGenerationRuneProcessor(WorkflowRuntimeService workflowRunt
     /// <summary>
     /// 提示词生成符文处理器的调试数据传输对象。
     /// </summary>
-    internal class PromptGenerationRuneProcessorDebugDto : IRuneProcessorDebugDto
+    internal record PromptGenerationRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         /// <summary>
         /// 符文配置中原始的提示词模板。

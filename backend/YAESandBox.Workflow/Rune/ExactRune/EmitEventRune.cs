@@ -30,7 +30,7 @@ internal class EmitEventRuneProcessor(EmitEventRuneConfig config, WorkflowRuntim
     public EmitEventRuneProcessorDebugDto DebugDto { get; } = new();
 
     /// <inheritdoc />
-    public record EmitEventRuneProcessorDebugDto : IRuneProcessorDebugDto
+    internal record EmitEventRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         /// <summary>
         /// 

@@ -72,7 +72,7 @@ public class JavaScriptRuneProcessor(JavaScriptRuneConfig config)
     /// <summary>
     /// JavaScript 脚本符文处理器的调试数据传输对象。
     /// </summary>
-    public class JavaScriptRuneProcessorDebugDto : IRuneProcessorDebugDto, IDebugDtoWithLogs
+    public record JavaScriptRuneProcessorDebugDto : IRuneProcessorDebugDto, IDebugDtoWithLogs
     {
         /// <summary>
         /// 实际执行的 JavaScript 脚本内容。

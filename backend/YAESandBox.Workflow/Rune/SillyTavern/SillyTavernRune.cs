@@ -238,7 +238,7 @@ internal class SillyTavernRuneProcessor(WorkflowRuntimeService workflowRuntimeSe
     /// <summary>
     /// 用于调试 SillyTavern 符文处理器的详细数据传输对象。
     /// </summary>
-    public class SillyTavernRuneProcessorDebugDto : IRuneProcessorDebugDto
+    internal record SillyTavernRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         /// <summary>
         /// 记录整个执行过程中的关键步骤和日志信息。

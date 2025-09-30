@@ -73,7 +73,7 @@ public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config
     }
 
     /// <inheritdoc />
-    public class LuaStringProcessorRuneDebugDto : LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto;
+    public record LuaStringProcessorRuneDebugDto : LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto;
 }
 
 /// <summary>

@@ -28,7 +28,7 @@ internal class TuumRuneProcessor(WorkflowRuntimeService workflowRuntimeService, 
     /// <summary>
     /// 枢机符文的调试信息。
     /// </summary>
-    public class TuumRuneProcessorDebugDto : IRuneProcessorDebugDto
+    internal record TuumRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         /// <summary>
         /// 内部枢机执行后的调试快照。

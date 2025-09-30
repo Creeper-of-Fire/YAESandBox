@@ -66,7 +66,7 @@ internal class HistoryAppendRuneProcessor(WorkflowRuntimeService workflowRuntime
     /// <summary>
     /// 历史记录追加符文处理器的调试数据传输对象。
     /// </summary>
-    internal class HistoryAppendRuneProcessorDebugDto : IRuneProcessorDebugDto
+    internal record HistoryAppendRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         /// <summary>
         /// 配置的历史记录变量名。

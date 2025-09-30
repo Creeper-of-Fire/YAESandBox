@@ -48,7 +48,7 @@ internal class StaticVariableRuneProcessor(WorkflowRuntimeService workflowRuntim
     /// <summary>
     /// 静态变量脚本符文的调试DTO。
     /// </summary>
-    internal class StaticVariableRuneProcessorDebugDto : IRuneProcessorDebugDto
+    internal record StaticVariableRuneProcessorDebugDto : IRuneProcessorDebugDto
     {
         /// <summary>
         /// 在本次执行中成功定义并注入的变量及其值。

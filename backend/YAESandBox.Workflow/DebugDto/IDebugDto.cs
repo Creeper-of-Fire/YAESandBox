@@ -1,9 +1,12 @@
-﻿namespace YAESandBox.Workflow.DebugDto;
+﻿using YAESandBox.Depend.Annotations;
+
+namespace YAESandBox.Workflow.DebugDto;
 
 /// <summary>
 /// 发给前端，用来显示Debug信息的DTO。
 /// 建议使用record来实现
 /// </summary>
+[RequireRecordImplementation]
 public interface IDebugDto;
 
 
