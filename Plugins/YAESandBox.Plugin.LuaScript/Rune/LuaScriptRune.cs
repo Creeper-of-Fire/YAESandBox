@@ -3,8 +3,8 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Plugin.Rune.LuaScript.LuaRunner;
-using YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
+using YAESandBox.Plugin.LuaScript.LuaRunner;
+using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.DebugDto;
@@ -14,7 +14,7 @@ using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
 
-namespace YAESandBox.Plugin.Rune.LuaScript.Rune;
+namespace YAESandBox.Plugin.LuaScript.Rune;
 
 /// <summary>
 /// Lua 脚本符文处理器。

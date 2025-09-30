@@ -1,7 +1,7 @@
 ﻿using YAESandBox.Workflow.DebugDto;
 using static YAESandBox.Workflow.Tuum.TuumProcessor;
 
-namespace YAESandBox.Plugin.Rune.LuaScript.LuaRunner;
+namespace YAESandBox.Plugin.LuaScript.LuaRunner;
 
 /// <summary>
 /// 一个用于构建和配置 LuaScriptRunner 的构建器。

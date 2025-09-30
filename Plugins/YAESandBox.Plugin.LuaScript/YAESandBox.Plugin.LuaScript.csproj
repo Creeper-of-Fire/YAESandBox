@@ -8,8 +8,6 @@
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <GenerateDocumentationFile>true</GenerateDocumentationFile>
         <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-        <AssemblyName>YAESandBox.Plugin.Rune.LuaScript</AssemblyName>
-        <RootNamespace>YAESandBox.Plugin.Rune.LuaScript</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>

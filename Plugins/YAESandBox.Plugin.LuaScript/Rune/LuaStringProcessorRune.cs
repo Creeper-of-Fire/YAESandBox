@@ -2,15 +2,15 @@
 using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Plugin.Rune.LuaScript.LuaRunner;
-using YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
+using YAESandBox.Plugin.LuaScript.LuaRunner;
+using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;
 
-namespace YAESandBox.Plugin.Rune.LuaScript.Rune;
+namespace YAESandBox.Plugin.LuaScript.Rune;
 
 /// <summary>
 /// Lua 字符串处理符文处理器。

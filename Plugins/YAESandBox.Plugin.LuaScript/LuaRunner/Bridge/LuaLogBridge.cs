@@ -2,7 +2,7 @@
 using YAESandBox.Workflow.DebugDto;
 
 // ReSharper disable InconsistentNaming
-namespace YAESandBox.Plugin.Rune.LuaScript.LuaRunner.Bridge;
+namespace YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 
 /// <summary>
 /// 向 Lua 暴露一个安全的日志记录器。

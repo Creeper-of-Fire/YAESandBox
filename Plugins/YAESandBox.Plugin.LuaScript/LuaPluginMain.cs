@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
-using YAESandBox.Plugin.Rune.LuaScript.Rune;
+using YAESandBox.Plugin.LuaScript.Rune;
 using YAESandBox.Workflow.API;
 
-namespace YAESandBox.Plugin.Rune.LuaScript;
+namespace YAESandBox.Plugin.LuaScript;
 
 /// <inheritdoc cref="IYaeSandBoxPlugin"/>
 public class LuaPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IProgramModuleStaticAssetConfigurator
