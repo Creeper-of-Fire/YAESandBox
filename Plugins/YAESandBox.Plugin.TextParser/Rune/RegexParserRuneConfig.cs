@@ -12,15 +12,14 @@ using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;
-using static YAESandBox.Plugin.Rune.TextParser.Rune.RegexParserRuneProcessor;
 
-namespace YAESandBox.Plugin.Rune.TextParser.Rune;
+namespace YAESandBox.Plugin.TextParser.Rune;
 
 /// <summary>
 /// “正则生成”符文的运行时处理器。
 /// </summary>
 public class RegexParserRuneProcessor(RegexParserRuneConfig config)
-    : INormalRune<RegexParserRuneConfig, RegexParserDebugDto>
+    : INormalRune<RegexParserRuneConfig, RegexParserRuneProcessor.RegexParserDebugDto>
 {
     /// <inheritdoc />
     public RegexParserRuneConfig Config { get; } = config;

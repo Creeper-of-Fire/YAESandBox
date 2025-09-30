@@ -16,7 +16,7 @@ public class LuaPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IPro
 
     /// <inheritdoc />
     public PluginMetadata Metadata { get; } = new(
-        Id: "YAESandBox.Plugin.Rune.LuaScript",
+        Id: "YAESandBox.Plugin.LuaScript",
         Name: "Lua 脚本插件",
         Version: "1.0.0",
         Author: "Creeper_of_Fire",

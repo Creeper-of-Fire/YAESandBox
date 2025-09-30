@@ -3,10 +3,10 @@ using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.AspNetCore.PluginDiscovery;
-using YAESandBox.Plugin.Rune.TextParser.Rune;
+using YAESandBox.Plugin.TextParser.Rune;
 using YAESandBox.Workflow.API;
 
-namespace YAESandBox.Plugin.Rune.TextParser;
+namespace YAESandBox.Plugin.TextParser;
 
 /// <summary>
 /// 文本处理器插件，提供标签解析和正则生成等高级文本处理功能。
@@ -16,7 +16,7 @@ public class TextParserPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvide
 {
     /// <inheritdoc />
     public PluginMetadata Metadata { get; } = new(
-        Id: "YAESandBox.Plugin.Rune.TextParser",
+        Id: "YAESandBox.Plugin.TextParser",
         Name: "文本处理器",
         Version: "1.0.0",
         Author: "Creeper_of_Fire",

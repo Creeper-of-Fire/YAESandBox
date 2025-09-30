@@ -13,15 +13,14 @@ using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Rune;
 using YAESandBox.Workflow.Tuum;
 using YAESandBox.Workflow.VarSpec;
-using static YAESandBox.Plugin.Rune.TextParser.Rune.TagParserRuneProcessor;
 
-namespace YAESandBox.Plugin.Rune.TextParser.Rune;
+namespace YAESandBox.Plugin.TextParser.Rune;
 
 /// <summary>
 /// “标签解析”符文的运行时处理器。
 /// </summary>
 public class TagParserRuneProcessor(TagParserRuneConfig config)
-    : INormalRune<TagParserRuneConfig, TagParserRuneDebugDto>
+    : INormalRune<TagParserRuneConfig, TagParserRuneProcessor.TagParserRuneDebugDto>
 {
     /// <inheritdoc />
     public TagParserRuneConfig Config { get; } = config;
