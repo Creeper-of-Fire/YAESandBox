@@ -23,6 +23,7 @@ public interface IUserScopedStorageFactory
 
     /// <summary>
     /// 异步地为指定用户ID获取一个应用了作用域模板的沙箱化存储服务实例。
+    /// 它会自动的在这个静态的 <see cref="ScopeTemplate"/> 模板中插入 <paramref name="userId"/>，实现完善的作用域管理，而不需要手动拼接。
     /// 这是获取用户特定子目录存储的首选方法。
     /// </summary>
     /// <param name="userId">要获取存储服务的用户ID。</param>

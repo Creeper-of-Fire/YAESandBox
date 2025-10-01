@@ -3,11 +3,16 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 using YAESandBox.Authentication;
+using YAESandBox.Authentication.Storage;
+using YAESandBox.Depend.Logger;
 using YAESandBox.Depend.Results;
+using YAESandBox.Depend.ResultsExtend;
+using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.Core;
 using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.Runtime.RuntimePersistence;
+using YAESandBox.Workflow.Runtime.RuntimePersistence.Storage;
 using YAESandBox.Workflow.Test.API.GameHub;
 using YAESandBox.Workflow.Utility;
 
@@ -60,11 +65,14 @@ public enum StreamOutputFormat
 [ApiExplorerSettings(GroupName = WorkflowTestModule.WorkflowTestGroupName)]
 public class WorkflowExecutionController(
     IMasterAiService masterAiService,
-    IHubContext<WorkflowHub> workflowHubContext
+    IHubContext<WorkflowHub> workflowHubContext,
+    IUserScopedStorageFactory userScopedStorageFactory
 ) : AuthenticatedApiControllerBase
 {
     private IMasterAiService MasterAiService { get; } = masterAiService;
     private IHubContext<WorkflowHub> WorkflowHubContext { get; } = workflowHubContext;
+    private IUserScopedStorageFactory UserScopedStorageFactory { get; } = userScopedStorageFactory;
+    private static IAppLogger Logger { get; } = AppLogging.CreateLogger<WorkflowExecutionController>();
 
     /// <summary>
     /// 通过 SignalR 异步触发一个工作流执行，并流式推送结果。
@@ -77,12 +85,14 @@ public class WorkflowExecutionController(
     [HttpPost("execute-signalr")]
     [ProducesResponseType(StatusCodes.Status202Accepted)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status400BadRequest)]
-    public IActionResult ExecuteWorkflowSignalR(
+    public async Task<IActionResult> ExecuteWorkflowSignalR(
         [FromBody] WorkflowExecutionSignalRRequest request,
         CancellationToken cancellationToken)
     {
         // 1. StructuredContentBuilder 用于在内存中聚合状态
         var contentBuilder = new StructuredContentBuilder("response");
+
+        var workflowInstanceId = InstanceIdGenerator.CreateForNewWorkflow();
 
         string userId = this.UserId;
 
@@ -109,6 +119,19 @@ public class WorkflowExecutionController(
             }
         );
 
+        var scopeTemplate = JsonFilePersistenceStorage.PersistenceScope;
+        var scopedJsonStorageResult = await this.UserScopedStorageFactory.GetFinalStorageForUserAsync(userId, scopeTemplate);
+        IPersistenceStorage persistenceStorageStorage;
+        if (scopedJsonStorageResult.TryGetError(out var scopedJsonStorageError, out var scopedJsonStorage))
+        {
+            Logger.Error(scopedJsonStorageError);
+            persistenceStorageStorage = new InMemoryPersistenceStorage();
+        }
+        else
+        {
+            persistenceStorageStorage = new JsonFilePersistenceStorage(scopedJsonStorage,workflowInstanceId);
+        }
+
         // 3. 在后台任务中启动工作流执行 (与SSE版本类似，但通信方式不同)
         _ = Task.Run<Task>(async () =>
         {
@@ -116,12 +139,12 @@ public class WorkflowExecutionController(
             {
                 var mockDataAccess = new MockWorkflowDataAccess();
                 var processor = request.WorkflowConfig.ToWorkflowProcessor(
-                    InstanceIdGenerator.CreateForNewWorkflow(),
+                    workflowInstanceId,
                     request.WorkflowInputs,
                     this.MasterAiService.ToSubAiService(userId),
                     mockDataAccess,
                     callback,
-                    new WorkflowPersistenceService()
+                    new WorkflowPersistenceService(persistenceStorageStorage)
                 );
                 var result = await processor.ExecuteWorkflowAsync(cancellationToken);
 
