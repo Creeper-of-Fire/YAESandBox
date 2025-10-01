@@ -88,7 +88,6 @@ internal record TuumRuneConfig : AbstractRuneConfig<TuumRuneProcessor>, IHasInne
     [Required]
     [HiddenInForm(true)]
     [Display(Name = "子枢机配置", Description = "点击以配置此符文内部封装的子枢机流程。")]
-    [RenderAsCustomObjectWidget("")]
     public TuumConfig InnerTuum { get; init; } = new()
     {
         // 为新创建的子枢机提供一个默认的、唯一的ConfigId

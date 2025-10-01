@@ -287,7 +287,7 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
     /// <summary>
     /// AI 服务配置。
     /// </summary>
-    [RenderAsCustomObjectWidget("AiConfigEditorWidget")]
+    [RenderWithCustomWidget("AiConfigEditorWidget")]
     [Display(Name = "AI 服务配置", Description = "为该AI调用符文配置AI服务、模型和流式选项。")]
     public RuneAiConfig AiConfiguration { get; init; } = new()
     {

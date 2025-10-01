@@ -145,7 +145,46 @@ function processNode(
         return [createFieldViewModel(node, path, requiredFields, customClassRendererKey)];
     }
 
-    // 根据类型处理
+    // =================================================================
+    // 优先处理字段级别的自定义渲染器
+    // -----------------------------------------------------------------
+    // 在根据 `type` 进行分支处理之前，先检查是否存在针对当前节点（即使是对象）的
+    // 自定义渲染指令。如果存在，则将此节点视为一个单一的字段，并立即返回其视图模型，
+    // 从而避免错误地递归进入其 `properties`。
+    // =================================================================
+
+    const customPropertyRendererKey = node['x-custom-renderer-property'] as string;
+    if (customPropertyRendererKey && MAIN_APP_WIDGETS[customPropertyRendererKey])
+    {
+        return [createFieldViewModel(node, path, requiredFields, customPropertyRendererKey)];
+    }
+
+    // 插件或WebComponent
+    const vuePluginProperty  = node['x-vue-component-property'] as string;
+    if (vuePluginProperty  && getVuePluginComponent(vuePluginProperty))
+    {
+        const componentName = `plugin:${vuePluginProperty}`;
+        COMPONENT_MAP[componentName] = getVuePluginComponent(vuePluginProperty)!;
+        return [createFieldViewModel(node, path, requiredFields, componentName)];
+    }
+    const webComponentProperty = node['x-web-component-property'] as string;
+    if (webComponentProperty)
+    {
+        // 使用 WebComponent 包装器
+        const vm = createFieldViewModel(node, path, requiredFields, 'WebComponentWrapper');
+        vm.props.tagName = webComponentProperty;
+        return [vm];
+    }
+    const monacoConfig = node['x-monaco-editor'] as any;
+    if (monacoConfig)
+    {
+        // 使用 Monaco Editor
+        const vm = createFieldViewModel(node, path, requiredFields, 'MonacoEditorWidget');
+        Object.assign(vm.props, monacoConfig); // 将配置作为 props 传递
+        return [vm];
+    }
+
+    // --- 根据类型处理 (后备逻辑) ---
     const type = getPrimaryType(node.type);
     switch (type)
     {
@@ -244,33 +283,6 @@ function determineComponentAndProps(node: FieldProps): { component: string; prop
 {
     const props: Record<string, any> = {placeholder: node.description || ''};
     let component = 'Input'; // 默认组件
-
-    const customWidgetKey = node['x-custom-renderer-property'] as string;
-    if (customWidgetKey && MAIN_APP_WIDGETS[customWidgetKey])
-    {
-        return { component: customWidgetKey, props };
-    }
-
-    // 插件或WebComponent
-    const vuePlugin = node['x-vue-component-property'] as string;
-    if (vuePlugin && getVuePluginComponent(vuePlugin))
-    {
-        const componentName = `plugin:${vuePlugin}`;
-        COMPONENT_MAP[componentName] = getVuePluginComponent(vuePlugin)!;
-        return {component: componentName, props};
-    }
-    const webComponent = node['x-web-component-property'] as string;
-    if (webComponent)
-    {
-        props.tagName = webComponent;
-        return {component: 'WebComponentWrapper', props};
-    }
-    const monacoConfig = node['x-monaco-editor'] as any;
-    if (monacoConfig)
-    {
-        Object.assign(props, monacoConfig);
-        return {component: 'MonacoEditorWidget', props};
-    }
 
     // 根据类型和属性决定组件
     const type = getPrimaryType(node.type);

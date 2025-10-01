@@ -17,7 +17,6 @@ public static class YaeSchemaExporter
             new InheritanceOrderProcessor(),
             new DisplayAttributeProcessor(),
             new ClassLabelProcessor(),
-            new CustomObjectWidgetRendererSchemaProcessor(),
             new HiddenInFormProcessor(),
             new DataTypeProcessor(),
             new RangeProcessor(),
