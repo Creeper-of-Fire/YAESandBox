@@ -22,6 +22,7 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 /// 负责执行用户提供的 Lua 脚本，并通过一个安全桥接器与枢机上下文交互。
 /// </summary>
 /// <param name="config">符文配置。</param>
+/// <param name="creatingContext"></param>
 public class LuaScriptRuneProcessor(LuaScriptRuneConfig config,ICreatingContext creatingContext)
     : NormalRune<LuaScriptRuneConfig, LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto>(config, creatingContext)
 {
