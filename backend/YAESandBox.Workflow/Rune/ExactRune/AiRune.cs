@@ -70,7 +70,7 @@ internal class AiRuneProcessor(AiRuneConfig config, ICreatingContext creatingCon
 
                 return aiCallResult;
             }
-        );
+        ).RunAsync();
 
         if (result.TryGetError(out var error, out var fullResponse))
         {

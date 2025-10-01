@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.Rune.Config;
+using YAESandBox.Workflow.Runtime;
 
 namespace YAESandBox.Workflow.Tuum;
 
@@ -110,6 +111,9 @@ public record TuumConfig
     [Required]
     [HiddenInForm(true)]
     public List<TuumOutputMapping> OutputMappingsList { get; init; } = [];
+
+    /// <inheritdoc />
+    public IEnumerable<AbstractRuneConfig> ContainedNodes => this.Runes;
 }
 
 /// <summary>

@@ -11,6 +11,7 @@ namespace YAESandBox.Workflow.Core;
 /// <param name="aiService"></param>
 /// <param name="dataAccess"></param>
 /// <param name="callback"></param>
+/// <param name="persistenceService"></param>
 public class WorkflowRuntimeService(
     SubAiService aiService,
     IWorkflowDataAccess dataAccess,

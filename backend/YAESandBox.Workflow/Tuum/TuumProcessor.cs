@@ -21,11 +21,14 @@ namespace YAESandBox.Workflow.Tuum;
 public class TuumProcessor(
     TuumConfig config,
     ICreatingContext creatingContext
-)
-    : IProcessorWithDebugDto<ITuumProcessorDebugDto>
+) : IProcessorWithDebugDto<ITuumProcessorDebugDto>
 {
     private static IAppLogger Logger { get; } = AppLogging.CreateLogger<TuumProcessor>();
-    private TuumConfig Config { get; } = config;
+    
+    /// <summary>
+    /// 配置对象
+    /// </summary>
+    public TuumConfig Config { get; } = config;
 
     /// <summary>
     /// 枢机的运行时上下文
@@ -178,7 +181,7 @@ public class TuumProcessor(
         var tuumInstanceId = this.ProcessorContext.InstanceId;
 
         // Tuum 的输出是一个字典，它不应该为 null，所以使用 ExecuteNonNullAsync
-        return await persistenceService.WithPersistence(tuumInstanceId, inputs).ExecuteNonNullAsync(async currentInputs =>
+        return await persistenceService.WithPersistence(tuumInstanceId, inputs).ExecuteAsync(async currentInputs =>
         {
             // 1. 根据输入端点的数据，填充枢机的内部变量池
             // 遍历新的输入映射: "内部变量名" -> "外部端点名"
@@ -220,7 +223,7 @@ public class TuumProcessor(
             }
 
             return Result.Ok(tuumOutputs);
-        });
+        }).RunAsync();
     }
 
     /// <summary>

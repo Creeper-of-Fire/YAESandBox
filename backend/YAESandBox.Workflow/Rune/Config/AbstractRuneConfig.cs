@@ -14,7 +14,7 @@ namespace YAESandBox.Workflow.Rune.Config;
 /// 符文的配置
 /// </summary>
 [JsonConverter(typeof(RuneConfigConverter))]
-public abstract record AbstractRuneConfig
+public abstract partial record AbstractRuneConfig
 {
     /// <summary>
     /// 名字
@@ -45,7 +45,10 @@ public abstract record AbstractRuneConfig
     [Required]
     [HiddenInForm(true)]
     public abstract string RuneType { get; init; }
+}
 
+public abstract partial record AbstractRuneConfig
+{
     /// <summary>
     /// 转为实例化的运行时状态
     /// </summary>

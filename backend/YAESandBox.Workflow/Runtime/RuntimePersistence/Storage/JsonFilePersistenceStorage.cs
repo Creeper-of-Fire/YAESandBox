@@ -30,6 +30,9 @@ public record WorkflowPersistenceFileRecord
 /// 所有持久化数据都将保存在这个作用域的根目录下。
 /// 例如，一个指向 "/Saves/{UserId}/WorkflowRuns/Persistence" 的作用域。
 /// </param>
+/// <param name="workflowInstanceId">
+/// 工作流根实例的ID。
+/// </param>
 public class JsonFilePersistenceStorage(ScopedJsonStorage storageScope, Guid workflowInstanceId) : IPersistenceStorage
 {
     private const string PersistenceFolderPath = "WorkflowRuns";

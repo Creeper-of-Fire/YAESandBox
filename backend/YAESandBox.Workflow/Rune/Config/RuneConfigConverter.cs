@@ -3,9 +3,8 @@ using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
-using YAESandBox.Workflow.Rune.Config;
 
-namespace YAESandBox.Workflow.Utility;
+namespace YAESandBox.Workflow.Rune.Config;
 
 /// <summary>
 /// 自定义的 JsonConverter 用于 <see cref="AbstractRuneConfig"/> 接口的多态反序列化。

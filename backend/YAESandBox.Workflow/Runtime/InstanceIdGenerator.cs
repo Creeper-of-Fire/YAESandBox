@@ -1,6 +1,6 @@
 using UUIDNext;
 
-namespace YAESandBox.Workflow.Utility;
+namespace YAESandBox.Workflow.Runtime;
 
 /// <summary>
 /// 一个实例ID生成器，用于生成唯一的、可预测的、可追踪的实例ID。

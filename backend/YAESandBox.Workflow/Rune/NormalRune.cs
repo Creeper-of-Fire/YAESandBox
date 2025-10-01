@@ -13,8 +13,7 @@ namespace YAESandBox.Workflow.Rune;
 /// </summary>
 /// <typeparam name="TConfig"></typeparam>
 /// <typeparam name="TDebug"></typeparam>
-public abstract class NormalRune<TConfig, TDebug>(TConfig config, ICreatingContext creatingContext)
-    : INormalRune<TConfig, TDebug>
+public abstract class NormalRune<TConfig, TDebug>(TConfig config, ICreatingContext creatingContext) : INormalRune<TConfig, TDebug>
     where TConfig : AbstractRuneConfig where TDebug : IRuneProcessorDebugDto, new()
 {
     /// <inheritdoc />

@@ -1,9 +1,8 @@
 ﻿using System.Collections.ObjectModel;
 using YAESandBox.Depend.Logger;
 using YAESandBox.Workflow.API;
-using YAESandBox.Workflow.Rune.Config;
 
-namespace YAESandBox.Workflow.Utility;
+namespace YAESandBox.Workflow.Rune.Config;
 
 /// <summary>
 /// 辅助类，用于根据符文类型名称查找具体的 <see cref="AbstractRuneConfig"/> 实现类型，

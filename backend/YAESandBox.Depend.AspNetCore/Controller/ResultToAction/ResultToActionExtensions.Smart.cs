@@ -131,7 +131,7 @@ public static partial class ResultToActionExtensions
         return new OkObjectResult(responseDto);
     }
 
-    private static bool ServerErrorToActionResult(Error error, [NotNullWhen(true)] out ActionResult? actionResult)
+    private static bool ServerErrorToActionResult(Error error, [MaybeNullWhen(false)] out ActionResult actionResult)
     {
         actionResult = null;
         if (error is not NormalError serverError)

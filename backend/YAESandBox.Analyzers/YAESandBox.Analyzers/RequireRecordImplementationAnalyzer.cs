@@ -26,7 +26,7 @@ public class RequireRecordImplementationAnalyzer : DiagnosticAnalyzer
     {
         context.ConfigureGeneratedCodeAnalysis(GeneratedCodeAnalysisFlags.None);
         context.EnableConcurrentExecution();
-        context.RegisterSymbolAction(AnalyzeNamedType, SymbolKind.NamedType);
+        context.RegisterSymbolAction(this.AnalyzeNamedType, SymbolKind.NamedType);
     }
 
     private void AnalyzeNamedType(SymbolAnalysisContext context)

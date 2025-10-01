@@ -3,51 +3,56 @@ using YAESandBox.Depend.Results;
 namespace YAESandBox.Workflow.Runtime.RuntimePersistence;
 
 /// <summary>
-/// 一个流畅的构造器，用于构建和执行一个持久化操作。
+/// 一个流畅的构造器，用于分阶段配置并构建一个持久化操作。
 /// </summary>
 /// <typeparam name="TInput">操作的输入类型。</typeparam>
-public class PersistenceCallBuilder<TInput>
+public class PersistenceCallBuilder<TInput>(
+    WorkflowPersistenceService persistenceService,
+    Guid instanceId,
+    TInput inputs)
 {
-    private WorkflowPersistenceService PersistenceService { get; }
-    private Guid InstanceId { get; }
-    private TInput Inputs { get; }
+    private WorkflowPersistenceService PersistenceService { get; } = persistenceService;
+    private Guid InstanceId { get; } = instanceId;
+    private TInput Inputs { get; } = inputs;
 
-    internal PersistenceCallBuilder(WorkflowPersistenceService persistenceService, Guid instanceId, TInput inputs)
+
+    /// <summary>
+    /// 指定一个操作逻辑并构建可执行的操作。
+    /// </summary>
+    /// <param name="executionLogic">核心业务逻辑。</param>
+    /// <returns>一个已配置完毕、可执行的持久化操作实例。</returns>
+    public PersistenceOperation<TInput, TPayload> ExecuteAsync<TPayload>(Func<TInput, Task<Result<TPayload>>> executionLogic)
     {
-        this.PersistenceService = persistenceService;
-        this.InstanceId = instanceId;
-        this.Inputs = inputs;
+        return new PersistenceOperation<TInput, TPayload>(
+            this.PersistenceService,
+            this.InstanceId,
+            this.Inputs,
+            executionLogic
+        );
     }
 
     /// <summary>
-    /// 指定一个操作逻辑并执行。
+    /// 指定一个【没有输出】的操作逻辑并构建可执行的操作。
     /// </summary>
     /// <param name="executionLogic">核心业务逻辑。</param>
-    public Task<Result<TOutput?>> ExecuteAsync<TOutput>(Func<TInput, Task<Result<TOutput>>> executionLogic)
+    /// <returns>一个已配置完毕、可执行的持久化操作实例。</returns>
+    public PersistenceOperation<TInput, object?> ExecuteAsync(Func<TInput, Task<Result>> executionLogic)
     {
-        // 委托给 WorkflowPersistenceService 的内部实现
-        return this.PersistenceService.ExecuteInternalAsync(this.InstanceId, this.Inputs, executionLogic);
-    }
+        return new PersistenceOperation<TInput, object?>(
+            this.PersistenceService,
+            this.InstanceId,
+            this.Inputs,
+            AdaptedLogic
+        );
 
-    /// <summary>
-    /// 指定一个【没有输出】的操作逻辑并执行。
-    /// </summary>
-    /// <param name="executionLogic">核心业务逻辑。</param>
-    public Task<Result> ExecuteAsync(Func<TInput, Task<Result>> executionLogic)
-    {
-        // 委托给 WorkflowPersistenceService 的内部实现
-        return this.PersistenceService.ExecuteInternalAsync(this.InstanceId, this.Inputs, executionLogic);
-    }
+        // 将 Func<..., Task<Result>> 适配为 Func<..., Task<Result<object?>>>
+        async Task<Result<object?>> AdaptedLogic(TInput input)
+        {
+            var result = await executionLogic(input);
+            if (result.TryGetError(out var error))
+                return error;
 
-    /// <summary>
-    /// 指定一个【输出不可为 null】的操作逻辑并执行。
-    /// </summary>
-    /// <typeparam name="TOutput">输出类型，约束为 notnull。</typeparam>
-    /// <param name="executionLogic">核心业务逻辑。</param>
-    public Task<Result<TOutput>> ExecuteNonNullAsync<TOutput>(Func<TInput, Task<Result<TOutput>>> executionLogic)
-        where TOutput : notnull
-    {
-        // 委托给 WorkflowPersistenceService 的内部实现
-        return this.PersistenceService.ExecuteNonNullInternalAsync(this.InstanceId, this.Inputs, executionLogic);
+            return Result.Ok<object?>(null);
+        }
     }
 }

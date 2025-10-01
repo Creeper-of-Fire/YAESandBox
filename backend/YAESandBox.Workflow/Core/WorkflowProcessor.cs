@@ -71,7 +71,7 @@ public class WorkflowProcessor(
         // 工作流的输出是图执行器成功后返回的最终数据存储 (IDictionary<GraphConnectionEndpoint<string>, object?>)，尽管如此，它并没有真正的派上用场。
         var resultTask = persistenceService
             .WithPersistence(workflowInstanceId, this.WorkflowInputs)
-            .ExecuteNonNullAsync(async currentInputs =>
+            .ExecuteAsync(async currentInputs =>
             {
                 // --- 1. 预处理阶段：构建完整的Tuum图 ---
 
@@ -126,8 +126,23 @@ public class WorkflowProcessor(
                     this.CloneAndSanitizeForFanOut,
                     cancellationToken);
 
-                return executionResult;
-            });
+                if (executionResult.TryGetError(out var executionError, out var executionOutputs))
+                {
+                    return executionError;
+                }
+                
+                // 【关键的转换步骤】
+                // 在返回之前，将运行时字典转换为持久化DTO
+                var persistencePayload = new Dictionary<string, object?>();
+                foreach ((var endpoint, object? value) in executionOutputs)
+                {
+                    // 使用我们之前为转换器设计的相同格式
+                    string stringKey = $"{endpoint.NodeId}::{endpoint.PortName}";
+                    persistencePayload[stringKey] = value;
+                }
+
+                return Result.Ok(persistencePayload);
+            }).RunAsync();
 
         // 无论结果来自缓存还是新执行，都将其转换为最终的 WorkflowExecutionResult
         var finalResult = await resultTask;

@@ -274,7 +274,7 @@ public static class YaeSandBoxJsonHelper
     /// 因此适用于需要独立副本以避免修改原始内容的场景。
     /// 如果解析失败（如 JSON 格式错误），将捕获异常并返回 <c>false</c>。
     /// </remarks>
-    public static bool CloneJsonNode(this JsonNode document, [NotNullWhen(true)] out JsonNode? clonedDocument)
+    public static bool CloneJsonNode(this JsonNode document, [MaybeNullWhen(false)] out JsonNode clonedDocument)
     {
         try
         {

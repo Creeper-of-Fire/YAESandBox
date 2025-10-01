@@ -66,7 +66,7 @@ internal class EmitEventRuneProcessor(EmitEventRuneConfig config, ICreatingConte
         );
 
         // 调用新的事件发射器回调
-        var result = await this.WorkflowRuntimeService.CallbackAsync<IWorkflowEventEmitter>(it => it.EmitAsync(payload));
+        var result = await this.WorkflowRuntimeService.CallbackAsync<IWorkflowEventEmitter>(it => it.EmitAsync(payload, cancellationToken));
 
         if (result.IsSuccess)
         {
