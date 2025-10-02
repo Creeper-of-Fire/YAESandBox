@@ -2,13 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.Results;
 using YAESandBox.Plugin.TextParser.Rune;
+using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Config.RuneConfig;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Rune.Config;
-using YAESandBox.Workflow.Rune.Interface;
-using YAESandBox.Workflow.Runtime;
+using YAESandBox.Workflow.Runtime.Processor;
+using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
 using YAESandBox.Workflow.TestDoubles;
-using YAESandBox.Workflow.Tuum;
-using static YAESandBox.Workflow.Tuum.TuumProcessor;
+using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
 
 namespace YAESandBox.Plugin.TextParser;
 
@@ -113,7 +113,7 @@ public class TextParserTestController : ControllerBase
         mockTuumContent.SetTuumVar(inputVariableName, request.SampleInputText);
 
         // 4. 执行 Processor
-        var executionResult = await ((INormalRune<AbstractRuneConfig, IRuneProcessorDebugDto>)processor).ExecuteAsync(mockTuumContent);
+        var executionResult = await ((INormalRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto>)processor).ExecuteAsync(mockTuumContent);
         if (executionResult.TryGetError(out var error))
         {
             return this.Ok(new TestResponseDto

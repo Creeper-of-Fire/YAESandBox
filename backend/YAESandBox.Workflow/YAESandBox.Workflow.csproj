@@ -32,6 +32,9 @@
         <Compile Update="Rune\ExactRune\ScriptParser.cs">
             <DependentUpon>StaticVariableRune.cs</DependentUpon>
         </Compile>
+        <Compile Update="ExactRune\StaticVariableRuneScriptParser.cs">
+          <DependentUpon>StaticVariableRune.cs</DependentUpon>
+        </Compile>
     </ItemGroup>
 
     <ItemGroup>

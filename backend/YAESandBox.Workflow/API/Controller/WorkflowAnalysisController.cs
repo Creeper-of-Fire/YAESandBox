@@ -2,10 +2,9 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Authentication;
-using YAESandBox.Workflow.Core;
-using YAESandBox.Workflow.Core.Analysis;
-using YAESandBox.Workflow.Rune.Config;
-using YAESandBox.Workflow.Tuum;
+using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Config.RuneConfig;
+using YAESandBox.Workflow.WorkflowService.Analysis;
 
 namespace YAESandBox.Workflow.API.Controller;
 

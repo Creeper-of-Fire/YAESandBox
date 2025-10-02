@@ -1,4 +1,4 @@
-﻿using YAESandBox.Workflow.Rune.Config;
+﻿using YAESandBox.Workflow.Config.RuneConfig;
 
 namespace YAESandBox.Workflow.DebugDto;
 

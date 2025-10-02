@@ -4,12 +4,12 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Workflow.API.Controller;
-using YAESandBox.Workflow.Core;
-using YAESandBox.Workflow.Core.Analysis;
-using YAESandBox.Workflow.Rune.Config;
-using YAESandBox.Workflow.Rune.ExactRune;
-using YAESandBox.Workflow.Rune.SillyTavern;
-using YAESandBox.Workflow.Utility;
+using YAESandBox.Workflow.Config.RuneConfig;
+using YAESandBox.Workflow.ExactRune;
+using YAESandBox.Workflow.ExactRune.SillyTavern;
+using YAESandBox.Workflow.WorkflowService;
+using YAESandBox.Workflow.WorkflowService.Analysis;
+using PromptGenerationRuneConfig = YAESandBox.Workflow.ExactRune.PromptGenerationRuneConfig;
 
 namespace YAESandBox.Workflow.API;
 

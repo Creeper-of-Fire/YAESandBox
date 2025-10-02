@@ -5,12 +5,12 @@ using Jint;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.API.Schema;
+using YAESandBox.Workflow.Config.RuneConfig;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Rune;
-using YAESandBox.Workflow.Rune.Config;
-using YAESandBox.Workflow.Runtime;
+using YAESandBox.Workflow.Runtime.Processor;
+using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
 using YAESandBox.Workflow.VarSpec;
-using static YAESandBox.Workflow.Tuum.TuumProcessor;
+using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
 
@@ -22,7 +22,7 @@ namespace YAESandBox.Plugin.Rune.JavaScript.Rune;
 /// </summary>
 /// <param name="config">符文配置。</param>
 public class JavaScriptRuneProcessor(JavaScriptRuneConfig config,ICreatingContext creatingContext)
-    : NormalRune<JavaScriptRuneConfig, JavaScriptRuneProcessor.JavaScriptRuneProcessorDebugDto>(config, creatingContext)
+    : NormalRuneProcessor<JavaScriptRuneConfig, JavaScriptRuneProcessor.JavaScriptRuneProcessorDebugDto>(config, creatingContext)
 {
     /// <summary>
     /// 执行 JavaScript 脚本。

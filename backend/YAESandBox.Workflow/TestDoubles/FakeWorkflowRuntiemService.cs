@@ -1,9 +1,9 @@
 using System.Diagnostics.CodeAnalysis;
 using YAESandBox.Workflow.AIService;
-using YAESandBox.Workflow.Core;
-using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.Runtime.RuntimePersistence;
 using YAESandBox.Workflow.Runtime.RuntimePersistence.Storage;
+using YAESandBox.Workflow.WorkflowService;
+using YAESandBox.Workflow.WorkflowService.Abstractions;
 
 namespace YAESandBox.Workflow.TestDoubles;
 

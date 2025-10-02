@@ -6,12 +6,12 @@ using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Plugin.LuaScript.LuaRunner;
 using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow.API.Schema;
+using YAESandBox.Workflow.Config.RuneConfig;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Rune;
-using YAESandBox.Workflow.Rune.Config;
-using YAESandBox.Workflow.Runtime;
+using YAESandBox.Workflow.Runtime.Processor;
+using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
 using YAESandBox.Workflow.VarSpec;
-using static YAESandBox.Workflow.Tuum.TuumProcessor;
+using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
 
@@ -24,7 +24,7 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 /// <param name="config">符文配置。</param>
 /// <param name="creatingContext"></param>
 public class LuaScriptRuneProcessor(LuaScriptRuneConfig config,ICreatingContext creatingContext)
-    : NormalRune<LuaScriptRuneConfig, LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto>(config, creatingContext)
+    : NormalRuneProcessor<LuaScriptRuneConfig, LuaScriptRuneProcessor.LuaScriptRuneProcessorDebugDto>(config, creatingContext)
 {
 
     /// <summary>

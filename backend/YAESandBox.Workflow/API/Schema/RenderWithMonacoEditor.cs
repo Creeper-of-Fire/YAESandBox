@@ -3,8 +3,7 @@ using System.Text.Json.Schema;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Depend.Logger;
 using YAESandBox.Depend.Schema.SchemaProcessor.Abstract;
-using YAESandBox.Workflow.Rune.Config;
-using YAESandBox.Workflow.Utility;
+using YAESandBox.Workflow.Config.RuneConfig;
 
 namespace YAESandBox.Workflow.API.Schema;
 

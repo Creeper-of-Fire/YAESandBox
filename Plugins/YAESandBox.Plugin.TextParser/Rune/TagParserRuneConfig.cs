@@ -8,11 +8,10 @@ using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
+using YAESandBox.Workflow.Config.RuneConfig;
 using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Rune;
-using YAESandBox.Workflow.Rune.Config;
-using YAESandBox.Workflow.Runtime;
-using YAESandBox.Workflow.Tuum;
+using YAESandBox.Workflow.Runtime.Processor;
+using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
 using YAESandBox.Workflow.VarSpec;
 
 namespace YAESandBox.Plugin.TextParser.Rune;
@@ -21,7 +20,7 @@ namespace YAESandBox.Plugin.TextParser.Rune;
 /// “标签解析”符文的运行时处理器。
 /// </summary>
 public class TagParserRuneProcessor(TagParserRuneConfig config,ICreatingContext creatingContext)
-    : NormalRune<TagParserRuneConfig, TagParserRuneProcessor.TagParserRuneDebugDto>(config, creatingContext)
+    : NormalRuneProcessor<TagParserRuneConfig, TagParserRuneProcessor.TagParserRuneDebugDto>(config, creatingContext)
 {
     /// <summary>
     /// 执行标签解析或替换逻辑。

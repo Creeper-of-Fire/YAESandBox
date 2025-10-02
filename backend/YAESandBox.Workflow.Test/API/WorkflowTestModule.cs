@@ -4,9 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.Depend.AspNetCore;
-using YAESandBox.Workflow.Core.Abstractions;
 using YAESandBox.Workflow.Test.API.Controller;
 using YAESandBox.Workflow.Test.API.GameHub;
+using YAESandBox.Workflow.WorkflowService.Abstractions;
 
 namespace YAESandBox.Workflow.Test.API;
 

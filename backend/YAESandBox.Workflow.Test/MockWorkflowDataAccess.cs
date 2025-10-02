@@ -1,4 +1,4 @@
-﻿using YAESandBox.Workflow.Core.Abstractions;
+﻿using YAESandBox.Workflow.WorkflowService.Abstractions;
 
 namespace YAESandBox.Workflow.Test;
 

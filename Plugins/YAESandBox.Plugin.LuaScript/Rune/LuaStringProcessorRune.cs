@@ -5,11 +5,11 @@ using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Plugin.LuaScript.LuaRunner;
 using YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;
 using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Rune;
-using YAESandBox.Workflow.Rune.Config;
-using YAESandBox.Workflow.Runtime;
+using YAESandBox.Workflow.Config.RuneConfig;
+using YAESandBox.Workflow.Runtime.Processor;
+using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
 using YAESandBox.Workflow.VarSpec;
-using static YAESandBox.Workflow.Tuum.TuumProcessor;
+using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
 
 namespace YAESandBox.Plugin.LuaScript.Rune;
 
@@ -18,7 +18,7 @@ namespace YAESandBox.Plugin.LuaScript.Rune;
 /// 专注于接收一个字符串，通过 Lua 脚本处理，并输出一个字符串。
 /// </summary>
 public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config, ICreatingContext creatingContext)
-    : NormalRune<LuaStringProcessorRuneConfig, LuaStringProcessorRuneProcessor.LuaStringProcessorRuneDebugDto>(config, creatingContext)
+    : NormalRuneProcessor<LuaStringProcessorRuneConfig, LuaStringProcessorRuneProcessor.LuaStringProcessorRuneDebugDto>(config, creatingContext)
 {
     /// <summary>
     /// 执行 Lua 字符串处理脚本。
