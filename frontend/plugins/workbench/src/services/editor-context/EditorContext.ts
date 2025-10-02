@@ -1,5 +1,5 @@
 ﻿import type {AnyConfigObject, GlobalEditSession} from "#/services/GlobalEditSession.ts";
-import {computed, type DeepReadonly, readonly, ref, type Ref} from 'vue';
+import {computed, type ComputedRef, type DeepReadonly, readonly, ref, type Ref} from 'vue';
 import {get} from 'lodash-es';
 import {type AnySelectionContext, createSelectionContext} from "#/services/editor-context/SelectionContext.ts";
 import {findPathByReference} from '#/utils/pathFinder';
@@ -32,6 +32,7 @@ export class EditorContext
     constructor(session: GlobalEditSession)
     {
         this.session = session;
+
         // 默认选中根对象。根对象可能没有 configId，我们用一个特殊值，例如 '__root__'
         this.select(session.getData().value);
 
@@ -51,6 +52,11 @@ export class EditorContext
     public get data(): DeepReadonly<Ref<AnyConfigObject>>
     {
         return readonly(this.session.getData());
+    }
+
+    public get isReadOnly(): ComputedRef<boolean>
+    {
+        return computed(() => this.session.isReadOnly.value);
     }
 
     public get storeId(): string

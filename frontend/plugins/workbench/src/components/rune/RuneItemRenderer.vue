@@ -54,7 +54,7 @@
       </n-popover>
 
       <!-- "更多" 操作的下拉菜单 -->
-      <ConfigItemActionsMenu :actionsProvider="getItemActions"/>
+      <ConfigItemActionsMenu :actions="itemActions"/>
     </template>
   </ConfigItemBase>
 
@@ -148,7 +148,7 @@ const rulesForThisRune = computed(() => metadataForThisRune.value?.rules);
 
 const runeClassLabel = computed(() => metadataForThisRune.value?.classLabel);
 
-const {getActions: getItemActions} = useConfigItemActions({
+const {actions: itemActions} = useConfigItemActions({
   itemRef: toRef(props, 'rune'),
   parentContextRef: computed(() =>
       props.parentTuum

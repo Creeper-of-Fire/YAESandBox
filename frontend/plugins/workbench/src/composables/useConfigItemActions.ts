@@ -5,6 +5,7 @@ import type {AnyConfigObject} from '#/services/GlobalEditSession.ts';
 import {useWorkbenchStore} from '#/stores/workbenchStore';
 import {AddIcon, EditIcon, SaveIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {createBlankConfig} from "#/utils/createBlankConfig.ts";
+import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 
 /**
  * @description useConfigItemActions 的输入参数类型
@@ -40,8 +41,9 @@ export interface EnhancedAction
  * @description 一个可组合函数，用于生成针对特定配置项的可用动作列表
  * @param params 包含当前项、会话和父级上下文的响应式引用
  */
-export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemActionsParams): { getActions: ActionsProvider; }
+export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemActionsParams): { actions: Ref<EnhancedAction[]>; }
 {
+    const {isReadOnly: isReadOnlyRef} = useSelectedConfig();
     const message = useMessage();
     const workbenchStore = useWorkbenchStore();
 
@@ -58,12 +60,13 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
             };
         });
     });
+
     /**
      * @description 生成并返回当前状态下的可用动作列表。
-     * 这个函数是“懒”的，只有在被调用时才会执行所有计算。
      */
-    const getActions = (): EnhancedAction[] =>
+    const actions = computed<EnhancedAction[]>(() =>
     {
+        const isReadOnly = isReadOnlyRef.value;
         // 从闭包中获取最新的 ref 值
         const item = itemRef.value;
         const parentCtx = parentContextRef.value;
@@ -93,14 +96,14 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
             label: '重命名',
             icon: EditIcon,
             renderType: 'popover',
-            disabled: !itemRef.value,
+            disabled: isReadOnly || !item,
             popoverTitle: '重命名',
             popoverContentType: 'input',
-            popoverInitialValue: itemRef.value?.name ?? '',
+            popoverInitialValue: item?.name ?? '',
             handler: ({name}) =>
             {
-                if (!itemRef.value || !name) return;
-                itemRef.value.name = name;
+                if (!item || !name) return;
+                item.name = name;
                 message.success(`已重命名为 "${name}"`);
             },
         }
@@ -127,6 +130,7 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
                     popoverTitle: '添加新枢机',
                     popoverContentType: 'input',
                     popoverInitialValue: '新枢机',
+                    disabled: isReadOnly,
                     handler: async ({name}) =>
                     {
                         if (!name) return;
@@ -148,6 +152,7 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
                     popoverContentType: 'select-and-input',
                     popoverSelectOptions: runeTypeOptions.value,
                     popoverSelectPlaceholder: '请选择符文类型',
+                    disabled: isReadOnly,
                     popoverDefaultNameGenerator: runeDefaultNameGenerator,
                     handler: async ({name, type}) =>
                     {
@@ -168,7 +173,7 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
             icon: TrashIcon,
             renderType: 'popover',
             type: 'error',
-            disabled: !parentCtx,
+            disabled: isReadOnly || !parentCtx,
             popoverTitle: '确认删除',
             popoverContentType: 'confirm-delete',
             popoverConfirmMessage: `你确定要删除“${item.name}”吗？此操作不可恢复。`,
@@ -192,13 +197,12 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
             icon: SaveIcon,
             renderType: 'popover',
             type: 'success',
-            disabled: !itemRef.value,
+            disabled: !item,
             popoverTitle: '另存为全局配置',
             popoverContentType: 'input',
-            popoverInitialValue: `${itemRef.value?.name} (全局副本)`,
+            popoverInitialValue: `${item?.name} (全局副本)`,
             handler: async ({name}) =>
             {
-                const item = itemRef.value;
                 if (!item || !name) return;
 
                 try
@@ -218,9 +222,9 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
             deleteAction,
             saveAsGlobalAction,
         ].filter(a => a.key && !a.disabled); // 过滤掉无效和禁用的动作
-    }
+    });
 
     return {
-        getActions
+        actions
     };
 }

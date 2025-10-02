@@ -41,7 +41,7 @@
         <n-flex class="action-bar" justify="space-between">
           <!-- 左侧：动态生成的上下文操作 -->
           <n-flex>
-            <template v-for="action in getItemActions()" :key="action.key">
+            <template v-for="action in itemActions" :key="action.key">
               <!-- 渲染需要 Popover 的动作 (如重命名、添加) -->
               <InlineInputPopover v-if="action.renderType === 'popover'"
                                   :action="action"
@@ -69,7 +69,8 @@
               </n-button>
             </template>
           </n-flex>
-          <n-flex>
+
+          <n-flex v-if="!isReadOnly">
             <n-button :disabled="!isDirty" secondary size="small" strong type="error" @click="handleDiscard">放弃</n-button>
             <n-button :disabled="!isDirty" secondary size="small" strong type="success" @click="handleSave">保存</n-button>
           </n-flex>
@@ -146,7 +147,6 @@ import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts"
 const props = defineProps<{}>();
 
 const emit = defineEmits<{
-  (e: 'start-editing', payload: { type: ConfigType; storeId: string }): void;
   (e: 'close-session', payload: { storeId: string }): void;
 }>();
 
@@ -155,7 +155,7 @@ const message = useMessage();
 
 // 工作流点击
 // TODO之后转移到工作流内部
-const {selectedContext, updateSelectedConfig, activeContext} = useSelectedConfig();
+const {switchContext, selectedContext, isReadOnly, updateSelectedConfig, activeContext} = useSelectedConfig();
 const session = computed(() => activeContext?.value?.session);
 
 function selectCurrentSessionItem()
@@ -224,7 +224,7 @@ function handleClose()
 }
 
 // --- 从 composable 获取动作 ---
-const {getActions: getItemActions} = useConfigItemActions({
+const {actions: itemActions} = useConfigItemActions({
   itemRef: computed(() => session.value?.getData().value ?? null),
   parentContextRef: ref(null), // 侧边栏是顶级编辑，没有父级
 });
@@ -315,7 +315,7 @@ function handleDrop(event: DragEvent)
         const {type, storeId} = JSON.parse(dataString);
         if (type && storeId)
         {
-          emit('start-editing', {type, storeId});
+          switchContext(type, storeId);
         }
       }
     } catch (e)

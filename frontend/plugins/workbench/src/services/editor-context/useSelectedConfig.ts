@@ -1,11 +1,20 @@
-﻿import {computed, inject, type InjectionKey, provide, readonly, ref, type Ref, shallowRef} from "vue";
+﻿import {computed, type DeepReadonly, inject, type InjectionKey, provide, readonly, ref, type Ref, shallowRef} from "vue";
 import {EditorContext} from "#/services/editor-context/EditorContext.ts";
 import type {AnyConfigObject, ConfigType} from "#/services/GlobalEditSession.ts";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 import {useDialog, useMessage} from "naive-ui";
 
-type EditorContextRef = Ref<EditorContext | null>;
-const ActiveEditorContextKey: InjectionKey<EditorContextRef> = Symbol('ActiveEditorContext');
+// --- 定义注入载荷的类型 ---
+interface EditorControlPayload
+{
+    activeContext: Ref<EditorContext | null>;
+    isLoading: Readonly<Ref<boolean>>;
+    switchContext: (type: ConfigType, storeId: string) => Promise<void>;
+    closeContext: () => void;
+    deepCloseContext: () => void;
+}
+
+const EditorControlPayloadKey: InjectionKey<EditorControlPayload> = Symbol('ActiveEditorContext');
 
 /**
  * @description 在顶层组件（如 WorkbenchView）中创建并提供 activeEditorContext。
@@ -35,6 +44,11 @@ export function createActiveEditorContextProvider()
         // 防止重复加载同一个会话
         if (_activeContext.value?.storeId === storeId)
         {
+            // 如果已经是当前会话，则将根对象设为选中状态
+            if (_activeContext.value.data)
+            {
+                _activeContext.value.select(_activeContext.value.session.getData().value);
+            }
             return;
         }
 
@@ -66,6 +80,7 @@ export function createActiveEditorContextProvider()
     /**
      * 关闭当前激活的会话。
      * 只是简单的关闭，不会关闭“后台”的会话。
+     * 对于大多数情况下的需求，请使用 closeContext()，因为我们在切换视图时并不希望真正的关闭会话，彻底关闭会话可能导致糟糕的UI/UX体验，甚至有可能导致非预期的错误。
      */
     function closeContext(): void
     {
@@ -105,9 +120,17 @@ export function createActiveEditorContextProvider()
         }
     }
 
-    // 2. 使用 provide 将状态提供出去
-    // 我们提供的是一个 Ref，这样后代组件就能响应其变化
-    provide(ActiveEditorContextKey, _activeContext);
+    // --- 将状态和方法打包成一个对象 ---
+    const payload: EditorControlPayload = {
+        activeContext: _activeContext,
+        isLoading: readonly(_isLoading),
+        switchContext,
+        closeContext,
+        deepCloseContext,
+    };
+
+    // --- 提供完整的载荷对象 ---
+    provide(EditorControlPayloadKey, payload);
 
     // 3. 返回状态和方法，供提供者组件使用
     return {
@@ -119,29 +142,25 @@ export function createActiveEditorContextProvider()
 }
 
 /**
- * @description 在后代组件中注入并使用 activeEditorContext。
- *
- * @returns 返回一个对当前激活 EditorContext 的只读 Ref。
- *          如果当前没有激活的 context，其 .value 将为 null。
- *          如果在提供者外部使用，将抛出错误。
+ * @description 在后代组件中注入并使用 activeEditorContext 及其控制器。
  */
-export function useActiveEditorContext()
+export function useEditorControlPayload()
 {
-    const activeContext = inject(ActiveEditorContextKey);
+    const payload = inject(EditorControlPayloadKey);
 
-    if (!activeContext)
+    if (!payload)
     {
-        throw new Error('useActiveEditorContext() 必须在 createActiveEditorContextProvider() 的后代组件中使用。');
+        throw new Error('useEditorControlPayload() 必须在 createActiveEditorContextProvider() 的后代组件中使用。');
     }
 
-    // 返回注入的 Ref，子组件可以通过 .value 访问 EditorContext 实例
-    // 并且当 context 切换时，组件会自动更新
-    return activeContext;
+    return payload;
 }
 
 export function useSelectedConfig(selfID?: Ref<string>)
 {
-    const activeContext = useActiveEditorContext();
+    const editorControlPayload = useEditorControlPayload();
+    const activeContext = editorControlPayload.activeContext;
+
     const selectedContext = computed(() => activeContext.value?.selectedContext.value ?? null);
     const selectedType = computed(() => selectedContext.value?.type);
     const updateSelectedConfig = (configObject: (AnyConfigObject | null)) =>
@@ -154,11 +173,16 @@ export function useSelectedConfig(selfID?: Ref<string>)
             return false;
         return activeContext.value?.selectedId.value === selfID.value;
     });
+    const isReadOnly = computed(() => activeContext.value?.isReadOnly.value ?? false);
     return {
+        switchContext: editorControlPayload.switchContext,
+        closeContext: editorControlPayload.closeContext,
+        isLoading: editorControlPayload.isLoading,
         selectedContext,
         selectedType,
         updateSelectedConfig,
         activeContext,
         isSelected,
+        isReadOnly,
     };
 }

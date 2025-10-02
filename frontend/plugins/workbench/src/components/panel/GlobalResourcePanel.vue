@@ -79,7 +79,6 @@
                   :item="element.item"
                   type="workflow"
                   @contextmenu="handleContextMenu"
-                  @start-editing="startEditing"
                   @show-error-detail="showErrorDetail"
               />
             </div>
@@ -110,7 +109,6 @@
                   :item="element.item"
                   type="tuum"
                   @contextmenu="handleContextMenu"
-                  @start-editing="startEditing"
                   @show-error-detail="showErrorDetail"
               />
             </div>
@@ -141,7 +139,6 @@
                   :item="element.item"
                   type="rune"
                   @contextmenu="handleContextMenu"
-                  @start-editing="startEditing"
                   @show-error-detail="showErrorDetail"
               />
             </div>
@@ -178,6 +175,7 @@ import {createBlankConfig} from "#/utils/createBlankConfig.ts";
 import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
 import {AddIcon, EditIcon, TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
+import {useEditorControlPayload} from "#/services/editor-context/useSelectedConfig.ts";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -391,17 +389,6 @@ function handleResourceClone(originalResourceItem: DraggableResourceItem<AnyConf
 }
 
 /**
- * 触发“开始编辑”事件，向上通知父组件打开新的编辑会话。
- * @param {object} payload - 包含类型和ID的对象。
- * @param {ConfigType} payload.type - 配置类型。
- * @param {string} payload.id - 配置ID。
- */
-function startEditing(payload: { type: ConfigType; storeId: string })
-{
-  emit('start-editing', payload);
-}
-
-/**
  * setData 回调函数。
  * 这是 vue-draggable-plus 官方提供的与原生 dataTransfer 交互的钩子。
  * 当拖拽开始时，库会调用这个函数。
@@ -483,6 +470,8 @@ function handleContextMenu(payload: { type: ConfigType; storeId: string; name: s
   });
 }
 
+const { switchContext } = useEditorControlPayload();
+
 // 处理菜单项点击
 function handleDropdownSelect(key: 'edit' | 'delete')
 {
@@ -492,7 +481,7 @@ function handleDropdownSelect(key: 'edit' | 'delete')
 
   if (key === 'edit')
   {
-    startEditing({type: item.type, storeId: item.storeId});
+    switchContext(item.type, item.storeId);
   }
   else if (key === 'delete')
   {

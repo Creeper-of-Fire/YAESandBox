@@ -82,11 +82,12 @@ export class GlobalEditSession
     public readonly type: ConfigType;
     public readonly storeId: string; // 源资源项的存储ID，同时也是本配置项的ID
     public isNew: boolean; // 标记这是否是一个全新的、尚未保存的草稿
+    public readonly isReadOnly: Ref<boolean>;
     /**
      * @internal - 对 workbenchStore 的引用，用于后端交互
      */
     private readonly _store: ReturnType<typeof useWorkbenchStore>;
-    private readonly draftData: Ref<AnyResourceItemSuccess>;
+    private readonly draftResourceItem: Ref<AnyResourceItemSuccess>;
     private originalState: Ref<string>; // JSON 字符串快照，用于脏检查
 
     private readonly _version = ref(0);
@@ -108,8 +109,10 @@ export class GlobalEditSession
         this.storeId = storeId;
 
         // 深度克隆源资源项作为草稿的初始状态
-        this.draftData = ref(cloneDeep(sourceItem));
+        this.draftResourceItem = ref(cloneDeep(sourceItem));
         this.originalState = ref(JSON.stringify(sourceItem));
+
+        this.isReadOnly = computed(() => this.draftResourceItem.value.isReadOnly);
     }
 
     // --- 公共API (供UI组件使用) ---
@@ -120,7 +123,7 @@ export class GlobalEditSession
      */
     public getData(): Ref<AnyConfigObject>
     {
-        return computed(() => this.draftData.value.data);
+        return computed(() => this.draftResourceItem.value.data);
     }
 
     /**
@@ -129,7 +132,7 @@ export class GlobalEditSession
      */
     public getFullDraft(): Ref<AnyResourceItemSuccess>
     {
-        return this.draftData;
+        return this.draftResourceItem;
     }
 
     /**
@@ -137,8 +140,13 @@ export class GlobalEditSession
      */
     public getIsDirty(): Ref<boolean>
     {
-        const data = this.draftData.value;
-        return computed(() => !isEquivalent(data, JSON.parse(this.originalState.value)));
+        const data = this.draftResourceItem.value;
+        return computed(() =>
+        {
+            if (this.isReadOnly.value)
+                return false;
+            return !isEquivalent(data, JSON.parse(this.originalState.value));
+        });
     }
 
     /**
@@ -148,7 +156,7 @@ export class GlobalEditSession
     public updateData(updatedData: Partial<AnyConfigObject>): void
     {
         // 使用 Object.assign 来合并更新，确保 Ref 的响应性
-        Object.assign(this.draftData.value.data, updatedData);
+        Object.assign(this.draftResourceItem.value.data, updatedData);
     }
 
     /**
@@ -157,7 +165,7 @@ export class GlobalEditSession
      */
     public updateRootProperties(updatedProperties: Partial<StoredConfigAddition>): void
     {
-        Object.assign(this.draftData.value, updatedProperties);
+        Object.assign(this.draftResourceItem.value, updatedProperties);
     }
 
     /**
@@ -171,27 +179,20 @@ export class GlobalEditSession
     }
 
     /**
-     * @description 提交更改，将当前草稿状态设为新的基准线。
-     *  这个方法应该在后端成功保存后被调用。
-     */
-    public commitChanges(): void
-    {
-        // 更新原始状态快照为当前草稿的状态
-        this.originalState.value = JSON.stringify(this.draftData.value);
-        // 如果这是一个新创建的会话，那么在第一次成功保存后，它就不再是“新的”了
-        if (this.isNew)
-        {
-            this.isNew = false;
-        }
-        this._version.value++;
-    }
-
-    /**
      * 保存当前会话的更改。
      * 它将调用 store 提供的后端服务接口。
      */
     public async save(): Promise<SaveResult>
     {
+        if (this.isReadOnly.value)
+            return {
+                success: false,
+                storeId: this.storeId,
+                name: this.draftResourceItem.value.data.name,
+                type: this.type,
+                error: '本内容是只读的。'
+            };
+
         // 调用 store 的统一保存方法，将自身和当前草稿数据传递过去
         const result = await this._store.saveSessionData(this);
 
@@ -209,7 +210,23 @@ export class GlobalEditSession
      */
     public discard(): void
     {
-        this.draftData.value = JSON.parse(this.originalState.value);
+        this.draftResourceItem.value = JSON.parse(this.originalState.value);
+        this._version.value++;
+    }
+
+    /**
+     * @description 提交更改，将当前草稿状态设为新的基准线。
+     *  这个方法应该在后端成功保存后被调用。
+     */
+    private commitChanges(): void
+    {
+        // 更新原始状态快照为当前草稿的状态
+        this.originalState.value = JSON.stringify(this.draftResourceItem.value);
+        // 如果这是一个新创建的会话，那么在第一次成功保存后，它就不再是“新的”了
+        if (this.isNew)
+        {
+            this.isNew = false;
+        }
         this._version.value++;
     }
 }

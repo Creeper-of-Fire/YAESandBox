@@ -3,7 +3,7 @@
   <div v-if="item.isSuccess"
        ref="listItemRef"
        class="resource-item"
-       @dblclick="$emit('start-editing', { type, storeId:storeId })"
+       @dblclick="handleStartEditing"
        @contextmenu.prevent="$emit('contextmenu', { type, storeId:storeId, name: item.data.name, event: $event })"
   >
 
@@ -22,7 +22,7 @@
             size="small"
             strong
             type="primary"
-            @click.stop="$emit('start-editing', { type, storeId:storeId })"
+            @click.stop="handleStartEditing"
         >
           <template #icon>
             <n-icon :component="EditIcon"/>
@@ -72,6 +72,7 @@ import type {AnyConfigObject, ConfigType} from '#/services/GlobalEditSession.ts'
 import type {GlobalResourceItem} from '@yaesandbox-frontend/core-services/types';
 import {computed, ref} from "vue";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
+import { useEditorControlPayload } from '#/services/editor-context/useSelectedConfig.ts';
 
 const props = defineProps<{
   storeId: string; // 原始 Record 的 key (资源的唯一ID)
@@ -80,7 +81,6 @@ const props = defineProps<{
 }>();
 
 const emit = defineEmits<{
-  (e: 'start-editing', payload: { type: ConfigType; storeId: string }): void; // 双击或点击“编辑”时触发
   (e: 'show-error-detail', errorMessage: string, originJsonString: string | null | undefined): void; // 点击“详情”时触发
   (e: 'contextmenu', payload: { type: ConfigType; storeId: string; name: string; isDamaged?: boolean; event: MouseEvent | PointerEvent }): void;
 }>();
@@ -88,15 +88,25 @@ const emit = defineEmits<{
 // *** 检查当前项是否变脏 ***
 const workbenchStore = useWorkbenchStore();
 
-// const isDirty = computed(() => workbenchStore.isDirty(props.storeId));
-// TODO 由于重构，目前去除全局内容的脏检查功能
-const isDirty = computed(() => false);
+const isDirty = computed(() => {
+  // 从 store 获取所有活跃的会话
+  const sessions = workbenchStore.getActiveSessions;
+  // 查找与当前列表项 storeId 匹配的会话
+  const currentSession = sessions[props.storeId];
+  // 如果找到了会话，则返回其 isDirty 状态；否则返回 false
+  return currentSession ? currentSession.getIsDirty().value : false;
+});
 
+
+const { switchContext } = useEditorControlPayload();
+function handleStartEditing() {
+  switchContext(props.type, props.storeId);
+}
 
 // 实现长按逻辑
 const listItemRef = ref<HTMLElement | null>(null);
 
-onLongPress( // <-- 2. 修正钩子名称
+onLongPress(
     listItemRef,
     (event: PointerEvent) =>
     {

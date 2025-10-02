@@ -25,7 +25,7 @@
         <!-- 校验状态指示器 -->
         <ValidationStatusIndicator :validation-info="validationInfo"/>
         <!-- 枢机的操作按钮 -->
-        <ConfigItemActionsMenu :actions-provider="getItemActions"/>
+        <ConfigItemActionsMenu :actions="itemActions"/>
       </template>
     </ConfigItemBase>
 
@@ -92,7 +92,7 @@ function handleItemClick()
 }
 
 // 使用可组合函数获取动作
-const {getActions: getItemActions} = useConfigItemActions({
+const {actions: itemActions} = useConfigItemActions({
   itemRef: toRef(props, 'tuum'),
   parentContextRef: computed(() =>
       props.parentWorkflow

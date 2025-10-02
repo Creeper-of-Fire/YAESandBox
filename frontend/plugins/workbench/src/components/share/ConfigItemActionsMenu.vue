@@ -1,14 +1,13 @@
 ﻿<!-- src/app-workbench/components/share/ConfigItemActionsMenu.vue -->
 <!-- TODO 之后把这玩意还加装到ConfigItemBase的右键菜单上 -->
 <template>
-  <div class="actions-menu-container" @click.stop>
+  <div v-if="hasActions" class="actions-menu-container" @click.stop>
     <!-- 使用 n-dropdown 作为动作菜单的容器 -->
     <n-dropdown
         :options="dropdownOptions"
         placement="bottom-end"
         trigger="hover"
         @select="handleSelect"
-        @update:show="handleUpdateShow"
     >
       <n-button style="font-size: 20px;" text>
         <n-icon :component="EllipsisHorizontalIcon"/>
@@ -28,34 +27,26 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, h, ref, shallowRef} from 'vue';
+import {computed, h, ref, toRefs} from 'vue';
 import {type DropdownOption, NButton, NDropdown, NIcon, useDialog} from 'naive-ui';
 import InlineInputPopover from './InlineInputPopover.vue';
 import {EllipsisHorizontalIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import type {ActionsProvider, EnhancedAction} from "#/composables/useConfigItemActions.ts";
+import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
 
 // 接口定义（保持不变，它依然是我们强大的数据模型）
 
 
 const props = defineProps<{
-  actionsProvider: ActionsProvider;
+  actions: EnhancedAction[];
 }>();
 
 const dialog = useDialog();
 const popoverRef = ref<InstanceType<typeof InlineInputPopover> | null>(null);
 const activePopoverAction = ref<EnhancedAction | null>(null);
 
-const calculatedActions = shallowRef<EnhancedAction[]>([]);
+const {actions: calculatedActions} = toRefs(props)
 
-function handleUpdateShow(show: boolean)
-{
-  // 当菜单即将显示，并且我们还没有计算过动作时
-  if (show && calculatedActions.value.length === 0)
-  {
-    // 调用 provider 函数来获取动作列表
-    calculatedActions.value = props.actionsProvider();
-  }
-}
+const hasActions = computed(() => calculatedActions.value.length > 0);
 
 // 将我们的 EnhancedAction 数组转换为 Naive UI Dropdown 需要的格式
 const dropdownOptions = computed<DropdownOption[]>(() =>

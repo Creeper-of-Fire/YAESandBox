@@ -1,7 +1,7 @@
 ﻿// --- START OF FILE frontend/src/app-workbench/stores/workbenchStore.ts ---
 
 import {defineStore} from 'pinia';
-import {computed, markRaw, type Reactive, reactive, shallowRef} from 'vue';
+import {computed, markRaw, type Reactive, reactive} from 'vue';
 import {v4 as uuidv4} from 'uuid';
 import {type AnyConfigObject, type ConfigType, getConfigObjectType, GlobalEditSession,} from '#/services/GlobalEditSession.ts';
 import type {
@@ -307,8 +307,8 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * @description 存储所有活跃的 GlobalEditSession 实例。
      * Key 是 session.storeId。
      */
-    const activeSessions = shallowRef<Record<string, GlobalEditSession>>({});
-    const getActiveSession = computed(() => activeSessions.value);
+    const activeSessions = reactive<Record<string, GlobalEditSession>>({});
+    const getActiveSessions = computed(() => activeSessions);
 
     // =================================================================
     // 内部 Getter & Action (加下划线表示，约定不对外暴露)
@@ -319,7 +319,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      */
     const hasDirtyDrafts = computed(() =>
     {
-        return Object.values(activeSessions.value).some(session => session.getIsDirty().value);
+        return Object.values(activeSessions).some(session => session.getIsDirty().value);
     });
 
     // TODO 没写好校验逻辑
@@ -466,7 +466,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         const session = new GlobalEditSession(type, newStoreId, blankResourceItem, true);
 
         // 2. 将其添加到活跃会话中
-        activeSessions.value[session.storeId] = markRaw(session);
+        activeSessions[session.storeId] = markRaw(session);
 
         return session;
     }
@@ -481,9 +481,9 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     {
 
         // 1. 如果已存在此会话，直接返回
-        if (activeSessions.value[storeId])
+        if (activeSessions[storeId])
         {
-            return activeSessions.value[storeId];
+            return activeSessions[storeId];
         }
 
         // 2. 根据类型，选择对应的异步状态对象
@@ -535,7 +535,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         const session = new GlobalEditSession(type, storeId, sourceItem, false);
 
         // 将新会话存入 activeSessions
-        activeSessions.value[session.storeId] = markRaw(session);
+        activeSessions[session.storeId] = markRaw(session);
 
         return session;
     }
@@ -545,22 +545,22 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      */
     function closeSession(sessionID: string)
     {
-        if (sessionID && activeSessions.value[sessionID])
+        if (sessionID && activeSessions[sessionID])
         {
-            delete activeSessions.value[sessionID];
+            delete activeSessions[sessionID];
         }
     }
 
     async function saveAllDirtyDrafts(): Promise<{ saved: SaveResult[], failed: SaveResult[] }>
     {
-        const dirtySessions = Object.values(activeSessions.value).filter(s => s.getIsDirty().value);
+        const dirtySessions = Object.values(activeSessions).filter(s => s.getIsDirty().value);
 
         if (dirtySessions.length === 0)
         {
             return {saved: [], failed: []};
         }
 
-        const savePromises = dirtySessions.map(session => session.save());
+        const savePromises = dirtySessions.filter(s => !s.isReadOnly.value).map(session => session.save());
         const results = await Promise.all(savePromises);
 
         const saved = results.filter(r => r.success);
@@ -585,7 +585,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         runeMetadata,
 
         hasDirtyDrafts,
-        getActiveSession,
+        getActiveSessions,
 
         // --- 核心服务方法 ---
         acquireEditSession,
