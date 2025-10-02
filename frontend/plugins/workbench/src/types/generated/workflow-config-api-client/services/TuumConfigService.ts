@@ -2,18 +2,18 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TuumConfig } from '../models/TuumConfig';
-import type { TuumConfigJsonResultDto } from '../models/TuumConfigJsonResultDto';
+import type { TuumConfigStoredConfig } from '../models/TuumConfigStoredConfig';
+import type { TuumConfigStoredConfigJsonResultDto } from '../models/TuumConfigStoredConfigJsonResultDto';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
 import { request as __request } from '../core/request';
 export class TuumConfigService {
     /**
      * 获取所有全局枢机配置的列表。
-     * @returns TuumConfigJsonResultDto 成功获取所有全局枢机配置的列表。
+     * @returns TuumConfigStoredConfigJsonResultDto 成功获取所有全局枢机配置的列表。
      * @throws ApiError
      */
-    public static getApiV1WorkflowsConfigsGlobalTuums(): CancelablePromise<Record<string, TuumConfigJsonResultDto>> {
+    public static getApiV1WorkflowsConfigsGlobalTuums(): CancelablePromise<Record<string, TuumConfigStoredConfigJsonResultDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/workflows-configs/global-tuums',
@@ -24,22 +24,22 @@ export class TuumConfigService {
     }
     /**
      * 获取指定 ID 的全局枢机配置。
-     * @returns TuumConfig 成功获取指定的枢机配置。
+     * @returns TuumConfigStoredConfig 成功获取指定的枢机配置。
      * @throws ApiError
      */
     public static getApiV1WorkflowsConfigsGlobalTuums1({
-        tuumId,
+        storeId,
     }: {
         /**
          * 枢机配置的唯一 ID。
          */
-        tuumId: string,
-    }): CancelablePromise<TuumConfig> {
+        storeId: string,
+    }): CancelablePromise<TuumConfigStoredConfig> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/workflows-configs/global-tuums/{tuumId}',
+            url: '/api/v1/workflows-configs/global-tuums/{storeId}',
             path: {
-                'tuumId': tuumId,
+                'storeId': storeId,
             },
             errors: {
                 404: `未找到指定 ID 的枢机配置。`,
@@ -53,23 +53,23 @@ export class TuumConfigService {
      * @throws ApiError
      */
     public static putApiV1WorkflowsConfigsGlobalTuums({
-        tuumId,
+        storeId,
         requestBody,
     }: {
         /**
          * 要创建或更新的枢机配置的唯一 ID。
          */
-        tuumId: string,
+        storeId: string,
         /**
          * 枢机配置数据。
          */
-        requestBody?: TuumConfig,
+        requestBody?: TuumConfigStoredConfig,
     }): CancelablePromise<void> {
         return __request(OpenAPI, {
             method: 'PUT',
-            url: '/api/v1/workflows-configs/global-tuums/{tuumId}',
+            url: '/api/v1/workflows-configs/global-tuums/{storeId}',
             path: {
-                'tuumId': tuumId,
+                'storeId': storeId,
             },
             body: requestBody,
             mediaType: 'application/json',
@@ -84,18 +84,18 @@ export class TuumConfigService {
      * @throws ApiError
      */
     public static deleteApiV1WorkflowsConfigsGlobalTuums({
-        tuumId,
+        storeId,
     }: {
         /**
          * 要删除的枢机配置的唯一 ID。
          */
-        tuumId: string,
+        storeId: string,
     }): CancelablePromise<void> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/v1/workflows-configs/global-tuums/{tuumId}',
+            url: '/api/v1/workflows-configs/global-tuums/{storeId}',
             path: {
-                'tuumId': tuumId,
+                'storeId': storeId,
             },
             errors: {
                 500: `删除配置时发生内部服务器错误。`,

@@ -37,7 +37,7 @@
       <!-- 当前编辑结构插槽 -->
       <template #editor-panel>
         <WorkbenchSidebar
-            :key="activeContext?.globalId ?? 'empty-session'"
+            :key="activeContext?.storeId ?? 'empty-session'"
             @closeSession="handleCloseSession"
             @start-editing="handleStartEditing"
         />
@@ -115,9 +115,9 @@ const showAiConfigModal = ref(false);
  * 处理“开始编辑”事件。
  * 直接调用 Composable 中的方法。
  */
-async function handleStartEditing({type, id}: { type: ConfigType; id: string })
+async function handleStartEditing({type, storeId}: { type: ConfigType; storeId: string })
 {
-  await switchContext(type, id);
+  await switchContext(type, storeId);
 }
 
 /**
@@ -150,7 +150,7 @@ async function handleSaveAll()
     const failedNames = failed.map(item =>
     {
       // 从 store 中安全地获取最新的名字，因为保存失败，草稿还在
-      return item.name || item.id;
+      return item.name || item.storeId;
     }).join('、');
 
     dialog.error({

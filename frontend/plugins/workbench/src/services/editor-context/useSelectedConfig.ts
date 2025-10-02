@@ -28,12 +28,12 @@ export function createActiveEditorContextProvider()
     /**
      * 切换或开始一个新的编辑会话，并创建对应的 EditorContext。
      * @param type - 资源类型
-     * @param id - 资源的全局 ID
+     * @param storeId - 资源的存储 ID
      */
-    async function switchContext(type: ConfigType, id: string): Promise<void>
+    async function switchContext(type: ConfigType, storeId: string): Promise<void>
     {
         // 防止重复加载同一个会话
-        if (_activeContext.value?.globalId === id)
+        if (_activeContext.value?.storeId === storeId)
         {
             return;
         }
@@ -43,18 +43,18 @@ export function createActiveEditorContextProvider()
 
         try
         {
-            const session = await workbenchStore.acquireEditSession(type, id);
+            const session = await workbenchStore.acquireEditSession(type, storeId);
             if (session)
             {
                 _activeContext.value = new EditorContext(session);
             }
             else
             {
-                message.error(`无法开始编辑 “${id}”。资源可能不存在或已损坏。`);
+                message.error(`无法开始编辑 “${storeId}”。资源可能不存在或已损坏。`);
             }
         } catch (error)
         {
-            console.error(`切换到会话 (${type}, ${id}) 时发生意外错误:`, error);
+            console.error(`切换到会话 (${type}, ${storeId}) 时发生意外错误:`, error);
             message.error('开始编辑时发生未知错误。');
             _activeContext.value = null;
         } finally
@@ -92,7 +92,7 @@ export function createActiveEditorContextProvider()
                 negativeText: '取消',
                 onPositiveClick: () =>
                 {
-                    workbenchStore.closeSession(context.globalId);
+                    workbenchStore.closeSession(context.storeId);
                     _activeContext.value = null;
                     message.info('编辑会话已关闭。');
                 },
@@ -100,7 +100,7 @@ export function createActiveEditorContextProvider()
         }
         else
         {
-            workbenchStore.closeSession(context.globalId);
+            workbenchStore.closeSession(context.storeId);
             _activeContext.value = null;
         }
     }

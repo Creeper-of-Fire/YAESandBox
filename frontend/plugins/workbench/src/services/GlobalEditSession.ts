@@ -1,14 +1,20 @@
 // --- START OF FILE frontend/src/app-workbench/services/GlobalEditSession.ts ---
 
-import {computed, isReactive, isRef, readonly, ref, type Ref, watch} from 'vue';
+import {computed, isReactive, isRef, readonly, ref, type Ref} from 'vue';
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig,} from '#/types/generated/workflow-config-api-client';
-import {type SaveResult, useWorkbenchStore} from '#/stores/workbenchStore.ts';
+import {
+    type AnyResourceItemSuccess as AnyResourceItemInStore,
+    type SaveResult,
+    type StoredConfigAddition,
+    useWorkbenchStore,
+} from '#/stores/workbenchStore.ts';
 import {cloneDeep} from "lodash-es";
 import {isEquivalent} from "@yaesandbox-frontend/core-services";
 
 // 定义了可编辑配置的类型别名，方便在整个应用中重用。
 export type ConfigType = 'workflow' | 'tuum' | 'rune';
 export type AnyConfigObject = WorkflowConfig | TuumConfig | AbstractRuneConfig;
+export type AnyResourceItemSuccess = AnyResourceItemInStore;
 
 export function getConfigObjectType(config: AnyConfigObject)
 {
@@ -20,15 +26,18 @@ export function getConfigObjectType(config: AnyConfigObject)
         return {type: 'rune' as const, config: config as AbstractRuneConfig};
 }
 
-function createDebuggableRef(initialValue:any) {
+function createDebuggableRef(initialValue: any)
+{
     let innerValue = initialValue;
     // Vue 的 ref 对象
     const actualRef = ref(initialValue);
 
     // 用 Proxy 包裹实际的 ref 对象
     return new Proxy(actualRef, {
-        get(target, prop, receiver) {
-            if (prop === 'value') {
+        get(target, prop, receiver)
+        {
+            if (prop === 'value')
+            {
                 // 在访问 .value 时打印信息
                 console.groupCollapsed(`DEBUG: Accessing ${prop} of ref (current value: ${target.value})`);
                 console.trace('Call stack for get');
@@ -36,21 +45,25 @@ function createDebuggableRef(initialValue:any) {
             }
             return Reflect.get(target, prop, receiver);
         },
-        set(target, prop, newValue, receiver) {
-            if (prop === 'value') {
+        set(target, prop, newValue, receiver)
+        {
+            if (prop === 'value')
+            {
                 console.groupCollapsed(`DEBUG: Setting ${prop} of ref from ${target.value} to ${newValue}`);
                 console.trace('Call stack for set');
                 console.groupEnd();
 
                 // 检查 newValue 是否为非响应式对象
-                if (typeof newValue === 'object' && newValue !== null && !isRef(newValue) && !isReactive(newValue)) {
+                if (typeof newValue === 'object' && newValue !== null && !isRef(newValue) && !isReactive(newValue))
+                {
                     console.warn(`Potential issue: ref.value is being set to a non-reactive object.`, newValue);
                 }
             }
 
             // 如果整个 ref 对象被替换，这里也能捕获到
-            if (prop === 'value' && target.value === undefined && newValue === undefined) {
-                console.warn(`DEBUG: Ref might be losing its value reference entirely!`, { target, newValue });
+            if (prop === 'value' && target.value === undefined && newValue === undefined)
+            {
+                console.warn(`DEBUG: Ref might be losing its value reference entirely!`, {target, newValue});
             }
 
             return Reflect.set(target, prop, newValue, receiver);
@@ -67,13 +80,13 @@ function createDebuggableRef(initialValue:any) {
 export class GlobalEditSession
 {
     public readonly type: ConfigType;
-    public readonly globalId: string; // 源数据的全局ID，同时也是本配置项的ID
+    public readonly storeId: string; // 源资源项的存储ID，同时也是本配置项的ID
     public isNew: boolean; // 标记这是否是一个全新的、尚未保存的草稿
     /**
      * @internal - 对 workbenchStore 的引用，用于后端交互
      */
     private readonly _store: ReturnType<typeof useWorkbenchStore>;
-    private readonly draftData: Ref<AnyConfigObject>;
+    private readonly draftData: Ref<AnyResourceItemSuccess>;
     private originalState: Ref<string>; // JSON 字符串快照，用于脏检查
 
     private readonly _version = ref(0);
@@ -82,21 +95,21 @@ export class GlobalEditSession
 
     /**
      * @param type - 配置项类型
-     * @param globalId - 源数据的全局ID，同时也是本配置项的ID
-     * @param sourceData - 用于创建会话的源数据对象
+     * @param storeId - 源资源的存储ID，同时也是本配置项的ID
+     * @param sourceItem -  用于创建会话的完整源资源项 (GlobalResourceItem)
      * @param isNew - 标记是否为新创建的项
      */
-    constructor(type: ConfigType, globalId: string, sourceData: AnyConfigObject, isNew: boolean = false)
+    constructor(type: ConfigType, storeId: string, sourceItem: AnyResourceItemSuccess, isNew: boolean = false)
     {
         this._store = useWorkbenchStore();
         this.type = type;
         this.isNew = isNew;
 
-        this.globalId = globalId;
+        this.storeId = storeId;
 
-        // 深度克隆源数据作为草稿的初始状态
-        this.draftData = ref(cloneDeep(sourceData));
-        this.originalState = ref(JSON.stringify(sourceData));
+        // 深度克隆源资源项作为草稿的初始状态
+        this.draftData = ref(cloneDeep(sourceItem));
+        this.originalState = ref(JSON.stringify(sourceItem));
     }
 
     // --- 公共API (供UI组件使用) ---
@@ -107,7 +120,16 @@ export class GlobalEditSession
      */
     public getData(): Ref<AnyConfigObject>
     {
-        return computed(() => this.draftData.value);
+        return computed(() => this.draftData.value.data);
+    }
+
+    /**
+     * 获取完整的草稿资源项，包括元数据。
+     * 用于需要编辑元数据（如描述、标签）或存储相关内容（如 storeRef）的UI。
+     */
+    public getFullDraft(): Ref<AnyResourceItemSuccess>
+    {
+        return this.draftData;
     }
 
     /**
@@ -126,7 +148,16 @@ export class GlobalEditSession
     public updateData(updatedData: Partial<AnyConfigObject>): void
     {
         // 使用 Object.assign 来合并更新，确保 Ref 的响应性
-        Object.assign(this.draftData.value, updatedData);
+        Object.assign(this.draftData.value.data, updatedData);
+    }
+
+    /**
+     * 更新资源项的根级属性 (如 storeRef, meta)。
+     * @param updatedProperties - 包含要更新的根属性的对象。
+     */
+    public updateRootProperties(updatedProperties: Partial<StoredConfigAddition>): void
+    {
+        Object.assign(this.draftData.value, updatedProperties);
     }
 
     /**

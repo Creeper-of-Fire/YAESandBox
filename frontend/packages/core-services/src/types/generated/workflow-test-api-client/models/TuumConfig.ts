@@ -9,9 +9,6 @@ import type { TuumOutputMapping } from './TuumOutputMapping';
  * 枢机的配置
  */
 export type TuumConfig = {
-    /**
-     * 名字
-     */
     name: string;
     /**
      * 是否被启用，默认为True

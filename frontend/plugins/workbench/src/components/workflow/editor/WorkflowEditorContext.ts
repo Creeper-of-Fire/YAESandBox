@@ -6,7 +6,7 @@
  */
 export interface WorkflowEditorContext {
     /** 当前选中的工作流的唯一全局ID */
-    globalId: string;
+    storeId: string;
     /** 当前选中的工作流配置数据 */
     data: WorkflowConfig;
 }

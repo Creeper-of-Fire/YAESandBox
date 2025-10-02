@@ -3,8 +3,8 @@
   <div v-if="item.isSuccess"
        ref="listItemRef"
        class="resource-item"
-       @dblclick="$emit('start-editing', { type, id })"
-       @contextmenu.prevent="$emit('contextmenu', { type, id, name: item.data.name, event: $event })"
+       @dblclick="$emit('start-editing', { type, storeId:storeId })"
+       @contextmenu.prevent="$emit('contextmenu', { type, storeId:storeId, name: item.data.name, event: $event })"
   >
 
     <span class="item-name">
@@ -22,7 +22,7 @@
             size="small"
             strong
             type="primary"
-            @click.stop="$emit('start-editing', { type, id })"
+            @click.stop="$emit('start-editing', { type, storeId:storeId })"
         >
           <template #icon>
             <n-icon :component="EditIcon"/>
@@ -34,12 +34,12 @@
   </div>
   <div v-else ref="listItemRef"
        class="resource-item-damaged"
-       @contextmenu.prevent="$emit('contextmenu', { type, id, name: id, isDamaged: true, event: $event })"
+       @contextmenu.prevent="$emit('contextmenu', { type, storeId:storeId, name: storeId, isDamaged: true, event: $event })"
   >
     <n-icon :component="LinkOffIcon" color="#d03050"/>
     <n-popover trigger="hover">
       <template #trigger>
-        <span class="damaged-text">{{ id }} (已损坏)</span>
+        <span class="damaged-text">{{ storeId }} (已损坏)</span>
       </template>
       {{ item.errorMessage }}
     </n-popover>
@@ -74,21 +74,21 @@ import {computed, ref} from "vue";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 
 const props = defineProps<{
-  id: string; // 原始 Record 的 key (资源的唯一ID)
+  storeId: string; // 原始 Record 的 key (资源的唯一ID)
   item: GlobalResourceItem<AnyConfigObject>; // 包含成功/失败状态和数据的资源项
   type: ConfigType; // 资源的类型 ('workflow', 'tuum', 'rune')
 }>();
 
 const emit = defineEmits<{
-  (e: 'start-editing', payload: { type: ConfigType; id: string }): void; // 双击或点击“编辑”时触发
+  (e: 'start-editing', payload: { type: ConfigType; storeId: string }): void; // 双击或点击“编辑”时触发
   (e: 'show-error-detail', errorMessage: string, originJsonString: string | null | undefined): void; // 点击“详情”时触发
-  (e: 'contextmenu', payload: { type: ConfigType; id: string; name: string; isDamaged?: boolean; event: MouseEvent | PointerEvent }): void;
+  (e: 'contextmenu', payload: { type: ConfigType; storeId: string; name: string; isDamaged?: boolean; event: MouseEvent | PointerEvent }): void;
 }>();
 
 // *** 检查当前项是否变脏 ***
 const workbenchStore = useWorkbenchStore();
 
-// const isDirty = computed(() => workbenchStore.isDirty(props.id));
+// const isDirty = computed(() => workbenchStore.isDirty(props.storeId));
 // TODO 由于重构，目前去除全局内容的脏检查功能
 const isDirty = computed(() => false);
 
@@ -104,8 +104,8 @@ onLongPress( // <-- 2. 修正钩子名称
       // 我们在事件的 payload 中携带了所有必要的信息
       emit('contextmenu', {
         type: props.type,
-        id: props.id,
-        name: props.item.isSuccess ? props.item.data.name : props.id, // 根据成功/失败状态决定名称
+        storeId: props.storeId,
+        name: props.item.isSuccess ? props.item.data.name : props.storeId, // 根据成功/失败状态决定名称
         isDamaged: !props.item.isSuccess,
         event: event,
       });

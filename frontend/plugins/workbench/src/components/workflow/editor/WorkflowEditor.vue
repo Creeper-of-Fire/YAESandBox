@@ -58,7 +58,7 @@ const props = defineProps<{
 }>();
 
 const nodePositions = useScopedStorage<{ [nodeId: string]: { x: number, y: number } }>(
-    props.workflowContext.globalId + 'node-positions',
+    props.workflowContext.storeId + 'node-positions',
     {}
 );
 

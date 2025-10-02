@@ -65,17 +65,17 @@
               :setData="handleSetData"
               :sort="false"
               class="resource-list"
-              item-key="id"
+              item-key="storeId"
               @end="onDragEnd"
               @start="onDragStart"
           >
             <div v-for="element in workflowsList"
-                 :key="element.id"
-                 :data-drag-id="element.id"
+                 :key="element.storeId"
+                 :data-drag-id="element.storeId"
                  data-drag-type="workflow"
             >
               <GlobalResourceListItem
-                  :id="element.id"
+                  :store-id="element.storeId"
                   :item="element.item"
                   type="workflow"
                   @contextmenu="handleContextMenu"
@@ -96,17 +96,17 @@
               :setData="handleSetData"
               :sort="false"
               class="resource-list"
-              item-key="id"
+              item-key="storeId"
               @end="onDragEnd"
               @start="onDragStart"
           >
             <div v-for="element in tuumsList"
-                 :key="element.id"
-                 :data-drag-id="element.id"
+                 :key="element.storeId"
+                 :data-drag-id="element.storeId"
                  data-drag-type="tuum"
             >
               <GlobalResourceListItem
-                  :id="element.id"
+                  :store-id="element.storeId"
                   :item="element.item"
                   type="tuum"
                   @contextmenu="handleContextMenu"
@@ -127,17 +127,17 @@
               :setData="handleSetData"
               :sort="false"
               class="resource-list"
-              item-key="id"
+              item-key="storeId"
               @end="onDragEnd"
               @start="onDragStart"
           >
             <div v-for="element in runesList"
-                 :key="element.id"
-                 :data-drag-id="element.id"
+                 :key="element.storeId"
+                 :data-drag-id="element.storeId"
                  data-drag-type="rune"
             >
               <GlobalResourceListItem
-                  :id="element.id"
+                  :store-id="element.storeId"
                   :item="element.item"
                   type="rune"
                   @contextmenu="handleContextMenu"
@@ -187,7 +187,7 @@ type DraggableResourceItem<T> = {
 
 const activeTab = ref<'workflow' | 'tuum' | 'rune'>('workflow'); // 默认激活“枢机”标签页
 
-const emit = defineEmits<{ (e: 'start-editing', payload: { type: ConfigType; id: string }): void; }>();
+const emit = defineEmits<{ (e: 'start-editing', payload: { type: ConfigType; storeId: string }): void; }>();
 const workbenchStore = useWorkbenchStore();
 const dialog = useDialog();
 const message = useMessage();
@@ -201,19 +201,19 @@ const runes = computed(() => runesAsync.state);
 
 // 为所有资源类型创建可用于 v-model 的列表
 const workflowsList = computed({
-  get: () => workflows.value ? Object.entries(workflows.value).map(([id, item]) => ({id, item})) : [],
+  get: () => workflows.value ? Object.entries(workflows.value).map(([storeId, item]) => ({storeId, item})) : [],
   set: () =>
   {
   }
 });
 const tuumsList = computed({
-  get: () => tuums.value ? Object.entries(tuums.value).map(([id, item]) => ({id, item})) : [],
+  get: () => tuums.value ? Object.entries(tuums.value).map(([storeId, item]) => ({storeId, item})) : [],
   set: () =>
   {
   }
 });
 const runesList = computed({
-  get: () => runes.value ? Object.entries(runes.value).map(([id, item]) => ({id, item})) : [],
+  get: () => runes.value ? Object.entries(runes.value).map(([storeId, item]) => ({storeId, item})) : [],
   set: () =>
   {
   }
@@ -360,7 +360,7 @@ async function handleCreateNew(payload: { name?: string, type?: string })
                 : await createBlankConfig('tuum', name);
 
     const newSession = workbenchStore.createNewDraftSession(resourceType, blankConfig);
-    emit('start-editing', {type: newSession.type, id: newSession.globalId});
+    emit('start-editing', {type: newSession.type, storeId: newSession.storeId});
 
     message.success(`成功创建全局${currentTabLabel.value}“${name}”！`);
   } catch (e)
@@ -396,7 +396,7 @@ function handleResourceClone(originalResourceItem: DraggableResourceItem<AnyConf
  * @param {ConfigType} payload.type - 配置类型。
  * @param {string} payload.id - 配置ID。
  */
-function startEditing(payload: { type: ConfigType; id: string })
+function startEditing(payload: { type: ConfigType; storeId: string })
 {
   emit('start-editing', payload);
 }
@@ -412,18 +412,18 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement)
 {
   // 从被拖拽的元素上读取我们之前设置好的 data-* 属性
   const type = dragEl.dataset.dragType as ConfigType | undefined;
-  const id = dragEl.dataset.dragId;
+  const storeId = dragEl.dataset.dragId;
 
-  if (type && id)
+  if (type && storeId)
   {
     // 将数据打包成JSON，安全地存入 dataTransfer
-    const data = JSON.stringify({type, id});
+    const data = JSON.stringify({type, storeId});
     dataTransfer.setData('text/plain', data);
 
     // 设置一个自定义类型，用于在 dragenter 事件中进行类型检查。
     // 这个类型本身不携带数据，它的存在就是一个“标记”。
     const customDragType = `application/vnd.workbench.item.${type}`;
-    dataTransfer.setData(customDragType, id); // 值可以是任意非空字符串，比如 id
+    dataTransfer.setData(customDragType, storeId); // 值可以是任意非空字符串，比如 storeId
   }
 
   dataTransfer.effectAllowed = 'copy'
@@ -432,7 +432,7 @@ function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement)
 // --- 右键菜单 (Context Menu) 的状态和逻辑 ---
 const showDropdown = ref(false);
 const dropdownPosition = reactive({x: 0, y: 0});
-const activeContextItem = ref<{ type: ConfigType; id: string; name: string; isDamaged?: boolean } | null>(null);
+const activeContextItem = ref<{ type: ConfigType; storeId: string; name: string; isDamaged?: boolean } | null>(null);
 
 // 动态生成菜单选项
 const dropdownOptions = computed<DropdownOption[]>(() =>
@@ -470,7 +470,7 @@ const dropdownOptions = computed<DropdownOption[]>(() =>
 });
 
 // 处理从子组件发出的右键事件
-function handleContextMenu(payload: { type: ConfigType; id: string; name: string; isDamaged?: boolean; event: MouseEvent })
+function handleContextMenu(payload: { type: ConfigType; storeId: string; name: string; isDamaged?: boolean; event: MouseEvent })
 {
   showDropdown.value = false; // 先隐藏任何已存在的菜单
   activeContextItem.value = {...payload};
@@ -492,11 +492,11 @@ function handleDropdownSelect(key: 'edit' | 'delete')
 
   if (key === 'edit')
   {
-    startEditing({type: item.type, id: item.id});
+    startEditing({type: item.type, storeId: item.storeId});
   }
   else if (key === 'delete')
   {
-    promptDelete(item.type, item.id, item.name);
+    promptDelete(item.type, item.storeId, item.name);
   }
 }
 

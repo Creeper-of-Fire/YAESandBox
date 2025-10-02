@@ -8,9 +8,6 @@ import type { WorkflowGraphConfig } from './WorkflowGraphConfig';
  * 工作流的配置
  */
 export type WorkflowConfig = {
-    /**
-     * 名字
-     */
     name: string;
     /**
      * 声明此工作流启动时需要提供的入口参数列表。

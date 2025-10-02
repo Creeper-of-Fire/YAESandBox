@@ -4,17 +4,17 @@
     <n-scrollbar>
       <div v-if="selectedType ==='workflow' && workflowEditorContext" class="main-content-wrapper">
         <WorkflowEditor
-            :key="`${activeContext.globalId}-${activeContext.version.value}`"
+            :key="`${activeContext.storeId}-${activeContext.version.value}`"
             :workflow-context="workflowEditorContext"/>
       </div>
       <div v-if="selectedType ==='tuum'" class="main-content-wrapper">
         <TuumEditor
-            :key="`${activeContext.globalId}-${activeContext.version.value}`"
+            :key="`${activeContext.storeId}-${activeContext.version.value}`"
             :tuum-context="selectedContext as TuumEditorContext"/>
       </div>
       <div v-if="selectedType === 'rune'" class="main-content-wrapper">
         <RuneEditor
-            :key="`${activeContext.globalId}-${activeContext.version.value}`"
+            :key="`${activeContext.storeId}-${activeContext.version.value}`"
             :rune-context="selectedContext as RuneEditorContext"/>
       </div>
     </n-scrollbar>
@@ -41,10 +41,10 @@ const workflowEditorContext = computed((): WorkflowEditorContext | null =>
   // 确保当前选中的是工作流
   if (selectedContext.value?.type === 'workflow')
   {
-    // 从 selectedContext 中安全地提取 globalId 和 data
+    // 从 selectedContext 中安全地提取 storeId 和 data
     const context = selectedContext.value as WorkflowSelectionContext;
     return {
-      globalId: context.context.globalId,
+      storeId: context.context.storeId,
       data: context.data
     };
   }

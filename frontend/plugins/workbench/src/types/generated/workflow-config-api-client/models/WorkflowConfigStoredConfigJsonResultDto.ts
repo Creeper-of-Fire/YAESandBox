@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { WorkflowConfig } from './WorkflowConfig';
-export type WorkflowConfigJsonResultDto = {
+import type { WorkflowConfigStoredConfig } from './WorkflowConfigStoredConfig';
+export type WorkflowConfigStoredConfigJsonResultDto = {
     isSuccess: boolean;
-    data: WorkflowConfig;
+    data: WorkflowConfigStoredConfig;
     errorDetails?: string | null;
     originJsonString: string | null;
 };

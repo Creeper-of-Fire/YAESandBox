@@ -3,7 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { AbstractRuneConfig } from '../models/AbstractRuneConfig';
-import type { AbstractRuneConfigJsonResultDto } from '../models/AbstractRuneConfigJsonResultDto';
+import type { AbstractRuneConfigStoredConfig } from '../models/AbstractRuneConfigStoredConfig';
+import type { AbstractRuneConfigStoredConfigJsonResultDto } from '../models/AbstractRuneConfigStoredConfigJsonResultDto';
 import type { RuneSchemasResponse } from '../models/RuneSchemasResponse';
 import type { CancelablePromise } from '../core/CancelablePromise';
 import { OpenAPI } from '../core/OpenAPI';
@@ -26,10 +27,10 @@ export class RuneConfigService {
     }
     /**
      * 获取所有全局符文配置的列表。
-     * @returns AbstractRuneConfigJsonResultDto 成功获取所有全局符文配置的列表。
+     * @returns AbstractRuneConfigStoredConfigJsonResultDto 成功获取所有全局符文配置的列表。
      * @throws ApiError
      */
-    public static getApiV1WorkflowsConfigsGlobalRunes(): CancelablePromise<Record<string, AbstractRuneConfigJsonResultDto>> {
+    public static getApiV1WorkflowsConfigsGlobalRunes(): CancelablePromise<Record<string, AbstractRuneConfigStoredConfigJsonResultDto>> {
         return __request(OpenAPI, {
             method: 'GET',
             url: '/api/v1/workflows-configs/global-runes',
@@ -40,22 +41,22 @@ export class RuneConfigService {
     }
     /**
      * 获取指定 ID 的全局符文配置。
-     * @returns AbstractRuneConfig 成功获取指定的符文配置。
+     * @returns AbstractRuneConfigStoredConfig 成功获取指定的符文配置。
      * @throws ApiError
      */
     public static getApiV1WorkflowsConfigsGlobalRunes1({
-        runeId,
+        storeId,
     }: {
         /**
          * 符文配置的唯一 ID。
          */
-        runeId: string,
-    }): CancelablePromise<AbstractRuneConfig> {
+        storeId: string,
+    }): CancelablePromise<AbstractRuneConfigStoredConfig> {
         return __request(OpenAPI, {
             method: 'GET',
-            url: '/api/v1/workflows-configs/global-runes/{runeId}',
+            url: '/api/v1/workflows-configs/global-runes/{storeId}',
             path: {
-                'runeId': runeId,
+                'storeId': storeId,
             },
             errors: {
                 404: `未找到指定 ID 的符文配置。`,
@@ -71,23 +72,23 @@ export class RuneConfigService {
      * @throws ApiError
      */
     public static putApiV1WorkflowsConfigsGlobalRunes({
-        runeId,
+        storeId,
         requestBody,
     }: {
         /**
          * 要创建或更新的符文配置的唯一 ID。
          */
-        runeId: string,
+        storeId: string,
         /**
          * 符文配置数据。
          */
-        requestBody?: AbstractRuneConfig,
+        requestBody?: AbstractRuneConfigStoredConfig,
     }): CancelablePromise<void> {
         return __request(OpenAPI, {
             method: 'PUT',
-            url: '/api/v1/workflows-configs/global-runes/{runeId}',
+            url: '/api/v1/workflows-configs/global-runes/{storeId}',
             path: {
-                'runeId': runeId,
+                'storeId': storeId,
             },
             body: requestBody,
             mediaType: 'application/json',
@@ -103,18 +104,18 @@ export class RuneConfigService {
      * @throws ApiError
      */
     public static deleteApiV1WorkflowsConfigsGlobalRunes({
-        runeId,
+        storeId,
     }: {
         /**
          * 要删除的符文配置的唯一 ID。
          */
-        runeId: string,
+        storeId: string,
     }): CancelablePromise<void> {
         return __request(OpenAPI, {
             method: 'DELETE',
-            url: '/api/v1/workflows-configs/global-runes/{runeId}',
+            url: '/api/v1/workflows-configs/global-runes/{storeId}',
             path: {
-                'runeId': runeId,
+                'storeId': storeId,
             },
             errors: {
                 500: `删除配置时发生内部服务器错误。`,

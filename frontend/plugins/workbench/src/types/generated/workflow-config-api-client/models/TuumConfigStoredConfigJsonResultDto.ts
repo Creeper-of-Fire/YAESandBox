@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { TuumConfig } from './TuumConfig';
-export type TuumConfigJsonResultDto = {
+import type { TuumConfigStoredConfig } from './TuumConfigStoredConfig';
+export type TuumConfigStoredConfigJsonResultDto = {
     isSuccess: boolean;
-    data: TuumConfig;
+    data: TuumConfigStoredConfig;
     errorDetails?: string | null;
     originJsonString: string | null;
 };

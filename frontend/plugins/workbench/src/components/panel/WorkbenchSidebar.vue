@@ -146,8 +146,8 @@ import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts"
 const props = defineProps<{}>();
 
 const emit = defineEmits<{
-  (e: 'start-editing', payload: { type: ConfigType; id: string }): void;
-  (e: 'close-session', payload: { id: string }): void;
+  (e: 'start-editing', payload: { type: ConfigType; storeId: string }): void;
+  (e: 'close-session', payload: { storeId: string }): void;
 }>();
 
 const dialog = useDialog();
@@ -220,7 +220,7 @@ function handleClose()
 {
   if (!session.value)
     return
-  emit('close-session', {id: session.value.globalId});
+  emit('close-session', {storeId: session.value.storeId});
 }
 
 // --- 从 composable 获取动作 ---
@@ -312,10 +312,10 @@ function handleDrop(event: DragEvent)
       const dataString = event.dataTransfer.getData('text/plain');
       if (dataString)
       {
-        const {type, id} = JSON.parse(dataString);
-        if (type && id)
+        const {type, storeId} = JSON.parse(dataString);
+        if (type && storeId)
         {
-          emit('start-editing', {type, id});
+          emit('start-editing', {type, storeId});
         }
       }
     } catch (e)

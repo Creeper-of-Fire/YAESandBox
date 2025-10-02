@@ -53,9 +53,9 @@ export class EditorContext
         return readonly(this.session.getData());
     }
 
-    public get globalId(): string
+    public get storeId(): string
     {
-        return this.session.globalId;
+        return this.session.storeId;
     }
 
     // --- 操作代理 ---

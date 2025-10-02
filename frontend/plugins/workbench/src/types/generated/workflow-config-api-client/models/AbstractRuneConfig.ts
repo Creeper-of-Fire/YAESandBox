@@ -6,9 +6,6 @@
  * 符文的配置
  */
 export type AbstractRuneConfig = {
-    /**
-     * 名字
-     */
     name: string;
     /**
      * 是否被启用，默认为True

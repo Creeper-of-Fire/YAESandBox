@@ -1,22 +1,57 @@
 ﻿// --- START OF FILE frontend/src/app-workbench/stores/workbenchStore.ts ---
 
 import {defineStore} from 'pinia';
-import {computed, markRaw, type Reactive, reactive, ref, shallowRef} from 'vue';
+import {computed, markRaw, type Reactive, reactive, shallowRef} from 'vue';
 import {v4 as uuidv4} from 'uuid';
-import {type AnyConfigObject, type ConfigType, GlobalEditSession, getConfigObjectType,} from '#/services/GlobalEditSession.ts';
-import type {AbstractRuneConfig, RuneSchemasResponse, TuumConfig, WorkflowConfig,} from "#/types/generated/workflow-config-api-client";
+import {type AnyConfigObject, type ConfigType, getConfigObjectType, GlobalEditSession,} from '#/services/GlobalEditSession.ts';
+import type {
+    AbstractRuneConfig,
+    RuneSchemasResponse,
+    StoredConfigMeta,
+    StoredConfigRef,
+    TuumConfig,
+    WorkflowConfig,
+} from "#/types/generated/workflow-config-api-client";
 import {RuneConfigService, TuumConfigService, WorkflowConfigService,} from "#/types/generated/workflow-config-api-client";
 import {useAsyncState, type UseAsyncStateReturn} from "@vueuse/core";
-import type {GlobalResourceItem} from "@yaesandbox-frontend/core-services/types";
+import type {
+    GlobalResourceItemFailure,
+    GlobalResourceItemSuccess as CoreGlobalResourceItemSuccess
+} from "@yaesandbox-frontend/core-services/types";
 import {type DynamicAsset, loadAndRegisterPlugins} from "#/features/schema-viewer/plugin-loader";
 
 // 导出类型
 export type WorkbenchStore = ReturnType<typeof useWorkbenchStore>;
 
+export type StoredConfig<T> = {
+    content: T;
+} & StoredConfigAddition;
+
+export type StoredConfigAddition = {
+    storeRef?: StoredConfigRef;
+    /**
+     * 指示此配置是否为只读。
+     * 只读配置（如内置模板）不能通过API进行修改或删除。
+     */
+    readonly isReadOnly: boolean;
+    meta?: StoredConfigMeta;
+}
+
+type AnyStoredConfig = StoredConfig<AnyConfigObject>;
+
+export type GlobalResourceItemSuccess<T> = CoreGlobalResourceItemSuccess<T> & StoredConfigAddition;
+
+// 扩展原始的 GlobalResourceItem，添加后端 StoredConfig 带来的新元数据
+// 这样，我们的视图模型就可以携带 isReadOnly 等状态，而不需要改变 data 的结构。
+export type GlobalResourceItem<T> = GlobalResourceItemSuccess<T> | GlobalResourceItemFailure;
+
+
 // 为不同类型的资源创建具体的别名，方便使用
 export type WorkflowResourceItem = GlobalResourceItem<WorkflowConfig>;
 export type TuumResourceItem = GlobalResourceItem<TuumConfig>;
 export type RuneResourceItem = GlobalResourceItem<AbstractRuneConfig>;
+
+export type AnyResourceItemSuccess = GlobalResourceItemSuccess<AnyConfigObject>;
 
 /**
  * @internal
@@ -35,7 +70,7 @@ interface IJsonResultDto<T>
 export interface SaveResult
 {
     success: boolean;
-    id: string;
+    storeId: string;
     name?: string;
     type: ConfigType;
     error?: any; // 保存具体的错误信息
@@ -61,26 +96,36 @@ export interface RuneMetadata
 
 
 /**
- * 辅助函数：将后端返回的 DTO 转换为我们前端的统一视图模型数组
+ * * 辅助函数：将后端返回的 StoredConfig DTO 转换为前端统一的视图模型数组。
+ * * 它会 "解包" StoredConfig，将 content 放入 data，并将 isReadOnly 等元数据提升。
  */
-function processDtoToViewModel<T>(dto: Record<string, IJsonResultDto<T>>): Record<string, GlobalResourceItem<T>>
+function processDtoToViewModel<TConfig extends AnyConfigObject, TStored extends StoredConfig<TConfig>>(
+    dto: Record<string, IJsonResultDto<TStored>>
+): Record<string, GlobalResourceItem<TConfig>>
 {
-    const viewModelItems: Record<string, GlobalResourceItem<T>> = {};
-    for (const id in dto)
+    const viewModelItems: Record<string, GlobalResourceItem<TConfig>> = {};
+    for (const storeId in dto)
     {
-        const item = dto[id];
-        if (item.isSuccess && item.data)
+        const item = dto[storeId];
+        if (item.isSuccess && item.data && item.data.content)
         {
-            viewModelItems[id] = {isSuccess: true, data: item.data};
+            // 解包操作：将 content 赋值给 data，其它元数据提升
+            viewModelItems[storeId] = {
+                storeRef: item.data.storeRef,
+                isSuccess: true,
+                data: item.data.content, // <-- 只把 content 作为 data
+                isReadOnly: item.data.isReadOnly, // <-- 存储只读状态
+                meta: item.data.meta, // <--存储 meta 信息
+            };
         }
         else
         {
-            viewModelItems[id] = {
+            viewModelItems[storeId] = {
                 isSuccess: false,
                 errorMessage: item.errorDetails || '未知错误，配置已损坏',
                 originJsonString: item.originJsonString,
             }
-            console.warn(`加载 ID 为 '${id}' 的全局配置失败: ${item.errorDetails}`);
+            console.warn(`加载 ID 为 '${storeId}' 的全局配置失败: ${item.errorDetails}`);
         }
     }
     return viewModelItems;
@@ -118,14 +163,6 @@ export function deepCloneWithNewIds<T extends object>(obj: T): T
     return newObj;
 }
 
-// 定义草稿对象的内部结构
-interface Draft
-{
-    type: ConfigType;
-    data: AnyConfigObject;
-    originalState: string;
-}
-
 export const useWorkbenchStore = defineStore('workbench', () =>
 {
     // =================================================================
@@ -135,19 +172,17 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     /**
      * @description 定义一个通用的资源处理器接口，用于统一不同资源类型的操作。
      */
-    interface IResourceHandler<T extends AnyConfigObject>
+    interface IResourceHandler<TConfig extends AnyConfigObject, TStored extends AnyStoredConfig>
     {
         // 每种资源的异步状态管理
-        asyncState: Reactive<UseAsyncStateReturn<Record<string, GlobalResourceItem<T>>, any[], true>>;
+        asyncState: Reactive<UseAsyncStateReturn<Record<string, GlobalResourceItem<TConfig>>, any[], true>>;
         // API 调用函数
         api: {
             // 保存或更新资源
-            save: (id: string, requestBody: T) => Promise<any>;
+            save: (storeId: string, requestBody: TStored) => Promise<any>;
             // 删除资源
-            delete: (id: string) => Promise<any>;
+            delete: (storeId: string) => Promise<any>;
         };
-        // API 调用时，ID参数的名称 (e.g., 'workflowId')
-        idParamName: string;
     }
 
     /**
@@ -156,42 +191,39 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * 使得后续的操作函数可以变得通用，从而消除重复的 switch-case 逻辑。
      * 如果未来要增加新的资源类型（例如 'plugin'），只需在此处添加一个新的条目即可。
      */
-    const resourceHandlers: { [K in ConfigType]: IResourceHandler<any> } = {
+    const resourceHandlers: { [K in ConfigType]: IResourceHandler<any, StoredConfig<any>> } = {
         workflow: {
             asyncState: reactive(useAsyncState(
-                () => WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows().then(processDtoToViewModel),
+                () => WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows().then(record => processDtoToViewModel(record)),
                 {} as Record<string, WorkflowResourceItem>,
                 {immediate: false, shallow: false}
             )),
             api: {
-                save: (workflowId, requestBody) => WorkflowConfigService.putApiV1WorkflowsConfigsGlobalWorkflows({workflowId, requestBody}),
-                delete: (workflowId) => WorkflowConfigService.deleteApiV1WorkflowsConfigsGlobalWorkflows({workflowId}),
-            },
-            idParamName: 'workflowId',
+                save: (storeId, requestBody) => WorkflowConfigService.putApiV1WorkflowsConfigsGlobalWorkflows({storeId, requestBody}),
+                delete: (storeId) => WorkflowConfigService.deleteApiV1WorkflowsConfigsGlobalWorkflows({storeId}),
+            }
         },
         tuum: {
             asyncState: reactive(useAsyncState(
-                () => TuumConfigService.getApiV1WorkflowsConfigsGlobalTuums().then(processDtoToViewModel),
+                () => TuumConfigService.getApiV1WorkflowsConfigsGlobalTuums().then(record => processDtoToViewModel(record)),
                 {} as Record<string, TuumResourceItem>,
                 {immediate: false, shallow: false}
             )),
             api: {
-                save: (tuumId, requestBody) => TuumConfigService.putApiV1WorkflowsConfigsGlobalTuums({tuumId, requestBody}),
-                delete: (tuumId) => TuumConfigService.deleteApiV1WorkflowsConfigsGlobalTuums({tuumId}),
-            },
-            idParamName: 'tuumId',
+                save: (storeId, requestBody) => TuumConfigService.putApiV1WorkflowsConfigsGlobalTuums({storeId, requestBody}),
+                delete: (storeId) => TuumConfigService.deleteApiV1WorkflowsConfigsGlobalTuums({storeId}),
+            }
         },
         rune: {
             asyncState: reactive(useAsyncState(
-                () => RuneConfigService.getApiV1WorkflowsConfigsGlobalRunes().then(processDtoToViewModel),
+                () => RuneConfigService.getApiV1WorkflowsConfigsGlobalRunes().then(record => processDtoToViewModel(record)),
                 {} as Record<string, RuneResourceItem>,
                 {immediate: false, shallow: false}
             )),
             api: {
-                save: (runeId, requestBody) => RuneConfigService.putApiV1WorkflowsConfigsGlobalRunes({runeId, requestBody}),
-                delete: (runeId) => RuneConfigService.deleteApiV1WorkflowsConfigsGlobalRunes({runeId}),
-            },
-            idParamName: 'runeId',
+                save: (storeId, requestBody) => RuneConfigService.putApiV1WorkflowsConfigsGlobalRunes({storeId, requestBody}),
+                delete: (storeId) => RuneConfigService.deleteApiV1WorkflowsConfigsGlobalRunes({storeId}),
+            }
         },
     };
 
@@ -273,10 +305,10 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
     /**
      * @description 存储所有活跃的 GlobalEditSession 实例。
-     * Key 是 session.globalId。
+     * Key 是 session.storeId。
      */
     const activeSessions = shallowRef<Record<string, GlobalEditSession>>({});
-    const getActiveSession = computed(() =>activeSessions.value);
+    const getActiveSession = computed(() => activeSessions.value);
 
     // =================================================================
     // 内部 Getter & Action (加下划线表示，约定不对外暴露)
@@ -291,30 +323,38 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     });
 
     // TODO 没写好校验逻辑
-    // _saveDraft 现在接收 globalId
+    // _saveDraft 现在接收 storeId
     const saveSessionData = async (session: GlobalEditSession): Promise<SaveResult> =>
     {
-        const {type, globalId} = session;
-        const draftData = session.getData().value;
-        const name = draftData.name;
+        const {type, storeId} = session;
+        const draftItem = session.getFullDraft().value;
+        const contentData = draftItem.data;
+        const name = contentData.name;
 
         const handler = resourceHandlers[type];
         if (!handler)
         {
             const error = `保存失败：未知的草稿类型 '${type}'。`;
             console.error(error);
-            return {success: false, name, id: globalId, type, error};
+            return {success: false, name, storeId: storeId, type, error};
+        }
+
+        const requestBody: AnyStoredConfig = {
+            storeRef: draftItem.storeRef,
+            content: contentData,
+            isReadOnly: draftItem.isReadOnly,
+            meta: draftItem.meta,
         }
 
         try
         {
-            await handler.api.save(globalId, draftData);
+            await handler.api.save(storeId, requestBody);
             await handler.asyncState.execute();
-            return {success: true, id: globalId, name, type};
+            return {success: true, storeId: storeId, name, type};
         } catch (error)
         {
             console.error(`保存 ${type} 草稿到后端时发生错误:`, error);
-            return {success: false, id: globalId, name, type, error};
+            return {success: false, storeId: storeId, name, type, error};
         }
     };
 
@@ -325,10 +365,10 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     /**
      * @description 从后端和本地状态中删除一个全局配置项。
      * @param type - 要删除的配置类型
-     * @param id - 全局配置的ID
+     * @param storeId - 全局配置的ID
      * @returns 如果成功，返回 true；否则返回 false。
      */
-    async function deleteGlobalConfig(type: ConfigType, id: string): Promise<boolean>
+    async function deleteGlobalConfig(type: ConfigType, storeId: string): Promise<boolean>
     {
         const handler = resourceHandlers[type];
         if (!handler)
@@ -339,16 +379,16 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
         try
         {
-            await handler.api.delete(id);
-            if (handler.asyncState.state[id])
+            await handler.api.delete(storeId);
+            if (handler.asyncState.state[storeId])
             {
-                delete handler.asyncState.state[id];
+                delete handler.asyncState.state[storeId];
             }
-            closeSession(id)
+            closeSession(storeId)
             return true;
         } catch (error)
         {
-            console.error(`删除 ${type} (ID: ${id}) 时发生错误:`, error);
+            console.error(`删除 ${type} (ID: ${storeId}) 时发生错误:`, error);
             // 这里可以向上抛出错误，让调用方处理 message 提示
             throw error;
         }
@@ -356,42 +396,91 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
     /**
      * 将一个已有的配置对象保存为新的全局配置。
-     * @param configToSave - 要保存为全局的配置对象。
+     * @param configToSave - 要保存到全局的配置对象。
+     * @param storedAdditionalData - 存储的附加数据。
      */
-    async function createGlobalConfig(configToSave: AnyConfigObject)
+    async function createGlobalConfig(configToSave: AnyConfigObject, storedAdditionalData?: Partial<StoredConfigAddition>)
     {
         // 深克隆并确保ID是全新的（即使是克隆来的）
-        const newGlobalConfig = deepCloneWithNewIds(configToSave);
-        const newGlobalId = uuidv4(); // 为这个新的全局资源创建一个全新的顶级ID
+        const newContent = deepCloneWithNewIds(configToSave);
+        const newStoreId = uuidv4(); // 为这个新的全局资源创建一个全新的顶级ID
 
-        const {type} = getConfigObjectType(newGlobalConfig);
+        const {type} = getConfigObjectType(newContent);
         const handler = resourceHandlers[type];
+
+        const newMeta = {
+            // 设置初始元数据
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        }
+        Object.assign(newMeta, storedAdditionalData?.meta);
+
+        const requestBody: AnyStoredConfig = {
+            storeRef: storedAdditionalData?.storeRef,
+            content: newContent,
+            isReadOnly: false,
+            meta: newMeta,
+        };
 
         // 执行保存和刷新
         try
         {
-            await handler.api.save(newGlobalId, newGlobalConfig);
+            await handler.api.save(newStoreId, requestBody);
             await handler.asyncState.execute();
         } catch (error)
         {
-            console.error(`将配置“${newGlobalConfig.name}”保存为全局 ${type} 时失败:`, error);
+            console.error(`将配置“${newContent.name}”保存为全局 ${type} 时失败:`, error);
             throw error;
         }
     }
 
     /**
+     * @description 为全新的、未保存的配置项创建一个编辑会话。
+     * @param type - 资源类型
+     * @param blankConfig - 一个空白的配置对象
+     * @param storedAdditionalData - 存储的附加数据。
+     */
+    function createNewDraftSession(type: ConfigType, blankConfig: AnyConfigObject, storedAdditionalData?: Partial<StoredConfigAddition>): GlobalEditSession
+    {
+        const newStoreId = uuidv4();
+
+
+        const newMeta = {
+            // 设置初始元数据
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        }
+        Object.assign(newMeta, storedAdditionalData?.meta);
+        const blankResourceItem: AnyResourceItemSuccess = {
+            storeRef: storedAdditionalData?.storeRef,
+            isSuccess: true,
+            data: blankConfig,
+            isReadOnly: false,
+            meta: newMeta,
+        };
+
+        // 1. 直接用空白配置创建一个新的 GlobalEditSession 实例
+        const session = new GlobalEditSession(type, newStoreId, blankResourceItem, true);
+
+        // 2. 将其添加到活跃会话中
+        activeSessions.value[session.storeId] = markRaw(session);
+
+        return session;
+    }
+
+    /**
      * 获取（申请）一个编辑会话。这是进行任何修改操作的唯一入口。
      * @param type - 要编辑的配置类型
-     * @param globalId - 全局配置的ID
+     * @param storeId - 全局配置的ID
      * @returns 如果成功，返回一个 GlobalEditSession 实例；如果已被锁定或找不到，返回 null。
      */
-    async function acquireEditSession(type: ConfigType, globalId: string): Promise<GlobalEditSession | null>
+    async function acquireEditSession(type: ConfigType, storeId: string): Promise<GlobalEditSession | null>
     {
 
         // 1. 如果已存在此会话，直接返回
-        if (activeSessions.value[globalId])
+        if (activeSessions.value[storeId])
         {
-            return activeSessions.value[globalId];
+            return activeSessions.value[storeId];
         }
 
         // 2. 根据类型，选择对应的异步状态对象
@@ -424,44 +513,26 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
         // 5. 从新的数据结构 (GlobalResourceItem[]) 中查找源数据
         const sourceData = stateObject.state;
-        const sourceItem = sourceData[globalId];
+        const sourceItem = sourceData[storeId];
 
         if (!sourceItem)
         {
-            console.error(`在 '${type}' 列表中找不到 ID 为 '${globalId}' 的配置项。`);
+            console.error(`在 '${type}' 列表中找不到 ID 为 '${storeId}' 的配置项。`);
             return null;
         }
 
         // 6. 检查找到的项是否已损坏
         if (!sourceItem.isSuccess)
         {
-            console.error(`配置项 '${globalId}' 已损坏，无法编辑。错误: ${sourceItem.errorMessage}`);
+            console.error(`配置项 '${storeId}' 已损坏，无法编辑。错误: ${sourceItem.errorMessage}`);
             return null;
         }
 
         // 创建新的 GlobalEditSession 实例
-        const session = new GlobalEditSession(type, globalId, sourceItem.data, false);
+        const session = new GlobalEditSession(type, storeId, sourceItem, false);
 
         // 将新会话存入 activeSessions
-        activeSessions.value[session.globalId] = markRaw(session);
-
-        return session;
-    }
-
-    /**
-     * @description 为全新的、未保存的配置项创建一个编辑会话。
-     * @param type - 资源类型
-     * @param blankConfig - 一个空白的配置对象
-     */
-    function createNewDraftSession(type: ConfigType, blankConfig: AnyConfigObject): GlobalEditSession
-    {
-        const newGlobalId = uuidv4();
-
-        // 1. 直接用空白配置创建一个新的 GlobalEditSession 实例
-        const session = new GlobalEditSession(type, newGlobalId, blankConfig, true);
-
-        // 2. 将其添加到活跃会话中
-        activeSessions.value[session.globalId] = markRaw(session);
+        activeSessions.value[session.storeId] = markRaw(session);
 
         return session;
     }

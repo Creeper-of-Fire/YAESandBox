@@ -2,10 +2,10 @@
 /* istanbul ignore file */
 /* tslint:disable */
 /* eslint-disable */
-import type { AbstractRuneConfig } from './AbstractRuneConfig';
-export type AbstractRuneConfigJsonResultDto = {
+import type { AbstractRuneConfigStoredConfig } from './AbstractRuneConfigStoredConfig';
+export type AbstractRuneConfigStoredConfigJsonResultDto = {
     isSuccess: boolean;
-    data: AbstractRuneConfig;
+    data: AbstractRuneConfigStoredConfig;
     errorDetails?: string | null;
     originJsonString: string | null;
 };
