@@ -3,20 +3,18 @@ using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.Config.RuneConfig;
+using YAESandBox.Workflow.Config.Stored;
 
 namespace YAESandBox.Workflow.Config;
 
 /// <summary>
 /// 枢机的配置
 /// </summary>
-public record TuumConfig
+public record TuumConfig:IConfigStored
 {
-    /// <summary>
-    /// 名字
-    /// </summary>
+    /// <inheritdoc />
     [Required(AllowEmptyStrings = true)]
     [HiddenInForm(true)]
-    [DefaultValue("")]
     public string Name { get; init; } = string.Empty;
 
     /// <summary>
@@ -110,9 +108,6 @@ public record TuumConfig
     [Required]
     [HiddenInForm(true)]
     public List<TuumOutputMapping> OutputMappingsList { get; init; } = [];
-
-    /// <inheritdoc />
-    public IEnumerable<AbstractRuneConfig> ContainedNodes => this.Runes;
 }
 
 /// <summary>

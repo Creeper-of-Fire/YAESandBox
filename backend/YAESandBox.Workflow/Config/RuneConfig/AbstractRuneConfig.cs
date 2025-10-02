@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 using YAESandBox.Depend.Schema.SchemaProcessor;
+using YAESandBox.Workflow.Config.Stored;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Runtime.Processor;
 using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
@@ -13,11 +14,9 @@ namespace YAESandBox.Workflow.Config.RuneConfig;
 /// 符文的配置
 /// </summary>
 [JsonConverter(typeof(RuneConfigConverter))]
-public abstract partial record AbstractRuneConfig
+public abstract partial record AbstractRuneConfig : IConfigStored
 {
-    /// <summary>
-    /// 名字
-    /// </summary>
+    /// <inheritdoc />
     [Required(AllowEmptyStrings = true)]
     [HiddenInForm(true)]
     [Display(Name = "配置名称", Description = "符文的配置名称，用于在界面上显示。")]

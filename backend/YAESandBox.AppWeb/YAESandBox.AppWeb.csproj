@@ -6,7 +6,15 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <GenerateDocumentationFile>false</GenerateDocumentationFile>
         <PackageLicenseExpression>MIT</PackageLicenseExpression>
+        <Configurations>Debug;Release;DebugGen</Configurations>
+        <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
+    
+    <PropertyGroup Condition=" '$(Configuration)' == 'DebugGen' ">
+      <DebugSymbols Condition=" '$(DebugSymbols)' == '' ">true</DebugSymbols>
+      <Optimize Condition=" '$(Optimize)' == '' ">false</Optimize>
+    </PropertyGroup>
+    
     <!-- 确保 Swashbuckle CLI 可以找到 Program.cs 中的启动类 -->
     <ItemGroup>
         <ProjectCapability Include="AspNetCore"/>
@@ -30,7 +38,7 @@
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
     <ItemGroup>
-        <Content Update="Plugins\**\wwwroot\**" Condition="'$(Configuration)' == 'Debug'">
+        <Content Update="Plugins\**\wwwroot\**" Condition="'$(Configuration)' == 'Debug' OR '$(Configuration)' == 'DebugGen'">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </Content>
     </ItemGroup>
@@ -41,8 +49,9 @@
         主入口 Target: 这个 Target 在 Build 之后触发。
         它的唯一职责就是按顺序调用其他两个 Target。
       -->
-<!--    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="'$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true'">-->
-    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build" Condition="false AND '$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true'">
+    <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build"
+            Condition="'$(Configuration)' == 'DebugGen' AND '$(IsPublishing)' != 'true'">
+        <Message Text="Swagger generation is ENABLED." Importance="high" />
         <CallTarget Targets="CollectSwaggerDocs"/>
         <CallTarget Targets="GenerateSwaggerFromReferences"/>
     </Target>
@@ -66,7 +75,7 @@
       -->
     <Target Name="GenerateSwaggerFromReferences"
             AfterTargets="Build"
-            Condition="'$(Configuration)' == 'Debug' AND '$(IsPublishing)' != 'true' AND '@(_AllSwaggerDocs)' != ''"
+            Condition="'$(Configuration)' == 'DebugGen' AND '$(IsPublishing)' != 'true' AND '@(_AllSwaggerDocs)' != ''"
             Inputs="@(_AllSwaggerDocs)"
             Outputs="%(Identity).dummy"> <!-- Outputs 确保了对每个 Item 都执行一次 -->
 

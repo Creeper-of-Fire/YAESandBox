@@ -107,6 +107,38 @@ public record  DictionaryResult<TKey, TValue> : Result where TKey : notnull
     {
         return this.ItemResults?.Values.Any(r => r.IsFailed) ?? false;
     }
+    
+    /// <summary>
+    /// 将当前批量结果与另一个批量结果进行合并。
+    /// <para>合并规则:</para>
+    /// <para>1. 如果任意一个 DictionaryResult 本身是整体失败状态，则返回失败的那个结果 (当前结果优先)。</para>
+    /// <para>2. 否则，合并两个结果的 ItemResults。对于重复的键，将保留当前结果中的项。</para>
+    /// </summary>
+    /// <param name="other">要合并的另一个 DictionaryResult。</param>
+    /// <returns>一个新的、包含了合并后所有项的 DictionaryResult。</returns>
+    public DictionaryResult<TKey, TValue> MergeWith(DictionaryResult<TKey, TValue> other)
+    {
+        // 1. 优先返回当前结果的失败状态
+        if (this.IsFailed)
+        {
+            return this;
+        }
+        // 2. 其次返回另一个结果的失败状态
+        if (other.IsFailed)
+        {
+            return other;
+        }
+
+        // 3. 两者都是成功状态，可以安全地合并 ItemResults
+        var combined = this.ItemResults.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
+
+        foreach (var item in other.ItemResults)
+        {
+            combined.TryAdd(item.Key, item.Value);
+        }
+
+        return Ok(combined);
+    }
 }
 
 /// <summary>

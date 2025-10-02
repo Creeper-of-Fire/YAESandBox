@@ -1,6 +1,4 @@
-﻿// 文件: JsonFileAiConfigurationManager.cs
-
-using YAESandBox.Authentication.Storage;
+﻿using YAESandBox.Authentication.Storage;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Storage;

@@ -1,6 +1,4 @@
-﻿// 文件: IAiConfigurationManager.cs
-
-using YAESandBox.Depend.Results;
+﻿using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService.AiConfig;
 
 namespace YAESandBox.Workflow.AIService.ConfigManagement;

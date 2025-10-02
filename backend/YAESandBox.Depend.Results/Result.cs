@@ -17,7 +17,7 @@ public record Error(string Message, Exception? Exception = null)
     /// <summary>
     /// 关联的异常（可能为 null）
     /// </summary>
-    internal Exception? Exception { get; init; } = Exception;
+    public Exception? Exception { get; init; } = Exception;
 
     /// <summary>
     /// 从一个 Exception 对象创建一个 Error。错误信息将使用 Exception.Message。

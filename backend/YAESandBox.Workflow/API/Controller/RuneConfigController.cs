@@ -16,6 +16,7 @@ using YAESandBox.Depend.Schema;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config.RuneConfig;
+using YAESandBox.Workflow.Config.Stored;
 using YAESandBox.Workflow.WorkflowService;
 
 namespace YAESandBox.Workflow.API.Controller;
@@ -78,17 +79,17 @@ public record RuneSchemasResponse
 /// <summary>
 /// 提供工作流相关配置（工作流、枢机、符文）的全局管理和Schema信息。
 /// </summary>
-/// <param name="workflowConfigFileService">工作流配置文件服务。</param>
+/// <param name="workflowConfigFindService">工作流配置文件服务。</param>
 /// <param name="moduleProvider">加载的所有模块。</param>
 [ApiController]
 [Route("api/v1/workflows-configs/global-runes")]
 [ApiExplorerSettings(GroupName = WorkflowConfigModule.WorkflowConfigGroupName)]
 public class RuneConfigController(
-    WorkflowConfigFileService workflowConfigFileService,
+    WorkflowConfigFindService workflowConfigFindService,
     IModuleProvider moduleProvider)
     : AuthenticatedApiControllerBase
 {
-    private WorkflowConfigFileService WorkflowConfigFileService { get; } = workflowConfigFileService;
+    private WorkflowConfigFindService WorkflowConfigFindService { get; } = workflowConfigFindService;
     private IModuleProvider ModuleProvider { get; } = moduleProvider;
 
     private List<DynamicComponentAsset> DiscoverDynamicAssets()
@@ -200,58 +201,58 @@ public class RuneConfigController(
     /// <response code="500">获取配置时发生内部服务器错误。</response>
     [HttpGet]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<AbstractRuneConfig>>), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(Dictionary<string, JsonResultDto<StoredConfig<AbstractRuneConfig>>>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<Dictionary<string, JsonResultDto<AbstractRuneConfig>>>> GetAllGlobalRuneConfigs() =>
-        await this.WorkflowConfigFileService.FindAllRuneConfig(this.UserId).ToActionResultAsync(dic =>
-            dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<AbstractRuneConfig>.ToJsonResultDto(kv.Value)));
+    public async Task<ActionResult<Dictionary<string, JsonResultDto<StoredConfig<AbstractRuneConfig>>>>> GetAllGlobalRuneConfigs() =>
+        await this.WorkflowConfigFindService.FindAllRuneConfig(this.UserId).ToActionResultAsync(dic =>
+            dic.ToDictionary(kv => kv.Key, kv => JsonResultDto<StoredConfig<AbstractRuneConfig>>.ToJsonResultDto(kv.Value)));
 
     /// <summary>
     /// 获取指定 ID 的全局符文配置。
     /// </summary>
-    /// <param name="runeId">符文配置的唯一 ID。</param>
+    /// <param name="storeId">符文配置的唯一 ID。</param>
     /// <returns>指定 ID 的符文配置。</returns>
     /// <response code="200">成功获取指定的符文配置。</response>
     /// <response code="404">未找到指定 ID 的符文配置。</response>
     /// <response code="500">获取配置时发生内部服务器错误。</response>
-    [HttpGet("{runeId}")]
+    [HttpGet("{storeId}")]
     [Produces("application/json")]
-    [ProducesResponseType(typeof(AbstractRuneConfig), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(StoredConfig<AbstractRuneConfig>), StatusCodes.Status200OK)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<ActionResult<AbstractRuneConfig>> GetGlobalRuneConfigById(string runeId) =>
-        await this.WorkflowConfigFileService.FindRuneConfig(this.UserId, runeId).ToActionResultAsync();
+    public async Task<ActionResult<StoredConfig<AbstractRuneConfig>>> GetGlobalRuneConfigById(string storeId) =>
+        await this.WorkflowConfigFindService.FindRuneConfig(this.UserId, storeId).ToActionResultAsync();
 
     /// <summary>
     /// 创建或更新全局符文配置 (Upsert)。
     /// 如果指定 ID 的符文配置已存在，则更新它；如果不存在，则创建它。
     /// 前端负责生成并提供符文的唯一 ID (GUID)。
     /// </summary>
-    /// <param name="runeId">要创建或更新的符文配置的唯一 ID。</param>
+    /// <param name="storeId">要创建或更新的符文配置的唯一 ID。</param>
     /// <param name="abstractRuneConfig">符文配置数据。</param>
     /// <returns>操作成功的响应。</returns>
     /// <response code="204">符文配置已成功更新/创建。</response>
     /// <response code="400">请求无效，例如：请求体为空或格式错误。</response>
     /// <response code="500">保存配置时发生内部服务器错误。</response>
-    [HttpPut("{runeId}")]
+    [HttpPut("{storeId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status400BadRequest)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> UpsertGlobalRuneConfig(string runeId, [FromBody] AbstractRuneConfig abstractRuneConfig) =>
-        await this.WorkflowConfigFileService.SaveRuneConfig(this.UserId, runeId, abstractRuneConfig).ToActionResultAsync();
+    public async Task<IActionResult> UpsertGlobalRuneConfig(string storeId, [FromBody] StoredConfig<AbstractRuneConfig> abstractRuneConfig) =>
+        await this.WorkflowConfigFindService.SaveRuneConfig(this.UserId, storeId, abstractRuneConfig).ToActionResultAsync();
 
     /// <summary>
     /// 删除指定 ID 的全局符文配置。
     /// </summary>
-    /// <param name="runeId">要删除的符文配置的唯一 ID。</param>
+    /// <param name="storeId">要删除的符文配置的唯一 ID。</param>
     /// <returns>删除成功的响应。</returns>
     /// <response code="204">符文配置已成功删除。</response>
     /// <response code="500">删除配置时发生内部服务器错误。</response>
-    [HttpDelete("{runeId}")]
+    [HttpDelete("{storeId}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> DeleteGlobalRuneConfig(string runeId) =>
-        await this.WorkflowConfigFileService.DeleteRuneConfig(this.UserId, runeId).ToActionResultAsync();
+    public async Task<IActionResult> DeleteGlobalRuneConfig(string storeId) =>
+        await this.WorkflowConfigFindService.DeleteRuneConfig(this.UserId, storeId).ToActionResultAsync();
 
 
     /// <summary>

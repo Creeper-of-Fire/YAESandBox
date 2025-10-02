@@ -1,5 +1,15 @@
 [
   {
+    "PackageId": "Acornima",
+    "PackageVersion": "1.2.0",
+    "PackageProjectUrl": "https://github.com/adams85/acornima",
+    "Copyright": "Adam Simon",
+    "Authors": "Adam Simon",
+    "License": "BSD-3-Clause",
+    "LicenseUrl": "https://licenses.nuget.org/BSD-3-Clause",
+    "LicenseInformationOrigin": 0
+  },
+  {
     "PackageId": "AngleSharp",
     "PackageVersion": "1.3.0",
     "PackageProjectUrl": "https://anglesharp.github.io/",
@@ -23,8 +33,13 @@
     "PackageVersion": "3.1.1",
     "PackageProjectUrl": "https://github.com/tonerdo/dotnet-env",
     "Authors": "DotNetEnv",
-    "License": "MIT",
-    "LicenseUrl": "https://github.com/BcryptNet/bcrypt.net/blob/main/licence.txt",
+    "ValidationErrors": [
+      {
+        "Error": "Validation for licenses of type File not yet supported",
+        "Context": "D:\\User\\Desktop\\ProjectForFun\\YAESandBox\\backend\\YAESandBox.AppWeb\\YAESandBox.AppWeb.csproj"
+      }
+    ],
+    "LicenseUrl": "https://aka.ms/deprecateLicenseUrl",
     "LicenseInformationOrigin": 2
   },
   {
@@ -39,12 +54,22 @@
   },
   {
     "PackageId": "JetBrains.Annotations",
-    "PackageVersion": "2025.1.0-eap1",
+    "PackageVersion": "2025.2.2",
     "PackageProjectUrl": "https://www.jetbrains.com/help/resharper/Code_Analysis__Code_Annotations.html",
-    "Copyright": "Copyright (c) 2016-2024 JetBrains s.r.o.",
+    "Copyright": "Copyright (c) 2016-2025 JetBrains s.r.o.",
     "Authors": "JetBrains",
     "License": "MIT",
     "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Jint",
+    "PackageVersion": "4.4.1",
+    "PackageProjectUrl": "https://github.com/sebastienros/jint",
+    "Copyright": "Sebastien Ros",
+    "Authors": "Sebastien Ros",
+    "License": "BSD-2-Clause",
+    "LicenseUrl": "https://licenses.nuget.org/BSD-2-Clause",
     "LicenseInformationOrigin": 0
   },
   {
@@ -79,7 +104,7 @@
   },
   {
     "PackageId": "Microsoft.AspNetCore.Authentication.JwtBearer",
-    "PackageVersion": "9.0.7",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://asp.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -189,7 +214,7 @@
   },
   {
     "PackageId": "Microsoft.AspNetCore.OpenApi",
-    "PackageVersion": "9.0.7",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://asp.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -329,7 +354,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Configuration",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -339,17 +364,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Configuration.Abstractions",
-    "PackageVersion": "8.0.0",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "MIT",
-    "LicenseUrl": "https://licenses.nuget.org/MIT",
-    "LicenseInformationOrigin": 0
-  },
-  {
-    "PackageId": "Microsoft.Extensions.Configuration.Abstractions",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -359,7 +374,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Configuration.Binder",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -369,17 +384,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.DependencyInjection",
-    "PackageVersion": "8.0.1",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "MIT",
-    "LicenseUrl": "https://licenses.nuget.org/MIT",
-    "LicenseInformationOrigin": 0
-  },
-  {
-    "PackageId": "Microsoft.Extensions.DependencyInjection",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -389,17 +394,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.DependencyInjection.Abstractions",
-    "PackageVersion": "8.0.2",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "MIT",
-    "LicenseUrl": "https://licenses.nuget.org/MIT",
-    "LicenseInformationOrigin": 0
-  },
-  {
-    "PackageId": "Microsoft.Extensions.DependencyInjection.Abstractions",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -419,7 +414,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Diagnostics",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -439,7 +434,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Diagnostics.Abstractions",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -469,7 +464,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Http",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -479,7 +474,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Logging",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -489,7 +484,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Logging.Abstractions",
-    "PackageVersion": "8.0.2",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -498,8 +493,18 @@
     "LicenseInformationOrigin": 0
   },
   {
-    "PackageId": "Microsoft.Extensions.Logging.Abstractions",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageId": "Microsoft.Extensions.Logging.Configuration",
+    "PackageVersion": "9.0.9",
+    "PackageProjectUrl": "https://dot.net/",
+    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
+    "Authors": "Microsoft",
+    "License": "MIT",
+    "LicenseUrl": "https://licenses.nuget.org/MIT",
+    "LicenseInformationOrigin": 0
+  },
+  {
+    "PackageId": "Microsoft.Extensions.Logging.Console",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -519,17 +524,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Options",
-    "PackageVersion": "8.0.2",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "MIT",
-    "LicenseUrl": "https://licenses.nuget.org/MIT",
-    "LicenseInformationOrigin": 0
-  },
-  {
-    "PackageId": "Microsoft.Extensions.Options",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -539,7 +534,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Options.ConfigurationExtensions",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -549,17 +544,7 @@
   },
   {
     "PackageId": "Microsoft.Extensions.Primitives",
-    "PackageVersion": "8.0.0",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "MIT",
-    "LicenseUrl": "https://licenses.nuget.org/MIT",
-    "LicenseInformationOrigin": 0
-  },
-  {
-    "PackageId": "Microsoft.Extensions.Primitives",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
+    "PackageVersion": "9.0.9",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -689,7 +674,7 @@
   },
   {
     "PackageId": "Microsoft.OpenApi",
-    "PackageVersion": "1.6.23",
+    "PackageVersion": "1.6.26",
     "PackageProjectUrl": "https://github.com/Microsoft/OpenAPI.NET",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -1009,7 +994,7 @@
   },
   {
     "PackageId": "Swashbuckle.AspNetCore",
-    "PackageVersion": "9.0.3",
+    "PackageVersion": "9.0.5",
     "PackageProjectUrl": "https://github.com/domaindrivendev/Swashbuckle.AspNetCore",
     "Authors": "domaindrivendev",
     "License": "MIT",
@@ -1018,7 +1003,7 @@
   },
   {
     "PackageId": "Swashbuckle.AspNetCore.Swagger",
-    "PackageVersion": "9.0.3",
+    "PackageVersion": "9.0.5",
     "PackageProjectUrl": "https://github.com/domaindrivendev/Swashbuckle.AspNetCore",
     "Copyright": "Copyright (c) 2016-2025 Richard Morris",
     "Authors": "domaindrivendev",
@@ -1028,7 +1013,7 @@
   },
   {
     "PackageId": "Swashbuckle.AspNetCore.SwaggerGen",
-    "PackageVersion": "9.0.3",
+    "PackageVersion": "9.0.5",
     "PackageProjectUrl": "https://github.com/domaindrivendev/Swashbuckle.AspNetCore",
     "Copyright": "Copyright (c) 2016-2025 Richard Morris",
     "Authors": "domaindrivendev",
@@ -1038,7 +1023,7 @@
   },
   {
     "PackageId": "Swashbuckle.AspNetCore.SwaggerUI",
-    "PackageVersion": "9.0.3",
+    "PackageVersion": "9.0.5",
     "PackageProjectUrl": "https://github.com/domaindrivendev/Swashbuckle.AspNetCore",
     "Copyright": "Copyright (c) 2016-2025 Richard Morris",
     "Authors": "domaindrivendev",
@@ -1229,16 +1214,6 @@
   {
     "PackageId": "System.Diagnostics.DiagnosticSource",
     "PackageVersion": "8.0.1",
-    "PackageProjectUrl": "https://dot.net/",
-    "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
-    "Authors": "Microsoft",
-    "License": "MIT",
-    "LicenseUrl": "https://licenses.nuget.org/MIT",
-    "LicenseInformationOrigin": 0
-  },
-  {
-    "PackageId": "System.Diagnostics.DiagnosticSource",
-    "PackageVersion": "10.0.0-preview.3.25171.5",
     "PackageProjectUrl": "https://dot.net/",
     "Copyright": "\u00A9 Microsoft Corporation. All rights reserved.",
     "Authors": "Microsoft",
@@ -2105,5 +2080,14 @@
     "License": "http://go.microsoft.com/fwlink/?LinkId=329770",
     "LicenseUrl": "http://go.microsoft.com/fwlink/?LinkId=329770",
     "LicenseInformationOrigin": 1
+  },
+  {
+    "PackageId": "UUIDNext",
+    "PackageVersion": "4.2.0",
+    "PackageProjectUrl": "https://github.com/mareek/UUIDNext",
+    "Authors": "Matthieu Mourisson",
+    "License": "0BSD",
+    "LicenseUrl": "https://licenses.nuget.org/0BSD",
+    "LicenseInformationOrigin": 0
   }
 ]

@@ -1,6 +1,4 @@
-﻿// 文件路径: YAESandBox.Workflow.AIService/AiConfig/DeepSeek/DeepSeekAiProcessorConfig.cs
-
-using System.ComponentModel;
+﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.AspNetCore.Secret.Mark;
 using YAESandBox.Depend.Schema.SchemaProcessor;

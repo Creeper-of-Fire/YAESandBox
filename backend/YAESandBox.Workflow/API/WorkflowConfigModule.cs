@@ -4,6 +4,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Workflow.API.Controller;
+using YAESandBox.Workflow.API.Service;
 using YAESandBox.Workflow.Config.RuneConfig;
 using YAESandBox.Workflow.ExactRune;
 using YAESandBox.Workflow.ExactRune.SillyTavern;
@@ -54,7 +55,8 @@ public class WorkflowConfigModule :
             options.AddSwaggerDocumentation(typeof(RuneConfigController).Assembly);
         });
 
-        service.AddSingleton<WorkflowConfigFileService>();
+        service.AddSingleton<WorkflowConfigFilePersistenceService>();
+        service.AddSingleton<WorkflowConfigFindService>();
         service.AddTransient<WorkflowValidationService>();
         service.AddTransient<TuumAnalysisService>();
         service.AddTransient<RuneAnalysisService>();
@@ -65,6 +67,8 @@ public class WorkflowConfigModule :
     {
         var runeProviders = context.AllModules.OfType<IProgramModuleRuneProvider>().ToList();
         RuneConfigTypeResolver.Initialize(runeProviders);
+        var innerConfigProviders = context.AllModules.OfType<IProgramModuleInnerConfigProvider>().ToList();
+        InnerConfigProviderResolver.Initialize(innerConfigProviders);
     }
 
     /// <inheritdoc />

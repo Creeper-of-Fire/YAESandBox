@@ -1,17 +1,16 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Schema.SchemaProcessor;
+using YAESandBox.Workflow.Config.Stored;
 
 namespace YAESandBox.Workflow.Config;
 
 /// <summary>
 /// 工作流的配置
 /// </summary>
-public record WorkflowConfig
+public record WorkflowConfig: IConfigStored
 {
-    /// <summary>
-    /// 名字
-    /// </summary>
+    /// <inheritdoc />
     [Required]
     [HiddenInForm(true)]
     public string Name { get; init; } = string.Empty;

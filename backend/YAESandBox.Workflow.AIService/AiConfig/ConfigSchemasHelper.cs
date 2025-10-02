@@ -1,6 +1,4 @@
-﻿// ConfigSchemasHelper.cs
-
-using System.Collections.ObjectModel;
+﻿using System.Collections.ObjectModel;
 using System.Reflection;
 using YAESandBox.Depend.Logger;
 

@@ -1,6 +1,4 @@
-﻿// DoubaoModels.cs (或者作为 DoubaoAiProcessor 的内部类)
-
-using System.Text.Json.Serialization;
+﻿using System.Text.Json.Serialization;
 using YAESandBox.Workflow.AIService.Shared;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;

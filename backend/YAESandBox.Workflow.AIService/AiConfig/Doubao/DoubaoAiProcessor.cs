@@ -1,6 +1,4 @@
-﻿// DoubaoAiProcessor.cs
-
-using YAESandBox.Depend.Results;
+﻿using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.AIService.Shared;
 
 namespace YAESandBox.Workflow.AIService.AiConfig.Doubao;
