@@ -330,6 +330,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         const draftItem = session.getFullDraft().value;
         const contentData = draftItem.data;
         const name = contentData.name;
+        const meta = draftItem.meta ?? {};
 
         const handler = resourceHandlers[type];
         if (!handler)
@@ -339,11 +340,13 @@ export const useWorkbenchStore = defineStore('workbench', () =>
             return {success: false, name, storeId: storeId, type, error};
         }
 
+        meta.updatedAt = new Date().toISOString();
+
         const requestBody: AnyStoredConfig = {
             storeRef: draftItem.storeRef,
             content: contentData,
             isReadOnly: draftItem.isReadOnly,
-            meta: draftItem.meta,
+            meta: meta,
         }
 
         try
