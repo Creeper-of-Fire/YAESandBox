@@ -1,7 +1,7 @@
 ﻿// --- START OF FILE frontend/src/app-workbench/stores/workbenchStore.ts ---
 
 import {defineStore} from 'pinia';
-import {computed, markRaw, type Reactive, reactive} from 'vue';
+import {computed, type ComputedRef, markRaw, type Reactive, reactive} from 'vue';
 import {v4 as uuidv4} from 'uuid';
 import {type AnyConfigObject, type ConfigType, getConfigObjectType, GlobalEditSession,} from '#/services/GlobalEditSession.ts';
 import type {
@@ -163,6 +163,12 @@ export function deepCloneWithNewIds<T extends object>(obj: T): T
     return newObj;
 }
 
+export interface ConfigTypeMap {
+    workflow: WorkflowConfig;
+    tuum: TuumConfig;
+    rune: AbstractRuneConfig;
+}
+
 export const useWorkbenchStore = defineStore('workbench', () =>
 {
     // =================================================================
@@ -172,14 +178,14 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     /**
      * @description 定义一个通用的资源处理器接口，用于统一不同资源类型的操作。
      */
-    interface IResourceHandler<TConfig extends AnyConfigObject, TStored extends AnyStoredConfig>
+    interface IResourceHandler<TConfig extends AnyConfigObject>
     {
         // 每种资源的异步状态管理
         asyncState: Reactive<UseAsyncStateReturn<Record<string, GlobalResourceItem<TConfig>>, any[], true>>;
         // API 调用函数
         api: {
             // 保存或更新资源
-            save: (storeId: string, requestBody: TStored) => Promise<any>;
+            save: (storeId: string, requestBody: StoredConfig<TConfig>) => Promise<any>;
             // 删除资源
             delete: (storeId: string) => Promise<any>;
         };
@@ -191,7 +197,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
      * 使得后续的操作函数可以变得通用，从而消除重复的 switch-case 逻辑。
      * 如果未来要增加新的资源类型（例如 'plugin'），只需在此处添加一个新的条目即可。
      */
-    const resourceHandlers: { [K in ConfigType]: IResourceHandler<any, StoredConfig<any>> } = {
+    const resourceHandlers: { [K in ConfigType]: IResourceHandler<ConfigTypeMap[K]> } = {
         workflow: {
             asyncState: reactive(useAsyncState(
                 () => WorkflowConfigService.getApiV1WorkflowsConfigsGlobalWorkflows().then(record => processDtoToViewModel(record)),
@@ -322,6 +328,26 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         return Object.values(activeSessions).some(session => session.getIsDirty().value);
     });
 
+    /**
+     * @internal
+     * @description 一个类型安全的辅助函数，用于调用特定类型的保存API并刷新状态。
+     * 它使用泛型来确保 handler 和 requestBody 的类型在编译时是匹配的。
+     * @param type - 具体的资源类型 ('workflow', 'tuum', 'rune')
+     * @param storeId - 资源的ID
+     * @param requestBody - 要保存的数据
+     */
+    const _saveAndExecute = async <T extends ConfigType>(
+        type: T,
+        storeId: string,
+        requestBody: StoredConfig<ConfigTypeMap[T]>
+    ) => {
+        // 当 T 是一个具体的类型 (如 'workflow') 时,
+        // handler 会被正确推断为 IResourceHandler<WorkflowConfig>
+        const handler = resourceHandlers[type];
+
+        await handler.api.save(storeId, requestBody);
+    };
+
     // TODO 没写好校验逻辑
     // _saveDraft 现在接收 storeId
     const saveSessionData = async (session: GlobalEditSession): Promise<SaveResult> =>
@@ -331,14 +357,6 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         const contentData = draftItem.data;
         const name = contentData.name;
         const meta = draftItem.meta ?? {};
-
-        const handler = resourceHandlers[type];
-        if (!handler)
-        {
-            const error = `保存失败：未知的草稿类型 '${type}'。`;
-            console.error(error);
-            return {success: false, name, storeId: storeId, type, error};
-        }
 
         meta.updatedAt = new Date().toISOString();
 
@@ -351,8 +369,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
         try
         {
-            await handler.api.save(storeId, requestBody);
-            await handler.asyncState.execute();
+            await _saveAndExecute(type, storeId, requestBody)
             return {success: true, storeId: storeId, name, type};
         } catch (error)
         {
@@ -409,7 +426,6 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         const newStoreId = uuidv4(); // 为这个新的全局资源创建一个全新的顶级ID
 
         const {type} = getConfigObjectType(newContent);
-        const handler = resourceHandlers[type];
 
         const newMeta = {
             // 设置初始元数据
@@ -428,8 +444,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         // 执行保存和刷新
         try
         {
-            await handler.api.save(newStoreId, requestBody);
-            await handler.asyncState.execute();
+            await _saveAndExecute(type, newStoreId, requestBody)
         } catch (error)
         {
             console.error(`将配置“${newContent.name}”保存为全局 ${type} 时失败:`, error);

@@ -176,6 +176,7 @@ import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
 import {AddIcon, EditIcon, TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
 import {useEditorControlPayload} from "#/services/editor-context/useSelectedConfig.ts";
+import {useGlobalResources} from "#/composables/useGlobalResources.ts";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -190,12 +191,9 @@ const workbenchStore = useWorkbenchStore();
 const dialog = useDialog();
 const message = useMessage();
 
-const workflowsAsync = workbenchStore.globalWorkflowsAsync;
-const tuumsAsync = workbenchStore.globalTuumsAsync;
-const runesAsync = workbenchStore.globalRunesAsync;
-const workflows = computed(() => workflowsAsync.state);
-const tuums = computed(() => tuumsAsync.state);
-const runes = computed(() => runesAsync.state);
+const { resources: workflows, isLoading: isWorkflowsLoading, error: workflowsError, execute: executeWorkflows } = useGlobalResources('workflow');
+const { resources: tuums, isLoading: isTuumsLoading, error: tuumsError, execute: executeTuums } = useGlobalResources('tuum');
+const { resources: runes, isLoading: isRunesLoading, error: runesError, execute: executeRunes } = useGlobalResources('rune');
 
 // 为所有资源类型创建可用于 v-model 的列表
 const workflowsList = computed({
@@ -217,22 +215,15 @@ const runesList = computed({
   }
 });
 
-const aggregatedIsLoading = computed(() => workflowsAsync.isLoading || tuumsAsync.isLoading || runesAsync.isLoading);
-const aggregatedError = computed(() => workflowsAsync.error || tuumsAsync.error || runesAsync.error);
+const aggregatedIsLoading = computed(() => isWorkflowsLoading.value || isTuumsLoading.value || isRunesLoading.value);
+const aggregatedError = computed(() => workflowsError.value || tuumsError.value || runesError.value);
 
-function executeAll()
-{
-  workflowsAsync.execute();
-  tuumsAsync.execute();
-  runesAsync.execute();
+function executeAll() {
+  executeWorkflows();
+  executeTuums();
+  executeRunes();
 }
 
-
-// 组件挂载时触发数据加载
-onMounted(() =>
-{
-  executeAll()
-});
 
 /**
  * 显示资源加载错误的详细信息。

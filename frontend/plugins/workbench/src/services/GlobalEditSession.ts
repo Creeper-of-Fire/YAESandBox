@@ -145,6 +145,7 @@ export class GlobalEditSession
         {
             if (this.isReadOnly.value)
                 return false;
+
             return !isEquivalent(data, JSON.parse(this.originalState.value));
         });
     }
@@ -155,6 +156,9 @@ export class GlobalEditSession
      */
     public updateData(updatedData: Partial<AnyConfigObject>): void
     {
+        if (this.isReadOnly.value)
+            return;
+
         // 使用 Object.assign 来合并更新，确保 Ref 的响应性
         Object.assign(this.draftResourceItem.value.data, updatedData);
     }
