@@ -7,6 +7,7 @@ import {useUpdaterStore} from "../stores/updaterStore.ts";
 import {type ManifestMode, useConfigStore} from "../stores/configStore.ts";
 import ConfirmationDialog from "../components/ConfirmationDialog.vue";
 import SpecialComponentItem from "../components/SpecialComponentItem.vue";
+import SettingsPanel from "../components/SettingsPanel.vue";
 
 const updaterStore = useUpdaterStore();
 const configStore = useConfigStore();
@@ -14,79 +15,12 @@ const configStore = useConfigStore();
 const frontendPath = 'wwwroot';
 const backendExePath = 'backend/YAESandBox.AppWeb.exe';
 
-const customManifestUrl = ref('');
-
 onMounted(async () =>
 {
   await updaterStore.listenForProgress();
   await configStore.loadConfig();
   await updaterStore.initialize();
 });
-
-// 监视 configStore 的变化，以更新本地的自定义 URL 输入框
-watch(() => configStore.parsedConfig?.core_components_manifest_url, (newUrl) =>
-{
-  if (configStore.currentMode === 'custom')
-  {
-    customManifestUrl.value = newUrl || '';
-  }
-}, {immediate: true});
-
-const showSlimWarningDialog = ref(false);
-const slimWarningMessage = `您选择的“精简版”不包含 .NET 运行环境。
-
-请确保您的系统已安装【.NET 9 (或更高版本) ASP.NET Core 运行时】，否则后端服务将无法启动。
-
-您可以从微软官方网站下载：
-<a href="https://dotnet.microsoft.com/zh-cn/download/dotnet/9.0" target="_blank">https://dotnet.microsoft.com/zh-cn/download/dotnet/9.0</a>`;
-
-const selectedMode = computed<ManifestMode>({
-  get()
-  {
-    return configStore.currentMode;
-  },
-  set(newMode: ManifestMode)
-  {
-    if (newMode === 'slim')
-    {
-      // 2. 显示我们的自定义对话框，而不是调用 confirm()
-      showSlimWarningDialog.value = true;
-    }
-
-    if (newMode === 'full' || newMode === 'slim')
-    {
-      configStore.changeManifestUrl(configStore.MANIFEST_URLS[newMode]);
-    }
-    // "custom" 模式的 URL 将通过输入框和按钮单独处理
-  }
-});
-
-// 处理对话框的确认事件
-function handleSlimConfirm()
-{
-  configStore.changeManifestUrl(configStore.MANIFEST_URLS.slim);
-  showSlimWarningDialog.value = false;
-}
-
-// 处理对话框的取消事件
-function handleSlimCancel()
-{
-  showSlimWarningDialog.value = false;
-  // selectedMode 会因为 configStore.currentMode 没变而自动弹回原来的值，无需手动处理
-}
-
-
-function applyCustomUrl()
-{
-  if (customManifestUrl.value.trim())
-  {
-    configStore.changeManifestUrl(customManifestUrl.value.trim());
-  }
-  else
-  {
-    alert('自定义 URL 不能为空。');
-  }
-}
 
 const launchApp = async () =>
 {
@@ -116,12 +50,6 @@ const launchApp = async () =>
     updaterStore.globalStatusMessage = `启动失败: ${String(error)}`;
   }
 };
-
-async function handleRefresh()
-{
-  await configStore.loadConfig();
-  await updaterStore.initialize();
-}
 </script>
 
 <template>
@@ -130,28 +58,21 @@ async function handleRefresh()
     <aside class="side-panel">
       <!-- 顶部信息区 -->
       <div class="side-panel-header">
-        <h1>YAESandBox 启动器</h1>
+        <h1>YAESandBox</h1>
         <p :class="{ 'is-busy': updaterStore.isInstalling || updaterStore.isDownloading, 'is-error': !!updaterStore.globalError }"
            class="status-message">
           {{ updaterStore.globalStatusMessage }}
         </p>
       </div>
 
+      <div class="side-panel-body">
+        <div class="settings-area">
+          <SettingsPanel />
+        </div>
+      </div>
+
       <!-- 底部操作区 -->
       <div class="side-panel-footer">
-        <div class="settings-area">
-          <label for="manifest-mode">更新源模式:</label>
-          <select id="manifest-mode" v-model="selectedMode">
-            <option value="full">完整版 (自带.NET9.0环境)</option>
-            <option value="slim">精简版 (需自行安装.NET9.0)</option>
-            <option value="custom">自定义</option>
-          </select>
-          <div v-if="selectedMode === 'custom'" class="custom-url-input">
-            <input v-model="customManifestUrl" placeholder="输入核心组件清单URL" type="text">
-            <button class="button-secondary" @click="applyCustomUrl">应用</button>
-          </div>
-        </div>
-
         <div class="footer-actions">
           <button
               v-if="updaterStore.availableUpdates.length > 0"
@@ -218,14 +139,6 @@ async function handleRefresh()
         </section>
       </div>
     </main>
-
-    <ConfirmationDialog
-        v-if="showSlimWarningDialog"
-        :message="slimWarningMessage"
-        title="切换模式警告"
-        @cancel="handleSlimCancel"
-        @confirm="handleSlimConfirm"
-    />
   </div>
 </template>
 
@@ -246,50 +159,58 @@ async function handleRefresh()
   border-radius: 6px;
   border: 1px solid transparent;
   cursor: pointer;
-  font-weight: 500;
-  transition: background-color 0.2s, opacity 0.2s;
+  font-weight: 600;
+  transition: all 0.2s ease-in-out;
+  box-shadow: 0 1px 2px 0 rgba(0,0,0,0.05);
+}
+
+.button-primary,.button-secondary .button-launch, .button-update-all {
+  color: var(--text-color-inverted);
 }
 
 .button-primary {
-  background-color: #007bff;
-  color: white;
-  border-color: #007bff;
+  background-color: var(--color-brand);
+  border-color: var(--color-brand);
 }
 
 .button-primary:hover:not(:disabled) {
-  background-color: #0056b3;
+  background-color: var(--color-brand-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
 }
 
+/* Secondary Button */
 .button-secondary {
-  background-color: #6c757d;
-  color: white;
-  border-color: #6c757d;
+  background-color: var(--btn-secondary-bg);
+  color: var(--btn-secondary-text);
+  border-color: var(--btn-secondary-border);
+  box-shadow: none; /* Secondary buttons don't need a strong shadow */
 }
-
 .button-secondary:hover:not(:disabled) {
-  background-color: #5a6268;
+  background-color: var(--btn-secondary-bg-hover);
+  border-color: var(--btn-secondary-bg-hover);
 }
 
 .button-update-all {
-  background-color: #28a745;
-  color: white;
-  border-color: #28a745;
+  background-color: var(--color-success);
+  border-color: var(--color-success);
 }
-
 .button-update-all:hover:not(:disabled) {
-  background-color: #218838;
+  background-color: var(--color-success-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1), 0 2px 4px -2px rgba(0,0,0,0.1);
 }
 
 .button-launch {
-  padding: 0.7rem 2rem;
-  font-size: 1rem;
-  background-color: #17a2b8;
-  color: white;
-  border-color: #17a2b8;
+  padding: 0.8rem 2rem;
+  font-size: 1.1rem;
+  background-color: var(--color-info);
+  border-color: var(--color-info);
 }
-
 .button-launch:hover:not(:disabled) {
-  background-color: #138496;
+  background-color: var(--color-info-hover);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px -2px rgba(0,0,0,0.15), 0 2px 6px -3px rgba(0,0,0,0.15);
 }
 
 button:disabled,
@@ -299,6 +220,8 @@ button:disabled,
 .button-update-all:disabled {
   cursor: not-allowed;
   opacity: 0.6;
+  box-shadow: none;
+  transform: none;
 }
 </style>
 
@@ -311,7 +234,7 @@ button:disabled,
   flex-direction: row;
   height: 100vh;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-  background-color: #ffffff;
+  background-color: var(--bg-color-panel);
 }
 
 /* --- 左侧侧边栏 --- */
@@ -322,13 +245,21 @@ button:disabled,
   width: 280px; /* 固定宽度 */
   padding: 1.5rem;
   box-sizing: border-box;
-  background-color: #fff;
-  border-right: 1px solid #e0e0e0;
+  background-color: var(--bg-color-panel);
+  border-right: 1px solid var(--border-color-medium);
   text-align: left;
+  color: var(--text-color-primary);
 }
 
 .side-panel-header {
   flex-shrink: 0;
+}
+
+/* 可滚动的主体区域 */
+.side-panel-body {
+  flex-grow: 1; /* 占据头部和底部之间的所有可用空间 */
+  overflow-y: auto; /* 当内容溢出时，显示垂直滚动条 */
+  min-height: 0; /* Flexbox 布局中实现滚动的关键技巧 */
 }
 
 .side-panel-footer {
@@ -338,7 +269,7 @@ button:disabled,
 
 .side-panel h1 {
   font-size: 1.6rem;
-  color: #333;
+  color: var(--text-color-primary);
   margin-top: 0;
 }
 
@@ -350,12 +281,10 @@ button:disabled,
 
 /* 重新设计设置区域和操作按钮以适应侧边栏 */
 .side-panel .settings-area {
-  display: flex;
-  flex-direction: column;
-  align-items: stretch; /* 让子元素撑满宽度 */
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  font-size: 0.9em;
+  padding: 1rem;
+  border: 1px solid var(--border-color-medium);
+  border-radius: 8px;
+  background-color: rgba(0, 0, 0, 0.02);
 }
 
 .side-panel .custom-url-input {
@@ -391,23 +320,23 @@ button:disabled,
   flex-grow: 1;
   overflow-y: auto;
   padding: 1.5rem;
-  background-color: #f7f9fc;
+  background-color: var(--bg-color-main);
 }
 
 .status-message.is-busy {
-  color: #007bff;
+  color: var(--color-brand);
 }
 
 .status-message.is-error {
-  color: #dc3545;
+  color: var(--color-danger);
 }
 
 .launcher-update-section {
   max-width: 800px;
   margin: 0 auto 1.5rem auto;
   border-radius: 8px;
-  background-color: #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  background-color: var(--bg-color-card);
+  box-shadow: var(--shadow-card);
   overflow: hidden;
 }
 
@@ -418,11 +347,11 @@ button:disabled,
 }
 
 .component-section {
-  background-color: #fff;
+  background-color: var(--bg-color-card);
   border-radius: 8px;
   padding: 1.5rem;
   margin-bottom: 1.5rem;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  box-shadow: var(--shadow-card);
 }
 
 .component-section:last-child {
@@ -431,17 +360,17 @@ button:disabled,
 
 .component-section h2 {
   margin-top: 0;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color-divider);
   padding-bottom: 0.75rem;
   margin-bottom: 1rem;
   font-size: 1.2rem;
-  color: #333;
+  color: var(--text-color-primary);
 }
 
 .error-section {
-  background-color: #fff3f3;
-  color: #721c24;
-  border: 1px solid #f5c6cb;
+  background-color: var(--bg-color-danger-soft);
+  color: var(--text-color-danger);
+  border: 1px solid var(--border-color-danger);
   padding: 1rem;
   border-radius: 8px;
   max-width: 600px;
@@ -464,7 +393,7 @@ button:disabled,
 }
 
 .loading-placeholder {
-  color: #888;
+  color: var(--text-color-muted);
   padding: 1rem 0;
   text-align: center;
 }
@@ -473,22 +402,5 @@ button:disabled,
   list-style: none;
   padding: 0;
   margin: 0;
-}
-
-.settings-area {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.5rem;
-  font-size: 0.9em;
-  color: #555;
-}
-
-.settings-area select, .settings-area input {
-  padding: 0.4rem;
-  border-radius: 4px;
-  border: 1px solid #ccc;
-  background-color: #fff;
 }
 </style>

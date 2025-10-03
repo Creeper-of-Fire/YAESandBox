@@ -29,8 +29,8 @@ const isUpdateAvailable = computed(() => props.component.status === 'update_avai
  */
 .special-component-wrapper.update-available {
   border-radius: 8px; /* 确保动画的边框是圆角的 */
-  border: 2px solid #ffc107;
-  box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+  border: 2px solid var(--color-warning);
+  box-shadow: 0 4px 15px rgba(var(--color-warning-rgb), 0.4);
   animation: pulse-border 2s infinite;
 }
 
@@ -41,37 +41,40 @@ const isUpdateAvailable = computed(() => props.component.status === 'update_avai
   /* 移除特殊项的下边框，因为它由外部容器的 border 控制 */
   border-bottom: none;
   padding: 1rem 1.5rem; /* 给特殊项更多内边距 */
-  background: linear-gradient(45deg, #fdfcff, #f7f9fc);
+  background: linear-gradient(45deg, var(--bg-color-panel), var(--bg-color-main));
+  /* 为内部组件添加匹配的圆角 */
+  border-radius: 6px;
 }
 
 /*
  * 针对特殊项的酷炫按钮样式，仅在有更新时应用
  */
 .special-component-wrapper.update-available :deep(.button-primary) {
-  background: linear-gradient(45deg, #ffc107, #ff9800);
+  background-color: var(--color-warning);
   border: none;
-  color: #333;
+  color: var(--text-color-on-warning);
   font-weight: bold;
   transform: scale(1.05); /* 稍微放大 */
-  box-shadow: 0 2px 8px rgba(255, 152, 0, 0.5);
+  box-shadow: 0 0 12px 0 rgba(var(--color-warning-rgb), 0.6);
   transition: all 0.2s ease;
 }
 
 .special-component-wrapper.update-available :deep(.button-primary:hover:not(:disabled)) {
+  background-color: var(--color-warning-hover);
   transform: scale(1.1);
-  box-shadow: 0 4px 12px rgba(255, 152, 0, 0.6);
+  box-shadow: 0 0 18px 2px rgba(var(--color-warning-rgb), 0.7);
 }
 
 /* 定义脉冲动画 */
 @keyframes pulse-border {
   0% {
-    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    box-shadow: 0 4px 15px rgba(var(--color-warning-rgb), 0.4);
   }
   50% {
-    box-shadow: 0 4px 25px rgba(255, 193, 7, 0.7);
+    box-shadow: 0 4px 25px rgba(var(--color-warning-rgb), 0.7);
   }
   100% {
-    box-shadow: 0 4px 15px rgba(255, 193, 7, 0.4);
+    box-shadow: 0 4px 15px rgba(var(--color-warning-rgb), 0.4);
   }
 }
 </style>

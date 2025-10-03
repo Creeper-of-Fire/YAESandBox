@@ -14,34 +14,36 @@ name = "yaesandbox_launcher_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
-tauri-build = { version = "2", features = [] }
+tauri-build = { version = "2.4.1", features = [] }
 
 [dependencies]
-tauri = { version = "2", features = ["devtools"] }
-tauri-plugin-opener = "2"
-serde = { version = "1", features = ["derive"] }
-serde_json = "1"
+tauri = { version = "2.8.5", features = ["devtools"] }
+tauri-plugin-opener = "2.5.0"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.145"
 reqwest = { version = "0.12", features = ["blocking", "json", "stream"] }
 tokio = { version = "1", features = ["full"] }
 futures-util = "0.3"
-zip = "4.5.0"
+zip = "5"
 portpicker = "0.1"
 native-dialog = "0"
 sha2 = "0"  # 用于计算 SHA256
 hex = "0"    # 用于将哈希值转为字符串
-self_update = { version = "0", features = ["archive-zip", "compression-zip-deflate", "rustls"], default-features = false }
-tempfile = "3.10.1"
-log = "0"
+self_update = { version = "0.42.0", features = ["archive-zip", "compression-zip-deflate", "rustls"], default-features = false }
+tempfile = "3.23.0"
+log = "0.4.28"
 simplelog = "0"
 tauri-plugin-fs = "2"
-
+dark-light = "2"
+toml_edit = "0.23.6"
 
 [target.'cfg(windows)'.dependencies]
-windows = { version = "0.61.3", features = [
+windows = { version = "0.62.1", features = [
     "Win32_System_JobObjects",
     "Win32_Foundation",
     "Win32_System_Threading",
-    "Win32_Security"
+    "Win32_Security",
+    "Win32_UI_WindowsAndMessaging",
 ] }
 
 [features]

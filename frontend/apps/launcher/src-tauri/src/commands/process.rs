@@ -1,6 +1,7 @@
 ﻿// src-tauri/src/commands/process.rs
 use std::sync::{Arc, Mutex};
 use super::super::AppState;
+use crate::core::config;
 use std::io::{BufRead, BufReader};
 use std::process::{Command as StdCommand, Stdio};
 use std::thread;
@@ -13,8 +14,6 @@ use crate::core::dialog_window::show_critical_error_and_exit;
 // 平台特定的引入
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
-use crate::commands::config_cmd::read_config_as_string;
-use crate::core::config_parser::get_ini_value;
 
 #[cfg(windows)]
 const CREATE_NO_WINDOW: u32 = 0x08000000;
@@ -29,11 +28,18 @@ pub async fn start_local_backend(
 ) -> Result<(), String> {
     // --- 1. 准备环境 ---
     let port = {
-        // 先调用 read_config_as_string 来确保配置文件存在并获取其内容
-        let config_content = read_config_as_string(app_state.clone())?;
-        // 解析 backend_port
-        let port_str = get_ini_value(&config_content, "Network", "backend_port")
-            .unwrap_or_else(|| "auto".to_string()); // 如果没找到，默认为 "auto"
+        // a. 使用配置模块加载配置文档。
+        //    这确保了配置文件是经过初始化和验证的。
+        let doc = config::load_or_initialize(&app_state.app_dir)?;
+
+        // b. 从文档中安全地获取 'backend_port' 的值。
+        //    如果键、节不存在，或值不是字符串，则安全地回退到 "auto"。
+        let port_str = doc
+            .get("Network")
+            .and_then(|table| table.get("backend_port"))
+            .and_then(|item| item.as_str())
+            .unwrap_or("auto")
+            .to_string();
 
         log::info!("[Launcher] 从配置中读取到 backend_port = '{}'", port_str);
 

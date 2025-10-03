@@ -33,7 +33,7 @@ const emit = defineEmits(['confirm', 'cancel']);
   left: 0;
   width: 100%;
   height: 100%;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: var(--bg-color-overlay);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -41,10 +41,10 @@ const emit = defineEmits(['confirm', 'cancel']);
 }
 
 .dialog-content {
-  background-color: white;
+  background-color: var(--bg-color-panel);
   padding: 2rem;
   border-radius: 8px;
-  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: var(--shadow-modal);
   max-width: 500px;
   width: 90%;
   text-align: left;
@@ -52,18 +52,18 @@ const emit = defineEmits(['confirm', 'cancel']);
 
 .dialog-title {
   margin-top: 0;
-  color: #333;
+  color: var(--text-color-primary);
 }
 
 .dialog-message {
-  color: #555;
+  color: var(--text-color-secondary);
   line-height: 1.6;
   white-space: pre-wrap; /* 保持换行符 */
 }
 
 /* 让 v-html 里的链接样式更好看 */
 .dialog-message :deep(a) {
-  color: #007bff;
+  color: var(--text-color-link);
   text-decoration: none;
 }
 .dialog-message :deep(a:hover) {

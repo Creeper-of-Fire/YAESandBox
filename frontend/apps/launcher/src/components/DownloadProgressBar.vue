@@ -13,21 +13,21 @@
   width: 80%;
   max-width: 400px;
   margin: 20px auto;
-  background-color: #333;
+  background-color: var(--border-color-soft);
   border-radius: 5px;
-  border: 1px solid #555;
+  border: 1px solid var(--border-color-medium);
 }
 
 .progress-bar {
   height: 20px;
-  background-color: #4caf50;
+  background-color: var(--color-success);
   border-radius: 5px;
   transition: width 0.1s linear;
 }
 
 p {
   font-size: 0.9em;
-  color: #ccc;
+  color: var(--text-color-secondary);
 }
 </style>
 

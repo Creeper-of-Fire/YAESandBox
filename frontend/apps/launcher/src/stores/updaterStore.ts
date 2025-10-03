@@ -2,7 +2,7 @@
 import {invoke} from '@tauri-apps/api/core';
 import {listen, type UnlistenFn} from '@tauri-apps/api/event';
 import semver from 'semver';
-import {computed, ref} from "vue";
+import {computed, type ComputedRef, type Reactive, reactive, ref, watch} from "vue";
 import {useConfigStore} from "./configStore.ts";
 import {launcherName} from "../utils/constant.ts";
 
@@ -40,13 +40,6 @@ export interface Component
     error: string | null;
 }
 
-export interface AppConfig
-{
-    plugins_manifest_url: string;
-    core_components_manifest_url: string;
-    proxy_address: string | null;
-}
-
 // 用于Tauri事件的Payload类型
 interface DownloadProgressPayload
 {
@@ -70,17 +63,19 @@ export const useUpdaterStore = defineStore('updater', () =>
     const isInstalling = ref(false);
     const globalStatusMessage = ref('启动器正在初始化...');
     const globalError = ref<string | null>(null);
-    const config = ref<{
-        core_components_manifest_url: string;
-        plugins_manifest_url: string;
-        proxy_address: string | null;
-    } | null>(null);
+    const configStore = useConfigStore();
+    const config = computed(() => ({
+        core_components_manifest_url: configStore.getConfigValue('core_components_manifest_url').value,
+        plugins_manifest_url: configStore.getConfigValue('plugins_manifest_url').value,
+        proxy_address: configStore.getConfigValue('proxy_address').value,
+    }));
 
     let unlistenProgress: UnlistenFn | null = null;
 
 
     // --- 2. Getters (用 computed 定义) ---
-    const launcherComponent = computed<Component | undefined>(() => {
+    const launcherComponent = computed<Component | undefined>(() =>
+    {
         return Object.values(components.value).find(c => c.id === 'launcher');
     });
 
@@ -111,14 +106,9 @@ export const useUpdaterStore = defineStore('updater', () =>
         globalStatusMessage.value = '正在加载配置...';
         globalError.value = null;
 
-        const configStore = useConfigStore();
-        if (!configStore.parsedConfig)
-        {
-            await configStore.loadConfig();
-        }
+        await configStore.loadConfig();
 
-        const config = configStore.parsedConfig;
-        if (!config || !config.core_components_manifest_url || !config.plugins_manifest_url)
+        if (!config.value.core_components_manifest_url || !config.value.plugins_manifest_url)
         {
             globalError.value = '配置文件无效或缺失关键URL。';
             globalStatusMessage.value = '配置错误。';
@@ -133,12 +123,12 @@ export const useUpdaterStore = defineStore('updater', () =>
             const [localVersions, coreManifest, pluginManifest] = await Promise.all([
                 invoke<Record<string, string>>('get_local_versions'),
                 invoke<{ components: any[] }>('fetch_manifest', {
-                    url: config.core_components_manifest_url,
-                    proxy: config.proxy_address
+                    url: config.value.core_components_manifest_url,
+                    proxy: config.value.proxy_address
                 }),
                 invoke<any[]>('fetch_manifest', {
-                    url: config.plugins_manifest_url,
-                    proxy: config.proxy_address
+                    url: config.value.plugins_manifest_url,
+                    proxy: config.value.proxy_address
                 })
             ]);
 
@@ -163,8 +153,7 @@ export const useUpdaterStore = defineStore('updater', () =>
             if (updateCount > 0)
             {
                 globalStatusMessage.value = `发现 ${updateCount} 个可用更新。`;
-            }
-            else
+            } else
             {
                 globalStatusMessage.value = '所有组件都已是最新版本。';
             }
@@ -197,8 +186,7 @@ export const useUpdaterStore = defineStore('updater', () =>
                 {
                     component.progress.percentage = Math.round((downloaded / total) * 100);
                     component.progress.text = `${(downloaded / 1024 / 1024).toFixed(2)}MB / ${(total / 1024 / 1024).toFixed(2)}MB`;
-                }
-                else
+                } else
                 {
                     component.progress.text = `已下载 ${(downloaded / 1024 / 1024).toFixed(2)}MB`;
                 }
@@ -222,8 +210,7 @@ export const useUpdaterStore = defineStore('updater', () =>
         component.progress = {percentage: 0, text: '准备下载...'};
         component.error = null;
 
-        const configStore = useConfigStore(); // 获取 configStore
-        const proxy = configStore.parsedConfig?.proxy_address;
+        const proxy = config.value.proxy_address;
 
         try
         {
@@ -333,7 +320,9 @@ export const useUpdaterStore = defineStore('updater', () =>
             // console.log('[Installer] 发现待处理任务，叫工人来上班。');
             isInstalling.value = true;
             // 叫醒工人，让他开始工作。我们不等待他完成所有工作。
-            installationWorker().then(_ => {});
+            installationWorker().then(_ =>
+            {
+            });
         }
     }
 
@@ -354,7 +343,7 @@ export const useUpdaterStore = defineStore('updater', () =>
             const savePath = `downloads/${component.id}_update.zip`;
             await invoke('download_and_verify_zip', {
                 id: component.id, url: component.url, relativePath: savePath,
-                expectedHash: component.hash, proxy: config.value?.proxy_address,
+                expectedHash: component.hash, proxy: config.value.proxy_address,
             });
 
             globalStatusMessage.value = '正在应用更新，应用即将重启...';
@@ -370,6 +359,25 @@ export const useUpdaterStore = defineStore('updater', () =>
             globalStatusMessage.value = `启动器更新失败: ${String(e)}`;
         }
     }
+
+    // --- 跨 Store 监听逻辑 ---
+
+    watch(
+        // 监听的源：核心组件清单的 URL。我们使用 .value 来访问 ComputedRef 的值。
+        () => config.value.core_components_manifest_url,
+
+        // 当 URL 变化时执行的回调
+        (newUrl, oldUrl) => {
+            // 这个判断非常重要：
+            // 1. 确保新旧值都存在 (避免在初始加载时触发)
+            // 2. 确保新旧值确实不同
+            if (newUrl && oldUrl && newUrl !== oldUrl) {
+                console.info(`[UpdaterStore] 检测到更新源变化，将自动刷新组件列表...`);
+                // 直接调用本 store 的 initialize action
+                initialize();
+            }
+        }
+    );
 
     // --- 4. 返回需要暴露给外部的状态和方法 ---
     return {
@@ -414,8 +422,7 @@ function processComponent(
         {
             status = 'update_available';
             statusText = '可更新';
-        }
-        else
+        } else
         {
             status = 'uptodate';
             statusText = '最新';

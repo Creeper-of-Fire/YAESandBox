@@ -151,7 +151,7 @@ function handleAction()
   justify-content: space-between;
   align-items: flex-start;
   padding: 0.75rem 0;
-  border-bottom: 1px solid #f0f0f0;
+  border-bottom: 1px solid var(--border-color-soft);
 }
 
 .component-list-item:last-child {
@@ -169,7 +169,7 @@ function handleAction()
 .name {
   font-weight: 600;
   font-size: 1rem;
-  color: #2c3e50;
+  color: var(--text-color-accent);
 }
 
 /* --- 右侧状态和操作按钮 --- */
@@ -187,31 +187,31 @@ function handleAction()
   padding: 0.2em 0.6em;
   border-radius: 12px;
   font-weight: bold;
-  color: #fff;
+  color: var(--text-color-inverted);
   width: 50px; /* 固定宽度以便对齐 */
   text-align: center;
   white-space: nowrap;
 }
 
 .status-uptodate {
-  background-color: #28a745;
+  background-color: var(--color-success);
 }
 
 .status-update_available {
-  background-color: #ffc107;
-  color: #333;
+  background-color: var(--color-warning);
+  color: var(--text-color-on-warning);
 }
 
 .status-not_installed {
-  background-color: #6c757d;
+  background-color: var(--color-secondary);
 }
 
 .status-downloading, .status-installing, .status-pending_install {
-  background-color: #007bff;
+  background-color: var(--color-brand);
 }
 
 .status-error {
-  background-color: #dc3545;
+  background-color: var(--color-danger);
 }
 
 /* --- 描述信息 --- */
@@ -231,7 +231,7 @@ function handleAction()
 .summary-text {
   margin: 0;
   font-size: 0.9rem;
-  color: #666;
+  color: var(--text-color-muted);
   white-space: nowrap; /* 强制单行 */
   overflow: hidden;
   text-overflow: ellipsis; /* 超出部分显示省略号 */
@@ -243,7 +243,7 @@ function handleAction()
   align-items: center;
   gap: 0.15rem;
   font-size: 0.95rem; /* 增大字体 */
-  color: #555;
+  color: var(--text-color-secondary);
 }
 
 .version-tag {
@@ -254,14 +254,14 @@ function handleAction()
 }
 
 .local-version {
-  background-color: #f0f0f0;
-  color: #666;
+  background-color: var(--bg-color-code);
+  color: var(--text-color-muted);
   text-decoration: line-through;
 }
 
 .remote-version {
-  background-color: #e6ffed;
-  color: #28a745;
+  background-color: var(--bg-color-success-soft);
+  color: var(--color-success);
 }
 
 .arrow {
@@ -272,8 +272,8 @@ function handleAction()
 /* --- 详情按钮 --- */
 .details-button {
   background: none;
-  border: 1px solid #007bff;
-  color: #007bff;
+  border: 1px solid var(--color-brand);
+  color: var(--color-brand);
   padding: 0.2rem 0.6rem;
   font-size: 0.8rem;
   border-radius: 4px;
@@ -283,12 +283,12 @@ function handleAction()
 }
 
 .details-button:hover {
-  background-color: #e6f2ff;
+  background-color: var(--bg-color-hover);
 }
 
 /* --- 超链接样式的 "详情" 按钮 ---  */
 .details-link {
-  color: #007bff;
+  color: var(--text-color-link);
   text-decoration: none;
   font-size: 0.85rem;
   cursor: pointer;
@@ -300,9 +300,8 @@ function handleAction()
 
 .details-link:hover {
   text-decoration: underline;
-  color: #0056b3;
+  color: var(--text-color-link-hover);
 }
-
 
 /* --- 模态框 (Modal) 样式 --- */
 .modal-body {
@@ -324,12 +323,12 @@ progress {
 
 .progress-text {
   font-size: 0.8em;
-  color: #555;
+  color: var(--text-color-secondary);
   min-width: 120px;
 }
 
 .error-text {
-  color: #dc3545;
+  color: var(--color-danger);
   font-size: 0.85em;
   margin-top: 0.5rem;
 }

@@ -3,12 +3,12 @@ use std::path::{Path, PathBuf};
 use tauri::{Manager, WebviewUrl};
 mod commands;
 pub mod core;
-use std::sync::Mutex;
-use tauri::menu::{Menu, MenuItemBuilder, SubmenuBuilder};
-use tauri::{AppHandle, Wry};
-
+use crate::commands::config_cmd::get_theme_from_string;
 #[cfg(windows)]
 use crate::core::job_object::JobObject;
+use std::sync::Mutex;
+use tauri::menu::{Menu, MenuItemBuilder, SubmenuBuilder};
+use tauri::{AppHandle, Theme, Wry};
 
 // 定义一个结构体来存储我们的应用级状态
 // 这里我们存入应用的根目录路径
@@ -69,8 +69,33 @@ fn show_log_viewer(app_handle: &AppHandle) {
 fn create_app_menu(app_handle: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let handle = app_handle;
 
+    let restart_item = MenuItemBuilder::new("重启")
+        .id("restart-app")
+        .build(handle)?;
+
     // 创建“文件”子菜单
-    let file_menu = SubmenuBuilder::new(handle, "文件").close_window().build()?;
+    let file_menu = SubmenuBuilder::new(handle, "文件")
+        .close_window()
+        .separator()
+        .item(&restart_item)
+        .build()?;
+
+    // 创建“主题”子菜单
+    let theme_auto = MenuItemBuilder::new("跟随系统")
+        .id("set-theme-auto")
+        .build(handle)?;
+    let theme_light = MenuItemBuilder::new("浅色模式")
+        .id("set-theme-light")
+        .build(handle)?;
+    let theme_dark = MenuItemBuilder::new("深色模式")
+        .id("set-theme-dark")
+        .build(handle)?;
+
+    let theme_submenu = SubmenuBuilder::new(handle, "主题")
+        .item(&theme_auto)
+        .item(&theme_light)
+        .item(&theme_dark)
+        .build()?;
 
     // 创建“视图”子菜单
     let toggle_log_item = MenuItemBuilder::new("显示开发者日志")
@@ -85,6 +110,8 @@ fn create_app_menu(app_handle: &AppHandle) -> tauri::Result<Menu<Wry>> {
     let view_menu = SubmenuBuilder::new(handle, "视图")
         .item(&toggle_log_item)
         .separator()
+        .item(&theme_submenu)
+        .separator()
         .item(&devtools_item)
         .build()?;
 
@@ -92,6 +119,22 @@ fn create_app_menu(app_handle: &AppHandle) -> tauri::Result<Menu<Wry>> {
     Menu::with_items(handle, &[&file_menu, &view_menu])
 }
 
+/// 一个辅助函数，用于在应用启动时确定初始主题
+fn get_initial_theme(app_dir: &Path) -> Option<Theme> {
+    let doc = match core::config::load_or_initialize(app_dir) {
+        Ok(doc) => doc,
+        Err(e) => {
+            log::error!("[Theme] 无法加载配置以确定初始主题: {}", e);
+            return None; // 如果配置加载失败，则默认跟随系统
+        }
+    };
+    let theme_str =
+        core::config::get_value(&doc, "Appearance", "theme").unwrap_or_else(|| "auto".to_string());
+
+    log::info!("[Theme] 从配置加载初始主题: {}", theme_str);
+
+    Option::from(get_theme_from_string(&theme_str))
+}
 
 #[tauri::command]
 async fn show_app_menu(window: tauri::Window) {
@@ -99,7 +142,12 @@ async fn show_app_menu(window: tauri::Window) {
     if let Some(menu) = window.menu() {
         // 使用 popup_menu_at 来更好地控制位置
         // 0,0 坐标相对于窗口左上角，正好在我们的按钮下方
-        window.popup_menu_at(&menu, tauri::Position::Logical(tauri::LogicalPosition{ x: 0.0, y: 0.0 })).unwrap();
+        window
+            .popup_menu_at(
+                &menu,
+                tauri::Position::Logical(tauri::LogicalPosition { x: 0.0, y: 0.0 }),
+            )
+            .unwrap();
     } else {
         log::warn!("尝试显示菜单，但窗口没有附加菜单。");
     }
@@ -114,6 +162,8 @@ pub fn run() {
                 .ok()
                 .and_then(|p| p.parent().map(|p| p.to_path_buf()))
                 .expect("未能获取可执行文件所在目录");
+
+            let initial_theme = get_initial_theme(&exe_dir);
 
             // 2. 定义我们想要的 WebView2 缓存目录
             //    建议放在一个子文件夹内，保持整洁
@@ -134,9 +184,15 @@ pub fn run() {
             .data_directory(data_dir) // 在这里设置数据/缓存目录
             .disable_drag_drop_handler() // 禁用窗口拖拽事件处理器，以使用html5原生拖拽
             .devtools(true) //启用开发者工具
+            .theme(initial_theme)
             .menu(menu)
             .on_menu_event(|window, event| {
+                let state = window.state::<AppState>();
                 match event.id.as_ref() {
+                    "restart-app" => {
+                        log::info!("[Menu] 重启应用事件触发");
+                        window.app_handle().restart();
+                    }
                     "toggle-log-view" => {
                         log::info!("[Menu] 切换日志视图事件触发");
                         // `window.app_handle()` 可以获取到 AppHandle
@@ -151,6 +207,27 @@ pub fn run() {
                         if let Some(webview_window) = app.get_webview_window(label) {
                             // 4. 在 WebviewWindow 上调用 open_devtools
                             webview_window.open_devtools();
+                        }
+                    }
+                    "set-theme-auto" => {
+                        if let Err(e) =
+                            commands::config_cmd::set_and_apply_theme(&state.app_dir,window.app_handle(), "auto")
+                        {
+                            log::error!("设置主题为 'auto' 失败: {}", e);
+                        }
+                    }
+                    "set-theme-light" => {
+                        if let Err(e) =
+                            commands::config_cmd::set_and_apply_theme(&state.app_dir,window.app_handle(), "light")
+                        {
+                            log::error!("设置主题为 'light' 失败: {}", e);
+                        }
+                    }
+                    "set-theme-dark" => {
+                        if let Err(e) =
+                            commands::config_cmd::set_and_apply_theme(&state.app_dir,window.app_handle(), "dark")
+                        {
+                            log::error!("设置主题为 'dark' 失败: {}", e);
                         }
                     }
                     _ => {}
@@ -174,10 +251,11 @@ pub fn run() {
             commands::unzip::unzip_file,
             commands::fs_utils::delete_file,
             commands::process::start_local_backend,
-            commands::config_cmd::read_config_as_string,
-            commands::config_cmd::write_config_as_string,
+            commands::config_cmd::read_config,
+            commands::config_cmd::write_config,
             commands::manifest::fetch_manifest,
             commands::updater_cmd::apply_launcher_self_update,
+            commands::restart_application::restart_application,
             commands::update_manager::get_local_versions,
             commands::download::download_and_verify_zip,
             commands::update_manager::update_local_version,

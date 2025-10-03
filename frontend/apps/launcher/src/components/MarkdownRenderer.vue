@@ -35,7 +35,7 @@ const renderedHtml = computed(() =>
 .markdown-body {
   line-height: 1.6;
   font-size: 1rem; /* 根据你的应用调整基础字号 */
-  color: #333;
+  color: var(--text-color-primary);
 }
 .markdown-body h1,
 .markdown-body h2,
@@ -43,7 +43,7 @@ const renderedHtml = computed(() =>
   margin-top: 1.5em;
   margin-bottom: 0.75em;
   font-weight: 600;
-  border-bottom: 1px solid #eee;
+  border-bottom: 1px solid var(--border-color-divider);
   padding-bottom: 0.3em;
 }
 
@@ -62,7 +62,7 @@ const renderedHtml = computed(() =>
 }
 
 .markdown-body a {
-  color: #007bff;
+  color: var(--text-color-link);
   text-decoration: none;
 }
 
@@ -71,7 +71,7 @@ const renderedHtml = computed(() =>
 }
 
 .markdown-body code {
-  background-color: #f0f0f0;
+  background-color: var(--bg-color-code);
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace;
@@ -80,7 +80,7 @@ const renderedHtml = computed(() =>
 
 /* 针对 `<code>` 标签的通用样式 */
 .markdown-body code {
-  background-color: #f0f0f0;
+  background-color: var(--bg-color-code);
   padding: 0.2em 0.4em;
   border-radius: 3px;
   font-family: monospace;
@@ -88,7 +88,7 @@ const renderedHtml = computed(() =>
 
 /* 针对 `<pre>` 块中的 `<code>` 标签 (即代码块) */
 .markdown-body pre {
-  background-color: #f6f8fa; /* 给代码块一个不同的背景色 */
+  background-color: var(--bg-color-code-block); /* 给代码块一个不同的背景色 */
   padding: 1em;
   border-radius: 6px;
   /* 核心：让 pre 元素自己处理溢出 */
@@ -105,9 +105,9 @@ const renderedHtml = computed(() =>
 }
 
 .markdown-body blockquote {
-  border-left: 0.25em solid #dfe2e5;
+  border-left: 0.25em solid var(--border-color-medium);
   padding: 0 1em;
-  color: #6a737d;
+  color: var(--text-color-muted);
   margin-left: 0;
   margin-right: 0;
 }
