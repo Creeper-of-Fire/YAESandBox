@@ -77,15 +77,4 @@ const emit = defineEmits(['confirm', 'cancel']);
   justify-content: flex-end;
   gap: 1rem;
 }
-
-/* 复用 App.vue 的按钮样式 */
-.button-primary, .button-secondary {
-  padding: 0.6em 1.2em;
-  border-radius: 6px;
-  border: 1px solid transparent;
-  cursor: pointer;
-  font-weight: 500;
-}
-.button-primary { background-color: #007bff; color: white; }
-.button-secondary { background-color: #6c757d; color: white; }
 </style>
