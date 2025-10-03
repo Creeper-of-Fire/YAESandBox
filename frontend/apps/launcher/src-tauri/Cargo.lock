@@ -6037,7 +6037,7 @@ dependencies = [
 
 [[package]]
 name = "yaesandbox-launcher"
-version = "0.0.9"
+version = "0.0.33"
 dependencies = [
  "futures-util",
  "hex",

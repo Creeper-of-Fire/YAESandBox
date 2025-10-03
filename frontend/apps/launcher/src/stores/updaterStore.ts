@@ -3,7 +3,8 @@ import {invoke} from '@tauri-apps/api/core';
 import {listen, type UnlistenFn} from '@tauri-apps/api/event';
 import semver from 'semver';
 import {computed, ref} from "vue";
-import { useConfigStore } from "./configStore.ts";
+import {useConfigStore} from "./configStore.ts";
+import {launcherName} from "../utils/constant.ts";
 
 // --- 1. 类型定义 ---
 
@@ -19,13 +20,15 @@ export type ComponentStatus =
     | 'error'; // 发生错误
 
 // 统一的组件数据结构
-export interface Component {
+export interface Component
+{
     id: string;
     name: string;
     type: 'core' | 'plugin';
     localVersion: string | null;
     remoteVersion: string;
     notes?: string;
+    description?: string;
     url: string;
     hash: string;
     extractPath: string;
@@ -37,27 +40,30 @@ export interface Component {
     error: string | null;
 }
 
-export interface AppConfig {
+export interface AppConfig
+{
     plugins_manifest_url: string;
     core_components_manifest_url: string;
     proxy_address: string | null;
 }
 
 // 用于Tauri事件的Payload类型
-interface DownloadProgressPayload {
+interface DownloadProgressPayload
+{
     id: string;
     downloaded: number;
     total: number | null;
 }
 
 const CORE_COMPONENTS_CONFIG: { id: string; extractPath: string }[] = [
-    {id: 'launcher', extractPath: 'manual_downloads/launcher_update'},
+    {id: launcherName, extractPath: 'manual_downloads/launcher_update'},
     {id: 'app', extractPath: 'wwwroot'},
     {id: 'backend', extractPath: 'backend'},
 ];
 
 // --- 2. Pinia Store 定义 ---
-export const useUpdaterStore = defineStore('updater', () => {
+export const useUpdaterStore = defineStore('updater', () =>
+{
     // --- 1. State (用 ref 定义) ---
     const components = ref<Record<string, Component>>({});
     const isChecking = ref(false);
@@ -74,9 +80,21 @@ export const useUpdaterStore = defineStore('updater', () => {
 
 
     // --- 2. Getters (用 computed 定义) ---
-    const coreComponents = computed(() => Object.values(components.value).filter(c => c.type === 'core').sort((a, b) => a.name.localeCompare(b.name)));
-    const pluginComponents = computed(() => Object.values(components.value).filter(c => c.type === 'plugin').sort((a, b) => a.name.localeCompare(b.name)));
-    const availableUpdates = computed(() => Object.values(components.value).filter(c => (c.status === 'not_installed' || c.status === 'update_available') && c.id !== 'launcher'));
+    const launcherComponent = computed<Component | undefined>(() => {
+        return Object.values(components.value).find(c => c.id === 'launcher');
+    });
+
+    const coreComponents = computed(() => Object.values(components.value)
+        .filter(c => c.type === 'core' && c.id !== launcherName)
+        .sort((a, b) => a.name.localeCompare(b.name)));
+
+    const pluginComponents = computed(() => Object.values(components.value)
+        .filter(c => c.type === 'plugin')
+        .sort((a, b) => a.name.localeCompare(b.name)));
+
+    const availableUpdates = computed(() => Object.values(components.value)
+        .filter(c => (c.status === 'not_installed' || c.status === 'update_available') && c.id !== launcherName));
+
     // const isBusy = computed(() => Object.values(components.value).some(c => ['downloading', 'installing', 'pending_install'].includes(c.status)));
     // isDownloading 只是一个状态查询，用于UI反馈，不用于逻辑锁定。
     const isDownloading = computed(() => Object.values(components.value).some(c => c.status === 'downloading'));
@@ -87,25 +105,29 @@ export const useUpdaterStore = defineStore('updater', () => {
     /**
      * 启动时执行一次，获取所有信息
      */
-    async function initialize() {
+    async function initialize(): Promise<void>
+    {
         isChecking.value = true;
         globalStatusMessage.value = '正在加载配置...';
         globalError.value = null;
 
         const configStore = useConfigStore();
-        if (!configStore.parsedConfig) {
+        if (!configStore.parsedConfig)
+        {
             await configStore.loadConfig();
         }
 
         const config = configStore.parsedConfig;
-        if (!config || !config.core_components_manifest_url || !config.plugins_manifest_url) {
+        if (!config || !config.core_components_manifest_url || !config.plugins_manifest_url)
+        {
             globalError.value = '配置文件无效或缺失关键URL。';
             globalStatusMessage.value = '配置错误。';
             isChecking.value = false;
             return;
         }
 
-        try {
+        try
+        {
             globalStatusMessage.value = '正在获取版本信息...';
 
             const [localVersions, coreManifest, pluginManifest] = await Promise.all([
@@ -123,30 +145,37 @@ export const useUpdaterStore = defineStore('updater', () => {
             const newComponents: Record<string, Component> = {};
             const configMap = new Map(CORE_COMPONENTS_CONFIG.map(c => [c.id, c]));
 
-            for (const remote of coreManifest.components) {
+            for (const remote of coreManifest.components)
+            {
                 const cfg = configMap.get(remote.id);
                 if (!cfg) continue;
                 newComponents[remote.id] = processComponent(remote, localVersions, 'core', cfg.extractPath);
             }
 
-            for (const remote of pluginManifest) {
+            for (const remote of pluginManifest)
+            {
                 newComponents[remote.id] = processComponent(remote, localVersions, 'plugin', `Plugins/${remote.id}`);
             }
 
             components.value = newComponents;
 
-            const updateCount = availableUpdates.value.length + (components.value['launcher']?.status === 'update_available' ? 1 : 0);
-            if (updateCount > 0) {
+            const updateCount = availableUpdates.value.length + (components.value[launcherName]?.status === 'update_available' ? 1 : 0);
+            if (updateCount > 0)
+            {
                 globalStatusMessage.value = `发现 ${updateCount} 个可用更新。`;
-            } else {
+            }
+            else
+            {
                 globalStatusMessage.value = '所有组件都已是最新版本。';
             }
 
-        } catch (e) {
+        } catch (e)
+        {
             globalError.value = `初始化失败: ${String(e)}`;
             globalStatusMessage.value = '检查更新时发生错误。';
             console.error(e);
-        } finally {
+        } finally
+        {
             isChecking.value = false;
         }
     }
@@ -154,17 +183,23 @@ export const useUpdaterStore = defineStore('updater', () => {
     /**
      * 监听后端的下载进度事件
      */
-    async function listenForProgress() {
+    async function listenForProgress()
+    {
         if (unlistenProgress)
             unlistenProgress();
-        unlistenProgress = await listen<DownloadProgressPayload>('download-progress', (event) => {
+        unlistenProgress = await listen<DownloadProgressPayload>('download-progress', (event) =>
+        {
             const component = components.value[event.payload.id];
-            if (component) {
+            if (component)
+            {
                 const {downloaded, total} = event.payload;
-                if (total) {
+                if (total)
+                {
                     component.progress.percentage = Math.round((downloaded / total) * 100);
                     component.progress.text = `${(downloaded / 1024 / 1024).toFixed(2)}MB / ${(total / 1024 / 1024).toFixed(2)}MB`;
-                } else {
+                }
+                else
+                {
                     component.progress.text = `已下载 ${(downloaded / 1024 / 1024).toFixed(2)}MB`;
                 }
             }
@@ -174,9 +209,11 @@ export const useUpdaterStore = defineStore('updater', () => {
     /**
      * 下载单个组件（并行触发）
      */
-    async function downloadComponent(id: string) {
+    async function downloadComponent(id: string)
+    {
         const component = components.value[id];
-        if (!component || component.status === 'downloading' || isInstalling.value) {
+        if (!component || component.status === 'downloading' || isInstalling.value)
+        {
             return;
         }
 
@@ -188,7 +225,8 @@ export const useUpdaterStore = defineStore('updater', () => {
         const configStore = useConfigStore(); // 获取 configStore
         const proxy = configStore.parsedConfig?.proxy_address;
 
-        try {
+        try
+        {
             const savePath = `downloads/${component.id}.zip`;
             await invoke('download_and_verify_zip', {
                 id, url: component.url, relativePath: savePath,
@@ -197,7 +235,8 @@ export const useUpdaterStore = defineStore('updater', () => {
             component.status = 'pending_install';
             component.statusText = '等待安装';
             startInstallQueue();
-        } catch (e) {
+        } catch (e)
+        {
             component.status = 'error';
             component.statusText = '下载失败';
             component.error = String(e);
@@ -208,7 +247,8 @@ export const useUpdaterStore = defineStore('updater', () => {
      * 查找下一个待安装的组件。这是一个内部辅助函数。
      * @returns {Component | undefined}
      */
-    function findNextPendingInstall(): Component | undefined {
+    function findNextPendingInstall(): Component | undefined
+    {
         // 这里可以加入优先级逻辑，比如先安装核心组件
         return Object.values(components.value).find(c => c.status === 'pending_install');
     }
@@ -216,7 +256,8 @@ export const useUpdaterStore = defineStore('updater', () => {
     /**
      * 下载所有可用更新（启动器除外）
      */
-    function downloadAll() {
+    function downloadAll()
+    {
         availableUpdates.value.forEach(component => downloadComponent(component.id));
     }
 
@@ -225,13 +266,16 @@ export const useUpdaterStore = defineStore('updater', () => {
      * 只要 isInstalling 为 true，它就会不断检查队列并处理任务。
      * 它不应该被外部直接 await。
      */
-    async function installationWorker() {
+    async function installationWorker()
+    {
         // 只要这个“工人”还在上班 (isInstalling is true)
-        while (isInstalling.value) {
+        while (isInstalling.value)
+        {
             const componentToInstall = findNextPendingInstall();
 
             // 如果没有更多任务，工人下班
-            if (!componentToInstall) {
+            if (!componentToInstall)
+            {
                 isInstalling.value = false;
                 // console.log('[Installer] 队列已清空，工人下班。');
                 return; // 退出循环
@@ -241,7 +285,8 @@ export const useUpdaterStore = defineStore('updater', () => {
             componentToInstall.status = 'installing';
             componentToInstall.statusText = '安装中...';
 
-            try {
+            try
+            {
                 const savePath = `downloads/${componentToInstall.id}.zip`;
                 await invoke('unzip_file', {
                     zipRelativePath: savePath,
@@ -257,7 +302,8 @@ export const useUpdaterStore = defineStore('updater', () => {
                 componentToInstall.statusText = '最新';
                 componentToInstall.localVersion = componentToInstall.remoteVersion;
                 // console.log(`[Installer] 任务成功: ${componentToInstall.name}`);
-            } catch (e) {
+            } catch (e)
+            {
                 componentToInstall.status = 'error';
                 componentToInstall.statusText = '安装失败';
                 componentToInstall.error = String(e);
@@ -272,15 +318,18 @@ export const useUpdaterStore = defineStore('updater', () => {
      * 它的作用是叫醒“工人”，如果工人已经在工作，则什么也不做。
      * 这个函数是“Fire and Forget”，它的意图就是触发一个后台任务。
      */
-    function startInstallQueue() {
+    function startInstallQueue()
+    {
         // 如果工人已经在工作了，就不用再叫他了
-        if (isInstalling.value) {
+        if (isInstalling.value)
+        {
             // console.log('[Installer] 工人已在工作中，无需再次启动。');
             return;
         }
 
         // 检查是否有需要处理的任务
-        if (findNextPendingInstall()) {
+        if (findNextPendingInstall())
+        {
             // console.log('[Installer] 发现待处理任务，叫工人来上班。');
             isInstalling.value = true;
             // 叫醒工人，让他开始工作。我们不等待他完成所有工作。
@@ -291,15 +340,17 @@ export const useUpdaterStore = defineStore('updater', () => {
     /**
      * 【特殊】处理启动器自更新
      */
-    async function updateLauncher() {
-        const component = components.value['launcher'];
+    async function updateLauncher()
+    {
+        const component = components.value[launcherName];
         if (!component || isInstalling.value) return;
 
         component.status = 'downloading';
         component.statusText = '下载中';
         component.error = null;
 
-        try {
+        try
+        {
             const savePath = `downloads/${component.id}_update.zip`;
             await invoke('download_and_verify_zip', {
                 id: component.id, url: component.url, relativePath: savePath,
@@ -311,7 +362,8 @@ export const useUpdaterStore = defineStore('updater', () => {
                 zipRelativePath: savePath,
                 newVersion: component.remoteVersion,
             });
-        } catch (e) {
+        } catch (e)
+        {
             component.status = 'error';
             component.statusText = '更新失败';
             component.error = String(e);
@@ -329,6 +381,7 @@ export const useUpdaterStore = defineStore('updater', () => {
         globalError,
 
         // Getters
+        launcherComponent,
         coreComponents,
         pluginComponents,
         availableUpdates,
@@ -349,16 +402,21 @@ function processComponent(
     localVersions: Record<string, string>,
     type: 'core' | 'plugin',
     extractPath: string
-): Component {
+): Component
+{
     const localVersion = localVersions[remote.id] || null;
     let status: ComponentStatus = 'not_installed';
     let statusText: string = '未安装';
 
-    if (localVersion) {
-        if (semver.gt(remote.version, localVersion)) {
+    if (localVersion)
+    {
+        if (semver.gt(remote.version, localVersion))
+        {
             status = 'update_available';
             statusText = '可更新';
-        } else {
+        }
+        else
+        {
             status = 'uptodate';
             statusText = '最新';
         }

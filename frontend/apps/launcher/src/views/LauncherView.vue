@@ -5,6 +5,7 @@ import ComponentItem from '../components/ComponentItem.vue';
 import {useUpdaterStore} from "../stores/updaterStore.ts";
 import {type ManifestMode, useConfigStore} from "../stores/configStore.ts";
 import ConfirmationDialog from "../components/ConfirmationDialog.vue";
+import SpecialComponentItem from "../components/SpecialComponentItem.vue";
 
 const updaterStore = useUpdaterStore();
 const configStore = useConfigStore();
@@ -122,6 +123,13 @@ async function handleRefresh() {
         <button @click="updaterStore.initialize()" class="button-secondary">重试</button>
       </div>
 
+      <section v-if="updaterStore.launcherComponent" class="launcher-update-section"
+               :class="{ 'update-available': updaterStore.launcherComponent.status === 'update_available' }">
+        <SpecialComponentItem
+            :component="updaterStore.launcherComponent"
+        />
+      </section>
+
       <!-- 组件列表 -->
       <div class="component-lists">
         <!-- 核心组件 -->
@@ -218,7 +226,7 @@ async function handleRefresh() {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  padding: 1.5rem;
+  padding: 1rem;
   box-sizing: border-box;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
   text-align: center;
@@ -226,7 +234,7 @@ async function handleRefresh() {
 }
 
 header {
-  margin-bottom: 1.5rem;
+  margin-bottom: 1.2rem;
 }
 
 h1 {
@@ -251,17 +259,19 @@ h1 {
 .main-content {
   flex-grow: 1;
   overflow-y: auto; /* 让组件列表区域可以滚动 */
-  padding: 0 1rem;
+  padding: 0 0.5rem;
 }
 
-.progress-section {
-  margin-bottom: 2rem;
-}
-
-.progress-text {
-  margin-left: 1em;
-  font-size: 0.9em;
-  color: #555;
+/* 启动器更新区域的专属样式 */
+.launcher-update-section {
+  max-width: 800px;
+  margin: 0 auto 1.5rem auto; /* 居中并在下方留出间距 */
+  border-radius: 8px;
+  border: 2px solid transparent;
+  background-color: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  transition: all 0.3s ease;
+  overflow: hidden; /* 确保内部 ComponentItem 的样式不会溢出 */
 }
 
 .error-section {
@@ -298,8 +308,8 @@ h1 {
 .component-section {
   background-color: #fff;
   border-radius: 8px;
-  padding: 1.5rem;
-  margin-bottom: 1.5rem;
+  padding: 1.2rem;
+  margin-bottom: 1.2rem;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
@@ -325,7 +335,7 @@ h1 {
 }
 
 footer {
-  padding-top: 1.5rem;
+  padding-top: 1.2rem;
   border-top: 1px solid #e0e0e0;
   background-color: #f7f9fc;
 }
@@ -378,8 +388,8 @@ footer {
 }
 
 .button-launch {
-  padding: 0.8rem 2.5rem;
-  font-size: 1.1rem;
+  padding: 0.7rem 2rem;
+  font-size: 1rem;
   background-color: #17a2b8;
   color: white;
   border-color: #17a2b8;
