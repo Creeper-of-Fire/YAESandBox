@@ -320,6 +320,14 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     // 内部 Getter & Action (加下划线表示，约定不对外暴露)
     // =================================================================
 
+    const getApiServiceForType = (type: ConfigType) => {
+        switch (type) {
+            case 'workflow': return WorkflowConfigService;
+            case 'tuum': return TuumConfigService;
+            case 'rune': return RuneConfigService;
+        }
+    };
+
     /**
      * @description 计算是否存在任何一个变脏的会话。
      */
@@ -381,6 +389,44 @@ export const useWorkbenchStore = defineStore('workbench', () =>
     // =================================================================
     // 公共 API (暴露给外部世界的精简接口)
     // =================================================================
+
+    async function renameGlobalConfig(type: ConfigType, storeId: string, newName: string) {
+        // 1. 获取 API 服务
+        const api = getApiServiceForType(type);
+
+        // 2. 获取原始配置项
+        // 我们直接调用 API 获取最新的、权威的数据，而不是依赖本地可能过时的缓存
+        const storedConfig = await (api as any).getApiV1WorkflowsConfigsGlobalRunes1({ storeId });
+        if (!storedConfig || !storedConfig.content) {
+            throw new Error("无法获取配置项，它可能已被删除。");
+        }
+
+        // 3. 更新名称
+        storedConfig.content.name = newName;
+
+        // 4. 调用 put 方法保存更新后的整个 StoredConfig 对象
+        await (api as any).putApiV1WorkflowsConfigsGlobalRunes({ storeId, requestBody: storedConfig });
+
+        // 5. 更新本地缓存
+        const getAsyncState = () => {
+            switch(type) {
+                case 'workflow': return globalWorkflowsAsync;
+                case 'tuum': return globalTuumsAsync;
+                case 'rune': return globalRunesAsync;
+            }
+        };
+        const asyncState = getAsyncState();
+        const stateItem = asyncState.value.state?.[storeId];
+
+        if (stateItem && stateItem.isSuccess) {
+            stateItem.data.name = newName;
+        }
+
+        // 6. 如果有活跃的会话，也要更新会话中的名称
+        if(activeSessions[storeId]) {
+            activeSessions[storeId].rename(newName);
+        }
+    }
 
     /**
      * @description 从后端和本地状态中删除一个全局配置项。
@@ -611,6 +657,7 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         // 其他
         createGlobalConfig,
         deleteGlobalConfig,
+        renameGlobalConfig,
 
         // --- 内部方法，供 GlobalEditSession 使用 ---
         // Vue 3 的 defineStore setup 语法不允许真正意义上的私有化，
