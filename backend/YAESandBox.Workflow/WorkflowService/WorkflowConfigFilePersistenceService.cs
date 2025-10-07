@@ -192,14 +192,6 @@ public class WorkflowConfigFilePersistenceService(IUserScopedStorageFactory user
         _ = userStorage.SaveAllAsync(upgradedConfig, filePath);
 
         return Result.Ok(upgradedConfig);
-
-        // 辅助方法，尝试通过反射从内容对象中获取 Name 属性
-        static string? TryGetNameFromContent(T content)
-        {
-            var nameProperty =
-                typeof(T).GetProperty("Name", System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance);
-            return nameProperty?.GetValue(content) as string;
-        }
     }
 
     private async Task<DictionaryResult<string, StoredConfig<T>>> FindAllConfig<T>(ScopeTemplate template, string userId)

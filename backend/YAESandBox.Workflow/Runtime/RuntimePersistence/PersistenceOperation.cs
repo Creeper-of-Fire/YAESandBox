@@ -91,7 +91,7 @@ public sealed class PersistenceOperation<TInput, TPayload>(
         if (existingState is null)
         {
             // 状态不存在，必须执行
-            return await RunExecute(currentInputs);
+            return await this.RunExecute(currentInputs);
         }
 
         switch (existingState)
@@ -102,18 +102,18 @@ public sealed class PersistenceOperation<TInput, TPayload>(
 
             case FailedState failedState:
                 Logger.Warn("持久化命中 (Failed): InstanceId={InstanceId}。返回缓存的错误。", instanceId);
-                return await RunCachedFailure(failedState);
+                return await this.RunCachedFailure(failedState);
 
             case RunningState runningState:
                 Logger.Info("持久化恢复 (Running): InstanceId={InstanceId}。尝试恢复输入并继续执行。", instanceId);
                 try
                 {
-                    return await RunExecute(runningState.GetInput<TInput>());
+                    return await this.RunExecute(runningState.GetInput<TInput>());
                 }
                 catch (Exception ex)
                 {
                     Logger.Error(ex, "为 InstanceId={InstanceId} 恢复输入失败，将使用当前输入。", instanceId);
-                    return await RunExecute(currentInputs);
+                    return await this.RunExecute(currentInputs);
                 }
 
             default:

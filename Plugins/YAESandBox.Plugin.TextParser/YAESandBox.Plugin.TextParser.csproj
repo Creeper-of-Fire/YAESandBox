@@ -36,16 +36,18 @@
         <MakeDir Directories="$(PluginDestination)"/>
 
         <ItemGroup>
-            <!-- a) 复制插件自己的主文件 -->
+            <!-- 复制插件自己的主文件 -->
             <FilesToCopy Include="$(OutputPath)$(AssemblyName).dll"/>
             <FilesToCopy Include="$(OutputPath)$(AssemblyName).pdb" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')"/>
             <FilesToCopy Include="$(OutputPath)$(AssemblyName).deps.json"/>
-
+        </ItemGroup>
+        <ItemGroup Condition="'@(PackageReference)' != ''">
             <!-- 
-              b) 【核心】自动将 PackageReference 列表转换为文件路径
+              自动将 PackageReference 列表转换为文件路径
                  - `%(PackageReference.Identity)`: 获取包名，例如 "AngleSharp"
                  - `$(OutputPath)%(PackageReference.Identity).dll`: 拼接出在本地输出目录中的完整路径
             -->
+            <!-- 仅当存在 PackageReference 时，才尝试复制 NuGet 包依赖。 -->
             <FilesToCopy Include="$(OutputPath)%(PackageReference.Identity).dll"/>
         </ItemGroup>
 

@@ -32,6 +32,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Workflow.Graph",
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Plugin.Rune.JavaScript", "..\Plugins\YAESandBox.Plugin.Rune.JavaScript\YAESandBox.Plugin.Rune.JavaScript.csproj", "{AC6C9E57-006F-48D1-B3CD-4F007B1882AC}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "YAESandBox.Plugin.FileSystemConfigProvider", "..\Plugins\YAESandBox.Plugin.FileSystemConfigProvider\YAESandBox.Plugin.FileSystemConfigProvider.csproj", "{43B61007-8781-40DA-8FA8-9A178D6EB433}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -129,6 +131,12 @@ Global
 		{AC6C9E57-006F-48D1-B3CD-4F007B1882AC}.Release|Any CPU.Build.0 = Release|Any CPU
 		{AC6C9E57-006F-48D1-B3CD-4F007B1882AC}.DebugGen|Any CPU.ActiveCfg = Debug|Any CPU
 		{AC6C9E57-006F-48D1-B3CD-4F007B1882AC}.DebugGen|Any CPU.Build.0 = Debug|Any CPU
+		{43B61007-8781-40DA-8FA8-9A178D6EB433}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43B61007-8781-40DA-8FA8-9A178D6EB433}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43B61007-8781-40DA-8FA8-9A178D6EB433}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43B61007-8781-40DA-8FA8-9A178D6EB433}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43B61007-8781-40DA-8FA8-9A178D6EB433}.DebugGen|Any CPU.ActiveCfg = Debug|Any CPU
+		{43B61007-8781-40DA-8FA8-9A178D6EB433}.DebugGen|Any CPU.Build.0 = Debug|Any CPU
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
 		{D1EBAAAC-8B93-49DE-B4CA-192C2BFC7BB7} = {5E79B2C8-4893-4D49-B459-B3FCBC122FA7}
