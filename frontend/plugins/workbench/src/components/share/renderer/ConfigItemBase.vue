@@ -14,7 +14,7 @@
          @click.stop
     >
       <n-icon :size="18">
-        <DragHandleOutlined/>
+        <DragHandleIcon/>
       </n-icon>
     </div>
 
@@ -46,7 +46,7 @@
 
 <script lang="ts" setup>
 import {NIcon, useThemeVars} from 'naive-ui';
-import {DragHandleOutlined} from '@yaesandbox-frontend/shared-ui/icons';
+import {DragHandleIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {computed, inject, ref, toRefs} from "vue";
 import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 import {vLazyRender} from '@yaesandbox-frontend/shared-ui'

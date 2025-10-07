@@ -82,6 +82,8 @@
 
       <!-- 2b. 可滚动的内容区域 -->
       <template #body>
+        <ConfigMetadataEditor v-if="fullDraft" :draft="fullDraft"/>
+
         <template v-if="session.type === 'workflow' && workflowData">
           <p class="sidebar-description">拖拽全局枢机到枢机列表，或将全局资源拖到此区域的任意位置以替换当前编辑项。</p>
           <WorkflowItemRenderer :workflow="workflowData"/>
@@ -143,6 +145,7 @@ import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
 import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 import RuneItemRenderer from "#/components/rune/RuneItemRenderer.vue";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
+import ConfigMetadataEditor from "#/components/share/ConfigMetadataEditor.vue";
 
 const props = defineProps<{}>();
 
@@ -157,6 +160,7 @@ const message = useMessage();
 // TODO之后转移到工作流内部
 const {switchContext, selectedContext, isReadOnly, updateSelectedConfig, activeContext} = useSelectedConfig();
 const session = computed(() => activeContext?.value?.session);
+const fullDraft = computed(() => session.value?.getFullDraft().value ?? null);
 
 function selectCurrentSessionItem()
 {

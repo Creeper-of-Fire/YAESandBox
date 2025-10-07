@@ -14,7 +14,7 @@ export {default as KeyboardArrowUpIcon} from '@vicons/material/es/KeyboardArrowU
 export {default as ArrowForwardIcon} from '@vicons/material/es/ArrowForwardOutlined';
 export {default as DeleteIcon} from '@vicons/material/es/DeleteOutlineRound';
 export {default as SettingsIcon} from '@vicons/ionicons5/es/SettingsOutline';
-export {default as DragHandleOutlined} from '@vicons/material/es/DragHandleOutlined';
+export {default as DragHandleIcon} from '@vicons/material/es/DragHandleOutlined';
 export {default as AddIcon} from '@vicons/material/es/AddCircleOutlineRound';
 export {default as ListIcon} from '@vicons/ionicons5/es/ListOutline';
 export {default as HelpCircleIcon} from '@vicons/ionicons5/es/HelpCircleOutline';
@@ -41,4 +41,5 @@ export {default as GraphIcon}from'@vicons/material/es/AutoGraphOutlined';
 export {default as SparklesIcon}from'@vicons/ionicons5/es/SparklesOutline';
 export {default as ErrorIcon}from'@vicons/material/es/ErrorOutlined';
 export {default as WarningIcon}from'@vicons/material/es/WarningOutlined';
+export {default as FolderIcon}from'@vicons/ionicons5/es/FolderOutline';
 // export {default as }from'@vicons/ionicons5/es/';
