@@ -1,17 +1,11 @@
 <!-- src/app-workbench/components/.../GlobalResourceListItem.vue -->
 <template>
-  <div v-if="item && item.isSuccess"
+  <div v-if="item.isSuccess"
+       ref="listItemRef"
        class="resource-item"
-       :class="{ 'is-dirty': isDirty }"
-       @click="handleStartEditing"
+       @dblclick="handleStartEditing"
        @contextmenu.prevent="$emit('contextmenu', { type, storeId:storeId, name: item.data.name, event: $event })"
   >
-
-    <div class="drag-handle-tree">
-      <n-icon>
-        <DragHandleIcon/>
-      </n-icon>
-    </div>
 
     <span class="item-name">
         {{ item.data.name }}
@@ -38,7 +32,7 @@
       编辑 “{{ item.data.name }}”
     </n-popover>
   </div>
-  <div v-else-if="item && !item.isSuccess"
+  <div v-else ref="listItemRef"
        class="resource-item-damaged"
        @contextmenu.prevent="$emit('contextmenu', { type, storeId:storeId, name: storeId, isDamaged: true, event: $event })"
   >
@@ -72,34 +66,29 @@
 
 <script lang="ts" setup>
 import {NButton, NIcon, useThemeVars} from 'naive-ui';
-import {DragHandleIcon, EditIcon, FindInPageIcon, LinkOffIcon} from '@yaesandbox-frontend/shared-ui/icons';
+import {onLongPress} from '@vueuse/core'
+import {EditIcon, FindInPageIcon, LinkOffIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import type {AnyConfigObject, ConfigType} from '#/services/GlobalEditSession.ts';
 import type {GlobalResourceItem} from '@yaesandbox-frontend/core-services/types';
-import {computed} from "vue";
+import {computed, ref} from "vue";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
-import {useEditorControlPayload} from '#/services/editor-context/useSelectedConfig.ts';
+import { useEditorControlPayload } from '#/services/editor-context/useSelectedConfig.ts';
 
 const props = defineProps<{
   storeId: string; // 原始 Record 的 key (资源的唯一ID)
+  item: GlobalResourceItem<AnyConfigObject>; // 包含成功/失败状态和数据的资源项
   type: ConfigType; // 资源的类型 ('workflow', 'tuum', 'rune')
 }>();
 
 const emit = defineEmits<{
   (e: 'show-error-detail', errorMessage: string, originJsonString: string | null | undefined): void; // 点击“详情”时触发
-  (e: 'contextmenu', payload: {
-    type: ConfigType;
-    storeId: string;
-    name: string;
-    isDamaged?: boolean;
-    event: MouseEvent | PointerEvent
-  }): void;
+  (e: 'contextmenu', payload: { type: ConfigType; storeId: string; name: string; isDamaged?: boolean; event: MouseEvent | PointerEvent }): void;
 }>();
 
 // *** 检查当前项是否变脏 ***
 const workbenchStore = useWorkbenchStore();
 
-const isDirty = computed(() =>
-{
+const isDirty = computed(() => {
   // 从 store 获取所有活跃的会话
   const sessions = workbenchStore.getActiveSessions;
   // 查找与当前列表项 storeId 匹配的会话
@@ -108,28 +97,31 @@ const isDirty = computed(() =>
   return currentSession ? currentSession.getIsDirty().value : false;
 });
 
-// 从 store 中动态获取 item 数据
-const item = computed(() => {
-  // 根据类型从对应的资源 map 中查找
-  switch (props.type) {
-    case 'workflow':
-      return workbenchStore.globalWorkflowsAsync.state?.[props.storeId];
-    case 'tuum':
-      return workbenchStore.globalTuumsAsync.state?.[props.storeId];
-    case 'rune':
-      return workbenchStore.globalRunesAsync.state?.[props.storeId];
-    default:
-      return null;
-  }
-});
 
-
-const {switchContext} = useEditorControlPayload();
-
-function handleStartEditing()
-{
+const { switchContext } = useEditorControlPayload();
+function handleStartEditing() {
   switchContext(props.type, props.storeId);
 }
+
+// 实现长按逻辑
+const listItemRef = ref<HTMLElement | null>(null);
+
+onLongPress(
+    listItemRef,
+    (event: PointerEvent) =>
+    {
+      // 长按触发时，总是发出 contextmenu 事件
+      // 我们在事件的 payload 中携带了所有必要的信息
+      emit('contextmenu', {
+        type: props.type,
+        storeId: props.storeId,
+        name: props.item.isSuccess ? props.item.data.name : props.storeId, // 根据成功/失败状态决定名称
+        isDamaged: !props.item.isSuccess,
+        event: event,
+      });
+    },
+    {delay: 500}
+);
 
 const themeVars = useThemeVars();
 </script>
@@ -155,15 +147,6 @@ const themeVars = useThemeVars();
 
 .resource-item:hover {
   background-color: v-bind('themeVars.hoverColor'); /* 悬停背景色 */
-}
-
-.drag-handle-tree {
-  padding: 0 8px;
-  cursor: grab;
-  color: v-bind('themeVars.textColor3');
-}
-.drag-handle-tree:active {
-  cursor: grabbing;
 }
 
 /* 让名称和按钮之间的空间更大，避免误触 */

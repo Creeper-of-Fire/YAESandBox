@@ -31,7 +31,7 @@
 
       <!-- 全局资源面板插槽 -->
       <template #global-panel>
-        <GlobalResourcePanel />
+        <GlobalResourcePanel @start-editing="handleStartEditing"/>
       </template>
 
       <!-- 当前编辑结构插槽 -->
@@ -39,6 +39,7 @@
         <WorkbenchSidebar
             :key="activeContext?.storeId ?? 'empty-session'"
             @closeSession="handleCloseSession"
+            @start-editing="handleStartEditing"
         />
       </template>
 
