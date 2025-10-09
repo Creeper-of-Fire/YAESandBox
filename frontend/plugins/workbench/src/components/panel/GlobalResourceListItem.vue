@@ -76,7 +76,6 @@ import { useEditorControlPayload } from '#/services/editor-context/useSelectedCo
 
 const props = defineProps<{
   storeId: string; // 原始 Record 的 key (资源的唯一ID)
-  item: GlobalResourceItem<AnyConfigObject>; // 包含成功/失败状态和数据的资源项
   type: ConfigType; // 资源的类型 ('workflow', 'tuum', 'rune')
 }>();
 
@@ -97,6 +96,18 @@ const isDirty = computed(() => {
   return currentSession ? currentSession.getIsDirty().value : false;
 });
 
+// 创建一个计算属性，根据 props.type 和 props.storeId 动态地从 store 中查找数据。
+// 这确保了组件始终访问的是 Pinia store 中最新的、经过响应式代理的源数据。
+const item = computed(() => {
+  let sourceState;
+  switch (props.type) {
+    case 'workflow': sourceState = workbenchStore.globalWorkflowsAsync.state; break;
+    case 'tuum': sourceState = workbenchStore.globalTuumsAsync.state; break;
+    case 'rune': sourceState = workbenchStore.globalRunesAsync.state; break;
+    default: return null;
+  }
+  return sourceState?.[props.storeId] as any; // any is fine here because template handles success/fail cases
+});
 
 const { switchContext } = useEditorControlPayload();
 function handleStartEditing() {
@@ -115,8 +126,8 @@ onLongPress(
       emit('contextmenu', {
         type: props.type,
         storeId: props.storeId,
-        name: props.item.isSuccess ? props.item.data.name : props.storeId, // 根据成功/失败状态决定名称
-        isDamaged: !props.item.isSuccess,
+        name: item.value.isSuccess ? item.value.data.name : props.storeId, // 根据成功/失败状态决定名称
+        isDamaged: !item.value.isSuccess,
         event: event,
       });
     },

@@ -87,7 +87,6 @@
                  data-drag-type="workflow"
             >
               <GlobalResourceListItem
-                  :item="element.item"
                   :store-id="element.storeId"
                   type="workflow"
                   @contextmenu="handleContextMenu"
@@ -117,7 +116,6 @@
                  data-drag-type="tuum"
             >
               <GlobalResourceListItem
-                  :item="element.item"
                   :store-id="element.storeId"
                   type="tuum"
                   @contextmenu="handleContextMenu"
@@ -147,7 +145,6 @@
                  data-drag-type="rune"
             >
               <GlobalResourceListItem
-                  :item="element.item"
                   :store-id="element.storeId"
                   type="rune"
                   @contextmenu="handleContextMenu"
