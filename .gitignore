@@ -62,6 +62,7 @@ runtimes/
 /dist/
 /build/
 /build-assets/
+!build/dist/.release_state.json
 /Data/
 */.idea/
 /.idea/
