@@ -51,6 +51,18 @@
           <n-tab name="rune" tab="符文"/>
         </n-tabs>
 
+        <n-form-item v-if="activeAvailableTags.length > 0" class="tag-filter-container">
+          <n-select
+              v-model:value="activeFilterTags"
+              :options="activeAvailableTags.map(tag => ({ label: tag, value: tag }))"
+              clearable
+              filterable
+              multiple
+              placeholder="按标签筛选..."
+              size="small"
+          />
+        </n-form-item>
+
 
       </template>
 
@@ -75,8 +87,8 @@
                  data-drag-type="workflow"
             >
               <GlobalResourceListItem
-                  :store-id="element.storeId"
                   :item="element.item"
+                  :store-id="element.storeId"
                   type="workflow"
                   @contextmenu="handleContextMenu"
                   @show-error-detail="showErrorDetail"
@@ -105,8 +117,8 @@
                  data-drag-type="tuum"
             >
               <GlobalResourceListItem
-                  :store-id="element.storeId"
                   :item="element.item"
+                  :store-id="element.storeId"
                   type="tuum"
                   @contextmenu="handleContextMenu"
                   @show-error-detail="showErrorDetail"
@@ -135,8 +147,8 @@
                  data-drag-type="rune"
             >
               <GlobalResourceListItem
-                  :store-id="element.storeId"
                   :item="element.item"
+                  :store-id="element.storeId"
                   type="rune"
                   @contextmenu="handleContextMenu"
                   @show-error-detail="showErrorDetail"
@@ -163,7 +175,7 @@
 
 
 <script lang="ts" setup>
-import {computed, h, nextTick, onMounted, reactive, ref} from 'vue';
+import {computed, h, nextTick, reactive, ref} from 'vue';
 import {type DropdownOption, NAlert, NButton, NEmpty, NFlex, NH4, NIcon, NSpin, NTab, NTabs, useDialog, useMessage} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore';
 import type {AnyConfigObject, ConfigType} from "#/services/GlobalEditSession.ts";
@@ -176,7 +188,7 @@ import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
 import {AddIcon, EditIcon, TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
 import {useEditorControlPayload} from "#/services/editor-context/useSelectedConfig.ts";
-import {useGlobalResources} from "#/composables/useGlobalResources.ts";
+import {useFilteredGlobalResources} from "#/composables/useFilteredGlobalResources.ts";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -191,9 +203,60 @@ const workbenchStore = useWorkbenchStore();
 const dialog = useDialog();
 const message = useMessage();
 
-const { resources: workflows, isLoading: isWorkflowsLoading, error: workflowsError, execute: executeWorkflows } = useGlobalResources('workflow');
-const { resources: tuums, isLoading: isTuumsLoading, error: tuumsError, execute: executeTuums } = useGlobalResources('tuum');
-const { resources: runes, isLoading: isRunesLoading, error: runesError, execute: executeRunes } = useGlobalResources('rune');
+const {
+  resources: workflows,
+  allAvailableTags: workflowTags,
+  filterTags: workflowFilterTags,
+  isLoading: isWorkflowsLoading,
+  error: workflowsError,
+  execute: executeWorkflows
+} = useFilteredGlobalResources('workflow');
+const {
+  resources: tuums,
+  allAvailableTags: tuumTags,
+    filterTags: tuumFilterTags,
+  isLoading: isTuumsLoading,
+  error: tuumsError,
+  execute: executeTuums
+} = useFilteredGlobalResources('tuum');
+const {
+  resources: runes,
+  allAvailableTags: runeTags,
+    filterTags: runeFilterTags,
+  isLoading: isRunesLoading,
+  error: runesError,
+  execute: executeRunes
+} = useFilteredGlobalResources('rune');
+
+// 可写的计算属性，用于 v-model 绑定到 n-select
+const activeFilterTags = computed({
+  get: () => {
+    switch (activeTab.value) {
+      case 'workflow': return workflowFilterTags.value;
+      case 'tuum': return tuumFilterTags.value;
+      case 'rune': return runeFilterTags.value;
+      default: return [];
+    }
+  },
+  set: (tags: string[]) => {
+    switch (activeTab.value) {
+      case 'workflow': workflowFilterTags.value = tags; break;
+      case 'tuum': tuumFilterTags.value = tags; break;
+      case 'rune': runeFilterTags.value = tags; break;
+    }
+  },
+});
+
+// 计算当前激活 Tab 的可用标签列表
+const activeAvailableTags = computed(() => {
+  switch (activeTab.value) {
+    case 'workflow': return workflowTags.value;
+    case 'tuum': return tuumTags.value;
+    case 'rune': return runeTags.value;
+    default: return [];
+  }
+});
+
 
 // 为所有资源类型创建可用于 v-model 的列表
 const workflowsList = computed({
@@ -218,7 +281,8 @@ const runesList = computed({
 const aggregatedIsLoading = computed(() => isWorkflowsLoading.value || isTuumsLoading.value || isRunesLoading.value);
 const aggregatedError = computed(() => workflowsError.value || tuumsError.value || runesError.value);
 
-function executeAll() {
+function executeAll()
+{
   executeWorkflows();
   executeTuums();
   executeRunes();
@@ -461,7 +525,7 @@ function handleContextMenu(payload: { type: ConfigType; storeId: string; name: s
   });
 }
 
-const { switchContext } = useEditorControlPayload();
+const {switchContext} = useEditorControlPayload();
 
 // 处理菜单项点击
 function handleDropdownSelect(key: 'edit' | 'delete')
@@ -567,5 +631,10 @@ function onDragEnd()
   flex-direction: column;
   gap: 8px; /* 列表项之间的间距 */
   padding-top: 8px; /* 列表顶部留出一些空间 */
+}
+
+.tag-filter-container {
+  margin-top: 12px;
+  margin-bottom: 0;
 }
 </style>
