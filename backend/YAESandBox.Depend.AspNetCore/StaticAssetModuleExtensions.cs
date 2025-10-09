@@ -24,7 +24,25 @@ public static class StaticAssetModuleExtensions
 
         // 为所有未知文件类型设置默认的 Content-Type
         // 'text/plain' 是一个安全且通用的选择
-        DefaultContentType = "text/plain"
+        DefaultContentType = "text/plain",
+        
+        // 添加 OnPrepareResponse 回调来动态设置缓存头
+        OnPrepareResponse = ctx =>
+        {
+            var headers = ctx.Context.Response.Headers;
+            var path = ctx.Context.Request.Path.Value ?? string.Empty;
+
+            // 检查请求的是否是 index.html
+            // 我们检查路径是否为根路径 "/" 或者以 ".html" 结尾
+            // 这样可以同时覆盖 MapFallbackToFile 和直接请求 index.html 的情况
+            if (path.EndsWith('/') || path.EndsWith(".html", StringComparison.OrdinalIgnoreCase) || path == string.Empty)
+            {
+                // 如果是 index.html，则强制浏览器不要缓存
+                headers.Append("Cache-Control", "no-cache, no-store, must-revalidate");
+                headers.Append("Pragma", "no-cache");
+                headers.Append("Expires", "0");
+            }
+        }
     };
 
     /// <summary>

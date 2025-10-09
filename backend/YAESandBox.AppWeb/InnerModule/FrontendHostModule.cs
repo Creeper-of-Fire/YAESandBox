@@ -19,10 +19,14 @@ internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProg
 
         if (frontendAbsolutePath == null) return;
 
-        context.EndpointBuilder.MapFallbackToFile("index.html", new StaticFileOptions
-        {
-            FileProvider = new PhysicalFileProvider(frontendAbsolutePath)
-        });
+        // 1. 克隆我们全局配置好的 DefaultStaticFileOptions，它包含了正确的缓存策略。
+        var fallbackOptions = StaticAssetModuleExtensions.DefaultStaticFileOptions.Clone();
+        
+        // 2. 为这个克隆实例设置特定的 FileProvider。
+        fallbackOptions.FileProvider = new PhysicalFileProvider(frontendAbsolutePath);
+
+        // 3. 将配置好的 options 传递给 MapFallbackToFile。
+        context.EndpointBuilder.MapFallbackToFile("index.html", fallbackOptions);
     }
 
     /// <inheritdoc />
