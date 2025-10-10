@@ -268,7 +268,7 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
     public override List<ConsumedSpec> GetConsumedSpec()
     {
         // 根据用户选择的输入类型，声明正确的消费变量类型
-        var consumedDef = this.TextOperation.InputDataType switch
+        VarSpecDef consumedDef = this.TextOperation.InputDataType switch
         {
             InputDataTypeEnum.PromptList => CoreVarDefs.PromptList,
             _ => CoreVarDefs.String
@@ -282,7 +282,7 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
         // 替换模式下，输出类型与输入类型保持一致
         if (this.TextOperation.OperationMode == OperationModeEnum.Replace)
         {
-            var producedDef = this.TextOperation.InputDataType switch
+            VarSpecDef producedDef = this.TextOperation.InputDataType switch
             {
                 InputDataTypeEnum.PromptList => CoreVarDefs.PromptList,
                 _ => CoreVarDefs.String
@@ -291,7 +291,7 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
         }
 
         // 提取模式下，输出类型由 ReturnFormat 决定，与输入类型无关
-        var extractProducedDef = this.TextOperation.ReturnFormat switch
+        VarSpecDef extractProducedDef = this.TextOperation.ReturnFormat switch
         {
             ReturnFormatEnum.First => CoreVarDefs.String,
             ReturnFormatEnum.AsList => CoreVarDefs.StringList,

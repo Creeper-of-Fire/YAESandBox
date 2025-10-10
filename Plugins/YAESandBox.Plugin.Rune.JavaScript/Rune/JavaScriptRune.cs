@@ -1,9 +1,11 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Text.Json;
 using System.Text.RegularExpressions;
 using Jint;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
+using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config.RuneConfig;
 using YAESandBox.Workflow.DebugDto;
@@ -21,7 +23,7 @@ namespace YAESandBox.Plugin.Rune.JavaScript.Rune;
 /// 负责执行用户提供的 JS 脚本，并通过直接暴露的上下文与枢机交互。
 /// </summary>
 /// <param name="config">符文配置。</param>
-public class JavaScriptRuneProcessor(JavaScriptRuneConfig config,ICreatingContext creatingContext)
+public class JavaScriptRuneProcessor(JavaScriptRuneConfig config, ICreatingContext creatingContext)
     : NormalRuneProcessor<JavaScriptRuneConfig, JavaScriptRuneProcessor.JavaScriptRuneProcessorDebugDto>(config, creatingContext)
 {
     /// <summary>
@@ -107,127 +109,150 @@ public partial record JavaScriptRuneConfig : AbstractRuneConfig<JavaScriptRunePr
         Description =
             "在此处编写 JS 脚本。使用 ctx.GetTuumVar('变量名') 获取输入，使用 ctx.SetTuumVar('变量名', 值) 设置输出。可以在 GetTuumVar/SetTuumVar 的上一行使用 // @type 类型名 [可选的描述信息] 来指定变量类型。",
         Prompt =
-            "// 示例: 使用类型注解和描述\n\n" +
-            "// @type string 用户的唯一标识符\n" +
-            "const user_id = ctx.GetTuumVar('input_user_id');\n\n" +
-            "log.info(`正在处理用户: ${user_id}`);\n\n" +
-            "// @type number 计算得出的最终分数\n" +
-            "let score = 100;\n" +
-            "ctx.SetTuumVar('final_score', score);\n\n" +
-            "// @type boolean 指示操作是否成功\n" +
-            "ctx.SetTuumVar('is_success', true);\n\n" +
-            "// 没有类型注解的变量将被视为 any 类型\n" +
-            "ctx.SetTuumVar('untyped_output', { key: 'value' });\n"
+            """
+            // 示例: 使用类型注解和描述
+
+            // 简单类型
+            // @type string 用户的唯一标识符
+            const user_id = ctx.GetTuumVar('input_user_id');
+
+            // 列表类型
+            // @type String[] 用户的标签列表
+            const tags = ctx.GetTuumVar('tags');
+
+            // 结构化类型 (Record)
+            // @type Record 玩家的详细信息
+            /*
+            {
+              "name": "String",
+              "level": "Number"
+            }
+            */
+            const player = ctx.GetTuumVar('player_info');
+            log.info(`正在处理玩家: ${player.name}`);
+
+            // @type Record
+            /*
+            { "success": "Boolean", "message": "String" }
+            */
+            ctx.SetTuumVar('operation_result', { success: true, message: 'OK' });
+            """
     )]
     [Required(AllowEmptyStrings = true)]
     [DefaultValue("")]
     public string Script { get; init; } = "";
 
     /// <inheritdoc />
-    protected override JavaScriptRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this,creatingContext);
+    protected override JavaScriptRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 
     // --- 变量静态分析 ---
 
-    // 正则表达式用于匹配 ctx.GetTuumVar('...') 或 ctx.GetTuumVar("...")
-    // Group 1: (可选) 类型名称 (e.g., 'string')
-    // Group 2: (可选) 描述信息
-    // Group 3: 变量名称
-    [GeneratedRegex(@"(?://\s*@type[:]?(?:\s*(\S+))(?:\s+(.*?))?\s*\r?\n)?\s*.*?ctx\.GetTuumVar\s*\(\s*['""]([^'""]+)['""]\s*\)",
-        RegexOptions.Multiline)]
-    private static partial Regex ConsumedVariableRegex();
-
-    // 正则表达式用于匹配 ctx.SetTuumVar('...') 或 ctx.SetTuumVar("...")
-    // Group 1: (可选) 类型名称 (e.g., 'string')
-    // Group 2: (可选) 描述信息
-    // Group 3: 变量名称
-    [GeneratedRegex(@"(?://\s*@type[:]?(?:\s*(\S+))(?:\s+(.*?))?\s*\r?\n)?\s*ctx\.SetTuumVar\s*\(\s*['""]([^'""]+)['""]\s*,",
-        RegexOptions.Multiline)]
-    private static partial Regex ProducedVariableRegex();
-
+    [GeneratedRegex(
+        """
+        (?://\s*@type[:]?(?:\s*(\S+))|/\*\s*([\s\S]+?)\s*\*/)? # Group 1: TypeName, Group 2: JSON Block
+        (?:\s+(.*?))?                                          # Group 3: Description
+        \s*\r?\n.*?
+        ctx\.(GetTuumVar|SetTuumVar)\s*\(\s*['"]([^'""]+)['"]   # Group 4: Method, Group 5: VarName
+        """,
+        RegexOptions.Multiline | RegexOptions.IgnorePatternWhitespace
+    )]
+    private static partial Regex VariableRegex();
 
     /// <summary>
-    /// 通过静态分析 JS 脚本，提取所有通过 `ctx.GetTuumVar()` 消费的变量。
+    /// 转换逻辑：将类型名和可选的JSON块转换为具体的 VarSpecDef。
     /// </summary>
-    public override List<ConsumedSpec> GetConsumedSpec()
+    private static VarSpecDef ConvertToVarSpecDef(string typeName, string? jsonBlock, string? description)
     {
-        if (string.IsNullOrWhiteSpace(this.Script))
+        // 1. 处理结构化 Record 类型
+        if (!string.IsNullOrWhiteSpace(jsonBlock))
         {
-            return [];
+            try
+            {
+                var properties = YaeSandBoxJsonHelper.Deserialize<Dictionary<string, string>>(jsonBlock);
+
+                if (properties != null)
+                {
+                    var specProperties = properties.ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => ConvertToVarSpecDef(kvp.Value, null, null) // 递归转换属性
+                    );
+                    return new RecordVarSpecDef(CoreVarDefs.RecordStringAny.TypeName, description, specProperties);
+                }
+            }
+            catch (JsonException)
+            {
+                /* 解析失败，回退到 Any */
+            }
         }
 
-        return ConsumedVariableRegex().Matches(this.Script)
+        // 2. 处理列表类型 (e.g., "String[]", "ThingInfo[]")
+        if (typeName.EndsWith("[]", StringComparison.Ordinal))
+        {
+            string elementTypeName = typeName[..^2];
+            var elementDef = ConvertToVarSpecDef(elementTypeName, null, null);
+            return new ListVarSpecDef($"{elementDef.TypeName}[]", description, elementDef);
+        }
+
+        // 3. 处理基础类型和已定义的扩展类型
+        return typeName.ToLowerInvariant() switch
+        {
+            "string" => CoreVarDefs.String with { Description = description },
+            "number" => CoreVarDefs.Number with { Description = description },
+            "boolean" => CoreVarDefs.Boolean with { Description = description },
+            "jsonstring" => CoreVarDefs.JsonString with { Description = description },
+            "any" => CoreVarDefs.Any with { Description = description },
+            "promptlist" => CoreVarDefs.PromptList with { Description = description },
+            "thinginfo" => ExtendVarDefs.ThingInfo with { Description = description },
+            _ => CoreVarDefs.Any with { Description = description } // 未知类型，默认为 Any
+        };
+    }
+
+    private List<(string VarName, VarSpecDef Def)> ParseSpecs(string targetMethod)
+    {
+        if (string.IsNullOrWhiteSpace(this.Script)) return [];
+
+        // 注意：正则表达式的捕获组索引可能需要调整
+        // JS 正则: Group 1 (TypeName), Group 2 (JsonBlock), Group 3 (Description), Group 4 (Method), Group 5 (VarName)
+        // 我们将 TypeName 和 JsonBlock 合并处理
+
+        return VariableRegex().Matches(this.Script)
+            .Where(match => match.Groups[4].Value == targetMethod)
             .Select(match => new
             {
                 TypeName = match.Groups[1].Value,
-                Description = match.Groups[2].Value.Trim(),
-                VarName = match.Groups[3].Value
+                JsonBlock = match.Groups[2].Value,
+                Description = match.Groups[3].Value.Trim(),
+                VarName = match.Groups[5].Value
             })
-            .GroupBy(v => v.VarName) // 按变量名分组，以处理同一变量的多次 get
+            .GroupBy(v => v.VarName)
             .Select(group =>
             {
                 string varName = group.Key;
-                // 优先使用第一个找到的带有类型注解的条目
-                var bestAnnotation = group.FirstOrDefault(g => !string.IsNullOrWhiteSpace(g.TypeName));
+                // 优先使用带有类型注解或JSON块的条目
+                var bestAnnotation =
+                    group.FirstOrDefault(g => !string.IsNullOrWhiteSpace(g.TypeName) || !string.IsNullOrWhiteSpace(g.JsonBlock));
 
-                string? typeName = bestAnnotation?.TypeName;
-                string? description = bestAnnotation?.Description;
+                string typeName = bestAnnotation?.TypeName ?? "Any";
+                string? jsonBlock = bestAnnotation?.JsonBlock;
+                string? description = string.IsNullOrWhiteSpace(bestAnnotation?.Description) ? null : bestAnnotation.Description;
 
-                VarSpecDef varDef;
-                if (string.IsNullOrWhiteSpace(typeName))
+                // 如果 JSON 块存在，但 TypeName 为空，则默认 TypeName 为 "Record"
+                if (!string.IsNullOrWhiteSpace(jsonBlock) && string.IsNullOrWhiteSpace(typeName))
                 {
-                    varDef = CoreVarDefs.Any; // 如果没有注解，则默认为 Any 类型
-                }
-                else
-                {
-                    string? finalDescription = string.IsNullOrWhiteSpace(description) ? null : description;
-                    varDef = new VarSpecDef(typeName, finalDescription);
+                    typeName = "Record";
                 }
 
-                return new ConsumedSpec(varName, varDef) { IsOptional = false };
+                var varDef = ConvertToVarSpecDef(typeName, jsonBlock, description);
+                return (varName, varDef);
             })
             .ToList();
     }
 
-    /// <summary>
-    /// 通过静态分析 JS 脚本，提取所有通过 `ctx.SetTuumVar()` 生产的变量。
-    /// </summary>
-    public override List<ProducedSpec> GetProducedSpec()
-    {
-        if (string.IsNullOrWhiteSpace(this.Script))
-        {
-            return [];
-        }
+    /// <inheritdoc />
+    public override List<ConsumedSpec> GetConsumedSpec() =>
+        this.ParseSpecs("GetTuumVar").Select(v => new ConsumedSpec(v.VarName, v.Def) { IsOptional = false }).ToList();
 
-        return ProducedVariableRegex().Matches(this.Script)
-            .Select(match => new
-            {
-                TypeName = match.Groups[1].Value,
-                Description = match.Groups[2].Value.Trim(),
-                VarName = match.Groups[3].Value
-            })
-            .GroupBy(v => v.VarName) // 按变量名分组，以处理同一变量的多次 set
-            .Select(group =>
-            {
-                string varName = group.Key;
-                // 优先使用第一个找到的带有类型注解的条目
-                var bestAnnotation = group.FirstOrDefault(g => !string.IsNullOrWhiteSpace(g.TypeName));
-
-                string? typeName = bestAnnotation?.TypeName;
-                string? description = bestAnnotation?.Description;
-
-                VarSpecDef varDef;
-                if (string.IsNullOrWhiteSpace(typeName))
-                {
-                    varDef = CoreVarDefs.Any; // 如果没有注解，则默认为 Any 类型
-                }
-                else
-                {
-                    string? finalDescription = string.IsNullOrWhiteSpace(description) ? null : description;
-                    varDef = new VarSpecDef(typeName, finalDescription);
-                }
-
-                return new ProducedSpec(varName, varDef);
-            })
-            .ToList();
-    }
+    /// <inheritdoc />
+    public override List<ProducedSpec> GetProducedSpec() =>
+        this.ParseSpecs("SetTuumVar").Select(v => new ProducedSpec(v.VarName, v.Def)).ToList();
 }

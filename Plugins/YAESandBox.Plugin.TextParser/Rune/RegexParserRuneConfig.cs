@@ -215,7 +215,7 @@ public record RegexParserRuneConfig : AbstractRuneConfig<RegexParserRuneProcesso
     /// <inheritdoc />
     public override List<ConsumedSpec> GetConsumedSpec()
     {
-        var consumedDef = this.TextOperation.InputDataType switch
+        VarSpecDef consumedDef = this.TextOperation.InputDataType switch
         {
             InputDataTypeEnum.PromptList => CoreVarDefs.PromptList,
             _ => CoreVarDefs.String
@@ -228,7 +228,7 @@ public record RegexParserRuneConfig : AbstractRuneConfig<RegexParserRuneProcesso
     {
         if (this.TextOperation.OperationMode == OperationModeEnum.Replace)
         {
-            var producedDef = this.TextOperation.InputDataType switch
+            VarSpecDef producedDef = this.TextOperation.InputDataType switch
             {
                 InputDataTypeEnum.PromptList => CoreVarDefs.PromptList,
                 _ => CoreVarDefs.String
@@ -237,7 +237,7 @@ public record RegexParserRuneConfig : AbstractRuneConfig<RegexParserRuneProcesso
         }
 
         // 提取模式
-        var extractProducedDef = this.TextOperation.ReturnFormat switch
+        VarSpecDef extractProducedDef = this.TextOperation.ReturnFormat switch
         {
             ReturnFormatEnum.First => CoreVarDefs.String,
             ReturnFormatEnum.AsList => CoreVarDefs.StringList,
