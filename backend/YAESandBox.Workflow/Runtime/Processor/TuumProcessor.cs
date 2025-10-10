@@ -24,7 +24,7 @@ public class TuumProcessor(
 ) : IProcessorWithDebugDto<ITuumProcessorDebugDto>
 {
     private static IAppLogger Logger { get; } = AppLogging.CreateLogger<TuumProcessor>();
-    
+
     /// <summary>
     /// 配置对象
     /// </summary>
@@ -104,6 +104,40 @@ public class TuumProcessor(
         {
             object? rawValue = this.GetTuumVar(valueName);
 
+            try
+            {
+                if (TryConvertValue(rawValue, out value))
+                {
+                    // 转换成功！为了后续访问效率，将转换后的结果写回 TuumVariable
+                    // （仅当值发生实际变化时才写回，避免不必要的字典操作）
+                    if (!ReferenceEquals(rawValue, value) && rawValue is not (JsonElement or JsonNode))
+                    {
+                        this.SetTuumVar(valueName, value);
+                    }
+
+                    return true;
+                }
+
+                // 转换失败
+                value = default;
+                return false;
+            }
+            catch (Exception ex)
+            {
+                value = default;
+                Logger.Error(ex,
+                    "无法将值'{ValueName}'(类型: {ObjectFullName})转换为 {TFullName}：JSON 转换失败。",
+                    valueName, rawValue?.GetType().FullName, typeof(T).FullName);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// 将任意对象安全地转换为目标类型 T 的静态辅助方法。
+        /// </summary>
+        /// <exception cref="InvalidCastException"> 转换失败。</exception>
+        private static bool TryConvertValue<T>(object? rawValue, [MaybeNullWhen(false)] out T value)
+        {
             // Case 1: 变量不存在或其值就是 null。
             if (rawValue is null)
             {
@@ -144,16 +178,101 @@ public class TuumProcessor(
                     return false;
                 }
 
-                // 转换成功！为了后续访问效率，可以将转换后的结果写回 TuumVariable
-                this.SetTuumVar(valueName, result);
                 value = result;
                 return true;
+            }
+            catch (InvalidCastException)
+            {
+                value = default;
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// 尝试通过点符号路径 (e.g., "player.stats.level") 获取枢机中的变量。
+        /// </summary>
+        /// <typeparam name="T">目标类型。</typeparam>
+        /// <param name="path">变量路径。</param>
+        /// <param name="value">如果成功，则输出转换后的值。</param>
+        /// <returns>如果成功找到并转换了变量，则返回 true。</returns>
+        public bool TryGetTuumVarByPath<T>(string path, [MaybeNullWhen(false)] out T value)
+        {
+            string[] parts = path.Split('.');
+            if (parts.Length == 0)
+            {
+                value = default;
+                return false;
+            }
+
+            // 1. 获取根对象
+            if (!this.TryGetTuumVar<object>(parts[0], out object? currentObject))
+            {
+                value = default;
+                return false;
+            }
+
+            // 2. 遍历路径的其余部分
+            for (int i = 1; i < parts.Length; i++)
+            {
+                if (currentObject is null)
+                {
+                    value = default;
+                    return false;
+                }
+
+                string key = parts[i];
+
+                switch (currentObject)
+                {
+                    case IDictionary<string, object> dict:
+                        if (!dict.TryGetValue(key, out currentObject))
+                        {
+                            value = default;
+                            return false;
+                        }
+
+                        break;
+
+                    case JsonElement { ValueKind: JsonValueKind.Object } jsonElement:
+                        if (!jsonElement.TryGetProperty(key, out var nextElement))
+                        {
+                            value = default;
+                            return false;
+                        }
+
+                        currentObject = nextElement;
+                        break;
+
+                    // 兜底方案：使用反射处理 POCO/record 类型
+                    default:
+                        var prop = currentObject.GetType().GetProperty(key,
+                            System.Reflection.BindingFlags.IgnoreCase |
+                            System.Reflection.BindingFlags.Public |
+                            System.Reflection.BindingFlags.Instance);
+
+                        if (prop == null)
+                        {
+                            value = default;
+                            return false;
+                        }
+
+                        currentObject = prop.GetValue(currentObject);
+                        break;
+                }
+            }
+
+            // 3. 对最终找到的对象调用统一的转换逻辑
+            try
+            {
+                return TryConvertValue(currentObject, out value);
             }
             catch (Exception ex)
             {
                 value = default;
-                throw new InvalidCastException(
-                    $"无法将值'{valueName}'(类型: {rawValue.GetType().FullName})转换为 {typeof(T).FullName}：JSON 转换失败。", ex);
+                Logger.Error(ex,
+                    "无法将地址'{Path}'(类型: {ObjectFullName})转换为 {TFullName}：JSON 转换失败。",
+                    path, currentObject?.GetType().FullName, typeof(T).FullName);
+                return false;
             }
         }
     }

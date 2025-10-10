@@ -22,8 +22,9 @@ namespace YAESandBox.Workflow.ExactRune;
 /// </summary>
 /// <param name="creatingContext"></param>
 /// <param name="config">符文配置。</param>
-internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config,ICreatingContext creatingContext)
-    : NormalRuneProcessor<PromptGenerationRuneConfig, PromptGenerationRuneProcessor.PromptGenerationRuneProcessorDebugDto>(config,creatingContext)
+internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config, ICreatingContext creatingContext)
+    : NormalRuneProcessor<PromptGenerationRuneConfig, PromptGenerationRuneProcessor.PromptGenerationRuneProcessorDebugDto>(config,
+        creatingContext)
 {
     /// <inheritdoc />
     public override PromptGenerationRuneProcessorDebugDto DebugDto { get; init; } = new()
@@ -37,9 +38,9 @@ internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config,I
     /// 启动枢机流程
     /// </summary>
     /// <inheritdoc />
-    public  override Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
+    public override Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
-        string substitutedContent = this.SubstitutePlaceholdersAsync(this.Config.Template, tuumProcessorContent);
+        string substitutedContent = this.SubstitutePlaceholders(this.Config.Template, tuumProcessorContent);
         this.DebugDto.FinalPromptContent = substitutedContent;
 
         var newPrompt = new RoledPromptDto
@@ -50,7 +51,8 @@ internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config,I
         };
         this.DebugDto.GeneratedPrompt = newPrompt;
 
-        var prompts = (tuumProcessorContent.GetTuumVar<ImmutableList<RoledPromptDto>>(PromptGenerationRuneConfig.PromptsName) ?? []).ToList();
+        var prompts =
+            (tuumProcessorContent.GetTuumVar<ImmutableList<RoledPromptDto>>(PromptGenerationRuneConfig.PromptsName) ?? []).ToList();
 
         if (prompts.Count == 0)
         {
@@ -127,64 +129,29 @@ internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config,I
     }
 
 
-    private string SubstitutePlaceholdersAsync(
-        string template,
-        TuumProcessorContent tuumContent)
+    /// <summary>
+    /// 使用 Tuum 上下文中的变量替换模板中的占位符，支持点符号访问。
+    /// </summary>
+    private string SubstitutePlaceholders(string template, TuumProcessorContent tuumContent)
     {
-        var resolvedValues = new Dictionary<string, string?>();
-
-        var uniquePlaceholderNames = PromptGenerationRuneConfig.PlaceholderRegex().Matches(template)
-            .Select(m => m.Groups[1].Value)
-            .Distinct()
-            .ToList();
-
-        foreach (string placeholderName in uniquePlaceholderNames)
+        return PromptGenerationRuneConfig.PlaceholderRegex().Replace(template, match =>
         {
-            string? value = null;
-            bool found = false;
+            // 例如: 'player.name'
+            string path = match.Groups[1].Value;
 
-            // 尝试从 TuumVariable (dynamic, 假设其内部是 IDictionary<string, object>)
-            try
+            // 使用 TuumContent 提供的路径解析方法
+            if (tuumContent.TryGetTuumVarByPath<object>(path, out object? value))
             {
-                if (tuumContent.TuumVariable is IDictionary<string, object> tuumInputDict &&
-                    tuumInputDict.TryGetValue(placeholderName, out object? tuumValObj))
-                {
-                    value = tuumValObj.ToString();
-                    found = true;
-                }
-            }
-            catch (Exception ex)
-            {
-                // 记录尝试从TuumInput获取时的潜在错误到调试信息
-                this.DebugDto.AddResolutionAttemptLog($"尝试从 TuumVariable 获取 '{placeholderName}' 失败。{ex.ToFormattedString()}");
+                string stringValue = value.ToString() ?? string.Empty;
+                this.DebugDto.ResolvedPlaceholdersWithValue[path] = stringValue;
+                return stringValue;
             }
 
-
-            if (found)
-            {
-                resolvedValues[placeholderName] = value;
-                this.DebugDto.ResolvedPlaceholdersWithValue[placeholderName] = value ?? "[null]";
-            }
-            else
-            {
-                // 如果未找到，则替换为空字符串 (根据用户要求隐式处理)
-                resolvedValues[placeholderName] = string.Empty;
-                this.DebugDto.UnresolvedPlaceholders.Add(placeholderName);
-                this.DebugDto.AddResolutionAttemptLog($"占位符 '{placeholderName}' 未在任何来源中找到，将替换为空字符串。");
-            }
-        }
-
-        // 执行替换
-        string resultText = template;
-        foreach (var kvp in resolvedValues)
-        {
-            // 使用 Regex.Escape 对占位符名称进行转义，以防包含正则表达式特殊字符
-            // 但由于我们是从 {} 中提取的，通常不需要，除非占位符名称本身很奇怪
-            // 为了简单起见，这里直接替换，假设占位符名称是常规文本
-            resultText = resultText.Replace($"[[{kvp.Key}]]", kvp.Value ?? string.Empty, StringComparison.OrdinalIgnoreCase);
-        }
-
-        return resultText;
+            // 未找到或值为 null
+            this.DebugDto.UnresolvedPlaceholders.Add(path);
+            this.DebugDto.AddResolutionAttemptLog($"占位符 '{{{{{path}}}}}' 未找到或其值为 null，将替换为空字符串。");
+            return string.Empty;
+        });
     }
 
 
@@ -231,7 +198,7 @@ internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config,I
         /// <summary>
         /// 记录已解析并成功替换的占位符及其值。
         /// 键: 占位符名称 (不带花括号)
-        /// 值: 替换的文本 (如果原始值为null，则为 "[null]")
+        /// 值: 替换的文本
         /// </summary>
         public Dictionary<string, string> ResolvedPlaceholdersWithValue { get; } = [];
 
@@ -264,21 +231,100 @@ internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config,I
 internal partial record PromptGenerationRuneConfig
 {
     // 使用 Regex.Matches 获取所有唯一的占位符名称
-    // 使用 lookahead 和 lookbehind 来确保我们只匹配 [[]] 包裹的内容，并且不能处理嵌套 [[]] 的情况
+    // 使用 lookahead 和 lookbehind 来确保我们只匹配 {{}} 包裹的内容，并且不能处理嵌套 {{}} 的情况
     // TODO 实现嵌套等操作
-    [GeneratedRegex(@"\[\[([^\[\]]+?)\]\]")]
+    [GeneratedRegex(@"\{\{([^}]+?)\}\}")]
     internal static partial Regex PlaceholderRegex();
 
     /// <inheritdoc />
     public override List<ConsumedSpec> GetConsumedSpec()
     {
-        var namesSpec = PlaceholderRegex().Matches(this.Template)
-            .Select(m => m.Groups[1].Value)
-            .Distinct()
-            .Select(n => new ConsumedSpec(n, CoreVarDefs.String))
-            .ToList();
-        namesSpec.Add(new ConsumedSpec(PromptsName, CoreVarDefs.PromptList) { IsOptional = true });
-        return namesSpec;
+        // 用于存储根变量及其推断出的结构
+        var rootSpecs = new Dictionary<string, VarSpecDef>();
+
+        var allPlaceholders = PlaceholderRegex().Matches(this.Template)
+            .Select(m => m.Groups[1].Value.Trim());
+
+        foreach (string path in allPlaceholders)
+        {
+            string[] parts = path.Split('.');
+            if (parts.Length == 0) continue;
+
+            string rootVarName = parts[0];
+
+            // --- 顶层变量处理 ---
+            if (parts.Length == 1)
+            {
+                // 如果是顶层变量 (e.g., {{game_mode}}), 且尚未定义，则将其定义为 Any
+                if (!rootSpecs.ContainsKey(rootVarName))
+                {
+                    rootSpecs[rootVarName] = CoreVarDefs.Any with
+                    {
+                        Description = "可被ToString的任意类型。"
+                    };
+                }
+
+                // 如果已存在且是 Record, 则不作处理，因为 Record 可以被 ToString()
+                continue;
+            }
+
+            // --- 嵌套变量处理 (核心逻辑) ---
+
+            // 确保根变量是 Record 类型
+            if (!rootSpecs.TryGetValue(rootVarName, out var currentDef) || currentDef is not RecordVarSpecDef)
+            {
+                currentDef = CoreVarDefs.RecordStringAny with
+                {
+                    Description = $"根据模板为变量'{rootVarName}'推断出的数据结构。",
+                    Properties = new Dictionary<string, VarSpecDef>()
+                };
+                rootSpecs[rootVarName] = currentDef;
+            }
+
+            var currentRecord = (RecordVarSpecDef)currentDef;
+
+            // 递归地构建/遍历属性路径
+            for (int i = 1; i < parts.Length; i++)
+            {
+                string propName = parts[i];
+
+                // 如果是路径的最后一部分 (叶子节点)
+                if (i == parts.Length - 1)
+                {
+                    if (!currentRecord.Properties.ContainsKey(propName))
+                    {
+                        // 叶子节点默认为 Any，因为它可以是任何能被 ToString() 的类型
+                        currentRecord.Properties[propName] = CoreVarDefs.Any with
+                        {
+                            Description = "可被ToString的任意类型。"
+                        };
+                    }
+
+                    break;
+                }
+
+                // 如果是路径的中间部分 (非叶子节点)
+                if (!currentRecord.Properties.TryGetValue(propName, out var nextDef) || nextDef is not RecordVarSpecDef)
+                {
+                    nextDef = CoreVarDefs.RecordStringAny with
+                    {
+                        Description = $"为'{propName}'推断出的嵌套数据结构。",
+                        Properties = new Dictionary<string, VarSpecDef>()
+                    };
+                    currentRecord.Properties[propName] = nextDef;
+                }
+
+                currentRecord = (RecordVarSpecDef)nextDef;
+            }
+        }
+
+        // 将推断出的结构转换为 ConsumedSpec 列表
+        var finalSpecs = rootSpecs.Select(kvp => new ConsumedSpec(kvp.Key, kvp.Value)).ToList();
+
+        // 添加对 Prompts 列表本身的消费
+        finalSpecs.Add(new ConsumedSpec(PromptsName, CoreVarDefs.PromptList) { IsOptional = true });
+
+        return finalSpecs;
     }
 
     public override List<ProducedSpec> GetProducedSpec() => [new(PromptsName, CoreVarDefs.PromptList)];
@@ -293,7 +339,7 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
 {
     private const string RoleGroupName = "提示词角色";
     private const string InsertGroupName = "插入";
-    
+
     /// <summary>
     /// 使用的提示词列表变量的名称（若存在则在列表中添加，若不存在则创建）。
     /// </summary>
@@ -372,22 +418,21 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
     public bool IsAppendMode { get; init; } = true;
 
     /// <summary>
-    /// 提示词模板，支持 `[[占位符]]` 替换。
-    /// 例如："你好，`[[playerName]]`！今天是`[[worldInfo]]`。"
+    /// 提示词模板，支持 `{{占位符}}` 和 `{{对象.属性}}` 替换。
     /// </summary>
     [Required(AllowEmptyStrings = true)]
     [DataType(DataType.MultilineText)]
     [Display(
         Name = "提示词模板",
-        Description = "编写包含动态占位符（例如 `[[variable]]`）的文本模板。这个现在有点不方便，之后可能会改为其他的模板格式。",
-        Prompt = "例如：'你好，`[[playerName]]`！今天是`[[worldInfo]]`。'"
+        Description = "编写包含动态占位符（例如 `{{variable}}` 或 `{{player.name}}`）的文本模板。",
+        Prompt = "例如：'你好，{{player.name}}！你的等级是{{player.level}}。'"
     )]
     [DefaultValue("")]
     public string Template { get; init; } = "";
 
 
     /// <inheritdoc />
-    protected override PromptGenerationRuneProcessor  ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
+    protected override PromptGenerationRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 }
 
 file enum InsertionPositionEnum
