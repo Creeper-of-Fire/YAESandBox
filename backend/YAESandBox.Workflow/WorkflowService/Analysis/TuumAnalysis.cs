@@ -9,6 +9,101 @@ using YAESandBox.Workflow.VarSpec;
 namespace YAESandBox.Workflow.WorkflowService.Analysis;
 
 /// <summary>
+/// 定义Tuum静态分析期间的类型兼容性检查模式。
+/// </summary>
+public enum TypeAnalysisMode
+{
+    /// <summary>
+    /// **(最宽松)** 只比较顶层类型名称，完全忽略记录(Record)的内部结构。
+    /// 这是最快的模式，但无法发现结构性错误。
+    /// </summary>
+    IgnoreStructure,
+
+    /// <summary>
+    /// **(推荐)** 结构化类型（鸭子类型）检查。
+    /// 如果类型A的结构包含了类型B所需的所有属性，并且这些属性的类型也兼容，则认为A兼容B。
+    /// 允许类型A有额外的属性。这是最灵活且实用的模式。
+    /// <example>一个拥有 {Name, Description, Level} 的 `Character` 类型，可以兼容一个只需要 {Name, Description} 的 `ThingInfo` 类型。</example>
+    /// </summary>
+    DuckTyping,
+
+    /// <summary>
+    /// **(最严格)** 严格的具名类型检查。
+    /// 两个记录(Record)类型只有在它们的类型名称完全相同时才被认为是兼容的，即使它们的结构一模一样。
+    /// </summary>
+    StrictNominal
+}
+
+/// <summary>
+/// 为 VarSpecDef 提供类型兼容性检查的扩展方法。
+/// </summary>
+internal static class VarSpecDefExtensions
+{
+    /// <summary>
+    /// 递归地检查当前类型定义是否与目标类型定义兼容。
+    /// </summary>
+    /// <param name="sourceDef">源类型（提供方）。</param>
+    /// <param name="targetDef">目标类型（需求方）。</param>
+    /// <param name="mode">要使用的分析模式。</param>
+    /// <returns>如果兼容则为 true。</returns>
+    public static bool IsCompatibleWith(this VarSpecDef sourceDef, VarSpecDef targetDef, TypeAnalysisMode mode)
+    {
+        // 规则0: Any 类型与任何类型都兼容。
+        if (sourceDef.TypeName == CoreVarDefs.Any.TypeName || targetDef.TypeName == CoreVarDefs.Any.TypeName)
+        {
+            return true;
+        }
+        
+        // 规则 1: 在 IgnoreStructure 模式下，我们只关心顶层 TypeName 是否相同。
+        // 这是更优先的规则，因为它覆盖了所有结构性检查。
+        if (mode == TypeAnalysisMode.IgnoreStructure)
+        {
+            return sourceDef.TypeName == targetDef.TypeName;
+        }
+
+        // 规则2: 如果类型不匹配（一个List，一个Record），则不兼容。
+        if (sourceDef.GetType() != targetDef.GetType())
+        {
+            return false;
+        }
+
+        // 根据具体类型进行分派
+        return (sourceDef, targetDef) switch
+        {
+            (PrimitiveVarSpecDef s, PrimitiveVarSpecDef t) => s.TypeName == t.TypeName,
+
+            (ListVarSpecDef s, ListVarSpecDef t) =>
+                // 列表兼容性取决于其元素类型的兼容性。
+                s.ElementDef.IsCompatibleWith(t.ElementDef, mode),
+
+            (RecordVarSpecDef s, RecordVarSpecDef t) =>
+                mode switch
+                {
+                    // 严格模式：
+                    // 1. 类型名必须完全匹配。
+                    // 2. 并且，源结构必须满足目标结构的要求 (结构兼容性检查)。
+                    TypeAnalysisMode.StrictNominal => 
+                        s.TypeName == t.TypeName &&
+                        t.Properties.All(targetProp =>
+                            s.Properties.TryGetValue(targetProp.Key, out var sourceProp) &&
+                            sourceProp.IsCompatibleWith(targetProp.Value, mode)),
+
+                    // 鸭子类型模式：源记录必须包含目标记录所需的所有属性，不关心类型名。
+                    TypeAnalysisMode.DuckTyping => t.Properties.All(targetProp =>
+                        s.Properties.TryGetValue(targetProp.Key, out var sourceProp) &&
+                        sourceProp.IsCompatibleWith(targetProp.Value, mode)), // 递归检查
+                    
+                    // IgnoreStructure 已经被提前处理，这里理论上不会到达。
+                    // 但为了代码完整性，可以保留一个默认分支。
+                    _ => true
+                },
+
+            _ => false // 未知类型组合
+        };
+    }
+}
+
+/// <summary>
 /// 对枢机进行静态分析后的结果报告。
 /// </summary>
 public record TuumAnalysisResult
@@ -67,8 +162,9 @@ public class TuumAnalysisService
     /// 此方法会调用分部类中的各个方法，并聚合最终的扁平化结果。
     /// </summary>
     /// <param name="tuumConfig">要分析的枢机配置。</param>
+    /// <param name="mode">用于类型检查的分析模式。</param>
     /// <returns>一个包含所有分析和校验信息的扁平化报告。</returns>
-    public TuumAnalysisResult Analyze(TuumConfig tuumConfig)
+    public TuumAnalysisResult Analyze(TuumConfig tuumConfig, TypeAnalysisMode mode = TypeAnalysisMode.DuckTyping)
     {
         // 步骤 0: 执行独立的校验和分析
         var tuumMappingUniqueMessages = this.ValidateTuumMappingUniqueness(tuumConfig).ToList();
@@ -77,8 +173,8 @@ public class TuumAnalysisService
         var runeAttributeMessages = this.ValidateRuneAttributeRules(tuumConfig).ToList();
 
         // 步骤 1: 确定所有内部变量的类型定义
-        var (internalTypeDefs, typeValidationMessages) = this.AnalyzeVariableTypes(tuumConfig);
-        var inputTypeValidationMessages = this.AnalyzeInputTypes(tuumConfig, internalTypeDefs);
+        var (internalTypeDefs, typeValidationMessages) = this.AnalyzeVariableTypes(tuumConfig, mode);
+        var inputTypeValidationMessages = this.AnalyzeInputTypes(tuumConfig, internalTypeDefs, mode);
 
         // 步骤 2: 进行纯粹的内部需求分析。这是最关键的一步，它不考虑外部输入。
         var internalRequirements = this.AnalyzeInternalRequirements(tuumConfig.GetEnableRunes().ToList());
@@ -150,7 +246,7 @@ public class TuumAnalysisService
     /// <summary>
     /// 辅助方法，获取类型的别名以生成更友好的消息
     /// </summary>
-    private static string getRuneAlias(Type runeType) => runeType.GetCustomAttribute<ClassLabelAttribute>()?.Label ?? runeType.Name;
+    private static string GetRuneAlias(Type runeType) => runeType.GetCustomAttribute<ClassLabelAttribute>()?.Label ?? runeType.Name;
 
     /// <summary>
     /// **分析函数 0.5: 符文属性规则校验**
@@ -190,7 +286,7 @@ public class TuumAnalysisService
                         yield return new ValidationMessage
                         {
                             Severity = RuleSeverity.Warning,
-                            Message = $"顺序警告：符文 '{runeConfig.Name}' 应该在 '{getRuneAlias(targetType)}' 之前执行。",
+                            Message = $"顺序警告：符文 '{runeConfig.Name}' 应该在 '{GetRuneAlias(targetType)}' 之前执行。",
                             RuleSource = "InFrontOf"
                         };
                     }
@@ -208,7 +304,7 @@ public class TuumAnalysisService
                         yield return new ValidationMessage
                         {
                             Severity = RuleSeverity.Warning,
-                            Message = $"顺序警告：符文 '{runeConfig.Name}' 应该在 '{getRuneAlias(targetType)}' 之后执行。",
+                            Message = $"顺序警告：符文 '{runeConfig.Name}' 应该在 '{GetRuneAlias(targetType)}' 之后执行。",
                             RuleSource = "Behind"
                         };
                     }
@@ -222,12 +318,13 @@ public class TuumAnalysisService
     /// **分析函数 1: 类型分析**
     /// <para>职责：只关心类型。确定所有内部变量的最终类型，并报告类型冲突。</para>
     /// </summary>
-    private (Dictionary<string, VarSpecDef> TypeDefs, List<ValidationMessage>Messages) AnalyzeVariableTypes(TuumConfig config)
+    private (Dictionary<string, VarSpecDef> TypeDefs, List<ValidationMessage> Messages) AnalyzeVariableTypes(TuumConfig config,
+        TypeAnalysisMode mode)
     {
         var messages = new List<ValidationMessage>();
         var variableTypeAppearances = new Dictionary<string, List<VarSpecDef>>();
 
-        // 步骤 1.1: 独立遍历，收集每个变量名出现过的所有类型定义。
+        // 步骤 1.1: 收集每个变量名出现过的所有类型定义。
         foreach (var rune in config.GetEnableRunes())
         {
             foreach (var spec in rune.GetConsumedSpec())
@@ -248,60 +345,96 @@ public class TuumAnalysisService
         // 步骤 1.2: 对每个变量，聚合其类型并检查兼容性。
         foreach ((string varName, var appearances) in variableTypeAppearances)
         {
-            VarSpecDef? finalDef;
-            // 找出所有非 Any 的类型定义
-            var concreteTypes = appearances.Where(def => def.TypeName != CoreVarDefs.Any.TypeName).Distinct().ToList();
-
-            if (concreteTypes.Count > 1)
+            var distinctAppearances = appearances.Distinct().ToList();
+            if (distinctAppearances.Count <= 1)
             {
-                // [Error 1: 类型不兼容]
-                messages.Add(new ValidationMessage
+                finalTypeDefs[varName] = distinctAppearances.FirstOrDefault() ?? CoreVarDefs.Any;
+                continue;
+            }
+
+            // 检查所有类型定义之间是否相互兼容
+            bool isCompatible = true;
+            for (int i = 0; i < distinctAppearances.Count; i++)
+            {
+                for (int j = i + 1; j < distinctAppearances.Count; j++)
                 {
-                    Severity = RuleSeverity.Error,
-                    Message = $"内部变量 '{varName}' 的类型定义不兼容。发现了多种具体类型: {string.Join(", ", concreteTypes.Select(t => t.TypeName))}",
-                    RuleSource = "TypeCompatibility"
-                });
-                // 当存在冲突时，我们仍然选择一个作为代表（比如第一个），或者干脆标记为 Any，以便后续流程能继续。这里我们选择Any。
-                finalDef = CoreVarDefs.Any;
+                    var typeA = distinctAppearances[i];
+                    var typeB = distinctAppearances[j];
+
+                    // 为了合并，它们必须可以互相转换（互相兼容）
+                    if (!typeA.IsCompatibleWith(typeB, mode) || !typeB.IsCompatibleWith(typeA, mode))
+                    {
+                        isCompatible = false;
+                        messages.Add(new ValidationMessage
+                        {
+                            Severity = RuleSeverity.Error,
+                            Message = $"内部变量 '{varName}' 的类型定义不兼容。在 '{mode}' 模式下，类型 '{typeA.TypeName}' 与 '{typeB.TypeName}' 存在冲突。",
+                            RuleSource = "TypeCompatibility"
+                        });
+                        break;
+                    }
+                }
+
+                if (!isCompatible) break;
+            }
+
+            // 如果不兼容，标记为Any并继续。如果兼容，选择一个最具体的作为代表。
+            if (!isCompatible)
+            {
+                finalTypeDefs[varName] = CoreVarDefs.Any;
             }
             else
             {
-                // 如果只有一个具体类型或全是Any，则类型兼容。
-                finalDef = concreteTypes.FirstOrDefault() ?? CoreVarDefs.Any;
+                // 选择一个最具体的类型作为代表（例如，属性最多的Record，或非Any类型）
+                finalTypeDefs[varName] = distinctAppearances
+                    .OrderByDescending(d =>
+                        d is RecordVarSpecDef r ? r.Properties.Count : (d.TypeName == CoreVarDefs.Any.TypeName ? -1 : 0))
+                    .First();
             }
-
-            finalTypeDefs[varName] = finalDef;
         }
 
         return (finalTypeDefs, messages);
     }
 
     // 检查映射到同一个外部输入端点的内部变量，其类型是否兼容。
-    private IEnumerable<ValidationMessage> AnalyzeInputTypes(TuumConfig config, IReadOnlyDictionary<string, VarSpecDef> typeDefs)
+    private IEnumerable<ValidationMessage> AnalyzeInputTypes(TuumConfig config, IReadOnlyDictionary<string, VarSpecDef> typeDefs,
+        TypeAnalysisMode mode)
     {
-        var endpointTypeConflicts = config.InputMappings
-            .GroupBy(kvp => kvp.Value) // 按外部端点名 (Value) 分组
-            .Select(group => new
-            {
-                EndpointName = group.Key,
-                // 获取该组内所有内部变量的最终推断类型
-                InternalVarTypes = group
-                    .Select(kvp => typeDefs.GetValueOrDefault(kvp.Key, CoreVarDefs.Any))
-                    .Where(def => def.TypeName != CoreVarDefs.Any.TypeName)
-                    .Distinct()
-                    .ToList()
-            })
-            .Where(g => g.InternalVarTypes.Count > 1); // 找出存在多个具体类型的分组
+        var endpointGroups = config.InputMappings.GroupBy(kvp => kvp.Value); // 按外部端点名分组
 
-        foreach (var conflict in endpointTypeConflicts)
+        foreach (var group in endpointGroups)
         {
-            yield return new ValidationMessage
+            var internalVarTypes = group
+                .Select(kvp => typeDefs.GetValueOrDefault(kvp.Key, CoreVarDefs.Any))
+                .Distinct()
+                .ToList();
+
+            if (internalVarTypes.Count <= 1) continue;
+
+            // 检查组内所有类型是否相互兼容
+            for (int i = 0; i < internalVarTypes.Count; i++)
             {
-                Severity = RuleSeverity.Error,
-                Message =
-                    $"输入映射冲突：外部端点 '{conflict.EndpointName}' 同时驱动了多个类型不兼容的内部变量。发现了类型: {string.Join(", ", conflict.InternalVarTypes.Select(t => t.TypeName))}",
-                RuleSource = "TypeCompatibility"
-            };
+                for (int j = i + 1; j < internalVarTypes.Count; j++)
+                {
+                    var typeA = internalVarTypes[i];
+                    var typeB = internalVarTypes[j];
+
+                    // 所有由同一外部源驱动的内部变量，必须是兼容的。
+                    // 这里我们只需要单向兼容即可，因为数据是单向流入的。
+                    // 但为了简单和安全，我们仍然可以检查双向兼容。
+                    if (typeA.IsCompatibleWith(typeB, mode) && typeB.IsCompatibleWith(typeA, mode))
+                        continue;
+                    yield return new ValidationMessage
+                    {
+                        Severity = RuleSeverity.Error,
+                        Message = $"输入映射冲突：外部端点 '{group.Key}' 同时驱动了多个类型不兼容的内部变量。在 '{mode}' 模式下，'{typeA.TypeName}' 与 '{typeB.TypeName}' 冲突。",
+                        RuleSource = "TypeCompatibility"
+                    };
+                    goto nextGroup; // 找到一个冲突就够了
+                }
+            }
+
+            nextGroup: ;
         }
     }
 
@@ -445,7 +578,7 @@ public class TuumAnalysisService
 
             // 确定类型：使用组内第一个内部变量的类型作为代表。
             // (类型兼容性已在 AnalyzeVariableTypes 中校验，这里可以安全地取第一个)
-            var endpointDef = CoreVarDefs.Any;
+            VarSpecDef endpointDef = CoreVarDefs.Any;
             if (internalVarsInGroup.FirstOrDefault() is { } firstVar && typeDefs.TryGetValue(firstVar, out var def))
             {
                 endpointDef = def;
