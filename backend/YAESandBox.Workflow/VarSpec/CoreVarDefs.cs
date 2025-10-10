@@ -26,11 +26,18 @@ public static class CoreVarDefs
         "字符串：代表一段文本数据，是工作流中最常用的类型。");
 
     /// <summary>
-    /// **数字 (Number)**: 代表一个数值，可以是整数或浮点数。
-    /// <para>用于计数、计算、ID标识或任何需要数学运算的场景。</para>
+    /// **整数 (Int)**: 代表一个没有小数部分的整数。
+    /// <para>内部通常由 64 位整数 (long) 支持，用于精确计数、ID、索引等场景。</para>
     /// </summary>
-    public static PrimitiveVarSpecDef Number { get; } = new("Number",
-        "数字：代表一个整数或浮点数，用于计数和计算。");
+    public static PrimitiveVarSpecDef Int { get; } = new("Int",
+        "整数：代表一个没有小数部分的整数，用于精确计数、ID等。");
+
+    /// <summary>
+    /// **浮点数 (Float)**: 代表一个可能包含小数部分的数字。
+    /// <para>内部通常由 64 位双精度浮点数 (double) 支持，用于需要小数精度或科学计算的场景。</para>
+    /// </summary>
+    public static PrimitiveVarSpecDef Float { get; } = new("Float",
+        "浮点数：代表一个可能包含小数部分的数字，用于科学计算等。");
 
     /// <summary>
     /// **布尔值 (Boolean)**: 代表一个逻辑上的真 (true) 或假 (false)。
@@ -49,11 +56,16 @@ public static class CoreVarDefs
         "字符串数组：一个只包含字符串元素的有序列表。", String);
 
     /// <summary>
-    /// **数字数组 (Number[])**: 一个只包含数字元素的有序列表。
-    /// <para>用于处理一系列ID、数值数据点等。</para>
+    /// **整数数组 (Int[])**: 一个只包含整数元素的有序列表。
     /// </summary>
-    public static ListVarSpecDef NumberList { get; } = new("Number[]",
-        "数字数组：一个只包含数字元素的有序列表。", Number);
+    public static ListVarSpecDef IntList { get; } = new("Int[]",
+        "整数数组：一个只包含整数元素的有序列表。", Int);
+
+    /// <summary>
+    /// **浮点数数组 (Float[])**: 一个只包含浮点数元素的有序列表。
+    /// </summary>
+    public static ListVarSpecDef FloatList { get; } = new("Float[]",
+        "浮点数数组：一个只包含浮点数元素的有序列表。", Float);
 
     /// <summary>
     /// **任意类型数组 (Any[])**: 一个可以包含任何类型元素的有序列表。

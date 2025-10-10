@@ -12,7 +12,7 @@ public record Error(string Message, Exception? Exception = null)
     /// <summary>
     /// 错误信息
     /// </summary>
-    internal string Message { get; } = Message;
+    public string Message { get; } = Message;
 
     /// <summary>
     /// 关联的异常（可能为 null）

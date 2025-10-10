@@ -125,7 +125,7 @@ public partial record JavaScriptRuneConfig : AbstractRuneConfig<JavaScriptRunePr
             /*
             {
               "name": "String",
-              "level": "Number"
+              "level": "Int"
             }
             */
             const player = ctx.GetTuumVar('player_info');
@@ -197,13 +197,14 @@ public partial record JavaScriptRuneConfig : AbstractRuneConfig<JavaScriptRunePr
         return typeName.ToLowerInvariant() switch
         {
             "string" => CoreVarDefs.String with { Description = description },
-            "number" => CoreVarDefs.Number with { Description = description },
+            "int" => CoreVarDefs.Int with { Description = description },
+            "float" => CoreVarDefs.Float with { Description = description },
             "boolean" => CoreVarDefs.Boolean with { Description = description },
             "jsonstring" => CoreVarDefs.JsonString with { Description = description },
             "any" => CoreVarDefs.Any with { Description = description },
             "promptlist" => CoreVarDefs.PromptList with { Description = description },
             "thinginfo" => ExtendVarDefs.ThingInfo with { Description = description },
-            _ => CoreVarDefs.Any with { Description = description } // 未知类型，默认为 Any
+            _ => new PrimitiveVarSpecDef(typeName, description)
         };
     }
 

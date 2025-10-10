@@ -107,7 +107,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
             --[[
             {
               "name": "String",
-              "level": "Number",
+              "level": "Float",
               "is_active": "Boolean"
             }
             ]]
@@ -120,7 +120,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
             ]]
             ctx.set('operation_result', { success = true, message = 'OK' })
 
-            -- @type: number 计算得出的最终分数
+            -- @type: int 计算得出的最终分数
             local score = 100
             ctx.set('final_score', score)
 
@@ -232,13 +232,14 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
         return typeName.ToLowerInvariant() switch
         {
             "string" => CoreVarDefs.String with { Description = description },
-            "number" => CoreVarDefs.Number with { Description = description },
+            "int" => CoreVarDefs.Int with { Description = description },
+            "float" => CoreVarDefs.Float with { Description = description },
             "boolean" => CoreVarDefs.Boolean with { Description = description },
             "jsonstring" => CoreVarDefs.JsonString with { Description = description },
             "any" => CoreVarDefs.Any with { Description = description },
             "promptlist" => CoreVarDefs.PromptList with { Description = description },
             "thinginfo" => ExtendVarDefs.ThingInfo with { Description = description },
-            _ => CoreVarDefs.Any with { Description = description } // 未知类型，默认为 Any
+            _ => new PrimitiveVarSpecDef(typeName, description)
         };
     }
 

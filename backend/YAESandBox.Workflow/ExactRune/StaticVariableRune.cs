@@ -181,9 +181,10 @@ internal partial record StaticVariableRuneConfig
 
             // TOML 基础类型 -> PrimitiveVarSpecDef
             case string: return CoreVarDefs.String;
-            case long:
             case int:
-            case double: return CoreVarDefs.Number;
+            case long: return CoreVarDefs.Int;
+            case float:
+            case double: return CoreVarDefs.Float;
             case bool: return CoreVarDefs.Boolean;
 
             case TomlArray tomlArray:

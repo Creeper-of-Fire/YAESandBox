@@ -195,6 +195,11 @@ public class TuumProcessor(
         /// <param name="path">变量路径。</param>
         /// <param name="value">如果成功，则输出转换后的值。</param>
         /// <returns>如果成功找到并转换了变量，则返回 true。</returns>
+        /// <remarks>
+        /// 不存在“TrySetTuumVarByPath”这样的方法，它会破坏我们显式的数据流，正确的做法是，读取，然后写回。
+        /// 并且，通常不建议把一个符文的功能设置为“Object.Assign”这样的模式，符文通常应该直截了当的产生一个对象，以做到上下文无关，并且有更好的类型提示，
+        /// 否则数据流的分析很可能需要考虑一个变量中对应属性产生的先后顺序，导致不确定的结果。
+        /// </remarks>
         public bool TryGetTuumVarByPath<T>(string path, [MaybeNullWhen(false)] out T value)
         {
             string[] parts = path.Split('.');
