@@ -19,6 +19,7 @@
 
     <ItemGroup>
         <PackageReference Include="JetBrains.Annotations" Version="2025.2.2"/>
+        <PackageReference Include="Tomlyn" Version="0.19.0" />
         <PackageReference Include="UUIDNext" Version="4.2.0"/>
     </ItemGroup>
 
@@ -31,9 +32,6 @@
         </Compile>
         <Compile Update="Rune\ExactRune\ScriptParser.cs">
             <DependentUpon>StaticVariableRune.cs</DependentUpon>
-        </Compile>
-        <Compile Update="ExactRune\StaticVariableRuneScriptParser.cs">
-          <DependentUpon>StaticVariableRune.cs</DependentUpon>
         </Compile>
     </ItemGroup>
 
