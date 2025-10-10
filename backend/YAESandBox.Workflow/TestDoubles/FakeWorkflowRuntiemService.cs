@@ -12,11 +12,16 @@ namespace YAESandBox.Workflow.TestDoubles;
 /// 它的所有服务默认都是无操作的或内存中的实例，以确保测试的隔离性。
 /// 属性是可设置的，以便在需要时注入特定的 Mock 对象。
 /// </summary>
-public sealed class FakeWorkflowRuntimeService() : WorkflowRuntimeService(
-    aiService: new SubAiService(null!, ""),
-    dataAccess: new FakeWorkflowDataAccess(),
-    callback: new FakeWorkflowCallback(),
-    persistenceService: new WorkflowPersistenceService(new InMemoryPersistenceStorage())
+public sealed class FakeWorkflowRuntimeService(
+    SubAiService? aiService = null,
+    IWorkflowDataAccess? dataAccess = null,
+    IWorkflowCallback? callback = null,
+    WorkflowPersistenceService? persistenceService = null
+) : WorkflowRuntimeService(
+    aiService: aiService ?? new SubAiService(null!, ""),
+    dataAccess: dataAccess ?? new FakeWorkflowDataAccess(),
+    callback: callback ?? new FakeWorkflowCallback(),
+    persistenceService: persistenceService ?? new WorkflowPersistenceService(new InMemoryPersistenceStorage())
 )
 {
     /// <summary>
