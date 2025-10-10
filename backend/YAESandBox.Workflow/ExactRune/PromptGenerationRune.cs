@@ -27,7 +27,7 @@ internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config, 
         creatingContext)
 {
     /// <inheritdoc />
-    public override PromptGenerationRuneProcessorDebugDto DebugDto { get; init; } = new()
+    public override PromptGenerationRuneProcessorDebugDto DebugDto { get; } = new()
     {
         OriginalTemplate = config.Template,
         ConfiguredRole = PromptRoleTypeExtension.ToPromptRoleType(config.RoleType),

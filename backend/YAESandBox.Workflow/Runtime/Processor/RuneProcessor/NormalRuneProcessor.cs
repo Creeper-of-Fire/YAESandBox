@@ -15,7 +15,7 @@ public abstract class NormalRuneProcessor<TConfig, TDebug>(TConfig config, ICrea
     where TConfig : AbstractRuneConfig where TDebug : IRuneProcessorDebugDto, new()
 {
     /// <inheritdoc />
-    public virtual TDebug DebugDto { get; init; } = new();
+    public virtual TDebug DebugDto { get; } = new();
 
     /// <inheritdoc />
     public virtual TConfig Config { get; } = config;
