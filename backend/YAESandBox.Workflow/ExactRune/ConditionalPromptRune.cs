@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using Esprima;
 using Jint;
 using Jint.Native;
 using Jint.Runtime;
@@ -8,6 +9,7 @@ using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Runtime.Processor;
+using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
 
 namespace YAESandBox.Workflow.ExactRune;
@@ -165,6 +167,60 @@ internal record ConditionalPromptRuneConfig : PromptGenerationRuneConfig
     protected override PromptGenerationRuneProcessor ToCurrentRune(ICreatingContext creatingContext) =>
         new ConditionalPromptRuneProcessor(this, creatingContext);
 
-    // GetConsumedSpec 和 GetProducedSpec 会被基类 PromptGenerationRuneConfig 自动处理，
-    // Jint 的注入逻辑会智能地使用 GetConsumedSpec 的结果，无需我们重写。
+    /// <summary>
+    /// 覆盖基类的方法，以同时分析 Template 和 Condition 字段中的变量。
+    /// </summary>
+    public override List<ConsumedSpec> GetConsumedSpec()
+    {
+        // 1. 首先，调用基类的方法来获取从 Template (`{{...}}`) 中解析出的所有变量。
+        var specsFromTemplate = base.GetConsumedSpec();
+
+        // 2. 然后，解析 Condition 字段中的 JavaScript 代码来找出额外的变量。
+        var variableNamesFromCondition = ParseJavaScriptVariables(this.Condition);
+
+        // 3. 合并两个来源的变量。
+        var finalSpecs = specsFromTemplate.ToDictionary(s => s.Name, s => s);
+
+        foreach (var varName in variableNamesFromCondition)
+        {
+            // 如果这个变量还没被 Template 解析器添加，就作为一个新的消费项添加。
+            // 我们将其类型定义为 Any，因为我们无法从 JS 代码中静态推断其具体类型。
+            if (!finalSpecs.ContainsKey(varName))
+            {
+                finalSpecs[varName] = new ConsumedSpec(varName, CoreVarDefs.Any) { IsOptional = true };
+            }
+        }
+
+        return finalSpecs.Values.ToList();
+    }
+    
+    /// <summary>
+    /// 使用 Esprima.NET 解析 JavaScript 字符串，并提取所有顶层的自由变量引用。
+    /// </summary>
+    private static ISet<string> ParseJavaScriptVariables(string script)
+    {
+        if (string.IsNullOrWhiteSpace(script))
+        {
+            return new HashSet<string>();
+        }
+
+        var identifiers = new HashSet<string>();
+        try
+        {
+            var parser = new JavaScriptParser();
+            var program = parser.ParseScript(script); // Or ParseModule if needed
+
+            // 使用一个访问者模式来遍历 AST
+            var visitor = new JavaScriptVariableExtractor();
+            visitor.Visit(program);
+            
+            return visitor.Identifiers;
+        }
+        catch (ParserException)
+        {
+            // 如果用户输入的JS有语法错误，解析会失败。
+            // 在这种情况下，我们优雅地返回空集合，避免使整个UI崩溃。
+            return new HashSet<string>();
+        }
+    }
 }
