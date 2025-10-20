@@ -1,4 +1,4 @@
-﻿import {cloneDeep} from "lodash-es";
+﻿import {cloneDeep, set} from "lodash-es";
 import {type Component, defineAsyncComponent, markRaw} from "vue";
 import {getVuePluginComponent} from "#/features/schema-viewer/plugin-loader.ts";
 import WebComponentWrapper from "#/features/schema-viewer/WebComponentWrapper.vue";
@@ -7,16 +7,25 @@ import SliderWithInputWidget from "#/features/schema-viewer/field-widget/SliderW
 import {NAutoComplete, NCheckbox, NInput, NInputNumber, NSelect, NSwitch} from "naive-ui";
 import RadioGroupWidget from "#/features/schema-viewer/field-widget/RadioGroupWidget.vue";
 import DynamicStringList from "#/features/schema-viewer/field-widget/DynamicStringList.vue";
+import FieldArrayWidget from "#/features/schema-viewer/field-widget/FieldArrayWidget.vue";
+import SelectWidget from "#/features/schema-viewer/field-widget/SelectWidget.vue";
 
 // =================================================================
 // 1. 组件注册表
 // =================================================================
+
+// 定义组件注册的接口，包含元数据
+export interface ComponentRegistration {
+    component: Component;
+    isStructural: boolean;
+}
 
 // 主应用内建的、通过键名引用的自定义组件
 const MAIN_APP_WIDGETS: Record<string, Component> = {
     'AiConfigEditorWidget': markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/field-widget/AiConfigEditorWidget.vue'))),
     'SillyTavernPresetEditor': markRaw(defineAsyncComponent(() => import('#/features/sillytavern-widget/PresetEditor.vue'))),
     'UnknownRuneEditor': markRaw(defineAsyncComponent(() => import('#/features/schema-viewer/rune-widget/UnknownRuneEditor.vue'))),
+    'SelectWidget': markRaw(SelectWidget),
     // ... 其他内建组件
 };
 
@@ -38,6 +47,7 @@ const COMPONENT_MAP: Record<string, Component> = {
     'WebComponentWrapper': markRaw(WebComponentWrapper),
     'RadioGroupWidget': markRaw(RadioGroupWidget),
     'DynamicStringList': markRaw(DynamicStringList),
+    'FieldArrayWidget': markRaw(FieldArrayWidget),
 
     // 插件和内建组件
     ...MAIN_APP_WIDGETS,
@@ -100,6 +110,24 @@ export function preprocessSchemaForVeeValidate(
     const fields = processNode(schema, '', []);
 
     return {fields, componentMap: COMPONENT_MAP};
+}
+
+/**
+ * 辅助函数：根据字段定义构建一个包含默认值的对象
+ * @param fields - 预处理后的字段数组
+ */
+function buildDefaultsFromFields(fields: FormFieldViewModel[]): Record<string, any>
+{
+    const defaults: Record<string, any> = {};
+    fields.forEach(field =>
+    {
+        if (field.initialValue !== undefined)
+        {
+            // 使用 lodash.set 来处理嵌套路径，例如 'user.address.street'
+            set(defaults, field.name, field.initialValue);
+        }
+    });
+    return defaults;
 }
 
 // =================================================================
@@ -215,12 +243,32 @@ function processNode(
             }
             return [];
         case 'array':
-            // vee-validate 使用 useFieldArray 处理数组，这里暂时简化
-            // 可以创建一个自定义组件来管理数组项的增删
+            if (!node.items || Array.isArray(node.items))
+            return [];
+            const itemsType = getPrimaryType(node.items.type);
 
-            // 新增: 处理数组类型的逻辑
-            // 我们只处理 "字符串数组" 这种情况
-            if (node.items && !Array.isArray(node.items) && (getPrimaryType(node.items.type))) {
+            // 处理对象数组
+            if (itemsType === 'object') {
+                // 1. 递归处理子项 schema，生成字段模板。
+                //    路径为空字符串，因为路径将相对于数组的每个元素。
+                const itemFieldsTemplate = processNode(node.items, '', node.items.required || []);
+
+                // 2. 根据模板生成一个用于“添加”的默认对象
+                const itemDefaults = buildDefaultsFromFields(itemFieldsTemplate);
+
+                // 3. 创建代表整个数组的 ViewModel
+                const vm = createFieldViewModel(node, path, requiredFields, 'FieldArrayWidget');
+
+                // 4. 将模板和默认值作为 props 传递
+                vm.props = {
+                    itemFieldsTemplate: itemFieldsTemplate,
+                    itemDefaults: itemDefaults,
+                    arrayTitle:  node.title || '项目'
+                };
+                return [vm];
+            }
+            // 处理字符串数组
+            if (itemsType === 'string') {
                 const vm = createFieldViewModel(node, path, requiredFields);
                 // 强制使用我们新的 DynamicStringList 组件
                 vm.component = 'DynamicStringList';

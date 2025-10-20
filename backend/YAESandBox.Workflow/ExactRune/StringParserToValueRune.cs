@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
+using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config.RuneConfig;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Runtime.Processor;
@@ -214,6 +215,7 @@ internal class StringParserToValueRuneProcessor(StringParserToValueRuneConfig co
 /// “字符串解析为值”符文的配置。
 /// </summary>
 [ClassLabel("🔎值解析")]
+[RuneCategory("文本解析")] 
 internal record StringParserToValueRuneConfig : AbstractRuneConfig<StringParserToValueRuneProcessor>
 {
     private const string GroupIO = "输入/输出";
@@ -275,11 +277,18 @@ public record ExtractionRule
 {
     private const string ExtractionObject = "提取对象";
 
+    /// <summary>
+    /// 提取出的值在输出对象中的键名。
+    /// </summary>
     [InlineGroup(ExtractionObject)]
     [Required(AllowEmptyStrings = false)]
     [Display(Name = "字段名", Description = "提取出的值在输出对象中的键名。")]
     public string FieldName { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 希望将提取出的值转换为哪种类型。
+    /// </summary>
+    [RenderWithCustomWidget("SelectWidget")]
     [InlineGroup(ExtractionObject)]
     [Required]
     [DefaultValue(ExtractedValueType.String)]
@@ -297,17 +306,27 @@ public record ExtractionRule
     )]
     public ExtractedValueType FieldType { get; init; } = ExtractedValueType.String;
 
+    /// <summary>
+    /// 如果勾选，当此字段无法匹配也无默认值时，整个符文将执行失败。
+    /// </summary>
+    [InlineGroup(ExtractionObject)]
+    [DefaultValue(false)]
+    [Display(Name = "是否必需", Description = "如果勾选，当此字段无法匹配也无默认值时，整个符文将执行失败。")]
+    public bool IsRequired { get; init; }
+
+    /// <summary>
+    /// 用于提取值的.NET正则表达式。
+    /// </summary>
     [Required(AllowEmptyStrings = false)]
     [DataType(DataType.MultilineText)]
     [Display(Name = "正则表达式", Description = "用于提取值的.NET正则表达式。必须包含一个名为 'value' 的捕获组，例如 '等级：(?<value>\\d+)'。")]
     public string Pattern { get; init; } = string.Empty;
 
+    /// <summary>
+    /// 如果正则表达式未匹配到任何内容，将使用此值。
+    /// </summary>
     [Display(Name = "默认值 (可选)", Description = "如果正则表达式未匹配到任何内容，将使用此值。")]
     public string? DefaultValue { get; init; }
-
-    [DefaultValue(false)]
-    [Display(Name = "是否必需", Description = "如果勾选，当此字段无法匹配也无默认值时，整个符文将执行失败。")]
-    public bool IsRequired { get; init; }
 }
 
 /// <summary>
@@ -315,8 +334,23 @@ public record ExtractionRule
 /// </summary>
 public enum ExtractedValueType
 {
+    /// <summary>
+    /// 字符串
+    /// </summary>
     String,
+
+    /// <summary>
+    /// 整数
+    /// </summary>
     Integer,
+
+    /// <summary>
+    /// 浮点数
+    /// </summary>
     Float,
+
+    /// <summary>
+    /// 布尔值
+    /// </summary>
     Boolean
 }
