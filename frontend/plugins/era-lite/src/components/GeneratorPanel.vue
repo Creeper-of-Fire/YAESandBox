@@ -10,6 +10,19 @@
           type="textarea"
       />
 
+      <n-flex :size="8" align="center" style="margin-top: -4px; margin-bottom: 4px;">
+        <n-text :depth="3" style="font-size: 12px;">
+          固定输入参数:
+        </n-text>
+        <n-code inline style="font-size: 12px; padding: 2px 6px;">
+          entityName
+        </n-code>
+        <n-text :depth="3" style="font-size: 12px;">=</n-text>
+        <n-tag :bordered="false" round size="small" type="info">
+          {{ props.entityName }}
+        </n-tag>
+      </n-flex>
+
       <!-- 配置提供者按钮 -->
       <WorkflowSelectorButton
           :filter="workflowFilter"
@@ -74,7 +87,8 @@ import {
   type EntityFieldSchema,
   getKey,
   useFlatDataWithSchema,
-  useStructuredWorkflowStream, type WorkflowFilter
+  useStructuredWorkflowStream,
+  type WorkflowFilter
 } from '@yaesandbox-frontend/core-services/composables';
 import {WorkflowSelectorButton} from '@yaesandbox-frontend/core-services/workflow'
 import EntityEditor from "#/components/EntityEditor.vue";
@@ -97,7 +111,7 @@ const emit = defineEmits<{
 }>();
 
 const workflowFilter = ref<WorkflowFilter>({
-  expectedInputs: props.expectedInputs,
+  expectedInputs: [...props.expectedInputs, 'entityName'],
   requiredTags: props.requiredTags,
 });
 
@@ -153,7 +167,10 @@ async function handleGenerate(config: WorkflowConfig)
     message.warning('请输入生成内容的核心描述！');
     return;
   }
-  const inputs = {topic: generationTopic.value};
+  const inputs = {
+    topic: generationTopic.value,
+    entityName: props.entityName
+  };
   await execute(config, inputs);
 }
 
