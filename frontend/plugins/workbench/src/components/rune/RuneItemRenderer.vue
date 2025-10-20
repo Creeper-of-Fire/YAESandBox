@@ -20,8 +20,7 @@
     </template>
 
     <template #actions>
-      <!-- 校验状态指示器，不过目前没有校验内容可供使用 -->
-      <ValidationStatusIndicator :validation-info="validationInfo"/>
+      <ValidationStatusIndicator v-if="validationInfo" :validation-info="validationInfo"/>
 
       <n-popover v-if="rulesForThisRune" trigger="hover">
         <template #trigger>

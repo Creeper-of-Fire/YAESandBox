@@ -23,7 +23,7 @@
 
       <template #actions>
         <!-- 校验状态指示器 -->
-        <ValidationStatusIndicator :validation-info="validationInfo"/>
+        <ValidationStatusIndicator v-if="validationInfo" :validation-info="validationInfo"/>
         <!-- 枢机的操作按钮 -->
         <ConfigItemActionsMenu :actions="itemActions"/>
       </template>

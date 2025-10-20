@@ -51,7 +51,7 @@ import type {ValidationInfo} from "#/components/share/validationInfo/useValidati
 
 const props = defineProps({
   validationInfo: {
-    type: Object as PropType<ValidationInfo | null>,
+    type: Object as PropType<ValidationInfo>,
     default: null,
   },
 });
