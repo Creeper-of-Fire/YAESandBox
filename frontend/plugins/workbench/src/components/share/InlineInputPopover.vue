@@ -64,7 +64,7 @@
 
 <script lang="ts" setup>
 import {computed, nextTick, ref, watch} from 'vue';
-import {type InputInst, type TreeSelectOverrideNodeClickBehavior} from 'naive-ui';
+import {type InputInst, type TreeSelectOption, type TreeSelectOverrideNodeClickBehavior} from 'naive-ui';
 import {NAlert, NButton, NFlex, NFormItem, NH5, NInput, NPopover} from 'naive-ui';
 import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
@@ -138,24 +138,59 @@ const isInputValid = computed(() =>
   return false; // 其他未知情况
 });
 
-// --- 监视器 ---
-watch(selectValue, (newType) =>
-{
-  if (newType && contentType.value === 'select-and-input')
-  {
-    if (props.action.popoverDefaultNameGenerator)
-    {
-      inputValue.value = props.action.popoverDefaultNameGenerator(newType, selectOptions.value);
-    }
-    else
-    {
-      const option = selectOptions.value.find(opt => opt.value === newType);
-      inputValue.value = option?.label as string || '新项目';
-    }
+const treeSelectOptions = computed(() => {
+  // 这里可以添加一个类型守卫，虽然在这种情况下不是必须的，但是个好习惯
+  if (props.action.popoverContentType === 'select-and-input') {
+    // 我们假设当 contentType 是 'select-and-input' 时，传入的总是 TreeSelectOption[]
+    return props.action.popoverSelectOptions as TreeSelectOption[] || [];
   }
-  else if (contentType.value !== 'confirm-delete')
-  { // 只有在非确认删除模式下才清空
-    inputValue.value = '';
+  return [];
+});
+
+// --- 监视器 ---
+watch(selectValue, (newType, oldType) =>
+{
+  if (newType !== oldType && newType) {
+    if (contentType.value === 'select-and-input') {
+      if (props.action.popoverDefaultNameGenerator) {
+        // popoverSelectOptions 是树状的，需要扁平化才能查找
+        const flattenOptions = (nodes: TreeSelectOption[]): TreeSelectOption[] => {
+          let result: TreeSelectOption[] = [];
+          for (const node of nodes) {
+            result.push(node);
+            if (node.children) {
+              result = result.concat(flattenOptions(node.children));
+            }
+          }
+          return result;
+        };
+
+        // 使用 popoverDefaultNameGenerator 生成推荐名称
+        inputValue.value = props.action.popoverDefaultNameGenerator(
+            newType,
+            flattenOptions(treeSelectOptions.value)
+        );
+      } else {
+        // 如果没有生成器，回退到使用 label 作为名称
+        const flattenOptions = (nodes: TreeSelectOption[]): TreeSelectOption[] => {
+          let result: TreeSelectOption[] = [];
+          for (const node of nodes) {
+            result.push(node);
+            if (node.children) {
+              result = result.concat(flattenOptions(node.children));
+            }
+          }
+          return result;
+        };
+        const option = flattenOptions(treeSelectOptions.value).find(opt => opt.key === newType);
+        inputValue.value = (option?.label as string) || '新项目';
+      }
+    }
+  } else if (!newType) {
+    // 如果选择被清空，则重置输入框
+    if (contentType.value !== 'confirm-delete') {
+      inputValue.value = '';
+    }
   }
 });
 
@@ -171,6 +206,22 @@ function handleTriggerClick()
       inputValue.value = props.action.popoverInitialValue || '';
       selectValue.value = null;
     }
+
+    // 首次打开时默认展开所有
+    if (expandedKeys.value.length === 0 && props.action?.popoverSelectOptions) {
+      const getAllParentKeys = (nodes: TreeSelectOption[]): string[] => {
+        let keys: string[] = [];
+        for (const node of nodes) {
+          if (node.children && node.children.length > 0) {
+            keys.push(node.key as string);
+            keys = keys.concat(getAllParentKeys(node.children));
+          }
+        }
+        return keys;
+      };
+      expandedKeys.value = getAllParentKeys(props.action.popoverSelectOptions);
+    }
+
     nextTick(() =>
     {
       if (inputRef.value)

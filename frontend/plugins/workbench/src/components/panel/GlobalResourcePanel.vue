@@ -186,6 +186,7 @@ import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
 import {AddIcon, EditIcon, TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
 import {useEditorControlPayload} from "#/services/editor-context/useSelectedConfig.ts";
 import {useFilteredGlobalResources} from "#/composables/useFilteredGlobalResources.ts";
+import {useRuneTypeSelector} from "#/composables/useRuneTypeSelector.ts";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -211,7 +212,7 @@ const {
 const {
   resources: tuums,
   allAvailableTags: tuumTags,
-    filterTags: tuumFilterTags,
+  filterTags: tuumFilterTags,
   isLoading: isTuumsLoading,
   error: tuumsError,
   execute: executeTuums
@@ -219,7 +220,7 @@ const {
 const {
   resources: runes,
   allAvailableTags: runeTags,
-    filterTags: runeFilterTags,
+  filterTags: runeFilterTags,
   isLoading: isRunesLoading,
   error: runesError,
   execute: executeRunes
@@ -227,30 +228,50 @@ const {
 
 // 可写的计算属性，用于 v-model 绑定到 n-select
 const activeFilterTags = computed({
-  get: () => {
-    switch (activeTab.value) {
-      case 'workflow': return workflowFilterTags.value;
-      case 'tuum': return tuumFilterTags.value;
-      case 'rune': return runeFilterTags.value;
-      default: return [];
+  get: () =>
+  {
+    switch (activeTab.value)
+    {
+      case 'workflow':
+        return workflowFilterTags.value;
+      case 'tuum':
+        return tuumFilterTags.value;
+      case 'rune':
+        return runeFilterTags.value;
+      default:
+        return [];
     }
   },
-  set: (tags: string[]) => {
-    switch (activeTab.value) {
-      case 'workflow': workflowFilterTags.value = tags; break;
-      case 'tuum': tuumFilterTags.value = tags; break;
-      case 'rune': runeFilterTags.value = tags; break;
+  set: (tags: string[]) =>
+  {
+    switch (activeTab.value)
+    {
+      case 'workflow':
+        workflowFilterTags.value = tags;
+        break;
+      case 'tuum':
+        tuumFilterTags.value = tags;
+        break;
+      case 'rune':
+        runeFilterTags.value = tags;
+        break;
     }
   },
 });
 
 // 计算当前激活 Tab 的可用标签列表
-const activeAvailableTags = computed(() => {
-  switch (activeTab.value) {
-    case 'workflow': return workflowTags.value;
-    case 'tuum': return tuumTags.value;
-    case 'rune': return runeTags.value;
-    default: return [];
+const activeAvailableTags = computed(() =>
+{
+  switch (activeTab.value)
+  {
+    case 'workflow':
+      return workflowTags.value;
+    case 'tuum':
+      return tuumTags.value;
+    case 'rune':
+      return runeTags.value;
+    default:
+      return [];
   }
 });
 
@@ -325,34 +346,8 @@ const currentTabLabel = computed(() =>
   }
 });
 
-const runeTypeOptions = computed(() =>
-{
-  const schemas = workbenchStore.runeSchemasAsync.state;
-  if (!schemas) return [];
-  return Object.keys(schemas).map(key =>
-  {
-    const metadata = workbenchStore.runeMetadata[key];
-    return {
-      label: metadata?.classLabel || schemas[key].title || key,
-      value: key,
-    };
-  });
-});
+const {runeTypeOptions, runeDefaultNameGenerator} = useRuneTypeSelector();
 
-const runeDefaultNameGenerator = (newType: string, options: any[]) =>
-{
-  if (newType)
-  {
-    const schema = workbenchStore.runeSchemasAsync.state[newType];
-    const defaultName = schema?.properties?.name?.default;
-    if (typeof defaultName === 'string')
-    {
-      return defaultName;
-    }
-    return options.find(opt => opt.value === newType)?.label || '新符文';
-  }
-  return '';
-};
 /**
  * :content-type="activeTab === 'rune' ? 'select-and-input' : 'input'"
  *             :default-name-generator="runeDefaultNameGenerator"
