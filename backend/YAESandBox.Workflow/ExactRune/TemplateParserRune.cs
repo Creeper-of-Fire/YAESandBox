@@ -1,7 +1,10 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
+using System.Globalization;
 using System.Text.RegularExpressions;
 using Tomlyn;
+using Tomlyn.Model;
+using YAESandBox.Depend.Logger;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.API.Schema;
@@ -18,15 +21,18 @@ namespace YAESandBox.Workflow.ExactRune;
 /// <summary>
 /// “模板解析”符文的运行时处理器。
 /// </summary>
-internal class TemplateParserRuneProcessor(TemplateParserRuneConfig config, ICreatingContext creatingContext)
+internal partial class TemplateParserRuneProcessor(TemplateParserRuneConfig config, ICreatingContext creatingContext)
     : NormalRuneProcessor<TemplateParserRuneConfig, TemplateParserRuneProcessor.TemplateParserRuneDebugDto>(config, creatingContext)
 {
-    private static readonly Regex PlaceholderRegex = new(@"\$\{(?<name>\w+)(?::\w+)?\}", RegexOptions.Compiled);
+    private static readonly Regex PlaceholderRegex = GetPlaceholderRegex();
+
+    [GeneratedRegex(@"\$\{(?<name>\w+)(?::\w+)?\}", RegexOptions.Compiled)]
+    private static partial Regex GetPlaceholderRegex();
 
     public override Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
         // 1. 获取输入并初始化
-        var inputText = tuumProcessorContent.GetTuumVar<string>(this.Config.InputVariableName) ?? string.Empty;
+        string inputText = tuumProcessorContent.GetTuumVar<string>(this.Config.InputVariableName) ?? string.Empty;
         this.DebugDto.InputText = inputText;
         var capturedValues = new Dictionary<string, string>();
         var regexOptions = this.BuildRegexOptions();
@@ -36,44 +42,53 @@ internal class TemplateParserRuneProcessor(TemplateParserRuneConfig config, ICre
             // 2. 聚合所有命名捕获组
             foreach (var pattern in this.Config.ExtractionPatterns)
             {
-                if (string.IsNullOrWhiteSpace(pattern)) continue;
+                if (string.IsNullOrWhiteSpace(pattern.Pattern)) continue;
 
-                var regex = new Regex(pattern, regexOptions, TimeSpan.FromSeconds(5));
+                var regex = new Regex(pattern.Pattern, regexOptions, TimeSpan.FromSeconds(5));
                 var match = regex.Match(inputText);
 
-                if (match.Success)
+                if (!match.Success)
+                    continue;
+
+                foreach (string groupName in regex.GetGroupNames())
                 {
-                    foreach (var groupName in regex.GetGroupNames())
-                    {
-                        if (int.TryParse(groupName, out _)) continue; // 跳过数字命名的组
-                        capturedValues[groupName] = match.Groups[groupName].Value;
-                    }
+                    if (int.TryParse(groupName, out _)) continue; // 跳过数字命名的组
+                    capturedValues[groupName] = match.Groups[groupName].Value;
                 }
             }
 
             this.DebugDto.CapturedValues = capturedValues;
 
-            // 3. 填充 TOML 模板
-            var filledTemplate = PlaceholderRegex.Replace(this.Config.OutputTemplate, match =>
-                capturedValues.TryGetValue(match.Groups["name"].Value, out var value) ? value : string.Empty
-            );
+            // 3. 智能填充 TOML 模板
+            string filledTemplate = PlaceholderRegex.Replace(this.Config.OutputTemplate, match =>
+            {
+                string groupName = match.Groups["name"].Value;
+                string? typeHint = match.Groups["type"].Success ? match.Groups["type"].Value : null;
+
+                capturedValues.TryGetValue(groupName, out string? capturedStringValue);
+
+                // 这个新的辅助函数会生成正确的替换值，
+                // 并且不会为字符串类型添加多余的引号。
+                return GetTomlReplacementValue(capturedStringValue, typeHint);
+            });
             this.DebugDto.FilledTomlTemplate = filledTemplate;
 
-            // 4. 解析填充后的 TOML 并转换为运行时对象
-            var model = Toml.ToModel(filledTemplate);
-            var runtimeValue = TomlRuneHelper.ConvertTomlObjectToRuntimeValue(model);
+            // 4. 解析填充后的 TOML
+            var modelOptions = new TomlModelOptions { ConvertPropertyName = s => s };
+            var model = Toml.ToModel(filledTemplate, options: modelOptions);
+            this.DebugDto.ParsedTomlModel = model;
 
-            // TOML 的根总是一个字典
-            if (runtimeValue is Dictionary<string, object?> outputDict)
+            // 5. 将TOML的顶级键作为变量名，并设置变量
+            var finalOutputs = new Dictionary<string, object?>();
+            foreach (var kvp in model)
             {
-                this.DebugDto.FinalOutput = outputDict;
-                tuumProcessorContent.SetTuumVar(this.Config.OutputVariableName, outputDict);
+                string variableName = kvp.Key;
+                object runtimeValue = TomlRuneHelper.ConvertTomlObjectToRuntimeValue(kvp.Value);
+                finalOutputs[variableName] = runtimeValue;
+                tuumProcessorContent.MergeTuumVar(variableName, runtimeValue);
             }
-            else
-            {
-                // 理论上不应发生，因为 TOML 根总是表
-                throw new InvalidOperationException("解析后的 TOML 根对象不是一个有效的字典。");
-            }
+
+            this.DebugDto.FinalOutputs = finalOutputs;
 
             return Result.Ok().AsCompletedTask();
         }
@@ -83,6 +98,91 @@ internal class TemplateParserRuneProcessor(TemplateParserRuneConfig config, ICre
             this.DebugDto.RuntimeError = error.ToDetailString();
             return Result.Fail(error).AsCompletedTask();
         }
+    }
+
+    /// <summary>
+    /// 根据捕获的字符串值和类型提示，生成适合在 TOML 模板中进行替换的字符串。
+    /// - 对于非字符串类型，返回其 TOML 字面量（如 "123", "true", "1.23"）。
+    /// - 对于字符串类型，返回经过转义的、可以安全地嵌入到模板已有引号中的 *内容*。
+    /// </summary>
+    private static string GetTomlReplacementValue(string? value, string? typeHint)
+    {
+        string valueOrEmpty = value ?? string.Empty;
+
+        switch (typeHint)
+        {
+            case "int":
+                return long.TryParse(valueOrEmpty, NumberStyles.Any, CultureInfo.InvariantCulture, out long i)
+                    ? i.ToString(CultureInfo.InvariantCulture)
+                    : "0";
+            case "float":
+                return double.TryParse(valueOrEmpty, NumberStyles.Any, CultureInfo.InvariantCulture, out double f)
+                    ? f.ToString("G17", CultureInfo.InvariantCulture)
+                    : "0.0";
+            case "bool":
+                return bool.TryParse(valueOrEmpty, out bool b) && b
+                    ? "true"
+                    : "false";
+            
+            // 默认处理为字符串类型
+            default:
+            {
+                // 使用 Tomlyn 序列化一个临时对象来获取正确转义的字符串 *字面量*。
+                // 例如，如果 valueOrEmpty 是 "line1\nline2\"quote\""，
+                // tomlSnippet 将是 "v = \"line1\\nline2\\\"quote\\\"\""。
+                var tempModel = new TomlTable { ["v"] = valueOrEmpty };
+                string tomlSnippet = Toml.FromModel(tempModel);
+
+                int valuePartIndex = tomlSnippet.IndexOf('=');
+                if (valuePartIndex == -1) return string.Empty; // 安全检查
+
+                string literal = tomlSnippet.Substring(valuePartIndex + 1).Trim();
+
+                // 我们需要的是引号 *内部* 的内容，所以我们剥离 Tomlyn 添加的外部引号。
+                // 例如，对于 "content with \"quotes\""，我们想要的是 'content with \"quotes\"'。
+                if (literal.Length >= 2 && literal.StartsWith('"') && literal.EndsWith('"'))
+                {
+                    return literal.Substring(1, literal.Length - 2);
+                }
+
+                // 同样处理多行字符串的情况
+                if (literal.Length >= 6 && literal.StartsWith("'''", StringComparison.Ordinal) && literal.EndsWith("'''", StringComparison.Ordinal))
+                {
+                    return literal.Substring(3, literal.Length - 6);
+                }
+                
+                // 为 Tomlyn 可能生成的其他字面量类型（例如，'...' 形式的字面量字符串）提供回退，
+                // 尽管对于任意输入来说这种情况不太可能发生。
+                if (literal.Length >= 2 && literal.StartsWith('\'') && literal.EndsWith('\''))
+                {
+                    return literal.Substring(1, literal.Length - 2);
+                }
+                
+                return valueOrEmpty; // 最后的备用逻辑，应该很少被触发。
+            }
+        }
+    }
+    /// <summary>
+    /// 使用 Tomlyn 序列化器将 C# 对象转换为其 TOML 字面量表示形式的字符串。
+    /// 这从根本上解决了所有转义和格式化问题。
+    /// </summary>
+    private static string SerializeTomlLiteral(object value)
+    {
+        // 创建一个临时模型，其中包含我们要序列化的值
+        var tempModel = new TomlTable { ["v"] = value };
+
+        // 让 Tomlyn 将此模型序列化为字符串，例如 "v = \"some string with \\\"quotes\\\"\""
+        string tomlSnippet = Toml.FromModel(tempModel);
+
+        // 提取等号后面的部分，即值的字面量表示
+        int valuePartIndex = tomlSnippet.IndexOf('=');
+        if (valuePartIndex >= 0)
+        {
+            return tomlSnippet.Substring(valuePartIndex + 1).Trim();
+        }
+
+        // 如果发生意外，返回一个安全的默认值（TOML空字符串）
+        return "''";
     }
 
     private RegexOptions BuildRegexOptions()
@@ -100,7 +200,8 @@ internal class TemplateParserRuneProcessor(TemplateParserRuneConfig config, ICre
         public string? InputText { get; set; }
         public Dictionary<string, string>? CapturedValues { get; set; }
         public string? FilledTomlTemplate { get; set; }
-        public Dictionary<string, object?>? FinalOutput { get; set; }
+        public TomlTable? ParsedTomlModel { get; set; }
+        public Dictionary<string, object?>? FinalOutputs { get; set; }
         public string? RuntimeError { get; set; }
     }
 }
@@ -110,10 +211,11 @@ internal class TemplateParserRuneProcessor(TemplateParserRuneConfig config, ICre
 /// 使用正则表达式的命名捕获组和TOML模板，从文本中提取并构建结构化数据。
 /// </summary>
 [ClassLabel("🛠️模板解析")]
-[RuneCategory("文本解析")] 
+[RuneCategory("文本解析")]
 internal partial record TemplateParserRuneConfig : AbstractRuneConfig<TemplateParserRuneProcessor>
 {
-    private const string GroupIO = "输入/输出";
+    private static IAppLogger Logger { get; } = AppLogging.CreateLogger<TemplateParserRuneProcessor>();
+
     private const string GroupRegex = "全局正则选项";
     private static readonly Regex PlaceholderForSpecRegex = GetPlaceholderForSpecRegex();
 
@@ -122,15 +224,7 @@ internal partial record TemplateParserRuneConfig : AbstractRuneConfig<TemplatePa
 
     #region Config Properties
 
-    [Required]
-    [InlineGroup(GroupIO)]
-    [Display(Name = "输入变量名")]
-    public string InputVariableName { get; init; } = "AiOutput";
-
-    [Required]
-    [InlineGroup(GroupIO)]
-    [Display(Name = "输出变量名", Description = "用于存储解析结果（一个对象）的目标变量名。")]
-    public string OutputVariableName { get; init; } = "parsedResult";
+    [Required] [Display(Name = "输入变量名")] public string InputVariableName { get; init; } = "AiOutput";
 
     [InlineGroup(GroupRegex)]
     [DefaultValue(true)]
@@ -148,7 +242,20 @@ internal partial record TemplateParserRuneConfig : AbstractRuneConfig<TemplatePa
     public bool DotAll { get; init; } = true;
 
     [Display(Name = "提取模式", Description = "定义一个或多个正则表达式，用于从输入文本中捕获命名组。后匹配到的同名组会覆盖前者。")]
-    public List<string> ExtractionPatterns { get; init; } = [];
+    public List<ExtractionPattern> ExtractionPatterns { get; init; } = [];
+
+    /// <summary>
+    /// 定义一个用于文本提取的正则表达式模式。
+    /// </summary>
+    public record ExtractionPattern
+    {
+        /// <summary>
+        /// 用于从输入文本中捕获命名组的正则表达式
+        /// </summary>
+        [Required(AllowEmptyStrings = false)]
+        [Display(Name = "正则表达式", Description = "用于从输入文本中捕获命名组的正则表达式。")]
+        public string Pattern { get; init; } = string.Empty;
+    }
 
     [Required(AllowEmptyStrings = true)]
     [DataType(DataType.MultilineText)]
@@ -180,23 +287,29 @@ internal partial record TemplateParserRuneConfig : AbstractRuneConfig<TemplatePa
             return [];
         }
 
+        string preprocessedTemplate = PreprocessTomlTemplateForSpec(this.OutputTemplate);
+        Logger.Info("正在准备{PreprocessedTemplate}", preprocessedTemplate);
+
         try
         {
-            // 1. 预处理 TOML 模板，用默认值替换占位符，使其成为合法的 TOML
-            var preprocessedTemplate = PreprocessTomlTemplateForSpec(this.OutputTemplate);
-
-            // 2. 解析预处理后的模板
+            // 1. 使用 Tomlyn 解析脚本内容
             var model = Toml.ToModel(preprocessedTemplate);
+            var specs = new List<ProducedSpec>();
 
-            // 3. 将 TOML 模型转换为 VarSpecDef
-            // 我们的输出变量本身就是这个顶层对象
-            var varDef = TomlRuneHelper.ConvertTomlObjectToVarSpecDef(model);
+            // 2. 遍历 TOML 模型的顶层键
+            foreach (string key in model.Keys)
+            {
+                object tomlObject = model[key];
+                // 3. 递归地将 TOML 对象转换为 VarSpecDef
+                var varDef = TomlRuneHelper.ConvertTomlObjectToVarSpecDef(tomlObject);
+                specs.Add(new ProducedSpec(key, varDef));
+            }
 
-            return [new ProducedSpec(this.OutputVariableName, varDef)];
+            return specs;
         }
         catch
         {
-            // 如果模板格式错误导致解析失败，则无法推断类型
+            // 解析失败，返回空列表或错误标记
             return [];
         }
     }
@@ -205,13 +318,14 @@ internal partial record TemplateParserRuneConfig : AbstractRuneConfig<TemplatePa
     {
         return PlaceholderForSpecRegex.Replace(template, match =>
         {
-            var typeHint = match.Groups["type"].Value;
+            string typeHint = match.Groups["type"].Value;
             return typeHint switch
             {
                 "int" => "0",
                 "float" => "0.0",
                 "bool" => "true",
-                _ => "\"\"" // 默认为字符串
+                // 用一个简单的、不带引号的虚拟值替换，它将被放入模板中已存在的引号内
+                _ => "dummy_string_for_spec"
             };
         });
     }
