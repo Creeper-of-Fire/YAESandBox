@@ -99,5 +99,6 @@ public class WorkflowConfigModule :
         typeof(UnknownRuneConfig),
         typeof(StringParserToValueRuneConfig),
         typeof(ConditionalPromptRuneConfig),
+        typeof(TemplateParserRuneConfig),
     ];
 }
