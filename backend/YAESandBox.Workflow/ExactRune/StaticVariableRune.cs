@@ -10,7 +10,6 @@ using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
 using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
 using Tomlyn;
-using Tomlyn.Model;
 using YAESandBox.Workflow.ExactRune.Helpers;
 
 namespace YAESandBox.Workflow.ExactRune;
@@ -43,15 +42,15 @@ internal class StaticVariableRuneProcessor(StaticVariableRuneConfig config, ICre
             this.DebugDto.RawTomlModel = model.ToString(); // 记录解析后的模型快照
 
             // 2. 遍历顶层键值对
-            foreach (var key in model.Keys)
+            foreach (string key in model.Keys)
             {
-                var tomlObject = model[key];
+                object tomlObject = model[key];
 
                 // 3. 将 TomlObject 转换为 .NET 原生对象/字典/列表
-                object? runtimeValue = TomlRuneHelper.ConvertTomlObjectToRuntimeValue(tomlObject);
+                object runtimeValue = TomlRuneHelper.ConvertTomlObjectToRuntimeValue(tomlObject);
 
-                // 4. 将转换后的值设置到 Tuum 变量池中
-                tuumProcessorContent.SetTuumVar(key, runtimeValue);
+                // 4. 将转换后的值合并到 Tuum 变量池中
+                tuumProcessorContent.MergeTuumVar(key, runtimeValue);
 
                 // 5. 更新调试信息
                 this.DebugDto.DefinedVariables[key] = runtimeValue;

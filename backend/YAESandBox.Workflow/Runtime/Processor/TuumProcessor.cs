@@ -196,9 +196,10 @@ public class TuumProcessor(
         /// <param name="value">如果成功，则输出转换后的值。</param>
         /// <returns>如果成功找到并转换了变量，则返回 true。</returns>
         /// <remarks>
-        /// 不存在“TrySetTuumVarByPath”这样的方法，它会破坏我们显式的数据流，正确的做法是，读取，然后写回。
-        /// 并且，通常不建议把一个符文的功能设置为“Object.Assign”这样的模式，符文通常应该直截了当的产生一个对象，以做到上下文无关，并且有更好的类型提示，
-        /// 否则数据流的分析很可能需要考虑一个变量中对应属性产生的先后顺序，导致不确定的结果。
+        /// 此方法与 `TrySetTuumVarByPath` 协同工作，以支持两种数据流模式：
+        /// 1. **不可变模式 (推荐)**: 符文读取整个对象 (`GetTuumVar`)，创建一个新的修改后对象，然后写回 (`SetTuumVar`)。数据流清晰，易于推理。
+        /// 2. **可变/渐进式构建模式**: 多个符文可以依次修改同一个对象的不同部分 (`TrySetTuumVarByPath`)。这在构建复杂对象时更方便，避免了重复读写整个对象。
+        /// 静态分析系统能够追踪这两种模式下的类型演变，确保数据流的正确性。
         /// </remarks>
         public bool TryGetTuumVarByPath<T>(string path, [MaybeNullWhen(false)] out T value)
         {
@@ -279,6 +280,195 @@ public class TuumProcessor(
                     path, currentObject?.GetType().FullName, typeof(T).FullName);
                 return false;
             }
+        }
+        
+        /// <summary>
+        /// 对列表进行合并时的合并策略。
+        /// </summary>
+        public enum ListMergeStrategy
+        {
+            /// <summary>
+            /// 新列表完全替换旧列表。(默认行为)
+            /// </summary>
+            Replace,
+
+            /// <summary>
+            /// 将新列表中的所有元素追加到旧列表的末尾。
+            /// </summary>
+            Concat,
+
+            /// <summary>
+            /// 将新列表中不存在于旧列表的元素追加到末尾（保持唯一性）。
+            /// </summary>
+            Union
+        }
+        
+        /// <summary>
+        /// 将一个对象的值深层合并到现有的 Tuum 变量中。
+        /// </summary>
+        /// <remarks>
+        /// - **对于对象/字典:** 递归地合并属性。
+        /// - **对于列表/数组:** 新列表会 **完全替换** 旧列表。
+        /// - **对于其他类型 (字符串, 数字等):** 新值会替换旧值。
+        /// 如果要向列表中追加元素，请使用 `AppendToListTuumVar`。
+        /// </remarks>
+        public void MergeTuumVar(string name, object? valueToMerge, ListMergeStrategy listStrategy = ListMergeStrategy.Union)
+        {
+            object? existingValue = this.GetTuumVar(name);
+
+            if (existingValue is null)
+            {
+                this.SetTuumVar(name, valueToMerge);
+                return;
+            }
+
+            // 尝试将双方都转换为可操作的字典，进行对象合并
+            if (TryConvertValue<IDictionary<string, object?>>(existingValue, out var targetDict) &&
+                TryConvertValue<IDictionary<string, object?>>(valueToMerge, out var sourceDict))
+            {
+                var mergedDict = DeepMerge(targetDict, sourceDict, listStrategy);
+                this.SetTuumVar(name, mergedDict);
+                return;
+            }
+            
+            // 如果不是对象合并，检查是否是列表合并
+            if (listStrategy != ListMergeStrategy.Replace && 
+                TryConvertValue<IEnumerable<object?>>(existingValue, out var targetList) &&
+                TryConvertValue<IEnumerable<object?>>(valueToMerge, out var sourceList))
+            {
+                var mergedList = MergeLists(targetList.ToList(), sourceList, listStrategy);
+                this.SetTuumVar(name, mergedList);
+                return;
+            }
+
+            // 对于所有其他情况（原始类型，或策略为替换），执行替换
+            this.SetTuumVar(name, valueToMerge);
+        }
+
+        private static IDictionary<string, object?> DeepMerge(IDictionary<string, object?> target, IDictionary<string, object?> source, ListMergeStrategy listStrategy)
+        {
+            foreach ((string key, object? sourceValue) in source)
+            {
+                // 如果目标中也存在该键
+                if (target.TryGetValue(key, out object? targetValue))
+                {
+                    // Case 1: 双方都是字典，递归合并
+                    if (targetValue is IDictionary<string, object?> targetNestedDict &&
+                        sourceValue is IDictionary<string, object?> sourceNestedDict)
+                    {
+                        target[key] = DeepMerge(targetNestedDict, sourceNestedDict, listStrategy);
+                        continue;
+                    }
+                    
+                    // Case 2: 双方都是列表，并且策略不是替换
+                    if (listStrategy != ListMergeStrategy.Replace &&
+                        targetValue is IEnumerable<object?> targetList &&
+                        sourceValue is IEnumerable<object?> sourceList)
+                    {
+                        target[key] = MergeLists(targetList.ToList(), sourceList, listStrategy);
+                        continue;
+                    }
+                }
+                
+                // Case 3: 其他所有情况（包括需要替换的列表），都进行替换
+                target[key] = sourceValue;
+            }
+            return target;
+        }
+
+        private static List<object?> MergeLists(List<object?> target, IEnumerable<object?> source, ListMergeStrategy strategy)
+        {
+            switch (strategy)
+            {
+                case ListMergeStrategy.Concat:
+                    target.AddRange(source);
+                    break;
+                case ListMergeStrategy.Union:
+                    // 为了性能和正确性，使用HashSet进行存在性检查
+                    var existingItems = new HashSet<object?>(target);
+                    foreach (object? item in source)
+                    {
+                        if (existingItems.Add(item)) // Add返回true代表元素原先不存在
+                        {
+                            target.Add(item);
+                        }
+                    }
+                    break;
+                case ListMergeStrategy.Replace:
+                default:
+                    // 此路径不应该在 DeepMerge 内部被调用，但在直接调用时是安全的
+                    return source.ToList();
+            }
+            return target;
+        }
+        
+        /// <summary>
+        /// 尝试通过点符号路径（例如 "player.stats.level"）设置或创建枢机中的变量。
+        /// 如果路径中的中间对象不存在，它将自动创建为 `Dictionary&lt;string, object?&gt;`。
+        /// </summary>
+        /// <typeparam name="T">要设置的值的类型。</typeparam>
+        /// <param name="path">变量路径。</param>
+        /// <param name="value">要设置的值。</param>
+        /// <returns>如果设置成功，则返回 true。</returns>
+        public bool TrySetTuumVarByPath<T>(string path, T value)
+        {
+            string[] parts = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
+            if (parts.Length == 0)
+            {
+                Logger.Warn("尝试使用空的路径设置变量，操作被忽略。");
+                return false;
+            }
+
+            // Case 1: 路径只有一个部分，等同于 SetTuumVar
+            if (parts.Length == 1)
+            {
+                this.SetTuumVar(parts[0], value);
+                return true;
+            }
+
+            // Case 2: 路径有多个部分，需要进行深层设置
+            string rootVarName = parts[0];
+            object? rootObject = this.GetTuumVar(rootVarName);
+
+            // 如果根对象不存在，创建一个新的字典作为根
+            if (rootObject == null)
+            {
+                rootObject = new Dictionary<string, object?>();
+                this.SetTuumVar(rootVarName, rootObject);
+            }
+
+            object currentObject = rootObject;
+
+            // 遍历路径直到倒数第二个部分，确保所有中间对象都是可写的字典
+            for (int i = 0; i < parts.Length - 1; i++)
+            {
+                string key = parts[i];
+                // 对于从根开始的每个部分，我们都需要从其父级获取它
+                var parentObject = (i == 0) ? this.TuumVariable : (IDictionary<string, object?>)currentObject;
+                
+                // 真正的当前对象是父级中的子对象
+                currentObject = parentObject.TryGetValue(key, out object? obj) ? obj! : null!;
+                
+                // 如果当前路径部分不存在，或者存在但不是字典，则需要创建/替换
+                if (currentObject is not IDictionary<string, object?> nextDict)
+                {
+                    nextDict = new Dictionary<string, object?>();
+                    parentObject[key] = nextDict;
+                }
+                currentObject = nextDict;
+            }
+
+            // 在最后一个对象上设置最终的值
+            if (currentObject is IDictionary<string, object?> finalDict)
+            {
+                string finalKey = parts[^1];
+                finalDict[finalKey] = value;
+                return true;
+            }
+            
+            // 如果中间路径上的某个值是原始类型（如字符串、数字），则无法继续深入，这是一个逻辑错误。
+            Logger.Error("无法设置路径 '{Path}' 的值，因为其中间部分不是一个可修改的对象。", path);
+            return false;
         }
     }
 

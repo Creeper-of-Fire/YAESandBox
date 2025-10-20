@@ -97,7 +97,7 @@ internal class StringParserToValueRuneProcessor(StringParserToValueRuneConfig co
             }
 
             // 5. 类型转换
-            var (convertedValue, conversionError) = this.ConvertValue(rawValue, rule.FieldType);
+            (object? convertedValue, string? conversionError) = this.ConvertValue(rawValue, rule.FieldType);
             if (conversionError != null)
             {
                 ruleDebugInfo.Error = conversionError;
@@ -121,7 +121,7 @@ internal class StringParserToValueRuneProcessor(StringParserToValueRuneConfig co
 
         // 6. 设置输出变量
         this.DebugDto.FinalOutput = results;
-        tuumProcessorContent.SetTuumVar(this.Config.OutputVariableName, results);
+        tuumProcessorContent.MergeTuumVar(this.Config.OutputVariableName, results);
 
         return Result.Ok().AsCompletedTask();
     }
