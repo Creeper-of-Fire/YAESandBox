@@ -42,4 +42,5 @@ export {default as SparklesIcon}from'@vicons/ionicons5/es/SparklesOutline';
 export {default as ErrorIcon}from'@vicons/material/es/ErrorOutlined';
 export {default as WarningIcon}from'@vicons/material/es/WarningOutlined';
 export {default as FolderIcon}from'@vicons/ionicons5/es/FolderOutline';
+export {default as PlayIcon}from'@vicons/ionicons5/es/PlayCircleOutline';
 // export {default as }from'@vicons/ionicons5/es/';

@@ -11,9 +11,12 @@
             符文类型: {{ runeTypeLabel }}
           </n-p>
         </div>
-        <n-form-item label="启用此符文" label-placement="left" style="margin-bottom: 0;">
+        <!-- 头部右侧按钮组 -->
+        <n-flex align="center">
+          <n-button @click="showTestModal = true">测试符文</n-button>
+          <n-text style="margin-left: 16px; margin-right: 8px;">启用此符文</n-text>
           <n-switch v-model:value="rune.enabled"/>
-        </n-form-item>
+        </n-flex>
       </n-flex>
 
       <!-- 变量显示区 -->
@@ -74,6 +77,13 @@
     <n-spin v-else-if="isLoadingSchema" description="正在加载符文配置模板..."/>
     <!-- 这个空状态理论上不会再显示，因为组件只在被选中时渲染 -->
     <n-empty v-else description="符文数据或模板未提供"/>
+
+    <RuneTestModal
+        v-if="rune"
+        v-model:show="showTestModal"
+        :rune="rune"
+    />
+
   </div>
 </template>
 
@@ -90,12 +100,14 @@ import {useRuneAnalysis} from "#/composables/useRuneAnalysis.ts";
 import TuumEditor from "#/components/tuum/editor/TuumEditor.vue";
 import type {TuumEditorContext} from "#/components/tuum/editor/TuumEditorContext.ts";
 import VarWithSpecTag from "#/components/share/varSpec/VarWithSpecTag.vue";
+import RuneTestModal from "#/components/rune/test/RuneTestModal.vue";
 
 // --- Props ---
 const props = defineProps<{
   runeContext: RuneEditorContext;
 }>();
 
+const showTestModal = ref(false);
 
 // 检查是否存在 innerTuum 属性
 const hasInnerTuum = computed(() => 'innerTuum' in props.runeContext.data && !!props.runeContext.data.innerTuum);

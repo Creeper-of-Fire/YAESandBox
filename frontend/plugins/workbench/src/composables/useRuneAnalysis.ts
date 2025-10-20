@@ -1,5 +1,5 @@
 ﻿import {computed, onMounted, ref, type Ref, watch} from "vue";
-import type {AbstractRuneConfig, RuneAnalysisResult, TuumConfig} from "#/types/generated/workflow-config-api-client";
+import type {AbstractRuneConfig, RuneAnalysisResult} from "#/types/generated/workflow-config-api-client";
 import {useRuneAnalysisStore} from "#/stores/useRuneAnalysisStore.ts";
 import {useDebounceFn} from "@vueuse/core";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
@@ -13,6 +13,7 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>)
     const runeAnalysisStore = useRuneAnalysisStore();
     const workbenchStore = useWorkbenchStore();
     const analysisResult = ref<RuneAnalysisResult | null>(null);
+    const isLoading = ref(false);
 
     const hasConsumedVariables = computed(() =>
         (analysisResult.value?.consumedVariables?.length || 0) > 0
@@ -26,6 +27,7 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>)
 
     async function executeAnalysis(newRune: AbstractRuneConfig | null): Promise<void>
     {
+        isLoading.value = true;
         try
         {
             // 如果没有传入符文或其类型，则清空分析结果
@@ -55,6 +57,9 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>)
         {
             console.error(`[useRuneAnalysis] 在分析符文 ${rune.value?.configId} 时失败: `, error);
             analysisResult.value = null; // 失败时也清空结果
+        } finally
+        {
+            isLoading.value = false; // 确保加载状态总是被重置
         }
     }
 
@@ -67,6 +72,7 @@ export function useRuneAnalysis(rune: Ref<AbstractRuneConfig | null>)
     onMounted(() => executeAnalysis(rune.value));
 
     return {
+        isLoading,
         analysisResult,
         hasConsumedVariables,
         hasProducedVariables,
