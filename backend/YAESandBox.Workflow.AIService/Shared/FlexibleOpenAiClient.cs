@@ -3,6 +3,7 @@ using System.Net.Http.Json;
 using System.Runtime.CompilerServices;
 using System.Text.Json;
 using System.Text.Json.Serialization;
+using YAESandBox.Depend.Logger;
 
 namespace YAESandBox.Workflow.AIService.Shared;
 
@@ -12,6 +13,7 @@ namespace YAESandBox.Workflow.AIService.Shared;
 /// </summary>
 public class FlexibleAiClient(HttpClient httpClient, ApiClientConfig config)
 {
+    private static IAppLogger Logger { get; } = AppLogging.CreateLogger<FlexibleAiClient>();
     private ApiClientConfig Config { get; } = config;
 
     private static readonly JsonSerializerOptions SerializerOptions = new()
@@ -38,6 +40,8 @@ public class FlexibleAiClient(HttpClient httpClient, ApiClientConfig config)
         request.Content = JsonContent.Create(requestPayload, options: SerializerOptions);
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", this.Config.ApiKey);
         request.Headers.Accept.Add(new MediaTypeWithQualityHeaderValue("text/event-stream"));
+
+        Logger.Info("向{RequestUri}发送请求体: {RequestPayload}", requestUri, JsonSerializer.Serialize(requestPayload, SerializerOptions));
 
         using var response = await httpClient.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, cancellationToken);
         response.EnsureSuccessStatusCode();

@@ -43,7 +43,7 @@ internal class JavaScriptVariableExtractor : AstVisitor
     /// </summary>
     protected override object? VisitIdentifier(Identifier identifier)
     {
-        var name = identifier.Name;
+        string name = identifier.Name;
 
         // 如果不是全局变量，并且在当前作用域链的任何层级都找不到它的声明
         if (!KnownGlobals.Contains(name) && !this.ScopeStack.Any(scope => scope.Contains(name)))

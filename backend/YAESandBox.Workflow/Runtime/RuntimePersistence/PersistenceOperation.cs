@@ -183,7 +183,7 @@ public sealed class PersistenceOperation<TInput, TPayload>(
             if (this.OnCachedFailureAction is not null)
             {
                 var cachedInput = failureState.GetInput<TInput>();
-                await this.OnCachedFailureAction(cachedInput, failureState.ErrorDetails);
+                await this.OnCachedFailureAction(cachedInput, failureState.ErrorDetails.ToError());
             }
         }
         catch (Exception ex)
@@ -192,6 +192,6 @@ public sealed class PersistenceOperation<TInput, TPayload>(
                 "持久化操作的 {HookName} 钩子中发生未捕获异常。InstanceId={InstanceId}", nameof(this.WhenCachedFailure), this.InstanceId);
         }
 
-        return failureState.ErrorDetails;
+        return failureState.ErrorDetails.ToError();
     }
 }

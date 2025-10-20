@@ -216,6 +216,9 @@ public static class GraphExecutor
         return Result.Ok(dataStore);
     }
 
+    // TODO
+    // 我不知道问题在什么地方，先记录在这里。在前端删除某个枢机后，对应的线依旧还在，会导致问题。似乎扇入扇出之类的也会导致问题，整个连线系统需要检查一下。
+    
     // 内部辅助方法，执行单个节点
     private static async Task<Result<ExecutionNode<TNode, TNodeId>>> ExecuteSingleNodeInternalAsync<TNode, TNodeId>(
         ExecutionNode<TNode, TNodeId> node,
@@ -248,7 +251,7 @@ public static class GraphExecutor
         var executeResult = await executeNodeAsync(node.Node, nodeInputs, cancellationToken);
         if (executeResult.TryGetError(out var error, out var nodeOutputs))
         {
-            return Result.Fail("节点 '{node.Node.Id}' 执行失败。", error);
+            return Result.Fail($"节点 '{node.Node.Id}' 执行失败。", error);
         }
 
         // 3. 存储输出

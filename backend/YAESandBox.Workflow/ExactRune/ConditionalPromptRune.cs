@@ -127,7 +127,7 @@ internal class ConditionalPromptRuneProcessor(ConditionalPromptRuneConfig config
     /// <summary>
     /// 条件提示词符文的专属调试 DTO。
     /// </summary>
-    public new record ConditionalPromptRuneProcessorDebugDto : PromptGenerationRuneProcessorDebugDto
+    public record ConditionalPromptRuneProcessorDebugDto : PromptGenerationRuneProcessorDebugDto
     {
         // --- 条件判断相关 ---
         [Display(Name = "执行条件")] public string Condition { get; set; } = string.Empty;
@@ -182,7 +182,7 @@ internal record ConditionalPromptRuneConfig : PromptGenerationRuneConfig
         // 3. 合并两个来源的变量。
         var finalSpecs = specsFromTemplate.ToDictionary(s => s.Name, s => s);
 
-        foreach (var varName in variableNamesFromCondition)
+        foreach (string varName in variableNamesFromCondition)
         {
             // 如果这个变量还没被 Template 解析器添加，就作为一个新的消费项添加。
             // 我们将其类型定义为 Any，因为我们无法从 JS 代码中静态推断其具体类型。

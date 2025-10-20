@@ -30,7 +30,7 @@ public static class StaticAssetModuleExtensions
         OnPrepareResponse = ctx =>
         {
             var headers = ctx.Context.Response.Headers;
-            var path = ctx.Context.Request.Path.Value ?? string.Empty;
+            string path = ctx.Context.Request.Path.Value ?? string.Empty;
 
             // 检查请求的是否是 index.html
             // 我们检查路径是否为根路径 "/" 或者以 ".html" 结尾

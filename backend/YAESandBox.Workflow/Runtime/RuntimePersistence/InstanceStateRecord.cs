@@ -97,8 +97,8 @@ public sealed record CompletedState(Guid InstanceId, string SerializedInputs, st
 /// </summary>
 /// <param name="InstanceId">实例的唯一ID。</param>
 /// <param name="SerializedInputs">实例执行时的输入快照（非空）。</param>
-/// <param name="ErrorDetails">实例失败时的错误信息（非空）。</param>
-public sealed record FailedState(Guid InstanceId, string SerializedInputs, Error ErrorDetails) : InstanceStateRecord(InstanceId)
+/// <param name="ErrorDetails">实例失败时的错误信息（非空），已转换为可序列化的格式。</param>
+public sealed record FailedState(Guid InstanceId, string SerializedInputs, SerializableError ErrorDetails) : InstanceStateRecord(InstanceId)
 {
     /// <summary>
     /// 创建一个执行失败的实例状态。
@@ -113,7 +113,7 @@ public sealed record FailedState(Guid InstanceId, string SerializedInputs, Error
         return new FailedState(
             instanceId,
             ValueWrapper.SerializeAsWrapper(inputs),
-            error
+            SerializableError.FromError(error)
         );
     }
 
