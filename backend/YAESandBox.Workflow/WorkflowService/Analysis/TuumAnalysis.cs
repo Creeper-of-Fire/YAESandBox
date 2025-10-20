@@ -29,9 +29,30 @@ public enum TypeAnalysisMode
 
     /// <summary>
     /// **(最严格)** 严格的具名类型检查。
+    /// 同时也会进行结构检查。
     /// 两个记录(Record)类型只有在它们的类型名称完全相同时才被认为是兼容的，即使它们的结构一模一样。
     /// </summary>
     StrictNominal
+}
+
+/// <summary>
+/// 封装了类型兼容性检查的结果。
+/// </summary>
+/// <param name="IsSuccess">检查是否成功。</param>
+/// <param name="FailureReason">如果失败，提供具体原因。</param>
+public record CompatibilityResult(bool IsSuccess, string? FailureReason = null)
+{
+    /// <summary>
+    /// 表示兼容的静态实例。
+    /// </summary>
+    public static CompatibilityResult Success { get; } = new(true);
+
+    /// <summary>
+    /// 创建一个表示不兼容的结果。
+    /// </summary>
+    /// <param name="reason">不兼容的原因。</param>
+    /// <returns>一个包含原因的不兼容结果。</returns>
+    public static CompatibilityResult Fail(string reason) => new(false, reason);
 }
 
 /// <summary>
@@ -40,66 +61,88 @@ public enum TypeAnalysisMode
 internal static class VarSpecDefExtensions
 {
     /// <summary>
-    /// 递归地检查当前类型定义是否与目标类型定义兼容。
+    /// 递归地检查当前类型定义是否与目标类型定义兼容，并返回详细结果。
     /// </summary>
     /// <param name="sourceDef">源类型（提供方）。</param>
     /// <param name="targetDef">目标类型（需求方）。</param>
     /// <param name="mode">要使用的分析模式。</param>
-    /// <returns>如果兼容则为 true。</returns>
-    public static bool IsCompatibleWith(this VarSpecDef sourceDef, VarSpecDef targetDef, TypeAnalysisMode mode)
+    /// <returns>一个包含兼容性结果和失败原因的对象。</returns>
+    public static CompatibilityResult CheckCompatibilityWith(this VarSpecDef sourceDef, VarSpecDef targetDef, TypeAnalysisMode mode)
     {
-        // 规则0: Any 类型与任何类型都兼容。
+        // 规则 0: Any 类型与任何类型都兼容。
         if (sourceDef.TypeName == CoreVarDefs.Any.TypeName || targetDef.TypeName == CoreVarDefs.Any.TypeName)
         {
-            return true;
+            return CompatibilityResult.Success;
         }
-        
+
         // 规则 1: 在 IgnoreStructure 模式下，我们只关心顶层 TypeName 是否相同。
-        // 这是更优先的规则，因为它覆盖了所有结构性检查。
         if (mode == TypeAnalysisMode.IgnoreStructure)
         {
-            return sourceDef.TypeName == targetDef.TypeName;
+            return sourceDef.TypeName == targetDef.TypeName
+                ? CompatibilityResult.Success
+                : CompatibilityResult.Fail($"在 '{mode}' 模式下，类型名称不匹配: '{sourceDef.TypeName}' vs '{targetDef.TypeName}'。");
         }
 
         // 规则2: 如果类型不匹配（一个List，一个Record），则不兼容。
         if (sourceDef.GetType() != targetDef.GetType())
         {
-            return false;
+            return CompatibilityResult.Fail($"基础类型种类不匹配: 一个是 {sourceDef.GetType().Name}，另一个是 {targetDef.GetType().Name}。");
         }
 
         // 根据具体类型进行分派
         return (sourceDef, targetDef) switch
         {
-            (PrimitiveVarSpecDef s, PrimitiveVarSpecDef t) => s.TypeName == t.TypeName,
+            (PrimitiveVarSpecDef s, PrimitiveVarSpecDef t) =>
+                s.TypeName == t.TypeName
+                    ? CompatibilityResult.Success
+                    : CompatibilityResult.Fail($"基础类型不匹配: 期望 '{t.TypeName}'，但实际是 '{s.TypeName}'。"),
+
 
             (ListVarSpecDef s, ListVarSpecDef t) =>
-                // 列表兼容性取决于其元素类型的兼容性。
-                s.ElementDef.IsCompatibleWith(t.ElementDef, mode),
+                CheckListCompatibility(s, t, mode),
 
             (RecordVarSpecDef s, RecordVarSpecDef t) =>
-                mode switch
-                {
-                    // 严格模式：
-                    // 1. 类型名必须完全匹配。
-                    // 2. 并且，源结构必须满足目标结构的要求 (结构兼容性检查)。
-                    TypeAnalysisMode.StrictNominal => 
-                        s.TypeName == t.TypeName &&
-                        t.Properties.All(targetProp =>
-                            s.Properties.TryGetValue(targetProp.Key, out var sourceProp) &&
-                            sourceProp.IsCompatibleWith(targetProp.Value, mode)),
+                CheckRecordCompatibility(s, t, mode),
 
-                    // 鸭子类型模式：源记录必须包含目标记录所需的所有属性，不关心类型名。
-                    TypeAnalysisMode.DuckTyping => t.Properties.All(targetProp =>
-                        s.Properties.TryGetValue(targetProp.Key, out var sourceProp) &&
-                        sourceProp.IsCompatibleWith(targetProp.Value, mode)), // 递归检查
-                    
-                    // IgnoreStructure 已经被提前处理，这里理论上不会到达。
-                    // 但为了代码完整性，可以保留一个默认分支。
-                    _ => true
-                },
-
-            _ => false // 未知类型组合
+            _ => CompatibilityResult.Fail("未知的类型组合进行比较。") // 未知类型组合
         };
+    }
+
+    private static CompatibilityResult CheckListCompatibility(ListVarSpecDef s, ListVarSpecDef t, TypeAnalysisMode mode)
+    {
+        // 列表兼容性取决于其元素类型的兼容性。
+        var elementResult = s.ElementDef.CheckCompatibilityWith(t.ElementDef, mode);
+        return elementResult.IsSuccess
+            ? CompatibilityResult.Success
+            : CompatibilityResult.Fail($"列表元素类型不兼容: {elementResult.FailureReason}");
+    }
+
+    private static CompatibilityResult CheckRecordCompatibility(RecordVarSpecDef s, RecordVarSpecDef t, TypeAnalysisMode mode)
+    {
+        // 严格模式下，首先检查类型名
+        if (mode == TypeAnalysisMode.StrictNominal && s.TypeName != t.TypeName)
+        {
+            return CompatibilityResult.Fail($"在 '{mode}' 模式下，记录类型名称必须完全相同，期望 '{t.TypeName}'，但实际是 '{s.TypeName}'。");
+        }
+
+        // 对目标记录的每个必需属性进行检查
+        foreach (var targetProp in t.Properties)
+        {
+            // 检查源记录中是否存在该属性
+            if (!s.Properties.TryGetValue(targetProp.Key, out var sourceProp))
+            {
+                return CompatibilityResult.Fail($"源记录 '{s.TypeName}' 缺少目标 '{t.TypeName}' 所需的属性 '{targetProp.Key}'。");
+            }
+
+            // 递归检查属性的类型兼容性
+            var propCompatibility = sourceProp.CheckCompatibilityWith(targetProp.Value, mode);
+            if (!propCompatibility.IsSuccess)
+            {
+                return CompatibilityResult.Fail($"属性 '{targetProp.Key}' 的类型不兼容: {propCompatibility.FailureReason}");
+            }
+        }
+
+        return CompatibilityResult.Success;
     }
 }
 
@@ -166,21 +209,22 @@ public class TuumAnalysisService
     /// <returns>一个包含所有分析和校验信息的扁平化报告。</returns>
     public TuumAnalysisResult Analyze(TuumConfig tuumConfig, TypeAnalysisMode mode = TypeAnalysisMode.DuckTyping)
     {
+        var enabledRunes = tuumConfig.GetEnableRunes().ToList();
         // 步骤 0: 执行独立的校验和分析
         var tuumMappingUniqueMessages = this.ValidateTuumMappingUniqueness(tuumConfig).ToList();
 
         // 校验枢机内部所有符文的属性规则
         var runeAttributeMessages = this.ValidateRuneAttributeRules(tuumConfig).ToList();
 
-        // 步骤 1: 确定所有内部变量的类型定义
-        var (internalTypeDefs, typeValidationMessages) = this.AnalyzeVariableTypes(tuumConfig, mode);
-        var inputTypeValidationMessages = this.AnalyzeInputTypes(tuumConfig, internalTypeDefs, mode);
+        // 步骤 1: 外部API契约分析 (确定哪些输入是必需的)
+        var internalRequirements = this.AnalyzeInternalRequirements(enabledRunes.ToList());
 
-        // 步骤 2: 进行纯粹的内部需求分析。这是最关键的一步，它不考虑外部输入。
-        var internalRequirements = this.AnalyzeInternalRequirements(tuumConfig.GetEnableRunes().ToList());
+        // 步骤 2: 顺序数据流与类型分析
+        var (flowAndTypeMessages, finalTypeDefs, allConsumedVars, allProducedVars) =
+            this.AnalyzeSequentialDataFlowAndTypes(tuumConfig, enabledRunes, mode);
 
-        // 步骤 3: 使用步骤 2 的结果进行完整的数据流校验。
-        var dataFlowMessages = this.ValidateDataFlow(tuumConfig, internalRequirements);
+        // 步骤 3: 外部映射的健全性校验 (依赖步骤1和2的结果)
+        var dataFlowMessages = this.ValidateExternalMappings(tuumConfig, internalRequirements, allConsumedVars, allProducedVars);
 
         // 步骤 4: 聚合内部 Spec 定义
         var internalConsumedSpecs = tuumConfig.GetEnableRunes()
@@ -197,21 +241,20 @@ public class TuumAnalysisService
             .ToList();
 
         // 步骤 4: 使用分析结果生成外部端点定义
-        var consumedEndpoints = this.DetermineConsumedEndpoints(tuumConfig, internalTypeDefs, internalRequirements);
-        var producedEndpoints = this.DetermineProducedEndpoints(tuumConfig, internalTypeDefs);
+        var consumedEndpoints = this.DetermineConsumedEndpoints(tuumConfig, finalTypeDefs, internalRequirements);
+        var producedEndpoints = this.DetermineProducedEndpoints(tuumConfig, finalTypeDefs);
 
         // 聚合所有结果到扁平化的 DTO
         return new TuumAnalysisResult
         {
             InternalConsumedSpecs = internalConsumedSpecs,
             InternalProducedSpecs = internalProducedSpecs,
-            InternalVariableDefinitions = internalTypeDefs,
+            InternalVariableDefinitions = finalTypeDefs,
             ConsumedEndpoints = consumedEndpoints,
             ProducedEndpoints = producedEndpoints,
             Messages =
             [
-                ..tuumMappingUniqueMessages, ..runeAttributeMessages, ..typeValidationMessages, ..inputTypeValidationMessages,
-                ..dataFlowMessages
+                ..tuumMappingUniqueMessages, ..runeAttributeMessages, ..flowAndTypeMessages, ..dataFlowMessages,
             ],
         };
     }
@@ -312,131 +355,128 @@ public class TuumAnalysisService
             }
         }
     }
-
-
-    /// <summary>
-    /// **分析函数 1: 类型分析**
-    /// <para>职责：只关心类型。确定所有内部变量的最终类型，并报告类型冲突。</para>
+    
+        /// <summary>
+    /// **核心分析函数**: 按顺序模拟数据流，检查连通性和类型兼容性。
     /// </summary>
-    private (Dictionary<string, VarSpecDef> TypeDefs, List<ValidationMessage> Messages) AnalyzeVariableTypes(TuumConfig config,
-        TypeAnalysisMode mode)
+    private (List<ValidationMessage> Messages, Dictionary<string, VarSpecDef> FinalTypeDefs, HashSet<string> AllConsumedVars, HashSet<string> AllProducedVars)
+        AnalyzeSequentialDataFlowAndTypes(TuumConfig tuumConfig, IReadOnlyList<AbstractRuneConfig> enabledRunes, TypeAnalysisMode mode)
     {
         var messages = new List<ValidationMessage>();
-        var variableTypeAppearances = new Dictionary<string, List<VarSpecDef>>();
+        var currentVariableTypes = new Dictionary<string, VarSpecDef>();
+        var allConsumedVars = new HashSet<string>();
+        var allProducedVars = new HashSet<string>(tuumConfig.InputMappings.Keys); // 外部输入是最初的生产者
 
-        // 步骤 1.1: 收集每个变量名出现过的所有类型定义。
-        foreach (var rune in config.GetEnableRunes())
+        // 初始化：外部输入提供了初始类型。我们用一个占位符，因为输入的真实类型由第一个消费者决定。
+        foreach (string inputVar in tuumConfig.InputMappings.Keys)
         {
-            foreach (var spec in rune.GetConsumedSpec())
-            {
-                variableTypeAppearances.TryAdd(spec.Name, []);
-                variableTypeAppearances[spec.Name].Add(spec.Def);
-            }
-
-            foreach (var spec in rune.GetProducedSpec())
-            {
-                variableTypeAppearances.TryAdd(spec.Name, []);
-                variableTypeAppearances[spec.Name].Add(spec.Def);
-            }
+            // 输入的类型是动态的，只有当它被消费时我们才能检查。这里我们标记为Any。
+            currentVariableTypes[inputVar] = CoreVarDefs.Any;
         }
 
-        var finalTypeDefs = new Dictionary<string, VarSpecDef>();
-
-        // 步骤 1.2: 对每个变量，聚合其类型并检查兼容性。
-        foreach ((string varName, var appearances) in variableTypeAppearances)
+        // 严格按顺序遍历符文
+        foreach (var rune in enabledRunes)
         {
-            var distinctAppearances = appearances.Distinct().ToList();
-            if (distinctAppearances.Count <= 1)
+            // 步骤 1: 检查当前符文的消费
+            foreach (var consumedSpec in rune.GetConsumedSpec())
             {
-                finalTypeDefs[varName] = distinctAppearances.FirstOrDefault() ?? CoreVarDefs.Any;
-                continue;
-            }
+                allConsumedVars.Add(consumedSpec.Name);
 
-            // 检查所有类型定义之间是否相互兼容
-            bool isCompatible = true;
-            for (int i = 0; i < distinctAppearances.Count; i++)
-            {
-                for (int j = i + 1; j < distinctAppearances.Count; j++)
+                // 检查数据源是否存在
+                if (!allProducedVars.Contains(consumedSpec.Name))
                 {
-                    var typeA = distinctAppearances[i];
-                    var typeB = distinctAppearances[j];
-
-                    // 为了合并，它们必须可以互相转换（互相兼容）
-                    if (!typeA.IsCompatibleWith(typeB, mode) || !typeB.IsCompatibleWith(typeA, mode))
+                    if (!consumedSpec.IsOptional)
                     {
-                        isCompatible = false;
                         messages.Add(new ValidationMessage
                         {
                             Severity = RuleSeverity.Error,
-                            Message = $"内部变量 '{varName}' 的类型定义不兼容。在 '{mode}' 模式下，类型 '{typeA.TypeName}' 与 '{typeB.TypeName}' 存在冲突。",
-                            RuleSource = "TypeCompatibility"
+                            Message = $"数据流中断：符文 '{rune.Name}' 需要的变量 '{consumedSpec.Name}' 在此执行点之前从未被生产过，也未从外部输入。",
+                            RuleSource = "DataFlow"
                         });
-                        break;
                     }
+                    continue; // 无法进行类型检查，跳过
                 }
 
-                if (!isCompatible) break;
-            }
+                // 进行类型兼容性检查
+                var sourceDef = currentVariableTypes[consumedSpec.Name];
+                var targetDef = consumedSpec.Def;
 
-            // 如果不兼容，标记为Any并继续。如果兼容，选择一个最具体的作为代表。
-            if (!isCompatible)
-            {
-                finalTypeDefs[varName] = CoreVarDefs.Any;
-            }
-            else
-            {
-                // 选择一个最具体的类型作为代表（例如，属性最多的Record，或非Any类型）
-                finalTypeDefs[varName] = distinctAppearances
-                    .OrderByDescending(d =>
-                        d is RecordVarSpecDef r ? r.Properties.Count : (d.TypeName == CoreVarDefs.Any.TypeName ? -1 : 0))
-                    .First();
-            }
-        }
-
-        return (finalTypeDefs, messages);
-    }
-
-    // 检查映射到同一个外部输入端点的内部变量，其类型是否兼容。
-    private IEnumerable<ValidationMessage> AnalyzeInputTypes(TuumConfig config, IReadOnlyDictionary<string, VarSpecDef> typeDefs,
-        TypeAnalysisMode mode)
-    {
-        var endpointGroups = config.InputMappings.GroupBy(kvp => kvp.Value); // 按外部端点名分组
-
-        foreach (var group in endpointGroups)
-        {
-            var internalVarTypes = group
-                .Select(kvp => typeDefs.GetValueOrDefault(kvp.Key, CoreVarDefs.Any))
-                .Distinct()
-                .ToList();
-
-            if (internalVarTypes.Count <= 1) continue;
-
-            // 检查组内所有类型是否相互兼容
-            for (int i = 0; i < internalVarTypes.Count; i++)
-            {
-                for (int j = i + 1; j < internalVarTypes.Count; j++)
+                var compatibilityResult = sourceDef.CheckCompatibilityWith(targetDef, mode);
+                if (!compatibilityResult.IsSuccess)
                 {
-                    var typeA = internalVarTypes[i];
-                    var typeB = internalVarTypes[j];
-
-                    // 所有由同一外部源驱动的内部变量，必须是兼容的。
-                    // 这里我们只需要单向兼容即可，因为数据是单向流入的。
-                    // 但为了简单和安全，我们仍然可以检查双向兼容。
-                    if (typeA.IsCompatibleWith(typeB, mode) && typeB.IsCompatibleWith(typeA, mode))
-                        continue;
-                    yield return new ValidationMessage
+                    messages.Add(new ValidationMessage
                     {
                         Severity = RuleSeverity.Error,
-                        Message = $"输入映射冲突：外部端点 '{group.Key}' 同时驱动了多个类型不兼容的内部变量。在 '{mode}' 模式下，'{typeA.TypeName}' 与 '{typeB.TypeName}' 冲突。",
+                        Message = $"类型不匹配：符文 '{rune.Name}' 消费的变量 '{consumedSpec.Name}' 类型不兼容。" +
+                                  $" 当前可用类型是 '{sourceDef.TypeName}'，但符文需要兼容 '{targetDef.TypeName}' 的类型。原因: {compatibilityResult.FailureReason}",
                         RuleSource = "TypeCompatibility"
-                    };
-                    goto nextGroup; // 找到一个冲突就够了
+                    });
                 }
             }
 
-            nextGroup: ;
+            // 步骤 2: 更新当前符文的生产
+            foreach (var producedSpec in rune.GetProducedSpec())
+            {
+                // 更新或添加变量的当前类型
+                currentVariableTypes[producedSpec.Name] = producedSpec.Def;
+                allProducedVars.Add(producedSpec.Name);
+            }
         }
+
+        return (messages, currentVariableTypes, allConsumedVars, allProducedVars);
     }
+
+    /// <summary>
+    /// **分析函数**: 校验外部映射的完整性和健康度。
+    /// </summary>
+    private List<ValidationMessage> ValidateExternalMappings(
+        TuumConfig config,
+        IReadOnlyDictionary<string, bool> internalRequirements,
+        IReadOnlySet<string> allConsumedVars,
+        IReadOnlySet<string> allProducedVars)
+    {
+        var messages = new List<ValidationMessage>();
+
+        // 检查必需输入是否被满足
+        var finalRequiredVars = internalRequirements.Where(kvp => kvp.Value).Select(kvp => kvp.Key).ToHashSet();
+        var providedByExternalInputs = config.InputMappings.Keys.ToHashSet();
+        var unfulfilledVars = finalRequiredVars.Except(providedByExternalInputs);
+        foreach (string varName in unfulfilledVars)
+        {
+            messages.Add(new ValidationMessage
+                { Severity = RuleSeverity.Error, Message = $"必需的内部变量 '{varName}' 没有数据来源。它需要通过输入映射从外部提供。", RuleSource = "DataFlow" });
+        }
+
+        // 检查冗余输入映射
+        var allOutputMappingSources = config.OutputMappings.Keys;
+        foreach (string internalVar in providedByExternalInputs)
+        {
+            if (!allConsumedVars.Contains(internalVar) && !allOutputMappingSources.Contains(internalVar))
+            {
+                messages.Add(new ValidationMessage
+                {
+                    Severity = RuleSeverity.Warning, Message = $"冗余的输入映射：内部变量 '{internalVar}' 从外部接收了数据，但从未被任何符文消费，也未被用于输出。",
+                    RuleSource = "DataFlow"
+                });
+            }
+        }
+
+        // 检查无效的输出映射源
+        foreach (string sourceVar in allOutputMappingSources)
+        {
+            if (!allProducedVars.Contains(sourceVar))
+            {
+                messages.Add(new ValidationMessage
+                {
+                    Severity = RuleSeverity.Warning, Message = $"无效的输出映射：源变量 '{sourceVar}' 从未被任何内部符文生产过，也未从外部输入获得。此映射可能不会输出任何数据。",
+                    RuleSource = "DataFlow"
+                });
+            }
+        }
+
+        return messages;
+    }
+
 
     /// <summary>
     /// **分析函数 2: 纯粹的内部需求分析**
@@ -484,76 +524,6 @@ public class TuumAnalysisService
         }
 
         return result;
-    }
-
-
-    /// <summary>
-    /// **分析函数 3: 完整的数据流校验**
-    /// <para>职责：结合内部需求分析结果和外部映射，检查数据流的完整性和健康度。</para>
-    /// </summary>
-    private List<ValidationMessage> ValidateDataFlow(TuumConfig config, IReadOnlyDictionary<string, bool> internalRequirements)
-    {
-        var messages = new List<ValidationMessage>();
-
-        // 步骤 3.1: 找出所有最终的、必需的内部变量（净需求）
-        var finalRequiredVars = internalRequirements
-            .Where(kvp => kvp.Value)
-            .Select(kvp => kvp.Key)
-            .ToHashSet();
-
-        // 步骤 3.2: 获取所有由外部输入提供的变量
-        var providedByExternalInputs = config.InputMappings.Keys.ToHashSet();
-
-        // 步骤 3.3: 检查必需输入是否被外部满足
-        var unfulfilledVars = finalRequiredVars.Except(providedByExternalInputs);
-        foreach (string varName in unfulfilledVars)
-        {
-            // [Error: 必需输入未提供]
-            messages.Add(new ValidationMessage
-            {
-                Severity = RuleSeverity.Error,
-                Message = $"必需的内部变量 '{varName}' 没有数据来源。它需要通过输入映射从外部提供。",
-                RuleSource = "DataFlow"
-            });
-        }
-
-        // 步骤 3.4: 检查冗余和无效映射
-        var allConsumedVars = internalRequirements.Keys.ToHashSet();
-        var allProducedVars = config.GetEnableRunes().SelectMany(r => r.GetProducedSpec()).Select(s => s.Name).ToHashSet();
-        var allOutputMappingSources = config.OutputMappings.Keys.ToHashSet();
-
-        // [Warning: 冗余输入映射]
-        // 遍历所有被外部提供的内部变量
-        foreach (string internalVar in providedByExternalInputs)
-        {
-            // 如果这个变量从未被任何符文消费，也未被用于任何输出的源头，则为冗余。
-            if (!allConsumedVars.Contains(internalVar) && !allOutputMappingSources.Contains(internalVar))
-            {
-                messages.Add(new ValidationMessage
-                {
-                    Severity = RuleSeverity.Warning,
-                    Message = $"冗余的输入映射：内部变量 '{internalVar}' 从外部接收了数据，但从未被任何符文消费，也未被用于输出。",
-                    RuleSource = "DataFlow"
-                });
-            }
-        }
-
-        // [Warning: 无效的输出映射源]
-        foreach (string sourceVar in allOutputMappingSources)
-        {
-            // 检查源变量是否由任何符文生产 或 由外部输入直接提供
-            if (!allProducedVars.Contains(sourceVar) && !providedByExternalInputs.Contains(sourceVar))
-            {
-                messages.Add(new ValidationMessage
-                {
-                    Severity = RuleSeverity.Warning,
-                    Message = $"无效的输出映射：源变量 '{sourceVar}' 从未被任何内部符文生产过，也未从外部输入获得。此映射可能不会输出任何数据。",
-                    RuleSource = "DataFlow"
-                });
-            }
-        }
-
-        return messages;
     }
 
     /// <summary>
