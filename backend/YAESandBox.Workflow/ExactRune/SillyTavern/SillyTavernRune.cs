@@ -3,6 +3,7 @@ using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.AIService;
+using YAESandBox.Workflow.API.Schema;
 using YAESandBox.Workflow.Config.RuneConfig;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Runtime.Processor;
@@ -11,102 +12,6 @@ using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
 
 namespace YAESandBox.Workflow.ExactRune.SillyTavern;
-
-/// <summary>
-/// 一个完整的 SillyTavern 处理器符文的配置。
-/// 它整合了预设和世界书，并处理变量填充，以生成最终的提示词列表。
-/// </summary>
-[ClassLabel("🍻酒馆预设")]
-internal record SillyTavernRuneConfig : AbstractRuneConfig<SillyTavernRuneProcessor>
-{
-    private const string GroupInputs = "输入变量";
-    private const string GroupOutputs = "输出变量";
-    private const string GroupSettings = "世界书全局设置";
-
-    /// <summary>
-    /// 定义世界书的全局处理设置。
-    /// </summary>
-    public record WorldInfoSettings
-    {
-        [InlineGroup(groupName: GroupSettings)]
-        [Required]
-        [DefaultValue(2)]
-        [Display(Name = "全局扫描深度", Description = "默认在历史记录中回溯多少条消息来匹配世界书关键字。")]
-        public int GlobalScanDepth { get; init; } = 2;
-
-        [InlineGroup(groupName: GroupSettings)]
-        [Required]
-        [DefaultValue(5)]
-        [Display(Name = "最大递归深度", Description = "世界书条目之间互相激活的最大次数。0 表示无限（内部会设一个安全上限）。")]
-        public int MaxRecursionDepth { get; init; } = 5;
-    }
-
-    #region Config Properties
-
-    [Required]
-    [DefaultValue(AiRuneConfig.PromptsDefaultName)]
-    [Display(Name = "输出提示词列表", Description = "处理完成后生成的最终提示词列表的变量名。")]
-    public string OutputPromptsVariableName { get; init; } = AiRuneConfig.PromptsDefaultName;
-
-    [InlineGroup(groupName: GroupInputs)]
-    [Required]
-    [DefaultValue(HistoryAppendRuneConfig.HistoryDefaultName)]
-    [Display(Name = "输入历史记录", GroupName = GroupInputs, Description = "要处理的原始聊天记录提示词列表的变量名。[注意：当前版本不会替换历史记录中的宏。]")]
-    public string HistoryVariableName { get; init; } = HistoryAppendRuneConfig.HistoryDefaultName;
-
-    [InlineGroup(groupName: GroupInputs)]
-    [Required]
-    [DefaultValue("worldInfoList")]
-    [Display(Name = "世界书JSON列表", Description = "包含多个世界书JSON字符串的列表变量名。[注意：当前版本不会替换世界书内容中的宏。]")]
-    public string WorldInfoJsonsVariableName { get; init; } = "worldInfoList";
-
-    [InlineGroup(groupName: GroupInputs)]
-    [Required]
-    [DefaultValue("playerCharacter")]
-    [Display(Name = "玩家角色信息", Description = "用于填充 {{user}} 和 {{persona}}/personaDescription 的玩家角色信息变量名。")]
-    public string PlayerCharacterVariableName { get; init; } = "playerCharacter";
-
-    [InlineGroup(groupName: GroupInputs)]
-    [Required]
-    [DefaultValue("targetCharacter")]
-    [Display(Name = "目标角色信息", Description = "用于填充 {{char}} 和 {{description}}/charDescription 的目标角色信息变量名。")]
-    public string TargetCharacterVariableName { get; init; } = "targetCharacter";
-
-    [Display(Name = "世界书全局设置", Description = "配置世界书的全局扫描和递归行为。")]
-    public WorldInfoSettings WorldInfoGlobalSettings { get; init; } = new();
-
-    [Required(AllowEmptyStrings = true)]
-    [RenderWithCustomWidget("SillyTavernPresetEditor")]
-    [Display(Name = "SillyTavern 预设 JSON", Description = "在此处粘贴完整的 SillyTavern 预设 JSON 内容。")]
-    public string PresetJson { get; init; } = string.Empty;
-
-    #endregion
-
-    /// <inheritdoc />
-    protected override SillyTavernRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
-
-    #region Consumed & Produced Spec
-
-    /// <inheritdoc />
-    public override List<ConsumedSpec> GetConsumedSpec()
-    {
-        return
-        [
-            new ConsumedSpec(this.HistoryVariableName, CoreVarDefs.PromptList),
-            new ConsumedSpec(this.PlayerCharacterVariableName, ExtendVarDefs.ThingInfo),
-            new ConsumedSpec(this.TargetCharacterVariableName, ExtendVarDefs.ThingInfo),
-            new ConsumedSpec(this.WorldInfoJsonsVariableName, ExtendVarDefs.SillyTavernWorldInfoJsonList) { IsOptional = true }
-        ];
-    }
-
-    /// <inheritdoc />
-    public override List<ProducedSpec> GetProducedSpec()
-    {
-        return [new ProducedSpec(this.OutputPromptsVariableName, CoreVarDefs.PromptList)];
-    }
-
-    #endregion
-}
 
 internal class SillyTavernRuneProcessor(SillyTavernRuneConfig config, ICreatingContext creatingContext)
     : NormalRuneProcessor<SillyTavernRuneConfig, SillyTavernRuneProcessor.SillyTavernRuneProcessorDebugDto>(config, creatingContext)
@@ -292,4 +197,101 @@ internal class SillyTavernRuneProcessor(SillyTavernRuneConfig config, ICreatingC
             this.Logs.Add($"[{DateTime.UtcNow:HH:mm:ss.fff}] {message}");
         }
     }
+}
+
+/// <summary>
+/// 一个完整的 SillyTavern 处理器符文的配置。
+/// 它整合了预设和世界书，并处理变量填充，以生成最终的提示词列表。
+/// </summary>
+[ClassLabel("🍻酒馆预设")]
+[RuneCategory("提示词处理")]
+internal record SillyTavernRuneConfig : AbstractRuneConfig<SillyTavernRuneProcessor>
+{
+    private const string GroupInputs = "输入变量";
+    private const string GroupOutputs = "输出变量";
+    private const string GroupSettings = "世界书全局设置";
+
+    /// <summary>
+    /// 定义世界书的全局处理设置。
+    /// </summary>
+    public record WorldInfoSettings
+    {
+        [InlineGroup(groupName: GroupSettings)]
+        [Required]
+        [DefaultValue(2)]
+        [Display(Name = "全局扫描深度", Description = "默认在历史记录中回溯多少条消息来匹配世界书关键字。")]
+        public int GlobalScanDepth { get; init; } = 2;
+
+        [InlineGroup(groupName: GroupSettings)]
+        [Required]
+        [DefaultValue(5)]
+        [Display(Name = "最大递归深度", Description = "世界书条目之间互相激活的最大次数。0 表示无限（内部会设一个安全上限）。")]
+        public int MaxRecursionDepth { get; init; } = 5;
+    }
+
+    #region Config Properties
+
+    [Required]
+    [DefaultValue(AiRuneConfig.PromptsDefaultName)]
+    [Display(Name = "输出提示词列表", Description = "处理完成后生成的最终提示词列表的变量名。")]
+    public string OutputPromptsVariableName { get; init; } = AiRuneConfig.PromptsDefaultName;
+
+    [InlineGroup(groupName: GroupInputs)]
+    [Required]
+    [DefaultValue(HistoryAppendRuneConfig.HistoryDefaultName)]
+    [Display(Name = "输入历史记录", GroupName = GroupInputs, Description = "要处理的原始聊天记录提示词列表的变量名。[注意：当前版本不会替换历史记录中的宏。]")]
+    public string HistoryVariableName { get; init; } = HistoryAppendRuneConfig.HistoryDefaultName;
+
+    [InlineGroup(groupName: GroupInputs)]
+    [Required]
+    [DefaultValue("worldInfoList")]
+    [Display(Name = "世界书JSON列表", Description = "包含多个世界书JSON字符串的列表变量名。[注意：当前版本不会替换世界书内容中的宏。]")]
+    public string WorldInfoJsonsVariableName { get; init; } = "worldInfoList";
+
+    [InlineGroup(groupName: GroupInputs)]
+    [Required]
+    [DefaultValue("playerCharacter")]
+    [Display(Name = "玩家角色信息", Description = "用于填充 {{user}} 和 {{persona}}/personaDescription 的玩家角色信息变量名。")]
+    public string PlayerCharacterVariableName { get; init; } = "playerCharacter";
+
+    [InlineGroup(groupName: GroupInputs)]
+    [Required]
+    [DefaultValue("targetCharacter")]
+    [Display(Name = "目标角色信息", Description = "用于填充 {{char}} 和 {{description}}/charDescription 的目标角色信息变量名。")]
+    public string TargetCharacterVariableName { get; init; } = "targetCharacter";
+
+    [Display(Name = "世界书全局设置", Description = "配置世界书的全局扫描和递归行为。")]
+    public WorldInfoSettings WorldInfoGlobalSettings { get; init; } = new();
+
+    [Required(AllowEmptyStrings = true)]
+    [RenderWithCustomWidget("SillyTavernPresetEditor")]
+    [Display(Name = "SillyTavern 预设 JSON", Description = "在此处粘贴完整的 SillyTavern 预设 JSON 内容。")]
+    public string PresetJson { get; init; } = string.Empty;
+
+    #endregion
+
+    /// <inheritdoc />
+    protected override SillyTavernRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
+
+    #region Consumed & Produced Spec
+
+    /// <inheritdoc />
+    public override List<ConsumedSpec> GetConsumedSpec()
+    {
+        return
+        [
+            new ConsumedSpec(this.HistoryVariableName, CoreVarDefs.PromptList),
+            new ConsumedSpec(this.PlayerCharacterVariableName, ExtendVarDefs.ThingInfo),
+            new ConsumedSpec(this.TargetCharacterVariableName, ExtendVarDefs.ThingInfo),
+            new ConsumedSpec(this.WorldInfoJsonsVariableName, ExtendVarDefs.SillyTavernWorldInfoJsonList) { IsOptional = true }
+        ];
+    }
+
+    /// <inheritdoc />
+    public override List<ProducedSpec> GetProducedSpec()
+    {
+        return [new ProducedSpec(this.OutputPromptsVariableName, CoreVarDefs.PromptList)];
+    }
+
+    #endregion
 }

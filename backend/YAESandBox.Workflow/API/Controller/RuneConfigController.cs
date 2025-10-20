@@ -166,6 +166,7 @@ public class RuneConfigController(
                     settings.SchemaProcessors.Add(new VueComponentRendererSchemaProcessor());
                     settings.SchemaProcessors.Add(new WebComponentRendererSchemaProcessor());
                     settings.SchemaProcessors.Add(new MonacoEditorRendererSchemaProcessor());
+                    settings.SchemaProcessors.Add(new RuneCategoryProcessor());
                 });
 
                 var value = JsonNode.Parse(schemaJson);

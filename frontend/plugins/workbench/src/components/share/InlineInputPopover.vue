@@ -14,18 +14,22 @@
     </template>
 
     <!-- Popover 内部的内容 -->
-    <n-flex vertical v-if="action">
+    <n-flex v-if="action" vertical>
       <n-h5 style="margin: 0 0 8px 0;">{{ action.popoverTitle }}</n-h5>
 
       <!-- 不同的内容类型渲染 -->
       <template v-if="contentType === 'input' || contentType === 'select-and-input'">
         <!-- 符文类型选择 (仅在 content-type 为 'select-and-input' 时显示) -->
         <n-form-item v-if="contentType === 'select-and-input'" label="类型" required>
-          <n-select
+          <n-tree-select
               v-model:value="selectValue"
+              v-model:expanded-keys="expandedKeys"
               :options="action.popoverSelectOptions"
+              :override-default-node-click-behavior="overrideNodeClickBehavior"
               :placeholder="action.popoverSelectPlaceholder"
               filterable
+              clearable
+              block-line
           />
         </n-form-item>
 
@@ -60,9 +64,10 @@
 
 <script lang="ts" setup>
 import {computed, nextTick, ref, watch} from 'vue';
-import type {InputInst} from 'naive-ui';
-import {NAlert, NButton, NFlex, NFormItem, NH5, NInput, NPopover, NSelect} from 'naive-ui';
+import {type InputInst, type TreeSelectOverrideNodeClickBehavior} from 'naive-ui';
+import {NAlert, NButton, NFlex, NFormItem, NH5, NInput, NPopover} from 'naive-ui';
 import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
+import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 
 const props = withDefaults(defineProps<{
       action?: EnhancedAction;
@@ -214,4 +219,19 @@ defineExpose({
   isPopoverVisible,
   handleClickOutside,
 });
+
+// TreeSelect 相关
+
+const expandedKeys = useScopedStorage<string[]>('tree-expanded-keys', []);
+/**
+ * 定义 TreeSelect 节点点击行为的覆盖函数。
+ * - 如果节点有 children (即为文件夹)，则点击行为是 'toggleExpand' (展开/折叠)。
+ * - 否则 (即为文件/叶子节点)，行为是 'default' (选中该项)。
+ */
+const overrideNodeClickBehavior: TreeSelectOverrideNodeClickBehavior = ({ option }) => {
+  if (option.children && option.children.length > 0) {
+    return 'toggleExpand';
+  }
+  return 'default';
+};
 </script>

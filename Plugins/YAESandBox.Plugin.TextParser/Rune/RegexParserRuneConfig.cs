@@ -171,6 +171,7 @@ public class RegexParserRuneProcessor(RegexParserRuneConfig config,ICreatingCont
     Name = "正则解析",
     Description = "使用正则表达式，对文本执行提取或替换操作。"
 )]
+[RuneCategory("文本处理")]
 public record RegexParserRuneConfig : AbstractRuneConfig<RegexParserRuneProcessor>
 {
     /// <summary>

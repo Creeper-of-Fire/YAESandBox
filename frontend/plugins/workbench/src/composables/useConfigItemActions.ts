@@ -1,6 +1,6 @@
 ﻿// 文件路径: src/app-workbench/composables/useConfigItemActions.ts
 import {type Component, computed, type Ref} from 'vue';
-import {type SelectOption, useMessage} from 'naive-ui';
+import {type SelectOption, type TreeSelectOption, useMessage} from 'naive-ui';
 import type {AnyConfigObject} from '#/services/GlobalEditSession.ts';
 import {useWorkbenchStore} from '#/stores/workbenchStore';
 import {AddIcon, EditIcon, SaveIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
@@ -47,18 +47,81 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
     const message = useMessage();
     const workbenchStore = useWorkbenchStore();
 
-    const runeTypeOptions = computed(() =>
-    {
+    const runeTypeOptions = computed<TreeSelectOption[]>(() => {
         const schemas = workbenchStore.runeSchemasAsync.state;
         if (!schemas) return [];
-        return Object.keys(schemas).map(key =>
-        {
+
+        // 这是一个临时的树状结构，用于构建最终的 TreeSelectOption 数组
+        // Map<string, Node>，其中 key 是路径片段，Node 包含子节点和符文项
+        interface TreeNode {
+            label: string;
+            key: string;
+            children: TreeNode[];
+            runes: TreeSelectOption[];
+        }
+
+        const root: TreeNode = { label: 'root', key: 'root', children: [], runes: [] };
+
+        Object.keys(schemas).forEach(key => {
             const metadata = workbenchStore.runeMetadata[key];
-            return {
+            const option: TreeSelectOption = {
                 label: metadata?.classLabel || schemas[key].title || key,
-                value: key,
+                key: key, // 在 TreeSelect 中，value 被称为 key
             };
+
+            const categoryPath = metadata?.category;
+
+            if (categoryPath) {
+                const pathSegments = categoryPath.split('/');
+                let currentNode = root;
+
+                // 遍历路径片段，构建树
+                pathSegments.forEach(segment => {
+                    let childNode = currentNode.children.find(c => c.label === segment);
+                    if (!childNode) {
+                        childNode = {
+                            label: segment,
+                            key: `${currentNode.key}/${segment}`, // 创建唯一的 key
+                            children: [],
+                            runes: [],
+                        };
+                        currentNode.children.push(childNode);
+                    }
+                    currentNode = childNode;
+                });
+                // 将符文项添加到路径的最后一个节点
+                currentNode.runes.push(option);
+            } else {
+                // 没有分类的符文直接放在根节点
+                root.runes.push(option);
+            }
         });
+
+        // 递归函数，将我们的 TreeNode 转换为 naive-ui 的 TreeSelectOption[]
+        const convertToTreeSelectOptions = (node: TreeNode): TreeSelectOption[] => {
+            // 对子目录和子符文进行排序
+            node.children.sort((a, b) => a.label.localeCompare(b.label));
+            node.runes.sort((a, b) => (a.label as string).localeCompare(b.label as string));
+
+            const subFolders = node.children.map(childNode => {
+                const childrenOptions = convertToTreeSelectOptions(childNode);
+                return {
+                    label: childNode.label,
+                    key: childNode.key,
+                    children: childrenOptions,
+                    // 如果一个目录没有子目录，但有符文，它仍然是可展开的
+                    isLeaf: false,
+                };
+            });
+
+            // 叶子节点是实际的符文项
+            const leafNodes = node.runes.map(rune => ({ ...rune, isLeaf: true }));
+
+            return [...subFolders, ...leafNodes];
+        };
+
+        // 从根节点开始转换，但不包括根节点本身
+        return convertToTreeSelectOptions(root);
     });
 
     /**

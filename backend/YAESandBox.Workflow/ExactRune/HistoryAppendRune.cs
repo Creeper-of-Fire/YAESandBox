@@ -107,6 +107,7 @@ internal class HistoryAppendRuneProcessor(HistoryAppendRuneConfig config, ICreat
 /// </summary>
 [InFrontOf(typeof(AiRuneConfig))]
 [ClassLabel("📜历史追加")]
+[RuneCategory("提示词处理")]
 internal record HistoryAppendRuneConfig : AbstractRuneConfig<HistoryAppendRuneProcessor>
 {
     public const string HistoryDefaultName = "History";

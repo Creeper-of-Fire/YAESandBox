@@ -11,6 +11,7 @@ using YAESandBox.Workflow.VarSpec;
 using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
 using Tomlyn;
 using Tomlyn.Model;
+using YAESandBox.Workflow.ExactRune.Helpers;
 
 namespace YAESandBox.Workflow.ExactRune;
 
@@ -47,7 +48,7 @@ internal class StaticVariableRuneProcessor(StaticVariableRuneConfig config, ICre
                 var tomlObject = model[key];
 
                 // 3. 将 TomlObject 转换为 .NET 原生对象/字典/列表
-                object? runtimeValue = ConvertTomlObjectToRuntimeValue(tomlObject);
+                object? runtimeValue = TomlRuneHelper.ConvertTomlObjectToRuntimeValue(tomlObject);
 
                 // 4. 将转换后的值设置到 Tuum 变量池中
                 tuumProcessorContent.SetTuumVar(key, runtimeValue);
@@ -64,36 +65,6 @@ internal class StaticVariableRuneProcessor(StaticVariableRuneConfig config, ICre
             this.DebugDto.ParsingError = error.ToDetailString();
             return Result.Fail(error).AsCompletedTask();
         }
-    }
-
-    /// <summary>
-    /// 递归地将 TomlObject 转换为适合在 Tuum 中存储的运行时对象。
-    /// TomlTable -> Dictionary &lt;string, object&gt;
-    /// TomlTableArray -> List&lt;Dictionary&lt;string, object&gt;&gt;
-    /// Primitive -> .NET primitive type
-    /// </summary>
-    private static object? ConvertTomlObjectToRuntimeValue(object tomlObject)
-    {
-        return tomlObject switch
-        {
-            // 表 -> 字典
-            TomlTable table => table.ToDictionary(
-                kvp => kvp.Key,
-                kvp => ConvertTomlObjectToRuntimeValue(kvp.Value)),
-
-            // 表数组 -> 字典列表
-            TomlTableArray tableArray => tableArray
-                .Select(ConvertTomlObjectToRuntimeValue)
-                .ToList(),
-
-            // 数组 -> 列表
-            TomlArray array => array
-                .Select(o => ConvertTomlObjectToRuntimeValue(o))
-                .ToList(),
-
-            // 其他所有基础类型，Tomlyn 已经为我们转换好了 (long, double, bool, string, etc.)
-            _ => tomlObject
-        };
     }
 
     /// <summary>
@@ -140,7 +111,7 @@ internal partial record StaticVariableRuneConfig
             {
                 object tomlObject = model[key];
                 // 3. 递归地将 TOML 对象转换为 VarSpecDef
-                var varDef = ConvertTomlObjectToVarSpecDef(tomlObject);
+                var varDef = TomlRuneHelper.ConvertTomlObjectToVarSpecDef(tomlObject);
                 specs.Add(new ProducedSpec(key, varDef));
             }
 
@@ -150,63 +121,6 @@ internal partial record StaticVariableRuneConfig
         {
             // 解析失败，返回空列表或错误标记
             return [];
-        }
-    }
-
-    // 辅助方法：将 TomlObject 递归转换为 VarSpecDef
-    private static VarSpecDef ConvertTomlObjectToVarSpecDef(object tomlObject)
-    {
-        switch (tomlObject)
-        {
-            case TomlTable table:
-                var properties = table.ToDictionary(
-                    kvp => kvp.Key,
-                    kvp => ConvertTomlObjectToVarSpecDef(kvp.Value)
-                );
-
-                // TOML 表 -> RecordVarSpecDef
-                return CoreVarDefs.RecordStringAny with
-                {
-                    Properties = properties
-                };
-
-            case TomlTableArray tableArray:
-                var elementDef = tableArray.Count == 0
-                    ? CoreVarDefs.Any // 空列表，元素类型未知，设为 Any
-                    : ConvertTomlObjectToVarSpecDef(tableArray[0]);
-
-                return CoreVarDefs.AnyList with { ElementDef = elementDef };
-
-            // TOML 基础类型 -> PrimitiveVarSpecDef
-            case string: return CoreVarDefs.String;
-            case int:
-            case long: return CoreVarDefs.Int;
-            case float:
-            case double: return CoreVarDefs.Float;
-            case bool: return CoreVarDefs.Boolean;
-
-            case TomlArray tomlArray:
-                VarSpecDef arrayElementDef;
-                if (tomlArray.Count == 0)
-                {
-                    arrayElementDef = CoreVarDefs.Any;
-                }
-                else
-                {
-                    // 推断数组的统一类型，这里简化为只看第一个元素
-                    arrayElementDef = tomlArray[0] is not { } tomlArrayFirstItem
-                        ? CoreVarDefs.Any
-                        : ConvertTomlObjectToVarSpecDef(tomlArrayFirstItem);
-                }
-
-                return new ListVarSpecDef(
-                    $"{arrayElementDef.TypeName}[]", // e.g., "String[]"
-                    null,
-                    arrayElementDef
-                );
-
-            // 其他情况或数组等，可以进一步细化
-            default: return CoreVarDefs.Any;
         }
     }
 }

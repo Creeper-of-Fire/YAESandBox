@@ -335,6 +335,7 @@ internal partial record PromptGenerationRuneConfig
 /// </summary>
 [InFrontOf(typeof(AiRuneConfig))]
 [ClassLabel("✍️提示词")]
+[RuneCategory("提示词处理")]
 internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGenerationRuneProcessor>
 {
     private const string RoleGroupName = "提示词角色";

@@ -92,6 +92,7 @@ export interface RuneMetadata
 {
     rules?: WorkflowRuneRules;
     classLabel?: string;
+    category?: string;
 }
 
 
@@ -286,11 +287,13 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                 if (schema)
                 {
                     const rules = schema['x-workflow-rune-rules'] as WorkflowRuneRules | undefined;
-                    // 从 Schema 中提取新的类别标签属性
+                    // 从 Schema 中提取类别标签属性
                     const classLabel = schema['x-classLabel'] as string | undefined;
+                    // 从 Schema 中提取分类字段
+                    const category = schema['x-rune-category'] as string | undefined;
 
                     // 只要 Schema 中包含任何一个元数据，就为其创建一个条目
-                    if (rules || classLabel)
+                    if (rules || classLabel || category)
                     {
                         const metadata: RuneMetadata = {};
                         if (rules)
@@ -300,6 +303,10 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                         if (classLabel)
                         {
                             metadata.classLabel = classLabel;
+                        }
+                        if (category)
+                        {
+                            metadata.category = category;
                         }
                         metadataMap[runeType] = metadata;
                     }

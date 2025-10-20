@@ -211,6 +211,7 @@ public class TagParserRuneProcessor(TagParserRuneConfig config,ICreatingContext 
     Name = "标签解析",
     Description = "使用CSS选择器从HTML/XML文本中精确提取数据。"
 )]
+[RuneCategory("文本处理")]
 public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
 {
     #region 配置项
