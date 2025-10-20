@@ -81,6 +81,8 @@ public class WorkflowConfigModule :
         typeof(StaticVariableRuneConfig),
         typeof(TuumRuneConfig),
         typeof(SillyTavernRuneConfig),
-        typeof(UnknownRuneConfig)
+        typeof(UnknownRuneConfig),
+        typeof(StringParserToValueRuneConfig),
+        typeof(ConditionalPromptRuneConfig),
     ];
 }
