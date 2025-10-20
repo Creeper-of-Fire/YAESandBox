@@ -154,7 +154,7 @@ builder.Services.AddSwaggerGen(options =>
     // Add Enum Schema Filter to display enums as strings in Swagger UI
     options.SchemaFilter<EnumSchemaFilter>(); // 假设 EnumSchemaFilter 已定义
 
-    options.DocumentFilter<SignalRDtoDocumentFilter>();
+    options.DocumentFilter<AdditionalSchemaDocumentFilter>();
 });
 
 builder.Services.AddHttpClient();

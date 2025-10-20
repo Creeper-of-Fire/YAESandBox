@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.Depend.AspNetCore;
 using YAESandBox.Workflow.API.Controller;
@@ -8,6 +9,7 @@ using YAESandBox.Workflow.API.Service;
 using YAESandBox.Workflow.Config.RuneConfig;
 using YAESandBox.Workflow.ExactRune;
 using YAESandBox.Workflow.ExactRune.SillyTavern;
+using YAESandBox.Workflow.VarSpec;
 using YAESandBox.Workflow.WorkflowService;
 using YAESandBox.Workflow.WorkflowService.Analysis;
 using PromptGenerationRuneConfig = YAESandBox.Workflow.ExactRune.PromptGenerationRuneConfig;
@@ -18,7 +20,8 @@ namespace YAESandBox.Workflow.API;
 /// 注册模块到 Program.cs
 /// </summary>
 public class WorkflowConfigModule :
-    IProgramModuleSwaggerUiOptionsConfigurator, IProgramModuleMvcConfigurator, IProgramModuleWithInitialization, IProgramModuleRuneProvider
+    IProgramModuleSwaggerUiOptionsConfigurator, IProgramModuleMvcConfigurator, IProgramModuleWithInitialization, IProgramModuleRuneProvider,
+    IProgramModuleAdditionalSchemaProvider
 {
     /// <summary>
     /// Api文档的GroupName
@@ -60,6 +63,18 @@ public class WorkflowConfigModule :
         service.AddTransient<WorkflowValidationService>();
         service.AddTransient<TuumAnalysisService>();
         service.AddTransient<RuneAnalysisService>();
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<Type> GetAdditionalSchemaTypes(DocumentFilterContext context)
+    {
+        bool isVarSpecDefReferenced = context.SchemaRepository.Schemas.ContainsKey(nameof(VarSpecDef));
+
+        if (!isVarSpecDefReferenced) yield break;
+        
+        yield return typeof(PrimitiveVarSpecDef);
+        yield return typeof(RecordVarSpecDef);
+        yield return typeof(ListVarSpecDef);
     }
 
     /// <inheritdoc />
