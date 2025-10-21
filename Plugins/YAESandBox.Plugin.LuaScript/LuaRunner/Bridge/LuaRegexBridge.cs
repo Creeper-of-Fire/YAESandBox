@@ -34,36 +34,6 @@ public class LuaRegexBridge : ILuaBridge
     }
 
     /// <summary>
-    /// 辅助方法，用于将C#对象转换为Lua Table。
-    /// </summary>
-    private static object? ConvertObjectToLuaTable(object csharpObject, Lua luaState, LuaLogBridge logger, string callingMethodName)
-    {
-        try
-        {
-            // 1. 将 C# 对象序列化为 JSON 字符串
-            string jsonString = JsonSerializer.Serialize(csharpObject, YaeSandBoxJsonHelper.JsonSerializerOptions);
-
-            // 2. 获取 Lua 中的 json.decode 函数
-            if (luaState["json.decode"] is not LuaFunction jsonDecodeFunc)
-            {
-                logger.error($"在 Lua 环境中找不到 'json.decode' 函数。无法在 {callingMethodName} 中转换结果。");
-                return null; // 返回 nil
-            }
-
-            // 3. 调用 Lua 函数，将 JSON 字符串转换为 Lua Table
-            object[]? result = jsonDecodeFunc.Call(jsonString);
-
-            // 4. Call 返回的是一个 object[]，取第一个元素即为我们的 Lua Table
-            return result.FirstOrDefault();
-        }
-        catch (Exception ex)
-        {
-            logger.error($"{callingMethodName} 转换结果失败。{ex.ToFormattedString()}");
-            return null;
-        }
-    }
-
-    /// <summary>
     /// 是否匹配成功
     /// </summary>
     private static object is_match(string input, string pattern, LuaTable? options, LuaLogBridge logger)
@@ -94,7 +64,7 @@ public class LuaRegexBridge : ILuaBridge
 
             // 返回所有捕获组的列表，[1]是完整匹配，[2]是第一个捕获组，以此类推。
             var groupsList = matchResult.Groups.Cast<Group>().Select(g => g.Value).ToList();
-            return ConvertObjectToLuaTable(groupsList, luaState, logger, "regex.match");
+            return LuaBridgeHelper.ConvertCSharpObjectToLuaTable(groupsList, luaState, logger, "regex.match");
         }
         catch (Exception ex)
         {
@@ -114,7 +84,7 @@ public class LuaRegexBridge : ILuaBridge
             var allMatchesList = matches
                 .Select(m => m.Groups.Cast<Group>().Select(g => g.Value).ToList())
                 .ToList();
-            return ConvertObjectToLuaTable(allMatchesList, luaState, logger, "regex.match_all");
+            return LuaBridgeHelper.ConvertCSharpObjectToLuaTable(allMatchesList, luaState, logger, "regex.match_all");
         }
         catch (Exception ex)
         {

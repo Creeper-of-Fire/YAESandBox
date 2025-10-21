@@ -1,0 +1,40 @@
+﻿[yaml]
+documentation = "全局 YAML 处理对象，用于在 Lua table 和 YAML 字符串之间转换。由 C# YamlDotNet 库驱动，功能强大且稳定。"
+
+[[yaml.methods]]
+documentation = '''
+将一个 YAML 格式的字符串反序列化为等效的 Lua table。
+
+**特性:**
+- 支持 YAML 的核心特性，如映射 (mapping)、序列 (sequence) 和标量 (scalar)。
+- 能够处理复杂的多级嵌套结构。
+- 对缩进敏感，严格遵循 YAML 规范。
+
+**示例:**
+```lua
+local yaml_str = [[
+# 这是一个用户配置示例
+user:
+  name: Alice
+  id: 123
+  is_active: true
+  roles:
+    - admin
+    - editor
+settings:
+  theme: dark
+  notifications:
+    email: true
+    sms: false
+]]
+
+local data = yaml.decode(yaml_str)
+
+log.info("用户名: " .. data.user.name) -- 输出 'Alice'
+log.info("第二个角色: " .. data.user.roles[2]) -- 输出 'editor'
+log.info("主题设置: " .. data.settings.theme) -- 输出 'dark'
+```'''
+insertText = "decode('${1:yaml_string}')"
+kind = "Function"
+name = "decode"
+signature = "yaml.decode(yamlString: string): table | nil"

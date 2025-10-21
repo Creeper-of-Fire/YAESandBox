@@ -43,6 +43,8 @@ public class LuaScriptRuneProcessor(LuaScriptRuneConfig config, ICreatingContext
             .AddBridge(new LuaContextBridge(tuumProcessorContent)) // 添加 ctx 功能
             .AddBridge(new LuaRegexBridge()) // 添加 regex 功能
             .AddBridge(new LuaDateTimeBridge()) // 添加 datetime 功能
+            .AddBridge(new LuaTomlBridge()) // 添加 toml 功能
+            .AddBridge(new LuaYamlBridge()) // 添加 yaml 功能
             .Build();
 
         // 直接执行脚本，无需其他设置

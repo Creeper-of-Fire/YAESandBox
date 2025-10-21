@@ -45,6 +45,8 @@ public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config
             .AddBridge(new LuaJsonBridge())
             .AddBridge(new LuaRegexBridge())
             .AddBridge(new LuaDateTimeBridge())
+            .AddBridge(new LuaTomlBridge()) // 添加 toml 功能
+            .AddBridge(new LuaYamlBridge()) // 添加 yaml 功能
             .Build();
 
         // 5. 执行脚本，并通过 preExecutionSetup 注入我们的全局变量和函数

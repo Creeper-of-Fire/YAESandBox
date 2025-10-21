@@ -1,0 +1,40 @@
+﻿[toml]
+documentation = "全局 TOML 处理对象，用于在 Lua table 和 TOML 字符串之间转换。由 C# Tomlyn 库驱动，性能高且完全兼容 TOML v1.0.0 规范。"
+
+[[toml.methods]]
+documentation = '''
+将一个 TOML v1.0.0 格式的字符串反序列化为等效的 Lua table。
+
+**特性:**
+- 高性能，适合处理大型配置文件。
+- 严格遵守 TOML 规范，对格式错误提供清晰的日志。
+- 支持所有 TOML 数据类型，包括内联表和表数组。
+
+**示例:**
+```lua
+local toml_str = [[
+title = "TOML Example"
+
+[database]
+ip = "192.168.1.1"
+ports = [ 8001, 8002, 8003 ]
+enabled = true
+
+[[users]]
+name = "Alice"
+roles = ["admin"]
+
+[[users]]
+name = "Bob"
+roles = ["viewer"]
+]]
+
+local data = toml.decode(toml_str)
+
+log.info("数据库IP: " .. data.database.ip) -- 输出 '192.168.1.1'
+log.info("第二个用户: " .. data.users[2].name) -- 输出 'Bob'
+```'''
+insertText = "decode('${1:toml_string}')"
+kind = "Function"
+name = "decode"
+signature = "toml.decode(tomlString: string): table | nil"

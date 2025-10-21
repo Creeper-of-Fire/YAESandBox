@@ -5,6 +5,8 @@
     "../shared/api-def/json-bridge.toml",
     "../shared/api-def/regex-bridge.toml",
     "../shared/api-def/datetime-bridge.toml",
+    "../shared/api-def/toml-bridge.toml",
+    "../shared/api-def/yaml-bridge.toml",
     "./api-def/custom-api-string.toml"
   ]
 }
