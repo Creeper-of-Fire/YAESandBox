@@ -143,6 +143,36 @@ public class WorkflowConfigFilePersistenceService(IUserScopedStorageFactory user
     public async Task<Result> DeleteRuneConfig(string userId, string storeId) =>
         await this.DeleteConfig(this.ForRune, userId, storeId);
 
+    /// <summary>
+    /// 根据 StoredConfigRef（RefId 和 Version）在全局符文中查找配置。
+    /// 这会扫描用户存储中的所有全局符文文件。
+    /// </summary>
+    internal async Task<Result<StoredConfig<AbstractRuneConfig>>> FindRuneConfigByRefAsync(string userId, StoredConfigRef targetRef)
+    {
+        // 1. 获取该用户的所有全局符文配置
+        var allRunesResult = await this.FindAllConfig<AbstractRuneConfig>(this.ForRune, userId);
+        if (allRunesResult.TryGetError(out var allRunesError))
+        {
+            return allRunesError;
+        }
+
+        // 2. 遍历所有找到的符文，寻找匹配的 RefId 和 Version
+        foreach (var (_, storedConfig) in allRunesResult.GetSuccessData())
+        {
+            if (storedConfig.StoreRef is not null &&
+                storedConfig.StoreRef.RefId == targetRef.RefId &&
+                storedConfig.StoreRef.Version == targetRef.Version)
+            {
+                // 找到了完全匹配的项
+                return Result.Ok(storedConfig);
+            }
+        }
+
+        // 3. 如果遍历完所有文件都没有找到
+        return NormalError.NotFound(
+            $"在用户 '{userId}' 的全局符文中找不到与 RefId='{targetRef.RefId}' 和 Version='{targetRef.Version}' 匹配的配置。");
+    }
+
     private async Task<Result<StoredConfig<T>>> FindConfig<T>(ScopeTemplate template, string userId, string storeId)
         where T : IConfigStored
     {

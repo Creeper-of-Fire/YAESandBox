@@ -16,7 +16,9 @@ public class WorkflowRuntimeService(
     SubAiService aiService,
     IWorkflowDataAccess dataAccess,
     IWorkflowCallback callback,
-    WorkflowPersistenceService persistenceService
+    WorkflowPersistenceService persistenceService,
+    WorkflowConfigFindService findService,
+    string userId
 )
 {
     /// <summary>
@@ -38,4 +40,14 @@ public class WorkflowRuntimeService(
     /// 工作流持久化服务
     /// </summary>
     public WorkflowPersistenceService PersistenceService { get; } = persistenceService;
+    
+    /// <summary>
+    /// 提供查找已保存配置（包括内置配置）的服务。
+    /// </summary>
+    public WorkflowConfigFindService FindService { get; } = findService;
+
+    /// <summary>
+    /// 触发此工作流执行的用户的ID。
+    /// </summary>
+    public string UserId { get; } = userId;
 }

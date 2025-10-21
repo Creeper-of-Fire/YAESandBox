@@ -281,7 +281,7 @@ public class TuumProcessor(
                 return false;
             }
         }
-        
+
         /// <summary>
         /// 对列表进行合并时的合并策略。
         /// </summary>
@@ -302,7 +302,7 @@ public class TuumProcessor(
             /// </summary>
             Union
         }
-        
+
         /// <summary>
         /// 将一个对象的值深层合并到现有的 Tuum 变量中。
         /// </summary>
@@ -330,9 +330,9 @@ public class TuumProcessor(
                 this.SetTuumVar(name, mergedDict);
                 return;
             }
-            
+
             // 如果不是对象合并，检查是否是列表合并
-            if (listStrategy != ListMergeStrategy.Replace && 
+            if (listStrategy != ListMergeStrategy.Replace &&
                 TryConvertValue<IEnumerable<object?>>(existingValue, out var targetList) &&
                 TryConvertValue<IEnumerable<object?>>(valueToMerge, out var sourceList))
             {
@@ -345,7 +345,8 @@ public class TuumProcessor(
             this.SetTuumVar(name, valueToMerge);
         }
 
-        private static IDictionary<string, object?> DeepMerge(IDictionary<string, object?> target, IDictionary<string, object?> source, ListMergeStrategy listStrategy)
+        private static IDictionary<string, object?> DeepMerge(IDictionary<string, object?> target, IDictionary<string, object?> source,
+            ListMergeStrategy listStrategy)
         {
             foreach ((string key, object? sourceValue) in source)
             {
@@ -359,7 +360,7 @@ public class TuumProcessor(
                         target[key] = DeepMerge(targetNestedDict, sourceNestedDict, listStrategy);
                         continue;
                     }
-                    
+
                     // Case 2: 双方都是列表，并且策略不是替换
                     if (listStrategy != ListMergeStrategy.Replace &&
                         targetValue is IEnumerable<object?> targetList &&
@@ -369,10 +370,11 @@ public class TuumProcessor(
                         continue;
                     }
                 }
-                
+
                 // Case 3: 其他所有情况（包括需要替换的列表），都进行替换
                 target[key] = sourceValue;
             }
+
             return target;
         }
 
@@ -393,15 +395,17 @@ public class TuumProcessor(
                             target.Add(item);
                         }
                     }
+
                     break;
                 case ListMergeStrategy.Replace:
                 default:
                     // 此路径不应该在 DeepMerge 内部被调用，但在直接调用时是安全的
                     return source.ToList();
             }
+
             return target;
         }
-        
+
         /// <summary>
         /// 尝试通过点符号路径（例如 "player.stats.level"）设置或创建枢机中的变量。
         /// 如果路径中的中间对象不存在，它将自动创建为 `Dictionary&lt;string, object?&gt;`。
@@ -445,16 +449,17 @@ public class TuumProcessor(
                 string key = parts[i];
                 // 对于从根开始的每个部分，我们都需要从其父级获取它
                 var parentObject = (i == 0) ? this.TuumVariable : (IDictionary<string, object?>)currentObject;
-                
+
                 // 真正的当前对象是父级中的子对象
                 currentObject = parentObject.TryGetValue(key, out object? obj) ? obj! : null!;
-                
+
                 // 如果当前路径部分不存在，或者存在但不是字典，则需要创建/替换
                 if (currentObject is not IDictionary<string, object?> nextDict)
                 {
                     nextDict = new Dictionary<string, object?>();
                     parentObject[key] = nextDict;
                 }
+
                 currentObject = nextDict;
             }
 
@@ -465,7 +470,7 @@ public class TuumProcessor(
                 finalDict[finalKey] = value;
                 return true;
             }
-            
+
             // 如果中间路径上的某个值是原始类型（如字符串、数字），则无法继续深入，这是一个逻辑错误。
             Logger.Error("无法设置路径 '{Path}' 的值，因为其中间部分不是一个可修改的对象。", path);
             return false;
@@ -560,13 +565,9 @@ public class TuumProcessor(
             var result = Result.Ok();
             try
             {
-                // (仅处理INormalRune，未来可扩展)
-                if (runeProcessor is INormalRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto> normalRune)
-                {
-                    // Rune 自身可能会使用持久化，也可能不使用。
-                    // TuumProcessor 对此不知情，它只负责调用和等待结果。
-                    result = await normalRune.ExecuteAsync(this.TuumContent, cancellationToken);
-                }
+                // Rune 自身可能会使用持久化，也可能不使用。
+                // TuumProcessor 对此不知情，它只负责调用和等待结果。
+                result = await runeProcessor.ExecuteAsync(this.TuumContent, cancellationToken);
             }
             catch (Exception ex)
             {

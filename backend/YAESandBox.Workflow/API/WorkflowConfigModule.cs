@@ -101,5 +101,6 @@ public class WorkflowConfigModule :
         typeof(ConditionalPromptRuneConfig),
         typeof(TemplateParserRuneConfig),
         typeof(TextTemplateRuneConfig),
+        typeof(ReferenceRuneConfig),
     ];
 }

@@ -1,5 +1,7 @@
-﻿using YAESandBox.Workflow.Config.RuneConfig;
+﻿using YAESandBox.Depend.Results;
+using YAESandBox.Workflow.Config.RuneConfig;
 using YAESandBox.Workflow.DebugDto;
+using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
 
 namespace YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
 
@@ -7,7 +9,16 @@ namespace YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
 /// 代表一个符文的运行时状态，含有符文的配置信息，以及运行时Debug状态信息。
 /// </summary>
 public interface IRuneProcessor<out TConfig, out TDebug> : IProcessorWithDebugDto<TDebug>, IRuneProcessorWithConfig<TConfig>, IRuneProcessor
-    where TConfig : AbstractRuneConfig where TDebug : IRuneProcessorDebugDto;
+    where TConfig : AbstractRuneConfig where TDebug : IRuneProcessorDebugDto
+{
+    /// <summary>
+    /// 启动枢机流程
+    /// </summary>
+    /// <param name="tuumProcessorContent">枢机执行的上下文内容。</param>
+    /// <param name="cancellationToken"></param>
+    /// <returns></returns>
+    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default);
+}
 
 /// <summary>
 /// 代表一个符文的运行时状态

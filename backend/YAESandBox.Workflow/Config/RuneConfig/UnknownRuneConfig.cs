@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Nodes;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.DebugDto;
 using YAESandBox.Workflow.Runtime.Processor;
 using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
+using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
 
 namespace YAESandBox.Workflow.Config.RuneConfig;
 
@@ -62,6 +64,10 @@ public class UnknownRuneProcessor : IRuneProcessor<UnknownRuneConfig, IRuneProce
 
     /// <inheritdoc />
     public IRuneProcessorDebugDto DebugDto => throw new NotSupportedException();
+
+    /// <inheritdoc />
+    public Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default) =>
+        throw new NotSupportedException();
 
     /// <inheritdoc />
     public ProcessorContext ProcessorContext => throw new NotSupportedException();

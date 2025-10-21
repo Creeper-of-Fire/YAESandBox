@@ -20,7 +20,8 @@ public class WorkflowConfigFindService(WorkflowConfigFilePersistenceService work
     /// 在用户存储和内置存储中寻找指定的全局工作流配置。
     /// </summary>
     public async Task<Result<StoredConfig<WorkflowConfig>>> FindWorkflowConfig(string userId, string storeId) =>
-        await this.FindConfigInternalAsync(userId, storeId, WorkflowInnerConfigs, this.WorkflowConfigFilePersistenceService.FindWorkflowConfig);
+        await this.FindConfigInternalAsync(userId, storeId, WorkflowInnerConfigs,
+            this.WorkflowConfigFilePersistenceService.FindWorkflowConfig);
 
     /// <summary>
     /// 在用户存储和内置存储中寻找指定的全局枢机配置。
@@ -40,7 +41,8 @@ public class WorkflowConfigFindService(WorkflowConfigFilePersistenceService work
     /// <param name="userId"></param>
     /// <returns></returns>
     public async Task<DictionaryResult<string, StoredConfig<WorkflowConfig>>> FindAllWorkflowConfig(string userId) =>
-        await this.FindAllConfigInternalAsync(userId, WorkflowInnerConfigs, this.WorkflowConfigFilePersistenceService.FindAllWorkflowConfig);
+        await this.FindAllConfigInternalAsync(userId, WorkflowInnerConfigs,
+            this.WorkflowConfigFilePersistenceService.FindAllWorkflowConfig);
 
     /// <summary>
     /// 寻找所有的全局枢机配置
@@ -81,6 +83,26 @@ public class WorkflowConfigFindService(WorkflowConfigFilePersistenceService work
     /// <inheritdoc cref="WorkflowConfigFindService.DeleteRuneConfig"/>
     public async Task<Result> DeleteRuneConfig(string userId, string storeId) =>
         await this.WorkflowConfigFilePersistenceService.DeleteRuneConfig(userId, storeId);
+
+    /// <summary>
+    /// 根据 StoredConfigRef（RefId 和 Version）在用户存储和内置存储中寻找指定的全局符文配置。
+    /// </summary>
+    public async Task<Result<StoredConfig<AbstractRuneConfig>>> FindRuneConfigByRefAsync(string userId, StoredConfigRef targetRef)
+    {
+        // 1. 优先查找内置配置
+        foreach (var innerConfig in RuneInnerConfigs.Values)
+        {
+            if (innerConfig.StoreRef is not null &&
+                innerConfig.StoreRef.RefId == targetRef.RefId &&
+                innerConfig.StoreRef.Version == targetRef.Version)
+            {
+                return Result.Ok(innerConfig);
+            }
+        }
+
+        // 2. 如果不是内置配置，则查找用户存储
+        return await this.WorkflowConfigFilePersistenceService.FindRuneConfigByRefAsync(userId, targetRef);
+    }
 
     /// <summary>
     /// 通用的“按ID查找”逻辑。

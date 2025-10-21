@@ -84,23 +84,17 @@ public class MockRuneController(IMasterAiService masterAiService) : Authenticate
     {
         string userId = this.UserId;
         // 1. 利用多态，让Config自己创建对应的Processor。
-        var workflowRuntimeService = new FakeWorkflowRuntimeService(aiService: new SubAiService(this.MasterAiService, userId));
+        var workflowRuntimeService =
+            new FakeWorkflowRuntimeService(aiService: new SubAiService(this.MasterAiService, userId), userId: userId);
         var creatingContext = ProcessorContext.CreateRoot(Guid.NewGuid(), workflowRuntimeService);
         var processor = request.RuneConfig.ToRuneProcessor(creatingContext);
         var context = ProcessorContext.CreateRoot(Guid.NewGuid(), workflowRuntimeService);
-
-        // 确保它是一个我们可以执行的类型
-        if (processor is not INormalRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto> executableProcessor)
-        {
-            return this.BadRequest(new MockRunResponseDto { IsSuccess = false, ErrorMessage = "目前，提供的符文配置无法执行。" });
-        }
 
         // 2. 创建一个模拟的、临时的枢机上下文
         var mockTuumContent = new TuumProcessorContent(
             new TuumConfig { ConfigId = "mock-run-tuum" },
             processorContext: context.ExtractContext()
         );
-
 
         // 3. 将所有模拟输入注入到上下文中
         foreach (var input in request.MockInputs)
@@ -110,7 +104,7 @@ public class MockRuneController(IMasterAiService masterAiService) : Authenticate
 
         // 4. 执行 Processor
         var executionResult =
-            await executableProcessor.ExecuteAsync(mockTuumContent);
+            await processor.ExecuteAsync(mockTuumContent);
         if (executionResult.TryGetError(out var error))
         {
             return this.Ok(new MockRunResponseDto

@@ -24,10 +24,13 @@ internal static class ToProcessor
         SubAiService aiService,
         IWorkflowDataAccess dataAccess,
         IWorkflowCallback callback,
-        WorkflowPersistenceService persistenceService
+        WorkflowPersistenceService persistenceService,
+        WorkflowConfigFindService workflowConfigFindService,
+        string userId
     )
     {
-        var workflowRuntimeService = new WorkflowRuntimeService(aiService, dataAccess, callback, persistenceService);
+        var workflowRuntimeService =
+            new WorkflowRuntimeService(aiService, dataAccess, callback, persistenceService, workflowConfigFindService, userId);
         var context = ProcessorContext.CreateRoot(workflowRunnerId, workflowRuntimeService);
         return new WorkflowProcessor(workflowConfig, context, workflowInputs.ToDictionary());
     }

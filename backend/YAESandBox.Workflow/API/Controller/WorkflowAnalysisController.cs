@@ -51,8 +51,11 @@ public class WorkflowAnalysisController(
     [HttpPost("analyze-rune")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(RuneAnalysisResult), StatusCodes.Status200OK)]
-    public ActionResult<RuneAnalysisResult> AnalyzeRune([FromBody] RuneAnalysisRequest request) =>
-        this.Ok(this.RuneAnalysisService.Analyze(request.RuneToAnalyze));
+    public async Task<ActionResult<RuneAnalysisResult>> AnalyzeRune([FromBody] RuneAnalysisRequest request)
+    {
+        string userId = this.UserId;
+        return await this.RuneAnalysisService.AnalyzeAsync(request.RuneToAnalyze, userId);
+    }
 
     /// <summary>
     /// 对单个枢机（Tuum）配置草稿进行高级分析（不包含符文级校验）。
@@ -66,8 +69,26 @@ public class WorkflowAnalysisController(
     [HttpPost("analyze-tuum")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(TuumAnalysisResult), StatusCodes.Status200OK)]
-    public ActionResult<TuumAnalysisResult> AnalyzeTuum([FromBody] TuumConfig tuumConfig) =>
-        this.Ok(this.TuumAnalysisService.Analyze(tuumConfig));
+    public async Task<ActionResult<TuumAnalysisResult>> AnalyzeTuum([FromBody] TuumConfig tuumConfig)
+    {
+        string userId = this.UserId;
+
+        // --- 步骤 1: 预处理，填充 TuumConfig 中所有符文的缓存 ---
+        // 我们对所有符文调用分析，而不仅仅是引用符文，以简化逻辑
+        // AnalyzeAsync 内部会处理不同类型的符文
+        foreach (var rune in tuumConfig.Runes)
+        {
+            // 我们不需要关心 AnalyzeAsync 的返回结果，
+            // 它的副作用（更新 ReferenceRuneConfig 的缓存）才是我们需要的。
+            _ = await this.RuneAnalysisService.AnalyzeAsync(rune, userId);
+        }
+
+        // --- 步骤 2: 现在可以安全地同步调用 TuumAnalysisService ---
+        // 因为所有 ReferenceRuneConfig 都已经被“填充”了真实数据。
+        var analysisResult = this.TuumAnalysisService.Analyze(tuumConfig);
+
+        return this.Ok(analysisResult);
+    }
 
     /// <summary>
     /// 对整个工作流配置草稿进行全面的静态校验。

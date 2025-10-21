@@ -113,7 +113,7 @@ public class TextParserTestController : ControllerBase
         mockTuumContent.SetTuumVar(inputVariableName, request.SampleInputText);
 
         // 4. 执行 Processor
-        var executionResult = await ((INormalRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto>)processor).ExecuteAsync(mockTuumContent);
+        var executionResult = await ((IRuneProcessor<AbstractRuneConfig, IRuneProcessorDebugDto>)processor).ExecuteAsync(mockTuumContent);
         if (executionResult.TryGetError(out var error))
         {
             return this.Ok(new TestResponseDto

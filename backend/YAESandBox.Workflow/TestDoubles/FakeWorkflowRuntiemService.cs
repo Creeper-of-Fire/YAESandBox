@@ -16,12 +16,16 @@ public sealed class FakeWorkflowRuntimeService(
     SubAiService? aiService = null,
     IWorkflowDataAccess? dataAccess = null,
     IWorkflowCallback? callback = null,
-    WorkflowPersistenceService? persistenceService = null
+    WorkflowPersistenceService? persistenceService = null,
+    WorkflowConfigFindService? findService = null,
+    string? userId = null
 ) : WorkflowRuntimeService(
     aiService: aiService ?? new SubAiService(null!, ""),
     dataAccess: dataAccess ?? new FakeWorkflowDataAccess(),
     callback: callback ?? new FakeWorkflowCallback(),
-    persistenceService: persistenceService ?? new WorkflowPersistenceService(new InMemoryPersistenceStorage())
+    persistenceService: persistenceService ?? new WorkflowPersistenceService(new InMemoryPersistenceStorage()),
+    findService: findService!,
+    userId: userId ?? "fake-user-id"
 )
 {
     /// <summary>

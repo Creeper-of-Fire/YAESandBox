@@ -15,6 +15,7 @@ using YAESandBox.Workflow.Runtime.RuntimePersistence;
 using YAESandBox.Workflow.Runtime.RuntimePersistence.Storage;
 using YAESandBox.Workflow.Test.API.GameHub;
 using YAESandBox.Workflow.Utility;
+using YAESandBox.Workflow.WorkflowService;
 using YAESandBox.Workflow.WorkflowService.Abstractions;
 
 namespace YAESandBox.Workflow.Test.API.Controller;
@@ -67,12 +68,14 @@ public enum StreamOutputFormat
 public class WorkflowExecutionController(
     IMasterAiService masterAiService,
     IHubContext<WorkflowHub> workflowHubContext,
-    IUserScopedStorageFactory userScopedStorageFactory
+    IUserScopedStorageFactory userScopedStorageFactory,
+    WorkflowConfigFindService workflowConfigFindService
 ) : AuthenticatedApiControllerBase
 {
     private IMasterAiService MasterAiService { get; } = masterAiService;
     private IHubContext<WorkflowHub> WorkflowHubContext { get; } = workflowHubContext;
     private IUserScopedStorageFactory UserScopedStorageFactory { get; } = userScopedStorageFactory;
+    private WorkflowConfigFindService WorkflowConfigFindService { get; } = workflowConfigFindService;
     private static IAppLogger Logger { get; } = AppLogging.CreateLogger<WorkflowExecutionController>();
 
     /// <summary>
@@ -145,7 +148,9 @@ public class WorkflowExecutionController(
                     this.MasterAiService.ToSubAiService(userId),
                     mockDataAccess,
                     callback,
-                    new WorkflowPersistenceService(persistenceStorageStorage)
+                    new WorkflowPersistenceService(persistenceStorageStorage),
+                    this.WorkflowConfigFindService,
+                    userId
                 );
                 var result = await processor.ExecuteWorkflowAsync(cancellationToken);
 
