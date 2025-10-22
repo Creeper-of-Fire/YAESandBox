@@ -1,7 +1,7 @@
 ﻿// --- START OF FILE frontend/src/app-workbench/stores/workbenchStore.ts ---
 
 import {defineStore} from 'pinia';
-import {computed, type ComputedRef, markRaw, type Reactive, reactive} from 'vue';
+import {computed, markRaw, type Reactive, reactive} from 'vue';
 import {v4 as uuidv4} from 'uuid';
 import {type AnyConfigObject, type ConfigType, getConfigObjectType, GlobalEditSession,} from '#/services/GlobalEditSession.ts';
 import type {
@@ -164,7 +164,8 @@ export function deepCloneWithNewIds<T extends object>(obj: T): T
     return newObj;
 }
 
-export interface ConfigTypeMap {
+export interface ConfigTypeMap
+{
     workflow: WorkflowConfig;
     tuum: TuumConfig;
     rune: AbstractRuneConfig;
@@ -347,12 +348,35 @@ export const useWorkbenchStore = defineStore('workbench', () =>
         type: T,
         storeId: string,
         requestBody: StoredConfig<ConfigTypeMap[T]>
-    ) => {
+    ) =>
+    {
         // 当 T 是一个具体的类型 (如 'workflow') 时,
         // handler 会被正确推断为 IResourceHandler<WorkflowConfig>
         const handler = resourceHandlers[type];
 
+        // 步骤 1: 调用 API 保存到后端
         await handler.api.save(storeId, requestBody);
+        // 步骤 2: 手动更新本地的 useAsyncState 状态，确保 UI 响应式更新
+
+        // 准备一个符合前端视图模型 (GlobalResourceItem) 结构的对象
+        const newViewModelItem: GlobalResourceItemSuccess<ConfigTypeMap[T]> = {
+            isSuccess: true,
+            data: requestBody.content,
+            isReadOnly: requestBody.isReadOnly,
+            meta: requestBody.meta,
+            storeRef: requestBody.storeRef,
+        };
+
+        const existingItem = handler.asyncState.state[storeId];
+
+        if (existingItem && existingItem.isSuccess) {
+            // 更新现有项：直接修改属性以触发响应式更新
+            // 这样做比替换整个对象更好，可以保留对该对象的任何现有引用
+            Object.assign(existingItem, newViewModelItem);
+        } else {
+            // 创建新项：在 state 对象上添加一个新属性
+            handler.asyncState.state[storeId] = newViewModelItem;
+        }
     };
 
     // TODO 没写好校验逻辑

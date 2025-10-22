@@ -7,6 +7,7 @@ import {AddIcon, EditIcon, SaveIcon, TrashIcon} from '@yaesandbox-frontend/share
 import {createBlankConfig} from "#/utils/createBlankConfig.ts";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 import {useRuneTypeSelector} from "#/composables/useRuneTypeSelector.ts";
+import type {TuumConfig} from "#/types/generated/workflow-config-api-client";
 
 /**
  * @description useConfigItemActions 的输入参数类型
@@ -110,6 +111,29 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
                         const newTuum = await createBlankConfig('tuum', name);
                         item.tuums.push(newTuum);
                         message.success('已添加新枢机');
+                    },
+                };
+            }
+            else if ('innerTuum' in item && item.innerTuum)
+            { // 包含 innerTuum 的符文（如 TuumRune），为其添加符文
+                action = {
+                    key: 'add-rune-to-inner-tuum',
+                    label: '添加符文',
+                    icon: AddIcon,
+                    renderType: 'popover',
+                    type: 'primary',
+                    popoverTitle: '添加新符文到子枢机',
+                    popoverContentType: 'select-and-input',
+                    popoverSelectOptions: runeTypeOptions.value,
+                    popoverSelectPlaceholder: '请选择符文类型',
+                    disabled: isReadOnly,
+                    popoverDefaultNameGenerator: runeDefaultNameGenerator,
+                    handler: async ({name, type}) =>
+                    {
+                        if (!name || !type || !item.innerTuum) return;
+                        const newRune = await createBlankConfig('rune', name, {runeType: type});
+                        (item.innerTuum as TuumConfig).runes.push(newRune);
+                        message.success('已添加新符文到子枢机');
                     },
                 };
             }
