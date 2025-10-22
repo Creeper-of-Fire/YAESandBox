@@ -334,7 +334,7 @@ internal partial record PromptGenerationRuneConfig
 /// 提示词生成符文的配置。
 /// </summary>
 [InFrontOf(typeof(AiRuneConfig))]
-[ClassLabel("✍️提示词")]
+[ClassLabel("提示词", Icon = "✍️")]
 [RuneCategory("提示词处理")]
 internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGenerationRuneProcessor>
 {

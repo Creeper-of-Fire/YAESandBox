@@ -210,7 +210,7 @@ internal partial class TemplateParserRuneProcessor(TemplateParserRuneConfig conf
 /// “模板解析”符文的配置。
 /// 使用正则表达式的命名捕获组和TOML模板，从文本中提取并构建结构化数据。
 /// </summary>
-[ClassLabel("🛠️模板解析")]
+[ClassLabel("模板解析", Icon = "🛠️")]
 [RuneCategory("文本解析")]
 internal partial record TemplateParserRuneConfig : AbstractRuneConfig<TemplateParserRuneProcessor>
 {

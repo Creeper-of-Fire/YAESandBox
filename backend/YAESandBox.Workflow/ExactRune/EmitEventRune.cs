@@ -79,7 +79,7 @@ internal class EmitEventRuneProcessor(EmitEventRuneConfig config, ICreatingConte
 /// <summary>
 /// "发射事件"符文的配置，用于将工作流内部变量的值发送到外部逻辑地址。
 /// </summary>
-[ClassLabel("📤发射事件")]
+[ClassLabel("发射事件", Icon = "📤")]
 internal record EmitEventRuneConfig : AbstractRuneConfig<EmitEventRuneProcessor>
 {
     /// <summary>

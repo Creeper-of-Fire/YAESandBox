@@ -77,7 +77,7 @@ public class LuaStringProcessorRuneProcessor(LuaStringProcessorRuneConfig config
 /// <summary>
 /// Lua 字符串处理符文的配置。
 /// </summary>
-[ClassLabel("📜Lua解析")]
+[ClassLabel("Lua解析", Icon = "📜")]
 [RuneCategory("文本处理/脚本")]
 public record LuaStringProcessorRuneConfig : AbstractRuneConfig<LuaStringProcessorRuneProcessor>
 {

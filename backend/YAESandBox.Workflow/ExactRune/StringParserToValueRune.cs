@@ -214,8 +214,8 @@ internal class StringParserToValueRuneProcessor(StringParserToValueRuneConfig co
 /// <summary>
 /// “字符串解析为值”符文的配置。
 /// </summary>
-[ClassLabel("🔎值解析")]
-[RuneCategory("文本解析")] 
+[ClassLabel("值解析", Icon = "🔎")]
+[RuneCategory("文本解析")]
 internal record StringParserToValueRuneConfig : AbstractRuneConfig<StringParserToValueRuneProcessor>
 {
     private const string GroupIO = "输入/输出";

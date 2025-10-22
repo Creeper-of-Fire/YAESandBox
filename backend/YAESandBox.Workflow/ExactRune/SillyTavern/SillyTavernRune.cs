@@ -203,7 +203,7 @@ internal class SillyTavernRuneProcessor(SillyTavernRuneConfig config, ICreatingC
 /// 一个完整的 SillyTavern 处理器符文的配置。
 /// 它整合了预设和世界书，并处理变量填充，以生成最终的提示词列表。
 /// </summary>
-[ClassLabel("🍻酒馆预设")]
+[ClassLabel("酒馆预设",Icon = "🍻")]
 [RuneCategory("提示词处理")]
 internal record SillyTavernRuneConfig : AbstractRuneConfig<SillyTavernRuneProcessor>
 {

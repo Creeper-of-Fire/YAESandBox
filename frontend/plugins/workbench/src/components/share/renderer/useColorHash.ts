@@ -22,14 +22,16 @@ export function useColorHash(keyRef: Ref<string>) {
             return new ColorHash({
                 lightness: [0.70, 0.75, 0.80],
                 saturation: [0.45, 0.55, 0.65],
-                hash: 'bkdr'
+                hue: { min: 0, max: 360 },
+                hash: "bkdr"
             });
         } else {
             // 浅色模式配置：颜色更深、饱和度更高，以在浅色背景上更突出
             return new ColorHash({
                 lightness: [0.50, 0.55, 0.60],
                 saturation: [0.65, 0.75, 0.85],
-                hash: 'bkdr'
+                hue: { min: 0, max: 360 },
+                hash: "bkdr"
             });
         }
     });

@@ -80,7 +80,7 @@ internal class TuumRuneProcessor(TuumRuneConfig config, ICreatingContext creatin
 /// <summary>
 /// “枢机符文”的配置，它封装了一个完整的枢机配置，使其可以像一个普通符文一样被使用。
 /// </summary>
-[ClassLabel("📦子枢机")]
+[ClassLabel("子枢机", Icon = "📦")]
 internal record TuumRuneConfig : AbstractRuneConfig<TuumRuneProcessor>, IHasInnerTuumConfig
 {
     /// <summary>

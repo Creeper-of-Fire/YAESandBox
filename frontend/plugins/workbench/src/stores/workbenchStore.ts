@@ -93,6 +93,7 @@ export interface RuneMetadata
     rules?: WorkflowRuneRules;
     classLabel?: string;
     category?: string;
+    icon?: string;
 }
 
 
@@ -292,9 +293,11 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                     const classLabel = schema['x-classLabel'] as string | undefined;
                     // 从 Schema 中提取分类字段
                     const category = schema['x-rune-category'] as string | undefined;
+                    // 从 Schema 中提取图标属性
+                    const icon = schema['x-classLabel-icon'] as string | undefined;
 
                     // 只要 Schema 中包含任何一个元数据，就为其创建一个条目
-                    if (rules || classLabel || category)
+                    if (rules || classLabel || category || icon)
                     {
                         const metadata: RuneMetadata = {};
                         if (rules)
@@ -308,6 +311,10 @@ export const useWorkbenchStore = defineStore('workbench', () =>
                         if (category)
                         {
                             metadata.category = category;
+                        }
+                        if (icon)
+                        {
+                            metadata.icon = icon;
                         }
                         metadataMap[runeType] = metadata;
                     }
@@ -369,11 +376,14 @@ export const useWorkbenchStore = defineStore('workbench', () =>
 
         const existingItem = handler.asyncState.state[storeId];
 
-        if (existingItem && existingItem.isSuccess) {
+        if (existingItem && existingItem.isSuccess)
+        {
             // 更新现有项：直接修改属性以触发响应式更新
             // 这样做比替换整个对象更好，可以保留对该对象的任何现有引用
             Object.assign(existingItem, newViewModelItem);
-        } else {
+        }
+        else
+        {
             // 创建新项：在 state 对象上添加一个新属性
             handler.asyncState.state[storeId] = newViewModelItem;
         }

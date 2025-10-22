@@ -76,7 +76,7 @@ public class LuaScriptRuneProcessor(LuaScriptRuneConfig config, ICreatingContext
 /// <summary>
 /// Lua 脚本符文的配置。
 /// </summary>
-[ClassLabel("📜Lua脚本")]
+[ClassLabel("Lua脚本", Icon = "📜")]
 [RuneCategory("脚本")]
 public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProcessor>
 {

@@ -251,7 +251,7 @@ internal class AiRuneProcessor(AiRuneConfig config, ICreatingContext creatingCon
 }
 
 [Behind(typeof(PromptGenerationRuneConfig))]
-[ClassLabel("🤖AI调用")]
+[ClassLabel("AI调用", Icon = "🤖")]
 internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
 {
     internal const string PromptsDefaultName = "Prompts";

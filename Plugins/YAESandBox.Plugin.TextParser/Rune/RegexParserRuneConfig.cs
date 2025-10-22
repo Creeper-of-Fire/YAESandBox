@@ -165,7 +165,7 @@ public class RegexParserRuneProcessor(RegexParserRuneConfig config,ICreatingCont
 /// “正则解析”符文的配置。
 /// 使用正则表达式，对文本执行提取或替换操作。
 /// </summary>
-[ClassLabel("⚙️正则操作")]
+[ClassLabel("正则操作", Icon = "⚙️")]
 [RenderWithVueComponent("RegexParserEditor")]
 [Display(
     Name = "正则解析",

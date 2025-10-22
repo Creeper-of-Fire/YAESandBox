@@ -128,7 +128,7 @@ internal partial record StaticVariableRuneConfig
 /// “静态变量”符文的配置，用于通过 TOML 定义一组结构化的静态变量。
 /// </summary>
 [InFrontOf(typeof(PromptGenerationRuneConfig))] // 放在提示词生成符文的前面
-[ClassLabel("🤔静态变量")]
+[ClassLabel("静态变量", Icon = "🤔")]
 internal partial record StaticVariableRuneConfig : AbstractRuneConfig<StaticVariableRuneProcessor>
 {
     /// <summary>

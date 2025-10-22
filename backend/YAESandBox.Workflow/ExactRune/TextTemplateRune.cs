@@ -35,7 +35,7 @@ internal class TextTemplateRuneProcessor(TextTemplateRuneConfig config, ICreatin
 
             // 2. 将生成的内容设置到指定的输出变量中
             tuumProcessorContent.SetTuumVar(this.Config.OutputVariableName, finalContent);
-            
+
             return Result.Ok().AsCompletedTask();
         }
         catch (Exception ex)
@@ -80,11 +80,10 @@ internal class TextTemplateRuneProcessor(TextTemplateRuneConfig config, ICreatin
     }
 }
 
-
 /// <summary>
 /// “文本模板”符文的配置。
 /// </summary>
-[ClassLabel("📄文本模板")]
+[ClassLabel("文本模板", Icon = "📄")]
 [RuneCategory("文本处理")]
 internal partial record TextTemplateRuneConfig : AbstractRuneConfig<TextTemplateRuneProcessor>
 {
@@ -109,7 +108,7 @@ internal partial record TextTemplateRuneConfig : AbstractRuneConfig<TextTemplate
     public string Template { get; init; } = "";
 
     #endregion
-    
+
     #region Static Analysis
 
     // 静态分析逻辑与 PromptGenerationRuneConfig 完全相同，用于推断消费的变量
@@ -132,6 +131,7 @@ internal partial record TextTemplateRuneConfig : AbstractRuneConfig<TextTemplate
                 {
                     rootSpecs[rootVarName] = CoreVarDefs.Any with { Description = "可被ToString的任意类型。" };
                 }
+
                 continue;
             }
 
@@ -157,6 +157,7 @@ internal partial record TextTemplateRuneConfig : AbstractRuneConfig<TextTemplate
                     {
                         currentRecord.Properties[propName] = CoreVarDefs.Any with { Description = "可被ToString的任意类型。" };
                     }
+
                     break;
                 }
 
@@ -169,6 +170,7 @@ internal partial record TextTemplateRuneConfig : AbstractRuneConfig<TextTemplate
                     };
                     currentRecord.Properties[propName] = nextDef;
                 }
+
                 currentRecord = (RecordVarSpecDef)nextDef;
             }
         }
@@ -177,7 +179,7 @@ internal partial record TextTemplateRuneConfig : AbstractRuneConfig<TextTemplate
     }
 
     public override List<ProducedSpec> GetProducedSpec() => [new(this.OutputVariableName, CoreVarDefs.String)];
-    
+
     #endregion
 
     protected override TextTemplateRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);

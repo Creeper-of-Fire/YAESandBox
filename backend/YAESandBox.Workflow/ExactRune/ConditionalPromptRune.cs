@@ -147,7 +147,7 @@ internal class ConditionalPromptRuneProcessor(ConditionalPromptRuneConfig config
 /// “条件提示词”符文的配置。
 /// 它继承了 PromptGenerationRuneConfig 的所有功能，并增加了一个执行条件。
 /// </summary>
-[ClassLabel("✍️条件提示词")]
+[ClassLabel("条件提示词",Icon = "✍️")]
 [RuneCategory("提示词处理")]
 internal record ConditionalPromptRuneConfig : PromptGenerationRuneConfig
 {

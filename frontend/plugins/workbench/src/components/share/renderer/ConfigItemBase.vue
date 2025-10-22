@@ -13,9 +13,7 @@
          class="drag-handle"
          @click.stop
     >
-      <n-icon :size="18">
-        <DragHandleIcon/>
-      </n-icon>
+      <ConfigItemIconRenderer :icon="icon" />
     </div>
 
     <!-- 主内容区插槽 -->
@@ -51,6 +49,7 @@ import {computed, inject, ref, toRefs} from "vue";
 import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 import {vLazyRender} from '@yaesandbox-frontend/shared-ui'
 import {useColorHash} from "#/components/share/renderer/useColorHash.ts";
+import ConfigItemIconRenderer from "#/components/share/renderer/ConfigItemIconRenderer.vue";
 
 // 定义组件的 props
 const props = defineProps<{
@@ -60,6 +59,7 @@ const props = defineProps<{
   highlightColorCalculator: string;
   enabled: boolean;
   hiddenSwitch?: boolean;
+  icon?: string | null;
 }>();
 
 const rootElement = ref<HTMLElement | null>(null);

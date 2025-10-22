@@ -92,7 +92,7 @@ public class JavaScriptRuneProcessor(JavaScriptRuneConfig config, ICreatingConte
 /// <summary>
 /// JavaScript 脚本符文的配置。
 /// </summary>
-[ClassLabel("📜JS")]
+[ClassLabel("JS", Icon = "📜")]
 public partial record JavaScriptRuneConfig : AbstractRuneConfig<JavaScriptRuneProcessor>
 {
     /// <summary>

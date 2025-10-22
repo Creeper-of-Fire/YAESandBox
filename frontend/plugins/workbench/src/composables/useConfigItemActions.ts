@@ -2,8 +2,8 @@
 import {type Component, computed, type Ref} from 'vue';
 import {type SelectOption, type TreeSelectOption, useMessage} from 'naive-ui';
 import type {AnyConfigObject} from '#/services/GlobalEditSession.ts';
-import {useWorkbenchStore} from '#/stores/workbenchStore';
-import {AddIcon, EditIcon, SaveIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
+import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore';
+import {AddIcon, EditIcon, SaveIcon, TrashIcon,CopyIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {createBlankConfig} from "#/utils/createBlankConfig.ts";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 import {useRuneTypeSelector} from "#/composables/useRuneTypeSelector.ts";
@@ -163,6 +163,30 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
             return action;
         }
 
+        // 动作：创建副本
+        const duplicateAction: EnhancedAction = {
+            key: 'duplicate',
+            label: '创建副本',
+            icon: CopyIcon,
+            renderType: 'button', // 这是一个直接操作，不需要弹窗
+            disabled: isReadOnly || !parentCtx, // 如果是只读或没有父级上下文，则禁用
+            handler: () => {
+                if (!parentCtx || !item || !('configId' in item)) return;
+
+                const index = parentCtx.list.findIndex(i => 'configId' in i && i.configId === item.configId);
+                if (index > -1) {
+                    // 使用 deepCloneWithNewIds 创建一个全新的副本
+                    const clonedItem = deepCloneWithNewIds(item);
+                    // 修改副本名称以作区分
+                    clonedItem.name = `${item.name} (副本)`;
+                    // 将副本插入到原项的后面
+                    parentCtx.list.splice(index + 1, 0, clonedItem);
+
+                    message.success(`已为“${item.name}”创建副本`);
+                }
+            }
+        }
+
         // 动作：删除
         const deleteAction: EnhancedAction = {
             key: 'delete',
@@ -218,6 +242,7 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
             getAddChildAction(),
             deleteAction,
             saveAsGlobalAction,
+            duplicateAction,
         ].filter(a => a.key && !a.disabled); // 过滤掉无效和禁用的动作
     });
 

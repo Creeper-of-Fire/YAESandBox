@@ -205,7 +205,7 @@ public class TagParserRuneProcessor(TagParserRuneConfig config,ICreatingContext 
 /// “标签解析”符文的配置。
 /// 使用CSS选择器从HTML/XML文本中精确提取数据。
 /// </summary>
-[ClassLabel("🏷️标签解析")]
+[ClassLabel("标签解析",Icon = "🏷️")]
 [RenderWithVueComponent("TagParserEditor")]
 [Display(
     Name = "标签解析",

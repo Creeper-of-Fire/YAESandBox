@@ -3,6 +3,7 @@
   <ConfigItemBase
       v-model:enabled="rune.enabled"
       :highlight-color-calculator="props.rune.runeType"
+      :icon = "runeIcon"
       :is-selected="isSelected"
       is-draggable
       @click="handleItemClick"
@@ -144,6 +145,8 @@ const metadataForThisRune = computed(() =>
 );
 
 const rulesForThisRune = computed(() => metadataForThisRune.value?.rules);
+
+const runeIcon = computed(() => metadataForThisRune.value?.icon);
 
 const runeClassLabel = computed(() => metadataForThisRune.value?.classLabel);
 

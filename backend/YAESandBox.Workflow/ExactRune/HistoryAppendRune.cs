@@ -106,7 +106,7 @@ internal class HistoryAppendRuneProcessor(HistoryAppendRuneConfig config, ICreat
 /// 历史记录追加符文的配置。
 /// </summary>
 [InFrontOf(typeof(AiRuneConfig))]
-[ClassLabel("📜历史追加")]
+[ClassLabel("历史追加",Icon = "📜")]
 [RuneCategory("提示词处理")]
 internal record HistoryAppendRuneConfig : AbstractRuneConfig<HistoryAppendRuneProcessor>
 {

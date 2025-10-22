@@ -14,7 +14,7 @@ namespace YAESandBox.Workflow.Config.RuneConfig;
 /// 一个特殊的符文配置，用于表示在反序列化过程中未能成功解析的符文。
 /// 它会捕获原始的JSON数据和解析错误，允许用户在UI中查看和修复。
 /// </summary>
-[ClassLabel("❓未知符文")]
+[ClassLabel("未知符文",Icon = "❓")]
 [RenderWithCustomWidget("UnknownRuneEditor")]
 public sealed record UnknownRuneConfig : AbstractRuneConfig<UnknownRuneProcessor>
 {

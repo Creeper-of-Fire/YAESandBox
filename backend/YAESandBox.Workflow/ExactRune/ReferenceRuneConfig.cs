@@ -27,30 +27,31 @@ internal class ReferenceRuneProcessor(ReferenceRuneConfig config, ICreatingConte
         TargetVersion = config.TargetRuneRef?.Version
     };
 
-    public override async Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
+    public override async Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent,
+        CancellationToken cancellationToken = default)
     {
         // 1. 每次执行时都动态解析和创建 Processor
         var creationResult = await this.CreateActualProcessorAsync();
-        
+
         if (creationResult.TryGetError(out var error, out var actualProcessor))
         {
             this.DebugDto.RuntimeError = $"创建引用的符文处理器失败: {error.Message}";
             return Result.Fail(error);
         }
-        
+
         this.DebugDto.ResolvedRuneType = actualProcessor.Config.RuneType;
         this.DebugDto.ResolvedRuneConfigId = actualProcessor.Config.ConfigId;
 
         // 2. 将执行完全委托给新创建的内部处理器
         var result = await actualProcessor.ExecuteAsync(tuumProcessorContent, cancellationToken);
-        
+
         // 3. 将内部处理器的调试信息代理到我们自己的调试DTO中
         this.DebugDto.ActualRuneDebugDto = actualProcessor.DebugDto;
         if (result.TryGetError(out var actualRuntimeError))
         {
             this.DebugDto.RuntimeError = actualRuntimeError.ToDetailString();
         }
-        
+
         return result;
     }
 
@@ -82,7 +83,7 @@ internal class ReferenceRuneProcessor(ReferenceRuneConfig config, ICreatingConte
         // 我们使用自己的 ConfigId 作为作用域名称，以表明这是 "ReferenceRune" 内部的一次执行。
         var childCreatingContext = this.ProcessorContext.CreateContextForChild(Guid.NewGuid());
         var actualProcessor = storedConfig.Content.ToRuneProcessor(childCreatingContext);
-        
+
         return Result.Ok(actualProcessor);
     }
 
@@ -101,14 +102,14 @@ internal class ReferenceRuneProcessor(ReferenceRuneConfig config, ICreatingConte
 /// "引用符文"的配置。
 /// 它本身不包含任何逻辑，而是通过 RefId 和 Version 引用一个已保存的全局符文。
 /// </summary>
-[ClassLabel("🔗引用符文")]
+[ClassLabel("引用符文", Icon = "🔗")]
 [RuneCategory("工作流控制")]
 internal record ReferenceRuneConfig : AbstractRuneConfig<ReferenceRuneProcessor>
 {
     [Required]
     [Display(Name = "引用的全局符文", Description = "选择一个要在此处引用的全局符文配置。")]
     public StoredConfigRef? TargetRuneRef { get; init; }
-    
+
     // TODO: [技术债] 架构演进 - 静态分析缓存
     // 当前的缓存机制（方案A）是一个为了快速实现而采取的务实策略。它通过让 RuneAnalysisService 修改
     // 此配置对象的状态，使得 TuumAnalysisService 可以保持同步和简单。
@@ -120,6 +121,7 @@ internal record ReferenceRuneConfig : AbstractRuneConfig<ReferenceRuneProcessor>
     // 2. 将 TuumAnalysisService 重构为异步服务 (AnalyzeAsync)。
     // 3. 在 TuumAnalysisService 内部，调用 RuneAnalysisService 并解析所有引用符文，从而实现逻辑的完全内聚。
     // 当未来有重构资源时，应考虑向方案B演进。
+
     #region Analysis Cache
 
     /// <summary>
@@ -133,7 +135,7 @@ internal record ReferenceRuneConfig : AbstractRuneConfig<ReferenceRuneProcessor>
     /// </summary>
     [JsonIgnore]
     public List<ProducedSpec>? CachedProducedSpecs { get; private set; }
-    
+
     /// <summary>
     /// (内部使用) 由分析服务调用，用于更新此实例的缓存。
     /// </summary>
@@ -142,7 +144,7 @@ internal record ReferenceRuneConfig : AbstractRuneConfig<ReferenceRuneProcessor>
         this.CachedConsumedSpecs = consumed;
         this.CachedProducedSpecs = produced;
     }
-    
+
     /// <summary>
     /// (内部使用) 清除分析缓存。
     /// </summary>
@@ -155,7 +157,7 @@ internal record ReferenceRuneConfig : AbstractRuneConfig<ReferenceRuneProcessor>
     #endregion
 
     #region Static Analysis Delegation
-    
+
     public override List<ConsumedSpec> GetConsumedSpec() => this.CachedConsumedSpecs ?? [];
     public override List<ProducedSpec> GetProducedSpec() => this.CachedProducedSpecs ?? [];
 
