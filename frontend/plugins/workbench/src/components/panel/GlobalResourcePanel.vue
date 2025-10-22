@@ -7,17 +7,25 @@
           <n-h4>
             全局资源
           </n-h4>
-          <InlineInputPopover
-              :action="createNewAction"
-              @confirm="handleCreateNew"
-          >
-            <n-button secondary size="small" type="primary">
+          <n-flex>
+            <n-button secondary size="small" @click="importConfig">
               <template #icon>
-                <n-icon :component="AddIcon"/>
+                <n-icon :component="UploadIcon"/>
               </template>
-              新建
+              导入
             </n-button>
-          </InlineInputPopover>
+            <InlineInputPopover
+                :action="createNewAction"
+                @confirm="handleCreateNew"
+            >
+              <n-button secondary size="small" type="primary">
+                <template #icon>
+                  <n-icon :component="AddIcon"/>
+                </template>
+                新建
+              </n-button>
+            </InlineInputPopover>
+          </n-flex>
         </n-flex>
 
         <!-- 状态一：正在加载 -->
@@ -182,10 +190,11 @@ import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
 import {createBlankConfig} from "#/utils/createBlankConfig.ts";
 import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
-import {AddIcon, EditIcon, TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
+import {AddIcon, DownloadIcon, EditIcon, TrashIcon, UploadIcon} from "@yaesandbox-frontend/shared-ui/icons";
 import {useEditorControlPayload} from "#/services/editor-context/useSelectedConfig.ts";
 import {useFilteredGlobalResources} from "#/composables/useFilteredGlobalResources.ts";
 import {useRuneTypeSelector} from "#/composables/useRuneTypeSelector.ts";
+import {useConfigImportExport} from "#/composables/useConfigImportExport.ts";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -517,6 +526,7 @@ function handleContextMenu(payload: { type: ConfigType; storeId: string; name: s
 }
 
 const {switchContext} = useEditorControlPayload();
+const {importConfig} = useConfigImportExport();
 
 // 处理菜单项点击
 function handleDropdownSelect(key: 'edit' | 'delete')

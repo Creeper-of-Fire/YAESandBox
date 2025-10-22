@@ -71,6 +71,7 @@
           </n-flex>
 
           <n-flex v-if="!isReadOnly">
+            <n-button :disabled="!fullDraft" secondary size="small" strong type="info" @click="handleExport">导出</n-button>
             <n-button :disabled="!isDirty" secondary size="small" strong type="error" @click="handleDiscard">放弃</n-button>
             <n-button :disabled="!isDirty" secondary size="small" strong type="success" @click="handleSave">保存</n-button>
           </n-flex>
@@ -146,6 +147,7 @@ import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 import RuneItemRenderer from "#/components/rune/RuneItemRenderer.vue";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 import ConfigMetadataEditor from "#/components/share/ConfigMetadataEditor.vue";
+import {useConfigImportExport} from "#/composables/useConfigImportExport.ts";
 
 const props = defineProps<{}>();
 
@@ -326,6 +328,20 @@ function handleDrop(event: DragEvent)
     {
       console.error("解析拖拽数据失败:", e);
     }
+  }
+}
+
+const {exportConfig} = useConfigImportExport();
+
+function handleExport()
+{
+  if (fullDraft.value)
+  {
+    exportConfig(fullDraft.value);
+  }
+  else
+  {
+    message.error("没有可导出的活动配置。");
   }
 }
 
