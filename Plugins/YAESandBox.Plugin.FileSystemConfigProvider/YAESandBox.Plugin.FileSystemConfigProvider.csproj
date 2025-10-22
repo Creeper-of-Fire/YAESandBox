@@ -43,7 +43,7 @@
         <MakeDir Directories="$(PluginDestination)"/>
 
         <!-- 3. 复制插件的核心文件和依赖 -->
-        <ItemGroup Condition="'@(PackageReference)' != ''">
+        <ItemGroup>
             <FilesToCopy Include="$(OutputPath)$(AssemblyName).dll"/>
             <FilesToCopy Include="$(OutputPath)$(AssemblyName).pdb" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')"/>
             <FilesToCopy Include="$(OutputPath)$(AssemblyName).deps.json"/>
