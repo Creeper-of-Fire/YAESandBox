@@ -31,8 +31,8 @@ import type {RuneEditorContext} from "#/components/rune/editor/RuneEditorContext
 import WorkflowEditor from "#/components/workflow/editor/WorkflowEditor.vue";
 import type {WorkflowEditorContext} from "#/components/workflow/editor/WorkflowEditorContext.ts";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
-import {getConfigObjectType} from "#/services/GlobalEditSession";
 import {type WorkflowSelectionContext} from "#/services/editor-context/SelectionContext";
+import {getConfigObjectType} from "@yaesandbox-frontend/core-services/types";
 
 const {selectedContext, activeContext} = useSelectedConfig();
 

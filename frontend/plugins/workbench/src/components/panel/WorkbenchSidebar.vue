@@ -135,7 +135,7 @@
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NH4, NIcon, useDialog, useMessage, useThemeVars} from 'naive-ui';
-import type {ConfigType} from "#/services/GlobalEditSession.ts";
+import type {ConfigType} from "@yaesandbox-frontend/core-services/types";
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "#/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "#/components/workflow/WorkflowItemRenderer.vue";

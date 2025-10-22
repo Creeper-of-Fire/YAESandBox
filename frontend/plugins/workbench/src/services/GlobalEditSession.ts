@@ -1,7 +1,6 @@
 // --- START OF FILE frontend/src/app-workbench/services/GlobalEditSession.ts ---
 
 import {computed, isReactive, isRef, readonly, ref, type Ref} from 'vue';
-import type {AbstractRuneConfig, TuumConfig, WorkflowConfig,} from '#/types/generated/workflow-config-api-client';
 import {
     type AnyResourceItemSuccess as AnyResourceItemInStore,
     type SaveResult,
@@ -10,21 +9,10 @@ import {
 } from '#/stores/workbenchStore.ts';
 import {cloneDeep} from "lodash-es";
 import {isEquivalent} from "@yaesandbox-frontend/core-services";
+import type {AnyConfigObject, ConfigType} from "@yaesandbox-frontend/core-services/types";
 
 // 定义了可编辑配置的类型别名，方便在整个应用中重用。
-export type ConfigType = 'workflow' | 'tuum' | 'rune';
-export type AnyConfigObject = WorkflowConfig | TuumConfig | AbstractRuneConfig;
 export type AnyResourceItemSuccess = AnyResourceItemInStore;
-
-export function getConfigObjectType(config: AnyConfigObject)
-{
-    if ('workflowInputs' in config && 'tuums' in config)
-        return {type: 'workflow' as const, config: config as WorkflowConfig};
-    else if ('runes' in config)
-        return {type: 'tuum' as const, config: config as TuumConfig};
-    else
-        return {type: 'rune' as const, config: config as AbstractRuneConfig};
-}
 
 function createDebuggableRef(initialValue: any)
 {

@@ -1,13 +1,12 @@
 ﻿// 文件路径: src/app-workbench/composables/useConfigItemActions.ts
 import {type Component, computed, type Ref} from 'vue';
 import {type SelectOption, type TreeSelectOption, useMessage} from 'naive-ui';
-import type {AnyConfigObject} from '#/services/GlobalEditSession.ts';
+import {type AnyConfigObject, getConfigObjectType, isRuneWithInnerTuum} from "@yaesandbox-frontend/core-services/types";
 import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore';
-import {AddIcon, EditIcon, SaveIcon, TrashIcon,CopyIcon} from '@yaesandbox-frontend/shared-ui/icons';
+import {AddIcon, CopyIcon, EditIcon, SaveIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {createBlankConfig} from "#/utils/createBlankConfig.ts";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 import {useRuneTypeSelector} from "#/composables/useRuneTypeSelector.ts";
-import type {TuumConfig} from "#/types/generated/workflow-config-api-client";
 
 /**
  * @description useConfigItemActions 的输入参数类型
@@ -30,10 +29,10 @@ export interface EnhancedAction
     renderType: 'popover' | 'confirm' | 'button';
     popoverTitle?: string;
     popoverContentType?: 'input' | 'select-and-input' | 'confirm-delete';
-    popoverSelectOptions?: SelectOption[] | TreeSelectOption[];
+    popoverSelectOptions?: TreeSelectOption[];
     popoverSelectPlaceholder?: string;
     popoverInitialValue?: string;
-    popoverDefaultNameGenerator?: (selectedValue: any, selectOptions: SelectOption[] | TreeSelectOption[]) => string;
+    popoverDefaultNameGenerator?: (selectedValue: any, selectOptions: TreeSelectOption[]) => string;
     popoverConfirmMessage?: string;
     confirmText?: string;
     handler?: (payload: { name?: string; type?: string }) => void;
@@ -49,7 +48,7 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
     const message = useMessage();
     const workbenchStore = useWorkbenchStore();
 
-    const { runeTypeOptions, runeDefaultNameGenerator } = useRuneTypeSelector();
+    const {runeTypeOptions, runeDefaultNameGenerator} = useRuneTypeSelector();
 
     /**
      * @description 生成并返回当前状态下的可用动作列表。
@@ -93,7 +92,9 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
                 disabled: true
             };
 
-            if ('tuums' in item)
+            const {type, config: typedItem} = getConfigObjectType(item);
+
+            if (type == 'workflow')
             { // 工作流添加枢机
                 action = {
                     key: 'add-tuum',
@@ -109,12 +110,12 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
                     {
                         if (!name) return;
                         const newTuum = await createBlankConfig('tuum', name);
-                        item.tuums.push(newTuum);
+                        typedItem.tuums.push(newTuum);
                         message.success('已添加新枢机');
                     },
                 };
             }
-            else if ('innerTuum' in item && item.innerTuum)
+            else if (isRuneWithInnerTuum(item))
             { // 包含 innerTuum 的符文（如 TuumRune），为其添加符文
                 action = {
                     key: 'add-rune-to-inner-tuum',
@@ -132,12 +133,12 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
                     {
                         if (!name || !type || !item.innerTuum) return;
                         const newRune = await createBlankConfig('rune', name, {runeType: type});
-                        (item.innerTuum as TuumConfig).runes.push(newRune);
+                        item.innerTuum.runes.push(newRune);
                         message.success('已添加新符文到子枢机');
                     },
                 };
             }
-            else if ('runes' in item)
+            else if (type == "tuum")
             { // 枢机添加符文
                 action = {
                     key: 'add-rune',
@@ -155,7 +156,7 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
                     {
                         if (!name || !type) return;
                         const newRune = await createBlankConfig('rune', name, {runeType: type});
-                        item.runes.push(newRune);
+                        typedItem.runes.push(newRune);
                         message.success('已添加新符文');
                     },
                 };
@@ -170,11 +171,13 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
             icon: CopyIcon,
             renderType: 'button', // 这是一个直接操作，不需要弹窗
             disabled: isReadOnly || !parentCtx, // 如果是只读或没有父级上下文，则禁用
-            handler: () => {
+            handler: () =>
+            {
                 if (!parentCtx || !item || !('configId' in item)) return;
 
                 const index = parentCtx.list.findIndex(i => 'configId' in i && i.configId === item.configId);
-                if (index > -1) {
+                if (index > -1)
+                {
                     // 使用 deepCloneWithNewIds 创建一个全新的副本
                     const clonedItem = deepCloneWithNewIds(item);
                     // 修改副本名称以作区分

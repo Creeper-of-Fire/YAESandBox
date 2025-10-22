@@ -71,7 +71,7 @@ import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import {NButton, NH3, useDialog, useMessage, useThemeVars} from 'naive-ui';
 import {SaveIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useWorkbenchStore} from '#/stores/workbenchStore';
-import {type ConfigType} from '#/services/GlobalEditSession.ts';
+import type {ConfigType} from "@yaesandbox-frontend/core-services/types";
 
 import EditorLayout from '#/layouts/EditorLayout.vue';
 import GlobalResourcePanel from '#/components/panel/GlobalResourcePanel.vue';

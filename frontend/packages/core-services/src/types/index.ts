@@ -1,3 +1,9 @@
 ﻿export * from './ui'
-export {type WorkflowConfig} from './generated/workflow-test-api-client/index.ts'
 export {type ApiRequestOptions} from './generated/workflow-test-api-client/core/ApiRequestOptions'
+
+import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from './generated/workflow-test-api-client';
+
+export type {WorkflowConfig, TuumConfig, AbstractRuneConfig};
+export type AnyConfigObject = WorkflowConfig | TuumConfig | AbstractRuneConfig;
+export type ConfigType = 'workflow' | 'tuum' | 'rune';
+export {getConfigObjectType, isRuneWithInnerTuum,isTuum,isWorkflow,isRune} from '../utils/configTypeGuards'

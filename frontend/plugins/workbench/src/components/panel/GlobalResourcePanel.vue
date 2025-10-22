@@ -175,9 +175,8 @@
 import {computed, h, nextTick, reactive, ref} from 'vue';
 import {type DropdownOption, NAlert, NButton, NEmpty, NFlex, NH4, NIcon, NSpin, NTab, NTabs, useDialog, useMessage} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore';
-import type {AnyConfigObject, ConfigType} from "#/services/GlobalEditSession.ts";
+import type {AnyConfigObject, ConfigType, GlobalResourceItem} from "@yaesandbox-frontend/core-services/types";
 import {VueDraggable as draggable} from "vue-draggable-plus";
-import type {GlobalResourceItem} from "@yaesandbox-frontend/core-services/types";
 import GlobalResourceListItem from './GlobalResourceListItem.vue';
 import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
 import {createBlankConfig} from "#/utils/createBlankConfig.ts";

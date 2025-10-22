@@ -68,11 +68,10 @@
 import {NButton, NIcon, useThemeVars} from 'naive-ui';
 import {onLongPress} from '@vueuse/core'
 import {EditIcon, FindInPageIcon, LinkOffIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import type {AnyConfigObject, ConfigType} from '#/services/GlobalEditSession.ts';
-import type {GlobalResourceItem} from '@yaesandbox-frontend/core-services/types';
+import type {ConfigType} from '@yaesandbox-frontend/core-services/types';
 import {computed, ref} from "vue";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
-import { useEditorControlPayload } from '#/services/editor-context/useSelectedConfig.ts';
+import {useEditorControlPayload} from '#/services/editor-context/useSelectedConfig.ts';
 
 const props = defineProps<{
   storeId: string; // 原始 Record 的 key (资源的唯一ID)
@@ -81,13 +80,20 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   (e: 'show-error-detail', errorMessage: string, originJsonString: string | null | undefined): void; // 点击“详情”时触发
-  (e: 'contextmenu', payload: { type: ConfigType; storeId: string; name: string; isDamaged?: boolean; event: MouseEvent | PointerEvent }): void;
+  (e: 'contextmenu', payload: {
+    type: ConfigType;
+    storeId: string;
+    name: string;
+    isDamaged?: boolean;
+    event: MouseEvent | PointerEvent
+  }): void;
 }>();
 
 // *** 检查当前项是否变脏 ***
 const workbenchStore = useWorkbenchStore();
 
-const isDirty = computed(() => {
+const isDirty = computed(() =>
+{
   // 从 store 获取所有活跃的会话
   const sessions = workbenchStore.getActiveSessions;
   // 查找与当前列表项 storeId 匹配的会话
@@ -98,19 +104,30 @@ const isDirty = computed(() => {
 
 // 创建一个计算属性，根据 props.type 和 props.storeId 动态地从 store 中查找数据。
 // 这确保了组件始终访问的是 Pinia store 中最新的、经过响应式代理的源数据。
-const item = computed(() => {
+const item = computed(() =>
+{
   let sourceState;
-  switch (props.type) {
-    case 'workflow': sourceState = workbenchStore.globalWorkflowsAsync.state; break;
-    case 'tuum': sourceState = workbenchStore.globalTuumsAsync.state; break;
-    case 'rune': sourceState = workbenchStore.globalRunesAsync.state; break;
-    default: return null;
+  switch (props.type)
+  {
+    case 'workflow':
+      sourceState = workbenchStore.globalWorkflowsAsync.state;
+      break;
+    case 'tuum':
+      sourceState = workbenchStore.globalTuumsAsync.state;
+      break;
+    case 'rune':
+      sourceState = workbenchStore.globalRunesAsync.state;
+      break;
+    default:
+      return null;
   }
   return sourceState?.[props.storeId] as any; // any is fine here because template handles success/fail cases
 });
 
-const { switchContext } = useEditorControlPayload();
-function handleStartEditing() {
+const {switchContext} = useEditorControlPayload();
+
+function handleStartEditing()
+{
   switchContext(props.type, props.storeId);
 }
 

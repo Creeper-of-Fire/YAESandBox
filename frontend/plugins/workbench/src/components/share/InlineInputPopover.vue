@@ -22,14 +22,14 @@
         <!-- 符文类型选择 (仅在 content-type 为 'select-and-input' 时显示) -->
         <n-form-item v-if="contentType === 'select-and-input'" label="类型" required>
           <n-tree-select
-              v-model:value="selectValue"
               v-model:expanded-keys="expandedKeys"
+              v-model:value="selectValue"
               :options="action.popoverSelectOptions"
               :override-default-node-click-behavior="overrideNodeClickBehavior"
               :placeholder="action.popoverSelectPlaceholder"
-              filterable
-              clearable
               block-line
+              clearable
+              filterable
           />
         </n-form-item>
 
@@ -64,8 +64,18 @@
 
 <script lang="ts" setup>
 import {computed, nextTick, ref, watch} from 'vue';
-import {type InputInst, type TreeSelectOption, type TreeSelectOverrideNodeClickBehavior} from 'naive-ui';
-import {NAlert, NButton, NFlex, NFormItem, NH5, NInput, NPopover} from 'naive-ui';
+import {
+  type InputInst,
+  NAlert,
+  NButton,
+  NFlex,
+  NFormItem,
+  NH5,
+  NInput,
+  NPopover,
+  type TreeSelectOption,
+  type TreeSelectOverrideNodeClickBehavior
+} from 'naive-ui';
 import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 
@@ -138,9 +148,11 @@ const isInputValid = computed(() =>
   return false; // 其他未知情况
 });
 
-const treeSelectOptions = computed(() => {
+const treeSelectOptions = computed(() =>
+{
   // 这里可以添加一个类型守卫，虽然在这种情况下不是必须的，但是个好习惯
-  if (props.action.popoverContentType === 'select-and-input') {
+  if (props.action.popoverContentType === 'select-and-input')
+  {
     // 我们假设当 contentType 是 'select-and-input' 时，传入的总是 TreeSelectOption[]
     return props.action.popoverSelectOptions as TreeSelectOption[] || [];
   }
@@ -150,15 +162,21 @@ const treeSelectOptions = computed(() => {
 // --- 监视器 ---
 watch(selectValue, (newType, oldType) =>
 {
-  if (newType !== oldType && newType) {
-    if (contentType.value === 'select-and-input') {
-      if (props.action.popoverDefaultNameGenerator) {
+  if (newType !== oldType && newType)
+  {
+    if (contentType.value === 'select-and-input')
+    {
+      if (props.action.popoverDefaultNameGenerator)
+      {
         // popoverSelectOptions 是树状的，需要扁平化才能查找
-        const flattenOptions = (nodes: TreeSelectOption[]): TreeSelectOption[] => {
+        const flattenOptions = (nodes: TreeSelectOption[]): TreeSelectOption[] =>
+        {
           let result: TreeSelectOption[] = [];
-          for (const node of nodes) {
+          for (const node of nodes)
+          {
             result.push(node);
-            if (node.children) {
+            if (node.children)
+            {
               result = result.concat(flattenOptions(node.children));
             }
           }
@@ -170,13 +188,18 @@ watch(selectValue, (newType, oldType) =>
             newType,
             flattenOptions(treeSelectOptions.value)
         );
-      } else {
+      }
+      else
+      {
         // 如果没有生成器，回退到使用 label 作为名称
-        const flattenOptions = (nodes: TreeSelectOption[]): TreeSelectOption[] => {
+        const flattenOptions = (nodes: TreeSelectOption[]): TreeSelectOption[] =>
+        {
           let result: TreeSelectOption[] = [];
-          for (const node of nodes) {
+          for (const node of nodes)
+          {
             result.push(node);
-            if (node.children) {
+            if (node.children)
+            {
               result = result.concat(flattenOptions(node.children));
             }
           }
@@ -186,9 +209,12 @@ watch(selectValue, (newType, oldType) =>
         inputValue.value = (option?.label as string) || '新项目';
       }
     }
-  } else if (!newType) {
+  }
+  else if (!newType)
+  {
     // 如果选择被清空，则重置输入框
-    if (contentType.value !== 'confirm-delete') {
+    if (contentType.value !== 'confirm-delete')
+    {
       inputValue.value = '';
     }
   }
@@ -208,11 +234,15 @@ function handleTriggerClick()
     }
 
     // 首次打开时默认展开所有
-    if (expandedKeys.value.length === 0 && props.action?.popoverSelectOptions) {
-      const getAllParentKeys = (nodes: TreeSelectOption[]): string[] => {
+    if (expandedKeys.value.length === 0 && props.action?.popoverSelectOptions)
+    {
+      const getAllParentKeys = (nodes: TreeSelectOption[]): string[] =>
+      {
         let keys: string[] = [];
-        for (const node of nodes) {
-          if (node.children && node.children.length > 0) {
+        for (const node of nodes)
+        {
+          if (node.children && node.children.length > 0)
+          {
             keys.push(node.key as string);
             keys = keys.concat(getAllParentKeys(node.children));
           }
@@ -279,8 +309,10 @@ const expandedKeys = useScopedStorage<string[]>('tree-expanded-keys', []);
  * - 如果节点有 children (即为文件夹)，则点击行为是 'toggleExpand' (展开/折叠)。
  * - 否则 (即为文件/叶子节点)，行为是 'default' (选中该项)。
  */
-const overrideNodeClickBehavior: TreeSelectOverrideNodeClickBehavior = ({ option }) => {
-  if (option.children && option.children.length > 0) {
+const overrideNodeClickBehavior: TreeSelectOverrideNodeClickBehavior = ({option}) =>
+{
+  if (option.children && option.children.length > 0)
+  {
     return 'toggleExpand';
   }
   return 'default';

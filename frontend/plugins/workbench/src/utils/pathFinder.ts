@@ -1,4 +1,4 @@
-﻿import type {AnyConfigObject} from "#/services/GlobalEditSession";
+﻿import type {AnyConfigObject} from "@yaesandbox-frontend/core-services/types";
 
 /**
  * 在配置对象树中递归查找指定对象的引用，并返回其路径。

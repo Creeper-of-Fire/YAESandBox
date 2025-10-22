@@ -1,6 +1,6 @@
 ﻿import {computed, type DeepReadonly, inject, type InjectionKey, provide, readonly, ref, type Ref, shallowRef} from "vue";
 import {EditorContext} from "#/services/editor-context/EditorContext.ts";
-import type {AnyConfigObject, ConfigType} from "#/services/GlobalEditSession.ts";
+import type {AnyConfigObject, ConfigType} from "@yaesandbox-frontend/core-services/types";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 import {useDialog, useMessage} from "naive-ui";
 

@@ -1,7 +1,8 @@
 ﻿import {useWorkbenchStore} from '#/stores/workbenchStore';
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from '#/types/generated/workflow-config-api-client';
 import type {EditorContext} from './EditorContext';
-import {type AnyConfigObject, getConfigObjectType} from "#/services/GlobalEditSession.ts";
+import type {AnyConfigObject} from "@yaesandbox-frontend/core-services/types";
+import {getConfigObjectType} from "@yaesandbox-frontend/core-services/types";
 
 // --- 具体选择上下文的定义 ---
 
@@ -40,7 +41,7 @@ export function createSelectionContext(
     context: EditorContext
 ): AnySelectionContext
 {
-    const {type,config:typedConfig} = getConfigObjectType(config)
+    const {type, config: typedConfig} = getConfigObjectType(config)
 
     switch (type)
     {

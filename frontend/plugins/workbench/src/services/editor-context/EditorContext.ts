@@ -1,5 +1,6 @@
-﻿import type {AnyConfigObject, GlobalEditSession} from "#/services/GlobalEditSession.ts";
+﻿import type {GlobalEditSession} from "#/services/GlobalEditSession.ts";
 import {computed, type ComputedRef, type DeepReadonly, readonly, ref, type Ref} from 'vue';
+import type {AnyConfigObject} from "@yaesandbox-frontend/core-services/types";
 import {get} from 'lodash-es';
 import {type AnySelectionContext, createSelectionContext} from "#/services/editor-context/SelectionContext.ts";
 import {findPathByReference} from '#/utils/pathFinder';

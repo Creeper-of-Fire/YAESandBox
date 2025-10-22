@@ -1,8 +1,8 @@
 ﻿// src/composables/useFilteredGlobalResources.ts
 import {computed, ref} from 'vue';
-import type {ConfigType} from '#/services/GlobalEditSession';
 import {useGlobalResources} from '#/composables/useGlobalResources';
 import type {ConfigTypeMap} from '#/stores/workbenchStore';
+import type {ConfigType} from "@yaesandbox-frontend/core-services/types";
 
 /**
  * 一个通用的、响应式的 Composable，用于获取并根据标签筛选全局资源列表。
