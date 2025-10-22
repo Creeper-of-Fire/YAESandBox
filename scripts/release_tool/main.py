@@ -47,16 +47,26 @@ def main():
     packaged_assets = []
     assets_to_upload = []
 
+    # 只打包那些被选中且有变更的组件
     for comp in components_to_release:
         comp.zip_path = build.package_component(comp)
         comp.hash = utils.get_file_hash(comp.zip_path)
         packaged_assets.append(comp)
         assets_to_upload.append(comp.zip_path)
+
+    ui.console.print("\n[bold]扫描需要独立发布的可执行文件...[/bold]")
+    for comp in all_components:  # 注意：这里我们遍历的是 `all_components`，而不是 `components_to_release`
         if comp.publish_exe:
             exe_path = utils.find_unique_exe(comp.path)
             if exe_path:
-                ui.console.print(f"➕ [green]添加独立可执行文件:[/green] {exe_path.name}")
-                assets_to_upload.append(exe_path)
+                # 检查一下，防止因为 launcher 本身也有变更而被重复添加
+                if exe_path not in assets_to_upload:
+                    ui.console.print(f"➕ [green]添加独立可执行文件:[/green] {exe_path.name}")
+                    assets_to_upload.append(exe_path)
+                else:
+                    ui.console.print(f"ℹ️ [blue]可执行文件已存在于上传列表 (作为组件包的一部分):[/blue] {exe_path.name}")
+            else:
+                ui.console.print(f"[yellow]警告: 组件 '{comp.name}' 被标记为发布 .exe，但在目录 {comp.path} 中未找到唯一的可执行文件。[/yellow]")
 
     manifest_paths, new_manifests = build.generate_manifests(
         packaged_assets, release_info, last_state.manifests
