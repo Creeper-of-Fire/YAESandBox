@@ -1,0 +1,442 @@
+{
+  "content": {
+    "name": "通用生成",
+    "workflowInputs": [
+      "topic",
+      "entityName"
+    ],
+    "tuums": [
+      {
+        "name": "世界书提示词",
+        "enabled": true,
+        "configId": "9ee36625-6163-4a73-b6bc-1f9638d68eae",
+        "runes": [
+          {
+            "innerTuum": {
+              "name": "",
+              "enabled": true,
+              "configId": "d7e8b1e05f8347fc90f286e20bf79a57",
+              "runes": [
+                {
+                  "targetRuneRef": {
+                    "refId": "simple.jailbreak",
+                    "version": "1.0.0"
+                  },
+                  "runeType": "ReferenceRuneConfig",
+                  "name": "引用世界书",
+                  "enabled": true,
+                  "configId": "a7886fab-4f06-4cf6-9fa5-140aa85d1d40"
+                },
+                {
+                  "roleType": "System",
+                  "insertionDepth": 0,
+                  "insertionPosition": "After",
+                  "isAppendMode": true,
+                  "template": "{{JailbreakText}}\n{{JailbreakText}}\n{{JailbreakText}}",
+                  "runeType": "PromptGenerationRuneConfig",
+                  "name": "提示词添加",
+                  "enabled": true,
+                  "configId": "812dd5f3-2dcc-4616-a3b1-77339b087c52"
+                }
+              ],
+              "inputMappingsList": [
+                {
+                  "internalName": "Prompts",
+                  "endpointName": "Prompts"
+                }
+              ],
+              "outputMappingsList": [
+                {
+                  "internalName": "Prompts",
+                  "endpointName": "Prompts"
+                }
+              ]
+            },
+            "runeType": "TuumRuneConfig",
+            "name": "世界书使用1",
+            "enabled": true,
+            "configId": "7e492e45-3bf6-4c6e-994c-f3ae9f3fdf91"
+          },
+          {
+            "innerTuum": {
+              "name": "",
+              "enabled": true,
+              "configId": "5dee992cc0904eb0b72fe219508d2f98",
+              "runes": [
+                {
+                  "targetRuneRef": {
+                    "refId": "yae.virgin.lore",
+                    "version": "1.0.0"
+                  },
+                  "runeType": "ReferenceRuneConfig",
+                  "name": "引用世界书",
+                  "enabled": true,
+                  "configId": "0a3b2e3e-55ff-47a9-8393-6e92c08c87aa"
+                },
+                {
+                  "historyVariableName": "世界书",
+                  "promptsVariableName": "Prompts",
+                  "runeType": "HistoryAppendRuneConfig",
+                  "name": "世界书追加",
+                  "enabled": true,
+                  "configId": "b06d0231-65d0-4216-bdab-838a80155f69"
+                }
+              ],
+              "inputMappingsList": [
+                {
+                  "internalName": "Prompts",
+                  "endpointName": "Prompts"
+                }
+              ],
+              "outputMappingsList": [
+                {
+                  "internalName": "Prompts",
+                  "endpointName": "Prompts"
+                }
+              ]
+            },
+            "runeType": "TuumRuneConfig",
+            "name": "世界书使用2",
+            "enabled": true,
+            "configId": "942da930-c421-4549-87bf-82e991bd15a8"
+          },
+          {
+            "innerTuum": {
+              "name": "",
+              "enabled": true,
+              "configId": "8323a0dd6229432092e4e55157578f90",
+              "runes": [
+                {
+                  "scriptContent": "# 这是为了使用酒馆符文时不报错。\r\n[playerCharacter]\r\nName = \"\"\r\nDescription = \"\"\r\n[targetCharacter]\r\nName = \"\"\r\nDescription = \"\"",
+                  "runeType": "StaticVariableRuneConfig",
+                  "name": "虚拟填充",
+                  "enabled": true,
+                  "configId": "15e6162c-7ffe-42bf-b6c7-eedd21257ece"
+                },
+                {
+                  "outputPromptsVariableName": "Prompts",
+                  "historyVariableName": "History",
+                  "worldInfoJsonsVariableName": "worldInfoList",
+                  "playerCharacterVariableName": "playerCharacter",
+                  "targetCharacterVariableName": "targetCharacter",
+                  "worldInfoGlobalSettings": {
+                    "globalScanDepth": 2,
+                    "maxRecursionDepth": 5
+                  },
+                  "presetJson": "",
+                  "runeType": "SillyTavernRuneConfig",
+                  "name": "酒馆预设",
+                  "enabled": true,
+                  "configId": "7c0c21fa-3019-4045-9701-9262f6cce31a"
+                }
+              ],
+              "inputMappingsList": [
+                {
+                  "internalName": "History",
+                  "endpointName": "Prompts"
+                }
+              ],
+              "outputMappingsList": [
+                {
+                  "internalName": "Prompts",
+                  "endpointName": "Prompts"
+                }
+              ]
+            },
+            "runeType": "TuumRuneConfig",
+            "name": "调用酒馆预设",
+            "enabled": false,
+            "configId": "4bbf0508-80e6-4d6a-84b3-69f8bf7c1871"
+          }
+        ],
+        "inputMappingsList": [],
+        "outputMappingsList": [
+          {
+            "internalName": "Prompts",
+            "endpointName": "世界书提示词"
+          }
+        ]
+      },
+      {
+        "name": "生成完整描述",
+        "enabled": true,
+        "configId": "a107f9ad-8e37-4243-bb3b-17937f60f080",
+        "runes": [
+          {
+            "roleType": "System",
+            "insertionDepth": 0,
+            "insertionPosition": "After",
+            "isAppendMode": true,
+            "template": "以下是故事的主题：\n<主题>{{topic}}</主题>",
+            "runeType": "PromptGenerationRuneConfig",
+            "name": "主题",
+            "enabled": true,
+            "configId": "41377b90-10ea-4ebe-8652-0d32839a87c7"
+          },
+          {
+            "innerTuum": {
+              "name": "",
+              "enabled": true,
+              "configId": "5a60075a654340ea8281f79194299e4f",
+              "runes": [
+                {
+                  "condition": "entityName == \"角色\"",
+                  "roleType": "User",
+                  "insertionDepth": 0,
+                  "insertionPosition": "After",
+                  "isAppendMode": true,
+                  "template": "请你输出一个故事，其包含一位角色。",
+                  "runeType": "ConditionalPromptRuneConfig",
+                  "name": "角色提示词",
+                  "enabled": true,
+                  "configId": "6954cf5b-0b1c-46b1-9aac-e0b5e6e4d84d"
+                },
+                {
+                  "condition": "entityName == \"场景\"",
+                  "roleType": "User",
+                  "insertionDepth": 0,
+                  "insertionPosition": "After",
+                  "isAppendMode": true,
+                  "template": "请你输出一个故事，其包含一个场景。",
+                  "runeType": "ConditionalPromptRuneConfig",
+                  "name": "场景提示词",
+                  "enabled": true,
+                  "configId": "e430d700-8d27-4e33-b77b-c5718f7d929a"
+                },
+                {
+                  "condition": "entityName == \"物品\"",
+                  "roleType": "User",
+                  "insertionDepth": 0,
+                  "insertionPosition": "After",
+                  "isAppendMode": true,
+                  "template": "请你输出一个故事，其包含一件物品。",
+                  "runeType": "ConditionalPromptRuneConfig",
+                  "name": "物品提示词",
+                  "enabled": true,
+                  "configId": "c24873dc-797f-4b49-8388-0320139f58fa"
+                }
+              ],
+              "inputMappingsList": [
+                {
+                  "internalName": "entityName",
+                  "endpointName": "entityName"
+                },
+                {
+                  "internalName": "topic",
+                  "endpointName": "topic"
+                },
+                {
+                  "internalName": "Prompts",
+                  "endpointName": "Prompts"
+                }
+              ],
+              "outputMappingsList": [
+                {
+                  "internalName": "Prompts",
+                  "endpointName": "Prompts"
+                }
+              ]
+            },
+            "runeType": "TuumRuneConfig",
+            "name": "专属提示词",
+            "enabled": true,
+            "configId": "f45b6727-2682-4893-ba21-05d12a577a17"
+          },
+          {
+            "roleType": "User",
+            "insertionDepth": 0,
+            "insertionPosition": "After",
+            "isAppendMode": true,
+            "template": "请你在故事的开头，生成一张简单的{{entityName}}卡，以此来展开整个故事。\n输出格式示例：\n（简单的{{entityName}}卡）\n（**【规则】**\n\n1.  **格式唯一性**: 你的{{entityName}}卡**必须**是，且**只能是**一个 YAML 格式的 Markdown 代码块。\n2.  **无额外文本**: **绝对不要**在代码块前后添加任何解释、问候、介绍或总结性文字。例如，不要说“好的，这是您要求的 YAML：”。\n3.  **代码块标识**: 必须使用 ` ```yaml ` 作为代码块的起始标识。\n4.  **本地化**: 尽量使用中文键。）\n---\n（故事）",
+            "runeType": "PromptGenerationRuneConfig",
+            "name": "简单要求",
+            "enabled": true,
+            "configId": "0f4519f3-a050-4893-8100-76d83b328852"
+          },
+          {
+            "roleType": "Assistant",
+            "insertionDepth": 0,
+            "insertionPosition": "After",
+            "isAppendMode": true,
+            "template": "好的，我已接受并理解了这个创作任务，我将进行符合设定的创作。",
+            "runeType": "PromptGenerationRuneConfig",
+            "name": "预填充",
+            "enabled": true,
+            "configId": "82987efd-b512-4404-accf-94584fbfaa83"
+          },
+          {
+            "roleType": "User",
+            "insertionDepth": 0,
+            "insertionPosition": "After",
+            "isAppendMode": true,
+            "template": "继续",
+            "runeType": "PromptGenerationRuneConfig",
+            "name": "预填充",
+            "enabled": true,
+            "configId": "9783b80c-3e0c-4953-9ff1-d8735eb3866e"
+          },
+          {
+            "aiOutputName": "AiOutput",
+            "reasoningOutputName": "",
+            "aiConfiguration": {
+              "aiProcessorConfigUuid": "4eb2960e-be50-49b8-83ea-e41b50b9f7a2",
+              "selectedAiRuneType": "DeepSeekAiProcessorConfig",
+              "isStream": true
+            },
+            "streamingTargetAddress": "description",
+            "finalOutputFormat": "DoubleOutput",
+            "streamingMode": "Incremental",
+            "runeType": "AiRuneConfig",
+            "name": "AI调用",
+            "enabled": true,
+            "configId": "c36ede5b-6040-49da-b5aa-c49db1f0dfb2"
+          },
+          {
+            "inputVariableName": "AiOutput",
+            "outputVariableName": "描述",
+            "ignoreCase": true,
+            "multiline": true,
+            "dotAll": true,
+            "extractionRules": [
+              {
+                "fieldName": "故事",
+                "fieldType": "String",
+                "isRequired": false,
+                "pattern": "(?<value>.*)"
+              }
+            ],
+            "runeType": "StringParserToValueRuneConfig",
+            "name": "提取内容",
+            "enabled": true,
+            "configId": "90cb70ee-a4f6-4212-ad42-09f6307d092f"
+          }
+        ],
+        "inputMappingsList": [
+          {
+            "internalName": "topic",
+            "endpointName": "topic"
+          },
+          {
+            "internalName": "entityName",
+            "endpointName": "entityName"
+          },
+          {
+            "internalName": "Prompts",
+            "endpointName": "世界书提示词"
+          }
+        ],
+        "outputMappingsList": [
+          {
+            "internalName": "描述",
+            "endpointName": "描述"
+          }
+        ]
+      },
+      {
+        "name": "解析",
+        "enabled": true,
+        "configId": "457e2298-41ba-4035-9962-6dad6d4f8ca5",
+        "runes": [
+          {
+            "scriptContent": "\"输出格式规范\" = \"\"\"\r\n**【输出规则】**\r\n\r\n1.  **格式唯一性**: 你的回答**必须**是，且**只能是**一个 YAML 格式的 Markdown 代码块。\r\n2.  **无额外文本**: **绝对不要**在代码块前后添加任何解释、问候、介绍或总结性文字。例如，不要说“好的，这是您要求的 YAML：”。\r\n3.  **代码块标识**: 必须使用 ` ```yaml ` 作为代码块的起始标识。\r\n4.  **本地化**: 尽量使用中文键。\r\n\"\"\"",
+            "runeType": "StaticVariableRuneConfig",
+            "name": "YAML格式要求",
+            "enabled": true,
+            "configId": "5782f344-5120-41a3-8ecb-6c152b38b595"
+          },
+          {
+            "roleType": "User",
+            "insertionDepth": 0,
+            "insertionPosition": "After",
+            "isAppendMode": true,
+            "template": "以下是故事的主题和故事内容：\n<主题>{{topic}}</主题>\n\n<故事>{{描述.故事}}</故事>\n\n请你根据故事，生成一张{{entityName}}卡，包含各个属性。\n\n{{输出格式规范}}",
+            "runeType": "PromptGenerationRuneConfig",
+            "name": "请求提取内容",
+            "enabled": true,
+            "configId": "0a53577f-f095-45d2-9fda-32576607c5bb"
+          },
+          {
+            "aiOutputName": "ai_raw_output",
+            "reasoningOutputName": "",
+            "aiConfiguration": {
+              "aiProcessorConfigUuid": "4eb2960e-be50-49b8-83ea-e41b50b9f7a2",
+              "selectedAiRuneType": "DeepSeekAiProcessorConfig",
+              "isStream": true
+            },
+            "streamingTargetAddress": "description",
+            "finalOutputFormat": "DoubleOutput",
+            "streamingMode": "Incremental",
+            "runeType": "AiRuneConfig",
+            "name": "AI调用",
+            "enabled": true,
+            "configId": "27de911f-f996-420e-92bd-863fcba3ca87"
+          },
+          {
+            "script": "--[[\r\n  Workflow Script: parse_ai_yaml_simple_v1.lua\r\n  Version: 1.0\r\n\r\n  Description:\r\n    一个简单而健壮的脚本，用于解析遵循特定提示工程指南的 AI YAML 输出。\r\n    它使用 C# Regex 桥从 Markdown 代码块中提取 YAML 内容，\r\n    然后使用 C# 桥进行高性能解析，最后将结果转换为 JSON。\r\n]]\r\n\r\n-- 1. 获取输入并检查\r\nlocal raw_output = ctx.get(\"ai_raw_output\")\r\nif not raw_output or string.match(raw_output, \"^%s*$\") then\r\n  error(\"AI raw output is empty or nil.\")\r\n  return\r\nend\r\n\r\n-- 2. 【提取】\r\nlocal content_to_parse\r\nlocal extraction_method\r\n\r\n-- 定义通用选项，使 . 能够匹配换行符\r\nlocal regex_options = { dotall = true }\r\n\r\n-- 策略 1 (首选): 使用更健壮的正则表达式查找 `yaml` 代码块。\r\n-- 新模式 ` ```\\s*yaml(.*?)``` ` 的含义:\r\n-- ```: 匹配起始标记\r\n-- \\s*: 匹配 ` ``` ` 和 `yaml` 之间的任意空白（空格、换行等）\r\n-- yaml: 匹配关键字\r\n-- (.*?): 非贪婪地捕获所有内容，直到...\r\n-- ```: 匹配结束标记\r\n-- 这个模式会自动处理掉标记内部的换行符和空白。\r\nlocal matches = regex.match(raw_output, [=[```\\s*yaml(.*?)```]=], regex_options)\r\nif matches and #matches >= 2 then\r\n    content_to_parse = matches[2]\r\n    extraction_method = \"Matched '```yaml' block with robust regex\"\r\nelse\r\n    -- 策略 2 (备选): 使用同样健壮的模式查找通用代码块\r\n    matches = regex.match(raw_output, [=[```(.*?)```]=], regex_options)\r\n    if matches and #matches >= 2 then\r\n        content_to_parse = matches[2]\r\n        extraction_method = \"Matched generic '```' block with robust regex\"\r\n    else\r\n        -- 策略 3 (最后手段)\r\n        content_to_parse = raw_output\r\n        extraction_method = \"Used raw output as final fallback\"\r\n    end\r\nend\r\n\r\nlog.info(\"YAML extraction successful. Method: \" .. extraction_method)\r\n\r\n-- 3. 【解析】使用 yaml 桥将提取出的字符串解码为 Lua table\r\nlocal result_table = yaml.decode(content_to_parse)\r\n\r\n-- 如果 C# 桥返回 nil (表示解析失败)，则立即抛出致命错误。\r\nif not result_table then\r\n    -- 这个错误信息会直接在工作流失败日志中显示，非常清晰。\r\n    error(\"YAML PARSING FAILED: The extracted content is not valid YAML.\")\r\nend\r\n\r\nlog.info(\"YAML content parsed successfully into a Lua table.\")\r\n\r\n-- 4. 【输出】将解析后的 Lua table 编码为 JSON 字符串并设置为最终输出\r\n-- 这是工作流中非常常见的最后一步\r\nlocal final_json = json.encode(result_table)\r\nif not final_json then\r\n    error(\"JSON ENCODING FAILED: The parsed YAML table could not be converted to a JSON string.\")\r\n    return\r\nend\r\n\r\nctx.set(\"parsed_json_output\", final_json)\r\nlog.info(\"Workflow completed successfully. Parsed YAML has been set as JSON output.\")",
+            "runeType": "LuaScriptRuneConfig",
+            "name": "YAML解析",
+            "enabled": true,
+            "configId": "4b8217f3-ab2d-4ddf-875c-e9c719a1c859"
+          },
+          {
+            "script": "--[[\r\n  Workflow Script: format_json_to_markdown_v2.lua\r\n  Version: 2.0\r\n\r\n  Description:\r\n    将一个 JSON 字符串或 Lua table 格式化为一个结构清晰、人类可读的 Markdown 文档。\r\n    此版本优化了格式，使用嵌套列表和缩进代替了原版过多的标题，大大提升了可读性。\r\n\r\n  改进点:\r\n    - 使用无序列表 (`-`) 和缩进展示对象属性，而不是为每个键都创建一个标题。\r\n    - 嵌套的对象和数组会以正确的缩进级别显示在其父列表项下。\r\n    - 顶层键依然作为一级标题 (`#`)，以区分不同的数据部分。\r\n    - 整体结构更紧凑、更直观，符合 Markdown 的最佳实践。\r\n]]\r\n\r\n-- 1. 获取输入并确定其类型\r\n-- @type any\r\nlocal input_data = ctx.get(\"parsed_json_output\")\r\nlocal data_table\r\n\r\nlocal input_type = type(input_data)\r\n\r\nif input_type == \"string\" then\r\n  -- A. 如果输入是字符串，则将其解码为 table\r\n  log.info(\"输入为 JSON 字符串，正在解码...\")\r\n  if not input_data or input_data == \"\" or input_data == \"{}\" or input_data == \"[]\" then\r\n    error(\"输入的 JSON 字符串为空或 nil。\")\r\n    return\r\n  end\r\n  \r\n  local success, result = pcall(json.decode, input_data)\r\n  if not success then\r\n    local error_message = \"解码 JSON 字符串失败: \" .. tostring(result)\r\n    error(error_message)\r\n    return\r\n  end\r\n  data_table = result\r\n  \r\nelseif input_type == \"table\" then\r\n  -- B. 如果输入已经是 table，则直接使用\r\n  log.info(\"输入已是 Lua table，直接使用。\")\r\n  data_table = input_data\r\n  \r\nelse\r\n  -- C. 如果是其他类型，则报错\r\n  local error_message = \"输入数据类型无效 (应为 string 或 table, 但得到 \" .. input_type .. \")。\"\r\n  error(error_message)\r\n  return\r\nend\r\n\r\n-- 2. 验证最终的 table 是否为空\r\nif not data_table or next(data_table) == nil then\r\n  error(\"处理后，数据 table 为空或 nil。\")\r\n  return\r\nend\r\n\r\n-- =========================================================================\r\n-- 辅助函数\r\n-- =========================================================================\r\n-- 检查一个 table 是否为数组（序列）\r\n-- 如果一个 table 的键是连续的从 1 开始的整数，我们视其为数组。\r\nlocal function is_array(tbl)\r\n  if type(tbl) ~= \"table\" then return false end\r\n  local i = 0\r\n  for _ in pairs(tbl) do\r\n    i = i + 1\r\n    if tbl[i] == nil then return false end\r\n  end\r\n  return true\r\nend\r\n\r\n-- =========================================================================\r\n-- 主格式化逻辑 (新的递归函数)\r\n-- =========================================================================\r\n\r\n--[[\r\n  递归函数，将 Lua table 转换为 Markdown 列表格式。\r\n  - data: 要处理的 table 或值。\r\n  - level: 当前的缩进级别。\r\n]]\r\nlocal function format_to_markdown(data, level)\r\n  level = level or 0\r\n  local indent = string.rep(\"  \", level) -- 每个缩进级别使用 2 个空格\r\n  local parts = {}\r\n  local data_type = type(data)\r\n\r\n  if data_type ~= \"table\" then\r\n    -- 如果数据不是 table (例如在数组中的简单值)，直接格式化\r\n    if data_type == \"string\" and string.find(data, \"\\n\") then\r\n       -- 对多行字符串，我们将其放入代码块，并保持缩进\r\n       return string.format(\"\\n%s```\\n%s\\n%s```\", indent, data, indent)\r\n    else\r\n       return string.format(\"`%s`\", tostring(data))\r\n    end\r\n  end\r\n\r\n  if is_array(data) then\r\n    -- ================= 处理数组 =================\r\n    if next(data) == nil then return indent .. \"- (空数组)\" end -- 处理空数组\r\n\r\n    for i, item in ipairs(data) do\r\n      local item_type = type(item)\r\n      if item_type == \"table\" then\r\n        -- 如果数组项是 table，先输出一个列表符，然后递归处理下一层\r\n        table.insert(parts, indent .. \"-\")\r\n        table.insert(parts, format_to_markdown(item, level + 1))\r\n      else\r\n        -- 如果是简单值，直接在一行内输出\r\n        table.insert(parts, string.format(\"%s- %s\", indent, format_to_markdown(item, level)))\r\n      end\r\n    end\r\n  else\r\n    -- ================= 处理对象 =================\r\n    if next(data) == nil then return indent .. \"- (空对象)\" end -- 处理空对象\r\n    \r\n    -- 按 key 排序以获得一致的输出\r\n    local sorted_keys = {}\r\n    for k in pairs(data) do\r\n      table.insert(sorted_keys, k)\r\n    end\r\n    table.sort(sorted_keys)\r\n\r\n    for _, key in ipairs(sorted_keys) do\r\n      local value = data[key]\r\n      local value_type = type(value)\r\n      \r\n      if value_type == \"table\" then\r\n        -- 如果值是 table，输出键，然后换行递归处理\r\n        table.insert(parts, string.format(\"%s- **%s**:\", indent, tostring(key)))\r\n        table.insert(parts, format_to_markdown(value, level + 1))\r\n      else\r\n        -- 如果是简单值，将键和值格式化到同一行\r\n        local formatted_value = format_to_markdown(value, level)\r\n        if string.find(formatted_value, \"\\n\") then\r\n          -- 如果值是多行字符串，需要特殊处理换行\r\n          table.insert(parts, string.format(\"%s- **%s**:%s\", indent, tostring(key), formatted_value))\r\n        else\r\n          table.insert(parts, string.format(\"%s- **%s**: %s\", indent, tostring(key), formatted_value))\r\n        end\r\n      end\r\n    end\r\n  end\r\n  \r\n  return table.concat(parts, \"\\n\")\r\nend\r\n\r\n-- =========================================================================\r\n-- 执行并输出\r\n-- =========================================================================\r\n\r\nlocal markdown_parts = {}\r\n\r\n-- 按 key 排序顶层对象\r\nlocal top_level_keys = {}\r\nfor k in pairs(data_table) do\r\n  table.insert(top_level_keys, k)\r\nend\r\ntable.sort(top_level_keys)\r\n\r\nfor _, key in ipairs(top_level_keys) do\r\n  local value = data_table[key]\r\n  \r\n  -- 为每个顶层键创建一个一级标题\r\n  table.insert(markdown_parts, string.format(\"# %s\", tostring(key)))\r\n  \r\n  -- 调用新的格式化函数来处理其内容\r\n  table.insert(markdown_parts, format_to_markdown(value, 0))\r\nend\r\n\r\n-- 使用水平线分隔不同的顶层部分，以增加可读性\r\nlocal final_markdown = table.concat(markdown_parts, \"\\n\\n---\\n\\n\")\r\n\r\n-- 将最终结果设置到上下文中\r\n-- @type String\r\nctx.set(\"formatted_markdown_output\", final_markdown)\r\nlog.info(\"成功将 JSON 格式化为更美观的 Markdown。\")",
+            "runeType": "LuaScriptRuneConfig",
+            "name": "转换格式",
+            "enabled": true,
+            "configId": "3050ffa9-0ecd-47db-b655-e5301b593a1c"
+          },
+          {
+            "outputVariableName": "description",
+            "template": "描述：\n{{formatted_markdown_output}}\n---\n原始内容：\n{{ai_raw_output}}\n---\n故事：\n{{描述.故事}}",
+            "runeType": "TextTemplateRuneConfig",
+            "name": "文本模板",
+            "enabled": true,
+            "configId": "2fca959e-67bb-495f-84ad-4cce3f844900"
+          },
+          {
+            "sourceVariableName": "description",
+            "targetAddress": "description",
+            "updateMode": "FullSnapshot",
+            "runeType": "EmitEventRuneConfig",
+            "name": "发射事件",
+            "enabled": true,
+            "configId": "d2ae782a-fc07-4b5f-b140-9412fe439c6d"
+          }
+        ],
+        "inputMappingsList": [
+          {
+            "internalName": "entityName",
+            "endpointName": "entityName"
+          },
+          {
+            "internalName": "topic",
+            "endpointName": "topic"
+          },
+          {
+            "internalName": "描述",
+            "endpointName": "描述"
+          },
+          {
+            "internalName": "Prompts",
+            "endpointName": "世界书提示词"
+          }
+        ],
+        "outputMappingsList": []
+      }
+    ],
+    "tags": [
+      "角色生成",
+      "场景生成",
+      "物品生成"
+    ]
+  },
+  "isReadOnly": false,
+  "meta": {
+    "description": "一个本项目的“官方示例模块”，您可以在`./Plugins/YAESandBox.Plugin.FileSystemConfigProvider/InnerConfigs/Workflows`下找到它，并可以复制/删除它。\n这是“era测试”模块的一个范例，适用于它涉及的三种不同的生成情况。\n对于其引用的符文（Rune），并不包含在本项目的源代码库中。",
+    "tags": [
+      "官方示例模块"
+    ],
+    "createdAt": "2025-10-20T16:06:37.491Z",
+    "updatedAt": "2025-10-22T13:12:55.986Z"
+  }
+}
