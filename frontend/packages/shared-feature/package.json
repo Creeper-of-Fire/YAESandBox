@@ -9,9 +9,8 @@
     "checkTsc": "vue-tsc -b --declaration"
   },
   "exports": {
-    ".": "./src/index.ts",
-    "./icons": "./src/utils/icons.ts",
-    "./content-renderer": "./src/shared/content-renderer/index.ts"
+    "./player-save": "./src/player-save.ts",
+    "./monaco-editor": "./src/monaco-editor.ts"
   },
   "peerDependencies": {
     "@guolao/vue-monaco-editor": "^1.5.5",

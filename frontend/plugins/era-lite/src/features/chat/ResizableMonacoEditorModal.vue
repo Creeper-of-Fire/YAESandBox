@@ -80,7 +80,7 @@ import {NAlert, NButton, NCode, NFlex, NIcon, NModal, NSpace} from 'naive-ui';
 import {useScopedStorage} from '@yaesandbox-frontend/core-services/composables';
 import {FullscreenExitIcon, FullscreenIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useScriptCompiler} from "#/features/chat/useScriptCompiler.ts";
-import {SmartEditor} from "@yaesandbox-frontend/shared-feature";
+import {SmartEditor} from "@yaesandbox-frontend/shared-feature/monaco-editor";
 
 const props = defineProps<{
   show: boolean;

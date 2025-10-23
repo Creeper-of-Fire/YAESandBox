@@ -1,7 +1,6 @@
-﻿import {type App} from 'vue';
+﻿import {type App, defineComponent, provide} from 'vue';
 import type {PluginModule} from '@yaesandbox-frontend/core-services';
-import PluginProvider from "#/component/PluginProvider.vue";
-import {PluginUniqueNameKey} from "@yaesandbox-frontend/core-services/injectKeys";
+import {PluginUniqueNameKey} from "@yaesandbox-frontend/core-services/inject-key";
 import type {RouteComponent, RouteRecordRaw} from "vue-router";
 import type {Pinia} from "pinia";
 
@@ -25,6 +24,19 @@ const localPlugins: PluginModule[] = [
 
 type Lazy<T> = () => Promise<T>;
 type RawRouteComponent = RouteComponent | Lazy<RouteComponent>;
+
+const PluginProvider = defineComponent({
+    name: 'PluginProvider',
+    props: {
+        pluginUniqueName: {type: String, required: true}
+    },
+    setup(props, {slots})
+    {
+        provide(PluginUniqueNameKey, props.pluginUniqueName);
+
+        return () => slots.default?.();
+    }
+});
 
 function wrapComponentWithProvider(component: RawRouteComponent, pluginUniqueName: string): RouteComponent
 {

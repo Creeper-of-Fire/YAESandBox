@@ -1,7 +1,7 @@
 ﻿import {defineStore} from 'pinia';
 import {computed, type ComputedRef} from 'vue';
 import {useWorkbenchStore, type WorkflowResourceItem} from '#/stores/workbenchStore';
-import type {IWorkflowConfigProvider} from "@yaesandbox-frontend/core-services/injectKeys";
+import type {IWorkflowConfigProvider} from "@yaesandbox-frontend/core-services/inject-key";
 
 const STORAGE_KEY = 'workflowConfigProviderStore';
 

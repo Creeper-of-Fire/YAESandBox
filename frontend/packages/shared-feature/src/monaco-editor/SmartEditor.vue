@@ -45,7 +45,7 @@ import {nanoid} from 'nanoid';
 import {NFlex, NInput, NSwitch, useThemeVars} from 'naive-ui';
 import {type MonacoEditor, VueMonacoEditor} from '@guolao/vue-monaco-editor';
 import {useScopedStorage} from '@yaesandbox-frontend/core-services/composables';
-import {IsDarkThemeKey} from '@yaesandbox-frontend/core-services/injectKeys';
+import {IsDarkThemeKey} from '@yaesandbox-frontend/core-services/inject-key';
 import {useVModel} from '@vueuse/core';
 import type {MonacoLanguageEnhancer} from "./types.ts";
 

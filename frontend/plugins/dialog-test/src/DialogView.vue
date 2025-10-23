@@ -27,7 +27,7 @@ import type {ChatMessage, Prompt} from '#/types';
 import {executeWorkflowStream} from '@yaesandbox-frontend/core-services';
 import ChatHistory from '#/components/ChatHistory.vue';
 import MessageInput from '#/components/MessageInput.vue';
-import {TokenResolverKey} from "@yaesandbox-frontend/core-services/injectKeys";
+import {TokenResolverKey} from "@yaesandbox-frontend/core-services/inject-key";
 import {WorkflowSelectorButton} from "@yaesandbox-frontend/core-services/workflow";
 import {useStructuredWorkflowStream, type WorkflowFilter} from "@yaesandbox-frontend/core-services/composables";
 

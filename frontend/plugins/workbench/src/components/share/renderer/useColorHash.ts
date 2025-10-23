@@ -1,5 +1,5 @@
 ﻿import { computed, inject, type Ref } from 'vue';
-import { IsDarkThemeKey } from "@yaesandbox-frontend/core-services/injectKeys";
+import { IsDarkThemeKey } from "@yaesandbox-frontend/core-services/inject-key";
 import ColorHash from "color-hash";
 
 /**

@@ -40,7 +40,7 @@ import {type MonacoEditor, VueMonacoEditor} from '@guolao/vue-monaco-editor';
 import {NAlert, NSpin} from 'naive-ui';
 import {useDebounceFn} from '@vueuse/core';
 import {MonacoLanguageClient} from "monaco-languageclient";
-import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
+import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/inject-key";
 
 // --- Props ---
 const props = defineProps<{

@@ -2,7 +2,7 @@
 import type {PluginModule} from '@yaesandbox-frontend/core-services';
 import {routes,routeName} from './routes';
 import {useWorkflowConfigProviderStore} from "#/stores/workflowConfigProviderStore.ts";
-import {type IWorkflowConfigProvider, WorkflowConfigProviderKey} from "@yaesandbox-frontend/core-services/injectKeys";
+import {type IWorkflowConfigProvider, WorkflowConfigProviderKey} from "@yaesandbox-frontend/core-services/inject-key";
 import {type Pinia, storeToRefs} from "pinia";
 
 const WorkbenchPluginModule: PluginModule = {

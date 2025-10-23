@@ -1,4 +1,4 @@
-﻿<!-- src/saves/StartupView.vue -->
+﻿<!-- StartupView.vue -->
 <template>
   <div>
     <n-flex
@@ -8,7 +8,7 @@
         style="height: 100%;"
         vertical
     >
-      <n-h1 style="font-size: 48px; margin-bottom: 48px;">Era-Lite</n-h1>
+      <n-h1 style="font-size: 48px; margin-bottom: 48px;">{{ appTitle }}</n-h1>
       <n-space size="large" style="width: 300px;" vertical>
         <n-button
             :disabled="!canContinue"
@@ -70,8 +70,12 @@
 <script lang="ts" setup>
 import {NButton, NFlex, NH1, NInput, NModal, NSpace} from 'naive-ui';
 import {HelpCircleIcon} from "@yaesandbox-frontend/shared-ui/icons";
-import SavePresenterCard from "#/saves/ui/SavePresenterCard.vue";
-import {useStartupLogic} from "@yaesandbox-frontend/core-services/playerSave";
+import SavePresenterCard from "./SavePresenterCard.vue";
+import {useStartupLogic} from "@yaesandbox-frontend/core-services/player-save";
+
+defineProps<{
+  appTitle: string;
+}>();
 
 const {
   autoLoadEnabled,

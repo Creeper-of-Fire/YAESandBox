@@ -21,7 +21,7 @@
 <script lang="ts" setup>
 import AppShell from "#/AppShell.vue";
 import {computed, provide, ref, watch} from "vue";
-import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
+import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/inject-key";
 import {usePreferredDark} from "@vueuse/core";
 import {isTransitioning, triggerThemeTransition} from "#/composables/useThemeTransition.ts";
 import {darkTheme, lightTheme} from "naive-ui";

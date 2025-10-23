@@ -2,8 +2,8 @@
     createAndProvideApiGameSaveService,
     createScopedSaveStoreFactory,
     type IGameSaveService
-} from "@yaesandbox-frontend/core-services/playerSave";
-import {useProjectUniqueName} from "@yaesandbox-frontend/core-services/injectKeys";
+} from "@yaesandbox-frontend/core-services/player-save";
+import {useProjectUniqueName} from "@yaesandbox-frontend/core-services/inject-key";
 
 export const useEraMapSaveStore = createScopedSaveStoreFactory('era-map-save-store');
 

@@ -50,8 +50,8 @@ import {useSessionStore} from '#/stores/sessionStore.ts';
 import CharacterDisplayCard from './CharacterDisplayCard.vue';
 import {useRouter} from "vue-router";
 import {useChatStore} from '#/features/chat/chatStore.ts';
-import {useGameSaveService} from "@yaesandbox-frontend/core-services/playerSave";
-import SavePresenterCard from "#/share/SavePresenterCard.vue";
+import {useGameSaveService} from "@yaesandbox-frontend/core-services/player-save";
+import {SavePresenterCard} from "@yaesandbox-frontend/shared-feature/player-save";
 
 const router = useRouter();
 const sessionStore = useSessionStore();

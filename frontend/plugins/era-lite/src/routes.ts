@@ -5,7 +5,7 @@ export const routes: RouteRecordRaw[] = [
     {
         // 插件的根路径，组件是我们的控制中心 PluginRoot.vue
         path: `/${routeName}`,
-        component: () => import('#/PluginRoot.vue'),
+        component: () => import('#/saves/PluginRoot.tsx'),
 
         // 当 PluginRoot 中的 v-if 为 true (有存档) 时，
         // <router-view> 将会从这里的 children 中寻找匹配项来渲染。

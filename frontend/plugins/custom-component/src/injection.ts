@@ -6,7 +6,7 @@ import {Fragment as FragmentWrapper, h as hWrapper} from './utils/h-wrapper';
 // 从 core-services 导入核心服务
 import * as workflowThings from '@yaesandbox-frontend/core-services/workflow';
 import * as composableThings from '@yaesandbox-frontend/core-services/composables';
-import * as injectKeys from '@yaesandbox-frontend/core-services/injectKeys';
+import * as injectKeys from '@yaesandbox-frontend/core-services/inject-key';
 import * as coreServices from '@yaesandbox-frontend/core-services';
 
 // 从 shared-ui 导入共享 UI 组件和功能

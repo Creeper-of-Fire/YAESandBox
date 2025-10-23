@@ -103,7 +103,7 @@ import {ContentRenderer} from '@yaesandbox-frontend/shared-ui/content-renderer';
 import {exampleCode, exampleContent, exampleName} from "#/views/example.ts";
 import {AddIcon, TrashIcon} from "@yaesandbox-frontend/shared-ui/icons";
 import {useCodeSafetyCheck, useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
-import {JsxTsLanguageEnhancer, SmartEditor} from "@yaesandbox-frontend/shared-feature"
+import {JsxTsLanguageEnhancer, SmartEditor} from "@yaesandbox-frontend/shared-feature/monaco-editor"
 import {injectionDtsContent, injectionDtsPath} from '../monaco-injection-types';
 
 const editorExtraLibs = [

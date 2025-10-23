@@ -4,8 +4,8 @@ import {
     createAndProvideApiGameSaveService,
     createScopedSaveStoreFactory,
     type IGameSaveService
-} from "@yaesandbox-frontend/core-services/playerSave";
-import {useProjectUniqueName} from "@yaesandbox-frontend/core-services/injectKeys";
+} from "@yaesandbox-frontend/core-services/player-save";
+import {useProjectUniqueName} from "@yaesandbox-frontend/core-services/inject-key";
 
 // 1. 为编辑器的 Pinia save store 定义一个唯一的 key
 export const useComponentSaveStore = createScopedSaveStoreFactory('component-editor-save-store');

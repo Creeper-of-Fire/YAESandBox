@@ -5,7 +5,7 @@ export const routeName: string = 'era-map';
 export const routes: RouteRecordRaw[] = [
     {
         path: `/${routeName}`,
-        component: () => import('#/saves/ui/PluginRoot.vue'),
+        component: () => import('#/saves/PluginRoot.tsx'),
         children: [
             {
                 path: '',

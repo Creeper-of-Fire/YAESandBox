@@ -21,7 +21,7 @@
 <script lang="tsx" setup>
 import DayNightToggle from "#/component/DayNightToggle.vue";
 import {type ComponentPublicInstance, computed, inject, nextTick, onMounted, ref, shallowRef, type VNode} from "vue";
-import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
+import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/inject-key";
 import {onLongPress} from "@vueuse/core";
 import {NSwitch} from "naive-ui";
 

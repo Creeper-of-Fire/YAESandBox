@@ -2,7 +2,7 @@
 import {type Item, type Scene} from '#/types/models.ts';
 import { nanoid } from 'nanoid';
 import { watchOnce } from '@vueuse/core';
-import {useEraLiteSaveStore} from "#/stores/useEraLiteSaveStore.ts";
+import {useEraLiteSaveStore} from "#/saves/useEraLiteSaveStore.ts";
 
 const STORAGE_KEY = 'era-lite-scenes';
 
