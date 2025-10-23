@@ -1,4 +1,4 @@
-﻿import {h, ref, type VNode} from 'vue';
+﻿import {ref, type VNode} from 'vue';
 import {NCheckbox, NList, NListItem, NThing, useDialog} from 'naive-ui';
 import {useScopedStorage} from './useScopedStorage';
 
@@ -47,21 +47,16 @@ const patterns: ObfuscationPattern[] = [
  * 渲染一个包含安全建议的 VNode 列表。
  * @returns {VNode}
  */
-const renderSuggestions = (): VNode =>
-{
-    return h('div', {style: {marginTop: '16px'}}, [
-        h('p', {style: {fontWeight: 'bold'}}, '如果您不确定代码的安全性，可以尝试以下操作：'),
-        h('ul', {style: {paddingLeft: '20px', marginTop: '8px', marginBottom: 0}}, [
-            h('li', null, [
-                '将代码粘贴到 ',
-                h('strong', null, 'AI 助手'),
-                '中，询问其功能和潜在风险。'
-            ]),
-            h('li', null, '在搜索引擎中搜索代码片段，查看是否有关于它的讨论或警告。'),
-            h('li', null, '如果您懂代码，请仔细审查。如果不懂，请不要运行来源不明的代码。'),
-        ])
-    ]);
-};
+const renderSuggestions = () => (
+    <div style={{marginTop: '16px'}}>
+        <p style={{fontWeight: 'bold'}}>如果您不确定代码的安全性，可以尝试以下操作：</p>
+        <ul style={{paddingLeft: '20px', marginTop: '8px', marginBottom: 0}}>
+            <li>将代码粘贴到 <strong>AI 助手</strong>中，询问其功能和潜在风险。</li>
+            <li>在搜索引擎中搜索代码片段，查看是否有关于它的讨论或警告。</li>
+            <li>如果您懂代码，请仔细审查。如果不懂，请不要运行来源不明的代码。</li>
+        </ul>
+    </div>
+);
 
 
 /**
@@ -90,17 +85,19 @@ export function useCodeSafetyCheck()
                     title: '潜在的恶意代码警告',
                     closable: false,
                     maskClosable: false,
-                    content: () => h('div', null, [
-                        h('p', null, '检测到以下可能用于隐藏恶意行为的代码模式。我们强烈建议您不要运行来源不可信的代码。'),
-                        h(NList, {bordered: true, style: {marginTop: '12px'}}, {
-                            default: () => detectedPatterns.map(p =>
-                                h(NListItem, null, {
-                                    default: () => h(NThing, {title: p.name, description: p.description})
-                                })
-                            )
-                        }),
-                        renderSuggestions(),
-                    ]),
+                    content: () => (
+                        <div>
+                            <p>检测到以下可能用于隐藏恶意行为的代码模式。我们强烈建议您不要运行来源不可信的代码。</p>
+                            <NList bordered style={{marginTop: '12px'}}>
+                                {detectedPatterns.map(p => (
+                                    <NListItem>
+                                        <NThing title={p.name} description={p.description}/>
+                                    </NListItem>
+                                ))}
+                            </NList>
+                            <Suggestions/>
+                        </div>
+                    ),
                     positiveText: '我了解风险，仍然继续',
                     negativeText: '取消',
                     onPositiveClick: () => resolve(true),
@@ -119,18 +116,19 @@ export function useCodeSafetyCheck()
             const checkboxState = ref(false);
             dialog.warning({
                 title: '运行第三方代码',
-                content: () => h('div', null, [
-                    h('p', null, '您正在运行/使用自定义代码。请确保您信任代码的来源，因为恶意代码可能会损害您的数据或执行非预期操作。'),
-                    renderSuggestions(),
-                    h(NCheckbox,
-                        {
-                            style: {marginTop: '16px'},
-                            checked: checkboxState.value,
-                            'onUpdate:checked': (val) => checkboxState.value = val,
-                        },
-                        {default: () => '不再提醒我'}
-                    ),
-                ]),
+                content: () => (
+                    <div>
+                        <p>您正在运行/使用自定义代码。请确保您信任代码的来源，因为恶意代码可能会损害您的数据或执行非预期操作。</p>
+                        <Suggestions/>
+                        <NCheckbox
+                            style={{marginTop: '16px'}}
+                            checked={checkboxState.value}
+                            onUpdate:checked={(val) => checkboxState.value = val}
+                        >
+                            不再提醒我
+                        </NCheckbox>
+                    </div>
+                ),
                 positiveText: '我已知晓，继续',
                 negativeText: '取消',
                 onPositiveClick: () =>

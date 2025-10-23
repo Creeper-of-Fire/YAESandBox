@@ -2,8 +2,8 @@
   <DayNightToggle
       ref="dayNightToggleRef"
       v-model="isCurrentlyDark"
-      :size="1.5"
       :duration="1000"
+      :size="1.5"
       @click="handleToggleClick($event)"
       @contextmenu.prevent="handleContextMenu"
   />
@@ -18,9 +18,9 @@
   >
   </n-dropdown>
 </template>
-<script lang="ts" setup>
+<script lang="tsx" setup>
 import DayNightToggle from "#/component/DayNightToggle.vue";
-import {type ComponentPublicInstance, computed, h, inject, nextTick, onMounted, ref, shallowRef, type VNode} from "vue";
+import {type ComponentPublicInstance, computed, inject, nextTick, onMounted, ref, shallowRef, type VNode} from "vue";
 import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/injectKeys";
 import {onLongPress} from "@vueuse/core";
 import {NSwitch} from "naive-ui";
@@ -88,21 +88,22 @@ const themeOptions = computed(() => [
   {
     key: 'system-toggle-render',
     type: 'render', // 指定类型为 render，这样 naive-ui 不会处理它的点击事件
-    render: (): VNode =>
-        h(
-            'div',
-            {
-              // 让整个 div 区域都可点击，提升用户体验
-              style: 'display: flex; align-items: center; justify-content: space-between; min-width: 120px; cursor: pointer; padding: 6px 12px;',
-              onClick: toggleSystemMode, // 点击整行时触发切换
-            },
-            [
-              h('span', '跟随系统'),
-              h(NSwitch, {
-                value: props.themeMode === 'system',
-              }),
-            ]
-        ),
+    render: (): VNode => (
+        <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              minWidth: '120px',
+              cursor: 'pointer',
+              padding: '6px 12px',
+            }}
+            onClick={toggleSystemMode}
+        >
+          <span>跟随系统</span>
+          <NSwitch value={props.themeMode === 'system'}/>
+        </div>
+    )
   },
 ]);
 

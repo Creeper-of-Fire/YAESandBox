@@ -26,8 +26,8 @@
   </div>
 </template>
 
-<script lang="ts" setup>
-import {computed, h, nextTick, ref, toRefs} from 'vue';
+<script lang="tsx" setup>
+import {computed, nextTick, ref, toRefs} from 'vue';
 import {type DropdownOption, NButton, NDropdown, NIcon, useDialog} from 'naive-ui';
 import InlineInputPopover from './InlineInputPopover.vue';
 import {EllipsisHorizontalIcon} from '@yaesandbox-frontend/shared-ui/icons';
@@ -55,7 +55,7 @@ const dropdownOptions = computed<DropdownOption[]>(() =>
     label: action.label,
     key: action.key,
     disabled: action.disabled,
-    icon: action.icon ? () => h(NIcon, {component: action.icon}) : undefined,
+    icon: action.icon ? () => <NIcon component={action.icon}/> : undefined,
   }));
 });
 
@@ -71,7 +71,8 @@ function handleSelect(key: string)
       // 对于需要弹窗的动作，我们激活 Popover
       activePopoverAction.value = action;
       // 使用 nextTick 延迟触发，确保 prop 已更新
-      nextTick(() => {
+      nextTick(() =>
+      {
         // 手动触发我们隐藏的 Popover
         popoverRef.value?.handleTriggerClick();
       });

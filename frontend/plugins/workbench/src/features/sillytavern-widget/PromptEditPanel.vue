@@ -1,4 +1,4 @@
-﻿<!-- PromptEditModal.vue -->
+﻿<!-- PromptEditPanel.vue -->
 <template>
   <!--
     由于我们是通过 useModal.create() 来动态创建这个组件，
@@ -136,8 +136,6 @@ import {
 import {CloseIcon as CloseIcon, HelpCircleIcon, SaveIcon as SaveIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import type {ContentPromptItem, MarkerPromptItem, PromptItem} from './sillyTavernPreset';
 
-// 1. 定义 Props 和 Emits
-// 这是为了与 useModal 的 h() 函数进行交互的标准模式
 const props = defineProps<{
   initialValue: Partial<PromptItem>;
 }>();

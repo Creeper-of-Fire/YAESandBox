@@ -38,8 +38,7 @@
   </n-layout>
 </template>
 
-<script lang="ts" setup>
-import {h} from 'vue';
+<script lang="tsx" setup>
 import {RouterLink, useRoute} from 'vue-router';
 import {NIcon, NLayout, NLayoutSider, NMenu, useThemeVars} from 'naive-ui';
 import {BagIcon, ChatIcon, EarthIcon, HomeIcon, PeopleIcon, StorefrontIcon} from '#/utils/icon.ts';
@@ -50,38 +49,48 @@ const collapsed = useScopedStorage('mainLayout:collapsed', false);
 
 const route = useRoute();
 
-const renderIcon = (icon: any) => () => h(NIcon, null, {default: () => h(icon)});
-
 const menuOptions = [
   {
-    label: () => h(RouterLink, {to: {name: 'Era_Lite_Home'}}, {default: () => '主菜单'}),
+    label: () => (
+        <RouterLink to={{name: 'Era_Lite_Home'}}>主菜单</RouterLink>
+    ),
     key: 'Era_Lite_Home',
-    icon: renderIcon(HomeIcon),
+    icon: <NIcon component={HomeIcon}/>,
   },
   {
-    label: () => h(RouterLink, {to: {name: 'Era_Lite_Chat_List'}}, {default: () => '对话记录'}),
+    label: () => (
+        <RouterLink to={{name: 'Era_Lite_Chat_List'}}>对话记录</RouterLink>
+    ),
     key: 'Era_Lite_Chat_List',
-    icon: renderIcon(ChatIcon),
+    icon: <NIcon component={ChatIcon}/>,
   },
   {
-    label: () => h(RouterLink, {to: {name: 'Era_Lite_Characters'}}, {default: () => '角色列表'}),
+    label: () => (
+        <RouterLink to={{name: 'Era_Lite_Characters'}}>角色列表</RouterLink>
+    ),
     key: 'Era_Lite_Characters',
-    icon: renderIcon(PeopleIcon),
+    icon: <NIcon component={PeopleIcon}/>,
   },
   {
-    label: () => h(RouterLink, {to: {name: 'Era_Lite_Scenes'}}, {default: () => '场景列表'}),
+    label: () => (
+        <RouterLink to={{name: 'Era_Lite_Scenes'}}>场景列表</RouterLink>
+    ),
     key: 'Era_Lite_Scenes',
-    icon: renderIcon(EarthIcon),
+    icon: <NIcon component={EarthIcon}/>,
   },
   {
-    label: () => h(RouterLink, {to: {name: 'Era_Lite_Shop'}}, {default: () => '道具商店'}),
+    label: () => (
+        <RouterLink to={{name: 'Era_Lite_Shop'}}>道具商店</RouterLink>
+    ),
     key: 'Era_Lite_Shop',
-    icon: renderIcon(StorefrontIcon),
+    icon: <NIcon component={StorefrontIcon}/>,
   },
   {
-    label: () => h(RouterLink, {to: {name: 'Era_Lite_Backpack'}}, {default: () => '我的背包'}),
+    label: () => (
+        <RouterLink to={{name: 'Era_Lite_Backpack'}}>我的背包</RouterLink>
+    ),
     key: 'Era_Lite_Backpack',
-    icon: renderIcon(BagIcon),
+    icon: <NIcon component={BagIcon}/>,
   },
 ];
 

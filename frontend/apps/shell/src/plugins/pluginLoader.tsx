@@ -1,4 +1,4 @@
-﻿import {type App, type Component, h} from 'vue';
+﻿import {type App} from 'vue';
 import type {PluginModule} from '@yaesandbox-frontend/core-services';
 import PluginProvider from "#/component/PluginProvider.vue";
 import {PluginUniqueNameKey} from "@yaesandbox-frontend/core-services/injectKeys";
@@ -37,22 +37,23 @@ function wrapComponentWithProvider(component: RawRouteComponent, pluginUniqueNam
             // 1. 执行原始的 import() 函数，等待组件模块加载完成
             const resolvedModule = await (component as () => Promise<any>)();
             // 2. 从模块中提取出真正的组件定义（处理 ESM 的 default 导出）
-            const actualComponent = resolvedModule.default || resolvedModule;
+            const ActualComponent = resolvedModule.default || resolvedModule;
             // 3. 返回一个包裹了真实组件的新组件定义
-            return {
-                render: () => h(PluginProvider, {pluginUniqueName}, {
-                    default: () => h(actualComponent)
-                })
-            };
+            return (
+                <PluginProvider pluginUniqueName={pluginUniqueName}>
+                    <ActualComponent/>
+                </PluginProvider>
+            );
         };
     }
 
     // 如果 component 是一个普通的对象，我们同步地返回包装器
-    return {
-        render: () => h(PluginProvider, {pluginUniqueName}, {
-            default: () => h(component as Component)
-        })
-    };
+    const ComponentToRender = component as any;
+    return (
+        <PluginProvider pluginUniqueName={pluginUniqueName}>
+            <ComponentToRender/>
+        </PluginProvider>
+    );
 }
 
 /**

@@ -1,5 +1,5 @@
 ﻿import type {Component} from 'vue';
-import {defineAsyncComponent, h} from 'vue';
+import {defineAsyncComponent} from 'vue';
 import {injectionKeys, injectionValues} from '../injection';
 
 /**
@@ -68,9 +68,17 @@ export function createAsyncComponentFromJs(
                 onError(error);
                 // 返回一个渲染错误的组件
                 return Promise.resolve({
-                    render: () => h('div', {
-                        style: 'color: red; border: 1px solid red; padding: 8px; font-family: monospace; white-space: pre-wrap;'
-                    }, error.message)
+                    render: () => (
+                        <div style={{
+                            color: 'red',
+                            border: '1px solid red',
+                            padding: '8px',
+                            fontFamily: 'monospace',
+                            whiteSpace: 'pre-wrap'
+                        }}>
+                            {error.message}
+                        </div>
+                    )
                 });
             }
         });
@@ -82,9 +90,15 @@ export function createAsyncComponentFromJs(
 
         // 返回一个静态的错误组件
         return {
-            render: () => h('div', {
-                style: 'color: red; border: 1px solid red; padding: 8px;'
-            }, `Component factory creation failed: ${factoryError.message}`)
+            render: () => (
+                <div style={{
+                    color: 'red',
+                    border: '1px solid red',
+                    padding: '8px',
+                }}>
+                    组件工厂创建错误：{factoryError.message}
+                </div>
+            )
         };
     }
 }

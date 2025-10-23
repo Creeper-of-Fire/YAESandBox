@@ -30,24 +30,25 @@
         <n-divider style="margin-top: 8px; margin-bottom: 8px;">结构详情</n-divider>
         <n-tree
             :data="treeData"
+            :render-label="renderLabel"
             :selectable="false"
             block-line
             default-expand-all
-            :render-label="renderLabel"
         />
       </template>
     </n-flex>
   </n-popover>
 </template>
 
-<script lang="ts" setup>
+<script lang="tsx" setup>
 import {NFlex, NPopover, NTag, NText, type TreeOption} from 'naive-ui';
-import type { VarSpecDef, ListVarSpecDef, RecordVarSpecDef  } from "#/types/generated/workflow-config-api-client";
-import type { Placement } from "vueuc/lib/binder/src/interface";
-import {h,computed} from "vue";
+import type {ListVarSpecDef, RecordVarSpecDef, VarSpecDef} from "#/types/generated/workflow-config-api-client";
+import type {Placement} from "vueuc/lib/binder/src/interface";
+import {computed} from "vue";
 
 // 定义一个扩展 TreeOption 的接口，以便在渲染函数中获得更强的类型提示
-interface VarSpecTreeOption extends TreeOption {
+interface VarSpecTreeOption extends TreeOption
+{
   nodeName: string;
   nodeTypeName: string;
   children?: VarSpecTreeOption[];
@@ -77,7 +78,8 @@ const isComplexType = computed(() => 'properties' in props.specDef || 'elementDe
  * @param name - 变量或属性的名称
  * @param keyPrefix - 用于生成唯一 key 的前缀
  */
-function specToTreeOption(spec: VarSpecDef, name: string, keyPrefix: string): VarSpecTreeOption {
+function specToTreeOption(spec: VarSpecDef, name: string, keyPrefix: string): VarSpecTreeOption
+{
   const option: VarSpecTreeOption = {
     key: keyPrefix,
     nodeName: name,
@@ -85,16 +87,19 @@ function specToTreeOption(spec: VarSpecDef, name: string, keyPrefix: string): Va
   };
 
   // 如果是 Record 类型
-  if ('properties' in spec) {
+  if ('properties' in spec)
+  {
     const recordSpec = spec as RecordVarSpecDef;
-    if (recordSpec.properties && Object.keys(recordSpec.properties).length > 0) {
+    if (recordSpec.properties && Object.keys(recordSpec.properties).length > 0)
+    {
       option.children = Object.entries(recordSpec.properties).map(([propName, propSpec]) =>
           specToTreeOption(propSpec, propName, `${keyPrefix}.${propName}`)
       );
     }
   }
   // 如果是 List 类型
-  else if ('elementDef' in spec) {
+  else if ('elementDef' in spec)
+  {
     const listSpec = spec as ListVarSpecDef;
     option.children = [
       specToTreeOption(listSpec.elementDef, '[ ] 元素', `${keyPrefix}[]`)
@@ -107,8 +112,10 @@ function specToTreeOption(spec: VarSpecDef, name: string, keyPrefix: string): Va
 /**
  * 计算属性，生成树状数据
  */
-const treeData = computed<VarSpecTreeOption[]>(() => {
-  if (!isComplexType.value) {
+const treeData = computed<VarSpecTreeOption[]>(() =>
+{
+  if (!isComplexType.value)
+  {
     return [];
   }
   // 创建一个顶层节点来表示整个结构
@@ -118,21 +125,22 @@ const treeData = computed<VarSpecTreeOption[]>(() => {
 /**
  * 自定义节点渲染函数
  */
-const renderLabel = ({ option }: { option: VarSpecTreeOption }) => {
-  return h(
-      'div',
-      {
-        style: {
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          width: '100%'
-        }
-      },
-      [
-        h('span', null, option.nodeName),
-        h(NTag, { size: 'tiny', type: 'info', bordered: false }, () => option.nodeTypeName)
-      ]
+const renderLabel = ({option}: { option: VarSpecTreeOption }) =>
+{
+  return (
+      <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            width: '100%'
+          }}
+      >
+        <span>{option.nodeName}</span>
+        <NTag size="tiny" type="info" bordered={false}>
+          {option.nodeTypeName}
+        </NTag>
+      </div>
   );
 };
 </script>

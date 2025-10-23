@@ -86,7 +86,7 @@ import {computed, ref} from 'vue';
 import {NButton, NDropdown, NPopover, NSpace, NSpin, NTag, NThing} from 'naive-ui';
 import {type MatchingOptions, type WorkflowFilter} from '../../composables.ts';
 import type {WorkflowConfig} from "../../types";
-import {useFilteredWorkflowSelectorModal} from "./useFilteredWorkflowSelectorModal.tsx";
+import {useFilteredWorkflowSelectorModal} from "./useFilteredWorkflowSelectorModal";
 
 // 定义 Props & Emits
 const props = defineProps<{

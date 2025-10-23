@@ -79,8 +79,8 @@
   </n-scrollbar>
 </template>
 
-<script lang="ts" setup>
-import {computed, h, nextTick, onMounted, ref, watch} from 'vue';
+<script lang="tsx" setup>
+import {computed, nextTick, onMounted, ref, watch} from 'vue';
 import {NButton, NCard, NEmpty, NFlex, NFormItem, NInput, NPopconfirm, NSelect, NSpin, useDialog, useMessage} from 'naive-ui';
 import {storeToRefs} from 'pinia';
 import {cloneDeep} from 'lodash-es';
@@ -171,12 +171,14 @@ function promptCreateNewSet()
   const newSetName = ref('');
   dialog.create({
     title: '新建 AI 配置集',
-    content: () => h(NInput, {
-      value: newSetName.value,
-      onUpdateValue: val => newSetName.value = val,
-      placeholder: '请输入配置集名称',
-      autofocus: true
-    }),
+    content: () => (
+        <NInput
+            value={newSetName.value}
+            onUpdate:value={val => newSetName.value = val}
+            placeholder="请输入配置集名称"
+            autofocus={true}
+        />
+    ),
     positiveText: '创建',
     onPositiveClick: () =>
     {
@@ -196,7 +198,12 @@ function promptCloneSet()
   const clonedName = ref(`${currentConfigSet.value.configSetName} (副本)`);
   dialog.create({
     title: '复制配置集',
-    content: () => h(NInput, {value: clonedName.value, onUpdateValue: val => clonedName.value = val}),
+    content: () => (
+        <NInput
+            value={clonedName.value}
+            onUpdate:value={val => clonedName.value = val}
+        />
+    ),
     positiveText: '复制',
     onPositiveClick: () => configStore.cloneCurrentSet(clonedName.value.trim()),
   });
@@ -208,7 +215,12 @@ function promptRenameSet()
   const newName = ref(currentConfigSet.value.configSetName);
   dialog.create({
     title: '修改配置集名称',
-    content: () => h(NInput, {value: newName.value, onUpdateValue: val => newName.value = val}),
+    content: () => (
+        <NInput
+            value={newName.value}
+            onUpdate:value={val => newName.value = val}
+        />
+    ),
     positiveText: '保存',
     onPositiveClick: () => configStore.renameCurrentSet(newName.value.trim()),
   });

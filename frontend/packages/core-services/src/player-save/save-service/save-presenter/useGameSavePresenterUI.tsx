@@ -1,4 +1,4 @@
-﻿import {h, ref} from 'vue';
+﻿import {ref} from 'vue';
 import {NInput, useDialog, useMessage} from 'naive-ui';
 import type {IGameSavePresenter} from "./IGameSavePresenter.ts";
 
@@ -84,11 +84,13 @@ export function useGameSavePresenterUI(savePresenter: IGameSavePresenter)
         const inputValue = ref('');
         dialog.create({
             title: '新建自动存档',
-            content: () => h(NInput, {
-                value: inputValue.value,
-                'onUpdate:value': v => (inputValue.value = v),
-                placeholder: '请输入自动存档的名称'
-            }),
+            content: () => (
+                <NInput
+                    value={inputValue.value}
+                    onUpdate:value={v => (inputValue.value = v)}
+                    placeholder="请输入自动存档的名称"
+                />
+            ),
             positiveText: '创建',
             onPositiveClick: async () =>
             {
@@ -109,11 +111,13 @@ export function useGameSavePresenterUI(savePresenter: IGameSavePresenter)
         const inputValue = ref('');
         dialog.create({
             title: '创建永久快照',
-            content: () => h(NInput, {
-                value: inputValue.value,
-                'onUpdate:value': v => (inputValue.value = v),
-                placeholder: '请输入快照名称'
-            }),
+            content: () => (
+                <NInput
+                    value={inputValue.value}
+                    onUpdate:value={v => (inputValue.value = v)}
+                    placeholder="请输入快照名称"
+                />
+            ),
             positiveText: '创建',
             onPositiveClick: async () =>
             {

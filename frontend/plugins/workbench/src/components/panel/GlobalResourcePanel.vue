@@ -179,8 +179,8 @@
 </template>
 
 
-<script lang="ts" setup>
-import {computed, h, nextTick, reactive, ref} from 'vue';
+<script lang="tsx" setup>
+import {computed, nextTick, reactive, ref} from 'vue';
 import {type DropdownOption, NAlert, NButton, NEmpty, NFlex, NH4, NIcon, NSpin, NTab, NTabs, useDialog, useMessage} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore';
 import type {AnyConfigObject, ConfigType, GlobalResourceItem} from "@yaesandbox-frontend/core-services/types";
@@ -190,7 +190,7 @@ import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
 import {createBlankConfig} from "#/utils/createBlankConfig.ts";
 import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
 import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
-import {AddIcon, DownloadIcon, EditIcon, TrashIcon, UploadIcon} from "@yaesandbox-frontend/shared-ui/icons";
+import {AddIcon, EditIcon, TrashIcon, UploadIcon} from "@yaesandbox-frontend/shared-ui/icons";
 import {useEditorControlPayload} from "#/services/editor-context/useSelectedConfig.ts";
 import {useFilteredGlobalResources} from "#/composables/useFilteredGlobalResources.ts";
 import {useRuneTypeSelector} from "#/composables/useRuneTypeSelector.ts";
@@ -327,10 +327,12 @@ function showErrorDetail(errorMessage: string, originJsonString: string | null |
 
   dialog.error({
     title: '错误详情',
-    content: () => h(
-        'div', // 外层容器，可以是一个 div 或者 Fragment
-        null,
-        messageLines.map(line => h('div', null, line)) // 为每行创建独立的 div
+    content: () => (
+        <div>
+          {messageLines.map((line, index) => (
+              <div key={index}>{line}</div>
+          ))}
+        </div>
     ),
     positiveText: '确定'
   });
@@ -488,7 +490,9 @@ const dropdownOptions = computed<DropdownOption[]>(() =>
     options.push({
       label: '强制删除',
       key: 'delete',
-      icon: () => h(NIcon, {component: TrashIcon})
+      icon: () => (
+          <NIcon component={TrashIcon}/>
+      )
     });
   }
   else
@@ -496,7 +500,9 @@ const dropdownOptions = computed<DropdownOption[]>(() =>
     options.push({
       label: '编辑',
       key: 'edit',
-      icon: () => h(NIcon, {component: EditIcon})
+      icon: () => (
+          <NIcon component={EditIcon}/>
+      )
     });
     options.push({
       type: 'divider',
@@ -505,7 +511,9 @@ const dropdownOptions = computed<DropdownOption[]>(() =>
     options.push({
       label: '删除',
       key: 'delete',
-      icon: () => h(NIcon, {component: TrashIcon})
+      icon: () => (
+          <NIcon component={TrashIcon}/>
+      )
     });
   }
   return options;

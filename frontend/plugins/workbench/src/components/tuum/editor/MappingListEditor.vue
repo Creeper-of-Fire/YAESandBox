@@ -94,8 +94,8 @@
   </n-card>
 </template>
 
-<script lang="ts" setup>
-import {computed, h, ref, type VNodeChild, watch} from 'vue';
+<script lang="tsx" setup>
+import {computed, ref, type VNodeChild, watch} from 'vue';
 import {NAutoComplete, NButton, NCard, NEmpty, NFlex, NIcon, NText} from 'naive-ui';
 import type {ConsumedSpec, ProducedSpec, TuumInputMapping, TuumOutputMapping} from "#/types/generated/workflow-config-api-client";
 import {AddIcon, ArrowForwardIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
@@ -138,9 +138,11 @@ const localItems = ref<MappingItem[]>([]);
  * 当内部变量输入框被选择时触发。
  * @param item - 当前正在编辑的映射项
  */
-const handleInternalNameSelect = (item: MappingItem) => {
+const handleInternalNameSelect = (item: MappingItem) =>
+{
   // 检查外部端点名称是否为空或只包含空白字符
-  if (!item.endpointName || item.endpointName.trim() === '') {
+  if (!item.endpointName || item.endpointName.trim() === '')
+  {
     // 如果是，则用内部变量的名称自动填充它
     item.endpointName = item.internalName;
   }
@@ -260,16 +262,13 @@ const renderAutocompleteOption = (option: SpecOptionWithMeta): VNodeChild =>
     return option.label as string;
   }
 
-  return h(
-      NFlex,
-      {justify: 'space-between', align: 'center', style: {width: '100%'}},
-      {
-        default: () => [
-          h('span', {class: 'option-label'}, option.label as string),
-          // ✨ 将计算好的 type 作为 prop 传入
-          h(VarSpecTag, getSpecTagProps(spec))
-        ]
-      }
+  return (
+      <NFlex justify="space-between" align="center" style={{width: '100%'}}>
+        <span class="option-label">{option.label as string}</span>
+
+        {/* 使用展开运算符传递 props */}
+        <VarSpecTag {...getSpecTagProps(spec)} />
+      </NFlex>
   );
 };
 

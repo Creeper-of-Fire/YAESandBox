@@ -94,8 +94,8 @@
   </div>
 </template>
 
-<script lang="ts" setup>
-import {computed, ref, watch, h} from 'vue';
+<script lang="tsx" setup>
+import {computed, ref, watch} from 'vue';
 import {NAvatar, NButton, NCard, NCode, NFlex, NIcon, NInput, NSpace, useDialog, useThemeVars} from 'naive-ui';
 import {useChatStore} from './chatStore.ts';
 import {useCharacterStore} from '#/features/characters/characterStore.ts';
@@ -175,15 +175,17 @@ const displayContent = computed(() =>
   return defaultTransformMessageContent(rawContent);
 });
 
-function handlePreviewRender() {
+function handlePreviewRender()
+{
   dialog.info({
     title: '脚本处理后源代码预览',
-    // 使用 h 函数动态创建 NCode VNode 来展示处理后的字符串
-    content: () => h(NCode, {
-      code: displayContent.value,
-      language: 'xml', // 将其作为 XML 进行语法高亮
-      wordWrap: true
-    }),
+    content: () => (
+        <NCode
+            code={displayContent.value}
+            language="xml"
+            wordWrap={true}
+        />
+    ),
     positiveText: '关闭',
     maskClosable: true,
     style: {

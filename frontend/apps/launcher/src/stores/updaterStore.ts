@@ -3,8 +3,8 @@ import {invoke} from '@tauri-apps/api/core';
 import {listen, type UnlistenFn} from '@tauri-apps/api/event';
 import semver from 'semver';
 import {computed, type ComputedRef, type Reactive, reactive, ref, watch} from "vue";
-import {useConfigStore} from "./configStore.ts";
-import {launcherName} from "../utils/constant.ts";
+import {useConfigStore} from "./configStore";
+import {launcherName} from "../utils/constant";
 
 // --- 1. 类型定义 ---
 

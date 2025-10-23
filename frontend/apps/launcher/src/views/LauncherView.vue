@@ -3,8 +3,8 @@
 import {computed, onMounted, ref, watch} from 'vue';
 import {invoke} from '@tauri-apps/api/core';
 import ComponentItem from '../components/ComponentItem.vue';
-import {useUpdaterStore} from "../stores/updaterStore.ts";
-import {type ManifestMode, useConfigStore} from "../stores/configStore.ts";
+import {useUpdaterStore} from "../stores/updaterStore";
+import {type ManifestMode, useConfigStore} from "../stores/configStore";
 import ConfirmationDialog from "../components/ConfirmationDialog.vue";
 import SpecialComponentItem from "../components/SpecialComponentItem.vue";
 import SettingsPanel from "../components/SettingsPanel.vue";

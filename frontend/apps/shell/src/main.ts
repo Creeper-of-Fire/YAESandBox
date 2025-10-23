@@ -24,7 +24,7 @@ import {installBuiltinComponents} from "@yaesandbox-frontend/shared-ui/content-r
 // 导入所有需要认证的 API 客户端的 OpenAPI 对象
 import {useAuthStore} from "#/app-authentication/stores/authStore.ts"
 import {TokenResolverKey} from '@yaesandbox-frontend/core-services/injectKeys';
-import {loadPlugins} from "#/plugins/pluginLoader.ts";
+import {loadPlugins} from "#/plugins/pluginLoader";
 import axiosInstance from "#/utils/axiosInstance.ts";
 import type {ApiRequestOptions} from "@yaesandbox-frontend/core-services/types";
 import {getBaseUrl} from '@yaesandbox-frontend/core-services';

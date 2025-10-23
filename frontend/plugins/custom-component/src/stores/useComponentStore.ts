@@ -12,8 +12,7 @@ import {
 // JSX 编译器工具函数
 import {compileJsx} from "#/utils/compiler";
 import {createAsyncComponentFromJs} from '../utils/component-factory';
-import {useComponentSaveStore} from "#/saves/useComponentSaveStore.ts";
-import {exampleCode, exampleContent, exampleName} from '#/views/example.ts';
+import {useComponentSaveStore} from "#/saves/useComponentSaveStore";
 
 
 // 定义组件状态的数据结构
