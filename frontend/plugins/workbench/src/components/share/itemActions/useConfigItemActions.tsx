@@ -1,26 +1,18 @@
-﻿// 文件路径: src/app-workbench/composables/useConfigItemActions.ts
-import {type Component, computed, nextTick, ref, type Ref, type VNode, watch} from 'vue';
-import {
-    type InputInst,
-    NAlert,
-    NButton,
-    NCard,
-    NFlex,
-    NFormItem,
-    NInput,
-    NTreeSelect,
-    type TreeSelectOption,
-    useMessage,
-    useModal
-} from 'naive-ui';
+﻿import {type Component, computed, type Ref} from 'vue';
+import {type ButtonProps, type TreeSelectOption, useMessage, useModal} from 'naive-ui';
 import {type AnyConfigObject, type ConfigType, getConfigObjectType, isRuneWithInnerTuum} from "@yaesandbox-frontend/core-services/types";
 import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore.ts';
 import {AddIcon, CopyIcon, EditIcon, SaveIcon, TrashIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {createBlankConfig} from "#/utils/createBlankConfig.ts";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 import {useRuneTypeSelector} from "#/composables/useRuneTypeSelector.ts";
-import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 import type {ModalApiInjection} from "naive-ui/es/modal/src/ModalProvider";
+import {
+    ConfirmContent,
+    createModalActionActivator,
+    InputContent,
+    SelectAndInputContent
+} from "#/components/share/itemActions/ConfigItemComponents.tsx";
 
 /**
  * @description useConfigItemActions 的输入参数类型
@@ -30,8 +22,6 @@ interface UseConfigItemActionsParams
     itemRef: Ref<AnyConfigObject | null>;
     parentContextRef: Ref<{ parent: AnyConfigObject; list: AnyConfigObject[] } | null>;
 }
-
-export type ActionsProvider = () => EnhancedAction[];
 
 export interface EnhancedAction
 {
@@ -54,7 +44,7 @@ export interface EnhancedAction
     /**
      * @description 作为按钮/菜单选项的样式类型
      */
-    type?: 'default' | 'primary' | 'info' | 'success' | 'warning' | 'error';
+    type?: ButtonProps['type'];
     /**
      * @description 激活此动作。
      * 该方法负责呈现所有必要的UI（如对话框、popover等）并执行最终的业务逻辑。
@@ -63,165 +53,186 @@ export interface EnhancedAction
     activate: (triggerElement: HTMLElement) => void;
 }
 
-/**
- * 渲染一个带输入框的对话框内容
- * @param props 配置项
- */
-export const InputContent = (props: {
-    title: string;
-    label: string;
-    initialValue: string;
-    onConfirm: (value: string) => void;
-    onCancel: () => void;
-}) =>
-{
-    const inputValue = ref(props.initialValue);
-    const inputRef = ref<InputInst | null>(null);
-    nextTick(() => inputRef.value?.focus());
 
-    const handleConfirm = () =>
+type ActionCreatorContext = {
+    item: AnyConfigObject;
+    parentCtx: { parent: AnyConfigObject; list: AnyConfigObject[] } | null;
+    isReadOnly: boolean;
+    modal: ModalApiInjection;
+    message: ReturnType<typeof useMessage>;
+    workbenchStore: ReturnType<typeof useWorkbenchStore>;
+    runeTypeOptions: Ref<TreeSelectOption[]>;
+};
+
+const createRenameAction = ({item, isReadOnly, modal, message}: ActionCreatorContext): EnhancedAction | null =>
+{
+    if (isReadOnly) return null;
+    return {
+        key: 'rename',
+        label: '重命名',
+        icon: EditIcon,
+        activate: createModalActionActivator(modal, (modalRef) =>
+            <InputContent
+                title="重命名" label="新名称" initialValue={item.name ?? ''}
+                onCancel={() => modalRef.destroy()}
+                onConfirm={(newName) =>
+                {
+                    item.name = newName;
+                    message.success(`已重命名为 "${newName}"`);
+                    modalRef.destroy();
+                }}/>
+        ),
+    };
+};
+
+const createAddChildAction = (ctx: ActionCreatorContext): EnhancedAction | null =>
+{
+    const {item, isReadOnly, modal, message, runeTypeOptions} = ctx;
+    const {type: itemType, config: typedItem} = getConfigObjectType(item);
+    const {runeDefaultNameGenerator} = useRuneTypeSelector();
+
+    const createAndPushTuum = async (name: string) =>
     {
-        const finalValue = inputValue.value.trim();
-        if (finalValue)
+        if (itemType !== 'workflow') return;
+        const newTuum = await createBlankConfig('tuum', name);
+        typedItem.tuums.push(newTuum);
+        message.success('已添加新枢机');
+    };
+
+    const createAndPushRune = async (payload: { name: string, type: string }) =>
+    {
+        const newRune = await createBlankConfig('rune', payload.name, {runeType: payload.type});
+        if (isRuneWithInnerTuum(item) && item.innerTuum)
         {
-            props.onConfirm(finalValue);
+            item.innerTuum.runes.push(newRune);
+            message.success('已添加新符文到子枢机');
+        }
+        else if (itemType === 'tuum')
+        {
+            typedItem.runes.push(newRune);
+            message.success('已添加新符文');
         }
     };
 
-    return (
-        <NCard title={props.title} bordered={false} size="small" style={{width: '300px'}}>
-            <NFormItem label={props.label} required>
-                <NInput ref={inputRef} v-model:value={inputValue.value}
-                        onKeydown={(e: KeyboardEvent) => e.key === 'Enter' && (e.preventDefault(), handleConfirm())}/>
-            </NFormItem>
-            <NFlex justify="end">
-                <NButton size="small" onClick={props.onCancel}>取消</NButton>
-                <NButton size="small" type="primary" disabled={!inputValue.value.trim()} onClick={handleConfirm}>确认</NButton>
-            </NFlex>
-        </NCard>
-    );
-};
-
-/**
- * 渲染一个带树选择和输入框的对话框内容
- */
-export const SelectAndInputContent = (props: {
-    title: string;
-    selectOptions: TreeSelectOption[];
-    selectPlaceholder: string;
-    nameGenerator: (type: any, opts: TreeSelectOption[]) => string;
-    onConfirm: (payload: { type: string, name: string }) => void;
-    onCancel: () => void;
-}) =>
-{
-    const selectedType = ref<string | null>(null);
-    const nameValue = ref('');
-    const expandedKeys = useScopedStorage<string[]>('tree-expanded-keys', []);
-
-    watch(selectedType, (newType) =>
+    if (itemType === 'workflow')
     {
-        if (newType)
-        {
-            nameValue.value = props.nameGenerator(newType, props.selectOptions);
-        }
-        else
-        {
-            nameValue.value = '';
-        }
-    });
-
-    if (expandedKeys.value.length === 0 && props.selectOptions)
-    {
-        expandedKeys.value = props.selectOptions.filter(o => o.children?.length).map(o => o.key as string);
+        return {
+            key: 'add-tuum',
+            label: '添加枢机',
+            icon: AddIcon,
+            disabled: isReadOnly,
+            activate: createModalActionActivator(modal, (modalRef) =>
+                <InputContent
+                    title="添加新枢机" label="名称" initialValue="新枢机"
+                    onCancel={() => modalRef.destroy()}
+                    onConfirm={async (name) =>
+                    {
+                        await createAndPushTuum(name);
+                        modalRef.destroy();
+                    }}/>
+            ),
+        };
     }
 
-    const handleConfirm = () =>
+    if (isRuneWithInnerTuum(item) || itemType === 'tuum')
     {
-        if (selectedType.value && nameValue.value.trim())
-        {
-            props.onConfirm({type: selectedType.value, name: nameValue.value.trim()});
-        }
-    };
+        return {
+            key: 'add-rune',
+            label: '添加符文',
+            icon: AddIcon,
+            disabled: isReadOnly,
+            activate: createModalActionActivator(modal, (modalRef) =>
+                <SelectAndInputContent
+                    title="添加新符文" selectOptions={runeTypeOptions.value} selectPlaceholder="请选择符文类型"
+                    nameGenerator={runeDefaultNameGenerator}
+                    onCancel={() => modalRef.destroy()}
+                    onConfirm={async (payload) =>
+                    {
+                        await createAndPushRune(payload);
+                        modalRef.destroy();
+                    }}/>
+            ),
+        };
+    }
 
-    return (
-        <NCard title={props.title} bordered={false} size="small" style={{width: '300px'}}>
-            <NFormItem label="类型" required>
-                <NTreeSelect
-                    v-model:value={selectedType.value} v-model:expanded-keys={expandedKeys.value}
-                    options={props.selectOptions} placeholder={props.selectPlaceholder}
-                    block-line clearable filterable
-                    overrideDefaultNodeClickBehavior={({option}) => (option.children ? 'toggleExpand' : 'default')}
-                />
-            </NFormItem>
-            {selectedType.value && (
-                <NFormItem label="名称" required>
-                    <NInput v-model:value={nameValue.value}
-                            onKeydown={(e: KeyboardEvent) => e.key === 'Enter' && (e.preventDefault(), handleConfirm())}/>
-                </NFormItem>
-            )}
-            <NFlex justify="end">
-                <NButton size="small" onClick={props.onCancel}>取消</NButton>
-                <NButton size="small" type="primary" disabled={!selectedType.value || !nameValue.value.trim()}
-                         onClick={handleConfirm}>确认</NButton>
-            </NFlex>
-        </NCard>
-    );
+    return null; // 不可添加子项
 };
 
-// 确认删除内容
-// TODO 改成更通用的
-export const ConfirmContent = (props: {
-    title: string;
-    message: string;
-    onConfirm: () => void;
-    onCancel: () => void;
-}) => (
-    <NCard title={props.title} bordered={false} size="small" style={{width: '300px'}}>
-        <NAlert showIcon={false} type="warning" style={{marginBottom: '12px'}}>{props.message}</NAlert>
-        <NFlex justify="end">
-            <NButton size="small" onClick={props.onCancel}>取消</NButton>
-            <NButton size="small" type="error" onClick={props.onConfirm}>确认删除</NButton>
-        </NFlex>
-    </NCard>
-);
-
-/**
- * @description 创建一个类似 Popover 的模态框的辅助函数
- * @param modal - useModal() 的返回值
- * @param triggerElement - 用于定位的 HTML 元素
- * @param contentRenderer - 渲染卡片内容的 TSX 函数
- */
-const createPopoverModal = (
-    modal: ModalApiInjection,
-    triggerElement: HTMLElement,
-    contentRenderer: (modalRef: { destroy: () => void }) => VNode
-) =>
+const createDuplicateAction = ({item, parentCtx, isReadOnly, message}: ActionCreatorContext): EnhancedAction | null =>
 {
-    const rect = triggerElement.getBoundingClientRect();
-    // 确保弹窗不会超出屏幕右侧或底部
-    const left = Math.min(rect.left, window.innerWidth - 320 - 16);
-    const top = Math.min(rect.bottom + 4, window.innerHeight - 200 - 16); // 假设弹窗最大高度
-
-    const modalInstance = modal.create({
-        title: undefined,
-        preset: 'card',
-        content: () => contentRenderer(modalInstance),
-        maskClosable: true,
-        style: {
-            position: 'fixed',
-            top: `${top}px`,
-            left: `${left}px`,
-            width: '320px',
-            margin: '0',
+    if (isReadOnly || !parentCtx) return null;
+    return {
+        key: 'duplicate',
+        label: '创建副本',
+        icon: CopyIcon,
+        activate: () =>
+        {
+            if (!('configId' in item)) return;
+            const index = parentCtx.list.findIndex(i => 'configId' in i && i.configId === item.configId);
+            if (index > -1)
+            {
+                const clonedItem = deepCloneWithNewIds(item);
+                clonedItem.name = `${item.name} (副本)`;
+                parentCtx.list.splice(index + 1, 0, clonedItem);
+                message.success(`已为“${item.name}”创建副本`);
+            }
         },
-        bordered: false,
-        closable: false,
-        headerStyle: {display: 'none'},
-        contentStyle: {padding: '0'},
-        displayDirective: 'if'
-    });
+    };
+};
 
-    return modalInstance;
+const createDeleteAction = ({item, parentCtx, isReadOnly, modal, message}: ActionCreatorContext): EnhancedAction | null =>
+{
+    if (isReadOnly || !parentCtx) return null;
+    return {
+        key: 'delete',
+        label: '删除',
+        icon: TrashIcon,
+        type: 'error',
+        activate: createModalActionActivator(modal, (modalRef) =>
+            <ConfirmContent
+                title="确认删除" message={`你确定要删除“${item.name}”吗？此操作不可恢复。`}
+                onCancel={() => modalRef.destroy()}
+                onConfirm={() =>
+                {
+                    if (!('configId' in item)) return;
+                    const index = parentCtx.list.findIndex(i => 'configId' in i && i.configId === item.configId);
+                    if (index > -1)
+                    {
+                        parentCtx.list.splice(index, 1);
+                        message.success(`已删除“${item.name}”`);
+                    }
+                    modalRef.destroy();
+                }}/>
+        ),
+    };
+};
+
+const createSaveAsGlobalAction = ({item, modal, message, workbenchStore}: ActionCreatorContext): EnhancedAction | null =>
+{
+    return {
+        key: 'save-as-global',
+        label: '另存为全局',
+        icon: SaveIcon,
+        type: 'success',
+        activate: createModalActionActivator(modal, (modalRef) =>
+            <InputContent
+                title="另存为全局配置" label="全局配置名称" initialValue={`${item.name} (全局副本)`}
+                onCancel={() => modalRef.destroy()}
+                onConfirm={async (name) =>
+                {
+                    try
+                    {
+                        await workbenchStore.createGlobalConfig({...item, name});
+                        message.success(`已成功将“${name}”保存为全局配置！`);
+                        modalRef.destroy(); // 成功后关闭
+                    } catch (e)
+                    {
+                        message.error(`保存失败: ${(e as Error).message}`);
+                        // 失败后不关闭，让用户可以重试或取消
+                    }
+                }}/>
+        ),
+    };
 };
 
 /**
@@ -234,7 +245,6 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
     const message = useMessage();
     const modal = useModal();
     const workbenchStore = useWorkbenchStore();
-
     const {runeTypeOptions, runeDefaultNameGenerator} = useRuneTypeSelector();
 
 
@@ -243,189 +253,31 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
      */
     const actions = computed<EnhancedAction[]>(() =>
     {
-        const isReadOnly = isReadOnlyRef.value;
-        // 从闭包中获取最新的 ref 值
         const item = itemRef.value;
         const parentCtx = parentContextRef.value;
-
-        // 如果没有 item，直接返回空数组
         if (!item) return [];
 
-        const {type: itemType, config: typedItem} = getConfigObjectType(item);
+        const context: ActionCreatorContext = {
+            item,
+            parentCtx,
+            isReadOnly: isReadOnlyRef.value,
+            modal,
+            message,
+            workbenchStore,
+            runeTypeOptions,
+        };
 
-        // 动作：重命名
-        const renameAction: EnhancedAction = {
-            key: 'rename',
-            label: '重命名',
-            icon: EditIcon,
-            disabled: isReadOnly || !item,
-            activate: (trigger) => createPopoverModal(modal, trigger, (modalRef) =>
-                <InputContent
-                    title="重命名" label="新名称" initialValue={item.name ?? ''}
-                    onCancel={() => modalRef.destroy()}
-                    onConfirm={(newName) =>
-                    {
-                        item.name = newName;
-                        message.success(`已重命名为 "${newName}"`);
-                        modalRef.destroy();
-                    }}/>),
-        }
+        // 使用创建函数数组来组装，逻辑更清晰
+        const actionCreators = [
+            createRenameAction,
+            createAddChildAction,
+            createDeleteAction,
+            createSaveAsGlobalAction,
+            createDuplicateAction,
+        ];
 
-        const getAddChildAction = (): EnhancedAction =>
-        {
-            // 默认隐藏动作
-            let action: EnhancedAction = {key: 'add-child', label: '添加子项', disabled: true, activate: () => {}};
-
-            const createAndPushTuum = async (name: string) =>
-            {
-                const newTuum = await createBlankConfig('tuum', name);
-                if (itemType === 'workflow')
-                {
-                    typedItem.tuums.push(newTuum);
-                    message.success('已添加新枢机');
-                }
-            };
-
-            const createAndPushRune = async (payload: { name: string, type: string }) =>
-            {
-                const newRune = await createBlankConfig('rune', payload.name, {runeType: payload.type});
-                if (isRuneWithInnerTuum(item) && item.innerTuum)
-                {
-                    item.innerTuum.runes.push(newRune);
-                    message.success('已添加新符文到子枢机');
-                }
-                else if (itemType === 'tuum')
-                {
-                    typedItem.runes.push(newRune);
-                    message.success('已添加新符文');
-                }
-            };
-
-            if (itemType == 'workflow')
-            { // 工作流添加枢机
-                action = {
-                    key: 'add-tuum',
-                    label: '添加枢机',
-                    icon: AddIcon,
-                    disabled: isReadOnly,
-                    activate: (trigger) => createPopoverModal(modal, trigger, (modalRef) =>
-                        <InputContent
-                            title="添加新枢机" label="名称" initialValue="新枢机"
-                            onCancel={() => modalRef.destroy()}
-                            onConfirm={async (name) =>
-                            {
-                                await createAndPushTuum(name);
-                                modalRef.destroy();
-                            }}/>
-                    ),
-                };
-            }
-            else if (isRuneWithInnerTuum(item) || itemType === 'tuum')
-            { // 枢机添加符文
-                action = {
-                    key: 'add-rune',
-                    label: '添加符文',
-                    icon: AddIcon,
-                    disabled: isReadOnly,
-                    activate: (trigger) => createPopoverModal(modal, trigger, (modalRef) =>
-                        <SelectAndInputContent
-                            title="添加新符文" selectOptions={runeTypeOptions.value} selectPlaceholder="请选择符文类型"
-                            nameGenerator={runeDefaultNameGenerator}
-                            onCancel={() => modalRef.destroy()}
-                            onConfirm={async (payload) =>
-                            {
-                                await createAndPushRune(payload);
-                                modalRef.destroy();
-                            }}/>
-                    ),
-                };
-            }
-            return action;
-        }
-
-        // 动作：创建副本
-        const duplicateAction: EnhancedAction = {
-            key: 'duplicate',
-            label: '创建副本',
-            icon: CopyIcon,
-            disabled: isReadOnly || !parentCtx, // 如果是只读或没有父级上下文，则禁用
-            activate: () =>
-            {
-                if (!parentCtx || !item || !('configId' in item)) return;
-
-                const index = parentCtx.list.findIndex(i => 'configId' in i && i.configId === item.configId);
-                if (index > -1)
-                {
-                    // 使用 deepCloneWithNewIds 创建一个全新的副本
-                    const clonedItem = deepCloneWithNewIds(item);
-                    // 修改副本名称以作区分
-                    clonedItem.name = `${item.name} (副本)`;
-                    // 将副本插入到原项的后面
-                    parentCtx.list.splice(index + 1, 0, clonedItem);
-
-                    message.success(`已为“${item.name}”创建副本`);
-                }
-            }
-        }
-
-        // 动作：删除
-        const deleteAction: EnhancedAction = {
-            key: 'delete',
-            label: '删除',
-            icon: TrashIcon,
-            type: 'error',
-            disabled: isReadOnly || !parentCtx,
-            activate: (trigger) => createPopoverModal(modal, trigger, (modalRef) =>
-                <ConfirmContent
-                    title="确认删除" message={`你确定要删除“${item.name}”吗？此操作不可恢复。`}
-                    onCancel={() => modalRef.destroy()}
-                    onConfirm={() =>
-                    {
-                        if (!parentCtx || !('configId' in item)) return;
-                        const index = parentCtx.list.findIndex(i => 'configId' in i && i.configId === item.configId);
-                        if (index > -1)
-                        {
-                            parentCtx.list.splice(index, 1);
-                            message.success(`已删除“${item.name}”`);
-                        }
-                        modalRef.destroy();
-                    }}/>
-            ),
-        }
-
-        // 动作：另存为全局配置
-        const saveAsGlobalAction: EnhancedAction = {
-            key: 'save-as-global',
-            label: '另存为全局',
-            icon: SaveIcon,
-            type: 'success',
-            disabled: !item,
-            activate: (trigger) => createPopoverModal(modal, trigger, (modalRef) =>
-                <InputContent
-                    title="另存为全局配置" label="全局配置名称" initialValue={`${item.name} (全局副本)`}
-                    onCancel={() => modalRef.destroy()}
-                    onConfirm={async (name) =>
-                    {
-                        try
-                        {
-                            await workbenchStore.createGlobalConfig({...item, name});
-                            message.success(`已成功将“${name}”保存为全局配置！`);
-                        } catch (e)
-                        {
-                            message.error(`保存失败: ${(e as Error).message}`);
-                        }
-                        modalRef.destroy();
-                    }}/>
-            ),
-        }
-
-        return [
-            renameAction,
-            getAddChildAction(),
-            deleteAction,
-            saveAsGlobalAction,
-            duplicateAction,
-        ].filter(a => a.key && !a.disabled); // 过滤掉无效和禁用的动作
+        // 调用每个创建函数，并过滤掉返回 null 的结果（即不适用的 Action）
+        return actionCreators.map(creator => creator(context)).filter((action): action is EnhancedAction => !!action);
     });
 
     return {
@@ -437,12 +289,12 @@ export function useConfigItemActions({itemRef, parentContextRef}: UseConfigItemA
  * @description 为全局配置列表生成 "新建" 动作
  * @param activeTab 当前激活的标签页类型 ('rune', 'workflow', 'tuum')
  * @param currentTabLabel 当前标签页的显示名称 (例如 "符文")
- * @param emit 组件的 emit 函数，用于触发事件
+ *  @param onCreated 一个回调函数，当新配置成功创建并保存为草稿后被调用。它接收包含新会话信息的对象作为参数。
  */
 export function useGlobalConfigCreationAction(
     activeTab: Ref<ConfigType>,
     currentTabLabel: Ref<string>,
-    emit: (event: 'start-editing', payload: { type: ConfigType, storeId: string }) => void
+    onCreated: (newSession: { type: ConfigType, storeId: string }) => void
 ): { createNewAction: Ref<EnhancedAction> }
 {
     const message = useMessage();
@@ -453,35 +305,34 @@ export function useGlobalConfigCreationAction(
     /**
      * @description 处理创建逻辑的核心函数
      */
-    const handleCreateNew = async (payload: { name: string; type?: string }) =>
+    const handleCreateNew = async (payload: { name: string; type?: string }): Promise<boolean> =>
     {
-        const { name, type: runeType } = payload;
+        const {name, type: runeType} = payload;
         const resourceType = activeTab.value;
 
-        // 验证逻辑
-        if (!name) {
-            message.error('请输入有效的名称');
-            return;
-        }
-        if (resourceType === 'rune' && !runeType) {
+        if (resourceType === 'rune' && !runeType)
+        {
             message.error('创建符文时必须选择符文类型');
-            return;
+            return false;
         }
 
-        try {
+        try
+        {
             const blankConfig =
                 resourceType === 'rune'
-                    ? await createBlankConfig('rune', name, { runeType: runeType! })
+                    ? await createBlankConfig('rune', name, {runeType: runeType!})
                     : resourceType === 'workflow'
                         ? await createBlankConfig('workflow', name)
                         : await createBlankConfig('tuum', name);
 
             const newSession = workbenchStore.createNewDraftSession(resourceType, blankConfig);
-            emit('start-editing', { type: newSession.type, storeId: newSession.storeId });
+
+            onCreated({type: newSession.type, storeId: newSession.storeId});
 
             message.success(`成功创建全局${currentTabLabel.value}“${name}”！`);
             return true; // 表示成功
-        } catch (e) {
+        } catch (e)
+        {
             message.error(`创建失败: ${(e as Error).message}`);
             return false; // 表示失败
         }
@@ -492,44 +343,46 @@ export function useGlobalConfigCreationAction(
         icon: AddIcon,
         label: `新建全局${currentTabLabel.value}`,
         disabled: false,
-        activate: (triggerElement) =>
+        activate: createModalActionActivator(modal, (modalRef) =>
         {
             const title = `新建全局${currentTabLabel.value}`;
 
+            // onConfirm 逻辑现在统一处理异步和关闭模态框
+            const createAndClose = async (createFn: () => Promise<boolean>) =>
+            {
+                const success = await createFn();
+                if (success)
+                {
+                    modalRef.destroy();
+                }
+            };
+
             if (activeTab.value === 'rune')
             {
-                // 符文需要选择类型
-                createPopoverModal(modal, triggerElement, (modalRef) =>
+                return (
                     <SelectAndInputContent
                         title={title}
                         selectOptions={runeTypeOptions.value}
                         selectPlaceholder="请选择符文类型"
                         nameGenerator={runeDefaultNameGenerator}
                         onCancel={() => modalRef.destroy()}
-                        onConfirm={async (payload) => {
-                            const success = await handleCreateNew(payload);
-                            if (success) modalRef.destroy();
-                        }}
+                        onConfirm={(payload) => createAndClose(() => handleCreateNew(payload))}
                     />
                 );
             }
             else
             {
-                // 工作流和枢机只需要输入名称
-                createPopoverModal(modal, triggerElement, (modalRef) =>
+                return (
                     <InputContent
                         title={title}
                         label="名称"
                         initialValue={`新建${currentTabLabel.value}`}
                         onCancel={() => modalRef.destroy()}
-                        onConfirm={async (name) => {
-                            const success = await handleCreateNew({ name });
-                            if (success) modalRef.destroy();
-                        }}
+                        onConfirm={(name) => createAndClose(() => handleCreateNew({name}))}
                     />
                 );
             }
-        }
+        }),
     }));
 
     return {

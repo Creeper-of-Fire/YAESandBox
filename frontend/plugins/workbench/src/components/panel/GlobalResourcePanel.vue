@@ -186,7 +186,6 @@ import {useGlobalConfigCreationAction} from "#/components/share/itemActions/useC
 import {AddIcon, EditIcon, TrashIcon, UploadIcon} from "@yaesandbox-frontend/shared-ui/icons";
 import {useEditorControlPayload} from "#/services/editor-context/useSelectedConfig.ts";
 import {useFilteredGlobalResources} from "#/composables/useFilteredGlobalResources.ts";
-import {useRuneTypeSelector} from "#/composables/useRuneTypeSelector.ts";
 import {useConfigImportExport} from "#/composables/useConfigImportExport.ts";
 
 // 定义我们转换后给 draggable 用的数组项的类型
@@ -349,7 +348,14 @@ const currentTabLabel = computed(() =>
   }
 });
 
-const {createNewAction} = useGlobalConfigCreationAction(activeTab, currentTabLabel, emit);
+const {createNewAction} = useGlobalConfigCreationAction(
+    activeTab,
+    currentTabLabel,
+    (newSession) =>
+    {
+      emit('start-editing', newSession);
+    }
+);
 
 const createButtonRef = ref<InstanceType<typeof NButton> | null>(null);
 
