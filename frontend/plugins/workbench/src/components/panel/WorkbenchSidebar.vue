@@ -41,33 +41,22 @@
         <n-flex class="action-bar" justify="space-between">
           <!-- 左侧：动态生成的上下文操作 -->
           <n-flex>
-            <template v-for="action in itemActions" :key="action.key">
-              <!-- 渲染需要 Popover 的动作 (如重命名、添加) -->
-              <InlineInputPopover v-if="action.renderType === 'popover'"
-                                  :action="action"
-                                  @confirm="payload => action.handler?.(payload)"
-              >
-                <n-button
-                    :disabled="action.disabled"
-                    :type="action.type || 'default'"
-                    size="small"
-                    strong
-                >
-                  {{ action.label }}
-                </n-button>
-              </InlineInputPopover>
-              <!-- 渲染简单按钮 (未来可能用到) -->
-              <n-button
-                  v-else
-                  :disabled="action.disabled"
-                  :type="action.type || 'default'"
-                  size="small"
-                  strong
-                  @click="action.handler?.({})"
-              >
-                {{ action.label }}
-              </n-button>
-            </template>
+            <!-- 简单的 v-for 循环，为每个 action 创建一个按钮 -->
+            <n-button
+                v-for="action in itemActions"
+                :key="action.key"
+                :disabled="action.disabled"
+                :type="action.type || 'default'"
+                size="small"
+                strong
+                @click="action.activate($event.currentTarget as HTMLElement)"
+            >
+              <!-- 按钮的图标和文本直接来自 action -->
+              <template v-if="action.icon" #icon>
+                <n-icon :component="action.icon"/>
+              </template>
+              {{ action.label }}
+            </n-button>
           </n-flex>
 
           <n-flex v-if="!isReadOnly">
@@ -142,8 +131,7 @@ import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "#/components/workflow/WorkflowItemRenderer.vue";
 import {AddBoxIcon, CloseIcon, GraphIcon, SwapHorizIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
-import {useConfigItemActions} from "#/composables/useConfigItemActions.ts";
-import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
+import {useConfigItemActions} from "#/components/share/itemActions/useConfigItemActions.tsx";
 import RuneItemRenderer from "#/components/rune/RuneItemRenderer.vue";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 import ConfigMetadataEditor from "#/components/share/ConfigMetadataEditor.vue";

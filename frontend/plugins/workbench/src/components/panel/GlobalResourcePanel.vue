@@ -14,17 +14,12 @@
               </template>
               导入
             </n-button>
-            <InlineInputPopover
-                :action="createNewAction"
-                @confirm="handleCreateNew"
-            >
-              <n-button secondary size="small" type="primary">
-                <template #icon>
-                  <n-icon :component="AddIcon"/>
-                </template>
-                新建
-              </n-button>
-            </InlineInputPopover>
+            <n-button ref="createButtonRef" secondary size="small" type="primary" @click="handleCreateNew">
+              <template #icon>
+                <n-icon :component="AddIcon"/>
+              </template>
+              新建
+            </n-button>
           </n-flex>
         </n-flex>
 
@@ -187,9 +182,7 @@ import type {AnyConfigObject, ConfigType, GlobalResourceItem} from "@yaesandbox-
 import {VueDraggable as draggable} from "vue-draggable-plus";
 import GlobalResourceListItem from './GlobalResourceListItem.vue';
 import HeaderAndBodyLayout from "#/layouts/HeaderAndBodyLayout.vue";
-import {createBlankConfig} from "#/utils/createBlankConfig.ts";
-import InlineInputPopover from "#/components/share/InlineInputPopover.vue";
-import type {EnhancedAction} from "#/composables/useConfigItemActions.ts";
+import {useGlobalConfigCreationAction} from "#/components/share/itemActions/useConfigItemActions.tsx";
 import {AddIcon, EditIcon, TrashIcon, UploadIcon} from "@yaesandbox-frontend/shared-ui/icons";
 import {useEditorControlPayload} from "#/services/editor-context/useSelectedConfig.ts";
 import {useFilteredGlobalResources} from "#/composables/useFilteredGlobalResources.ts";
@@ -356,73 +349,16 @@ const currentTabLabel = computed(() =>
   }
 });
 
-const {runeTypeOptions, runeDefaultNameGenerator} = useRuneTypeSelector();
+const {createNewAction} = useGlobalConfigCreationAction(activeTab, currentTabLabel, emit);
 
-/**
- * :content-type="activeTab === 'rune' ? 'select-and-input' : 'input'"
- *             :default-name-generator="runeDefaultNameGenerator"
- *             :initial-value="`新建${currentTabLabel}`"
- *             :input-placeholder="`请输入新的${currentTabLabel}名称`"
- *             :select-options="runeTypeOptions"
- *             :select-placeholder="'请选择符文类型'"
- *             :title="`新建全局${currentTabLabel}`"
- */
-const createNewAction = computed<EnhancedAction>(() =>
-    ({
-      key: 'create-new-global',
-      icon: AddIcon,
-      label: '新建全局配置',
-      renderType: 'button',
-      disabled: false,
-      popoverContentType: activeTab.value === 'rune' ? 'select-and-input' : 'input',
-      popoverDefaultNameGenerator: runeDefaultNameGenerator,
-      popoverInitialValue: `新建${currentTabLabel.value}`,
-      popoverInputPlaceholder: `请输入新的${currentTabLabel.value}名称`,
-      popoverSelectOptions: runeTypeOptions.value,
-      popoverSelectPlaceholder: '请选择符文类型',
-      popoverTitle: `新建全局${currentTabLabel.value}`,
-      onConfirm: handleCreateNew
-    })
-)
+const createButtonRef = ref<InstanceType<typeof NButton> | null>(null);
 
-/**
- * 处理 InlineInputPopover 确认事件
- */
-async function handleCreateNew(payload: { name?: string, type?: string })
+const handleCreateNew = () =>
 {
-  const name = payload.name;
-  if (!name)
-  {
-    message.error('请输入有效的名称');
-    return;
-  }
-  const resourceType = activeTab.value;
-  const runeType = payload.type;
+  const triggerElement = createButtonRef.value?.$el as HTMLElement;
 
-  if (resourceType === 'rune' && !runeType)
-  {
-    message.error('创建符文时必须选择符文类型');
-    return;
-  }
-
-  try
-  {
-    const blankConfig =
-        resourceType === 'rune'
-            ? await createBlankConfig('rune', name, {runeType: runeType!})
-            : resourceType === 'workflow'
-                ? await createBlankConfig('workflow', name)
-                : await createBlankConfig('tuum', name);
-
-    const newSession = workbenchStore.createNewDraftSession(resourceType, blankConfig);
-    emit('start-editing', {type: newSession.type, storeId: newSession.storeId});
-
-    message.success(`成功创建全局${currentTabLabel.value}“${name}”！`);
-  } catch (e)
-  {
-    message.error(`创建失败: ${(e as Error).message}`);
-  }
-}
+  createNewAction.value.activate(triggerElement);
+};
 
 
 /**
