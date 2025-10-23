@@ -47,7 +47,7 @@ const patterns: ObfuscationPattern[] = [
  * 渲染一个包含安全建议的 VNode 列表。
  * @returns {VNode}
  */
-const renderSuggestions = () => (
+const Suggestions = (): VNode => (
     <div style={{marginTop: '16px'}}>
         <p style={{fontWeight: 'bold'}}>如果您不确定代码的安全性，可以尝试以下操作：</p>
         <ul style={{paddingLeft: '20px', marginTop: '8px', marginBottom: 0}}>

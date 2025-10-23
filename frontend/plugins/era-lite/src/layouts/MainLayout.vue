@@ -40,59 +40,73 @@
 
 <script lang="tsx" setup>
 import {RouterLink, useRoute} from 'vue-router';
-import {NIcon, NLayout, NLayoutSider, NMenu, useThemeVars} from 'naive-ui';
+import {type MenuOption, NIcon, NLayout, NLayoutSider, NMenu, useThemeVars} from 'naive-ui';
 import {BagIcon, ChatIcon, EarthIcon, HomeIcon, PeopleIcon, StorefrontIcon} from '#/utils/icon.ts';
 import {GameControllerIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
+import type {Component} from "vue";
 
 const collapsed = useScopedStorage('mainLayout:collapsed', false);
 
 const route = useRoute();
 
-const menuOptions = [
+interface NavLink
+{
+  label: string;
+  key: string; // key 和 route name 我们约定为同一个值
+  icon: Component;
+}
+
+const navLinks: NavLink[] = [
   {
-    label: () => (
-        <RouterLink to={{name: 'Era_Lite_Home'}}>主菜单</RouterLink>
-    ),
+    label: '主菜单',
     key: 'Era_Lite_Home',
-    icon: <NIcon component={HomeIcon}/>,
+    icon: HomeIcon
   },
   {
-    label: () => (
-        <RouterLink to={{name: 'Era_Lite_Chat_List'}}>对话记录</RouterLink>
-    ),
+    label: '对话记录',
     key: 'Era_Lite_Chat_List',
-    icon: <NIcon component={ChatIcon}/>,
+    icon: ChatIcon
   },
   {
-    label: () => (
-        <RouterLink to={{name: 'Era_Lite_Characters'}}>角色列表</RouterLink>
-    ),
+    label: '角色列表',
     key: 'Era_Lite_Characters',
-    icon: <NIcon component={PeopleIcon}/>,
+    icon: PeopleIcon
   },
   {
-    label: () => (
-        <RouterLink to={{name: 'Era_Lite_Scenes'}}>场景列表</RouterLink>
-    ),
+    label: '场景列表',
     key: 'Era_Lite_Scenes',
-    icon: <NIcon component={EarthIcon}/>,
+    icon: EarthIcon
   },
   {
-    label: () => (
-        <RouterLink to={{name: 'Era_Lite_Shop'}}>道具商店</RouterLink>
-    ),
+    label: '道具商店',
     key: 'Era_Lite_Shop',
-    icon: <NIcon component={StorefrontIcon}/>,
+    icon: StorefrontIcon
   },
   {
-    label: () => (
-        <RouterLink to={{name: 'Era_Lite_Backpack'}}>我的背包</RouterLink>
-    ),
+    label: '我的背包',
     key: 'Era_Lite_Backpack',
-    icon: <NIcon component={BagIcon}/>,
+    icon: BagIcon
   },
 ];
+
+function processNavLinksToMenuOptions(links: NavLink[]): MenuOption[]
+{
+  return links.map(link =>
+  {
+    return {
+      key: link.key,
+      label: () => (
+          <RouterLink to={{name: link.key}}>{link.label}</RouterLink>
+      ),
+      icon: () => (
+          <NIcon component={link.icon}/>
+      ),
+    };
+  });
+}
+
+const menuOptions = processNavLinksToMenuOptions(navLinks);
 
 defineOptions({
   name: 'era-lite:MainLayout',
