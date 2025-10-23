@@ -1,23 +1,23 @@
 ﻿<template>
-  <n-scrollbar class="chat-history-area" :scrollbar-inst-ref="scrollbarInstRef">
+  <n-scrollbar :scrollbar-inst-ref="scrollbarInstRef" class="chat-history-area">
     <div class="message-list">
       <div v-if="history.length === 0" class="empty-chat">
-        <n-empty description="还没有消息，开始对话吧！" />
+        <n-empty description="还没有消息，开始对话吧！"/>
       </div>
       <!-- 1. 修改v-for，直接遍历 props.history -->
       <div
           v-for="message in history"
           :key="message.id"
-          class="message-wrapper"
           :class="`role-${message.role.toLowerCase()}`"
+          class="message-wrapper"
       >
         <!-- 2. 添加头像 -->
         <n-avatar
-            round
             :style="{
               backgroundColor: message.role === 'User' ? '#A0E9A9' : '#ffffff',
               color: message.role === 'User' ? '#333' : '#007AFF'
             }"
+            round
         >
           {{ message.role === 'User' ? 'U' : 'A' }}
         </n-avatar>
@@ -33,10 +33,9 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watch, nextTick } from 'vue';
-import type { ScrollbarInst } from 'naive-ui';
-import { NScrollbar, NEmpty, NAvatar } from 'naive-ui';
-import type { ChatMessage } from '../types';
+import {nextTick, ref, watch} from 'vue';
+import {NAvatar, NEmpty, NScrollbar, type ScrollbarInst, useThemeVars} from 'naive-ui';
+import type {ChatMessage} from '../types';
 
 const props = defineProps<{
   history: ChatMessage[];
@@ -49,30 +48,34 @@ const scrollbarInstRef = ref<ScrollbarInst | null>(null);
 // 代码现在直接使用 `props.history` 进行渲染，变得更加简洁和高效。
 
 // 监视历史记录的变化，自动滚动到底部
-watch(() => props.history.length, async () => {
+watch(() => props.history.length, async () =>
+    {
       await nextTick();
       const scrollbarInstance = scrollbarInstRef.value;
-      if (scrollbarInstance) {
-        scrollbarInstance.scrollTo({ top: 999999, behavior: 'smooth' });
+      if (scrollbarInstance)
+      {
+        scrollbarInstance.scrollTo({top: 999999, behavior: 'smooth'});
       }
     },
-    { flush: 'post' }
+    {flush: 'post'}
 );
+const themeVars = useThemeVars();
 </script>
 
 <style scoped>
 .chat-history-area {
   flex-grow: 1;
   padding: 16px;
-  background-color: #f7f7f7;
+  background-color: v-bind('themeVars.cardColor');
 }
+
 .message-list {
   display: flex;
   flex-direction: column;
   gap: 20px; /* 增加消息间的垂直间距 */
 }
 
-/* --- 新增：消息行容器 --- */
+/* --- 消息行容器 --- */
 .message-wrapper {
   display: flex;
   align-items: flex-start; /* 头像和气泡顶部对齐 */
@@ -83,8 +86,9 @@ watch(() => props.history.length, async () => {
 .message-bubble {
   padding: 10px 14px;
   border-radius: 18px; /* 更圆润的边角 */
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  box-shadow: v-bind('themeVars.boxShadow1');
 }
+
 .message-bubble p {
   margin: 0;
   white-space: pre-wrap;
@@ -98,9 +102,10 @@ watch(() => props.history.length, async () => {
   /* 头像在右，气泡在左 */
   flex-direction: row-reverse;
 }
+
 .role-user .message-bubble {
-  background-color: #A0E9A9;
-  color: #000;
+  background-color: v-bind('themeVars.primaryColor');
+  color: v-bind('themeVars.cardColor');
   /* 小技巧：调整一个角的弧度，模拟微信气泡的尾巴 */
   border-top-right-radius: 5px;
 }
@@ -109,9 +114,10 @@ watch(() => props.history.length, async () => {
 .role-assistant {
   align-self: flex-start;
 }
+
 .role-assistant .message-bubble {
-  color: #333;
-  border: 1px solid #e8e8e8;
+  color: v-bind('themeVars.textColor1');
+  border: 1px solid v-bind('themeVars.borderColor');
   /* 小技巧：调整一个角的弧度，模拟微信气泡的尾巴 */
   border-top-left-radius: 5px;
 }

@@ -34,7 +34,7 @@
 
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
-import {NButton, NFlex, NInput, NSwitch} from 'naive-ui';
+import {NButton, NFlex, NInput, NSwitch, useThemeVars} from 'naive-ui';
 
 const props = defineProps<{
   loading: boolean;
@@ -90,6 +90,12 @@ function handleKeyDown(event: KeyboardEvent)
   // 在其他情况下 (例如：需要用Enter换行时)，我们不执行任何操作，
   // 让浏览器执行默认的换行行为。
 }
+
+defineExpose({
+  getCurrentInput: () => userInput.value,
+  triggerSend: sendMessage
+});
+const themeVars = useThemeVars();
 </script>
 
 <style scoped>
@@ -98,7 +104,7 @@ function handleKeyDown(event: KeyboardEvent)
   flex-direction: column; /* 垂直布局，设置在上方 */
   gap: 8px;
   padding: 12px 16px;
-  border-top: 1px solid #e8e8e8;
+  border-top: 1px solid v-bind('themeVars.borderColor');
 }
 
 .input-area {
