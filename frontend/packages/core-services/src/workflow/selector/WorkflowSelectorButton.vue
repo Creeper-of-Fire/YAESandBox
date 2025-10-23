@@ -78,121 +78,15 @@
         @clickoutside="showDropdown = false"
         @select="handleDropdownSelect"
     />
-
-    <!-- 工作流选择模态框 -->
-    <n-modal
-        v-model:show="isModalVisible"
-        preset="card"
-        style="width: 600px"
-        title="选择一个工作流"
-    >
-      <!-- 场景需求提示 -->
-      <n-alert v-if="filter.expectedInputs?.length || filter.requiredTags?.length" style="margin-bottom: 1rem;" title="场景需求" type="info">
-        <n-space vertical>
-          <div v-if="filter.expectedInputs?.length">
-            此任务期望生成器能处理以下输入：
-            <n-space :style="{ marginTop: '8px' }">
-              <n-tag round v-for="input in filter.expectedInputs" :key="input" type="success">{{ input }}</n-tag>
-            </n-space>
-          </div>
-          <div v-if="filter.requiredTags?.length">
-            并期望生成器包含以下标签：
-            <n-space :style="{ marginTop: '8px' }">
-              <n-tag v-for="tag in filter.requiredTags" :key="tag" type="info">{{ tag }}</n-tag>
-            </n-space>
-          </div>
-        </n-space>
-      </n-alert>
-
-      <!-- 配置区域 -->
-      <n-card size="small" style="margin-bottom: 1rem;">
-        <n-flex justify="space-around">
-          <!-- 输入匹配模式配置 -->
-          <n-flex :size="8" vertical>
-            <n-text strong>输入参数匹配</n-text>
-            <n-radio-group v-model:value="inputMatchingMode" name="input-mode">
-              <n-popover trigger="hover">
-                <template #trigger>
-                  <n-radio value="strict">严格</n-radio>
-                </template>
-                必须完美匹配所有输入，不多不少。
-              </n-popover>
-              <n-popover trigger="hover">
-                <template #trigger>
-                  <n-radio value="normal">普通</n-radio>
-                </template>
-                可以接受场景提供的额外输入（被忽略）。
-              </n-popover>
-              <n-popover trigger="hover">
-                <template #trigger>
-                  <n-radio value="relaxed">宽松</n-radio>
-                </template>
-                允许工作流缺少部分输入。
-              </n-popover>
-            </n-radio-group>
-          </n-flex>
-
-          <n-divider vertical/>
-
-          <!-- 标签匹配模式配置 -->
-          <n-flex :size="8" vertical>
-            <n-text strong>标签匹配</n-text>
-            <n-radio-group v-model:value="tagMatchingMode" name="tag-mode">
-              <n-popover trigger="hover">
-                <template #trigger>
-                  <n-radio value="need">必须</n-radio>
-                </template>
-                工作流必须包含所有场景需求的标签。
-              </n-popover>
-              <n-popover trigger="hover">
-                <template #trigger>
-                  <n-radio value="prefer">偏好</n-radio>
-                </template>
-                仅将标签作为排序依据，不强制要求。
-              </n-popover>
-            </n-radio-group>
-          </n-flex>
-        </n-flex>
-      </n-card>
-
-      <n-list bordered clickable hoverable>
-        <n-list-item v-for="workflow in filteredAndSortedWorkflows" :key="workflow.id"
-                     @click="selectWorkflow(workflow.id)">
-          <n-thing :title="workflow.resource.name">
-            <template #description>
-              <n-space align="center" size="small" wrap>
-                <!-- 渲染输入参数 -->
-                <n-tag v-for="(status, name) in workflow.matchDetails.inputs" :key="name" :type="getInputTagType(status)" round
-                       size="small">
-                  {{ name }}
-                </n-tag>
-                <!-- 渲染标签 -->
-                <n-tag v-for="(status, name) in workflow.matchDetails.tags" :key="name" :type="getTagTagType(status)"
-                        size="small">
-                  {{ name }}
-                </n-tag>
-              </n-space>
-            </template>
-          </n-thing>
-        </n-list-item>
-        <n-empty v-if="!filteredAndSortedWorkflows.length" description="在当前模式下没有找到匹配的工作流" style="padding: 2rem;"/>
-      </n-list>
-    </n-modal>
   </div>
 </template>
 
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
-import {NButton, NDropdown, NList, NListItem, NModal, NPopover, NSpace, NSpin, NTag, NThing} from 'naive-ui';
-import {
-  type InputMatchingMode,
-  type MatchingOptions,
-  type TagMatchingMode,
-  useFilteredWorkflowSelector,
-  useScopedStorage,
-  type WorkflowFilter
-} from '../../composables.ts';
+import {NButton, NDropdown, NPopover, NSpace, NSpin, NTag, NThing} from 'naive-ui';
+import {type MatchingOptions, type WorkflowFilter} from '../../composables.ts';
 import type {WorkflowConfig} from "../../types";
+import {useFilteredWorkflowSelectorModal} from "./useFilteredWorkflowSelectorModal.tsx";
 
 // 定义 Props & Emits
 const props = defineProps<{
@@ -206,60 +100,23 @@ const emit = defineEmits<{
   (e: 'click', config: WorkflowConfig): void
 }>();
 
-const inputMatchingMode = useScopedStorage<InputMatchingMode>(`${props.storageKey}-input-matching-mode`, props.initialOptions?.inputs || 'normal');
-const tagMatchingMode = useScopedStorage<TagMatchingMode>(`${props.storageKey}-tag-mathing-mode`, props.initialOptions?.tags || 'prefer');
-
-const matchingOptions = computed<MatchingOptions>(() => ({
-  inputs: inputMatchingMode.value,
-  tags: tagMatchingMode.value,
-}));
-
 // --- 核心逻辑 ---
 const filterRef = ref(props.filter);
 
-// 1. 复用 useWorkflowSelector 来处理状态和持久化
+// 复用 useWorkflowSelector 来处理状态和持久化
 const {
-  isModalVisible,
   selectedWorkflowConfig,
   isProviderLoading,
-  openSelectorModal,
-  selectWorkflow,
   clearSelection,
-  filteredAndSortedWorkflows,
-} = useFilteredWorkflowSelector(props.storageKey, filterRef, matchingOptions);
-
-function getInputTagType(status: 'matched' | 'unprovided' | 'unconsumed'): 'success' | 'error' | 'default'
-{
-  switch (status)
-  {
-    case 'matched':
-      return 'success'; // 匹配的输入，绿色
-    case 'unprovided':
-      return 'error';   // 缺失的输入，红色（致命）
-    case 'unconsumed':
-      return 'default'; // 未使用的输入，灰色（中性）
-  }
-}
-
-function getTagTagType(status: 'matched' | 'missing' | 'extra'): 'info' | 'warning' | 'default'
-{
-  switch (status)
-  {
-    case 'matched':
-      return 'info';    // 匹配的标签，蓝色
-    case 'missing':
-      return 'warning'; // 缺少的必需标签，橙色
-    case 'extra':
-      return 'default'; // 工作流自带的额外标签，灰色
-  }
-}
+  openSelectorModal,
+} = useFilteredWorkflowSelectorModal(props.storageKey, filterRef, props.initialOptions);
 
 defineExpose({
   selectedWorkflowConfig: selectedWorkflowConfig
 })
 
-// 2. 主按钮点击逻辑
-function handleClick()
+// 主按钮点击逻辑
+async function handleClick()
 {
   if (selectedWorkflowConfig.value)
   {
@@ -268,8 +125,7 @@ function handleClick()
   }
   else
   {
-    // 如果未配置，就打开选择模态框，引导用户配置
-    openSelectorModal();
+    await openSelectorModal();
   }
 }
 

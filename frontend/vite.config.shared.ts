@@ -1,5 +1,6 @@
 import {type BuildOptions, mergeConfig, type PluginOption, type UserConfig} from 'vite';
 import vue from '@vitejs/plugin-vue';
+import vueJsx from '@vitejs/plugin-vue-jsx';
 import path from 'path';
 import AutoImport from 'unplugin-auto-import/vite';
 import {NaiveUiResolver} from 'unplugin-vue-components/resolvers';
@@ -35,6 +36,7 @@ export function createMonorepoViteConfig(options: MonorepoViteConfigOptions): Us
     const baseConfig: UserConfig = {
         plugins: [
             vue(),
+            vueJsx(),
             VitePluginVueDevTools(),
             Components({
                 resolvers: [

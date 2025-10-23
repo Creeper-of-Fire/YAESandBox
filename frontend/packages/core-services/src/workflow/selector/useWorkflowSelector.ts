@@ -22,10 +22,7 @@ export function useWorkflowSelector(storageKey: string)
     // 这个 ID 会在同一作用域下的不同组件实例间共享（如果它们使用相同的 storageKey）
     const selectedWorkflowId = useScopedStorage<string | null>(storageKey, null, localStorage, 'WorkflowSelector');
 
-    // 3. 控制模态框的显示状态 (这是 UI 状态，由 Composable 管理)
-    const isModalVisible = ref(false);
-
-    // 4. 组件挂载时确保工作流列表已加载
+    // 3. 组件挂载时确保工作流列表已加载
     onMounted(async () =>
     {
         if (workflowProvider && !workflowProvider.isReady.value)
@@ -34,7 +31,7 @@ export function useWorkflowSelector(storageKey: string)
         }
     });
 
-    // 5. 计算属性：从全局提供者中筛选出所有可用的工作流
+    // 4. 计算属性：从全局提供者中筛选出所有可用的工作流
     const availableWorkflows = computed<MappedWorkflow[]>(() =>
     {
         if (!workflowProvider || !workflowProvider.isReady.value)
@@ -52,7 +49,7 @@ export function useWorkflowSelector(storageKey: string)
         }).filter((item): item is MappedWorkflow => item !== null);
     });
 
-    // 6. 计算属性：根据存储的 ID，查找并返回完整的工作流配置对象
+    // 5. 计算属性：根据存储的 ID，查找并返回完整的工作流配置对象
     const selectedWorkflowConfig = computed<WorkflowConfig | undefined>(() =>
     {
         if (!selectedWorkflowId.value || !workflowProvider)
@@ -64,21 +61,10 @@ export function useWorkflowSelector(storageKey: string)
         return workflowConfig.data;
     });
 
-    // 7. 操作函数
-    function openSelectorModal()
-    {
-        isModalVisible.value = true;
-    }
-
-    function closeSelectorModal()
-    {
-        isModalVisible.value = false;
-    }
-
+    // 6. 操作函数
     function selectWorkflow(id: string)
     {
         selectedWorkflowId.value = id;
-        closeSelectorModal();
     }
 
     function clearSelection()
@@ -88,7 +74,6 @@ export function useWorkflowSelector(storageKey: string)
 
     return {
         // 状态 & 数据
-        isModalVisible,
         selectedWorkflowId,
         availableWorkflows,
         selectedWorkflowConfig,
@@ -97,7 +82,6 @@ export function useWorkflowSelector(storageKey: string)
         isProviderLoading: computed(() => workflowProvider?.isLoading.value ?? false),
 
         // 方法
-        openSelectorModal,
         selectWorkflow,
         clearSelection,
     };
