@@ -20,7 +20,7 @@
             <!-- 插件名称，直接取自项目程序集名称 -->
             <PluginName>$(AssemblyName)</PluginName>
             <!-- 插件的目标部署目录，通过相对路径计算得出 -->
-            <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))../../build/Plugins/$(PluginName)</PluginDestination>
+            <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)/../build/Plugins/$(PluginName)'))</PluginDestination>
         </PropertyGroup>
 
         <!-- 输出日志，方便调试 -->
@@ -71,7 +71,7 @@
           '-> '...'' 是 Item Transformation 语法，为每一项添加前缀和换行。
         -->
         <Message Text="[COPY PLUGIN] 自定义内容列表:%0A%0D    @(PluginCustomContent->'- %(Identity)','%0A%0D    ')"
-                 Importance="normal"
+                 Importance="high"
                  Condition="'$(HasCustomContent)' == 'true'"/>
         <Copy
                 SourceFiles="@(PluginCustomContent)"

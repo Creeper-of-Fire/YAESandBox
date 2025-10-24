@@ -1,11 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <EnablePluginAutoCopy>true</EnablePluginAutoCopy>
+    </PropertyGroup>
+
     <ItemGroup>
         <EmbeddedResource Include="LuaRunner\json.lua"/>
     </ItemGroup>
 
     <ItemGroup>
         <PackageReference Include="KeraLua" Version="1.4.7"/>
-        <PackageReference Include="NLua" Version="1.7.6" />
+        <PackageReference Include="NLua" Version="1.7.6"/>
         <PackageReference Include="YamlDotNet" Version="16.3.0"/>
     </ItemGroup>
 

@@ -1,4 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <EnablePluginAutoCopy>true</EnablePluginAutoCopy>
+    </PropertyGroup>
+    
     <ItemGroup>
         <Folder Include="InnerConfigs\Runes\"/>
         <Folder Include="InnerConfigs\Tuums\"/>

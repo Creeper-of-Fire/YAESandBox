@@ -1,4 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+    <PropertyGroup>
+        <EnablePluginAutoCopy>true</EnablePluginAutoCopy>
+    </PropertyGroup>
+
     <ItemGroup>
         <ProjectReference Include="..\..\backend\YAESandBox.Depend.Results\YAESandBox.Depend.Results.csproj"/>
         <ProjectReference Include="..\..\backend\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
