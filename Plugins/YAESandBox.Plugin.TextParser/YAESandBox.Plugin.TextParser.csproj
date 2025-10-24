@@ -2,6 +2,7 @@
     <ItemGroup>
         <ProjectReference Include="..\..\backend\YAESandBox.Depend.Results\YAESandBox.Depend.Results.csproj"/>
         <ProjectReference Include="..\..\backend\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
+        <ProjectReference Include="..\..\backend\YAESandBox.ModuleSystem.AspNet\YAESandBox.ModuleSystem.AspNet.csproj" />
         <ProjectReference Include="..\..\backend\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
 

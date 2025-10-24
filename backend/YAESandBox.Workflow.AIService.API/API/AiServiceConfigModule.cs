@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.ModuleSystem.AspNet;
+using YAESandBox.ModuleSystem.AspNet.Interface;
 using YAESandBox.Workflow.AIService.API.API.Controller;
 using YAESandBox.Workflow.AIService.ConfigManagement;
 

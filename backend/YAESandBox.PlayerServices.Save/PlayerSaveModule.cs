@@ -3,6 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.ModuleSystem.AspNet;
+using YAESandBox.ModuleSystem.AspNet.Interface;
 using YAESandBox.PlayerServices.Save.SaveData;
 using YAESandBox.PlayerServices.Save.SaveSlot;
 

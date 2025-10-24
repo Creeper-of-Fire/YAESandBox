@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
     
     <ItemGroup>
+      <ProjectReference Include="..\YAESandBox.Authentication.API\YAESandBox.Authentication.API.csproj" />
       <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj" />
       <ProjectReference Include="..\YAESandBox.Depend.Results\YAESandBox.Depend.Results.csproj" />
       <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />

@@ -8,6 +8,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.Authentication.Storage;
 using YAESandBox.ModuleSystem.AspNet;
+using YAESandBox.ModuleSystem.AspNet.Interface;
 
 // 使用你新的命名空间
 

@@ -1,11 +1,13 @@
 ﻿using Microsoft.Extensions.FileProviders;
 using YAESandBox.Depend.Logger;
 using YAESandBox.Depend.Services;
+using YAESandBox.ModuleSystem.Abstractions;
 using YAESandBox.ModuleSystem.AspNet;
+using YAESandBox.ModuleSystem.AspNet.Interface;
 
 namespace YAESandBox.AppWeb.InnerModule;
 
-internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProgramAtLastConfigurator
+internal class FrontendHostModule : IProgramModuleStaticAssetProvider, IProgramModuleAtLastConfigurator
 {
     private static IAppLogger Logger { get; } = AppLogging.CreateLogger<FrontendHostModule>();
 
@@ -21,7 +23,7 @@ internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProg
 
         // 1. 克隆我们全局配置好的 DefaultStaticFileOptions，它包含了正确的缓存策略。
         var fallbackOptions = StaticAssetModuleExtensions.DefaultStaticFileOptions.Clone();
-        
+
         // 2. 为这个克隆实例设置特定的 FileProvider。
         fallbackOptions.FileProvider = new PhysicalFileProvider(frontendAbsolutePath);
 
@@ -30,16 +32,19 @@ internal class FrontendHostModule : IProgramModuleStaticAssetConfigurator, IProg
     }
 
     /// <inheritdoc />
-    public void ConfigureStaticAssets(IApplicationBuilder app, IWebHostEnvironment environment)
+    /// <remarks>
+    /// 提供前端资源的静态文件服务。
+    /// </remarks>
+    public IEnumerable<StaticAssetDefinition> GetStaticAssetDefinitions(IServiceProvider serviceProvider)
     {
-        string? frontendAbsolutePath = GetFrontendAbsolutePath(app.ApplicationServices);
+        string? frontendAbsolutePath = GetFrontendAbsolutePath(serviceProvider);
 
-        if (frontendAbsolutePath == null) return;
+        if (frontendAbsolutePath == null) yield break;
 
-        app.UseStaticFiles(StaticAssetModuleExtensions.DefaultStaticFileOptions.CloneAndReBond(
-            fileProvider: new PhysicalFileProvider(frontendAbsolutePath),
-            requestPath:""
-        ));
+        yield return new PhysicalPathStaticAsset(frontendAbsolutePath)
+        {
+            RequestPath = "" // 挂载到根目录
+        };
     }
 
     /// <summary>

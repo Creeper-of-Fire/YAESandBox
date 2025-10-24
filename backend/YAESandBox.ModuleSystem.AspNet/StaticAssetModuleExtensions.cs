@@ -25,7 +25,7 @@ public static class StaticAssetModuleExtensions
         // 为所有未知文件类型设置默认的 Content-Type
         // 'text/plain' 是一个安全且通用的选择
         DefaultContentType = "text/plain",
-        
+
         // 添加 OnPrepareResponse 回调来动态设置缓存头
         OnPrepareResponse = ctx =>
         {
@@ -88,33 +88,68 @@ public static class StaticAssetModuleExtensions
     }
 
     /// <summary>
-    /// 为实现了 IProgramModule 的模块挂载其内嵌的 "wwwroot" 目录作为静态文件服务。
-    /// 这是为插件和模块提供前端资源的标准、便捷方式。
+    /// 为实现了 IProgramModuleStaticAssetProvider 的模块配置静态文件服务。
     /// </summary>
-    /// <param name="app">应用程序构建器。</param>
-    /// <param name="module">要挂载资源的模块实例。</param>
-    /// <param name="requestPathOverwrite">前端访问此资源的 URL 路径。如果为 null，则默认为 "/plugins/{ModuleName}"。</param>
-    public static void UseModuleWwwRoot(this IApplicationBuilder app, IProgramModule module, string? requestPathOverwrite = null)
+    public static void ConfigureStaticAssets(this IProgramModuleStaticAssetProvider provider, IApplicationBuilder app)
     {
-        var moduleType = module.GetType();
-        var assembly = moduleType.Assembly;
-        string? assemblyPath = Path.GetDirectoryName(assembly.Location);
+        // 1. 从 IApplicationBuilder 中获取 IServiceProvider
+        var services = app.ApplicationServices;
 
-        if (string.IsNullOrEmpty(assemblyPath)) return;
+        // 2. 调用模块的框架无关方法，传入 IServiceProvider
+        var assetDefinitions = provider.GetStaticAssetDefinitions(services);
 
-        string wwwRootPath = Path.Combine(assemblyPath, "wwwroot");
+        // 3. 在这个 AspNetCore 感知的方法中，处理所有具体的中间件注册逻辑
+        foreach (var asset in assetDefinitions)
+        {
+            IFileProvider? fileProvider = null;
+            string? physicalPathLog = null;
 
-        if (!Directory.Exists(wwwRootPath)) return;
+            switch (asset)
+            {
+                case AssemblyRelativeStaticAsset assemblyAsset:
+                    var assembly = provider.GetType().Assembly;
+                    string? assemblyPath = Path.GetDirectoryName(assembly.Location);
+                    if (string.IsNullOrEmpty(assemblyPath))
+                    {
+                        Logger.Warn("无法获取模块 [{ModuleName}] 的程序集路径，已跳过。", provider.GetType().Name);
+                        continue;
+                    }
 
-        // 如果未提供请求路径，则根据模块名称自动生成一个
-        // 空字串表示根目录，依旧是有效的，所以我们这里只判断 null，不判断是否是空字符串
-        string requestPath = requestPathOverwrite ?? module.ToRequestPath();
+                    string physicalContentPath = Path.Combine(assemblyPath, assemblyAsset.ContentRootSubpath);
+                    if (Directory.Exists(physicalContentPath))
+                    {
+                        fileProvider = new PhysicalFileProvider(physicalContentPath);
+                        physicalPathLog = physicalContentPath;
+                    }
 
-        app.UseStaticFiles(DefaultStaticFileOptions.CloneAndReBond(
-            fileProvider: new PhysicalFileProvider(wwwRootPath),
-            requestPath: requestPath)
-        );
-        Logger.Info("[{ModuleTypeName}] 已通过 UseModuleWwwRoot 挂载 wwwroot: {WwwRootPath} -> '{RequestPath}'",
-            moduleType.Name, wwwRootPath, requestPath);
+                    break;
+
+                case PhysicalPathStaticAsset physicalAsset:
+                    if (Directory.Exists(physicalAsset.AbsolutePath))
+                    {
+                        fileProvider = new PhysicalFileProvider(physicalAsset.AbsolutePath);
+                        physicalPathLog = physicalAsset.AbsolutePath;
+                    }
+
+                    break;
+
+                default:
+                    continue; // 跳过未知的定义类型
+            }
+
+            if (fileProvider == null)
+            {
+                Logger.Warn("模块 [{ModuleName}] 声明的静态资源路径不存在或无法解析，已跳过。定义: {@AssetDefinition}",
+                    provider.GetType().Name, asset);
+                return;
+            }
+
+            app.UseStaticFiles(DefaultStaticFileOptions.CloneAndReBond(
+                fileProvider: fileProvider,
+                requestPath: asset.RequestPath
+            ));
+            Logger.Info("模块 [{ModuleName}] 已挂载静态资源: {PhysicalPath} -> '{RequestPath}'",
+                provider.GetType().Name, physicalPathLog, asset.RequestPath);
+        }
     }
 }

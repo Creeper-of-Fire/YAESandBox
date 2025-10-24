@@ -1,15 +1,13 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
+using YAESandBox.ModuleSystem.Abstractions;
 using YAESandBox.ModuleSystem.Abstractions.PluginDiscovery;
-using YAESandBox.ModuleSystem.AspNet;
 using YAESandBox.Plugin.LuaScript.Rune;
 using YAESandBox.Workflow.Core.Service;
 
 namespace YAESandBox.Plugin.LuaScript;
 
 /// <inheritdoc cref="IYaeSandBoxPlugin"/>
-public class LuaPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IProgramModuleStaticAssetConfigurator
+public class LuaPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IProgramModuleStaticAssetProvider
 {
     /// <inheritdoc />
     public void RegisterServices(IServiceCollection service) { }
@@ -24,9 +22,12 @@ public class LuaPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IPro
     );
 
     /// <inheritdoc />
-    public void ConfigureStaticAssets(IApplicationBuilder app, IWebHostEnvironment environment)
+    public IEnumerable<StaticAssetDefinition> GetStaticAssetDefinitions(IServiceProvider serviceProvider)
     {
-        app.UseModuleWwwRoot(this); 
+        yield return new AssemblyRelativeStaticAsset("wwwroot")
+        {
+            RequestPath = this.ToRequestPath()
+        };
     }
 
     /// <inheritdoc />

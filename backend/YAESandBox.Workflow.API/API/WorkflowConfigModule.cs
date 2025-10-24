@@ -5,6 +5,7 @@ using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.ModuleSystem.Abstractions;
 using YAESandBox.ModuleSystem.AspNet;
+using YAESandBox.ModuleSystem.AspNet.Interface;
 using YAESandBox.Workflow.API.API.Controller;
 using YAESandBox.Workflow.Core.Config.RuneConfig;
 using YAESandBox.Workflow.Core.Runtime.WorkflowService;

@@ -35,7 +35,7 @@ internal static class ApplicationModules
     public static (IReadOnlyList<IProgramModule> Modules, IReadOnlyList<Assembly> PluginAssemblies)
         DiscoverAndLoadAllModules(IPluginDiscoveryService pluginDiscoveryService)
     {
-        // 2. 【新增】在第一次加载时，挂载我们的“救援”事件处理器
+        // 在第一次加载时，挂载我们的“救援”事件处理器
         if (!_isResolvingEventHooked)
         {
             AssemblyLoadContext.Default.Resolving += ResolvePluginDependency;

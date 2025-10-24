@@ -14,6 +14,7 @@ using YAESandBox.Depend.Storage;
 using YAESandBox.ModuleSystem.Abstractions;
 using YAESandBox.ModuleSystem.Abstractions.PluginDiscovery;
 using YAESandBox.ModuleSystem.AspNet;
+using YAESandBox.ModuleSystem.AspNet.Interface;
 using static YAESandBox.AppWeb.ProgramStatic;
 
 Console.OutputEncoding = Encoding.UTF8;
@@ -209,8 +210,8 @@ AppLogging.Initialize(loggerFactory);
 
 // 配置中间件
 // =================== 统一插件静态文件挂载 ===================
-allModules.ForEachModules<IProgramModuleStaticAssetConfigurator>(it =>
-    it.ConfigureStaticAssets(app, app.Environment));
+allModules.ForEachModules<IProgramModuleStaticAssetProvider>(it =>
+    it.ConfigureStaticAssets(app));
 // =========================================================
 
 allModules.ForEachModules<IProgramModuleAppConfigurator>(it => it.ConfigureApp(app));
@@ -257,7 +258,7 @@ allModules.ForEachModules<IProgramModuleHubRegistrar>(it => it.MapHubs(app));
 
 // --- 模块最后配置 ---
 var finalContext = new FinalConfigurationContext(app, app);
-allModules.ForEachModules<IProgramAtLastConfigurator>(it => it.ConfigureAtLast(finalContext));
+allModules.ForEachModules<IProgramModuleAtLastConfigurator>(it => it.ConfigureAtLast(finalContext));
 app.Run();
 
 namespace YAESandBox.AppWeb

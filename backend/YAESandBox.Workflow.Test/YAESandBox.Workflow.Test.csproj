@@ -1,6 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
+        <ProjectReference Include="..\YAESandBox.Authentication.API\YAESandBox.Authentication.API.csproj" />
+        <ProjectReference Include="..\YAESandBox.ModuleSystem.AspNet\YAESandBox.ModuleSystem.AspNet.csproj" />
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>

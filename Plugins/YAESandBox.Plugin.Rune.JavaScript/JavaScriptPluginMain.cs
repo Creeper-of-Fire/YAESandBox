@@ -1,15 +1,12 @@
-﻿using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.DependencyInjection;
+﻿using Microsoft.Extensions.DependencyInjection;
 using YAESandBox.ModuleSystem.Abstractions.PluginDiscovery;
-using YAESandBox.ModuleSystem.AspNet;
 using YAESandBox.Plugin.Rune.JavaScript.Rune;
 using YAESandBox.Workflow.Core.Service;
 
 namespace YAESandBox.Plugin.Rune.JavaScript;
 
 /// <inheritdoc cref="IYaeSandBoxPlugin"/>
-public class JavaScriptPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IProgramModuleStaticAssetConfigurator
+public class JavaScriptPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider
 {
     /// <inheritdoc />
     public void RegisterServices(IServiceCollection service) { }
@@ -22,12 +19,6 @@ public class JavaScriptPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvide
         Author: "Creeper_of_Fire",
         Description: "JavaScript 脚本插件，使用 Jint 引擎，提供通用的 JS 脚本符文和专用的字符串处理符文。"
     );
-
-    /// <inheritdoc />
-    public void ConfigureStaticAssets(IApplicationBuilder app, IWebHostEnvironment environment)
-    {
-        app.UseModuleWwwRoot(this); 
-    }
 
     /// <inheritdoc />
     public IReadOnlyList<Type> RuneConfigTypes =>

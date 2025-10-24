@@ -105,11 +105,11 @@ public static partial class TOMLHelper
     // 辅助函数：修复点分隔键
     private static string FixDottedKey(string dottedKey, Regex validBareKeyRegex)
     {
-        var parts = dottedKey.Split('.');
+        string[] parts = dottedKey.Split('.');
         var processedParts = new List<string>();
-        foreach (var part in parts)
+        foreach (string part in parts)
         {
-            var trimmedPart = part.Trim();
+            string trimmedPart = part.Trim();
             if (string.IsNullOrEmpty(trimmedPart)) continue;
 
             if (!validBareKeyRegex.IsMatch(trimmedPart) && !IsQuoted(trimmedPart))

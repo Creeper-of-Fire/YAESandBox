@@ -1,8 +1,10 @@
 ﻿using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.DependencyInjection;
+using YAESandBox.ModuleSystem.Abstractions;
 using YAESandBox.ModuleSystem.Abstractions.PluginDiscovery;
 using YAESandBox.ModuleSystem.AspNet;
+using YAESandBox.ModuleSystem.AspNet.Interface;
 using YAESandBox.Plugin.TextParser.Rune;
 using YAESandBox.Workflow.Core.Service;
 
@@ -12,7 +14,7 @@ namespace YAESandBox.Plugin.TextParser;
 /// 文本处理器插件，提供标签解析和正则生成等高级文本处理功能。
 /// </summary>
 public class TextParserPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvider, IProgramModuleMvcConfigurator,
-    IProgramModuleStaticAssetConfigurator
+    IProgramModuleStaticAssetProvider
 {
     /// <inheritdoc />
     public PluginMetadata Metadata { get; } = new(
@@ -30,9 +32,12 @@ public class TextParserPluginMain : IYaeSandBoxPlugin, IProgramModuleRuneProvide
     }
 
     /// <inheritdoc />
-    public void ConfigureStaticAssets(IApplicationBuilder app, IWebHostEnvironment environment)
+    public IEnumerable<StaticAssetDefinition> GetStaticAssetDefinitions(IServiceProvider serviceProvider)
     {
-        app.UseModuleWwwRoot(this);
+        yield return new AssemblyRelativeStaticAsset("wwwroot")
+        {
+            RequestPath = this.ToRequestPath()
+        };
     }
 
     /// <inheritdoc />
