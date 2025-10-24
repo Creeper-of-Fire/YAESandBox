@@ -7,19 +7,19 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService;
-using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config.RuneConfig;
-using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Runtime.Processor;
-using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
-using YAESandBox.Workflow.VarSpec;
+using YAESandBox.Workflow.Core.Config.RuneConfig;
+using YAESandBox.Workflow.Core.DebugDto;
+using YAESandBox.Workflow.Core.Runtime.Processor;
+using YAESandBox.Workflow.Core.Runtime.Processor.RuneProcessor;
+using YAESandBox.Workflow.Core.VarSpec;
+using YAESandBox.Workflow.Schema;
 
 namespace YAESandBox.Plugin.TextParser.Rune;
 
 /// <summary>
 /// “标签解析”符文的运行时处理器。
 /// </summary>
-public class TagParserRuneProcessor(TagParserRuneConfig config,ICreatingContext creatingContext)
+internal class TagParserRuneProcessor(TagParserRuneConfig config, ICreatingContext creatingContext)
     : NormalRuneProcessor<TagParserRuneConfig, TagParserRuneProcessor.TagParserRuneDebugDto>(config, creatingContext)
 {
     /// <summary>
@@ -205,14 +205,14 @@ public class TagParserRuneProcessor(TagParserRuneConfig config,ICreatingContext 
 /// “标签解析”符文的配置。
 /// 使用CSS选择器从HTML/XML文本中精确提取数据。
 /// </summary>
-[ClassLabel("标签解析",Icon = "🏷️")]
+[ClassLabel("标签解析", Icon = "🏷️")]
 [RenderWithVueComponent("TagParserEditor")]
 [Display(
     Name = "标签解析",
     Description = "使用CSS选择器从HTML/XML文本中精确提取数据。"
 )]
 [RuneCategory("文本处理")]
-public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
+internal record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
 {
     #region 配置项
 
@@ -304,7 +304,7 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
     }
 
     /// <inheritdoc />
-    protected override TagParserRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this,creatingContext);
+    protected override TagParserRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
 
     #endregion
 }
@@ -314,8 +314,23 @@ public record TagParserRuneConfig : AbstractRuneConfig<TagParserRuneProcessor>
 /// </summary>
 public enum MatchContentModeEnum
 {
+    /// <summary>
+    /// 文本内容
+    /// </summary>
     TextContent,
+
+    /// <summary>
+    /// 内部的HTML
+    /// </summary>
     InnerHtml,
+
+    /// <summary>
+    /// 完整的HTML
+    /// </summary>
     OuterHtml,
+
+    /// <summary>
+    /// 属性
+    /// </summary>
     Attribute
 }

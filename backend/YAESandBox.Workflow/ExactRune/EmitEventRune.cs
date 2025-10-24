@@ -4,12 +4,12 @@ using System.Text.Json;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Depend.Storage;
-using YAESandBox.Workflow.Config.RuneConfig;
-using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Runtime.Processor;
-using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
-using YAESandBox.Workflow.VarSpec;
-using YAESandBox.Workflow.WorkflowService.Abstractions;
+using YAESandBox.Workflow.Core.Config.RuneConfig;
+using YAESandBox.Workflow.Core.DebugDto;
+using YAESandBox.Workflow.Core.Runtime.Processor;
+using YAESandBox.Workflow.Core.Runtime.Processor.RuneProcessor;
+using YAESandBox.Workflow.Core.Runtime.WorkflowService.Abstractions;
+using YAESandBox.Workflow.Core.VarSpec;
 
 namespace YAESandBox.Workflow.ExactRune;
 

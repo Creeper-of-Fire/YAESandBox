@@ -7,14 +7,14 @@ using YAESandBox.Depend.ResultsExtend;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Workflow.AIService;
 using YAESandBox.Workflow.AIService.Shared;
-using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config.RuneConfig;
-using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Runtime.Processor;
-using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
-using YAESandBox.Workflow.VarSpec;
-using YAESandBox.Workflow.WorkflowService.Abstractions;
-using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
+using YAESandBox.Workflow.Core.Config.RuneConfig;
+using YAESandBox.Workflow.Core.DebugDto;
+using YAESandBox.Workflow.Core.Runtime.Processor;
+using YAESandBox.Workflow.Core.Runtime.Processor.RuneProcessor;
+using YAESandBox.Workflow.Core.Runtime.WorkflowService.Abstractions;
+using YAESandBox.Workflow.Core.VarSpec;
+using YAESandBox.Workflow.Schema;
+using static YAESandBox.Workflow.Core.Runtime.Processor.TuumProcessor;
 
 namespace YAESandBox.Workflow.ExactRune;
 

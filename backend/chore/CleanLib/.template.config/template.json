@@ -1,0 +1,13 @@
+{
+  "$schema": "http://json.schemastore.org/template",
+  "author": "Creeper_of_Fire",
+  "classifications": [ "Common", "Library" ],
+  "identity": "YAESB.CleanLib",
+  "name": "空项目",
+  "description": "一个没有设置任何东西的空项目，它直接从`Directory.Build.props`获取配置。",
+  "shortName": "cleanLib",
+  "tags": {
+    "language": "C#",
+    "type": "project"
+  }
+}

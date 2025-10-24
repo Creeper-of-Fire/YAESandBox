@@ -1,15 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <LangVersion>preview</LangVersion>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
-    </PropertyGroup>
-
     <ItemGroup>
-        <ProjectReference Include="..\..\backend\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj"/>
         <ProjectReference Include="..\..\backend\YAESandBox.Depend.Results\YAESandBox.Depend.Results.csproj"/>
         <ProjectReference Include="..\..\backend\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
         <ProjectReference Include="..\..\backend\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
@@ -19,51 +9,14 @@
         <PackageReference Include="AngleSharp" Version="1.3.0"/>
     </ItemGroup>
 
-    <!-- ⭐⭐⭐ 构建后自动复制到插件目录 ⭐⭐⭐ -->
-    <Target Name="CopyToPluginsFolder" AfterTargets="Build">
-
-        <!-- 1. 定义变量 -->
-        <PropertyGroup>
-            <PluginName>$(AssemblyName)</PluginName>
-            <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))../../build/Plugins/$(PluginName)</PluginDestination>
-        </PropertyGroup>
-
-        <Message Text="[COPY PLUGIN] 插件源输出目录 (OutputPath): $(OutputPath)" Importance="high"/>
-        <Message Text="[COPY PLUGIN] 插件目标部署目录 (PluginDestination): $(PluginDestination)" Importance="high"/>
-
-        <!-- &lt;!&ndash; 2. 先删除旧目录 &ndash;&gt; -->
-        <RemoveDir Directories="$(PluginDestination)" />
-        <MakeDir Directories="$(PluginDestination)"/>
-
-        <ItemGroup>
-            <!-- 复制插件自己的主文件 -->
-            <FilesToCopy Include="$(OutputPath)$(AssemblyName).dll"/>
-            <FilesToCopy Include="$(OutputPath)$(AssemblyName).pdb" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')"/>
-            <FilesToCopy Include="$(OutputPath)$(AssemblyName).deps.json"/>
-        </ItemGroup>
-        <ItemGroup Condition="'@(PackageReference)' != ''">
-            <!-- 
-              自动将 PackageReference 列表转换为文件路径
-                 - `%(PackageReference.Identity)`: 获取包名，例如 "AngleSharp"
-                 - `$(OutputPath)%(PackageReference.Identity).dll`: 拼接出在本地输出目录中的完整路径
-            -->
-            <!-- 仅当存在 PackageReference 时，才尝试复制 NuGet 包依赖。 -->
-            <FilesToCopy Include="$(OutputPath)%(PackageReference.Identity).dll"/>
-        </ItemGroup>
-
-        <!-- 执行复制 -->
-        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(PluginDestination)" SkipUnchangedFiles="true"/>
-
-        <!-- 5. 专门处理 wwwroot -->
-        <ItemGroup>
-            <WwwRootFiles Include="wwwroot\**\*.*"/>
-        </ItemGroup>
-        <Copy
-                SourceFiles="@(WwwRootFiles)"
-                DestinationFiles="@(WwwRootFiles -> '$(PluginDestination)\wwwroot\%(RecursiveDir)%(Filename)%(Extension)')"
-                SkipUnchangedFiles="true"
-        />
-
-        <Message Text="[COPY PLUGIN] 成功将插件 '$(PluginName)' 和其声明的 NuGet 包依赖复制到目标目录。" Importance="high"/>
-    </Target>
+    <ItemGroup>
+        <!-- 
+          声明此插件有一个自定义内容目录 `wwwroot` 需要复制。
+          - Include: 源文件路径，支持通配符。
+          - DestinationSubdirectory: 复制到目标插件目录下的哪个子目录。
+        -->
+        <PluginCustomContent Include="wwwroot\**\*.*">
+            <DestinationSubdirectory>wwwroot</DestinationSubdirectory>
+        </PluginCustomContent>
+    </ItemGroup>
 </Project>

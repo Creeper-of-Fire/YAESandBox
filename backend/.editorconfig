@@ -4062,3 +4062,9 @@ resharper_xaml_xaml_xamarin_forms_data_type_and_binding_context_type_mismatched_
 resharper_xaml_x_key_attribute_disallowed_highlighting = error
 resharper_xunit_xunit_test_with_console_output_highlighting = warning
 resharper_zero_index_from_end_highlighting = warning
+
+
+# 为所有 Controller 文件覆盖规则
+[**Controller.cs]
+# 禁用 CA2007 (ConfigureAwait) 规则
+dotnet_code_quality.CA2007.severity = none

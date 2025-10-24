@@ -1,5 +1,5 @@
 using Tomlyn.Model;
-using YAESandBox.Workflow.VarSpec;
+using YAESandBox.Workflow.Core.VarSpec;
 
 namespace YAESandBox.Workflow.ExactRune.Helpers;
 

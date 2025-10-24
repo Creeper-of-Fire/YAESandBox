@@ -3,6 +3,10 @@ using YAESandBox.Depend.Storage;
 
 namespace YAESandBox.Authentication;
 
+/// <summary>
+/// 用户服务，负责用户注册、验证、查找以及刷新令牌的管理。
+/// 数据持久化依赖于 <see cref="IGeneralJsonRootStorage"/>。
+/// </summary>
 public class UserService(IGeneralJsonRootStorage storage, IPasswordService passwordService)
 {
     private const string UserFileName = "users.json";
@@ -10,7 +14,10 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
     // 使用 SemaphoreSlim 来防止并发写入同一个用户文件时发生冲突
     private static SemaphoreSlim FileLock { get; } = new(1, 1);
 
-    // 内部方法，加载所有用户
+    /// <summary>
+    /// 内部方法，从存储中异步加载所有用户。
+    /// </summary>
+    /// <returns>返回包含用户字典（Key: UserId, Value: User对象）的结果。</returns>
     private async Task<Result<Dictionary<string, User>>> LoadUsersAsync()
     {
         var loadResult = await storage.LoadAllAsync<Dictionary<string, User>>(UserFileName);
@@ -19,7 +26,12 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
         return users ?? new Dictionary<string, User>();
     }
 
-    // 注册新用户
+    /// <summary>
+    /// 注册新用户。
+    /// </summary>
+    /// <param name="username">用户名。</param>
+    /// <param name="password">密码。</param>
+    /// <returns>成功时返回新创建的用户对象，失败时返回错误信息。</returns>
     public async Task<Result<User>> RegisterAsync(string username, string password)
     {
         await FileLock.WaitAsync();
@@ -54,7 +66,12 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
         }
     }
 
-    // 验证用户凭证并返回用户对象
+    /// <summary>
+    /// 验证用户凭证并返回用户对象（登录）。
+    /// </summary>
+    /// <param name="username">用户名。</param>
+    /// <param name="password">用户输入的密码。</param>
+    /// <returns>验证成功返回用户对象，失败返回错误信息。</returns>
     public async Task<Result<User>> ValidateUserAsync(string username, string password)
     {
         var loadResult = await this.LoadUsersAsync();

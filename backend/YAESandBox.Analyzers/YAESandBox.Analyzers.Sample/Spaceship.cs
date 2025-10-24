@@ -1,5 +1,3 @@
-using System;
-
 namespace YAESandBox.Analyzers.Sample;
 
 public class Spaceship

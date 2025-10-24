@@ -6,13 +6,13 @@ using Jint;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Depend.Storage;
-using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config.RuneConfig;
-using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Runtime.Processor;
-using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
-using YAESandBox.Workflow.VarSpec;
-using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
+using YAESandBox.Workflow.Core.Config.RuneConfig;
+using YAESandBox.Workflow.Core.DebugDto;
+using YAESandBox.Workflow.Core.Runtime.Processor;
+using YAESandBox.Workflow.Core.Runtime.Processor.RuneProcessor;
+using YAESandBox.Workflow.Core.VarSpec;
+using YAESandBox.Workflow.Schema;
+using static YAESandBox.Workflow.Core.Runtime.Processor.TuumProcessor;
 
 // ReSharper disable InconsistentNaming
 
@@ -23,6 +23,7 @@ namespace YAESandBox.Plugin.Rune.JavaScript.Rune;
 /// 负责执行用户提供的 JS 脚本，并通过直接暴露的上下文与枢机交互。
 /// </summary>
 /// <param name="config">符文配置。</param>
+/// <param name="creatingContext"></param>
 public class JavaScriptRuneProcessor(JavaScriptRuneConfig config, ICreatingContext creatingContext)
     : NormalRuneProcessor<JavaScriptRuneConfig, JavaScriptRuneProcessor.JavaScriptRuneProcessorDebugDto>(config, creatingContext)
 {

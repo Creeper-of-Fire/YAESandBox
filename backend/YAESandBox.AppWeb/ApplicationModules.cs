@@ -4,13 +4,13 @@ using System.Reflection;
 using System.Runtime.Loader;
 using YAESandBox.AppWeb.InnerModule;
 using YAESandBox.AppWeb.Services;
-using YAESandBox.Authentication;
-using YAESandBox.Depend.AspNetCore;
-using YAESandBox.Depend.AspNetCore.PluginDiscovery;
+using YAESandBox.Authentication.API;
 using YAESandBox.Depend.Logger;
+using YAESandBox.ModuleSystem.Abstractions;
+using YAESandBox.ModuleSystem.Abstractions.PluginDiscovery;
 using YAESandBox.PlayerServices.Save;
-using YAESandBox.Workflow.AIService.API;
-using YAESandBox.Workflow.API;
+using YAESandBox.Workflow.AIService.API.API;
+using YAESandBox.Workflow.API.API;
 using YAESandBox.Workflow.Test.API;
 
 namespace YAESandBox.AppWeb;
@@ -160,6 +160,7 @@ internal static class ApplicationModules
             // 【清理】无论成功与否，在退出此方法前，必须将程序集从跟踪字典中移除。
             ResolvingAssemblies.Value.TryRemove(assemblyName.FullName, out _);
         }
+
         return null;
     }
 

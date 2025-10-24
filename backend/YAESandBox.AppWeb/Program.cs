@@ -6,12 +6,14 @@ using Microsoft.AspNetCore.DataProtection;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.AppWeb;
 using YAESandBox.AppWeb.Services;
-using YAESandBox.Depend.AspNetCore;
-using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.AspNetCore.Secret;
-using YAESandBox.Depend.AspNetCore.Services;
 using YAESandBox.Depend.Logger;
+using YAESandBox.Depend.Secret;
+using YAESandBox.Depend.Services;
 using YAESandBox.Depend.Storage;
+using YAESandBox.ModuleSystem.Abstractions;
+using YAESandBox.ModuleSystem.Abstractions.PluginDiscovery;
+using YAESandBox.ModuleSystem.AspNet;
 using static YAESandBox.AppWeb.ProgramStatic;
 
 Console.OutputEncoding = Encoding.UTF8;

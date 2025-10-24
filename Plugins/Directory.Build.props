@@ -1,0 +1,14 @@
+﻿<Project>
+    <!-- 导入上层配置 -->
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))"
+            Condition="'' != $([MSBuild]::GetPathOfFileAbove('Directory.Build.props', '$(MSBuildThisFileDirectory)../'))"/>
+
+    <!-- 插件所用的属性 -->
+    <PropertyGroup>
+        <!-- 告诉MSBuild，将包引用的Assembly文件复制到输出目录中 -->
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+
+        <!-- 不使用中心版本管理 -->
+        <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
+    </PropertyGroup>
+</Project>

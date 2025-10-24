@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    
+    <ItemGroup>
+      <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj" />
+      <ProjectReference Include="..\YAESandBox.Depend.Results\YAESandBox.Depend.Results.csproj" />
+      <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
+      <ProjectReference Include="..\YAESandBox.ModuleSystem.Abstractions\YAESandBox.ModuleSystem.Abstractions.csproj" />
+      <ProjectReference Include="..\YAESandBox.ModuleSystem.AspNet\YAESandBox.ModuleSystem.AspNet.csproj" />
+      <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj" />
+    </ItemGroup>
+
+</Project>

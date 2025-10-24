@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using YAESandBox.Depend.AspNetCore.Secret.Mark;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.ResultsExtend;
+using YAESandBox.Depend.Secret.Mark;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;
 
@@ -13,7 +13,7 @@ public class AiConfigurationSet : IProtectedData
     /// <summary>
     /// 默认的 AI 配置集名称。
     /// </summary>
-    internal const string DefaultConfigSetName = "Default";
+    public const string DefaultConfigSetName = "Default";
 
     /// <summary>
     /// 创建一个默认的 AI 配置集。

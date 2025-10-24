@@ -6,6 +6,8 @@
         <Nullable>enable</Nullable>
         <LangVersion>latest</LangVersion>
 
+        <GenerateDocumentationFile>false</GenerateDocumentationFile>
+        <ManagePackageVersionsCentrally>false</ManagePackageVersionsCentrally>
         <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
         <IsRoslynComponent>true</IsRoslynComponent>
 

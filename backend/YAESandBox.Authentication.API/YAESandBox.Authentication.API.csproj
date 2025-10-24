@@ -1,0 +1,11 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <ItemGroup>
+        <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer"/>
+    </ItemGroup>
+
+    <ItemGroup>
+        <ProjectReference Include="..\YAESandBox.Authentication\YAESandBox.Authentication.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj"/>
+    </ItemGroup>
+</Project>

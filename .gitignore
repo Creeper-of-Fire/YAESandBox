@@ -71,3 +71,4 @@ runtimes/
 
 # JetBrains Rider/ReSharper user-specific settings
 *.DotSettings.user
+/project_tree.txt

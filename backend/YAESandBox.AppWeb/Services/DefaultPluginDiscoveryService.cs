@@ -1,8 +1,8 @@
 ﻿// 文件: YAESandBox.AppWeb/DefaultPluginDiscoveryService.cs
 
 using System.Collections.ObjectModel;
-using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.Logger;
+using YAESandBox.ModuleSystem.Abstractions.PluginDiscovery;
 
 namespace YAESandBox.AppWeb.Services;
 

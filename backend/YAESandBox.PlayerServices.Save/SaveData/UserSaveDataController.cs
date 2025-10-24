@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using YAESandBox.Authentication;
+using YAESandBox.Authentication.API;
 using YAESandBox.Depend.AspNetCore.Controller.ResultToAction;
 using static YAESandBox.PlayerServices.Save.Utils.TokenUtil;
 

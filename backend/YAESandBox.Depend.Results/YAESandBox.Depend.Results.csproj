@@ -1,17 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <LangVersion>preview</LangVersion>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <AnalysisModeConfigureAwait>Library</AnalysisModeConfigureAwait>
-    </PropertyGroup>
-
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations" Version="2025.2.2" />
+        <PackageReference Include="JetBrains.Annotations" />
     </ItemGroup>
-
 </Project>

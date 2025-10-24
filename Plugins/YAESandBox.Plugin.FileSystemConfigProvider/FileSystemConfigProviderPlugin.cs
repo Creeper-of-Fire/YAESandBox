@@ -1,12 +1,12 @@
 using System.Text.Json;
 using Microsoft.Extensions.DependencyInjection;
-using YAESandBox.Depend.AspNetCore.PluginDiscovery;
 using YAESandBox.Depend.Logger;
 using YAESandBox.Depend.Storage;
-using YAESandBox.Workflow.API;
-using YAESandBox.Workflow.Config;
-using YAESandBox.Workflow.Config.RuneConfig;
-using YAESandBox.Workflow.Config.Stored;
+using YAESandBox.ModuleSystem.Abstractions.PluginDiscovery;
+using YAESandBox.Workflow.Core.Config;
+using YAESandBox.Workflow.Core.Config.RuneConfig;
+using YAESandBox.Workflow.Core.Config.Stored;
+using YAESandBox.Workflow.Core.Service;
 
 namespace YAESandBox.Plugin.FileSystemConfigProvider;
 
@@ -35,6 +35,7 @@ public class FileSystemConfigProviderPlugin : IYaeSandBoxPlugin, IProgramModuleI
         Description: "一个通过扫描本地文件目录来提供“官方”内置配置的插件。"
     );
 
+    /// <inheritdoc cref="FileSystemConfigProviderPlugin"/>
     public FileSystemConfigProviderPlugin()
     {
         // 在构造函数中确定插件的根目录，确保路径在整个生命周期内都可用

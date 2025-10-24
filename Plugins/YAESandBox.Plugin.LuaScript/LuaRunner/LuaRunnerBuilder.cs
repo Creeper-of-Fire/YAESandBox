@@ -1,5 +1,5 @@
-﻿using YAESandBox.Workflow.DebugDto;
-using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
+﻿using YAESandBox.Workflow.Core.DebugDto;
+using static YAESandBox.Workflow.Core.Runtime.Processor.TuumProcessor;
 
 namespace YAESandBox.Plugin.LuaScript.LuaRunner;
 

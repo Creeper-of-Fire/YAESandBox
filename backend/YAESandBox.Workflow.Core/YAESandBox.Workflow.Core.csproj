@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+    
+    <ItemGroup>
+      <ProjectReference Include="..\YAESandBox.Authentication\YAESandBox.Authentication.csproj" />
+      <ProjectReference Include="..\YAESandBox.Depend.Results\YAESandBox.Depend.Results.csproj" />
+      <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj" />
+      <ProjectReference Include="..\YAESandBox.ModuleSystem.Abstractions\YAESandBox.ModuleSystem.Abstractions.csproj" />
+      <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="UUIDNext" />
+    </ItemGroup>
+
+</Project>

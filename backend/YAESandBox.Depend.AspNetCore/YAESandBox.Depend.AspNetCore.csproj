@@ -1,25 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <LangVersion>preview</LangVersion>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <AnalysisModeConfigureAwait>Library</AnalysisModeConfigureAwait>
-    </PropertyGroup>
-
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0"/>
-        <PackageReference Include="Microsoft.OpenApi" Version="1.6.26" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.5" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.5" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.5" />
+        <PackageReference Include="Microsoft.AspNetCore.Mvc.Core"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI"/>
     </ItemGroup>
 
     <ItemGroup>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
+        <ProjectReference Include="..\YAESandBox.ModuleSystem.Abstractions\YAESandBox.ModuleSystem.Abstractions.csproj"/>
+        <ProjectReference Include="..\YAESandBox.ModuleSystem.AspNet\YAESandBox.ModuleSystem.AspNet.csproj"/>
     </ItemGroup>
 
 </Project>

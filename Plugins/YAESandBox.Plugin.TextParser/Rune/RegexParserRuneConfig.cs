@@ -6,19 +6,19 @@ using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
 using YAESandBox.Depend.Storage;
 using YAESandBox.Workflow.AIService;
-using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config.RuneConfig;
-using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Runtime.Processor;
-using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
-using YAESandBox.Workflow.VarSpec;
+using YAESandBox.Workflow.Core.Config.RuneConfig;
+using YAESandBox.Workflow.Core.DebugDto;
+using YAESandBox.Workflow.Core.Runtime.Processor;
+using YAESandBox.Workflow.Core.Runtime.Processor.RuneProcessor;
+using YAESandBox.Workflow.Core.VarSpec;
+using YAESandBox.Workflow.Schema;
 
 namespace YAESandBox.Plugin.TextParser.Rune;
 
 /// <summary>
 /// “正则生成”符文的运行时处理器。
 /// </summary>
-public class RegexParserRuneProcessor(RegexParserRuneConfig config,ICreatingContext creatingContext)
+internal class RegexParserRuneProcessor(RegexParserRuneConfig config,ICreatingContext creatingContext)
     : NormalRuneProcessor<RegexParserRuneConfig, RegexParserRuneProcessor.RegexParserDebugDto>(config, creatingContext)
 {
 
@@ -144,7 +144,7 @@ public class RegexParserRuneProcessor(RegexParserRuneConfig config,ICreatingCont
     /// <summary>
     /// 正则操作符文的调试 DTO。
     /// </summary>
-    public record RegexParserDebugDto : IRuneProcessorDebugDto
+    internal record RegexParserDebugDto : IRuneProcessorDebugDto
     {
         public string? InputText { get; set; }
         public string? AppliedOptions { get; set; }
@@ -172,7 +172,7 @@ public class RegexParserRuneProcessor(RegexParserRuneConfig config,ICreatingCont
     Description = "使用正则表达式，对文本执行提取或替换操作。"
 )]
 [RuneCategory("文本处理")]
-public record RegexParserRuneConfig : AbstractRuneConfig<RegexParserRuneProcessor>
+internal record RegexParserRuneConfig : AbstractRuneConfig<RegexParserRuneProcessor>
 {
     /// <summary>
     /// 通用的文本处理（提取/替换）操作设置。

@@ -3,7 +3,7 @@ using System.Text;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 using YAESandBox.Depend.Storage;
-using YAESandBox.Workflow.WorkflowService.Abstractions;
+using YAESandBox.Workflow.Core.Runtime.WorkflowService.Abstractions;
 
 namespace YAESandBox.Workflow.Utility;
 

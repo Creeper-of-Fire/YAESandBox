@@ -1,10 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config;
-using YAESandBox.Workflow.Config.RuneConfig;
-using YAESandBox.Workflow.VarSpec;
+using YAESandBox.Workflow.Core.Config;
+using YAESandBox.Workflow.Core.Config.RuneConfig;
+using YAESandBox.Workflow.Core.VarSpec;
+using YAESandBox.Workflow.Schema;
 
 namespace YAESandBox.Workflow.WorkflowService.Analysis;
 

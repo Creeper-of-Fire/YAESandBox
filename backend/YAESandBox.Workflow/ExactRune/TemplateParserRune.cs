@@ -7,14 +7,14 @@ using Tomlyn.Model;
 using YAESandBox.Depend.Logger;
 using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Schema.SchemaProcessor;
-using YAESandBox.Workflow.API.Schema;
-using YAESandBox.Workflow.Config.RuneConfig;
-using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Core.Config.RuneConfig;
+using YAESandBox.Workflow.Core.DebugDto;
+using YAESandBox.Workflow.Core.Runtime.Processor;
+using YAESandBox.Workflow.Core.Runtime.Processor.RuneProcessor;
+using YAESandBox.Workflow.Core.VarSpec;
 using YAESandBox.Workflow.ExactRune.Helpers;
-using YAESandBox.Workflow.Runtime.Processor;
-using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
-using YAESandBox.Workflow.VarSpec;
-using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
+using YAESandBox.Workflow.Schema;
+using static YAESandBox.Workflow.Core.Runtime.Processor.TuumProcessor;
 
 namespace YAESandBox.Workflow.ExactRune;
 

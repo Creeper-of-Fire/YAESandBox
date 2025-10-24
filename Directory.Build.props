@@ -12,7 +12,36 @@
                           ReferenceOutputAssembly="false"
                           Condition="'$(MSBuildProjectName)' != 'YAESandBox.Analyzers'"/>
     </ItemGroup>
-    
+
+    <PropertyGroup>
+        <!-- 目标框架版本 -->
+        <TargetFramework>net9.0</TargetFramework>
+
+        <!-- 启用 C# 的预览功能 -->
+        <LangVersion>preview</LangVersion>
+
+        <!-- 启用隐式全局 using -->
+        <ImplicitUsings>enable</ImplicitUsings>
+
+        <!-- 启用可空引用类型 -->
+        <Nullable>enable</Nullable>
+
+        <!-- 启用中央包版本管理 -->
+        <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+
+        <!-- 为项目生成的 NuGet 包指定许可证 -->
+        <PackageLicenseExpression>MIT</PackageLicenseExpression>
+
+        <!-- 为项目生成 XML 文档文件，用于智能提示等 -->
+        <GenerateDocumentationFile>true</GenerateDocumentationFile>
+
+        <!-- 将警告视为错误，强制保持代码高质量 -->
+        <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+
+        <!-- 配置 ConfigureAwait 检测 -->
+        <AnalysisModeConfigureAwait>Library</AnalysisModeConfigureAwait>
+    </PropertyGroup>
+
     <PropertyGroup>
         <!-- 
           1. 启用确定性构建

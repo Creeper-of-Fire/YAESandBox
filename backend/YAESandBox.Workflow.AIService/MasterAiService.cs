@@ -45,9 +45,9 @@ public record SubAiService(IMasterAiService MasterAiService, string UserId)
 }
 
 /// <inheritdoc />
-public class MasterAiService(IHttpClientFactory httpClientFactory, IAiConfigurationProvider configProvider) : IMasterAiService
+public class MasterAiService(IAiHttpClientFactory aiHttpClientFactory, IAiConfigurationProvider configProvider) : IMasterAiService
 {
-    private IHttpClientFactory HttpClientFactory { get; } = httpClientFactory;
+    private IAiHttpClientFactory HttpClientFactory { get; } = aiHttpClientFactory;
     private IAiConfigurationProvider ConfigProvider { get; } = configProvider;
 
     /// <inheritdoc />

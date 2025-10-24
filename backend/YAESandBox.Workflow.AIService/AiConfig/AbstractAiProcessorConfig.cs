@@ -1,8 +1,8 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using YAESandBox.Depend.AspNetCore.Secret.Mark;
 using YAESandBox.Depend.Schema.SchemaProcessor;
+using YAESandBox.Depend.Secret.Mark;
 
 namespace YAESandBox.Workflow.AIService.AiConfig;
 

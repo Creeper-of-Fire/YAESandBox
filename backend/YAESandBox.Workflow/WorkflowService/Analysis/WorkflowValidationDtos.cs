@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json;
-using YAESandBox.Workflow.Config;
+using YAESandBox.Workflow.Core.Config;
 
 namespace YAESandBox.Workflow.WorkflowService.Analysis;
 

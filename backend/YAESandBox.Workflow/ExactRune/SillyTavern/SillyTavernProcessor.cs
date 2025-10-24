@@ -1,5 +1,5 @@
 ﻿using YAESandBox.Workflow.AIService;
-using YAESandBox.Workflow.VarSpec;
+using YAESandBox.Workflow.Core.VarSpec;
 
 namespace YAESandBox.Workflow.ExactRune.SillyTavern;
 

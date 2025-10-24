@@ -1,14 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <LangVersion>13</LangVersion>
-    </PropertyGroup>
-
     <ItemGroup>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>

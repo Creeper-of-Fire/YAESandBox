@@ -1,14 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <LangVersion>preview</LangVersion>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    </PropertyGroup>
-
     <ItemGroup>
+      <ProjectReference Include="..\YAESandBox.Authentication.API\YAESandBox.Authentication.API.csproj" />
       <ProjectReference Include="..\YAESandBox.Authentication\YAESandBox.Authentication.csproj" />
       <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj" />
     </ItemGroup>

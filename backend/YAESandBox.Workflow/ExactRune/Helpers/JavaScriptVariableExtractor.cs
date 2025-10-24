@@ -1,7 +1,7 @@
 using Esprima.Ast;
 using Esprima.Utils;
 
-namespace YAESandBox.Workflow.ExactRune;
+namespace YAESandBox.Workflow.ExactRune.Helpers;
 
 /// <summary>
 /// 一个 AST 访问者，用于从 Esprima 的语法树中提取自由变量标识符。

@@ -1,6 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using YAESandBox.Authentication;
+using YAESandBox.Authentication.API;
 using YAESandBox.Depend.AspNetCore.Controller.ResultToAction;
 using YAESandBox.PlayerServices.Save.Utils;
 

@@ -1,39 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk.Web">
     <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <LangVersion>preview</LangVersion>
-        <Nullable>enable</Nullable>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <GenerateDocumentationFile>false</GenerateDocumentationFile>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
         <Configurations>Debug;Release;DebugGen</Configurations>
         <Platforms>AnyCPU</Platforms>
     </PropertyGroup>
-    
+
     <PropertyGroup Condition=" '$(Configuration)' == 'DebugGen' ">
-      <DebugSymbols Condition=" '$(DebugSymbols)' == '' ">true</DebugSymbols>
-      <Optimize Condition=" '$(Optimize)' == '' ">false</Optimize>
+        <DebugSymbols Condition=" '$(DebugSymbols)' == '' ">true</DebugSymbols>
+        <Optimize Condition=" '$(Optimize)' == '' ">false</Optimize>
     </PropertyGroup>
-    
+
     <!-- 确保 Swashbuckle CLI 可以找到 Program.cs 中的启动类 -->
     <ItemGroup>
         <ProjectCapability Include="AspNetCore"/>
     </ItemGroup>
     <ItemGroup>
         <InternalsVisibleTo Include="YAESandBox.Tests"/>
-        <PackageReference Include="DotNetEnv" Version="3.1.1"/>
-        <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.9" />
-        <PackageReference Include="Microsoft.OpenApi" Version="1.6.26" />
-        <PackageReference Include="Nito.AsyncEx" Version="5.1.2"/>
-        <PackageReference Include="Swashbuckle.AspNetCore" Version="9.0.5" />
-        <PackageReference Include="Swashbuckle.AspNetCore.Swagger" Version="9.0.5" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen" Version="9.0.5" />
-        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="9.0.5" />
+        <PackageReference Include="DotNetEnv" />
+        <PackageReference Include="Nito.AsyncEx"/>
+        <PackageReference Include="Nito.AsyncEx.Coordination" />
+        <PackageReference Include="Swashbuckle.AspNetCore"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen"/>
+        <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI"/>
     </ItemGroup>
     <ItemGroup>
+        <ProjectReference Include="..\YAESandBox.Authentication.API\YAESandBox.Authentication.API.csproj"/>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
-        <ProjectReference Include="..\YAESandBox.PlayerServices.Save\YAESandBox.PlayerServices.Save.csproj" />
+        <ProjectReference Include="..\YAESandBox.PlayerServices.Save\YAESandBox.PlayerServices.Save.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Workflow.AIService.API\YAESandBox.Workflow.AIService.API.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.AIService\YAESandBox.Workflow.AIService.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Workflow.API\YAESandBox.Workflow.API.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow.Test\YAESandBox.Workflow.Test.csproj"/>
         <ProjectReference Include="..\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
@@ -51,7 +46,7 @@
       -->
     <Target Name="RunSwaggerGenerationFlow" AfterTargets="Build"
             Condition="'$(Configuration)' == 'DebugGen' AND '$(IsPublishing)' != 'true'">
-        <Message Text="Swagger generation is ENABLED." Importance="high" />
+        <Message Text="Swagger generation is ENABLED." Importance="high"/>
         <CallTarget Targets="CollectSwaggerDocs"/>
         <CallTarget Targets="GenerateSwaggerFromReferences"/>
     </Target>
@@ -90,7 +85,7 @@
                      JsonFileName=%(_AllSwaggerDocs.JsonFileName);
                      TsClientRoot=%(_AllSwaggerDocs.TsClientRoot);
                      TsOutputSubDir=%(_AllSwaggerDocs.TsOutputSubDir)
-                     " />
+                     "/>
     </Target>
 
     <!-- 
@@ -106,25 +101,25 @@
 
         <!-- 步骤 A: 生成 swagger.json -->
         <Message Text="[AppWeb] 1. 生成 JSON for '$(DocIdentity)'..." Importance="high"/>
-        <Delete Files="$(TempLogFile)" ContinueOnError="true" />
+        <Delete Files="$(TempLogFile)" ContinueOnError="true"/>
         <Exec Command="dotnet swagger tofile --output &quot;$(JsonOutputBaseDir)/$(JsonFileName)&quot; &quot;$(SwaggerHostAssembly)&quot; $(DocIdentity) &gt; &quot;$(TempLogFile)&quot; 2&gt;&amp;1"
               WorkingDirectory="$(ProjectDir)"
               ContinueOnError="false"
-              EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;DOTNET_CLI_UI_LANGUAGE=en-US" />
+              EnvironmentVariables="ASPNETCORE_ENVIRONMENT=Development;DOTNET_CLI_UI_LANGUAGE=en-US"/>
 
         <ReadLinesFromFile File="$(TempLogFile)" Condition="Exists('$(TempLogFile)')">
-            <Output TaskParameter="Lines" ItemName="_JsonGenLogLines" />
+            <Output TaskParameter="Lines" ItemName="_JsonGenLogLines"/>
         </ReadLinesFromFile>
-        <Message Text="[JSON LOG] %(_JsonGenLogLines.Identity)" Importance="high" Condition="'@(_JsonGenLogLines)' != ''" />
-        
+        <Message Text="[JSON LOG] %(_JsonGenLogLines.Identity)" Importance="high" Condition="'@(_JsonGenLogLines)' != ''"/>
+
         <!-- 步骤 B: 生成 TypeScript 客户端 -->
         <!-- 注意：这里的 WorkingDirectory 是从每个文档定义中动态获取的 TsClientRoot！ -->
         <Message Text="[AppWeb] 2. 生成 TS Client for '$(DocIdentity)'..." Importance="high"/>
-        <Exec Command="npx openapi-typescript-codegen --input $(JsonOutputBaseDir)/$(JsonFileName) --output $(TsClientRoot)/types/generated/$(TsOutputSubDir) --client axios --useOptions" 
+        <Exec Command="npx openapi-typescript-codegen --input $(JsonOutputBaseDir)/$(JsonFileName) --output $(TsClientRoot)/types/generated/$(TsOutputSubDir) --client axios --useOptions"
               WorkingDirectory="$(TsClientRoot)" ContinueOnError="false"/>
     </Target>
-    
-    
+
+
     <ItemGroup>
         <Folder Include="wwwroot\"/>
     </ItemGroup>

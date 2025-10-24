@@ -1,76 +1,20 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <LangVersion>preview</LangVersion>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-    </PropertyGroup>
-
     <ItemGroup>
         <Folder Include="InnerConfigs\Runes\"/>
         <Folder Include="InnerConfigs\Tuums\"/>
         <Folder Include="InnerConfigs\Workflows\"/>
     </ItemGroup>
-
+    
     <ItemGroup>
-        <Content Include="InnerConfigs\**\*.*">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-        </Content>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\..\backend\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj"/>
         <ProjectReference Include="..\..\backend\YAESandBox.Depend.Results\YAESandBox.Depend.Results.csproj"/>
         <ProjectReference Include="..\..\backend\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
         <ProjectReference Include="..\..\backend\YAESandBox.Workflow\YAESandBox.Workflow.csproj"/>
     </ItemGroup>
 
-    <!-- ⭐添加构建后自动复制到插件目录的 Target -->
-    <Target Name="CopyToPluginsFolder" AfterTargets="Build">
-
-        <!-- 1. 定义变量 (这部分和你的 Lua 插件完全一样) -->
-        <PropertyGroup>
-            <PluginName>$(AssemblyName)</PluginName>
-            <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))../../build/Plugins/$(PluginName)</PluginDestination>
-        </PropertyGroup>
-
-        <Message Text="[COPY PLUGIN] 插件源输出目录 (OutputPath): $(OutputPath)" Importance="high"/>
-        <Message Text="[COPY PLUGIN] 插件目标部署目录 (PluginDestination): $(PluginDestination)" Importance="high"/>
-
-        <!-- 2. 先删除旧目录，确保是干净的部署 -->
-        <RemoveDir Directories="$(PluginDestination)"/>
-        <MakeDir Directories="$(PluginDestination)"/>
-
-        <!-- 3. 复制插件的核心文件和依赖 -->
-        <ItemGroup>
-            <FilesToCopy Include="$(OutputPath)$(AssemblyName).dll"/>
-            <FilesToCopy Include="$(OutputPath)$(AssemblyName).pdb" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')"/>
-            <FilesToCopy Include="$(OutputPath)$(AssemblyName).deps.json"/>
-        </ItemGroup>
-        <ItemGroup Condition="'@(PackageReference)' != ''">
-            <!-- 
-              自动将 PackageReference 列表转换为文件路径
-                 - `%(PackageReference.Identity)`: 获取包名，例如 "AngleSharp"
-                 - `$(OutputPath)%(PackageReference.Identity).dll`: 拼接出在本地输出目录中的完整路径
-            -->
-            <!-- 仅当存在 PackageReference 时，才尝试复制 NuGet 包依赖。 -->
-            <FilesToCopy Include="$(OutputPath)%(PackageReference.Identity).dll"/>
-        </ItemGroup>
-        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(PluginDestination)" SkipUnchangedFiles="true"/>
-
-        <!-- 4. 专门处理 InnerConfigs 文件夹 -->
-        <ItemGroup>
-            <!-- 找到项目中的 InnerConfigs 文件夹里的所有文件 -->
-            <ConfigFilesToCopy Include="InnerConfigs\**\*.*"/>
-        </ItemGroup>
-        <!-- 将这些文件连同它们的子目录结构一起复制到目标插件目录 -->
-        <Copy
-                SourceFiles="@(ConfigFilesToCopy)"
-                DestinationFiles="@(ConfigFilesToCopy -> '$(PluginDestination)\InnerConfigs\%(RecursiveDir)%(Filename)%(Extension)')"
-                SkipUnchangedFiles="true"
-        />
-
-        <Message Text="[COPY PLUGIN] 成功将插件 '$(PluginName)' 和 InnerConfigs 目录复制到目标位置。" Importance="high"/>
-    </Target>
+    <ItemGroup>
+        <!-- 声明需要复制 `InnerConfigs` 目录 -->
+        <PluginCustomContent Include="InnerConfigs\**\*.*">
+            <DestinationSubdirectory>InnerConfigs</DestinationSubdirectory>
+        </PluginCustomContent>
+    </ItemGroup>
 </Project>

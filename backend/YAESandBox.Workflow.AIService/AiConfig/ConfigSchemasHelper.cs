@@ -9,7 +9,7 @@ namespace YAESandBox.Workflow.AIService.AiConfig;
 /// 以及提供对特定配置类型的发现和访问。
 /// 它通过反射读取类型的属性及其关联的DataAnnotations特性。
 /// </summary>
-internal static class ConfigSchemasHelper // 改为静态类，因为所有成员都是静态的
+public static class ConfigSchemasHelper // 改为静态类，因为所有成员都是静态的
 {
     private static IAppLogger Logger { get; } = AppLogging.CreateLogger(nameof(ConfigSchemasHelper));
 
@@ -82,7 +82,7 @@ internal static class ConfigSchemasHelper // 改为静态类，因为所有成�
     /// 获取所有继承自 <see cref="AbstractAiProcessorConfig"/> 的具体配置类型。
     /// </summary>
     /// <returns>一个包含所有可用AI配置类型的集合。</returns>
-    internal static IEnumerable<Type> GetAvailableAiConfigConcreteTypes()
+    public static IEnumerable<Type> GetAvailableAiConfigConcreteTypes()
     {
         return AvailableAiConfigTypesCache.Values;
     }
@@ -93,7 +93,7 @@ internal static class ConfigSchemasHelper // 改为静态类，因为所有成�
     /// </summary>
     /// <param name="typeName">类型的名称 (例如 "DoubaoAiProcessorConfig")。</param>
     /// <returns>如果找到则返回类型，否则throw。</returns>
-    internal static Type? GetAiConfigTypeByName(string? typeName)
+    public static Type? GetAiConfigTypeByName(string? typeName)
     {
         if (string.IsNullOrWhiteSpace(typeName))
             return null;

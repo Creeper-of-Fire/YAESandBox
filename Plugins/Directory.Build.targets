@@ -1,0 +1,90 @@
+<!-- Plugins\Directory.Build.targets -->
+<Project>
+    <!-- 导入上层配置 -->
+    <Import Project="$([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))"
+            Condition="'' != $([MSBuild]::GetPathOfFileAbove('Directory.Build.targets', '$(MSBuildThisFileDirectory)../'))" />
+
+
+    <!-- 定义标志位及其默认值 -->
+    <PropertyGroup>
+        <!-- 如果外部没有定义 EnablePluginAutoCopy 属性，则默认为 false -->
+        <EnablePluginAutoCopy Condition="'$(EnablePluginAutoCopy)' == ''">false</EnablePluginAutoCopy>
+    </PropertyGroup>
+    
+    <!-- ⭐⭐⭐ 构建后自动复制到插件目录 ⭐⭐⭐ -->
+    <!-- 仅当 `EnablePluginAutoCopy` 为 true 时，才执行 -->
+    <Target Name="CopyToPluginsFolder" AfterTargets="Build" Condition="'$(EnablePluginAutoCopy)' == 'true'">
+
+        <!-- 1. 定义变量 -->
+        <PropertyGroup>
+            <!-- 插件名称，直接取自项目程序集名称 -->
+            <PluginName>$(AssemblyName)</PluginName>
+            <!-- 插件的目标部署目录，通过相对路径计算得出 -->
+            <PluginDestination>$([System.IO.Path]::GetFullPath('$(MSBuildThisFileDirectory)..'))../../build/Plugins/$(PluginName)</PluginDestination>
+        </PropertyGroup>
+
+        <!-- 输出日志，方便调试 -->
+        <Message Text="[COPY PLUGIN] 开始处理插件: $(PluginName)" Importance="high"/>
+        <Message Text="[COPY PLUGIN] 插件源输出目录 (OutputPath): $(OutputPath)" Importance="high"/>
+        <Message Text="[COPY PLUGIN] 插件目标部署目录 (PluginDestination): $(PluginDestination)" Importance="high"/>
+
+        <!-- 2. 清理并创建目标目录，确保每次部署都是全新的 -->
+        <RemoveDir Directories="$(PluginDestination)"/>
+        <MakeDir Directories="$(PluginDestination)"/>
+
+        <!-- 3. 收集所有需要复制的核心文件 -->
+        <ItemGroup>
+            <!-- a) 复制插件自己的主文件 -->
+            <FilesToCopy Include="$(OutputPath)$(AssemblyName).dll"/>
+            <FilesToCopy Include="$(OutputPath)$(AssemblyName).pdb" Condition="Exists('$(OutputPath)$(AssemblyName).pdb')"/>
+            <FilesToCopy Include="$(OutputPath)$(AssemblyName).deps.json"/>
+        </ItemGroup>
+        <ItemGroup Condition="'@(PackageReference)' != ''">
+            <!-- 
+              b) 自动将 PackageReference 列表转换为文件路径
+                 - `%(PackageReference.Identity)`: 获取包名，例如 "AngleSharp"
+                 - `$(OutputPath)%(PackageReference.Identity).dll`: 拼接出在本地输出目录中的完整路径
+            -->
+            <!-- 仅当存在 PackageReference 时，才尝试复制 NuGet 包依赖。 -->
+            <FilesToCopy Include="$(OutputPath)%(PackageReference.Identity).dll"/>
+        </ItemGroup>
+
+        <!-- 4. 执行核心文件的复制操作 -->
+        <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(PluginDestination)" SkipUnchangedFiles="true"/>
+
+        <!-- 
+          5. 处理由插件注入的自定义内容
+             这里我们直接处理 `PluginCustomContent` 列表。
+             如果某个插件没有定义这个列表，这个 Copy 任务就不会执行任何操作。
+        -->
+        <!-- 使用一个属性来判断列表是否为空，避免在多个 Condition 中重复判断 -->
+        <PropertyGroup>
+            <HasCustomContent Condition="'@(PluginCustomContent)' != ''">true</HasCustomContent>
+        </PropertyGroup>
+        <!-- 详细的日志输出 -->
+        <Message Text="[COPY PLUGIN] 发现自定义内容，准备复制到 '$(PluginDestination)'"
+                 Importance="high"
+                 Condition="'$(HasCustomContent)' == 'true'"/>
+        <!-- 
+          以列表形式打印出所有待复制的文件，非常便于调试。
+          %0A%0D 是换行符。
+          '-> '...'' 是 Item Transformation 语法，为每一项添加前缀和换行。
+        -->
+        <Message Text="[COPY PLUGIN] 自定义内容列表:%0A%0D    @(PluginCustomContent->'- %(Identity)','%0A%0D    ')"
+                 Importance="normal"
+                 Condition="'$(HasCustomContent)' == 'true'"/>
+        <Copy
+                SourceFiles="@(PluginCustomContent)"
+                DestinationFiles="@(PluginCustomContent -> '$(PluginDestination)\%(DestinationSubdirectory)\%(RecursiveDir)%(Filename)%(Extension)')"
+                SkipUnchangedFiles="true"
+                Condition="'@(PluginCustomContent)' != ''"
+        />
+        <Message Text="[COPY PLUGIN] 自定义内容复制完成。"
+                 Importance="high"
+                 Condition="'$(HasCustomContent)' == 'true'"/>
+        
+
+        <Message Text="[COPY PLUGIN] 成功将插件 '$(PluginName)' 和其声明的 NuGet 包依赖复制到目标目录。" Importance="high"/>
+    </Target>
+
+</Project>

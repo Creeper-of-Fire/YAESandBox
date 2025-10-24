@@ -1,28 +1,14 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
-    <PropertyGroup>
-        <TargetFramework>net9.0</TargetFramework>
-        <ImplicitUsings>enable</ImplicitUsings>
-        <Nullable>enable</Nullable>
-        <PackageLicenseExpression>MIT</PackageLicenseExpression>
-        <GenerateDocumentationFile>true</GenerateDocumentationFile>
-        <AnalysisModeConfigureAwait>Library</AnalysisModeConfigureAwait>
-    </PropertyGroup>
-
     <ItemGroup>
         <ProjectReference Include="..\YAESandBox.Authentication\YAESandBox.Authentication.csproj" />
-        <ProjectReference Include="..\YAESandBox.Depend.AspNetCore\YAESandBox.Depend.AspNetCore.csproj"/>
         <ProjectReference Include="..\YAESandBox.Depend\YAESandBox.Depend.csproj"/>
-        <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleTo">
-            <_Parameter1>YAESandBox.Workflow.Test</_Parameter1>
-        </AssemblyAttribute>
+    </ItemGroup>
+    <ItemGroup>
+        <InternalsVisibleTo Include="YAESandBox.Workflow.Test"/>
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0"/>
-        <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.9" />
-        <PackageReference Include="Microsoft.OpenApi" Version="1.6.26" />
-        <PackageReference Include="Nito.AsyncEx.Coordination" Version="5.1.2"/>
+        <PackageReference Include="Nito.AsyncEx.Coordination" />
     </ItemGroup>
 
     <ItemGroup>

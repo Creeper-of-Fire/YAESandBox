@@ -1,5 +1,5 @@
 ﻿using NLua;
-using YAESandBox.Workflow.DebugDto;
+using YAESandBox.Workflow.Core.DebugDto;
 
 // ReSharper disable InconsistentNaming
 namespace YAESandBox.Plugin.LuaScript.LuaRunner.Bridge;

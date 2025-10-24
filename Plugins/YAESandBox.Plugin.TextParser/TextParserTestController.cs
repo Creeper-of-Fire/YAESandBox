@@ -2,13 +2,13 @@
 using Microsoft.AspNetCore.Mvc;
 using YAESandBox.Depend.Results;
 using YAESandBox.Plugin.TextParser.Rune;
-using YAESandBox.Workflow.Config;
-using YAESandBox.Workflow.Config.RuneConfig;
-using YAESandBox.Workflow.DebugDto;
-using YAESandBox.Workflow.Runtime.Processor;
-using YAESandBox.Workflow.Runtime.Processor.RuneProcessor;
+using YAESandBox.Workflow.Core.Config;
+using YAESandBox.Workflow.Core.Config.RuneConfig;
+using YAESandBox.Workflow.Core.DebugDto;
+using YAESandBox.Workflow.Core.Runtime.Processor;
+using YAESandBox.Workflow.Core.Runtime.Processor.RuneProcessor;
 using YAESandBox.Workflow.TestDoubles;
-using static YAESandBox.Workflow.Runtime.Processor.TuumProcessor;
+using static YAESandBox.Workflow.Core.Runtime.Processor.TuumProcessor;
 
 namespace YAESandBox.Plugin.TextParser;
 
@@ -49,7 +49,11 @@ public class TextParserTestController : ControllerBase
     /// </summary>
     public record TestResponseDto
     {
-        [Required] public bool IsSuccess { get; init; }
+        /// <summary>
+        /// 是否成功。
+        /// </summary>
+        [Required]
+        public bool IsSuccess { get; init; }
 
         /// <summary>
         /// 成功时，这里是提取或生成的结果。
@@ -84,16 +88,16 @@ public class TextParserTestController : ControllerBase
 
         var workflowRuntimeService = new FakeWorkflowRuntimeService();
         var context = ProcessorContext.CreateRoot(Guid.NewGuid(), workflowRuntimeService);
-        
+
         switch (request.RuneConfig)
         {
             case TagParserRuneConfig tagConfig:
-                processor = new TagParserRuneProcessor(tagConfig,context);
+                processor = new TagParserRuneProcessor(tagConfig, context);
                 inputVariableName = tagConfig.TextOperation.InputVariableName;
                 outputVariableName = tagConfig.TextOperation.OutputVariableName;
                 break;
             case RegexParserRuneConfig regexConfig:
-                processor = new RegexParserRuneProcessor(regexConfig,context);
+                processor = new RegexParserRuneProcessor(regexConfig, context);
                 inputVariableName = regexConfig.TextOperation.InputVariableName;
                 outputVariableName = regexConfig.TextOperation.OutputVariableName;
                 break;

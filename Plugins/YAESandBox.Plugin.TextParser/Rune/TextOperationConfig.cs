@@ -96,7 +96,13 @@ public record TextOperationConfig
 /// </summary>
 public enum InputDataTypeEnum
 {
+    /// <summary>
+    /// 字符串
+    /// </summary>
     String,
+    /// <summary>
+    /// 提示词列表
+    /// </summary>
     PromptList
 }
 
@@ -105,8 +111,17 @@ public enum InputDataTypeEnum
 /// </summary>
 public enum ReturnFormatEnum
 {
+    /// <summary>
+    /// 仅返回第一个匹配项。
+    /// </summary>
     First,
+    /// <summary>
+    /// 返回一个列表，包含所有匹配项。
+    /// </summary>
     AsList,
+    /// <summary>
+    /// 输出一个包含所有匹配项的JSON数组字符串。
+    /// </summary>
     AsJsonString
 }
 

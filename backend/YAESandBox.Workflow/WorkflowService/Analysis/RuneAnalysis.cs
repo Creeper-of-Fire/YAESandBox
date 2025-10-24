@@ -1,7 +1,8 @@
 ﻿using System.ComponentModel.DataAnnotations;
-using YAESandBox.Workflow.Config.RuneConfig;
+using YAESandBox.Workflow.Core.Config.RuneConfig;
+using YAESandBox.Workflow.Core.Runtime.WorkflowService;
+using YAESandBox.Workflow.Core.VarSpec;
 using YAESandBox.Workflow.ExactRune;
-using YAESandBox.Workflow.VarSpec;
 
 namespace YAESandBox.Workflow.WorkflowService.Analysis;
 

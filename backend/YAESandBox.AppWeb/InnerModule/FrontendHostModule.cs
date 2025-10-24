@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.FileProviders;
-using YAESandBox.Depend.AspNetCore;
-using YAESandBox.Depend.AspNetCore.Services;
 using YAESandBox.Depend.Logger;
+using YAESandBox.Depend.Services;
+using YAESandBox.ModuleSystem.AspNet;
 
 namespace YAESandBox.AppWeb.InnerModule;
 
