@@ -127,4 +127,30 @@ internal record EmitEventRuneConfig : AbstractRuneConfig<EmitEventRuneProcessor>
 
     /// <inheritdoc />
     protected override EmitEventRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
+
+    /// <inheritdoc />
+    public override List<EmittedEventSpec> AnalyzeEmittedEvents(IReadOnlyDictionary<string, VarSpecDef> resolvedVariableTypes)
+    {
+        // 1. 查找源变量的推断类型
+        resolvedVariableTypes.TryGetValue(this.SourceVariableName, out var dataType);
+
+        // 2. 构建事件内容的规格
+        // 如果找不到类型（例如数据流中断），则 ContentSpec 为 null，
+        // 这表示我们知道会发射一个事件，但无法确定其内容类型。
+        var contentSpec = dataType is not null
+            ? new EmittedContentSpec { TypeDefinition = dataType }
+            : null;
+
+        // 3. 创建并返回事件的完整静态契约
+        var emittedEvent = new EmittedEventSpec
+        {
+            Address = this.TargetAddress ?? string.Empty,
+            Mode = this.UpdateMode,
+            Description = $"从变量 '{this.SourceVariableName}' 发射数据。",
+            SourceRuneConfigId = this.ConfigId,
+            ContentSpec = contentSpec,
+        };
+
+        return [emittedEvent];
+    }
 }

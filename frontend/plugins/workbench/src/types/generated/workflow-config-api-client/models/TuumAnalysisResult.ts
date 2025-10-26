@@ -3,6 +3,7 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ConsumedSpec } from './ConsumedSpec';
+import type { EmittedEventSpec } from './EmittedEventSpec';
 import type { ProducedSpec } from './ProducedSpec';
 import type { ValidationMessage } from './ValidationMessage';
 import type { VarSpecDef } from './VarSpecDef';
@@ -36,6 +37,11 @@ export type TuumAnalysisResult = {
      * 这主要用于内部校验和为外部端点确定类型。
      */
     internalVariableDefinitions: Record<string, VarSpecDef>;
+    /**
+     * Tuum 内部所有符文声明的、将向外部发射的事件的静态契约列表。
+     * 这描述了 Tuum 的所有副作用。
+     */
+    emittedEvents: Array<EmittedEventSpec>;
     /**
      * 在分析过程中发现的所有错误和警告的列表。
      * 如果此列表为空，代表 Tuum 配置健康。

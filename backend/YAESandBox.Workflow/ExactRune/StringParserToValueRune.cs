@@ -84,7 +84,7 @@ internal class StringParserToValueRuneProcessor(StringParserToValueRuneConfig co
                 else if (rule.IsRequired)
                 {
                     var error = Result.Fail($"必需的字段 '{rule.FieldName}' 未能从输入中匹配到，且没有提供默认值。");
-                    this.DebugDto.RuntimeError = error.Message;
+                    this.DebugDto.RuntimeError = error.ToDetailString();
                     return error.AsCompletedTask();
                 }
                 else
@@ -104,7 +104,7 @@ internal class StringParserToValueRuneProcessor(StringParserToValueRuneConfig co
                 if (rule.IsRequired)
                 {
                     var error = Result.Fail($"必需的字段 '{rule.FieldName}' 的值 '{rawValue}' 无法转换为类型 '{rule.FieldType}'。");
-                    this.DebugDto.RuntimeError = error.Message;
+                    this.DebugDto.RuntimeError = error.ToDetailString();
                     return error.AsCompletedTask();
                 }
 

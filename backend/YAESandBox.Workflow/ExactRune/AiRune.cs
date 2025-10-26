@@ -156,6 +156,13 @@ internal class AiRuneProcessor(AiRuneConfig config, ICreatingContext creatingCon
         return (reasoningBuilder.ToString(), contentBuilder.ToString());
     }
 
+    internal static string GetStreamTargetAddressForThinking(string? targetAddress)
+    {
+        if (string.IsNullOrWhiteSpace(targetAddress))
+            return "think";
+        return $"{targetAddress}.think";
+    }
+
     /// <summary>
     /// 实现“双重”发射逻辑：分开 thinking 和 content。
     /// </summary>
@@ -170,7 +177,7 @@ internal class AiRuneProcessor(AiRuneConfig config, ICreatingContext creatingCon
         // 1. 发射思维过程 (如果有)
         if (!string.IsNullOrEmpty(chunk.Reasoning))
         {
-            string thinkAddress = $"{this.Config.StreamingTargetAddress ?? string.Empty}.think";
+            string thinkAddress = GetStreamTargetAddressForThinking(this.Config.StreamingTargetAddress);
 
             object reasoningDataToSend = this.Config.StreamingMode == nameof(UpdateMode.Incremental)
                 ? chunk.Reasoning
@@ -355,6 +362,59 @@ internal record AiRuneConfig : AbstractRuneConfig<AiRuneProcessor>
 
     /// <inheritdoc />
     protected override AiRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
+
+    /// <inheritdoc />
+    public override List<EmittedEventSpec> AnalyzeEmittedEvents(IReadOnlyDictionary<string, VarSpecDef> resolvedVariableTypes)
+    {
+        // AI符文的副作用只在流式模式下发生
+        if (!this.AiConfiguration.IsStream)
+        {
+            return [];
+        }
+
+        var events = new List<EmittedEventSpec>();
+        var streamMode = Enum.TryParse<UpdateMode>(this.StreamingMode, out var mode) ? mode : UpdateMode.Incremental;
+        string address = this.StreamingTargetAddress ?? string.Empty;
+
+        // 所有流式输出的数据类型当前都是字符串
+        var stringContentSpec = new EmittedContentSpec { TypeDefinition = CoreVarDefs.String };
+
+        if (this.FinalOutputFormat == nameof(AiOutputFormat.DoubleOutput))
+        {
+            // 在双重输出模式下，声明两个事件
+            events.Add(new EmittedEventSpec
+            {
+                Address = address,
+                Mode = streamMode,
+                Description = "AI模型生成的实时内容流。",
+                SourceRuneConfigId = this.ConfigId,
+                ContentSpec = stringContentSpec,
+            });
+            events.Add(new EmittedEventSpec
+            {
+                Address = AiRuneProcessor.GetStreamTargetAddressForThinking(address),
+                Mode = streamMode,
+                Description = "AI模型生成的思维过程流。",
+                SourceRuneConfigId = this.ConfigId,
+                ContentSpec = stringContentSpec,
+            });
+        }
+        else // ContentWithThinkTag
+        {
+            // 在合并模式下，只声明一个事件
+            
+            events.Add(new EmittedEventSpec
+            {
+                Address = address,
+                Mode = streamMode,
+                Description = "AI模型生成的、可能包含<think>标签的合并内容流。",
+                SourceRuneConfigId = this.ConfigId,
+                ContentSpec = stringContentSpec,
+            });
+        }
+
+        return events;
+    }
 }
 
 /// <summary>

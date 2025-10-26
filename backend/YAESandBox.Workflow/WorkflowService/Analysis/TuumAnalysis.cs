@@ -188,6 +188,13 @@ public record TuumAnalysisResult
     public required Dictionary<string, VarSpecDef> InternalVariableDefinitions { get; init; }
 
     /// <summary>
+    /// Tuum 内部所有符文声明的、将向外部发射的事件的静态契约列表。
+    /// 这描述了 Tuum 的所有副作用。
+    /// </summary>
+    [Required]
+    public required List<EmittedEventSpec> EmittedEvents { get; init; }
+
+    /// <summary>
     /// 在分析过程中发现的所有错误和警告的列表。
     /// 如果此列表为空，代表 Tuum 配置健康。
     /// </summary>
@@ -219,8 +226,8 @@ public class TuumAnalysisService
         // 步骤 1: 外部API契约分析 (确定哪些输入是必需的)
         var internalRequirements = this.AnalyzeInternalRequirements(enabledRunes.ToList());
 
-        // 步骤 2: 顺序数据流与类型分析
-        var (flowAndTypeMessages, finalTypeDefs, allConsumedVars, allProducedVars) =
+        // 步骤 2: 顺序数据流、类型和副作用分析
+        var (flowAndTypeMessages, finalTypeDefs, allConsumedVars, allProducedVars,emittedEvents) =
             this.AnalyzeSequentialDataFlowAndTypes(tuumConfig, enabledRunes, mode);
 
         // 步骤 3: 外部映射的健全性校验 (依赖步骤1和2的结果)
@@ -252,6 +259,7 @@ public class TuumAnalysisService
             InternalVariableDefinitions = finalTypeDefs,
             ConsumedEndpoints = consumedEndpoints,
             ProducedEndpoints = producedEndpoints,
+            EmittedEvents = emittedEvents,
             Messages =
             [
                 ..tuumMappingUniqueMessages, ..runeAttributeMessages, ..flowAndTypeMessages, ..dataFlowMessages,
@@ -355,17 +363,24 @@ public class TuumAnalysisService
             }
         }
     }
-    
-        /// <summary>
+
+    /// <summary>
     /// **核心分析函数**: 按顺序模拟数据流，检查连通性和类型兼容性。
     /// </summary>
-    private (List<ValidationMessage> Messages, Dictionary<string, VarSpecDef> FinalTypeDefs, HashSet<string> AllConsumedVars, HashSet<string> AllProducedVars)
+    private (
+        List<ValidationMessage> Messages,
+        Dictionary<string, VarSpecDef> FinalTypeDefs,
+        HashSet<string> AllConsumedVars,
+        HashSet<string> AllProducedVars,
+        List<EmittedEventSpec> AllEmittedEvents
+        )
         AnalyzeSequentialDataFlowAndTypes(TuumConfig tuumConfig, IReadOnlyList<AbstractRuneConfig> enabledRunes, TypeAnalysisMode mode)
     {
         var messages = new List<ValidationMessage>();
         var currentVariableTypes = new Dictionary<string, VarSpecDef>();
         var allConsumedVars = new HashSet<string>();
         var allProducedVars = new HashSet<string>(tuumConfig.InputMappings.Keys); // 外部输入是最初的生产者
+        var allEmittedEvents = new List<EmittedEventSpec>();
 
         // 初始化：外部输入提供了初始类型。我们用一个占位符，因为输入的真实类型由第一个消费者决定。
         foreach (string inputVar in tuumConfig.InputMappings.Keys)
@@ -394,6 +409,7 @@ public class TuumAnalysisService
                             RuleSource = "DataFlow"
                         });
                     }
+
                     continue; // 无法进行类型检查，跳过
                 }
 
@@ -414,6 +430,12 @@ public class TuumAnalysisService
                 }
             }
 
+            // 步骤 1.5: 分析当前符文的副作用
+            // 我们将【执行此Rune之前】的类型上下文传递给它。
+            // 因为Rune的副作用通常是基于它所消费的数据。
+            var eventsFromRune = rune.AnalyzeEmittedEvents(currentVariableTypes);
+            allEmittedEvents.AddRange(eventsFromRune);
+
             // 步骤 2: 更新当前符文的生产
             foreach (var producedSpec in rune.GetProducedSpec())
             {
@@ -423,7 +445,7 @@ public class TuumAnalysisService
             }
         }
 
-        return (messages, currentVariableTypes, allConsumedVars, allProducedVars);
+        return (messages, currentVariableTypes, allConsumedVars, allProducedVars, allEmittedEvents);
     }
 
     /// <summary>

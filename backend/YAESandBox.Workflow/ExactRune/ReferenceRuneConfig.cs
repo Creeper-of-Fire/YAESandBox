@@ -35,7 +35,7 @@ internal class ReferenceRuneProcessor(ReferenceRuneConfig config, ICreatingConte
 
         if (creationResult.TryGetError(out var error, out var actualProcessor))
         {
-            this.DebugDto.RuntimeError = $"创建引用的符文处理器失败: {error.Message}";
+            this.DebugDto.RuntimeError = $"创建引用的符文处理器失败: {error.ToDetailString()}";
             return Result.Fail(error);
         }
 

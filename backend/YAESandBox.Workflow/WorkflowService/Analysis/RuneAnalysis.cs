@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using YAESandBox.Depend.Results;
 using YAESandBox.Workflow.Core.Config.RuneConfig;
 using YAESandBox.Workflow.Core.Runtime.WorkflowService;
 using YAESandBox.Workflow.Core.VarSpec;
@@ -98,7 +99,7 @@ public class RuneAnalysisService(WorkflowConfigFindService findService)
                     {
                         Severity = RuleSeverity.Error,
                         Message =
-                            $"引用解析失败：找不到 RefId='{refConfig.TargetRuneRef.RefId}', Version='{refConfig.TargetRuneRef.Version}' 的全局符文。({error.Message})",
+                            $"引用解析失败：找不到 RefId='{refConfig.TargetRuneRef.RefId}', Version='{refConfig.TargetRuneRef.Version}' 的全局符文。({error.ToDetailString()})",
                         RuleSource = "ReferenceValidation"
                     }
                 ]

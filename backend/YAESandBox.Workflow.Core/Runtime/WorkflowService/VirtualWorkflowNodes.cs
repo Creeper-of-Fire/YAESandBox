@@ -7,21 +7,33 @@ namespace YAESandBox.Workflow.Core.Runtime.WorkflowService;
 /// 一个虚拟的、仅存在于运行时的图节点，代表Workflow的入口。
 /// 它的作用是将工作流的启动参数注入到Tuum图中。
 /// </summary>
-internal class VirtualWorkflowInputNode(WorkflowConfig config, IReadOnlyDictionary<string, object?> workflowInitialInputs) 
+public class VirtualWorkflowInputNode(WorkflowConfig config, IReadOnlyDictionary<string, object?> workflowInitialInputs) 
     : IGraphNode<string>
 {
     // ReSharper disable once InconsistentNaming
+    /// <summary>
+    /// 虚拟输入端口的ID
+    /// </summary>
     public const string VIRTUAL_INPUT_ID = "__workflow_input__";
         
     private IReadOnlyList<string> WorkflowInputNames { get; } = config.WorkflowInputs;
     private IReadOnlyDictionary<string, object?> WorkflowInitialInputs { get; } = workflowInitialInputs;
 
+    /// <summary>
+    /// 本虚拟节点的ID是固定的，是VIRTUAL_INPUT_ID
+    /// </summary>
     public string Id => VIRTUAL_INPUT_ID;
 
     // 工作流输入节点不消费任何东西
+    /// <summary>
+    /// 获得工作流输入节点的输入端口名
+    /// </summary>
     public IEnumerable<string> GetInputPortNames() => [];
 
     // 它的输出端口就是WorkflowConfig中声明的所有入口参数名
+    /// <summary>
+    /// 获得工作流输入节点的输出端口名
+    /// </summary>
     public IEnumerable<string> GetOutputPortNames() => this.WorkflowInputNames;
 
     /// <summary>

@@ -65,6 +65,18 @@ public abstract partial record AbstractRuneConfig
     /// </summary>
     /// <returns></returns>
     public virtual List<ProducedSpec> GetProducedSpec() => [];
+    
+    /// <summary>
+    /// 分析此符文可能产生的副作用（如发射事件）。
+    /// 此方法在拥有完整上下文（如Tuum内所有变量的最终推断类型）后被调用。
+    /// </summary>
+    /// <param name="resolvedVariableTypes">一个字典，包含了Tuum内所有变量名及其最终被推断出的类型定义。</param>
+    /// <returns>一个描述此符文所有副作用的规格列表。</returns>
+    public virtual List<EmittedEventSpec> AnalyzeEmittedEvents(IReadOnlyDictionary<string, VarSpecDef> resolvedVariableTypes)
+    {
+        // 默认情况下，符文没有副作用。
+        return [];
+    }
 }
 
 /// <inheritdoc />

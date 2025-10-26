@@ -12,7 +12,10 @@ public record Error(string Message, Exception? Exception = null)
     /// <summary>
     /// 错误信息
     /// </summary>
-    public string Message { get; } = Message;
+    /// <remarks>
+    /// 请勿对外使用它，你应该使用<see cref="ResultFormattingExtensions.ToDetailString(Error, bool)"/>
+    /// </remarks>
+    internal string Message { get; } = Message;
 
     /// <summary>
     /// 关联的异常（可能为 null）

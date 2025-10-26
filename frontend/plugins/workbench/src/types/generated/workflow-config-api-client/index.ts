@@ -12,6 +12,8 @@ export type { AbstractRuneConfigStoredConfig } from './models/AbstractRuneConfig
 export type { AbstractRuneConfigStoredConfigJsonResultDto } from './models/AbstractRuneConfigStoredConfigJsonResultDto';
 export type { ConsumedSpec } from './models/ConsumedSpec';
 export type { DynamicComponentAsset } from './models/DynamicComponentAsset';
+export type { EmittedContentSpec } from './models/EmittedContentSpec';
+export type { EmittedEventSpec } from './models/EmittedEventSpec';
 export type { IRuneProcessorDebugDto } from './models/IRuneProcessorDebugDto';
 export type { ListVarSpecDef } from './models/ListVarSpecDef';
 export type { MockRunRequestDto } from './models/MockRunRequestDto';
@@ -33,6 +35,7 @@ export type { TuumConfigStoredConfigJsonResultDto } from './models/TuumConfigSto
 export type { TuumConnectionEndpoint } from './models/TuumConnectionEndpoint';
 export type { TuumInputMapping } from './models/TuumInputMapping';
 export type { TuumOutputMapping } from './models/TuumOutputMapping';
+export { UpdateMode } from './models/UpdateMode';
 export type { ValidationMessage } from './models/ValidationMessage';
 export type { VarSpecDef } from './models/VarSpecDef';
 export type { WorkflowConfig } from './models/WorkflowConfig';

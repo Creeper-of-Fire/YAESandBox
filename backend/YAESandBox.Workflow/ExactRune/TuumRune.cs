@@ -10,6 +10,7 @@ using YAESandBox.Workflow.Core.Runtime.Processor.RuneProcessor;
 using YAESandBox.Workflow.Core.VarSpec;
 using YAESandBox.Workflow.WorkflowService.Analysis;
 using static YAESandBox.Workflow.Core.Runtime.Processor.TuumProcessor;
+using static YAESandBox.Workflow.ExactRune.TuumRuneProcessor;
 
 namespace YAESandBox.Workflow.ExactRune;
 
@@ -19,7 +20,7 @@ namespace YAESandBox.Workflow.ExactRune;
 /// <param name="creatingContext"></param>
 /// <param name="config">枢机符文的配置。</param>
 internal class TuumRuneProcessor(TuumRuneConfig config, ICreatingContext creatingContext)
-    : NormalRuneProcessor<TuumRuneConfig, TuumRuneProcessor.TuumRuneProcessorDebugDto>(config, creatingContext)
+    : NormalRuneProcessor<TuumRuneConfig, TuumRuneProcessorDebugDto>(config, creatingContext)
 {
     /// <summary>
     /// 枢机符文的调试信息。
@@ -121,4 +122,8 @@ internal record TuumRuneConfig : AbstractRuneConfig<TuumRuneProcessor>, IHasInne
 
     /// <inheritdoc />
     protected override TuumRuneProcessor ToCurrentRune(ICreatingContext creatingContext) => new(this, creatingContext);
+
+    /// <inheritdoc />
+    public override List<EmittedEventSpec> AnalyzeEmittedEvents(IReadOnlyDictionary<string, VarSpecDef> resolvedVariableTypes) =>
+        this.AnalysisResult.EmittedEvents;
 }
