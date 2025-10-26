@@ -2,9 +2,7 @@
 
 // 定义选中项的类型
 import {type ComputedRef, inject, type InjectionKey, type Ref} from "vue";
-import type {GlobalResourceItem} from "../types";
-import type {WorkflowConfig} from "../types";
-import type {ApiRequestOptions} from "../types";
+import type {ApiRequestOptions, GlobalResourceItem, WorkflowConfig} from "./types";
 
 /**
  * 用于在应用中注入是否为暗黑主题的状态
@@ -64,10 +62,14 @@ export interface IWorkflowConfigProvider
 export const WorkflowConfigProviderKey: InjectionKey<IWorkflowConfigProvider> = Symbol('WorkflowConfigProviderKey')
 
 
-export function useProjectUniqueName(){
+export function useProjectUniqueName()
+{
     const projectUniqueName = inject(PluginUniqueNameKey);
-    if (!projectUniqueName) {
+    if (!projectUniqueName)
+    {
         throw new Error("插件的独有名称未被提供。");
     }
     return projectUniqueName
 }
+
+export {WorkflowAnalysisProviderKey, type IWorkflowAnalysisProvider} from "./inject-key/WorkflowAnalysisProvider"

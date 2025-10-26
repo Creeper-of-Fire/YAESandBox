@@ -1,6 +1,6 @@
 ﻿import { ref, inject, onScopeDispose, type Ref } from 'vue';
 import { executeWorkflowStream } from '../../../services/workflowService.ts';
-import { TokenResolverKey } from '../../../utils/injectKeys.ts';
+import { TokenResolverKey } from '../../../injectKeys.ts';
 import type {WorkflowConfig} from "../../../types";
 
 /**

@@ -70,26 +70,56 @@
     </n-card>
 
     <n-list bordered clickable hoverable>
-      <n-list-item v-for="workflow in workflows" :key="workflow.id"
-                   @click="handleSelect(workflow.id)">
-        <n-thing :title="workflow.resource.name">
-          <template #description>
-            <n-space align="center" size="small" wrap>
-              <!-- 渲染输入参数 -->
-              <n-tag v-for="(status, name) in workflow.matchDetails.inputs" :key="name" :type="getInputTagType(status)" round
-                     size="small">
-                {{ name }}
-              </n-tag>
-              <!-- 渲染标签 -->
-              <n-tag v-for="(status, name) in workflow.matchDetails.tags" :key="name" :type="getTagTagType(status)"
-                     size="small">
-                {{ name }}
-              </n-tag>
-            </n-space>
-          </template>
-        </n-thing>
-      </n-list-item>
-      <n-empty v-if="!workflows.length" description="在当前模式下没有找到匹配的工作流" style="padding: 2rem;"/>
+      <div v-for="workflow in workflows" :key="workflow.id">
+        <n-list-item @click="handleSelect(workflow.id)">
+          <n-thing :title="workflow.resource.name">
+            <template #description>
+              <n-space align="center" size="small" wrap>
+                <!-- 渲染输入参数 -->
+                <n-tag v-for="(status, name) in workflow.matchDetails.inputs" :key="name" :type="getInputTagType(status)" round
+                       size="small">
+                  {{ name }}
+                </n-tag>
+                <!-- 渲染标签 -->
+                <n-tag v-for="(status, name) in workflow.matchDetails.tags" :key="name" :type="getTagTagType(status)"
+                       size="small">
+                  {{ name }}
+                </n-tag>
+              </n-space>
+            </template>
+            <template #footer>
+              <n-popover
+                  :disabled="!getReportFor(workflow.id)?.workflowEmittedEvents?.length"
+                  :style="{ maxWidth: '500px', maxHeight: '400px', overflowY: 'auto' }"
+                  placement="right-start"
+                  trigger="hover"
+              >
+                <template #trigger>
+                  <n-button
+                      :disabled="!getReportFor(workflow.id)?.workflowEmittedEvents?.length"
+                      :loading="!analysisReports.get(workflow.id)"
+                      round
+                      type="info"
+                      size="small"
+                      @click.stop
+                  >
+                    {{ getButtonText(workflow.id) }}
+                  </n-button>
+                </template>
+                <!-- Popover 的内容：加载中、空状态或事件树 -->
+                <div v-if="getReportFor(workflow.id)">
+                  <WorkflowEmittedEventsTree
+                      v-if="getReportFor(workflow.id)!.workflowEmittedEvents?.length"
+                      :events="getReportFor(workflow.id)!.workflowEmittedEvents"
+                  />
+                </div>
+                <n-text v-else depth="3">分析报告加载中...</n-text>
+              </n-popover>
+            </template>
+          </n-thing>
+        </n-list-item>
+        <n-empty v-if="!workflows.length" description="在当前模式下没有找到匹配的工作流" style="padding: 2rem;"/>
+      </div>
     </n-list>
   </div>
 </template>
@@ -97,14 +127,18 @@
 <script lang="ts" setup>
 import {NList, NListItem, NPopover, NSpace, NTag, NThing} from 'naive-ui';
 import {type EnhancedWorkflow, type InputMatchingMode, type TagMatchingMode, type WorkflowFilter} from '../../composables.ts';
+import WorkflowEmittedEventsTree from "./WorkflowEmittedEventsTree.vue";
+import type {WorkflowValidationReport} from "../../types";
+import {ref} from "vue";
 
-const inputMode = defineModel<InputMatchingMode>('inputMode', { required: true });
-const tagMode = defineModel<TagMatchingMode>('tagMode', { required: true });
+const inputMode = defineModel<InputMatchingMode>('inputMode', {required: true});
+const tagMode = defineModel<TagMatchingMode>('tagMode', {required: true});
 
 // 定义 Props & Emits
 const props = defineProps<{
   workflows: EnhancedWorkflow[];
   filter: WorkflowFilter;
+  analysisReports: Map<string, WorkflowValidationReport | null>;
 }>();
 
 const emit = defineEmits<{
@@ -138,4 +172,16 @@ function getTagTagType(status: 'matched' | 'missing' | 'extra'): 'info' | 'warni
       return 'default';
   }
 }
+
+const getReportFor = (id: string) => props.analysisReports.get(id);
+const getButtonText = (id: string) => {
+  const report = getReportFor(id);
+  // report is undefined -> data structure hasn't been populated yet (race condition, rare)
+  // report is null -> loading in progress
+  if (report === undefined || report === null) {
+    return '分析中...';
+  }
+  return report.workflowEmittedEvents?.length ? '查看输出 API' : '无输出事件';
+};
+
 </script>

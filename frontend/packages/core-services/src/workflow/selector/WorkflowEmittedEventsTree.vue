@@ -1,4 +1,4 @@
-﻿<!-- src/components/workflow/analysis/WorkflowEmittedEventsTree.vue -->
+﻿<!-- WorkflowEmittedEventsTree.vue -->
 <template>
   <n-card :bordered="false" size="small" title="对外发射事件 (API)">
     <n-text depth="3" style="font-size: 12px; display: block; margin-bottom: 12px;">
@@ -21,7 +21,7 @@ import {computed, type VNode} from 'vue';
 import {NEmpty, NFlex, NIcon, NPopover, NTag, NText, NTree, type TreeOption} from 'naive-ui';
 import {FolderIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {TreeSelectOverride} from '@yaesandbox-frontend/shared-ui/utils';
-import type {EmittedEventSpec} from '#/types/generated/workflow-config-api-client';
+import type {EmittedEventSpec} from '../../types';
 
 // --- 类型定义 ---
 
@@ -136,7 +136,7 @@ const renderLabel = ({option}: { option: TreeOption }): VNode =>
   if (node.isEventNode)
   {
     return (
-        <NPopover trigger="hover" placement="right">
+        <NPopover trigger="hover" placement="right" to={document.body}>
           {{
             trigger: () => labelNode,
             default: popoverContent

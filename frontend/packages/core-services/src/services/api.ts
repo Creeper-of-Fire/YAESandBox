@@ -1,4 +1,4 @@
-﻿import type {TokenResolver} from "../utils/injectKeys.ts";
+﻿import type {TokenResolver} from "../injectKeys.ts";
 import type {ApiRequestOptions} from "../types";
 
 /**

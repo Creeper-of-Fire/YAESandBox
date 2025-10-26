@@ -26,7 +26,7 @@ import {computed} from 'vue';
 import {NEmpty, NSkeleton} from 'naive-ui';
 import type {WorkflowConfig} from '#/types/generated/workflow-config-api-client';
 import {useWorkflowAnalysis} from '#/composables/useWorkflowAnalysis';
-import WorkflowEmittedEventsTree from './WorkflowEmittedEventsTree.vue';
+import {WorkflowEmittedEventsTree} from '@yaesandbox-frontend/core-services/workflow';
 import ValidationStatusIndicator from "#/components/share/validationInfo/ValidationStatusIndicator.vue";
 import {useValidationInfo} from "#/components/share/validationInfo/useValidationInfo.ts";
 

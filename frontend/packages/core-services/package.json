@@ -13,7 +13,7 @@
     "./composables": "./src/composables.ts",
     "./workflow": "./src/workflow/index.ts",
     "./types": "./src/types/index.ts",
-    "./inject-key": "./src/utils/injectKeys.ts",
+    "./inject-key": "./src/injectKeys.ts",
     "./player-save": "./src/player-save/index.ts"
   },
   "peerDependencies": {
@@ -27,7 +27,8 @@
   "dependencies": {
     "@microsoft/signalr": "^9.0.6",
     "lodash-es": "^4.17.21",
-    "form-data": "^4.0.4"
+    "form-data": "^4.0.4",
+    "@yaesandbox-frontend/shared-ui": "workspace:*"
   },
   "devDependencies": {
     "vue": "^3.5.18",
