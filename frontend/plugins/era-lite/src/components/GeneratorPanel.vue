@@ -25,10 +25,10 @@
 
       <!-- 配置提供者按钮 -->
       <WorkflowSelectorButton
+          :expected-outputs="expectedOutputsFromSchema"
           :filter="workflowFilter"
           :storage-key="props.storageKey"
-          @click="handleGenerate"
-      />
+          @click="handleGenerate"/>
     </n-flex>
 
     <!-- AI生成结果展示区域-->
@@ -90,7 +90,7 @@ import {
   useStructuredWorkflowStream,
   type WorkflowFilter
 } from '@yaesandbox-frontend/core-services/composables';
-import {WorkflowSelectorButton} from '@yaesandbox-frontend/core-services/workflow'
+import {extractOutputsFromSchema, WorkflowSelectorButton} from '@yaesandbox-frontend/core-services/workflow'
 import EntityEditor from "#/components/EntityEditor.vue";
 import {useVModel} from "@vueuse/core";
 
@@ -133,6 +133,8 @@ const {
 } = useStructuredWorkflowStream();
 
 const {typedData: flatData} = useFlatDataWithSchema(flatTextData, props.schema)
+
+const expectedOutputsFromSchema = computed(() => extractOutputsFromSchema(props.schema));
 
 if (flatData)
 {

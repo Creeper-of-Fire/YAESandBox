@@ -5,5 +5,6 @@
 // export * from './execute/entitySchema.ts'
 // export * from './execute/useFlatDataWithSchema.ts'
 // export * from './selector/useFilteredWorkflowSelector.ts'
+export {extractOutputsFromSchema} from './execute/schemaUtils.ts'
 export {default as WorkflowSelectorButton} from './selector/WorkflowSelectorButton.vue'
 export {default as WorkflowEmittedEventsTree} from './selector/WorkflowEmittedEventsTree.vue'

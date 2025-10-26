@@ -79,6 +79,7 @@
         <WorkflowSelectorButton
             ref="workflowBtnRef"
             :disabled="!userInput.trim() || isLoading"
+            :expected-outputs="['content']"
             :filter="workflowFilter"
             :storage-key="`chat-workflow-${sessionId}`"
             @click="handleSend"

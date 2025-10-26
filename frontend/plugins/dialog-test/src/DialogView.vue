@@ -3,10 +3,10 @@
     <div class="workflow-selector-wrapper">
       <WorkflowSelectorButton
           ref="workflowSelectorBtnRef"
+          :expected-outputs="['']"
           :filter="workflowFilter"
           storage-key="dialog-test-workflow"
-          @click="handleWorkflowExecution"
-      />
+          @click="handleWorkflowExecution"/>
     </div>
 
     <ChatHistory :history="chatHistory"/>
@@ -20,14 +20,12 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, inject, ref, watch} from 'vue';
+import {computed, ref, watch} from 'vue';
 import {useMessage, useThemeVars} from 'naive-ui';
 import {v4 as uuidv4} from 'uuid';
 import type {ChatMessage, Prompt} from '#/types';
-import {executeWorkflowStream} from '@yaesandbox-frontend/core-services';
 import ChatHistory from '#/components/ChatHistory.vue';
 import MessageInput from '#/components/MessageInput.vue';
-import {TokenResolverKey} from "@yaesandbox-frontend/core-services/inject-key";
 import {WorkflowSelectorButton} from "@yaesandbox-frontend/core-services/workflow";
 import {useStructuredWorkflowStream, type WorkflowFilter} from "@yaesandbox-frontend/core-services/composables";
 
@@ -129,7 +127,7 @@ async function handleSendMessage(userInput: string)
   // b. 准备工作流输入
   const historyPrompt: Prompt[] = chatHistory.value
       .slice(0, -2) // 排除用户刚输入的消息和AI占位符，获取之前的历史
-      .map(msg => ({ role: msg.role, content: msg.content }));
+      .map(msg => ({role: msg.role, content: msg.content}));
 
   const workflowInputs = {
     history: JSON.stringify(historyPrompt),

@@ -17,11 +17,11 @@
           type="textarea"
       />
       <WorkflowSelectorButton
+          :expected-outputs="['context']"
           :filter="workflowFilter"
           :storage-key="workflowStorageKey"
           style="margin-top: 8px;"
-          @click="generate"
-      />
+          @click="generate"/>
     </div>
 
     <!-- 状态 2: 正在生成 -->
@@ -46,10 +46,10 @@
         <!-- TODO "重试"按钮需要一个 ref 来获取上次选择的工作流，但是实际上根本没有做 -->
         <WorkflowSelectorButton
             ref="retryButtonRef"
+            :expected-outputs="['context']"
             :filter="workflowFilter"
             :storage-key="workflowStorageKey"
-            @click="generate"
-        />
+            @click="generate"/>
         <n-button size="small" type="primary" @click="applyProposal">应用</n-button>
       </n-space>
     </div>
@@ -92,7 +92,6 @@ import {useWorldStateStore} from '#/stores/useWorldStateStore';
 import {WorkflowSelectorButton} from '@yaesandbox-frontend/core-services/workflow'
 import {type WorkflowFilter} from "@yaesandbox-frontend/core-services/composables";
 import {type Instruction, InstructionType} from "#/components/creator/instruction.ts";
-import type {WorkflowConfig} from "@yaesandbox-frontend/core-services/types";
 
 const props = defineProps<{
   instruction: Instruction;

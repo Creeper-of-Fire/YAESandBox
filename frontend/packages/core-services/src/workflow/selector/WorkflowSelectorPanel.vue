@@ -3,6 +3,12 @@
     <!-- 场景需求提示 -->
     <n-alert v-if="filter.expectedInputs?.length || filter.requiredTags?.length" style="margin-bottom: 1rem;" title="场景需求" type="info">
       <n-space vertical>
+        <div v-if="expectedOutputs?.length">
+          此任务期望生成器能提供以下输出（可选）：
+          <n-space :style="{ marginTop: '8px' }">
+            <n-tag v-for="output in expectedOutputs" :key="output" round type="warning">{{ output }}</n-tag>
+          </n-space>
+        </div>
         <div v-if="filter.expectedInputs?.length">
           此任务期望生成器能处理以下输入：
           <n-space :style="{ marginTop: '8px' }">
@@ -138,6 +144,7 @@ const tagMode = defineModel<TagMatchingMode>('tagMode', {required: true});
 const props = defineProps<{
   workflows: EnhancedWorkflow[];
   filter: WorkflowFilter;
+  expectedOutputs: string[] | null;
   analysisReports: Map<string, WorkflowValidationReport | null>;
 }>();
 

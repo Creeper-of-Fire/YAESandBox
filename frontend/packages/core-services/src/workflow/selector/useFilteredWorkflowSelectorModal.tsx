@@ -18,9 +18,14 @@ import type {WorkflowValidationReport} from "../../types";
  *
  * @param storageKey 用于持久化用户选择和UI偏好的唯一键。
  * @param filter 一个响应式的筛选条件对象 Ref。
+ * @param expectedOutputs 一个响应式的、纯展示用的期望输出列表 Ref。
  * @param initialOptions 可选的、用于首次加载时的默认匹配模式。
  */
-export function useFilteredWorkflowSelectorModal(storageKey: string, filter: Ref<WorkflowFilter>, initialOptions?: Partial<MatchingOptions>)
+export function useFilteredWorkflowSelectorModal(
+    storageKey: string,
+    filter: Ref<WorkflowFilter>,
+    expectedOutputs: Ref<string[] | null>,
+    initialOptions?: Partial<MatchingOptions>)
 {
 
     const modal = useModal();
@@ -42,21 +47,26 @@ export function useFilteredWorkflowSelectorModal(storageKey: string, filter: Ref
     const analysisReports = ref<Map<string, WorkflowValidationReport | null>>(new Map());
 
     // 4. 监听筛选结果的变化，并自动为列表中的工作流获取分析报告
-    watch(selectorLogic.filteredAndSortedWorkflows, async (workflows) => {
+    watch(selectorLogic.filteredAndSortedWorkflows, async (workflows) =>
+    {
         if (!analysisProvider) return;
 
         // 创建一个Promise数组来并行获取所有报告
-        const reportPromises = workflows.map(async (wf) => {
+        const reportPromises = workflows.map(async (wf) =>
+        {
             // 如果已经有报告或正在获取，则跳过
-            if (analysisReports.value.has(wf.id)) {
+            if (analysisReports.value.has(wf.id))
+            {
                 return;
             }
             // 先设置一个null值表示正在加载
             analysisReports.value.set(wf.id, null);
-            try {
+            try
+            {
                 const report = await analysisProvider.getReport(wf.resource);
                 analysisReports.value.set(wf.id, report || null);
-            } catch (error) {
+            } catch (error)
+            {
                 console.error(`获取工作流 ${wf.resource.name} 的分析报告失败:`, error);
                 // 可以设置一个错误状态，但这里简单地保持null
                 analysisReports.value.set(wf.id, null);
@@ -65,7 +75,7 @@ export function useFilteredWorkflowSelectorModal(storageKey: string, filter: Ref
 
         await Promise.all(reportPromises);
 
-    }, { immediate: true }); // immediate: true 确保首次加载时就触发
+    }, {immediate: true}); // immediate: true 确保首次加载时就触发
 
     /**
      * 打开选择模态框。
@@ -87,6 +97,7 @@ export function useFilteredWorkflowSelectorModal(storageKey: string, filter: Ref
                         workflows={selectorLogic.filteredAndSortedWorkflows.value}
                         filter={filter.value}
 
+                        expectedOutputs={expectedOutputs.value}
                         analysisReports={analysisReports.value}
 
                         inputMode={inputMatchingMode.value}

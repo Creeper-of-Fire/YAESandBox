@@ -1,4 +1,5 @@
-﻿<template>
+﻿<!-- WorkflowSelectorButton.vue -->
+<template>
   <div>
     <n-popover trigger="hover">
       <template #trigger>
@@ -42,12 +43,21 @@
         </template>
 
         <!-- 状态二：未选择，但有明确的输入需求 -->
-        <template v-else-if="filter.expectedInputs?.length">
+        <template v-else-if="filter.expectedInputs?.length || props.expectedOutputs?.length">
           <n-text strong>需要一个生成器</n-text>
-          <n-text>此场景需要一个能处理以下输入的AI工作流：</n-text>
-          <n-space>
-            <n-tag v-for="input in filter.expectedInputs" :key="input" round type="success">{{ input }}</n-tag>
-          </n-space>
+          <n-text>此场景需要一个AI工作流，并满足：</n-text>
+          <div v-if="props.expectedOutputs?.length" style="margin-top: 4px;">
+            <n-text :depth="2">能提供以下输出（可选）：</n-text>
+            <n-space>
+              <n-tag v-for="output in props.expectedOutputs" :key="output" round type="warning">{{ output }}</n-tag>
+            </n-space>
+          </div>
+          <div v-if="filter.expectedInputs?.length" style="margin-top: 4px;">
+            <n-text :depth="2">能处理以下输入：</n-text>
+            <n-space>
+              <n-tag v-for="input in filter.expectedInputs" :key="input" round type="success">{{ input }}</n-tag>
+            </n-space>
+          </div>
           <n-divider style="margin: 4px 0;"/>
           <n-text :depth="3" style="font-size: 12px;">
             点击按钮以从列表中选择一个匹配的工作流。
@@ -82,7 +92,7 @@
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from 'vue';
+import {computed, ref, toRef} from 'vue';
 import {NButton, NDropdown, NPopover, NSpace, NSpin, NTag, NThing} from 'naive-ui';
 import {type MatchingOptions, type WorkflowFilter} from '../../composables.ts';
 import type {WorkflowConfig} from "../../types";
@@ -92,6 +102,7 @@ import {useFilteredWorkflowSelectorModal} from "./useFilteredWorkflowSelectorMod
 const props = defineProps<{
   storageKey: string;
   filter: WorkflowFilter;
+  expectedOutputs: string[] | null;
   initialOptions?: Partial<MatchingOptions>;
 }>();
 
@@ -102,6 +113,7 @@ const emit = defineEmits<{
 
 // --- 核心逻辑 ---
 const filterRef = ref(props.filter);
+const expectedOutputsRef = toRef(props, 'expectedOutputs');
 
 // 复用 useWorkflowSelector 来处理状态和持久化
 const {
@@ -109,7 +121,7 @@ const {
   isProviderLoading,
   clearSelection,
   openSelectorModal,
-} = useFilteredWorkflowSelectorModal(props.storageKey, filterRef, props.initialOptions);
+} = useFilteredWorkflowSelectorModal(props.storageKey, filterRef, expectedOutputsRef, props.initialOptions);
 
 defineExpose({
   selectedWorkflowConfig: selectedWorkflowConfig
