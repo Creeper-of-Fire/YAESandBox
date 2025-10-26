@@ -58,6 +58,8 @@ public class WorkflowConfigModule :
             });
 
             options.AddSwaggerDocumentation(typeof(RuneConfigController).Assembly);
+            options.AddSwaggerDocumentation(typeof(AiRuneConfig).Assembly);
+            options.AddSwaggerDocumentation(typeof(AbstractRuneConfig).Assembly);
         });
 
         service.AddSingleton<WorkflowConfigFilePersistenceService>();

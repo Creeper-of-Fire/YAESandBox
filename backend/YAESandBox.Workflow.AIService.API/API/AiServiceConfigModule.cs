@@ -4,6 +4,7 @@ using Microsoft.OpenApi.Models;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.ModuleSystem.AspNet;
 using YAESandBox.ModuleSystem.AspNet.Interface;
+using YAESandBox.Workflow.AIService.AiConfig;
 using YAESandBox.Workflow.AIService.API.API.Controller;
 using YAESandBox.Workflow.AIService.ConfigManagement;
 
@@ -47,6 +48,7 @@ public class AiServiceConfigModule : IProgramModuleSwaggerUiOptionsConfigurator,
             });
 
             options.AddSwaggerDocumentation(typeof(AiConfigurationsController).Assembly);
+            options.AddSwaggerDocumentation(typeof(AbstractAiProcessorConfig).Assembly);
         });
 
         service.AddSingleton<JsonFileAiConfigurationManager>()
