@@ -2,19 +2,21 @@
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.OpenApi.Models;
+using Swashbuckle.AspNetCore.SwaggerGen;
 using Swashbuckle.AspNetCore.SwaggerUI;
 using YAESandBox.ModuleSystem.AspNet;
 using YAESandBox.ModuleSystem.AspNet.Interface;
 using YAESandBox.Workflow.Core.Runtime.WorkflowService.Abstractions;
 using YAESandBox.Workflow.Test.API.Controller;
 using YAESandBox.Workflow.Test.API.GameHub;
+using YAESandBox.Workflow.WorkflowService.Analysis;
 
 namespace YAESandBox.Workflow.Test.API;
 
 /// <summary>
 /// 用于测试工作流执行功能的模块。
 /// </summary>
-public class WorkflowTestModule : IProgramModuleSwaggerUiOptionsConfigurator, IProgramModuleMvcConfigurator, IProgramModuleHubRegistrar
+public class WorkflowTestModule : IProgramModuleSwaggerUiOptionsConfigurator, IProgramModuleMvcConfigurator, IProgramModuleHubRegistrar, IProgramModuleAdditionalSchemaProvider
 {
     /// <summary>
     /// Api文档的GroupName
@@ -50,6 +52,14 @@ public class WorkflowTestModule : IProgramModuleSwaggerUiOptionsConfigurator, IP
 
         // 注册模拟的 IWorkflowDataAccess
         service.AddSingleton<IWorkflowDataAccess, MockWorkflowDataAccess>();
+    }
+
+    /// <inheritdoc />
+    public IEnumerable<Type> GetAdditionalSchemaTypes(DocumentFilterContext context)
+    {
+        if (context.DocumentName != WorkflowTestGroupName) yield break;
+        
+        yield return typeof(WorkflowValidationReport);
     }
 
     /// <inheritdoc />
