@@ -108,7 +108,10 @@ public static class StaticAssetModuleExtensions
             {
                 case AssemblyRelativeStaticAsset assemblyAsset:
                     var assembly = provider.GetType().Assembly;
+#pragma warning disable IL3000 // 'System.Reflection.Assembly.Location' is incompatible with single-file publishing.
                     string? assemblyPath = Path.GetDirectoryName(assembly.Location);
+#pragma warning restore IL3000 // 'System.Reflection.Assembly.Location' is incompatible with single-file publishing.
+                    // 检查路径是否为空。如果为空，说明可能处于单文件发布等无法获取物理路径的场景。
                     if (string.IsNullOrEmpty(assemblyPath))
                     {
                         Logger.Warn("无法获取模块 [{ModuleName}] 的程序集路径，已跳过。", provider.GetType().Name);
@@ -141,7 +144,7 @@ public static class StaticAssetModuleExtensions
             {
                 Logger.Warn("模块 [{ModuleName}] 声明的静态资源路径不存在或无法解析，已跳过。定义: {@AssetDefinition}",
                     provider.GetType().Name, asset);
-                return;
+                continue;
             }
 
             app.UseStaticFiles(DefaultStaticFileOptions.CloneAndReBond(

@@ -100,7 +100,9 @@ public class RuneConfigController(
         foreach (var plugin in allPlugins)
         {
             // 3. 直接通过插件的 Assembly 位置来推断 wwwroot 路径
+#pragma warning disable IL3000 // 'System.Reflection.Assembly.Location' is incompatible with single-file publishing.
             string assemblyLocation = plugin.GetType().Assembly.Location;
+#pragma warning restore IL3000 // 'System.Reflection.Assembly.Location' is incompatible with single-file publishing.
             if (string.IsNullOrEmpty(assemblyLocation)) continue;
 
             string? pluginRootPath = Path.GetDirectoryName(assemblyLocation);
