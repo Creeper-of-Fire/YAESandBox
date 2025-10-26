@@ -14,6 +14,7 @@ import {
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
 import type {ModalApiInjection} from "naive-ui/es/modal/src/ModalProvider";
 import type {EnhancedAction} from "#/components/share/itemActions/useConfigItemActions.tsx";
+import {TreeSelectOverride} from "@yaesandbox-frontend/shared-ui/utils";
 
 /**
  * 渲染一个带输入框的对话框内容
@@ -99,10 +100,14 @@ export const SelectAndInputContent = (props: {
         <NCard title={props.title} bordered={false} size="small" style={{width: '300px'}}>
             <NFormItem label="类型" required>
                 <NTreeSelect
-                    v-model:value={selectedType.value} v-model:expanded-keys={expandedKeys.value}
-                    options={props.selectOptions} placeholder={props.selectPlaceholder}
-                    block-line clearable filterable
-                    overrideDefaultNodeClickBehavior={({option}) => (option.children ? 'toggleExpand' : 'default')}
+                    v-model:value={selectedType.value}
+                    v-model:expanded-keys={expandedKeys.value}
+                    options={props.selectOptions}
+                    placeholder={props.selectPlaceholder}
+                    block-line
+                    clearable
+                    filterable
+                    overrideDefaultNodeClickBehavior={TreeSelectOverride}
                 />
             </NFormItem>
             {selectedType.value && (

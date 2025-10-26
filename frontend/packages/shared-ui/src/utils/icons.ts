@@ -47,4 +47,6 @@ export {default as PauseIcon}from'@vicons/ionicons5/es/PauseCircleOutline';
 export {default as CopyIcon}from'@vicons/ionicons5/es/CopyOutline';
 export {default as UploadIcon}from'@vicons/material/es/UploadOutlined';
 export {default as DownloadIcon}from'@vicons/material/es/DownloadOutlined';
+export {default as SendIcon}from'@vicons/ionicons5/es/SendOutline';
+export {default as NotificationsIcon}from'@vicons/ionicons5/es/NotificationsOutline';
 // export {default as }from'@vicons/ionicons5/es/';

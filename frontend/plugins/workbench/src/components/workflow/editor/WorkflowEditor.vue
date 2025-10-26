@@ -204,7 +204,7 @@ const onConnect = (params: Connection) =>
   if (!sourceNode) return;
 
   let source: TuumConnectionEndpoint;
-  if (sourceNode.type === 'input')
+  if (sourceNode.type === 'workflow-input')
   {
     source = {
       tuumId: WORKFLOW_INPUT_SOURCE_ID,
