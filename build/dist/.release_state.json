@@ -1,7 +1,7 @@
 {
     "hashes": {
         "launcher": "e4e868816eb4252aa29c109cf175819c9eb2caacc09e8eec5b3224e1357f144a",
-        "app": "8e0e094579e6864e17b4b799818a5985d0a6f93d772905a064fbf974facb442e",
+        "app": "f06868c3ddb3804bef62b796a566b85eab286650416b7a933a0483482c575e12",
         "backend": "598d5ffada5cb0b2b722fa78fa03ebcde99620f7b3c884d341941c2f50a02ccb",
         "backend-slim": "2d42b3c7d5a474c385a073dd50446fcadcfd6ebed88b7a6c803ba89bef782459",
         "plugins": {
@@ -25,11 +25,11 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "notes": "## YAESandBox v0.1.2 发布日志\n\n本次更新是一个以**代码质量提升**和**内部重构**为核心的维护版本，旨在为未来的功能开发奠定更坚实的基础。我们对前后端代码库进行了多项现代化重构，并修复了若干问题。此外，本次更新也为工作流选择器带来了一项实用的**功能增强**。\n\n### ✨ 功能增强 (Enhancement)\n\n*   **工作流选择器中的 API 预览 (`62c2e61`, `f1315ab`, `becb860`)**\n    *   为工作流引入了初步的**静态分析**能力，现在系统可以分析出工作流对外暴露的事件 API。\n    *   在**工作流选择器**中，用户现在可以方便地预览每个工作流将要发射的事件及其数据结构。这有助于在复用和集成工作流时，更清晰地了解其副作用，做出更准确的选择。\n\n### 🛠️ 重构与代码质量 (Refactoring & Code Quality)\n\n本次发布包含了大量的内部代码重构，虽然这些变化对最终用户是透明的，但它们极大地提升了项目的可维护性、健壮性和开发效率。\n\n*   **全面迁移至 TSX 语法 (`f99c92d`)**:\n    *   为了提升代码的可读性、类型安全和开发体验，我们将项目中所有使用 Vue `h()` 渲染函数的地方，系统性地迁移到了 **TSX** 语法。\n\n*   **后端项目结构现代化 (`f286377`, `3480019`)**:\n    *   对后端核心项目（如 `Workflow`, `AIService`）进行了结构重构，将其拆分为 `.Core` (核心逻辑) 和 `.API` (Web 接口) 等部分，努力实现业务逻辑与宿主环境的解耦。\n    *   引入了新的模块系统抽象，降低了核心模块对 ASP.NET Core 的依赖。\n\n*   **前端通用逻辑抽象与规范化 (`dc75f65`)**:\n    *   为解决插件间存档管理逻辑重复的问题，引入了 `withSaveGameRoot` 高阶组件 (HOC) 进行封装，简化了插件的入口代码。\n    *   统一了前端 `core-services` 的模块导出路径为 `kebab-case` 风格，增强了代码库的一致性。\n\n*   **工作台交互逻辑重构 (`fd3aae4`, `ce7f7dc`)**:\n    *   废弃了原有的、逻辑复杂的 `InlineInputPopover` 组件，采用 `useModal()` 和 **TSX** 动态渲染交互界面，使得配置项操作（新建/重命名等）的代码更内聚、更易于维护。\n\n### 🐛 Bug 修复 (Bug Fixes)\n\n*   **发布 (`38851ca`)**: 解决了单文件发布场景下的编译器警告和资源路径处理问题，提升了兼容性。",
+                    "notes": "## YAESandBox v0.1.3 发布日志\n\n本次更新是一个专注于**修复与体验完善**的维护版本。我们重点解决了 v0.1.2 版本中“工作流选择器 API 预览”功能在实际应用场景中的上下文缺失问题，并将其能力全面推广到了所有相关组件中，确保了功能设计的完整性和一致性。\n\n### 🐛 功能修复与完善 (Fixes & Improvements)\n\n*   **增强工作流选择器的上下文感知能力 (`307b5643`)**\n    *   **修复**：解决了在多个核心场景下（如创造物品指令、通用生成器、聊天等），工作流选择器无法展示当前任务对**输出数据契约 (Output Contract)** 的具体期望的问题。\n    *   **完善**: `WorkflowSelectorButton` 及其关联的选择面板现在能够接收并清晰地展示一个 `expectedOutputs` 列表。这使得用户在选择工作流之前，就能直观地了解消费端期望从工作流中获取的数据结构（例如 `['context']` 或 `['content']`），从而做出更准确的决策。\n    *   **推广**: 此功能已全面应用于 `IntentComponent`、`GeneratorPanel` 和 `ChatView` 等所有使用工作流选择器的组件中，补全了 v0.1.2 版本中 API 预览功能的最后一环，显著提升了开发和使用的体验。\n\n*   **引入 `extractOutputsFromSchema` 工具函数 (`307b5643`)**\n    *   **代码质量**: 为 `core-services` 模块新增了 `extractOutputsFromSchema` 辅助函数。它能够将组件的 `EntityFieldSchema` 声明式地转换为 `expectedOutputs` 列表，实现了业务逻辑（数据结构定义）与 UI 展示（选择器提示）的自动同步，减少了重复代码和硬编码。",
                     "description": "YAESandBox 的前端用户界面。",
-                    "version": "0.1.2",
-                    "hash": "8a89d0871baa3a5e5f27c8494243e8b4c1dd28bbc520883480d4d093545c3399",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.2/app.zip"
+                    "version": "0.1.3",
+                    "hash": "76bec1face3db941eca177c70999e0a0133ad5098f6b66c83287c3409cd5c6b6",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.3/app.zip"
                 },
                 {
                     "id": "backend",
@@ -56,11 +56,11 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "notes": "## YAESandBox v0.1.2 发布日志\n\n本次更新是一个以**代码质量提升**和**内部重构**为核心的维护版本，旨在为未来的功能开发奠定更坚实的基础。我们对前后端代码库进行了多项现代化重构，并修复了若干问题。此外，本次更新也为工作流选择器带来了一项实用的**功能增强**。\n\n### ✨ 功能增强 (Enhancement)\n\n*   **工作流选择器中的 API 预览 (`62c2e61`, `f1315ab`, `becb860`)**\n    *   为工作流引入了初步的**静态分析**能力，现在系统可以分析出工作流对外暴露的事件 API。\n    *   在**工作流选择器**中，用户现在可以方便地预览每个工作流将要发射的事件及其数据结构。这有助于在复用和集成工作流时，更清晰地了解其副作用，做出更准确的选择。\n\n### 🛠️ 重构与代码质量 (Refactoring & Code Quality)\n\n本次发布包含了大量的内部代码重构，虽然这些变化对最终用户是透明的，但它们极大地提升了项目的可维护性、健壮性和开发效率。\n\n*   **全面迁移至 TSX 语法 (`f99c92d`)**:\n    *   为了提升代码的可读性、类型安全和开发体验，我们将项目中所有使用 Vue `h()` 渲染函数的地方，系统性地迁移到了 **TSX** 语法。\n\n*   **后端项目结构现代化 (`f286377`, `3480019`)**:\n    *   对后端核心项目（如 `Workflow`, `AIService`）进行了结构重构，将其拆分为 `.Core` (核心逻辑) 和 `.API` (Web 接口) 等部分，努力实现业务逻辑与宿主环境的解耦。\n    *   引入了新的模块系统抽象，降低了核心模块对 ASP.NET Core 的依赖。\n\n*   **前端通用逻辑抽象与规范化 (`dc75f65`)**:\n    *   为解决插件间存档管理逻辑重复的问题，引入了 `withSaveGameRoot` 高阶组件 (HOC) 进行封装，简化了插件的入口代码。\n    *   统一了前端 `core-services` 的模块导出路径为 `kebab-case` 风格，增强了代码库的一致性。\n\n*   **工作台交互逻辑重构 (`fd3aae4`, `ce7f7dc`)**:\n    *   废弃了原有的、逻辑复杂的 `InlineInputPopover` 组件，采用 `useModal()` 和 **TSX** 动态渲染交互界面，使得配置项操作（新建/重命名等）的代码更内聚、更易于维护。\n\n### 🐛 Bug 修复 (Bug Fixes)\n\n*   **发布 (`38851ca`)**: 解决了单文件发布场景下的编译器警告和资源路径处理问题，提升了兼容性。",
+                    "notes": "## YAESandBox v0.1.3 发布日志\n\n本次更新是一个专注于**修复与体验完善**的维护版本。我们重点解决了 v0.1.2 版本中“工作流选择器 API 预览”功能在实际应用场景中的上下文缺失问题，并将其能力全面推广到了所有相关组件中，确保了功能设计的完整性和一致性。\n\n### 🐛 功能修复与完善 (Fixes & Improvements)\n\n*   **增强工作流选择器的上下文感知能力 (`307b5643`)**\n    *   **修复**：解决了在多个核心场景下（如创造物品指令、通用生成器、聊天等），工作流选择器无法展示当前任务对**输出数据契约 (Output Contract)** 的具体期望的问题。\n    *   **完善**: `WorkflowSelectorButton` 及其关联的选择面板现在能够接收并清晰地展示一个 `expectedOutputs` 列表。这使得用户在选择工作流之前，就能直观地了解消费端期望从工作流中获取的数据结构（例如 `['context']` 或 `['content']`），从而做出更准确的决策。\n    *   **推广**: 此功能已全面应用于 `IntentComponent`、`GeneratorPanel` 和 `ChatView` 等所有使用工作流选择器的组件中，补全了 v0.1.2 版本中 API 预览功能的最后一环，显著提升了开发和使用的体验。\n\n*   **引入 `extractOutputsFromSchema` 工具函数 (`307b5643`)**\n    *   **代码质量**: 为 `core-services` 模块新增了 `extractOutputsFromSchema` 辅助函数。它能够将组件的 `EntityFieldSchema` 声明式地转换为 `expectedOutputs` 列表，实现了业务逻辑（数据结构定义）与 UI 展示（选择器提示）的自动同步，减少了重复代码和硬编码。",
                     "description": "YAESandBox 的前端用户界面。",
-                    "version": "0.1.2",
-                    "hash": "8a89d0871baa3a5e5f27c8494243e8b4c1dd28bbc520883480d4d093545c3399",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.2/app.zip"
+                    "version": "0.1.3",
+                    "hash": "76bec1face3db941eca177c70999e0a0133ad5098f6b66c83287c3409cd5c6b6",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.3/app.zip"
                 },
                 {
                     "id": "backend",
