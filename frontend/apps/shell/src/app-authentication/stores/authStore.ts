@@ -95,6 +95,20 @@ export const useAuthStore = defineStore(STORAGE_KEY, () =>
         // 如果正在刷新，则等待并返回结果，避免并发
         if (isRefreshing.value)
         {
+            /**
+             * TODO: [优化] 当前并发处理采用轮询等待。
+             * 一个更优的实现是使用共享的 Promise 来避免轮询引入的微小延迟，并能更优雅地处理刷新失败的场景。
+             * 并且把它提到 currentRefreshToken 和 currentUserId 的检查之前。
+             * 示例:
+             * if (refreshTokenPromise) return refreshTokenPromise;
+             * refreshTokenPromise = new Promise(...);
+             * return refreshTokenPromise;
+             * const currentRefreshToken = refreshToken.value;
+             * const currentUserId = user.value?.userId;
+             * if (!currentRefreshToken || !currentUserId) {...}
+             * ...
+             */
+
             // 等待刷新完成
             await new Promise(resolve =>
             {
