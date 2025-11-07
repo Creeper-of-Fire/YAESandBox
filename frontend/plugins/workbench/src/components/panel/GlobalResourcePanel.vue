@@ -49,9 +49,12 @@
             size="small"
             type="segment"
         >
-          <n-tab name="workflow" tab="工作流"/>
-          <n-tab name="tuum" tab="枢机"/>
-          <n-tab name="rune" tab="符文"/>
+          <n-tab
+              v-for="config in tabConfigs"
+              :key="config.type"
+              :name="config.type"
+              :tab="config.label"
+          />
         </n-tabs>
 
         <n-form-item v-if="activeAvailableTags.length > 0" class="tag-filter-container">
@@ -70,93 +73,38 @@
       </template>
 
       <template #body>
-        <div v-if="activeTab===`workflow`">
-          <draggable
-              v-if="workflowsList.length > 0"
-              v-model="workflowsList"
-              :animation="150"
-              :clone="handleResourceClone"
-              :group="{ name: 'workflows-group', pull: 'clone', put: false }"
-              :setData="setDataHandler"
-              :sort="false"
-              class="resource-list"
-              item-key="storeId"
-              @end="onDragEnd"
-              @start="onDragStart"
+        <draggable
+            v-if="activeList.length > 0"
+            v-model="draggableList"
+            :animation="150"
+            :clone="handleResourceClone"
+            :group="{ name: currentTabConfig.dragGroupName, pull: 'clone', put: false }"
+            :setData="setDataHandler"
+            :sort="false"
+            class="resource-list"
+            item-key="storeId"
+            @end="onDragEnd"
+            @start="onDragStart"
+        >
+          <div v-for="element in activeList"
+               :key="element.storeId"
+               :data-drag-id="element.storeId"
+               :data-drag-type="currentTabConfig.type"
           >
-            <div v-for="element in workflowsList"
-                 :key="element.storeId"
-                 :data-drag-id="element.storeId"
-                 data-drag-type="workflow"
-            >
-              <GlobalResourceListItem
-                  :store-id="element.storeId"
-                  type="workflow"
-                  @contextmenu="handleContextMenu"
-                  @show-error-detail="showErrorDetail"
-              />
-            </div>
-          </draggable>
-          <n-empty v-else class="empty-container" description="无全局工作流" small/>
-        </div>
-        <div v-if="activeTab===`tuum`">
-          <draggable
-              v-if="tuumsList.length > 0"
-              v-model="tuumsList"
-              :animation="150"
-              :clone="handleResourceClone"
-              :group="{ name: 'tuums-group', pull: 'clone', put: false }"
-              :setData="setDataHandler"
-              :sort="false"
-              class="resource-list"
-              item-key="storeId"
-              @end="onDragEnd"
-              @start="onDragStart"
-          >
-            <div v-for="element in tuumsList"
-                 :key="element.storeId"
-                 :data-drag-id="element.storeId"
-                 data-drag-type="tuum"
-            >
-              <GlobalResourceListItem
-                  :store-id="element.storeId"
-                  type="tuum"
-                  @contextmenu="handleContextMenu"
-                  @show-error-detail="showErrorDetail"
-              />
-            </div>
-          </draggable>
-          <n-empty v-else class="empty-container" description="无全局枢机" small/>
-        </div>
-        <div v-if="activeTab===`rune`">
-          <draggable
-              v-if="runesList.length > 0"
-              v-model="runesList"
-              :animation="150"
-              :clone="handleResourceClone"
-              :group="{ name: 'runes-group', pull: 'clone', put: false }"
-              :setData="setDataHandler"
-              :sort="false"
-              class="resource-list"
-              item-key="storeId"
-              @end="onDragEnd"
-              @start="onDragStart"
-          >
-            <div v-for="element in runesList"
-                 :key="element.storeId"
-                 :data-drag-id="element.storeId"
-                 data-drag-type="rune"
-            >
-              <GlobalResourceListItem
-                  :store-id="element.storeId"
-                  type="rune"
-                  @contextmenu="handleContextMenu"
-                  @show-error-detail="showErrorDetail"
-              />
-            </div>
-          </draggable>
-          <n-empty v-else class="empty-container" description="无全局符文" small/>
-        </div>
+            <GlobalResourceListItem
+                :store-id="element.storeId"
+                :type="currentTabConfig.type"
+                @contextmenu="handleContextMenu"
+                @show-error-detail="showErrorDetail"
+            />
+          </div>
+        </draggable>
+        <n-empty
+            v-else
+            :description="currentTabConfig.emptyDescription"
+            class="empty-container"
+            small
+        />
       </template>
     </HeaderAndBodyLayout>
 
@@ -166,7 +114,7 @@
 
 
 <script lang="tsx" setup>
-import {computed, reactive, ref} from 'vue';
+import {computed, ref} from 'vue';
 import {type DropdownOption, NAlert, NButton, NEmpty, NFlex, NH4, NIcon, NSpin, NTab, NTabs, useDialog, useMessage} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore';
 import type {AnyConfigObject, ConfigType, GlobalResourceItem} from "@yaesandbox-frontend/core-services/types";
@@ -182,6 +130,20 @@ import {useResourceDragProvider} from "#/composables/useResourceDragAndDrop.tsx"
 import {useContextMenu} from "@yaesandbox-frontend/shared-ui";
 import {useMobileDragCoordinator} from "#/composables/useMobileDragCoordinator.ts";
 
+interface TabConfig
+{
+  type: ConfigType;
+  label: string;
+  dragGroupName: string;
+  emptyDescription: string;
+}
+
+const tabConfigs: TabConfig[] = [
+  {type: 'workflow', label: '工作流', dragGroupName: 'workflows-group', emptyDescription: '无全局工作流'},
+  {type: 'tuum', label: '枢机', dragGroupName: 'tuums-group', emptyDescription: '无全局枢机'},
+  {type: 'rune', label: '符文', dragGroupName: 'runes-group', emptyDescription: '无全局符文'},
+];
+
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
   id: string; // 原始 Record 的 key
@@ -195,111 +157,63 @@ const workbenchStore = useWorkbenchStore();
 const dialog = useDialog();
 const message = useMessage();
 
-const {
-  resources: workflows,
-  allAvailableTags: workflowTags,
-  filterTags: workflowFilterTags,
-  isLoading: isWorkflowsLoading,
-  error: workflowsError,
-  execute: executeWorkflows
-} = useFilteredGlobalResources('workflow');
-const {
-  resources: tuums,
-  allAvailableTags: tuumTags,
-  filterTags: tuumFilterTags,
-  isLoading: isTuumsLoading,
-  error: tuumsError,
-  execute: executeTuums
-} = useFilteredGlobalResources('tuum');
-const {
-  resources: runes,
-  allAvailableTags: runeTags,
-  filterTags: runeFilterTags,
-  isLoading: isRunesLoading,
-  error: runesError,
-  execute: executeRunes
-} = useFilteredGlobalResources('rune');
+const resourceHandlers = {
+  workflow: useFilteredGlobalResources('workflow'),
+  tuum: useFilteredGlobalResources('tuum'),
+  rune: useFilteredGlobalResources('rune'),
+};
 
 // 可写的计算属性，用于 v-model 绑定到 n-select
 const activeFilterTags = computed({
-  get: () =>
-  {
-    switch (activeTab.value)
-    {
-      case 'workflow':
-        return workflowFilterTags.value;
-      case 'tuum':
-        return tuumFilterTags.value;
-      case 'rune':
-        return runeFilterTags.value;
-      default:
-        return [];
-    }
-  },
-  set: (tags: string[]) =>
-  {
-    switch (activeTab.value)
-    {
-      case 'workflow':
-        workflowFilterTags.value = tags;
-        break;
-      case 'tuum':
-        tuumFilterTags.value = tags;
-        break;
-      case 'rune':
-        runeFilterTags.value = tags;
-        break;
-    }
-  },
+  get: () => activeResourceHandler.value.filterTags.value,
+  set: (tags: string[]) => { activeResourceHandler.value.filterTags.value = tags; }
 });
 
 // 计算当前激活 Tab 的可用标签列表
-const activeAvailableTags = computed(() =>
+const activeAvailableTags = computed(() => activeResourceHandler.value.allAvailableTags.value);
+
+// 获取当前激活标签页的数据处理器
+const activeResourceHandler = computed(() =>
 {
-  switch (activeTab.value)
-  {
-    case 'workflow':
-      return workflowTags.value;
-    case 'tuum':
-      return tuumTags.value;
-    case 'rune':
-      return runeTags.value;
-    default:
-      return [];
-  }
+  return resourceHandlers[activeTab.value];
 });
 
-
-// 为所有资源类型创建可用于 v-model 的列表
-const workflowsList = computed({
-  get: () => workflows.value ? Object.entries(workflows.value).map(([storeId, item]) => ({storeId, item})) : [],
-  set: () =>
-  {
-  }
-});
-const tuumsList = computed({
-  get: () => tuums.value ? Object.entries(tuums.value).map(([storeId, item]) => ({storeId, item})) : [],
-  set: () =>
-  {
-  }
-});
-const runesList = computed({
-  get: () => runes.value ? Object.entries(runes.value).map(([storeId, item]) => ({storeId, item})) : [],
-  set: () =>
-  {
-  }
+const activeList = computed(() =>
+{
+  const resources = activeResourceHandler.value.resources.value;
+  return resources ? Object.entries(resources).map(([storeId, item]) => ({storeId, item})) : [];
 });
 
-const aggregatedIsLoading = computed(() => isWorkflowsLoading.value || isTuumsLoading.value || isRunesLoading.value);
-const aggregatedError = computed(() => workflowsError.value || tuumsError.value || runesError.value);
+const draggableList = computed({
+  get: () => activeList.value,
+  // 即使我们不排序，v-model 也需要一个 set 函数来避免 Vue 警告
+  set: () => {}
+});
 
+// --- 聚合状态 ---
+const aggregatedIsLoading = computed(() =>
+    Object.values(resourceHandlers).some(h => h.isLoading.value)
+);
+const aggregatedError = computed(() =>
+    Object.values(resourceHandlers).find(h => h.error.value)?.error.value ?? null
+);
+
+// --- 聚合方法 ---
 function executeAll()
 {
-  executeWorkflows();
-  executeTuums();
-  executeRunes();
+  Object.values(resourceHandlers).forEach(h => h.execute());
 }
 
+// 获取当前激活标签页的完整配置
+const currentTabConfig = computed(() =>
+{
+  return tabConfigs.find(c => c.type === activeTab.value)!;
+});
+
+/**
+ * 计算属性，用于在 Tooltip 中显示当前激活的标签页名称
+ */
+const currentTabLabel = computed(() => currentTabConfig.value.label);
 
 /**
  * 显示资源加载错误的详细信息。
@@ -323,24 +237,6 @@ function showErrorDetail(errorMessage: string, originJsonString: string | null |
     positiveText: '确定'
   });
 }
-
-/**
- * 计算属性，用于在 Tooltip 中显示当前激活的标签页名称
- */
-const currentTabLabel = computed(() =>
-{
-  switch (activeTab.value)
-  {
-    case 'workflow':
-      return '工作流';
-    case 'tuum':
-      return '枢机';
-    case 'rune':
-      return '符文';
-    default:
-      return '资源';
-  }
-});
 
 const {createNewAction} = useGlobalConfigCreationAction(
     activeTab,
