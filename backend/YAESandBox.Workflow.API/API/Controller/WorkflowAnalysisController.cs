@@ -98,7 +98,6 @@ public class WorkflowAnalysisController(
     /// </remarks>
     /// <param name="workflowConfig">工作流配置的完整草稿。</param>
     /// <returns>一份包含所有校验信息的结构化报告。</returns>
-    // TODO 对应的校验还没有完成
     [HttpPost("validate-workflow")]
     [Produces("application/json")]
     [ProducesResponseType(typeof(WorkflowValidationReport), StatusCodes.Status200OK)]
