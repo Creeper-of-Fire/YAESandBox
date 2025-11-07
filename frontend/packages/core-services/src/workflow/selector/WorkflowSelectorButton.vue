@@ -12,7 +12,7 @@
             size="large"
             style="user-select: none;"
             @click="handleClick"
-            @contextmenu.prevent="handleContextMenu"
+            @contextmenu.prevent="showMenu"
         >
           <template v-if="isProviderLoading" #icon>
             <n-spin :size="20"/>
@@ -78,25 +78,17 @@
     </n-popover>
 
     <!-- 右键菜单，用于重新配置 -->
-    <n-dropdown
-        :options="dropdownOptions"
-        :show="showDropdown"
-        :x="x"
-        :y="y"
-        placement="bottom-start"
-        trigger="manual"
-        @clickoutside="showDropdown = false"
-        @select="handleDropdownSelect"
-    />
+    <ContextMenu/>
   </div>
 </template>
 
 <script lang="ts" setup>
 import {computed, ref, toRef} from 'vue';
-import {NButton, NDropdown, NPopover, NSpace, NSpin, NTag, NThing} from 'naive-ui';
+import {NButton, NPopover, NSpace, NSpin, NTag, NThing} from 'naive-ui';
 import {type MatchingOptions, type WorkflowFilter} from '../../composables.ts';
 import type {WorkflowConfig} from "../../types";
 import {useFilteredWorkflowSelectorModal} from "./useFilteredWorkflowSelectorModal";
+import {useContextMenu} from "@yaesandbox-frontend/shared-ui";
 
 // 定义 Props & Emits
 const props = defineProps<{
@@ -147,40 +139,26 @@ const buttonText = computed(() =>
   return selectedWorkflowConfig.value?.name || '配置AI生成器';
 });
 
-// --- 右键菜单逻辑 (与之前的 WorkflowSelector 组件相同) ---
-const showDropdown = ref(false);
-const x = ref(0);
-const y = ref(0);
-
+// --- 右键菜单逻辑 --
 const dropdownOptions = computed(() => [
   {
     label: '重新选择工作流',
     key: 'select',
+    onClick: () =>
+    {
+      openSelectorModal();
+    },
   },
   {
     label: '清除选择',
     key: 'clear',
     disabled: !selectedWorkflowConfig.value,
+    onClick: () =>
+    {
+      clearSelection();
+    },
   },
 ]);
 
-function handleContextMenu(e: MouseEvent)
-{
-  showDropdown.value = true;
-  x.value = e.clientX;
-  y.value = e.clientY;
-}
-
-function handleDropdownSelect(key: string | number)
-{
-  showDropdown.value = false;
-  if (key === 'select')
-  {
-    openSelectorModal();
-  }
-  else if (key === 'clear')
-  {
-    clearSelection();
-  }
-}
+const {showMenu, ContextMenu} = useContextMenu(dropdownOptions);
 </script>

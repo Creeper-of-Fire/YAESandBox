@@ -1,31 +1,19 @@
 ﻿<template>
   <DayNightToggle
-      ref="dayNightToggleRef"
+      :ref="setTriggerRef"
       v-model="isCurrentlyDark"
       :duration="1000"
       :size="1.5"
       @click="handleToggleClick($event)"
-      @contextmenu.prevent="handleContextMenu"
   />
-  <n-dropdown
-      :on-clickoutside="onClickOutside"
-      :options="themeOptions"
-      :show="showDropdownRef"
-      :x="xRef"
-      :y="yRef"
-      placement="bottom-start"
-      trigger="manual"
-  >
-  </n-dropdown>
+  <ContextMenu/>
 </template>
 <script lang="tsx" setup>
 import DayNightToggle from "#/component/DayNightToggle.vue";
-import {type ComponentPublicInstance, computed, inject, nextTick, onMounted, ref, shallowRef, type VNode} from "vue";
+import {type ComponentPublicInstance, computed, inject, ref, shallowRef, type VNode} from "vue";
 import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/inject-key";
-import {onLongPress} from "@vueuse/core";
 import {NSwitch} from "naive-ui";
-
-const dayNightToggleRef = shallowRef<ComponentPublicInstance | null>(null)
+import {useContextMenu} from "@yaesandbox-frontend/shared-ui";
 
 const isCurrentlyDark = inject(IsDarkThemeKey, ref(false));
 const props = defineProps<{
@@ -55,34 +43,8 @@ const toggleSystemMode = () =>
   }
   emit('update:themeMode', newMode);
   // 切换后关闭下拉菜单
-  showDropdownRef.value = false;
+  hideMenu();
 };
-
-const showDropdownRef = ref(false);
-const xRef = ref(0);
-const yRef = ref(0);
-
-const handleContextMenu = (e: MouseEvent) =>
-{
-  longPressed.value = true;
-  showDropdownRef.value = false
-  nextTick().then(() =>
-  {
-    showDropdownRef.value = true
-    xRef.value = e.clientX
-    yRef.value = e.clientY
-  })
-}
-
-onMounted(() =>
-{
-  onLongPress(dayNightToggleRef, handleContextMenu, {delay: 500});
-});
-
-const onClickOutside = () =>
-{
-  showDropdownRef.value = false
-}
 
 const themeOptions = computed(() => [
   {
@@ -132,4 +94,12 @@ const handleToggleClick = (event: MouseEvent) =>
   // 在更新 v-model 的同时，发出带有 MouseEvent 的 toggle 事件
   emit('toggle', event);
 }
+
+const {setTriggerRef, ContextMenu, hideMenu} = useContextMenu(themeOptions, {
+  triggerOn: ['contextmenu', 'longpress'],
+  longpressOptions: {delay: 500},
+  onShow: () => {
+    longPressed.value = true;
+  }
+});
 </script>

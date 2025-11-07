@@ -160,22 +160,13 @@
       </template>
     </HeaderAndBodyLayout>
 
-    <n-dropdown
-        :options="dropdownOptions"
-        :show="showDropdown"
-        :x="dropdownPosition.x"
-        :y="dropdownPosition.y"
-        placement="bottom-start"
-        trigger="manual"
-        @clickoutside="showDropdown = false"
-        @select="handleDropdownSelect"
-    />
+    <ContextMenu/>
   </div>
 </template>
 
 
 <script lang="tsx" setup>
-import {computed, nextTick, reactive, ref} from 'vue';
+import {computed, reactive, ref} from 'vue';
 import {type DropdownOption, NAlert, NButton, NEmpty, NFlex, NH4, NIcon, NSpin, NTab, NTabs, useDialog, useMessage} from 'naive-ui';
 import {deepCloneWithNewIds, useWorkbenchStore} from '#/stores/workbenchStore';
 import type {AnyConfigObject, ConfigType, GlobalResourceItem} from "@yaesandbox-frontend/core-services/types";
@@ -188,6 +179,7 @@ import {useEditorControlPayload} from "#/services/editor-context/useSelectedConf
 import {useFilteredGlobalResources} from "#/composables/useFilteredGlobalResources.ts";
 import {useConfigImportExport} from "#/composables/useConfigImportExport.ts";
 import {useResourceDragProvider} from "#/composables/useResourceDragAndDrop.tsx";
+import {useContextMenu} from "@yaesandbox-frontend/shared-ui";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -388,7 +380,7 @@ function handleResourceClone(originalResourceItem: DraggableResourceItem<AnyConf
   return null;
 }
 
-const { setDataHandler } = useResourceDragProvider();
+const {setDataHandler} = useResourceDragProvider();
 
 // --- 右键菜单 (Context Menu) 的状态和逻辑 ---
 const showDropdown = ref(false);
@@ -400,75 +392,53 @@ const dropdownOptions = computed<DropdownOption[]>(() =>
 {
   if (!activeContextItem.value) return [];
 
-  const options: DropdownOption[] = [];
+  const item = activeContextItem.value;
 
-  if (activeContextItem.value.isDamaged)
+  const editAction = {
+    label: '编辑',
+    key: 'edit',
+    icon: () => <NIcon component={EditIcon}/>,
+    onClick: () =>
+    {
+      switchContext(item.type, item.storeId);
+    }
+  };
+
+  const deleteAction = {
+    label: item.isDamaged ? '强制删除' : '删除',
+    key: 'delete',
+    icon: () => <NIcon component={TrashIcon}/>,
+    onClick: () =>
+    {
+      promptDelete(item.type, item.storeId, item.name);
+    }
+  };
+
+  if (item.isDamaged)
   {
-    options.push({
-      label: '强制删除',
-      key: 'delete',
-      icon: () => (
-          <NIcon component={TrashIcon}/>
-      )
-    });
+    return [deleteAction];
   }
   else
   {
-    options.push({
-      label: '编辑',
-      key: 'edit',
-      icon: () => (
-          <NIcon component={EditIcon}/>
-      )
-    });
-    options.push({
-      type: 'divider',
-      key: 'd1'
-    });
-    options.push({
-      label: '删除',
-      key: 'delete',
-      icon: () => (
-          <NIcon component={TrashIcon}/>
-      )
-    });
+    return [
+      editAction,
+      {type: 'divider', key: 'd1'},
+      deleteAction
+    ];
   }
-  return options;
 });
+
+const {showMenu, ContextMenu} = useContextMenu(dropdownOptions);
 
 // 处理从子组件发出的右键事件
 function handleContextMenu(payload: { type: ConfigType; storeId: string; name: string; isDamaged?: boolean; event: MouseEvent })
 {
-  showDropdown.value = false; // 先隐藏任何已存在的菜单
   activeContextItem.value = {...payload};
-  dropdownPosition.x = payload.event.clientX;
-  dropdownPosition.y = payload.event.clientY;
-
-  nextTick(() =>
-  {
-    showDropdown.value = true; // 在下一个 DOM 更新周期显示菜单
-  });
+  showMenu(payload.event);
 }
 
 const {switchContext} = useEditorControlPayload();
 const {importConfig} = useConfigImportExport();
-
-// 处理菜单项点击
-function handleDropdownSelect(key: 'edit' | 'delete')
-{
-  showDropdown.value = false;
-  const item = activeContextItem.value;
-  if (!item) return;
-
-  if (key === 'edit')
-  {
-    switchContext(item.type, item.storeId);
-  }
-  else if (key === 'delete')
-  {
-    promptDelete(item.type, item.storeId, item.name);
-  }
-}
 
 // 弹出删除确认对话框
 function promptDelete(type: ConfigType, id: string, name: string)

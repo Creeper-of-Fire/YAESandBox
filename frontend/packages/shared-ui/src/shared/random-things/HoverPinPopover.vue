@@ -1,4 +1,5 @@
-﻿<template>
+﻿<!-- HoverPinPopover.vue -->
+<template>
   <n-popover
       :show="isPopoverVisible"
       :style="{maxWidth: '400px'}"
