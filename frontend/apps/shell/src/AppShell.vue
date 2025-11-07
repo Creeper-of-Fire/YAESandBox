@@ -22,7 +22,7 @@
 
       <!-- 用户状态和登出按钮 -->
       <n-flex align="center" class="user-controls">
-        <DayNightToggleWithDropDown v-model:themeMode="themeMode"  @toggle="$emit('toggle-theme', $event)"/>
+        <DayNightToggleWithDropDown />
         <span v-if="authStore.isAuthenticated">
           欢迎, {{ userName }}
         </span>
@@ -73,10 +73,6 @@ const navLinks = computed(() =>
         label: meta.navEntry!.label,
       }));
 });
-
-
-defineEmits(['update:themeMode', 'toggle-theme']);
-const themeMode = defineModel<'light' | 'dark' | 'system'>({default: 'system'});
 
 const authStore = useAuthStore();
 const themeVars = useThemeVars();

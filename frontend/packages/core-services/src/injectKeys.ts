@@ -5,6 +5,36 @@ import {type ComputedRef, inject, type InjectionKey, type Ref} from "vue";
 import type {ApiRequestOptions, GlobalResourceItem, WorkflowConfig} from "./types";
 
 /**
+ * 定义主题控制接口。
+ * 子组件通过调用这些函数来请求状态变更。
+ */
+export interface ThemeControl {
+    /**
+     * 切换当前主题。
+     * 这是主切换按钮的主要操作。
+     * @param event - 触发此操作的鼠标事件，用于动画定位。
+     */
+    toggleTheme: (event: MouseEvent) => void;
+
+    /**
+     * 切换“跟随系统”模式的开关。
+     * @param event - 触发此操作的鼠标事件，用于动画定位。
+     */
+    toggleSystemMode: (event: MouseEvent) => void;
+
+    /**
+     * 只读状态：当前是否启用了“跟随系统”模式。
+     * 用于在 UI 中（如 Switch 开关）展示当前状态。
+     */
+    isFollowingSystem: ComputedRef<boolean>;
+}
+
+/**
+ * 用于注入主题控制对象的 InjectionKey。
+ */
+export const ThemeControlKey = Symbol('ThemeControl');
+
+/**
  * 用于在应用中注入是否为暗黑主题的状态
  */
 export const IsDarkThemeKey: InjectionKey<Ref<boolean>> = Symbol('IsDarkThemeKey');

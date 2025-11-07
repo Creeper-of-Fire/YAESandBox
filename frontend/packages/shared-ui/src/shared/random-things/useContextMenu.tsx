@@ -41,7 +41,7 @@ export interface UseContextMenuOptions
 export function useContextMenu(
     options: Ref<ContextMenuOption[]>,
     config: UseContextMenuOptions = {}
-)
+): { setTriggerRef: (el: (object | null)) => void; showMenu: (event: MouseEvent) => void; hideMenu: () => void; ContextMenu: () => VNode }
 {
     // 内部状态管理
     const show = ref(false);

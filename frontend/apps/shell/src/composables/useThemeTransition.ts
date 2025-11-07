@@ -260,7 +260,7 @@ export function triggerThemeTransition(
         // a. 遮罩的颜色从【旧主题色】平滑过渡到【新主题色】
         fallbackMask.value.color = interpolateColorInLab(sourceColor, targetColor, easedProgress);
 
-        // b. ✨ 核心修改：遮罩的透明度从 1 (完全不透明) 过渡到 0 (完全透明)
+        // b. 遮罩的透明度从 1 (完全不透明) 过渡到 0 (完全透明)
         fallbackMask.value.opacity = 1 - easedProgress;
 
         if (progress < 1) {

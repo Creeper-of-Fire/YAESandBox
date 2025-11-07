@@ -1,4 +1,5 @@
-﻿<template>
+﻿<!-- DayNightToggleWithDropDown -->
+<template>
   <DayNightToggle
       :ref="setTriggerRef"
       v-model="isCurrentlyDark"
@@ -10,41 +11,37 @@
 </template>
 <script lang="tsx" setup>
 import DayNightToggle from "#/component/DayNightToggle.vue";
-import {type ComponentPublicInstance, computed, inject, ref, shallowRef, type VNode} from "vue";
-import {IsDarkThemeKey} from "@yaesandbox-frontend/core-services/inject-key";
+import {computed, inject, ref, type VNode} from "vue";
+import {IsDarkThemeKey, type ThemeControl, ThemeControlKey} from "@yaesandbox-frontend/core-services/inject-key";
 import {NSwitch} from "naive-ui";
 import {useContextMenu} from "@yaesandbox-frontend/shared-ui";
 
-const isCurrentlyDark = inject(IsDarkThemeKey, ref(false));
-const props = defineProps<{
-  themeMode: 'light' | 'dark' | 'system';
-}>();
-const emit = defineEmits<{
-  (e: 'update:themeMode', value: 'light' | 'dark' | 'system'): void;
-  (e: 'toggle', event: MouseEvent): void;
-}>();
+const themeControl = inject(ThemeControlKey) as ThemeControl;
+const isCurrentlyDark = inject(IsDarkThemeKey);
+
+if (!themeControl || !isCurrentlyDark)
+{
+  throw new Error('主题约束没有被注入，请确保父组件提供了它们。');
+}
+
+// 从 themeControl 中解构出需要的方法和只读状态
+const {toggleTheme, toggleSystemMode, isFollowingSystem} = themeControl;
 
 const longPressed = ref(false);
 
-// 这是切换“跟随系统”模式的核心逻辑
-const toggleSystemMode = () =>
+/**
+ * 处理主切换按钮的点击事件。
+ */
+const handleToggleClick = (event: MouseEvent) =>
 {
-  let newMode: 'light' | 'dark' | 'system';
-  if (props.themeMode === 'system')
+  if (longPressed.value)
   {
-    // 如果当前是“跟随系统”，则关闭它
-    // 新模式将固定为当前正在显示的主题
-    newMode = isCurrentlyDark.value ? 'dark' : 'light';
+    longPressed.value = false; // 消费并重置标志位
+    return; // 阻止单击事件逻辑
   }
-  else
-  {
-    // 如果当前是明确模式，则开启“跟随系统”
-    newMode = 'system';
-  }
-  emit('update:themeMode', newMode);
-  // 切换后关闭下拉菜单
-  hideMenu();
-};
+  toggleTheme(event);
+}
+
 
 const themeOptions = computed(() => [
   {
@@ -60,45 +57,25 @@ const themeOptions = computed(() => [
               cursor: 'pointer',
               padding: '6px 12px',
             }}
-            onClick={toggleSystemMode}
+            onClick={(event: MouseEvent) =>
+            {
+              toggleSystemMode(event);
+              // 切换后关闭菜单
+              hideMenu();
+            }}
         >
           <span>跟随系统</span>
-          <NSwitch value={props.themeMode === 'system'}/>
+          <NSwitch value={isFollowingSystem.value}/>
         </div>
     )
   },
 ]);
 
-const handleToggleClick = (event: MouseEvent) =>
-{
-  if (longPressed.value)
-  {
-    longPressed.value = false; // 消费并重置标志位
-    return; // 阻止单击事件逻辑
-  }
-
-  let newMode: 'light' | 'dark' | 'system';
-  // 如果当前是跟随系统模式，点击后应该切换到明确的模式
-  if (props.themeMode === 'system')
-  {
-    // 如果当前显示为暗色，则切换到亮色模式，反之亦然
-    newMode = isCurrentlyDark.value ? 'light' : 'dark';
-  }
-  else
-  {
-    // 如果已经是明确模式，则在亮/暗之间切换
-    newMode = props.themeMode === 'light' ? 'dark' : 'light';
-  }
-  emit('update:themeMode', newMode);
-
-  // 在更新 v-model 的同时，发出带有 MouseEvent 的 toggle 事件
-  emit('toggle', event);
-}
-
 const {setTriggerRef, ContextMenu, hideMenu} = useContextMenu(themeOptions, {
   triggerOn: ['contextmenu', 'longpress'],
   longpressOptions: {delay: 500},
-  onShow: () => {
+  onShow: () =>
+  {
     longPressed.value = true;
   }
 });
