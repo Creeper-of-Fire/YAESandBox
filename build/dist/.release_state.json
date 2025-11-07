@@ -1,7 +1,7 @@
 {
     "hashes": {
         "launcher": "e4e868816eb4252aa29c109cf175819c9eb2caacc09e8eec5b3224e1357f144a",
-        "app": "ce9b518c04cf0564a7d01d02a4463c76fa083bfd057414bacbe34da18e6fa957",
+        "app": "8a8cada2e41adc6e578125798c13a577c1113539b62f632e100161fffea83547",
         "backend": "598d5ffada5cb0b2b722fa78fa03ebcde99620f7b3c884d341941c2f50a02ccb",
         "backend-slim": "2d42b3c7d5a474c385a073dd50446fcadcfd6ebed88b7a6c803ba89bef782459",
         "plugins": {
@@ -25,11 +25,11 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "notes": "## v0.1.4\n\n### 🐛 Bug 修复\n\n*   **修复了认证令牌刷新逻辑未被触发的根本性问题**\n\n    *   **问题描述：**\n        应用中设计了长效的“刷新令牌”机制，旨在无缝地延长用户登录会话。然而，一个缺陷导致该机制从未被实际触发。这使得用户的登录会话被错误地限制在单个“访问令牌”的短暂生命周期内。因此，无论用户是否在活跃使用，一旦访问令牌到期，会话就会中断，导致被强制登出。\n\n    *   **解决方案：**\n        本次更新修复了API请求客户端中的调用逻辑。现在，客户端在发送请求前会正确检查访问令牌的有效性。如果令牌即将过期，系统会调用已有的刷新流程来获取新令牌，从而确保了认证的连续性。\n\n    *   **用户影响：**\n        恢复了应用预期的长效登录体验。用户会话现在可以按设计在后台自动延续，彻底解决了因令牌到期而导致的周期性强制登出问题。",
+                    "notes": "### **v0.1.5**\n\n此版本为一个修补程序版本，主要目标是修复移动端视图下拖拽功能的严重缺陷，并对多个核心模块进行了广泛的架构重构，以提升代码库的长期可维护性和健壮性。\n\n---\n\n### **缺陷修复 (Bug Fixes)**\n\n*   **修复了移动端拖拽交互的完全失效问题**\n    *   **问题根源**: 此前，移动端拖拽功能因两个独立的缺陷而完全无法使用：\n        1.  **抽屉未关闭**: 拖拽开始时，由于事件处理器错误地引用了桌面端的状态，导致资源抽屉无法自动关闭，遮挡了放置目标。\n        2.  **放置操作失败**: 即便手动关闭抽屉，`n-drawer` 组件默认的 `v-if` 行为会销毁其内部的拖拽源实例，破坏了 `vue-draggable-plus` 的内部状态，导致放置操作失败。\n    *   **解决方案**:\n        1.  通过引入新的 `useMobileDragCoordinator` Composable 和 `provide/inject` 模式，重构了组件间的通信机制，确保在拖拽开始时能正确关闭抽屉。\n        2.  为 `n-drawer` 组件增加了 `display-directive=\"show\"` 属性，将其行为切换为 `v-show`，从而在拖拽过程中保持拖拽源实例的存活，恢复了放置功能。\n\n### **重构与优化 (Refactoring & Improvements)**\n\n*   **统一拖拽与放置(D&D)逻辑至 Composable**\n    *   将分散在 `GlobalResourcePanel` 和 `WorkbenchSidebar` 中的拖拽逻辑提取到了新的 `useResourceDragAndDrop.tsx` Composable 中。\n    *   该 Composable 作为拖拽功能的唯一真实来源，通过提供 `useResourceDragProvider` (拖拽源) 和 `useResourceDropZone` (放置目标) 这两个高度封装的 API，将组件的职责简化为声明式地使用，而非手动处理原生事件。此举大幅降低了组件间的耦合度。\n\n*   **封装禁用状态的继承逻辑**\n    *   创建了 `useInheritedState.ts` Composable，用于统一处理组件树中禁用状态的注入、计算和传递。\n    *   此重构消除了多个组件中重复的 `provide/inject` 样板代码，使状态管理更加集中和可预测。\n\n*   **提升组件实现和代码质量**\n    *   **渲染逻辑优化**: 将 `ValidationStatusIndicator` 组件的渲染逻辑重构为 TSX，以编程方式动态构建 VNode，取代了原先模板中复杂的 `v-if` 条件指令，使逻辑更清晰。\n    *   **代码清理**: 移除了因早期架构遗留下的冗余代码（如 `innerTuum` 字段的手动删除逻辑），因为后续的 `preprocessSchema` 函数已能自动处理该场景。\n    *   **消除魔法字符串**: 将硬编码的工作流输入源 ID (`'__workflow_input__'`) 提取为共享常量 `WORKFLOW_INPUT_SOURCE_ID`，提高了代码的可读性和安全性。",
                     "description": "YAESandBox 的前端用户界面。",
-                    "version": "0.1.4",
-                    "hash": "79965af225d66379da84cae05a80c8589ff1c8ff9275584a4cdf9917faae4f7f",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.4/app.zip"
+                    "version": "0.1.5",
+                    "hash": "d27e722d2450d2dbb2e0ef8e6599bea2fd185fe9c43f57548b1d07949dc2576b",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.5/app.zip"
                 },
                 {
                     "id": "backend",
@@ -56,11 +56,11 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "notes": "## v0.1.4\n\n### 🐛 Bug 修复\n\n*   **修复了认证令牌刷新逻辑未被触发的根本性问题**\n\n    *   **问题描述：**\n        应用中设计了长效的“刷新令牌”机制，旨在无缝地延长用户登录会话。然而，一个缺陷导致该机制从未被实际触发。这使得用户的登录会话被错误地限制在单个“访问令牌”的短暂生命周期内。因此，无论用户是否在活跃使用，一旦访问令牌到期，会话就会中断，导致被强制登出。\n\n    *   **解决方案：**\n        本次更新修复了API请求客户端中的调用逻辑。现在，客户端在发送请求前会正确检查访问令牌的有效性。如果令牌即将过期，系统会调用已有的刷新流程来获取新令牌，从而确保了认证的连续性。\n\n    *   **用户影响：**\n        恢复了应用预期的长效登录体验。用户会话现在可以按设计在后台自动延续，彻底解决了因令牌到期而导致的周期性强制登出问题。",
+                    "notes": "### **v0.1.5**\n\n此版本为一个修补程序版本，主要目标是修复移动端视图下拖拽功能的严重缺陷，并对多个核心模块进行了广泛的架构重构，以提升代码库的长期可维护性和健壮性。\n\n---\n\n### **缺陷修复 (Bug Fixes)**\n\n*   **修复了移动端拖拽交互的完全失效问题**\n    *   **问题根源**: 此前，移动端拖拽功能因两个独立的缺陷而完全无法使用：\n        1.  **抽屉未关闭**: 拖拽开始时，由于事件处理器错误地引用了桌面端的状态，导致资源抽屉无法自动关闭，遮挡了放置目标。\n        2.  **放置操作失败**: 即便手动关闭抽屉，`n-drawer` 组件默认的 `v-if` 行为会销毁其内部的拖拽源实例，破坏了 `vue-draggable-plus` 的内部状态，导致放置操作失败。\n    *   **解决方案**:\n        1.  通过引入新的 `useMobileDragCoordinator` Composable 和 `provide/inject` 模式，重构了组件间的通信机制，确保在拖拽开始时能正确关闭抽屉。\n        2.  为 `n-drawer` 组件增加了 `display-directive=\"show\"` 属性，将其行为切换为 `v-show`，从而在拖拽过程中保持拖拽源实例的存活，恢复了放置功能。\n\n### **重构与优化 (Refactoring & Improvements)**\n\n*   **统一拖拽与放置(D&D)逻辑至 Composable**\n    *   将分散在 `GlobalResourcePanel` 和 `WorkbenchSidebar` 中的拖拽逻辑提取到了新的 `useResourceDragAndDrop.tsx` Composable 中。\n    *   该 Composable 作为拖拽功能的唯一真实来源，通过提供 `useResourceDragProvider` (拖拽源) 和 `useResourceDropZone` (放置目标) 这两个高度封装的 API，将组件的职责简化为声明式地使用，而非手动处理原生事件。此举大幅降低了组件间的耦合度。\n\n*   **封装禁用状态的继承逻辑**\n    *   创建了 `useInheritedState.ts` Composable，用于统一处理组件树中禁用状态的注入、计算和传递。\n    *   此重构消除了多个组件中重复的 `provide/inject` 样板代码，使状态管理更加集中和可预测。\n\n*   **提升组件实现和代码质量**\n    *   **渲染逻辑优化**: 将 `ValidationStatusIndicator` 组件的渲染逻辑重构为 TSX，以编程方式动态构建 VNode，取代了原先模板中复杂的 `v-if` 条件指令，使逻辑更清晰。\n    *   **代码清理**: 移除了因早期架构遗留下的冗余代码（如 `innerTuum` 字段的手动删除逻辑），因为后续的 `preprocessSchema` 函数已能自动处理该场景。\n    *   **消除魔法字符串**: 将硬编码的工作流输入源 ID (`'__workflow_input__'`) 提取为共享常量 `WORKFLOW_INPUT_SOURCE_ID`，提高了代码的可读性和安全性。",
                     "description": "YAESandBox 的前端用户界面。",
-                    "version": "0.1.4",
-                    "hash": "79965af225d66379da84cae05a80c8589ff1c8ff9275584a4cdf9917faae4f7f",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.4/app.zip"
+                    "version": "0.1.5",
+                    "hash": "d27e722d2450d2dbb2e0ef8e6599bea2fd185fe9c43f57548b1d07949dc2576b",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.5/app.zip"
                 },
                 {
                     "id": "backend",
