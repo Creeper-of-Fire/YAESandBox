@@ -60,7 +60,7 @@ def confirm_final_upload(repo_owner, repo_name, version, assets_to_upload):
     for asset_path in assets_to_upload:
         console.print(f"  - {asset_path.name}")
 
-    if not Confirm.ask("\n[bold red]确认执行发布？此操作不可逆！[/bold red]", default=False):
+    if not Confirm.ask("\n[bold red]确认执行发布？此操作不可逆！[/bold red]"):
         console.print("操作已取消。")
         return False
     return True
