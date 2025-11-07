@@ -6,7 +6,7 @@ import {RuleSeverity, type ValidationMessage} from "#/types/generated/workflow-c
  * @internal
  * 定义校验结果的结构。
  */
-interface ValidationResult
+export interface ValidationResult
 {
     count: number;
     messages: ValidationMessage[];

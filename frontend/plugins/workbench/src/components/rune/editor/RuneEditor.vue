@@ -32,10 +32,10 @@
                   v-for="spec in runeAnalysisResult.consumedVariables"
                   :key="spec.name"
                   :is-optional="'isOptional' in spec ? spec.isOptional : undefined"
-                  placement='top'
                   :spec-def="spec.def"
                   :tag-type="'isOptional' in spec ? (spec.isOptional ? 'default' : 'success') : 'info'"
                   :var-name="spec.name"
+                  placement='top'
               />
             </n-flex>
           </div>
@@ -44,11 +44,11 @@
             <n-flex :wrap="true" style="margin-top: 4px;">
               <VarWithSpecTag
                   v-for="spec in runeAnalysisResult.producedVariables"
-                  placement='bottom'
                   :key="spec.name"
                   :spec-def="spec.def"
                   :tag-type="'info'"
                   :var-name="spec.name"
+                  placement='bottom'
               />
             </n-flex>
           </div>
@@ -89,8 +89,7 @@
 
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
-// 移除了 Popover 相关的组件和图标
-import {NBlockquote, NEmpty, NFlex, NFormItem, NH4, NP, NSpin, NSwitch, NTag, useThemeVars} from 'naive-ui';
+import {NBlockquote, NEmpty, NFlex, NH4, NP, NSpin, NSwitch, NTag, useThemeVars} from 'naive-ui';
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 import type {AbstractRuneConfig, TuumConfig} from "#/types/generated/workflow-config-api-client";
 import DynamicFormRenderer from "#/features/schema-viewer/DynamicFormRenderer.vue";
