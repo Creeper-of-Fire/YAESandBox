@@ -1,10 +1,8 @@
 <!-- src/app-workbench/components/.../WorkbenchSidebar.vue -->
 <template>
   <!-- 1. 根容器始终存在，并监听拖拽事件 -->
-  <div
+  <DropZoneContainer
       class="workbench-sidebar"
-      @dragenter="handleDragEnter"
-      @dragover.prevent
   >
     <!-- 2. 根据 session 是否存在，渲染不同的内部视图 -->
     <HeaderAndBodyLayout v-if="session && session.getData().value">
@@ -106,26 +104,19 @@
 
 
     <!-- 3. 拖拽覆盖层，覆盖在内容或空状态之上 -->
-    <div
-        v-if="isDragOverContainer"
-        class="drop-overlay"
-        @dragleave="handleDragLeave"
-        @drop.prevent="handleDrop"
-        @dragover.prevent
-    >
+    <DropZoneOverlay>
       <div class="drop-overlay-content">
         <n-icon :component="SwapHorizIcon" size="48"/>
         <p>释放鼠标以{{ session ? '替换当前编辑项' : '开始新的编辑' }}</p>
       </div>
-    </div>
-  </div>
+    </DropZoneOverlay>
+  </DropZoneContainer>
 </template>
 
 
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
 import {NH4, NIcon, useDialog, useMessage, useThemeVars} from 'naive-ui';
-import type {ConfigType} from "@yaesandbox-frontend/core-services/types";
 import type {AbstractRuneConfig, TuumConfig, WorkflowConfig} from "#/types/generated/workflow-config-api-client";
 import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import WorkflowItemRenderer from "#/components/workflow/WorkflowItemRenderer.vue";
@@ -136,6 +127,7 @@ import RuneItemRenderer from "#/components/rune/RuneItemRenderer.vue";
 import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts";
 import ConfigMetadataEditor from "#/components/share/ConfigMetadataEditor.vue";
 import {useConfigImportExport} from "#/composables/useConfigImportExport.ts";
+import {type DragPayload, useResourceDropZone} from "#/composables/useResourceDragAndDrop.tsx";
 
 const props = defineProps<{}>();
 
@@ -163,10 +155,6 @@ function selectCurrentSessionItem()
     }
   }
 }
-
-// --- 状态 ---
-// 覆盖层的显隐状态
-const isDragOverContainer = ref(false);
 
 // --- 计算属性 ---
 // 通过 session 获取 isDirty 状态
@@ -222,102 +210,17 @@ const {actions: itemActions} = useConfigItemActions({
   itemRef: computed(() => session.value?.getData().value ?? null),
   parentContextRef: ref(null), // 侧边栏是顶级编辑，没有父级
 });
-// --- 等级定义和比较逻辑 ---
 
-// 定义配置类型的等级
-const typeHierarchy: Record<ConfigType, number> = {
-  workflow: 3,
-  tuum: 2,
-  rune: 1,
+// 定义当 drop 发生时应该执行的逻辑
+const handleDropLogic = (payload: DragPayload) =>
+{
+  switchContext(payload.type, payload.storeId);
 };
 
-/**
- * 从 DragEvent 中解析出我们自定义的拖拽类型。
- * @param event - 拖拽事件
- * @returns 拖拽的 ConfigType 或 null
- */
-function getDraggedItemType(event: DragEvent): ConfigType | null
-{
-  for (const type of event.dataTransfer?.types ?? [])
-  {
-    const match = type.match(/^application\/vnd\.workbench\.item\.(workflow|tuum|rune)$/);
-    if (match)
-    {
-      return match[1] as ConfigType;
-    }
-  }
-  return null;
-}
-
-
-/**
- * 当拖拽项首次进入容器时，进行等级判断。
- */
-function handleDragEnter(event: DragEvent)
-{
-  const draggedType = getDraggedItemType(event);
-
-  // 如果无法识别拖拽类型，则不响应该拖拽
-  if (!draggedType)
-  {
-    return;
-  }
-
-  // 如果当前没有编辑会话，任何可识别的拖拽都应该显示覆盖层
-  if (!session.value)
-  {
-    isDragOverContainer.value = true;
-    return;
-  }
-
-  // 获取当前会话和拖拽物的等级
-  const currentSessionType = session.value.type;
-  const draggedLevel = typeHierarchy[draggedType];
-  const currentLevel = typeHierarchy[currentSessionType];
-
-  // *** 核心判断逻辑 ***
-  // 只有当拖拽项的等级 >= 当前编辑项的等级时，才显示“替换”覆盖层。
-  // 否则，不显示覆盖层，让事件“穿透”到下面的 draggable 区域。
-  if (draggedLevel >= currentLevel)
-  {
-    isDragOverContainer.value = true;
-  }
-}
-
-
-/**
- * 当拖拽项离开覆盖层时，隐藏它。
- */
-function handleDragLeave()
-{
-  isDragOverContainer.value = false;
-}
-
-/**
- * 在覆盖层上完成放置操作。
- */
-function handleDrop(event: DragEvent)
-{
-  isDragOverContainer.value = false;
-  if (event.dataTransfer)
-  {
-    try
-    {
-      const dataString = event.dataTransfer.getData('text/plain');
-      if (dataString)
-      {
-        const {type, storeId} = JSON.parse(dataString);
-        if (type && storeId)
-        {
-          switchContext(type, storeId);
-        }
-      }
-    } catch (e)
-    {
-      console.error("解析拖拽数据失败:", e);
-    }
-  }
-}
+const {DropZoneContainer, DropZoneOverlay} = useResourceDropZone({
+  session,
+  onDrop: handleDropLogic,
+});
 
 const {exportConfig} = useConfigImportExport();
 
@@ -358,7 +261,7 @@ const themeVars = useThemeVars();
 <style scoped>
 /* 根容器必须是 relative 并且占满高度 */
 .workbench-sidebar {
-  position: relative;
+  position: relative; /* 必须是 relative，为 overlay 提供定位上下文 */
   height: 100%;
   box-sizing: border-box;
   display: flex; /* 使用 flex 布局让内部内容撑开 */
@@ -428,26 +331,10 @@ const themeVars = useThemeVars();
   margin-bottom: 16px;
 }
 
-.drop-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: v-bind('themeVars.primaryColorSuppl');
-  border: 2px dashed v-bind('themeVars.primaryColor');
-  border-radius: 6px;
-  z-index: 10;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-sizing: border-box;
-}
-
 .drop-overlay-content {
   text-align: center;
   color: v-bind('themeVars.primaryColor');
   font-weight: 500;
-  pointer-events: none;
+  pointer-events: none;/* 内部内容不响应鼠标事件 */
 }
 </style>

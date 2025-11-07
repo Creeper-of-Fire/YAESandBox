@@ -77,7 +77,7 @@
               :animation="150"
               :clone="handleResourceClone"
               :group="{ name: 'workflows-group', pull: 'clone', put: false }"
-              :setData="handleSetData"
+              :setData="setDataHandler"
               :sort="false"
               class="resource-list"
               item-key="storeId"
@@ -106,7 +106,7 @@
               :animation="150"
               :clone="handleResourceClone"
               :group="{ name: 'tuums-group', pull: 'clone', put: false }"
-              :setData="handleSetData"
+              :setData="setDataHandler"
               :sort="false"
               class="resource-list"
               item-key="storeId"
@@ -135,7 +135,7 @@
               :animation="150"
               :clone="handleResourceClone"
               :group="{ name: 'runes-group', pull: 'clone', put: false }"
-              :setData="handleSetData"
+              :setData="setDataHandler"
               :sort="false"
               class="resource-list"
               item-key="storeId"
@@ -187,6 +187,7 @@ import {AddIcon, EditIcon, TrashIcon, UploadIcon} from "@yaesandbox-frontend/sha
 import {useEditorControlPayload} from "#/services/editor-context/useSelectedConfig.ts";
 import {useFilteredGlobalResources} from "#/composables/useFilteredGlobalResources.ts";
 import {useConfigImportExport} from "#/composables/useConfigImportExport.ts";
+import {useResourceDragProvider} from "#/composables/useResourceDragAndDrop.tsx";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -387,33 +388,7 @@ function handleResourceClone(originalResourceItem: DraggableResourceItem<AnyConf
   return null;
 }
 
-/**
- * setData 回调函数。
- * 这是 vue-draggable-plus 官方提供的与原生 dataTransfer 交互的钩子。
- * 当拖拽开始时，库会调用这个函数。
- * @param dataTransfer - 原生的 DataTransfer 对象
- * @param dragEl - 被拖拽的 DOM 元素 (即我们 v-for 的那个 div)
- */
-function handleSetData(dataTransfer: DataTransfer, dragEl: HTMLElement)
-{
-  // 从被拖拽的元素上读取我们之前设置好的 data-* 属性
-  const type = dragEl.dataset.dragType as ConfigType | undefined;
-  const storeId = dragEl.dataset.dragId;
-
-  if (type && storeId)
-  {
-    // 将数据打包成JSON，安全地存入 dataTransfer
-    const data = JSON.stringify({type, storeId});
-    dataTransfer.setData('text/plain', data);
-
-    // 设置一个自定义类型，用于在 dragenter 事件中进行类型检查。
-    // 这个类型本身不携带数据，它的存在就是一个“标记”。
-    const customDragType = `application/vnd.workbench.item.${type}`;
-    dataTransfer.setData(customDragType, storeId); // 值可以是任意非空字符串，比如 storeId
-  }
-
-  dataTransfer.effectAllowed = 'copy'
-}
+const { setDataHandler } = useResourceDragProvider();
 
 // --- 右键菜单 (Context Menu) 的状态和逻辑 ---
 const showDropdown = ref(false);
