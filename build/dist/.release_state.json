@@ -1,7 +1,7 @@
 {
     "hashes": {
         "launcher": "e4e868816eb4252aa29c109cf175819c9eb2caacc09e8eec5b3224e1357f144a",
-        "app": "8a8cada2e41adc6e578125798c13a577c1113539b62f632e100161fffea83547",
+        "app": "c5cfca450816f3745c3f15e4bf1ba982db3a71d124397f83f9427c1a61248234",
         "backend": "598d5ffada5cb0b2b722fa78fa03ebcde99620f7b3c884d341941c2f50a02ccb",
         "backend-slim": "2d42b3c7d5a474c385a073dd50446fcadcfd6ebed88b7a6c803ba89bef782459",
         "plugins": {
@@ -25,11 +25,11 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "notes": "### **v0.1.5**\n\n此版本为一个修补程序版本，主要目标是修复移动端视图下拖拽功能的严重缺陷，并对多个核心模块进行了广泛的架构重构，以提升代码库的长期可维护性和健壮性。\n\n---\n\n### **缺陷修复 (Bug Fixes)**\n\n*   **修复了移动端拖拽交互的完全失效问题**\n    *   **问题根源**: 此前，移动端拖拽功能因两个独立的缺陷而完全无法使用：\n        1.  **抽屉未关闭**: 拖拽开始时，由于事件处理器错误地引用了桌面端的状态，导致资源抽屉无法自动关闭，遮挡了放置目标。\n        2.  **放置操作失败**: 即便手动关闭抽屉，`n-drawer` 组件默认的 `v-if` 行为会销毁其内部的拖拽源实例，破坏了 `vue-draggable-plus` 的内部状态，导致放置操作失败。\n    *   **解决方案**:\n        1.  通过引入新的 `useMobileDragCoordinator` Composable 和 `provide/inject` 模式，重构了组件间的通信机制，确保在拖拽开始时能正确关闭抽屉。\n        2.  为 `n-drawer` 组件增加了 `display-directive=\"show\"` 属性，将其行为切换为 `v-show`，从而在拖拽过程中保持拖拽源实例的存活，恢复了放置功能。\n\n### **重构与优化 (Refactoring & Improvements)**\n\n*   **统一拖拽与放置(D&D)逻辑至 Composable**\n    *   将分散在 `GlobalResourcePanel` 和 `WorkbenchSidebar` 中的拖拽逻辑提取到了新的 `useResourceDragAndDrop.tsx` Composable 中。\n    *   该 Composable 作为拖拽功能的唯一真实来源，通过提供 `useResourceDragProvider` (拖拽源) 和 `useResourceDropZone` (放置目标) 这两个高度封装的 API，将组件的职责简化为声明式地使用，而非手动处理原生事件。此举大幅降低了组件间的耦合度。\n\n*   **封装禁用状态的继承逻辑**\n    *   创建了 `useInheritedState.ts` Composable，用于统一处理组件树中禁用状态的注入、计算和传递。\n    *   此重构消除了多个组件中重复的 `provide/inject` 样板代码，使状态管理更加集中和可预测。\n\n*   **提升组件实现和代码质量**\n    *   **渲染逻辑优化**: 将 `ValidationStatusIndicator` 组件的渲染逻辑重构为 TSX，以编程方式动态构建 VNode，取代了原先模板中复杂的 `v-if` 条件指令，使逻辑更清晰。\n    *   **代码清理**: 移除了因早期架构遗留下的冗余代码（如 `innerTuum` 字段的手动删除逻辑），因为后续的 `preprocessSchema` 函数已能自动处理该场景。\n    *   **消除魔法字符串**: 将硬编码的工作流输入源 ID (`'__workflow_input__'`) 提取为共享常量 `WORKFLOW_INPUT_SOURCE_ID`，提高了代码的可读性和安全性。",
+                    "notes": "## v0.1.6\n\n本次补丁更新主要修复了两项关键问题：一是解决了主题切换功能中长期存在的状态同步与动画错误，二是在工作台中补全了此前重构遗漏的一处代码。\n\n### 🎨 修复：主题切换的状态同步与动画问题\n\n此前的版本中，主题切换功能存在状态更新不一致、跨组件通信不可靠以及过渡动画丢失（当手动切换为跟随系统时）等问题。为彻底解决这些错误，我们使用 `provide/inject` 方案对该功能进行了重构。\n\n- **解决状态同步失败**: 通过将所有主题状态和切换逻辑集中到顶层组件 `App.vue` 进行统一管理，彻底消除了因 props 传递和事件冒泡导致的同步失败问题。现在，主题状态是唯一的、可靠的。\n- **修复过渡动画**: 创建了统一的 `changeThemeWithAnimation` 函数，确保所有由用户交互触发的主题变更都能正确应用平滑的过渡动画，修复了此前动画时有时无的缺陷。\n- **简化架构，降低出错风险**: 子组件不再需要管理复杂的状态或派发事件，仅通过注入的接口进行通信。这不仅修复了原有的逻辑错误，也使代码更易于维护，降低了未来再次出现类似问题的风险。\n\n### 🛠️ 修复：补全移动端拖拽协调器的应用\n\n此更新修复了在上一个版本的重构/修复中，因代码合并冲突而遗漏的一处关键修改。\n\n`GlobalResourcePanel.vue` 组件当时未被正确切换到新的 `useMobileDragCoordinator` Composable 机制，仍在错误地使用已被废弃的 DOM 事件派发方式进行通信。本次提交修正了这一疏漏，移除了旧代码，并正确集成了新的协调器。",
                     "description": "YAESandBox 的前端用户界面。",
-                    "version": "0.1.5",
-                    "hash": "d27e722d2450d2dbb2e0ef8e6599bea2fd185fe9c43f57548b1d07949dc2576b",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.5/app.zip"
+                    "version": "0.1.6",
+                    "hash": "a4cdfecdaf99a91561c1eea426788270a65f801bb12453b5764612901e89e2d1",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.6/app.zip"
                 },
                 {
                     "id": "backend",
@@ -56,11 +56,11 @@
                 {
                     "id": "app",
                     "name": "前端应用",
-                    "notes": "### **v0.1.5**\n\n此版本为一个修补程序版本，主要目标是修复移动端视图下拖拽功能的严重缺陷，并对多个核心模块进行了广泛的架构重构，以提升代码库的长期可维护性和健壮性。\n\n---\n\n### **缺陷修复 (Bug Fixes)**\n\n*   **修复了移动端拖拽交互的完全失效问题**\n    *   **问题根源**: 此前，移动端拖拽功能因两个独立的缺陷而完全无法使用：\n        1.  **抽屉未关闭**: 拖拽开始时，由于事件处理器错误地引用了桌面端的状态，导致资源抽屉无法自动关闭，遮挡了放置目标。\n        2.  **放置操作失败**: 即便手动关闭抽屉，`n-drawer` 组件默认的 `v-if` 行为会销毁其内部的拖拽源实例，破坏了 `vue-draggable-plus` 的内部状态，导致放置操作失败。\n    *   **解决方案**:\n        1.  通过引入新的 `useMobileDragCoordinator` Composable 和 `provide/inject` 模式，重构了组件间的通信机制，确保在拖拽开始时能正确关闭抽屉。\n        2.  为 `n-drawer` 组件增加了 `display-directive=\"show\"` 属性，将其行为切换为 `v-show`，从而在拖拽过程中保持拖拽源实例的存活，恢复了放置功能。\n\n### **重构与优化 (Refactoring & Improvements)**\n\n*   **统一拖拽与放置(D&D)逻辑至 Composable**\n    *   将分散在 `GlobalResourcePanel` 和 `WorkbenchSidebar` 中的拖拽逻辑提取到了新的 `useResourceDragAndDrop.tsx` Composable 中。\n    *   该 Composable 作为拖拽功能的唯一真实来源，通过提供 `useResourceDragProvider` (拖拽源) 和 `useResourceDropZone` (放置目标) 这两个高度封装的 API，将组件的职责简化为声明式地使用，而非手动处理原生事件。此举大幅降低了组件间的耦合度。\n\n*   **封装禁用状态的继承逻辑**\n    *   创建了 `useInheritedState.ts` Composable，用于统一处理组件树中禁用状态的注入、计算和传递。\n    *   此重构消除了多个组件中重复的 `provide/inject` 样板代码，使状态管理更加集中和可预测。\n\n*   **提升组件实现和代码质量**\n    *   **渲染逻辑优化**: 将 `ValidationStatusIndicator` 组件的渲染逻辑重构为 TSX，以编程方式动态构建 VNode，取代了原先模板中复杂的 `v-if` 条件指令，使逻辑更清晰。\n    *   **代码清理**: 移除了因早期架构遗留下的冗余代码（如 `innerTuum` 字段的手动删除逻辑），因为后续的 `preprocessSchema` 函数已能自动处理该场景。\n    *   **消除魔法字符串**: 将硬编码的工作流输入源 ID (`'__workflow_input__'`) 提取为共享常量 `WORKFLOW_INPUT_SOURCE_ID`，提高了代码的可读性和安全性。",
+                    "notes": "## v0.1.6\n\n本次补丁更新主要修复了两项关键问题：一是解决了主题切换功能中长期存在的状态同步与动画错误，二是在工作台中补全了此前重构遗漏的一处代码。\n\n### 🎨 修复：主题切换的状态同步与动画问题\n\n此前的版本中，主题切换功能存在状态更新不一致、跨组件通信不可靠以及过渡动画丢失（当手动切换为跟随系统时）等问题。为彻底解决这些错误，我们使用 `provide/inject` 方案对该功能进行了重构。\n\n- **解决状态同步失败**: 通过将所有主题状态和切换逻辑集中到顶层组件 `App.vue` 进行统一管理，彻底消除了因 props 传递和事件冒泡导致的同步失败问题。现在，主题状态是唯一的、可靠的。\n- **修复过渡动画**: 创建了统一的 `changeThemeWithAnimation` 函数，确保所有由用户交互触发的主题变更都能正确应用平滑的过渡动画，修复了此前动画时有时无的缺陷。\n- **简化架构，降低出错风险**: 子组件不再需要管理复杂的状态或派发事件，仅通过注入的接口进行通信。这不仅修复了原有的逻辑错误，也使代码更易于维护，降低了未来再次出现类似问题的风险。\n\n### 🛠️ 修复：补全移动端拖拽协调器的应用\n\n此更新修复了在上一个版本的重构/修复中，因代码合并冲突而遗漏的一处关键修改。\n\n`GlobalResourcePanel.vue` 组件当时未被正确切换到新的 `useMobileDragCoordinator` Composable 机制，仍在错误地使用已被废弃的 DOM 事件派发方式进行通信。本次提交修正了这一疏漏，移除了旧代码，并正确集成了新的协调器。",
                     "description": "YAESandBox 的前端用户界面。",
-                    "version": "0.1.5",
-                    "hash": "d27e722d2450d2dbb2e0ef8e6599bea2fd185fe9c43f57548b1d07949dc2576b",
-                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.5/app.zip"
+                    "version": "0.1.6",
+                    "hash": "a4cdfecdaf99a91561c1eea426788270a65f801bb12453b5764612901e89e2d1",
+                    "url": "https://github.com/Creeper-of-Fire/YAESandBox/releases/download/v0.1.6/app.zip"
                 },
                 {
                     "id": "backend",
