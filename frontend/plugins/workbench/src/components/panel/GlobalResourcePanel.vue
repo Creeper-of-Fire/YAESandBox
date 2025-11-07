@@ -180,6 +180,7 @@ import {useFilteredGlobalResources} from "#/composables/useFilteredGlobalResourc
 import {useConfigImportExport} from "#/composables/useConfigImportExport.ts";
 import {useResourceDragProvider} from "#/composables/useResourceDragAndDrop.tsx";
 import {useContextMenu} from "@yaesandbox-frontend/shared-ui";
+import {useMobileDragCoordinator} from "#/composables/useMobileDragCoordinator.ts";
 
 // 定义我们转换后给 draggable 用的数组项的类型
 type DraggableResourceItem<T> = {
@@ -382,9 +383,23 @@ function handleResourceClone(originalResourceItem: DraggableResourceItem<AnyConf
 
 const {setDataHandler} = useResourceDragProvider();
 
+const {notifyDragStart, notifyDragEnd} = useMobileDragCoordinator();
+
+// 当拖动开始时触发
+function onDragStart()
+{
+  notifyDragStart();
+  // 可以添加更多处理逻辑
+}
+
+// 当拖动结束时触发
+function onDragEnd()
+{
+  notifyDragEnd();
+  // 可以添加更多处理逻辑
+}
+
 // --- 右键菜单 (Context Menu) 的状态和逻辑 ---
-const showDropdown = ref(false);
-const dropdownPosition = reactive({x: 0, y: 0});
 const activeContextItem = ref<{ type: ConfigType; storeId: string; name: string; isDamaged?: boolean } | null>(null);
 
 // 动态生成菜单选项
@@ -461,37 +476,6 @@ function promptDelete(type: ConfigType, id: string, name: string)
       }
     },
   });
-}
-
-const panelRoot = ref<HTMLDivElement | null>(null);
-
-// 当拖动开始时触发
-function onDragStart()
-{
-  if (!panelRoot.value) return;
-
-  // 创建一个自定义的、可冒泡的 DOM 事件
-  const event = new CustomEvent('drag-from-panel:start', {
-    bubbles: true, // 这是关键，允许事件向上冒泡
-    composed: true // 允许事件跨越 Shadow DOM (可选，但推荐)
-  });
-
-  // 从组件的根元素派发事件
-  panelRoot.value.dispatchEvent(event);
-}
-
-// 当拖动结束时触发
-function onDragEnd()
-{
-  if (!panelRoot.value) return;
-
-  // 派发一个结束事件
-  const event = new CustomEvent('drag-from-panel:end', {
-    bubbles: true,
-    composed: true
-  });
-
-  panelRoot.value.dispatchEvent(event);
 }
 
 </script>
