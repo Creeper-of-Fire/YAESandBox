@@ -50,8 +50,7 @@ import InputNode from "#/components/workflow/editor/InputNode.vue";
 import type {TuumConnectionEndpoint, WorkflowConnection} from "#/types/generated/workflow-config-api-client";
 import {useThemeVars} from "naive-ui";
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
-
-const WORKFLOW_INPUT_SOURCE_ID = '__workflow_input__';
+import {WORKFLOW_INPUT_SOURCE_ID} from "#/utils/constants.ts";
 
 const props = defineProps<{
   workflowContext: WorkflowEditorContext;
@@ -257,6 +256,7 @@ const themeVars = useThemeVars()
   border: 1px solid v-bind('themeVars.borderColor');
   border-radius: 4px;
 }
+
 :deep(.vue-flow__node.selected) {
   box-shadow: 0 0 0 2px v-bind('themeVars.primaryColor');
 }
