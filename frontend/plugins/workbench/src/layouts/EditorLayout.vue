@@ -87,13 +87,10 @@
             v-model:show="isGlobalPanelDrawerVisible"
             :width="320"
             placement="left"
+            display-directive="show"
         >
           <n-drawer-content :closable="true" title="全局资源">
-            <div
-                class="mobile-drawer-content"
-                @drag-from-panel:start="handleDragStartFromPanel"
-                @drag-from-panel:end="handleDragEndFromPanel"
-            >
+            <div class="mobile-drawer-content">
               <slot name="global-panel"></slot>
             </div>
           </n-drawer-content>
@@ -143,7 +140,7 @@
 import {NSwitch, useThemeVars} from "naive-ui";
 import {breakpointsTailwind, useBreakpoints} from '@vueuse/core';
 import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
-import {ref} from "vue";
+import {createMobileDragCoordinator} from "#/composables/useMobileDragCoordinator.ts";
 
 // --- UI 控制状态 ---
 // 使用 vueuse/core 来判断屏幕断点，定义三种布局状态
@@ -156,38 +153,13 @@ const isGlobalPanelVisible = useScopedStorage('editor-layout-global-panel-visibl
 const isEditorPanelVisible = useScopedStorage('editor-layout-editor-panel-visible', true);
 const splitSize = useScopedStorage('editor-layout-split-size', '80%');
 
-const isGlobalPanelDrawerVisible = ref(false);
-
 const activeTab = useScopedStorage('editor-active-tab', 'editor');
 
 defineOptions({
   name: 'workbench-main-layout',
 })
 
-/**
- * 当监听到从全局资源面板开始拖动的事件时调用
- */
-function handleDragStartFromPanel()
-{
-  // 只在移动端视图下隐藏抽屉
-  if (isMobile.value)
-  {
-    isGlobalPanelVisible.value = false;
-  }
-}
-
-/**
- * 当监听到拖动结束的事件时调用
- */
-function handleDragEndFromPanel()
-{
-  // 拖动结束后，重新显示抽屉，方便用户继续操作
-  // 同样只在移动端生效
-  if (isMobile.value)
-  {
-    isGlobalPanelVisible.value = true;
-  }
-}
+const { isDrawerOpen: isGlobalPanelDrawerVisible } = createMobileDragCoordinator(isMobile);
 
 const themeVars = useThemeVars();
 </script>

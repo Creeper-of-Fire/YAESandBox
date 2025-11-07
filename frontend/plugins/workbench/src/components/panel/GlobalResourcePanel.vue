@@ -1,6 +1,6 @@
 ﻿<!-- src/app-workbench/components/.../GlobalResourcePanel.vue -->
 <template>
-  <div ref="panelRoot" class="global-resource-panel-wrapper">
+  <div class="global-resource-panel-wrapper">
     <HeaderAndBodyLayout>
       <template #header>
         <n-flex justify="space-between">
