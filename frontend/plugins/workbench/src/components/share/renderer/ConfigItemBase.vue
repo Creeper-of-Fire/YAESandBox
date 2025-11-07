@@ -3,7 +3,7 @@
   <div
       ref="rootElement"
       v-lazy-render="renderActions"
-      :class="{ 'is-selected': isSelected , 'is-disabled': !enabled || isParentDisabled }"
+      :class="{ 'is-selected': isSelected , 'is-disabled': isEffectivelyDisabled }"
       class="config-item-base"
       @click="$emit('click')"
       @dblclick.prevent="$emit('dblclick')"
@@ -43,13 +43,12 @@
 </template>
 
 <script lang="ts" setup>
-import {NIcon, useThemeVars} from 'naive-ui';
-import {DragHandleIcon} from '@yaesandbox-frontend/shared-ui/icons';
-import {computed, inject, ref, toRefs} from "vue";
-import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
+import {useThemeVars} from 'naive-ui';
+import {computed, ref, toRefs} from "vue";
 import {vLazyRender} from '@yaesandbox-frontend/shared-ui'
 import {useColorHash} from "#/components/share/renderer/useColorHash.ts";
 import ConfigItemIconRenderer from "#/components/share/renderer/ConfigItemIconRenderer.vue";
+import {useInheritedDisableState} from "#/composables/useInheritedState.ts";
 
 // 定义组件的 props
 const props = defineProps<{
@@ -67,7 +66,7 @@ const shouldRenderActions = ref(false);
 
 const renderActions = () => { shouldRenderActions.value = true; };
 
-const isParentDisabled = inject(IsParentDisabledKey, ref(false));
+const {isEffectivelyDisabled} = useInheritedDisableState(() => props.enabled);
 
 const themeVars = useThemeVars();
 

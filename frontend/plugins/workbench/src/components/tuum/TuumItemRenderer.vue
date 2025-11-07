@@ -58,7 +58,6 @@ import ConfigItemBase from '#/components/share/renderer/ConfigItemBase.vue'; // 
 import RuneItemRenderer from '#/components/rune/RuneItemRenderer.vue'; // 导入符文渲染器
 import {type TuumConfig, type WorkflowConfig} from '#/types/generated/workflow-config-api-client';
 import {computed, provide, ref, toRef} from "vue";
-import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 import {useConfigItemActions} from "#/components/share/itemActions/useConfigItemActions.tsx";
 import ConfigItemActionsMenu from "#/components/share/itemActions/ConfigItemActionsMenu.vue";
 import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
@@ -66,6 +65,7 @@ import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts"
 import {useTuumAnalysis} from "#/composables/useTuumAnalysis.ts";
 import {useValidationInfo} from "#/components/share/validationInfo/useValidationInfo.ts";
 import ValidationStatusIndicator from "#/components/share/validationInfo/ValidationStatusIndicator.vue";
+import {useInheritedDisableState} from "#/composables/useInheritedState.ts";
 
 // 定义组件的 props
 const props = withDefaults(defineProps<{
@@ -132,9 +132,7 @@ function toggleExpansion()
   }
 }
 
-// 提供当前 Tuum 的禁用状态
-const isItselfDisabled = computed(() => !props.tuum.enabled);
-provide(IsParentDisabledKey, isItselfDisabled);
+useInheritedDisableState(() => props.tuum.enabled);
 
 const themeVars = useThemeVars();
 const wrapperBackgroundColor = computed(() => themeVars.value.tableHeaderColor);

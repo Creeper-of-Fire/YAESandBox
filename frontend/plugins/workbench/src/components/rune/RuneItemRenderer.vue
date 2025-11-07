@@ -82,7 +82,6 @@ import ConfigItemBase from '#/components/share/renderer/ConfigItemBase.vue';
 import type {AbstractRuneConfig, TuumConfig} from '#/types/generated/workflow-config-api-client';
 import {computed, inject, provide, ref, toRef} from "vue";
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
-import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
 import {FindInPageIcon, InfoIcon, KeyboardArrowDownIcon, KeyboardArrowUpIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useRuneAnalysis} from "#/composables/useRuneAnalysis.ts";
 import {useConfigItemActions} from "#/components/share/itemActions/useConfigItemActions.tsx";
@@ -93,6 +92,7 @@ import {useSelectedConfig} from "#/services/editor-context/useSelectedConfig.ts"
 import ValidationStatusIndicator from "#/components/share/validationInfo/ValidationStatusIndicator.vue";
 import {useValidationInfo} from "#/components/share/validationInfo/useValidationInfo.ts";
 import VarWithSpecTag from "#/components/share/varSpec/VarWithSpecTag.vue";
+import {useInheritedDisableState} from "#/composables/useInheritedState.ts";
 
 // 定义 Props 和 Emits
 const props = defineProps<{
@@ -221,19 +221,6 @@ function toggleExpansion()
   }
 }
 
-// 1. 注入来自父容器（Tuum 或另一个 Rune）的禁用状态
-// 提供一个 ref(false) 作为默认值，用于顶层符文或在上下文中找不到提供者的情况
-const isParentDisabled = inject(IsParentDisabledKey, ref(false));
 
-// 2. 计算出此符文最终的有效禁用状态
-const isEffectivelyDisabled = computed(() =>
-{
-  // 自身的禁用状态 OR 父容器的禁用状态
-  return !props.rune.enabled || isParentDisabled.value;
-});
-
-// 3. (关键的递归步骤) 为自己的后代提供其自身的“有效禁用状态”
-// 这样，禁用链就可以无限传递下去
-provide(IsParentDisabledKey, isEffectivelyDisabled);
-
+useInheritedDisableState(() => props.rune.enabled);
 </script>

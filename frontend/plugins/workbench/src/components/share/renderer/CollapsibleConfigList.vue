@@ -27,8 +27,8 @@
 import {VueDraggable as draggable} from 'vue-draggable-plus';
 import {NEmpty, useThemeVars} from 'naive-ui';
 import type {AbstractRuneConfig, TuumConfig} from '#/types/generated/workflow-config-api-client';
-import {computed, inject, ref} from "vue";
-import {IsParentDisabledKey} from "#/utils/injectKeys.ts";
+import {computed} from "vue";
+import {useParentDisabledState} from "#/composables/useInheritedState.ts";
 
 const props = withDefaults(defineProps<{
   items: T[];
@@ -42,7 +42,7 @@ const emit = defineEmits<{
   (e: 'update:items', value: T[]): void;
 }>();
 
-const isParentDisabled = inject(IsParentDisabledKey, ref(false));
+const {isParentDisabled} = useParentDisabledState();
 
 const themeVars = useThemeVars();
 // 将主题变量暴露给 <style>
