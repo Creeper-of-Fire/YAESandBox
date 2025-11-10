@@ -1,4 +1,5 @@
-﻿<template>
+﻿<!-- EntityEditor -->
+<template>
   <n-modal
       :show="show"
       :style="{width: '90vw', maxWidth: '600px' }"
