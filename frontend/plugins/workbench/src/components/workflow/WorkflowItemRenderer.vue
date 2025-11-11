@@ -3,20 +3,27 @@
   <div class="workflow-item-renderer">
     <!-- 工作流入口参数编辑器 -->
     <n-card size="small" style="margin-bottom: 16px;" title="工作流入口参数">
-      <n-text depth="3" style="font-size: 12px; display: block; margin-bottom: 8px;">
-        定义工作流启动时需要从外部传入的参数名称。这些参数后续可以在枢机的输入映射中使用。
-      </n-text>
+      <template #header-extra>
+        <InfoPopover content="定义工作流启动时需要从外部传入的参数名称。这些参数后续可以在枢机的输入映射中使用。"/>
+      </template>
       <n-dynamic-tags v-model:value="workflowInputsRef"/>
     </n-card>
 
     <n-card size="small" style="margin-bottom: 16px;" title="工作流标签">
-      <n-text depth="3" style="font-size: 12px; display: block; margin-bottom: 8px;">
-        为工作流添加描述性标签，便于在选择器中进行分类和筛选。
-      </n-text>
+      <template #header-extra>
+        <InfoPopover content="为工作流添加描述性标签，便于在选择器中进行分类和筛选。"/>
+      </template>
       <n-dynamic-tags v-model:value="workflowTagsRef"/>
     </n-card>
 
-    <WorkflowAnalysisPanel :workflow="workflow"/>
+    <n-collapse v-model:expanded-names="analysisExpandedNames" style="margin-bottom: 16px;">
+      <n-collapse-item name="analysis" title="工作流静态分析">
+        <template #header-extra>
+          <InfoPopover content="通过静态分析，可以预览工作流最终可能发出的所有事件，并检查配置中的潜在问题。"/>
+        </template>
+        <WorkflowAnalysisPanel :workflow="workflow"/>
+      </n-collapse-item>
+    </n-collapse>
 
     <!-- 工作流的枢机列表 (可拖拽排序，接受来自全局资源的枢机) -->
     <CollapsibleConfigList
@@ -42,11 +49,17 @@ import TuumItemRenderer from '../tuum/TuumItemRenderer.vue';
 import {computed} from 'vue';
 import CollapsibleConfigList from "#/components/share/renderer/CollapsibleConfigList.vue";
 import WorkflowAnalysisPanel from "#/components/workflow/analysis/WorkflowAnalysisPanel.vue";
+import {InfoIcon} from "@yaesandbox-frontend/shared-ui/icons";
+import {useScopedStorage} from "@yaesandbox-frontend/core-services/composables";
+import {InfoPopover} from "@yaesandbox-frontend/shared-ui";
 
 // 定义组件的 Props
 const props = defineProps<{
   workflow: WorkflowConfig;
 }>();
+
+// 控制分析面板的折叠状态，默认为空数组（即折叠）
+const analysisExpandedNames = useScopedStorage<string[]>('workbench-workflow-analysis-expanded', []);
 
 const workflowInputsRef = computed({
   get: () => props.workflow?.workflowInputs || [],

@@ -2,9 +2,9 @@
 <template>
   <n-popover
       :show="isPopoverVisible"
-      :style="{maxWidth: '400px'}"
+      :style="{maxWidth: maxWidth}"
       :trigger="'manual'"
-      placement="right-start"
+      :placement="placement"
       @clickoutside="handleClickOutside"
   >
     <template #trigger>
@@ -32,7 +32,16 @@
 
 <script lang="ts" setup>
 import {ref} from 'vue';
-import {NPopover} from 'naive-ui';
+import {NPopover, type PopoverPlacement} from 'naive-ui';
+
+// --- Props 定义 ---
+withDefaults(defineProps<{
+  placement?: PopoverPlacement;
+  maxWidth?: string;
+}>(), {
+  placement: 'right-start',
+  maxWidth: '400px',
+});
 
 // --- 状态定义 ---
 

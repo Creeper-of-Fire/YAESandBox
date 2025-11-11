@@ -1,4 +1,4 @@
-﻿<!-- VarSpecPopover.vue (新基础组件) -->
+﻿<!-- VarSpecPopover.vue -->
 <template>
   <n-popover :placement="placement" :style="{ maxWidth: '300px' }" trigger="hover">
     <!--

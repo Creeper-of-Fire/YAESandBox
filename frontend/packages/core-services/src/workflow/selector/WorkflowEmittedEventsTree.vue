@@ -1,9 +1,9 @@
 ﻿<!-- WorkflowEmittedEventsTree.vue -->
 <template>
   <n-card :bordered="false" size="small" title="对外发射事件 (API)">
-    <n-text depth="3" style="font-size: 12px; display: block; margin-bottom: 12px;">
-      此工作流向外部系统广播的事件列表，构成了其对外的“事件API”。
-    </n-text>
+    <template #header-extra>
+      <InfoPopover content="此工作流向外部系统广播的事件列表，构成了其对外的“事件API”。"/>
+    </template>
     <n-tree
         v-if="treeData.length > 0"
         :data="treeData"
@@ -22,6 +22,7 @@ import {NEmpty, NFlex, NIcon, NPopover, NTag, NText, NTree, type TreeOption} fro
 import {FolderIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {TreeSelectOverride} from '@yaesandbox-frontend/shared-ui/utils';
 import type {EmittedEventSpec} from '../../types';
+import {InfoPopover} from "@yaesandbox-frontend/shared-ui";
 
 // --- 类型定义 ---
 

@@ -20,39 +20,42 @@
       </n-flex>
 
       <!-- 变量显示区 -->
-      <n-blockquote
-          v-if="hasConsumedVariables || hasProducedVariables"
-          class="variable-display-box"
-      >
-        <n-flex size="small" vertical>
-          <div v-if="runeAnalysisResult && hasConsumedVariables">
-            <strong>输入变量:</strong>
-            <n-flex :wrap="true" style="margin-top: 4px;">
-              <VarWithSpecTag
-                  v-for="spec in runeAnalysisResult.consumedVariables"
-                  :key="spec.name"
-                  :is-optional="'isOptional' in spec ? spec.isOptional : undefined"
-                  :spec-def="spec.def"
-                  :tag-type="'isOptional' in spec ? (spec.isOptional ? 'default' : 'success') : 'info'"
-                  :var-name="spec.name"
-                  placement='top'
-              />
-            </n-flex>
-          </div>
-          <div v-if="runeAnalysisResult && hasProducedVariables">
-            <strong>输出变量:</strong>
-            <n-flex :wrap="true" style="margin-top: 4px;">
-              <VarWithSpecTag
-                  v-for="spec in runeAnalysisResult.producedVariables"
-                  :key="spec.name"
-                  :spec-def="spec.def"
-                  :tag-type="'info'"
-                  :var-name="spec.name"
-                  placement='bottom'
-              />
-            </n-flex>
-          </div>
-        </n-flex>
+      <n-blockquote class="variable-display-box">
+        <n-spin :show="isAnalysisLoading" size="small">
+
+          <!-- 始终渲染的内容骨架 -->
+          <n-flex size="small" vertical>
+            <div>
+              <strong>输入变量:</strong>
+              <n-flex v-if="runeAnalysisResult && hasConsumedVariables" :wrap="true" style="margin-top: 4px;">
+                <VarWithSpecTag
+                    v-for="spec in runeAnalysisResult.consumedVariables"
+                    :key="spec.name"
+                    :is-optional="'isOptional' in spec ? spec.isOptional : undefined"
+                    :spec-def="spec.def"
+                    :tag-type="'isOptional' in spec ? (spec.isOptional ? 'default' : 'success') : 'info'"
+                    :var-name="spec.name"
+                    placement='top'
+                />
+              </n-flex>
+              <n-text v-else depth="3" style="margin-left: 8px;">无</n-text>
+            </div>
+            <div>
+              <strong>输出变量:</strong>
+              <n-flex v-if="runeAnalysisResult && hasProducedVariables" :wrap="true" style="margin-top: 4px;">
+                <VarWithSpecTag
+                    v-for="spec in runeAnalysisResult.producedVariables"
+                    :key="spec.name"
+                    :spec-def="spec.def"
+                    :tag-type="'info'"
+                    :var-name="spec.name"
+                    placement='bottom'
+                />
+              </n-flex>
+              <n-text v-else depth="3" style="margin-left: 8px;">无</n-text>
+            </div>
+          </n-flex>
+        </n-spin>
       </n-blockquote>
 
       <!-- 动态表单渲染器 -->
@@ -89,7 +92,7 @@
 
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
-import {NBlockquote, NEmpty, NFlex, NH4, NP, NSpin, NSwitch, NTag, useThemeVars} from 'naive-ui';
+import {NBlockquote, NEmpty, NFlex, NH4, NP, NSpin, NSwitch, useThemeVars} from 'naive-ui';
 import {useWorkbenchStore} from "#/stores/workbenchStore.ts";
 import type {AbstractRuneConfig, TuumConfig} from "#/types/generated/workflow-config-api-client";
 import DynamicFormRenderer from "#/features/schema-viewer/DynamicFormRenderer.vue";
@@ -136,7 +139,8 @@ const rune = computed(() =>
 const {
   analysisResult: runeAnalysisResult,
   hasConsumedVariables,
-  hasProducedVariables
+  hasProducedVariables,
+  isLoading: isAnalysisLoading
 } = useRuneAnalysis(
     computed(() => rune.value)
 );
@@ -202,11 +206,11 @@ const themeVars = useThemeVars();
   box-sizing: border-box;
 }
 
-/* 新增的变量显示区样式 */
+/* 变量显示区样式 */
 .variable-display-box {
   padding: 12px;
   margin-bottom: 16px;
-  max-height: 140px; /* 设置一个最大高度 */
+  height: 140px; /* 设置一个固定高度 */
   overflow-y: auto; /* 当内容超出时，显示垂直滚动条 */
   background-color: v-bind('themeVars.actionColor'); /* 使用一个柔和的背景色以示区别 */
 }
