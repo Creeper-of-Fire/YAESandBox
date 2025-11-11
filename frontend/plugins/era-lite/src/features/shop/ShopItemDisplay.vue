@@ -9,27 +9,17 @@
       <n-button ghost type="error" @click="handleDelete">删除</n-button>
     </template>
   </BaseItemDisplay>
-
-  <EntityEditor
-      v-if="item"
-      v-model:show="showEditorModal"
-      :initial-data="item"
-      :schema="itemSchema"
-      entity-name="物品"
-      mode="edit"
-      @save="handleSave"
-  />
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from 'vue';
+import {computed} from 'vue';
 import {NButton, useDialog, useMessage} from 'naive-ui';
 import {useShopStore} from '#/features/shop/shopStore.ts';
 import {useBackpackStore} from '#/features/backpack/backpackStore.ts';
 import BaseItemDisplay from '../../components/BaseItemDisplay.vue';
-import EntityEditor from "#/components/EntityEditor.vue";
 import type {Item} from '#/types/models.ts';
 import {itemSchema} from "#/schemas/entitySchemas.ts";
+import {useEntityEditorModal} from "#/components/useEntityEditorModal.tsx";
 
 const props = defineProps<{ itemId: string }>();
 
@@ -40,18 +30,24 @@ const dialog = useDialog();
 
 const item = computed(() => shopStore.itemsForSale.find(i => i.id === props.itemId));
 
-const showEditorModal = ref(false);
+const entityEditor = useEntityEditorModal<Item>();
 
 function openEditModal()
 {
-  showEditorModal.value = true;
+  if (!item.value) return;
+  entityEditor.open({
+    mode: 'edit',
+    entityName: '物品',
+    schema: itemSchema,
+    initialData: item.value,
+    onSave: updatedItem =>
+    {
+      shopStore.updateItem(updatedItem);
+      message.success('物品已更新');
+    }
+  });
 }
 
-function handleSave(updatedItem: Item)
-{
-  shopStore.updateItem(updatedItem);
-  message.success('物品已更新');
-}
 
 function handleBuy()
 {

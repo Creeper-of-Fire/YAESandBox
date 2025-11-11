@@ -1,5 +1,4 @@
-﻿// src/shared/content-renderer/index.ts
-import { registerComponents, builtinRegistrations } from './core/componentRegistry';
+﻿import { registerComponents, builtinRegistrations } from './content-renderer/core/componentRegistry.ts';
 
 /**
  * 安装函数：注册所有模块内置的组件及其解析契约。
@@ -15,7 +14,7 @@ export function installBuiltinComponents() {
 /**
  * 主渲染组件，是使用此模块的核心。
  */
-export { default as ContentRenderer } from './ContentRenderer.vue';
+export { default as ContentRenderer } from './content-renderer/ContentRenderer.vue';
 
 /**
  * 核心 API 方法，供高级用法或动态注册。
@@ -25,9 +24,9 @@ export {
     resolveComponent,     // 根据标签名解析 Vue 组件
     unregisterComponents, // 卸载已注册的组件
     contractsMap          // 获取响应式的、只读的组件契约 Map
-} from './core/componentRegistry';
+} from './content-renderer/core/componentRegistry.ts';
 
-export { parseContent } from './core/contentParser';
+export { parseContent } from './content-renderer/core/contentParser.ts';
 
 
 // --- 类型定义导出 ---
@@ -35,11 +34,11 @@ export { parseContent } from './core/contentParser';
 /**
  * 导出所有核心的数据结构类型。
  */
-export * from './types';
+export * from './content-renderer/types.ts';
 export type {
     ComponentContract,
     ComponentRegistration
-} from './core/componentRegistry';
+} from './content-renderer/core/componentRegistry.ts';
 
 
 // --- 组件及定义导出 (方便直接使用或调试) ---
@@ -47,9 +46,9 @@ export type {
 /**
  * 导出内置组件的 Vue 组件本身，以便在应用的其他地方直接使用。
  */
-export { default as CollapseComponent } from './components/Collapse.vue';
-export { default as InfoPopupComponent } from './components/InfoPopup.vue';
-export { default as RawHtmlComponent } from './components/RawHtml.vue';
+export { default as CollapseComponent } from './content-renderer/components/Collapse.vue';
+export { default as InfoPopupComponent } from './content-renderer/components/InfoPopup.vue';
+export { default as RawHtmlComponent } from './content-renderer/components/RawHtml.vue';
 
 /**
  * 导出内置组件的完整注册定义，以备不时之需或用于构建自定义的安装逻辑。

@@ -99,14 +99,10 @@
 
 <script lang="ts" setup>
 import {computed, ref, watch} from 'vue';
-import {
-  AddIcon as AddIcon,
-  CloudDownloadIcon as DownloadIcon,
-  CloudUploadIcon as UploadIcon
-} from '@yaesandbox-frontend/shared-ui/icons';
+import {AddIcon as AddIcon, CloudDownloadIcon as DownloadIcon, CloudUploadIcon as UploadIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {useElementSize, useVModel} from '@vueuse/core';
 import {NButton, NSelect, useDialog, useMessage, useThemeVars} from 'naive-ui';
-import {createEmptyPreset, type PromptOrderSetting, type SillyTavernPreset} from './sillyTavernPreset';
+import {createEmptyPreset, type PromptItem, type PromptOrderSetting, type SillyTavernPreset} from './sillyTavernPreset';
 import AvailablePrompts from './AvailablePrompts.vue';
 import ActivePromptOrder from './ActivePromptOrder.vue';
 import {usePromptEditModal} from './usePromptEditModal';
@@ -258,7 +254,7 @@ const handleAddNewPrompt = async () =>
   if (!preset.value) return;
 
   // 打开模态框，初始数据为空对象，表示新建
-  const newItem = await openEditModal({});
+  const newItem: PromptItem | undefined = await openEditModal({});
 
   if (newItem)
   {
@@ -266,14 +262,14 @@ const handleAddNewPrompt = async () =>
     if (preset.value.prompts.some(p => p.identifier === newItem.identifier))
     {
       // 可以用 useMessage 显示一个错误提示
-      console.error('Identifier collision detected!');
+      console.error('发现UUID碰撞！');
       return;
     }
 
     // 1. 将新定义添加到 prompts (定义池)
     preset.value.prompts.push(newItem);
 
-    // 2. (可选) 询问用户是否要立即链接到当前激活顺序
+    // 2. 询问用户是否要立即链接到当前激活顺序
     if (currentOrderSetting.value)
     {
       dialog.info({
@@ -376,7 +372,8 @@ const handleAddNewCharacter = () =>
   message.success(`已创建新的角色配置 (ID: ${newId})`);
 };
 
-const handleInitializePreset = () => {
+const handleInitializePreset = () =>
+{
   rawPreset.value = createEmptyPreset();
   message.success('已创建新的空白预设，现在可以开始添加内容了。');
 };

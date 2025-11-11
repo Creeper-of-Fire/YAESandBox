@@ -1,5 +1,4 @@
-﻿import {computed, type Ref, watch, ref, inject} from 'vue';
-import {useModal} from 'naive-ui';
+﻿import {computed, inject, ref, type Ref, watch} from 'vue';
 import {
     type InputMatchingMode,
     type MatchingOptions,
@@ -11,9 +10,10 @@ import {useScopedStorage} from '../../composables/useScopedStorage';
 import WorkflowSelectorPanel from './WorkflowSelectorPanel.vue';
 import {type IWorkflowAnalysisProvider, WorkflowAnalysisProviderKey} from "../../inject-key/WorkflowAnalysisProvider.ts";
 import type {WorkflowValidationReport} from "../../types";
+import {usePromiseModal} from "@yaesandbox-frontend/shared-ui/modal";
 
 /**
- * 【新增】一个使用命令式API来打开工作流选择模态框的 Composable。
+ * 一个使用命令式API来打开工作流选择模态框的 Composable。
  * 它封装了UI交互，同时依赖纯粹的 useFilteredWorkflowSelector 进行逻辑处理。
  *
  * @param storageKey 用于持久化用户选择和UI偏好的唯一键。
@@ -28,7 +28,7 @@ export function useFilteredWorkflowSelectorModal(
     initialOptions?: Partial<MatchingOptions>)
 {
 
-    const modal = useModal();
+    const promiseModal = usePromiseModal();
 
     // 1. 持久化用户对匹配模式的选择
     const inputMatchingMode = useScopedStorage<InputMatchingMode>(`${storageKey}-input-mode`, initialOptions?.inputs ?? 'normal');
@@ -79,55 +79,47 @@ export function useFilteredWorkflowSelectorModal(
 
     /**
      * 打开选择模态框。
-     * @returns 一个 Promise，当用户选择一个工作流时 resolve(id)，当用户关闭模态框时 reject()。
+     * @returns 一个 ModalPromise，当用户选择一个工作流时 resolve(id)，当用户关闭时 resolve(undefined)。
      */
-    function open(): Promise<string>
+    async function open(): Promise<string | undefined>
     {
-        return new Promise((resolve, reject) =>
-        {
-            const modalInstance = modal.create({
-                title: '选择一个工作流',
-                preset: 'card',
-                style: {
-                    width: '600px',
-                },
-                content: () => (
-                    <WorkflowSelectorPanel
-                        // Props: 传递响应式数据
-                        workflows={selectorLogic.filteredAndSortedWorkflows.value}
-                        filter={filter.value}
+        const result = await promiseModal.open<string>({
+            title: '选择一个工作流',
+            preset: 'card',
+            style: {
+                width: '600px',
+            },
+            maskClosable: true,
+            closeOnEsc: true,
 
-                        expectedOutputs={expectedOutputs.value}
-                        analysisReports={analysisReports.value}
+            content: (resolve, cancel) => (
+                <WorkflowSelectorPanel
+                    // Props: 传递响应式数据
+                    workflows={selectorLogic.filteredAndSortedWorkflows.value}
+                    filter={filter.value}
 
-                        inputMode={inputMatchingMode.value}
-                        onUpdate:inputMode={value => (inputMatchingMode.value = value)}
+                    expectedOutputs={expectedOutputs.value}
+                    analysisReports={analysisReports.value}
 
-                        tagMode={tagMatchingMode.value}
-                        onUpdate:tagMode={value => (tagMatchingMode.value = value)}
+                    inputMode={inputMatchingMode.value}
+                    onUpdate:inputMode={value => (inputMatchingMode.value = value)}
 
-                        // 自定义事件
-                        onSelect={(id: string) =>
-                        {
-                            selectorLogic.selectWorkflow(id);
-                            modalInstance.destroy();
-                            resolve(id);
-                        }}
-                    />
-                ),
-                // 当用户通过点击遮罩、按ESC或右上角关闭按钮时
-                onClose: () =>
-                {
-                    reject(new Error('用户取消选择'));
-                    return true; // 返回true允许关闭
-                },
-                onNegativeClick: () =>
-                {
-                    reject(new Error('用户取消选择'));
-                    return true;
-                }
-            });
+                    tagMode={tagMatchingMode.value}
+                    onUpdate:tagMode={value => (tagMatchingMode.value = value)}
+
+                    // 自定义事件
+                    onSelect={(id: string) =>
+                    {
+                        selectorLogic.selectWorkflow(id);
+                        // 调用 resolve 关闭模态框并返回选中的 ID
+                        resolve(id);
+                    }}
+                />
+            )
         });
+
+        // 将 ModalResult<string> 转换为 string | undefined
+        return result.isOk() ? result.data : undefined;
     }
 
     return {

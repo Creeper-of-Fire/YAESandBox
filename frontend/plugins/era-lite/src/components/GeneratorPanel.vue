@@ -66,16 +66,6 @@
         <n-button @click="handleClear">丢弃</n-button>
       </n-flex>
     </div>
-
-    <EntityEditor
-        v-if="modelValue"
-        v-model:show="showEditor"
-        :entity-name="entityName"
-        :initial-data="modelValue"
-        :schema="schema"
-        mode="complete"
-        @save="handleSaveFromEditor"
-    />
   </n-card>
 </template>
 
@@ -91,8 +81,8 @@ import {
   type WorkflowFilter
 } from '@yaesandbox-frontend/core-services/composables';
 import {extractOutputsFromSchema, WorkflowSelectorButton} from '@yaesandbox-frontend/core-services/workflow'
-import EntityEditor from "#/components/EntityEditor.vue";
 import {useVModel} from "@vueuse/core";
+import {useEntityEditorModal} from "#/components/useEntityEditorModal.tsx";
 
 const props = defineProps<{
   modelValue: Partial<T> | null;
@@ -202,21 +192,19 @@ function handleClear()
   internalModel.value = null;
 }
 
-// "编辑/补全后添加" 按钮
-function handleEditAndAccept()
-{
-  if (internalModel.value)
-  {
-    showEditor.value = true;
-  }
-}
+const entityEditor = useEntityEditorModal<T>();
 
-// 监听内部编辑器的 save 事件
-function handleSaveFromEditor(completedData: Omit<T, 'id'>)
-{
-  // 收到编辑器保存的数据后，通过 accept 事件将最终结果向上冒泡
-  emit('accept', completedData);
-  // 清理自身状态，准备下一次生成
-  clearStream();
+function handleEditAndAccept() {
+  if (!internalModel.value) return;
+  entityEditor.open({
+    mode: 'complete',
+    entityName: props.entityName,
+    schema: props.schema,
+    initialData: internalModel.value,
+    onSave: (completedData) => {
+      emit('accept', completedData);
+      clearStream();
+    }
+  });
 }
 </script>

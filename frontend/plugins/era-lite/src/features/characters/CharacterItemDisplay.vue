@@ -30,16 +30,6 @@
       </n-flex>
     </template>
   </n-list-item>
-
-  <EntityEditor
-      v-if="character"
-      v-model:show="showEditorModal"
-      :initial-data="character"
-      :schema="characterSchema"
-      entity-name="角色"
-      mode="edit"
-      @save="handleSave"
-  />
 </template>
 
 <script lang="ts" setup>
@@ -49,9 +39,9 @@ import {useCharacterStore} from '#/features/characters/characterStore';
 import {useSessionStore} from '#/stores/sessionStore';
 import {Pencil as EditIcon, TrashBinOutline as DeleteIcon} from '@vicons/ionicons5';
 import type {Character} from '#/types/models';
-import EntityEditor from "#/components/EntityEditor.vue";
 import {characterSchema} from "#/schemas/entitySchemas";
 import CharacterAvatar from "#/components/CharacterAvatar.vue";
+import {useEntityEditorModal} from "#/components/useEntityEditorModal.tsx";
 
 const props = defineProps<{ characterId: string }>();
 
@@ -62,19 +52,21 @@ const message = useMessage();
 
 const character = computed(() => characterStore.characters.find(c => c.id === props.characterId));
 
-const showEditorModal = ref(false);
+const entityEditor = useEntityEditorModal<Character>();
 
-function openEditModal()
-{
-  showEditorModal.value = true;
+function openEditModal() {
+  if (!character.value) return;
+  entityEditor.open({
+    mode: 'edit',
+    entityName: '角色',
+    schema: characterSchema,
+    initialData: character.value,
+    onSave: (updatedChar) => {
+      characterStore.updateCharacter(updatedChar);
+      message.success('角色信息已更新');
+    }
+  });
 }
-
-function handleSave(updatedChar: Character)
-{
-  characterStore.updateCharacter(updatedChar);
-  message.success('角色信息已更新');
-}
-
 function handleDelete()
 {
   if (!character.value) return;

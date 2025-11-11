@@ -28,15 +28,6 @@
           :scene-id="scene.id"
       />
     </n-list>
-
-    <EntityEditor
-        v-model:show="showCreateModal"
-        :initial-data="null as Partial<Scene> | null"
-        :schema="sceneSchema"
-        entity-name="场景"
-        mode="create"
-        @save="handleCreate"
-    />
   </n-flex>
 </template>
 
@@ -46,25 +37,26 @@ import {NButton, NFlex, NH1, NList, NPageHeader, useMessage} from 'naive-ui';
 import {useSceneStore} from './sceneStore.ts';
 import type {Scene} from '#/types/models.ts';
 import GeneratorPanel from "#/components/GeneratorPanel.vue";
-import EntityEditor from "#/components/EntityEditor.vue";
 import SceneItemDisplay from "#/features/scenes/SceneItemDisplay.vue";
 import {sceneSchema} from "#/schemas/entitySchemas.ts";
+import {useEntityEditorModal} from "#/components/useEntityEditorModal.tsx";
 
 const sceneStore = useSceneStore();
 const message = useMessage();
+const entityEditor = useEntityEditorModal<Scene>();
 
 // --- 场景模态框逻辑 ---
-const showCreateModal = ref(false);
-
-function openCreateModal()
-{
-  showCreateModal.value = true;
-}
-
-function handleCreate(sceneData: Omit<Scene, 'id'>)
-{
-  sceneStore.addScene(sceneData);
-  message.success('新场景已创建');
+function openCreateModal() {
+  entityEditor.open({
+    mode: 'create',
+    entityName: '场景',
+    schema: sceneSchema,
+    initialData: null,
+    onSave: (sceneData) => {
+      sceneStore.addScene(sceneData);
+      message.success('新场景已创建');
+    }
+  });
 }
 
 // --- AI 生成器逻辑 ---

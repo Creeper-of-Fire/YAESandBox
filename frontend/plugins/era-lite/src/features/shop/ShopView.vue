@@ -34,14 +34,6 @@
           :item-id="item.id"
       />
     </n-list>
-
-    <EntityEditor
-        v-model:show="showCreateModal"
-        :initial-data="null as Partial<Item> | null"
-        :schema="itemSchema"
-        entity-name=""
-        mode="create"
-        @save="handleCreate"/>
   </n-flex>
 </template>
 
@@ -49,31 +41,33 @@
 import {NButton, NFlex, NH1, NList, NPageHeader, useMessage} from 'naive-ui';
 import {useShopStore} from './shopStore.ts';
 import {useBackpackStore} from '../backpack/backpackStore.ts';
-import EntityEditor from "#/components/EntityEditor.vue";
 import {ref} from "vue";
 import type {Item} from '#/types/models.ts';
 import ShopItemDisplay from "#/features/shop/ShopItemDisplay.vue";
 import GeneratorPanel from "#/components/GeneratorPanel.vue";
 import {itemSchema} from "#/schemas/entitySchemas.ts";
+import {useEntityEditorModal} from "#/components/useEntityEditorModal.tsx";
 
 const shopStore = useShopStore();
 const backpackStore = useBackpackStore();
 const message = useMessage();
 
 // --- 编辑器模态框状态 ---
-const showCreateModal = ref(false);
-const editingItemId = ref<string | null>(null);
+const entityEditor = useEntityEditorModal<Item>();
 
 function openCreateModal()
 {
-  editingItemId.value = null;
-  showCreateModal.value = true;
-}
-
-function handleCreate(newItemData: Omit<Item, 'id'>)
-{
-  shopStore.addItem(newItemData);
-  message.success('新物品已创建');
+  entityEditor.open({
+    mode: 'create',
+    entityName: '物品',
+    schema: itemSchema,
+    initialData: null,
+    onSave: (itemData) =>
+    {
+      shopStore.addItem(itemData);
+      message.success('新物品已创建');
+    }
+  });
 }
 
 // --- AI 生成逻辑 ---

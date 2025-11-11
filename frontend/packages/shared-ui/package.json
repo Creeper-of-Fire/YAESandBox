@@ -11,9 +11,10 @@
   "exports": {
     ".": "./src/index.ts",
     "./icons": "./src/utils/icons.ts",
-    "./content-renderer": "./src/shared/content-renderer/index.ts",
+    "./content-renderer": "./src/shared/content-renderer.ts",
     "./composables": "./src/composables.ts",
-    "./utils": "./src/utils.ts"
+    "./utils": "./src/utils.ts",
+    "./modal": "./src/shared/modal.ts"
   },
   "peerDependencies": {
     "naive-ui": "^2.42.0",

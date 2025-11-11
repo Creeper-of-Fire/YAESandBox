@@ -6,25 +6,16 @@
       <n-button ghost type="warning" @click="handleDrop">丢弃</n-button>
     </template>
   </BaseItemDisplay>
-  <EntityEditor
-      v-if="item"
-      v-model:show="showEditorModal"
-      :initial-data="item"
-      :schema="itemSchema"
-      entity-name="背包物品"
-      mode="edit"
-      @save="handleSave"
-  />
 </template>
 
 <script lang="ts" setup>
-import {computed, ref} from 'vue';
+import {computed} from 'vue';
 import {NButton, useDialog, useMessage} from 'naive-ui';
 import {useBackpackStore} from '#/features/backpack/backpackStore.ts';
 import BaseItemDisplay from '../../components/BaseItemDisplay.vue';
-import EntityEditor from "#/components/EntityEditor.vue";
 import type {Item} from '#/types/models.ts';
 import {itemSchema} from "#/schemas/entitySchemas.ts";
+import {useEntityEditorModal} from "#/components/useEntityEditorModal.tsx";
 
 const props = defineProps<{ itemId: string }>();
 const backpackStore = useBackpackStore();
@@ -33,17 +24,22 @@ const message = useMessage();
 
 const item = computed(() => backpackStore.ownedItems.find(i => i.id === props.itemId));
 
-const showEditorModal = ref(false);
+const entityEditor = useEntityEditorModal<Item>();
 
 function openEditModal()
 {
-  showEditorModal.value = true;
-}
-
-function handleSave(updatedItem: Item)
-{
-  backpackStore.updateItemInBackpack(updatedItem);
-  message.success('背包中的物品已更新');
+  if (!item.value) return;
+  entityEditor.open({
+    mode: 'edit',
+    entityName: '背包物品',
+    schema: itemSchema,
+    initialData: item.value,
+    onSave: updatedItem =>
+    {
+      backpackStore.updateItemInBackpack(updatedItem);
+      message.success('背包中的物品已更新');
+    }
+  });
 }
 
 function handleDrop()

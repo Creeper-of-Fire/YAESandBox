@@ -1,37 +1,41 @@
-﻿import {useModal} from 'naive-ui';
-import PromptEditPanel from './PromptEditPanel.vue';
+﻿import PromptEditPanel from './PromptEditPanel.vue';
 import type {PromptItem} from './sillyTavernPreset';
+import {ModalPromise, type SubmitExpose, useSaveableModal} from "@yaesandbox-frontend/shared-ui/modal";
+import {ref} from "vue";
 
 export function usePromptEditModal()
 {
-    const modal = useModal();
+    const saveableModal = useSaveableModal();
 
-    function open(initialData: PromptItem | Partial<PromptItem>)
+    function open(initialData: PromptItem | Partial<PromptItem>): ModalPromise<PromptItem>
     {
-        return new Promise<PromptItem | null>((resolve) =>
-        {
-            const modalInstance = modal.create({
-                title: initialData.identifier ? '编辑提示词' : '新建提示词',
-                preset: 'card',
-                style: {width: '90vw', maxWidth: '800px'},
-                content: () => (
-                    <PromptEditPanel
-                        initialValue={initialData}
-                        onSave={(updatedItem: PromptItem) =>
-                        {
-                            resolve(updatedItem);
-                            modalInstance.destroy();
-                        }}
-                        onCancel={() =>
-                        {
-                            resolve(null);
-                            modalInstance.destroy();
-                        }}
-                    />
-                ),
-                // Naive UI 的模态框点击遮罩默认会关闭，这里可以阻止并交由组件内部处理
-                maskClosable: false,
-            });
+        const formPanelRef = ref<SubmitExpose<PromptItem> | null>(null);
+
+        return saveableModal.open({
+            title: initialData.identifier ? '编辑提示词' : '新建提示词',
+            preset: 'card',
+            style: {width: '90vw', maxWidth: '800px'},
+
+            // 提供 content
+            content: () => (
+                <PromptEditPanel
+                    ref={formPanelRef}
+                    initialValue={initialData}
+                />
+            ),
+
+            // 提供 onSave 逻辑
+            onSave: async () =>
+            {
+                const updatedItem = await formPanelRef.value?.submit();
+                if (updatedItem)
+                {
+                    // 表单验证成功，返回数据
+                    return updatedItem;
+                }
+                // 表单验证失败，抛出异常以阻止模态框关闭
+                return null;
+            }
         });
     }
 
