@@ -146,7 +146,9 @@ public class TuumProcessor(
             }
 
             // Case 2: 变量已经是正确的类型（最快路径）。
-            if (rawValue is T typedValue)
+            // 当 T 不是 object 时，此检查是安全的，可以避免不必要的序列化。
+            // 当 T 是 object 时，我们必须跳过此检查，以允许字符串等类型被进一步解析为 JsonElement，
+            if (typeof(T) != typeof(object) && rawValue is T typedValue)
             {
                 value = typedValue;
                 return true;
