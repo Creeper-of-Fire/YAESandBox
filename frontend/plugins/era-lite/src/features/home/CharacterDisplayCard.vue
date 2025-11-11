@@ -7,7 +7,7 @@
       </template>
     </n-empty>
     <n-flex v-else align="center">
-      <n-avatar :size="60" style="font-size: 40px;">{{ character.avatar }}</n-avatar>
+      <CharacterAvatar :character="character" :size="60"/>
       <div>
         <n-h3 style="margin: 0">{{ character.name }}</n-h3>
         <p style="white-space: pre-wrap;">{{ character.description }}</p>
@@ -17,9 +17,10 @@
 </template>
 
 <script lang="ts" setup>
-import {NAvatar, NButton, NCard, NEmpty, NH3, NFlex} from 'naive-ui';
+import {NButton, NCard, NEmpty, NFlex, NH3} from 'naive-ui';
 import {type Character} from '#/types/models.ts';
 import {useRouter} from "vue-router";
+import CharacterAvatar from "#/components/CharacterAvatar.vue";
 
 defineProps<{
   title: string;

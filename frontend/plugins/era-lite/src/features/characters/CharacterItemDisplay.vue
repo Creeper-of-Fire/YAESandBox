@@ -2,7 +2,7 @@
 <template>
   <n-list-item v-if="character">
     <template #prefix>
-      <n-avatar :size="48" style="font-size: 32px;">{{ character.avatar }}</n-avatar>
+      <CharacterAvatar :character="character" :size="48"/>
     </template>
     <n-thing
         :description="character.description"
@@ -44,13 +44,14 @@
 
 <script lang="ts" setup>
 import {computed, ref} from 'vue';
-import {NAvatar, NButton, NFlex, NIcon, NListItem, NThing, useDialog, useMessage} from 'naive-ui';
+import {NButton, NFlex, NIcon, NListItem, NThing, useDialog, useMessage} from 'naive-ui';
 import {useCharacterStore} from '#/features/characters/characterStore';
 import {useSessionStore} from '#/stores/sessionStore';
 import {Pencil as EditIcon, TrashBinOutline as DeleteIcon} from '@vicons/ionicons5';
 import type {Character} from '#/types/models';
 import EntityEditor from "#/components/EntityEditor.vue";
 import {characterSchema} from "#/schemas/entitySchemas";
+import CharacterAvatar from "#/components/CharacterAvatar.vue";
 
 const props = defineProps<{ characterId: string }>();
 

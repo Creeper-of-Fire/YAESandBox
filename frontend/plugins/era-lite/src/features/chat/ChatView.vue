@@ -9,14 +9,16 @@
         <template #extra>
           <n-space align="center">
             <n-tag v-if="playerCharacter" :bordered="false" round>
-              玩家:
-              <n-avatar :size="22" style="margin-left: 8px;">{{ playerCharacter.avatar }}</n-avatar>
-              {{ playerCharacter.name }}
+              <template #avatar>
+                <CharacterAvatar :character="playerCharacter" :size="20"/>
+              </template>
+              玩家: {{ playerCharacter.name }}
             </n-tag>
             <n-tag v-if="targetCharacter" :bordered="false" round>
-              目标:
-              <n-avatar :size="22" style="margin-left: 8px;">{{ targetCharacter.avatar }}</n-avatar>
-              {{ targetCharacter.name }}
+              <template #avatar>
+                <CharacterAvatar :character="targetCharacter" :size="20"/>
+              </template>
+              目标: {{ targetCharacter.name }}
             </n-tag>
             <n-tag v-if="scene" :bordered="false" round>
               <template #icon>
@@ -113,6 +115,7 @@ import {CodeIcon, HelpCircleIcon} from '@yaesandbox-frontend/shared-ui/icons';
 import {defaultTransformMessageContent} from "#/features/chat/messageTransformer.ts";
 import ResizableMonacoEditorModal from "#/features/chat/ResizableMonacoEditorModal.vue";
 import {useScriptCompiler} from "#/features/chat/useScriptCompiler.ts";
+import CharacterAvatar from "#/components/CharacterAvatar.vue";
 
 const workflowFilter = ref<WorkflowFilter>({
   expectedInputs: ['history_json', 'playerCharacter_json', 'targetCharacter_json', 'scene_json'],

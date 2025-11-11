@@ -32,9 +32,10 @@
     "@vicons/fluent": "^0.13.0",
     "@vicons/ionicons5": "^0.13.0",
     "@yaesandbox-frontend/core-services": "workspace:*",
-    "@yaesandbox-frontend/shared-ui": "workspace:*",
     "@yaesandbox-frontend/shared-feature": "workspace:*",
+    "@yaesandbox-frontend/shared-ui": "workspace:*",
     "acorn": "^8.15.0",
+    "minidenticons": "^4.2.1",
     "nanoid": "^5.1.5"
   },
   "devDependencies": {

@@ -3,9 +3,7 @@
   <div v-if="isVisible" :class="['message-wrapper', `role-${message.role.toLowerCase()}`]">
     <!-- 消息头：包含头像和角色名 -->
     <div v-if="character" class="message-header">
-      <n-avatar :size="32" round>
-        {{ character.avatar }}
-      </n-avatar>
+      <CharacterAvatar :character="character" :size="32"/>
       <span class="character-name">{{ character.name }}</span>
     </div>
 
@@ -95,13 +93,15 @@
 </template>
 
 <script lang="tsx" setup>
-import {computed, ref, watch} from 'vue';
-import {NAvatar, NButton, NCard, NCode, NFlex, NIcon, NInput, NSpace, useDialog, useThemeVars} from 'naive-ui';
+import {computed, type ComputedRef, ref, watch} from 'vue';
+import {NButton, NCard, NCode, NFlex, NIcon, NInput, NSpace, useDialog, useThemeVars} from 'naive-ui';
 import {useChatStore} from './chatStore.ts';
 import {useCharacterStore} from '#/features/characters/characterStore.ts';
 import {ChevronLeftIcon, ChevronRightIcon, CodeIcon, DeleteIcon, EditIcon, RefreshIcon} from '@yaesandbox-frontend/shared-ui/icons'
 import {ContentRenderer} from "@yaesandbox-frontend/shared-ui/content-renderer";
 import {defaultTransformMessageContent} from "#/features/chat/messageTransformer.ts";
+import CharacterAvatar from "#/components/CharacterAvatar.vue";
+import type {Character} from "#/types/models.ts";
 
 const props = defineProps<{
   messageId: string,
@@ -202,7 +202,7 @@ function handlePreviewRender()
 
 
 // 计算角色信息
-const character = computed(() =>
+const character: ComputedRef<Character | null> = computed(() =>
 {
   if (!message.value) return null;
   const session = chatStore.sessions.find(s => s.id === message.value!.sessionId);
@@ -219,11 +219,16 @@ const character = computed(() =>
   }
 
   if (char)
-  {
-    return {name: char.name, avatar: char.avatar || '?'};
-  }
+    return char;
+
   // Fallback
-  return {name: isUser.value ? '玩家' : '助手', avatar: isUser.value ? 'U' : 'A'};
+  const fallbackName = isUser.value ? '玩家' : '助手';
+  return {
+    id: `fallback-${message.value.id}`,
+    name: fallbackName,
+    description: '',
+    avatar: isUser.value ? 'U' : 'A',
+  };
 });
 
 // --- 分支逻辑 ---
