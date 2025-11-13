@@ -13,7 +13,7 @@ internal class DisplayAttributeProcessor : YaeGeneralAttributeProcessor<DisplayA
     /// <inheritdoc/>
     protected override void ProcessAttribute(JsonSchemaExporterContext context, JsonObject schema, DisplayAttribute attribute)
     {
-        // .NET 9 Exporter 不会自动处理 DisplayAttribute，所以我们需要自己添加。
+        // .NET 的 Exporter 不会自动处理 DisplayAttribute，所以我们需要自己添加。
         // 这给了我们更大的控制权。
 
         

@@ -77,11 +77,11 @@ YAESandBox 是一个全栈、插件化的平台，用于构建和运行由 AI �
 
 ## 技术栈
 
-*   **后端**: .NET 9, C# 13 Preview, ASP.NET Core
+*   **后端**: .NET 10, C# 14, ASP.NET Core
 *   **脚本引擎**: NLua (Lua), Jint (JavaScript)
 *   **前端**: Vue 3, TypeScript, Vite, Pinia, naive-ui, Monaco Editor
 *   **桌面端**: Tauri
-*   **API 与 Schema**: OpenAPI (Swagger), .NET 9 `JsonSchemaExporter`, openapi-typescript-codegen
+*   **API 与 Schema**: OpenAPI (Swagger), .NET 10 `JsonSchemaExporter`, openapi-typescript-codegen
 
 ## 快速上手
 

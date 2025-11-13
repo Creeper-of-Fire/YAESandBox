@@ -1,7 +1,6 @@
-﻿using Microsoft.OpenApi.Models;
+﻿using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
 using YAESandBox.Depend.Logger;
-using YAESandBox.ModuleSystem.AspNet;
 using YAESandBox.ModuleSystem.AspNet.Interface;
 
 namespace YAESandBox.AppWeb.Services;

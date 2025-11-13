@@ -6,8 +6,7 @@ using YAESandBox.Depend.Storage;
 namespace YAESandBox.Depend.Schema;
 
 /// <summary>
-/// 使用 .NET 9 的 JsonSchemaExporter 生成与前端UI框架兼容的 JSON Schema。
-/// 这是 NJsonSchema 方案的下一代实现，提供了对 Schema 生成过程更精细的控制。
+/// 使用 JsonSchemaExporter 生成与前端UI框架兼容的 JSON Schema。
 /// </summary>
 public static class YaeSchemaExporter
 {

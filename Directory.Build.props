@@ -15,10 +15,10 @@
 
     <PropertyGroup>
         <!-- 目标框架版本 -->
-        <TargetFramework>net9.0</TargetFramework>
+        <TargetFramework>net10.0</TargetFramework>
 
         <!-- 启用 C# 的预览功能 -->
-        <LangVersion>preview</LangVersion>
+        <!--<LangVersion>preview</LangVersion>-->
 
         <!-- 启用隐式全局 using -->
         <ImplicitUsings>enable</ImplicitUsings>

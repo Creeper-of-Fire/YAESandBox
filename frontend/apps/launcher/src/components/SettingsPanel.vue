@@ -29,10 +29,10 @@ const coreManifestUrl = computed({
 const showSlimWarningDialog = ref(false);
 const slimWarningMessage = `您选择的“精简版”不包含 .NET 运行环境。
 
-请确保您的系统已安装【.NET 9 (或更高版本) ASP.NET Core 运行时】，否则后端服务将无法启动。
+请确保您的系统已安装【.NET 10 (或更高版本) ASP.NET Core 运行时】，否则后端服务将无法启动。
 
 您可以从微软官方网站下载：
-<a href="https://dotnet.microsoft.com/zh-cn/download/dotnet/9.0" target="_blank">https://dotnet.microsoft.com/zh-cn/download/dotnet/9.0</a>`;
+<a href="https://dotnet.microsoft.com/zh-cn/download/dotnet/10.0" target="_blank">https://dotnet.microsoft.com/zh-cn/download/dotnet/10.0</a>`;
 
 
 // 步骤 1: 创建一个本地的“代理” ref，专门给 v-model 使用。
@@ -84,7 +84,7 @@ function handleSlimCancel() {
       <label for="manifest-mode">更新源模式:</label>
       <select id="manifest-mode" v-model="localSelectedMode">
         <option value="full">完整版 (自带.NET环境)</option>
-        <option value="slim">精简版 (需自行安装.NET)</option>
+        <option value="slim">精简版 (需ASP.NET 10)</option>
         <option value="custom">自定义</option>
       </select>
       <div v-if="localSelectedMode === 'custom'" class="custom-url-input">

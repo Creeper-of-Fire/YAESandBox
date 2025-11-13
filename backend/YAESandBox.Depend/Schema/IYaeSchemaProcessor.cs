@@ -4,7 +4,7 @@ using System.Text.Json.Schema;
 namespace YAESandBox.Depend.Schema;
 
 /// <summary>
-/// 定义一个用于转换由 .NET 9 JsonSchemaExporter 生成的 Schema 节点的处理器。
+/// 定义一个用于转换由 .NET JsonSchemaExporter 生成的 Schema 节点的处理器。
 /// 这是适配新版 Exporter 的处理器接口。
 /// </summary>
 public interface IYaeSchemaProcessor
