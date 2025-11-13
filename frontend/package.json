@@ -14,7 +14,7 @@
     "check:licenses": "node ./scripts/check-licenses.mjs",
     "check:deps": "node ./scripts/check-deps.mjs",
     "build:app": "pnpm --filter @yaesandbox-frontend/shell build",
-    "release": "python ./../scripts/release_helper.py"
+    "release": "python ./../scripts/release_tool/main.py"
   },
   "devDependencies": {
     "@quantco/pnpm-licenses": "^2.2.1",
