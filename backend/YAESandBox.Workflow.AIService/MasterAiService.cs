@@ -58,7 +58,7 @@ public class MasterAiService(IAiHttpClientFactory aiHttpClientFactory, IAiConfig
 
         var configs = this.ConfigProvider.GetConfigurationSet(userId, aiProcessorConfigUuid);
 
-        if (configs == null) return null;
+        if (configs is null) return null;
 
         // 调用配置对象的工厂方法
         var config = configs.FindAiConfig(aiModuleType);

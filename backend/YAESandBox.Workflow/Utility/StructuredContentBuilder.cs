@@ -103,7 +103,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
             var firstTextNode = targetNode.Children.OfType<TextNode>().FirstOrDefault();
 
             TextNode primaryTextNode;
-            if (firstTextNode != null)
+            if (firstTextNode is not null)
             {
                 // a. 如果找到了，更新其内容。它成为我们的“主”文本节点。
                 firstTextNode.Content.Clear().Append(content);
@@ -213,7 +213,7 @@ public partial class StructuredContentBuilder(string rootElementName = "root")
                 .OfType<ElementNode>()
                 .FirstOrDefault(e => e.Name == segment);
 
-            if (nextElement == null)
+            if (nextElement is null)
             {
                 nextElement = new ElementNode(segment);
                 current.Children.Add(nextElement);

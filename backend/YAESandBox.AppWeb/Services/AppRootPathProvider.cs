@@ -49,7 +49,7 @@ public class AppRootPathProvider : IRootPathProvider
         string? foundRootPath = null;
         int maxDepth = 5; // 设置一个最大向上搜索层数，防止死循环
 
-        while (searchDir != null && maxDepth-- > 0)
+        while (searchDir is not null && maxDepth-- > 0)
         {
             // 3. 检查当前目录是否包含名为 "backend" 的子目录。
             //    这是打包后应用根目录的可靠标志。
@@ -65,7 +65,7 @@ public class AppRootPathProvider : IRootPathProvider
         }
 
         // 5. 最终确定根路径
-        if (foundRootPath != null)
+        if (foundRootPath is not null)
         {
             this.RootPath = foundRootPath;
         }
@@ -94,7 +94,7 @@ public class AppRootPathProvider : IRootPathProvider
 
         // 循环向上查找，最多10层，防止死循环
         int maxDepth = 10;
-        while (currentDirectory != null && maxDepth-- > 0)
+        while (currentDirectory is not null && maxDepth-- > 0)
         {
             // 检查当前目录是否包含解决方案文件
             if (Directory.GetFiles(currentDirectory.FullName, "*.sln").Length > 0)

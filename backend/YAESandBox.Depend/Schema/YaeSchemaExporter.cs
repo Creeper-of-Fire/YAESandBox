@@ -202,7 +202,7 @@ public static class YaeSchemaExporter
 
                 // 提取显式 Order
                 int order = int.MaxValue;
-                if (propSchema != null &&
+                if (propSchema is not null &&
                     propSchema.TryGetPropertyValue("x-temp-ui-order", out var orderNode) &&
                     orderNode is JsonValue orderVal &&
                     orderVal.TryGetValue(out int orderInt))
@@ -212,7 +212,7 @@ public static class YaeSchemaExporter
 
                 // 提取继承深度
                 int depth = 0; // 默认深度为0
-                if (propSchema != null &&
+                if (propSchema is not null &&
                     propSchema.TryGetPropertyValue("x-temp-inheritance-depth", out var depthNode) &&
                     depthNode is JsonValue depthVal &&
                     depthVal.TryGetValue(out int depthInt))
@@ -282,7 +282,7 @@ internal class InheritanceOrderProcessor : IYaeSchemaProcessor
     {
         int depth = 0;
         var current = type;
-        while (current.BaseType != null)
+        while (current.BaseType is not null)
         {
             depth++;
             current = current.BaseType;

@@ -33,7 +33,7 @@ file static class PromptMapper
             {
                 var lastMessage = userMessages[^1];
                 var lastPart = lastMessage.Parts?.LastOrDefault();
-                if (lastPart != null)
+                if (lastPart is not null)
                 {
                     // 将内容追加到最后一个 part
                     userMessages[^1] = lastMessage with

@@ -37,27 +37,27 @@ public class ExceptionUsageAnalyzer : DiagnosticAnalyzer
         var catchClause = (CatchClauseSyntax)context.Node;
 
         // 1. 规则仅适用于声明了异常变量的 catch 块, e.g., `catch (Exception ex)`
-        if (catchClause.Declaration == null || catchClause.Declaration.Identifier.IsKind(SyntaxKind.None))
+        if (catchClause.Declaration is null || catchClause.Declaration.Identifier.IsKind(SyntaxKind.None))
         {
             return;
         }
 
         // 2. 如果 catch 块中包含 `throw;` 语句，这是一个有效的处理方式，直接返回。
-        if (catchClause.Block.Statements.OfType<ThrowStatementSyntax>().Any(ts => ts.Expression == null))
+        if (catchClause.Block.Statements.OfType<ThrowStatementSyntax>().Any(ts => ts.Expression is null))
         {
             return;
         }
 
         var semanticModel = context.SemanticModel;
         var exceptionSymbol = semanticModel.GetDeclaredSymbol(catchClause.Declaration);
-        if (exceptionSymbol == null)
+        if (exceptionSymbol is null)
         {
             return;
         }
 
         // 3. 查找所有使用该异常变量的地方
         var dataFlowAnalysis = semanticModel.AnalyzeDataFlow(catchClause.Block);
-        if (dataFlowAnalysis != null && !dataFlowAnalysis.ReadInside.Contains(exceptionSymbol))
+        if (dataFlowAnalysis is not null && !dataFlowAnalysis.ReadInside.Contains(exceptionSymbol))
         {
             // 变量根本没被读取，报告错误
             this.ReportDiagnostic(context, catchClause.Declaration);

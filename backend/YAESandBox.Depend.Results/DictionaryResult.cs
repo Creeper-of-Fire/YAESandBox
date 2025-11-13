@@ -81,7 +81,7 @@ public record  DictionaryResult<TKey, TValue> : Result where TKey : notnull
     /// </summary>
     public IEnumerable<KeyValuePair<TKey, TValue>> GetSuccessData()
     {
-        if (this.ItemResults == null) yield break;
+        if (this.ItemResults is null) yield break;
 
         foreach (var kvp in this.ItemResults)
         {

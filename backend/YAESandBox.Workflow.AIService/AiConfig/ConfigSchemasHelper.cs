@@ -32,7 +32,7 @@ public static class ConfigSchemasHelper // 改为静态类，因为所有成员�
         // 如果分布在多个程序集中，需要调整 Assembly.GetAssembly() 或提供程序集列表。
         var targetAssembly = Assembly.GetAssembly(AbstractAiProcessorConfigType);
 
-        if (targetAssembly == null)
+        if (targetAssembly is null)
         {
             Logger.Error("[ERROR] 无法获取类型 '{FullName}' 所在的程序集。AI 配置类型将无法被发现。", AbstractAiProcessorConfigType.FullName);
             AvailableAiConfigTypesCache = new ReadOnlyDictionary<string, Type>(temporaryDictionary); // 初始化为空字典

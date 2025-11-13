@@ -15,7 +15,7 @@ public abstract class YaePropertyAttributeProcessor<T> : IYaeSchemaProcessor whe
         // 如果当前上下文不是属性，则直接跳过。
         var attribute = context.PropertyInfo?.AttributeProvider?.GetCustomAttribute<T>(inherit: true);
 
-        if (attribute != null)
+        if (attribute is not null)
         {
             this.ProcessAttribute(context, schema, attribute);
         }

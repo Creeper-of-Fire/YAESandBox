@@ -105,7 +105,7 @@ internal class ConditionalPromptRuneProcessor(ConditionalPromptRuneConfig config
         }
 
         // 6. 如果有错误，记录并返回失败
-        if (evalError != null)
+        if (evalError is not null)
         {
             this.DebugDto.EvaluationError = evalError;
             return Result.Fail($"条件提示词 '{this.Config.Name}' 的条件执行失败: {evalError}");

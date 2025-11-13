@@ -38,7 +38,7 @@ public record SerializableError
             ExceptionType = ex.GetType().FullName,
             Message = ex.Message,
             StackTrace = ex.StackTrace,
-            InnerError = ex.InnerException != null ? FromException(ex.InnerException) : null
+            InnerError = ex.InnerException is not null ? FromException(ex.InnerException) : null
         };
     }
     
@@ -70,7 +70,7 @@ public record SerializableError
 /// 一个自定义异常类，用于包装从持久化存储中恢复的错误信息。
 /// </summary>
 public class PersistedException(SerializableError error)
-    : Exception(error.Message, error.InnerError != null ? new PersistedException(error.InnerError) : null)
+    : Exception(error.Message, error.InnerError is not null ? new PersistedException(error.InnerError) : null)
 {
     /// <summary>
     /// 原始异常的类型名称。

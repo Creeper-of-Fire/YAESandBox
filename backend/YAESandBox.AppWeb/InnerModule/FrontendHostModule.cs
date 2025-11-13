@@ -19,7 +19,7 @@ internal class FrontendHostModule : IProgramModuleStaticAssetProvider, IProgramM
     {
         string? frontendAbsolutePath = GetFrontendAbsolutePath(context.App.ApplicationServices);
 
-        if (frontendAbsolutePath == null) return;
+        if (frontendAbsolutePath is null) return;
 
         // 1. 克隆我们全局配置好的 DefaultStaticFileOptions，它包含了正确的缓存策略。
         var fallbackOptions = StaticAssetModuleExtensions.DefaultStaticFileOptions.Clone();
@@ -39,7 +39,7 @@ internal class FrontendHostModule : IProgramModuleStaticAssetProvider, IProgramM
     {
         string? frontendAbsolutePath = GetFrontendAbsolutePath(serviceProvider);
 
-        if (frontendAbsolutePath == null) yield break;
+        if (frontendAbsolutePath is null) yield break;
 
         yield return new PhysicalPathStaticAsset(frontendAbsolutePath)
         {

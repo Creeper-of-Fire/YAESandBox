@@ -84,7 +84,7 @@ public class AbstractAiProcessorConfigConverter : JsonConverter<AbstractAiProces
 
         // 使用 ConfigSchemasHelper 获取具体的 AI 配置类型
         var actualTargetType = ConfigSchemasHelper.GetAiConfigTypeByName(configTypeValue);
-        if (actualTargetType == null)
+        if (actualTargetType is null)
         {
             throw new JsonException($"未知或不支持的 '{ConfigTypePropertyName}': '{configTypeValue}'。找不到对应的 .NET 类型。");
         }
@@ -106,7 +106,7 @@ public class AbstractAiProcessorConfigConverter : JsonConverter<AbstractAiProces
             var result = JsonSerializer.Deserialize(jsonObject.GetRawText(), actualTargetType, options) as AbstractAiProcessorConfig;
             // 理论上，如果 actualTargetType 不是可空类型，Deserialize 不应返回 null，除非 JSON 是 "null"
             // 但由于我们已经处理了 JsonTokenType.Null，且 jsonObject 是一个对象，这里应得到一个实例
-            if (result == null && Nullable.GetUnderlyingType(actualTargetType) == null)
+            if (result is null && Nullable.GetUnderlyingType(actualTargetType) is null)
             {
                 // 这通常不应该发生，除非反序列化逻辑对于特定类型返回了 null
                 throw new JsonException($"将 '{configTypeValue}' 反序列化到类型 '{actualTargetType.FullName}' 的结果为 null，但该类型不可为空。");

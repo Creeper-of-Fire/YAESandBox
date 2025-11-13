@@ -140,7 +140,7 @@ public static class StaticAssetModuleExtensions
                     continue; // 跳过未知的定义类型
             }
 
-            if (fileProvider == null)
+            if (fileProvider is null)
             {
                 Logger.Warn("模块 [{ModuleName}] 声明的静态资源路径不存在或无法解析，已跳过。定义: {@AssetDefinition}",
                     provider.GetType().Name, asset);

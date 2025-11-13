@@ -29,7 +29,7 @@ public class JsonFileAiConfigurationManager(IUserScopedStorageFactory userStorag
         if (result.TryGetError(out var error, out var value))
             return error;
 
-        if (value == null || value.Count == 0)
+        if (value is null || value.Count == 0)
         {
             // 如果用户是首次使用，为其创建默认配置
             return AiConfigurationSet.MakeDefaultDictionary();

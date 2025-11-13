@@ -22,14 +22,14 @@ public class ExceptionUsageCodeFixProvider : CodeFixProvider
     public sealed override async Task RegisterCodeFixesAsync(CodeFixContext context)
     {
         var root = await context.Document.GetSyntaxRootAsync(context.CancellationToken).ConfigureAwait(false);
-        if (root == null) return;
+        if (root is null) return;
 
         var diagnostic = context.Diagnostics.First();
         var diagnosticSpan = diagnostic.Location.SourceSpan;
         
         // 从诊断位置找到对应的 CatchClauseSyntax 节点
         var catchClause = root.FindToken(diagnosticSpan.Start).Parent?.AncestorsAndSelf().OfType<CatchClauseSyntax>().FirstOrDefault();
-        if (catchClause == null) return;
+        if (catchClause is null) return;
         
         context.RegisterCodeFix(
             CodeAction.Create(

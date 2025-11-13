@@ -145,7 +145,7 @@ builder.Services.AddSwaggerGen(options =>
     // 如果 API 没有明确的 GroupName，默认可以将其分配给公开文档
     options.DocInclusionPredicate((docName, apiDesc) =>
         {
-            if (apiDesc.GroupName != null)
+            if (apiDesc.GroupName is not null)
                 // 核心规则：API 的 GroupName 必须精确匹配当前要生成的文档名。
                 return apiDesc.GroupName == docName;
 

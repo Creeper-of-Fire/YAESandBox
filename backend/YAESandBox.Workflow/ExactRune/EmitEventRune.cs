@@ -49,7 +49,7 @@ internal class EmitEventRuneProcessor(EmitEventRuneConfig config, ICreatingConte
 
         // 如果源数据为null，我们可以选择不发射或发射一个null。
         // 通常不发射是更干净的行为，避免向前端发送不必要的空事件。
-        if (sourceData == null)
+        if (sourceData is null)
         {
             this.DebugDto.EventEmitted = false;
             return Result.Ok();

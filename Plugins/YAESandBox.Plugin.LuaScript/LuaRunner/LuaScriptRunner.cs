@@ -92,7 +92,7 @@ public class LuaScriptRunner(IDebugDtoWithLogs debugDto, IEnumerable<ILuaBridge>
                 loggableDto.RuntimeError = conciseErrorMessage;
                 loggableDto.Logs.Add("[FATAL] 脚本执行异常. 详细信息如下:");
                 using var reader = new StringReader(fullErrorDetails);
-                for (string? line = reader.ReadLine(); line != null; line = reader.ReadLine())
+                for (string? line = reader.ReadLine(); line is not null; line = reader.ReadLine())
                 {
                     loggableDto.Logs.Add(line);
                 }
@@ -142,7 +142,7 @@ public static class LuaConverter
                     object? convertedKey = ConvertLuaToCSharp(key, logger);
                     object? convertedValue = ConvertLuaToCSharp(table[key], logger);
 
-                    if (convertedKey == null) continue; // 不支持 nil 键
+                    if (convertedKey is null) continue; // 不支持 nil 键
 
                     dict[convertedKey] = convertedValue;
 

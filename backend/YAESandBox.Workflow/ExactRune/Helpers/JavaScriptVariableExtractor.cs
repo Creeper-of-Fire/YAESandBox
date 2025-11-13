@@ -61,7 +61,7 @@ internal class JavaScriptVariableExtractor : AstVisitor
         var newScope = new HashSet<string>();
 
         // 将函数名（如果有）添加到新作用域
-        if (function.Id != null)
+        if (function.Id is not null)
         {
             // 函数名在其自身内部是可见的
             newScope.Add(function.Id.Name);
@@ -96,7 +96,7 @@ internal class JavaScriptVariableExtractor : AstVisitor
         }
         
         // 继续访问初始化表达式 (如 `var x = y` 中的 `y`)
-        if (variableDeclarator.Init != null)
+        if (variableDeclarator.Init is not null)
         {
             this.Visit(variableDeclarator.Init);
         }
@@ -109,7 +109,7 @@ internal class JavaScriptVariableExtractor : AstVisitor
     protected override object? VisitFunctionDeclaration(FunctionDeclaration functionDeclaration)
     {
         // 函数声明的名字在父作用域和自身作用域都可见
-        if (functionDeclaration.Id != null)
+        if (functionDeclaration.Id is not null)
         {
             this.ScopeStack.Peek().Add(functionDeclaration.Id.Name);
         }

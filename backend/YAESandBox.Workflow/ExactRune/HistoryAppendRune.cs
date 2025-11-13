@@ -34,7 +34,7 @@ internal class HistoryAppendRuneProcessor(HistoryAppendRuneConfig config, ICreat
 
         // 1. 获取历史记录列表 (必需)
         var historyList = tuumProcessorContent.GetTuumVar<ImmutableList<RoledPromptDto>>(this.Config.HistoryVariableName);
-        if (historyList == null)
+        if (historyList is null)
             return Result.Fail($"必须的历史记录变量 '{this.Config.HistoryVariableName}' 未提供、类型错误或为空。").AsCompletedTask();
 
         this.DebugDto.HistoryPromptCount = historyList.Count;

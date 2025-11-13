@@ -199,7 +199,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
 
         var configType = ConfigSchemasHelper.GetAiConfigTypeByName(aiModelType);
 
-        if (configType == null)
+        if (configType is null)
             return this.NotFound($"名为 '{aiModelType}' 的 AI 模块类型未找到。");
 
         if (!typeof(AbstractAiProcessorConfig).IsAssignableFrom(configType))
@@ -210,7 +210,7 @@ public class AiConfigurationsController(IAiConfigurationManager configurationMan
         if (allSetsResult.TryGetValue(out var allSets))
         {
             var set = allSets.FirstOrDefault(s => s.Value.ConfigSetName == AiConfigurationSet.DefaultConfigSetName).Value;
-            if (set != null)
+            if (set is not null)
             {
                 if (set.Configurations.TryGetValue(aiModelType, out var defaultConfig))
                 {

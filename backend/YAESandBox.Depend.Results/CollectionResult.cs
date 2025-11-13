@@ -57,7 +57,7 @@ public record CollectionResult<T> : Result
     /// </summary>
     public IEnumerable<T> GetSuccessData()
     {
-        if (this.ItemResults == null) yield break;
+        if (this.ItemResults is null) yield break;
 
         foreach (var result in this.ItemResults)
         {
@@ -81,7 +81,7 @@ public record CollectionResult<T> : Result
     /// </summary>
     public IEnumerable<Error> GetAllItemErrors()
     {
-        if (this.ItemResults == null) yield break;
+        if (this.ItemResults is null) yield break;
 
         foreach (var result in this.ItemResults)
         {

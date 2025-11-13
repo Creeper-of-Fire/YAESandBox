@@ -67,7 +67,7 @@ public class UserSaveDataService(IUserScopedStorageFactory userStorageFactory)
 
         if (result.TryGetError(out error, out var value))
             return error;
-        if (value == null)
+        if (value is null)
             return string.Empty;
         return value;
     }

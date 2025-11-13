@@ -106,7 +106,7 @@ public class RuneConfigController(
             if (string.IsNullOrEmpty(assemblyLocation)) continue;
 
             string? pluginRootPath = Path.GetDirectoryName(assemblyLocation);
-            if (pluginRootPath == null) continue;
+            if (pluginRootPath is null) continue;
 
             string wwwRootPath = Path.Combine(pluginRootPath, "wwwroot");
             if (!Directory.Exists(wwwRootPath)) continue;
@@ -171,7 +171,7 @@ public class RuneConfigController(
                 });
 
                 var value = JsonNode.Parse(schemaJson);
-                if (value != null)
+                if (value is not null)
                 {
                     schemas[type.Name] = value;
                 }

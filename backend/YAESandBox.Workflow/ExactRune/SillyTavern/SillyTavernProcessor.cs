@@ -82,7 +82,7 @@ public static partial class SillyTavernProcessor
             if (!templateItem.IsMark)
             {
                 // 如果是具体提示词，直接使用其内容和已计算好的角色
-                if (templateItem.Content != null)
+                if (templateItem.Content is not null)
                 {
                     finalPromptList.Add(new RoledPromptDto
                     {

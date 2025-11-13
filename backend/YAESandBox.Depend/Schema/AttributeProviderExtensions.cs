@@ -47,7 +47,7 @@ public static class AttributeProviderExtensions
             case Type currentType:
             {
                 var baseType = currentType.BaseType;
-                while (baseType != null && baseType != typeof(object))
+                while (baseType is not null && baseType != typeof(object))
                 {
                     if (baseType.GetCustomAttributes(typeof(T), false).FirstOrDefault() is T attr) 
                         return attr;
@@ -59,16 +59,16 @@ public static class AttributeProviderExtensions
             case PropertyInfo propertyInfo:
             {
                 var currentType = propertyInfo.DeclaringType?.BaseType;
-                while (currentType != null && currentType != typeof(object))
+                while (currentType is not null && currentType != typeof(object))
                 {
                     var baseProperty = currentType.GetProperty(propertyInfo.Name,
                         BindingFlags.Public | BindingFlags.Instance | BindingFlags.DeclaredOnly);
 
-                    if (baseProperty != null)
+                    if (baseProperty is not null)
                     {
                         // 在基类属性上查找，inherit 必须为 false，因为我们只关心这一层
                         var attr = baseProperty.GetCustomAttributes(typeof(T), false).FirstOrDefault() as T;
-                        if (attr != null) return attr;
+                        if (attr is not null) return attr;
                     }
                     currentType = currentType.BaseType;
                 }

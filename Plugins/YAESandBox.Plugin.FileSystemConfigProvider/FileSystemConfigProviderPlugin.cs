@@ -104,7 +104,7 @@ public class FileSystemConfigProviderPlugin : IYaeSandBoxPlugin, IProgramModuleI
                 // 使用项目中的JSON辅助类进行反序列化，确保配置一致
                 var storedConfig = YaeSandBoxJsonHelper.Deserialize<StoredConfig<TConfig>>(jsonContent);
 
-                if (storedConfig != null)
+                if (storedConfig is not null)
                 {
                     loadedConfigs.Add(storedConfig);
                     Logger.Info("成功从文件加载内部配置: [{Type}] {Name} (来自: {FilePath})",

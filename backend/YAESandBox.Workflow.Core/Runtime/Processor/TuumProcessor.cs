@@ -208,7 +208,7 @@ public class TuumProcessor(
                 // JsonNode 可以表示任何有效的JSON值（对象、数组、字符串、数字、布尔、null）。
                 // 如果成功，说明输入是一个JSON格式的字符串。
                 var jsonNode = JsonNode.Parse(stringValue);
-                if (jsonNode == null)
+                if (jsonNode is null)
                     return stringValue;
 
                 return jsonNode;
@@ -289,7 +289,7 @@ public class TuumProcessor(
                             System.Reflection.BindingFlags.Public |
                             System.Reflection.BindingFlags.Instance);
 
-                        if (prop == null)
+                        if (prop is null)
                         {
                             value = default;
                             return false;
@@ -468,7 +468,7 @@ public class TuumProcessor(
             object? rootObject = this.GetTuumVar(rootVarName);
 
             // 如果根对象不存在，创建一个新的字典作为根
-            if (rootObject == null)
+            if (rootObject is null)
             {
                 rootObject = new Dictionary<string, object?>();
                 this.SetTuumVar(rootVarName, rootObject);

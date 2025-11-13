@@ -58,7 +58,7 @@ public class AiConfigurationSet : IProtectedData
     public Result<AbstractAiProcessorConfig> FindAiConfig(string aiModelType)
     {
         this.Configurations.TryGetValue(aiModelType, out var config);
-        if (config == null)
+        if (config is null)
             return NormalError.NotFound($"{this.ConfigSetName}中未定义 AI 配置类型: {aiModelType}");
         return Result.Ok(config);
     }

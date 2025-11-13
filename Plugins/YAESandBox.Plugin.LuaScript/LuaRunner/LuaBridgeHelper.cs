@@ -21,7 +21,7 @@ public static class LuaBridgeHelper
     /// <returns>一个纯 Lua Table，如果转换失败则返回 null。</returns>
     public static object? ConvertCSharpObjectToLuaTable(object? csharpObject, Lua luaState, LuaLogBridge logger, string context)
     {
-        if (csharpObject == null)
+        if (csharpObject is null)
         {
             return null;
         }

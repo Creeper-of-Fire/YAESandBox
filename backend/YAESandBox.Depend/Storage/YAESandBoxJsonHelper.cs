@@ -101,7 +101,7 @@ public static class YaeSandBoxJsonHelper
             else
             {
                 // 对于引用类型，默认值是 null
-                isOldValueDefault = oldValue == null;
+                isOldValueDefault = oldValue is null;
             }
 
             // 4. 如果 oldOptions 的属性值是默认值，那么我们才从 newOptions 复制
@@ -155,7 +155,7 @@ public static class YaeSandBoxJsonHelper
             // 尝试获取 JsonPropertyNameAttribute
             var jsonPropertyNameAttribute = property.GetCustomAttribute<JsonPropertyNameAttribute>();
 
-            if (jsonPropertyNameAttribute != null && !string.IsNullOrEmpty(jsonPropertyNameAttribute.Name))
+            if (jsonPropertyNameAttribute is not null && !string.IsNullOrEmpty(jsonPropertyNameAttribute.Name))
             {
                 // 如果特性存在且其Name属性有值，则使用它作为键
                 key = jsonPropertyNameAttribute.Name;
@@ -173,7 +173,7 @@ public static class YaeSandBoxJsonHelper
             object? value = property.GetValue(obj);
 
             var jsonExtensionDataAttribute = property.GetCustomAttribute<JsonExtensionDataAttribute>();
-            if (jsonExtensionDataAttribute != null)
+            if (jsonExtensionDataAttribute is not null)
             {
                 switch (value)
                 {
@@ -207,7 +207,7 @@ public static class YaeSandBoxJsonHelper
     /// <returns>一个新的目标类型实例，只包含源对象中标记为 [Required] 的属性值。如果源对象为 null 或无法创建目标实例，则返回 null。</returns>
     public static object? CreateObjectWithRequiredPropertiesOnly(object? source, Type targetType)
     {
-        if (source == null)
+        if (source is null)
             return null;
 
         // 确保 targetType 可以被实例化 (例如，有无参数构造函数)
@@ -215,7 +215,7 @@ public static class YaeSandBoxJsonHelper
         try
         {
             target = Activator.CreateInstance(targetType);
-            if (target == null)
+            if (target is null)
                 return null;
         }
         catch (Exception)
@@ -242,7 +242,7 @@ public static class YaeSandBoxJsonHelper
             );
 
             // 如果找到了对应的目标属性，并且它可以被写入
-            if (targetProperty == null || !targetProperty.CanWrite) continue;
+            if (targetProperty is null || !targetProperty.CanWrite) continue;
             try
             {
                 object? value = sourceProperty.GetValue(source); // 从源对象获取值
@@ -279,7 +279,7 @@ public static class YaeSandBoxJsonHelper
         try
         {
             clonedDocument = JsonNode.Parse(document.ToJsonString());
-            if (clonedDocument != null)
+            if (clonedDocument is not null)
                 return true;
         }
         catch

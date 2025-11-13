@@ -84,7 +84,7 @@ public class DataProtectionService(ISecretProtector secretProtector) : IDataProt
                      .Where(property => property is { CanRead: true, CanWrite: true }))
         {
             // A. 如果属性本身被标记为 [Protected]
-            if (property.GetCustomAttribute<ProtectedAttribute>() != null)
+            if (property.GetCustomAttribute<ProtectedAttribute>() is not null)
             {
                 if (property.GetValue(instance) is not string currentValue)
                     continue;

@@ -208,7 +208,7 @@ public partial record LuaScriptRuneConfig : AbstractRuneConfig<LuaScriptRuneProc
             {
                 var properties = YaeSandBoxJsonHelper.Deserialize<Dictionary<string, string>>(jsonBlock);
 
-                if (properties != null)
+                if (properties is not null)
                 {
                     var specProperties = properties.ToDictionary(
                         kvp => kvp.Key,

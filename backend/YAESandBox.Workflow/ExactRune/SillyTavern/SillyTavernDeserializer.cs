@@ -27,13 +27,13 @@ public static class SillyTavernDeserializer
         {
             var preset = JsonSerializer.Deserialize<SillyTavernPreset>(jsonContent);
 
-            if (preset == null)
+            if (preset is null)
             {
                 return Result.Fail("预设JSON解析结果为空，这可能是因为内容为 'null' 或结构不兼容。");
             }
             
             // 基本验证：确保核心部分存在
-            if (preset.Prompts == null || preset.PromptOrder == null)
+            if (preset.Prompts is null || preset.PromptOrder is null)
             {
                 return Result.Fail("预设JSON结构不完整，缺少 'prompts' 或 'prompt_order' 关键字段。");
             }
@@ -66,13 +66,13 @@ public static class SillyTavernDeserializer
         {
             var worldInfo = JsonSerializer.Deserialize<SillyTavernWorldInfo>(jsonContent);
 
-            if (worldInfo == null)
+            if (worldInfo is null)
             {
                 return Result.Fail("世界书JSON解析结果为空，这可能是因为内容为 'null' 或结构不兼容。");
             }
             
             // 基本验证
-            if (worldInfo.Entries == null)
+            if (worldInfo.Entries is null)
             {
                 return Result.Fail("世界书JSON结构不完整，缺少 'entries' 关键字段。");
             }

@@ -98,7 +98,7 @@ internal class StringParserToValueRuneProcessor(StringParserToValueRuneConfig co
 
             // 5. 类型转换
             (object? convertedValue, string? conversionError) = this.ConvertValue(rawValue, rule.FieldType);
-            if (conversionError != null)
+            if (conversionError is not null)
             {
                 ruleDebugInfo.Error = conversionError;
                 if (rule.IsRequired)

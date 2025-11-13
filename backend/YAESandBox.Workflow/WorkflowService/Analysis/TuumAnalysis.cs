@@ -313,7 +313,7 @@ public class TuumAnalysisService
             var runeType = runeConfig.GetType();
 
             // 规则: [SingleInTuum]
-            if (runeType.GetCustomAttribute<SingleInTuumAttribute>() != null)
+            if (runeType.GetCustomAttribute<SingleInTuumAttribute>() is not null)
             {
                 if (tuumRunes.Count(r => r.GetType() == runeType) > 1)
                 {

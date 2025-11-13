@@ -107,7 +107,7 @@ internal class RangeProcessor : IYaeSchemaProcessor
         var rangeAttribute = context.PropertyInfo.AttributeProvider.GetCustomAttribute<RangeAttribute>(inherit: true);
         var customRangeAttribute = context.PropertyInfo.AttributeProvider.GetCustomAttribute<CustomRangeAttribute>(inherit: true);
 
-        if (rangeAttribute == null && customRangeAttribute == null)
+        if (rangeAttribute is null && customRangeAttribute is null)
             return;
 
         // 优先使用 CustomRangeAttribute 的值，因为它更具体

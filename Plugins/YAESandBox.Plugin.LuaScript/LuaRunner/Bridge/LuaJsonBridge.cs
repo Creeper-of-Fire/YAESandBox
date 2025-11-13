@@ -87,7 +87,7 @@ public class LuaJsonBridge : ILuaBridge
         }
 
         using var stream = assembly.GetManifestResourceStream(resourceName);
-        if (stream == null)
+        if (stream is null)
             throw new FileNotFoundException($"无法加载资源流: {resourceName}");
         using var reader = new StreamReader(stream);
         return reader.ReadToEnd();

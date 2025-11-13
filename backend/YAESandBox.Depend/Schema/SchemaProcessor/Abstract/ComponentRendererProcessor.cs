@@ -26,7 +26,7 @@ public class ComponentRendererProcessor<TAttribute>(string typeKey, string prope
 
         // 1. 检查属性级别
         var attribute = context.PropertyInfo?.AttributeProvider.GetCustomAttribute<TAttribute>();
-        if (attribute != null)
+        if (attribute is not null)
         {
             schema[this.PropertyKey] = this.ValueSelector(attribute);
             // 找到并处理后，直接返回，不再处理类型级别的特性

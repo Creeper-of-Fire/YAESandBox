@@ -67,7 +67,7 @@ internal class RuneConfigConverter : JsonConverter<AbstractRuneConfig>
         var runeTypeProperty = jsonObject.EnumerateObject()
             .FirstOrDefault(p => string.Equals(p.Name, ExpectedRuneTypePropertyName, StringComparison.OrdinalIgnoreCase));
 
-        if (runeTypeProperty.Name == null) // 即 FirstOrDefault 返回了默认值
+        if (runeTypeProperty.Name is null) // 即 FirstOrDefault 返回了默认值
         {
             return CreateFallback(jsonObject,
                 $"反序列化失败：JSON对象中缺少必需的 '{ExpectedRuneTypePropertyName}' 属性。");
@@ -90,7 +90,7 @@ internal class RuneConfigConverter : JsonConverter<AbstractRuneConfig>
 
         // 2. 查找对应的 .NET 类型
         var concreteType = RuneConfigTypeResolver.FindRuneConfigType(runeTypeNameFromInput);
-        if (concreteType == null)
+        if (concreteType is null)
         {
             return CreateFallback(jsonObject,
                 $"反序列化失败：未找到与符文类型 '{runeTypeNameFromInput}' 对应的.NET实现。", runeTypeNameFromInput);
@@ -124,7 +124,7 @@ internal class RuneConfigConverter : JsonConverter<AbstractRuneConfig>
 
         // 2. 如果创建成功，就使用 CloneJsonNode 方法来创建深拷贝
         JsonObject finalRawJsonData;
-        if (tempRawJsonNode != null && tempRawJsonNode.CloneJsonNode(out var clonedNode) && clonedNode is JsonObject clonedObject)
+        if (tempRawJsonNode is not null && tempRawJsonNode.CloneJsonNode(out var clonedNode) && clonedNode is JsonObject clonedObject)
         {
             finalRawJsonData = clonedObject;
         }

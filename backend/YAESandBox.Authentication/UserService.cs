@@ -81,7 +81,7 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
         var user = users.Values
             .FirstOrDefault(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase));
 
-        if (user == null || !passwordService.VerifyPassword(password, user.PasswordHash))
+        if (user is null || !passwordService.VerifyPassword(password, user.PasswordHash))
         {
             return Result.Fail("用户名或密码无效。");
         }
@@ -162,7 +162,7 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
         // 遍历所有用户，查找匹配的刷新令牌
         var user = users.Values.FirstOrDefault(u => u.RefreshToken == refreshToken);
 
-        if (user != null)
+        if (user is not null)
         {
             return Result.Ok(user);
         }

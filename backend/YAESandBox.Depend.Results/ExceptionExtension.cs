@@ -26,7 +26,7 @@ public static class ExceptionExtension
 
         sb.AppendLine("--- 错误详情 ---");
 
-        while (currentException != null)
+        while (currentException is not null)
         {
             if (level > 0)
             {

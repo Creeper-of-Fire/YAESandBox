@@ -18,7 +18,7 @@ public class LuaRegexBridge : ILuaBridge
     private static RegexOptions ParseOptions(LuaTable? optionsTable)
     {
         var options = RegexOptions.None;
-        if (optionsTable == null) return options;
+        if (optionsTable is null) return options;
 
         // 检查布尔选项
         if (optionsTable["ignore_case"] is true) options |= RegexOptions.IgnoreCase;
@@ -104,7 +104,7 @@ public class LuaRegexBridge : ILuaBridge
             object? countObj = options?["count"];
             int countLimit = 0;
 
-            if (countObj != null)
+            if (countObj is not null)
             {
                 try
                 {

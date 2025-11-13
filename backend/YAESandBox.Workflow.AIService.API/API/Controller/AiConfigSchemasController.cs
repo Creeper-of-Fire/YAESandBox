@@ -66,7 +66,7 @@ public class AiConfigSchemasController : AuthenticatedApiControllerBase
                     var schemaNode = JsonNode.Parse(schemaJson); // 解析为 JsonNode 以便正确序列化为 JSON 对象
 
                     // 3. 组合成 DTO
-                    if (schemaNode == null)
+                    if (schemaNode is null)
                         return null;
 
                     return new AiConfigTypeWithSchemaDto

@@ -36,7 +36,7 @@ file class EmitterCallback(
 
     public async Task CompleteAsync()
     {
-        if (onCompleteAsync != null)
+        if (onCompleteAsync is not null)
         {
             await onCompleteAsync();
         }

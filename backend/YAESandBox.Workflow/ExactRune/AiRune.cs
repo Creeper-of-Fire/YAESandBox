@@ -54,13 +54,13 @@ internal class AiRuneProcessor(AiRuneConfig config, ICreatingContext creatingCon
                 var aiConfig = this.Config.AiConfiguration;
                 var workflowRuntimeService = this.WorkflowRuntimeService;
 
-                if (aiConfig.SelectedAiRuneType == null || aiConfig.AiProcessorConfigUuid == null)
+                if (aiConfig.SelectedAiRuneType is null || aiConfig.AiProcessorConfigUuid is null)
                     return NormalError.Conflict($"枢机 {workflowRuntimeService} 没有配置AI信息，所以无法执行AI符文。");
 
                 var aiProcessor = workflowRuntimeService.AiService.CreateAiProcessor(
                     aiConfig.AiProcessorConfigUuid,
                     aiConfig.SelectedAiRuneType);
-                if (aiProcessor == null)
+                if (aiProcessor is null)
                     return NormalError.Conflict($"未找到 AI 配置 {aiConfig.AiProcessorConfigUuid}配置下的类型：{aiConfig.SelectedAiRuneType}");
 
 

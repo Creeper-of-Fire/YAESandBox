@@ -54,11 +54,11 @@ public static class ResultFormattingExtensions
         var customProperties = errorType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
             .Where(p => p.DeclaringType != typeof(Error) && p.CanRead)
             .Select(p => new { p.Name, Value = p.GetValue(error) })
-            .Where(p => p.Value != null && (p.Value is not string s || !string.IsNullOrEmpty(s)))
+            .Where(p => p.Value is not null && (p.Value is not string s || !string.IsNullOrEmpty(s)))
             .ToList(); // 物化结果以避免多次枚举
         
         // 3. 判断是否为“简单错误”：基础 Error 类型 + 无自定义属性 + 无异常
-        bool isSimpleError = isBaseError && customProperties.Count == 0 && error.Exception == null;
+        bool isSimpleError = isBaseError && customProperties.Count == 0 && error.Exception is null;
         
         if (isSimpleError)
         {
@@ -85,7 +85,7 @@ public static class ResultFormattingExtensions
         }
 
         // 如果存在内部异常，则附加完整的异常信息
-        if (error.Exception != null)
+        if (error.Exception is not null)
         {
             sb.AppendLine("--- 内部异常详情 ---");
             // 复用我们之前创建的 ToFormattedString() 扩展方法

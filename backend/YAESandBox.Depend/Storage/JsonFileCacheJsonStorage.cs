@@ -24,7 +24,7 @@ public partial class JsonFileCacheJsonStorage(string? dataRootPath) : JsonFileJs
         var loadResult = await base.LoadFileContentAsync(filePath);
 
         // 3. 如果从磁盘加载成功，将内容存入缓存
-        if (loadResult.TryGetValue(out string? fileContent) && fileContent != null)
+        if (loadResult.TryGetValue(out string? fileContent) && fileContent is not null)
         {
             this.StoreFileContentInCache(filePath, fileContent);
         }

@@ -30,7 +30,7 @@ public class PluginAssemblyLoadContext : AssemblyLoadContext
     {
         // 尝试使用解析器从插件目录中找到托管程序集。
         string? assemblyPath = this._resolver.ResolveAssemblyToPath(assemblyName);
-        if (assemblyPath != null)
+        if (assemblyPath is not null)
         {
             // 如果找到，就从该路径加载。
             return this.LoadFromAssemblyPath(assemblyPath);
@@ -49,7 +49,7 @@ public class PluginAssemblyLoadContext : AssemblyLoadContext
     {
         // 尝试使用解析器从插件目录（包括 runtimes 文件夹）中找到非托管库。
         string? libraryPath = this._resolver.ResolveUnmanagedDllToPath(unmanagedDllName);
-        if (libraryPath != null)
+        if (libraryPath is not null)
         {
             // 如果找到，就加载它并返回其句柄。
             return this.LoadUnmanagedDllFromPath(libraryPath);
