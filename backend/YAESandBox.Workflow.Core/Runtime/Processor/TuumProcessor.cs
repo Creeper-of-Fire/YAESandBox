@@ -161,10 +161,14 @@ public class TuumProcessor(
                     // Case 3: 变量是从持久化存储中恢复的 JsonElement。
                     JsonElement jsonElement => jsonElement.Deserialize<T>(YaeSandBoxJsonHelper.JsonSerializerOptions),
                     JsonNode jsonNode => jsonNode.Deserialize<T>(YaeSandBoxJsonHelper.JsonSerializerOptions),
-                    // Case 4: 变量是一个字符串，可能是一个JSON字符串。
-                    // 如果目标类型本身就是字符串，Case 2 已经处理过了。
-                    // 所以到这里，我们假设这个字符串是需要被解析的JSON。
-                    string stringValue => JsonSerializer.Deserialize<T>(stringValue, YaeSandBoxJsonHelper.JsonSerializerOptions),
+                    // Case 4: 变量是一个字符串，可能是一个JSON字符串，也可能是一个普通字符串。
+                    // 如果目标类型 T 本身就是字符串，Case 2 已经处理过了。
+                    // 到这里，如果 T 是 object，字符串可能是字面量，也可能是JSON。我们需要智能判断。
+                    // 如果 T 是其他具体类型，字符串必须是该类型的JSON表示。
+                    string stringValue =>
+                        typeof(T) == typeof(object)
+                            ? (T)TryParseAsJsonThenReturnString(stringValue) // 智能处理 object 类型
+                            : JsonSerializer.Deserialize<T>(stringValue, YaeSandBoxJsonHelper.JsonSerializerOptions),
                     // Case 5: 最后的备用方案。
                     // 变量是其他类型的C#对象 (例如 MyRecordA)，需要转换为另一种类型 (例如 MyRecordB)。
                     // 这是通过序列化到JSON再反序列化来实现的，开销最大，应作为最后手段。
@@ -187,6 +191,33 @@ public class TuumProcessor(
             {
                 value = default;
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// 辅助方法：尝试将字符串解析为 JSON 对象 (JsonNode)。如果解析失败，则返回原始字符串。
+        /// 这个方法保证了对所有字符串输入的正确处理，无论是普通字符串还是任何形式的有效JSON。
+        /// </summary>
+        /// <param name="stringValue">输入的字符串。</param>
+        /// <returns>如果解析成功，返回 JsonNode；否则返回原始字符串。</returns>
+        private static object TryParseAsJsonThenReturnString(string stringValue)
+        {
+            try
+            {
+                // 直接尝试将字符串解析为 JsonNode。
+                // JsonNode 可以表示任何有效的JSON值（对象、数组、字符串、数字、布尔、null）。
+                // 如果成功，说明输入是一个JSON格式的字符串。
+                var jsonNode = JsonNode.Parse(stringValue);
+                if (jsonNode == null)
+                    return stringValue;
+
+                return jsonNode;
+            }
+            catch (JsonException)
+            {
+                // 如果抛出 JsonException，说明它不是一个有效的JSON文档。
+                // 在这种情况下，我们认定它就是一个普通的字符串字面量。
+                return stringValue;
             }
         }
 
