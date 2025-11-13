@@ -16,6 +16,15 @@
 
     <ItemGroup>
         <!-- 
+          使用 'Remove' 属性来从编译列表中移除文件。
+          '**' 是一个通配符，代表递归地匹配所有子目录。
+          '*.cs' 匹配所有以 .cs 结尾的文件。
+        -->
+        <None Remove="frontend/node_modules/**/*.*" />
+    </ItemGroup>
+
+    <ItemGroup>
+        <!-- 
           声明此插件有一个自定义内容目录 `wwwroot` 需要复制。
           - Include: 源文件路径，支持通配符。
           - DestinationSubdirectory: 复制到目标插件目录下的哪个子目录。
