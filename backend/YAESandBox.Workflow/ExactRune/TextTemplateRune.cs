@@ -30,7 +30,13 @@ internal class TextTemplateRuneProcessor(TextTemplateRuneConfig config, ICreatin
         try
         {
             // 1. 使用与 PromptGenerationRune 相同的逻辑替换占位符
-            string finalContent = this.SubstitutePlaceholders(this.Config.Template, tuumProcessorContent);
+            string finalContent = Helpers.StringTemplateHelper.Render(
+                this.Config.Template,
+                tuumProcessorContent,
+                this.DebugDto.ResolvedPlaceholders,
+                this.DebugDto.UnresolvedPlaceholders
+                // 此 Rune 的 DebugDto 没有专门的 log 列表，所以这里不传 logAction，或者可以扩展 DebugDto
+            );
             this.DebugDto.FinalContent = finalContent;
 
             // 2. 将生成的内容设置到指定的输出变量中
@@ -44,30 +50,6 @@ internal class TextTemplateRuneProcessor(TextTemplateRuneConfig config, ICreatin
             this.DebugDto.RuntimeError = error.ToDetailString();
             return Result.Fail(error).AsCompletedTask();
         }
-    }
-
-    /// <summary>
-    /// 使用 Tuum 上下文中的变量替换模板中的占位符，支持点符号访问。
-    /// </summary>
-    private string SubstitutePlaceholders(string template, TuumProcessorContent tuumContent)
-    {
-        return TextTemplateRuneConfig.PlaceholderRegex().Replace(template, match =>
-        {
-            // 例如: 'player.name'
-            string path = match.Groups["path"].Value;
-
-            // 使用 TuumContent 提供的路径解析方法
-            if (tuumContent.TryGetTuumVarByPath<object>(path, out object? value))
-            {
-                string stringValue = value.ToString() ?? string.Empty;
-                this.DebugDto.ResolvedPlaceholders[path] = stringValue;
-                return stringValue;
-            }
-
-            // 未找到或值为 null
-            this.DebugDto.UnresolvedPlaceholders.Add(path);
-            return string.Empty; // 替换为空字符串
-        });
     }
 
     internal record TextTemplateRuneDebugDto : IRuneProcessorDebugDto
@@ -87,10 +69,6 @@ internal class TextTemplateRuneProcessor(TextTemplateRuneConfig config, ICreatin
 [RuneCategory("文本处理")]
 internal partial record TextTemplateRuneConfig : AbstractRuneConfig<TextTemplateRuneProcessor>
 {
-    // 正则表达式与 PromptGenerationRuneConfig 保持一致，但捕获组命名为 'path' 以提高可读性
-    [GeneratedRegex(@"\{\{(?<path>[^}]+?)\}\}")]
-    internal static partial Regex PlaceholderRegex();
-
     #region Config Properties
 
     [Required]
@@ -114,68 +92,11 @@ internal partial record TextTemplateRuneConfig : AbstractRuneConfig<TextTemplate
     // 静态分析逻辑与 PromptGenerationRuneConfig 完全相同，用于推断消费的变量
     public override List<ConsumedSpec> GetConsumedSpec()
     {
-        var rootSpecs = new Dictionary<string, VarSpecDef>();
-        var allPlaceholders = PlaceholderRegex().Matches(this.Template)
-            .Select(m => m.Groups["path"].Value.Trim());
+        // 提取占位符
+        var placeholders = Helpers.StringTemplateHelper.ExtractPlaceholders(this.Template);
 
-        foreach (string path in allPlaceholders)
-        {
-            string[] parts = path.Split('.', StringSplitOptions.RemoveEmptyEntries);
-            if (parts.Length == 0) continue;
-
-            string rootVarName = parts[0];
-
-            if (parts.Length == 1)
-            {
-                if (!rootSpecs.ContainsKey(rootVarName))
-                {
-                    rootSpecs[rootVarName] = CoreVarDefs.Any with { Description = "可被ToString的任意类型。" };
-                }
-
-                continue;
-            }
-
-            if (!rootSpecs.TryGetValue(rootVarName, out var currentDef) || currentDef is not RecordVarSpecDef)
-            {
-                currentDef = CoreVarDefs.RecordStringAny with
-                {
-                    Properties = new Dictionary<string, VarSpecDef>(),
-                    Description = $"根据模板为变量'{rootVarName}'推断出的数据结构。"
-                };
-                rootSpecs[rootVarName] = currentDef;
-            }
-
-            var currentRecord = (RecordVarSpecDef)currentDef;
-
-            for (int i = 1; i < parts.Length; i++)
-            {
-                string propName = parts[i];
-
-                if (i == parts.Length - 1)
-                {
-                    if (!currentRecord.Properties.ContainsKey(propName))
-                    {
-                        currentRecord.Properties[propName] = CoreVarDefs.Any with { Description = "可被ToString的任意类型。" };
-                    }
-
-                    break;
-                }
-
-                if (!currentRecord.Properties.TryGetValue(propName, out var nextDef) || nextDef is not RecordVarSpecDef)
-                {
-                    nextDef = CoreVarDefs.RecordStringAny with
-                    {
-                        Properties = new Dictionary<string, VarSpecDef>(),
-                        Description = $"为'{propName}'推断出的嵌套数据结构。"
-                    };
-                    currentRecord.Properties[propName] = nextDef;
-                }
-
-                currentRecord = (RecordVarSpecDef)nextDef;
-            }
-        }
-
-        return rootSpecs.Select(kvp => new ConsumedSpec(kvp.Key, kvp.Value)).ToList();
+        // 使用通用逻辑推断变量结构
+        return Helpers.StringTemplateHelper.InferConsumedSpecs(placeholders);
     }
 
     public override List<ProducedSpec> GetProducedSpec() => [new(this.OutputVariableName, CoreVarDefs.String)];
