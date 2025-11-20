@@ -1,6 +1,7 @@
 ﻿using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using YAESandBox.Depend.Schema.SchemaProcessor;
+using YAESandBox.Workflow.Core.Config.ControlNode;
 using YAESandBox.Workflow.Core.Config.Stored;
 
 namespace YAESandBox.Workflow.Core.Config;
@@ -63,6 +64,11 @@ public record WorkflowGraphConfig
     /// </summary>
     [Display(Name = "手动连接列表", Description = "当禁用自动连接时，在此处定义所有枢机之间的数据流向。")]
     public List<WorkflowConnection>? Connections { get; init; } = [];
+    
+    /// <summary>
+    /// 控制流节点列表。
+    /// </summary>
+    public List<ControlNodeConfig> ControlNodes { get; init; } = [];
 }
 
 /// <summary>

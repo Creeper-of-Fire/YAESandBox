@@ -40,14 +40,31 @@ internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config, 
     /// <inheritdoc />
     public override Task<Result> ExecuteAsync(TuumProcessorContent tuumProcessorContent, CancellationToken cancellationToken = default)
     {
-        string substitutedContent = this.SubstitutePlaceholders(this.Config.Template, tuumProcessorContent);
+        // 1. 渲染提示词内容
+        string substitutedContent = Helpers.StringTemplateHelper.Render(
+            this.Config.Template,
+            tuumProcessorContent,
+            this.DebugDto.ResolvedPlaceholdersWithValue,
+            this.DebugDto.UnresolvedPlaceholders,
+            this.DebugDto.AddResolutionAttemptLog
+        );
         this.DebugDto.FinalPromptContent = substitutedContent;
+
+        // 2. 渲染角色名称 (如果存在)
+        string substitutedName = Helpers.StringTemplateHelper.Render(
+            this.Config.PromptNameInAiModel,
+            tuumProcessorContent,
+            this.DebugDto.ResolvedPlaceholdersWithValue, // 共用同一个解析记录
+            this.DebugDto.UnresolvedPlaceholders, // 共用同一个未解析列表
+            this.DebugDto.AddResolutionAttemptLog // 共用同一个日志回调
+        );
+        this.DebugDto.FinalPromptName = substitutedName;
 
         var newPrompt = new RoledPromptDto
         {
             Role = PromptRoleTypeExtension.ToPromptRoleType(this.Config.RoleType),
             Content = substitutedContent,
-            Name = this.Config.PromptNameInAiModel ?? string.Empty
+            Name = substitutedName
         };
         this.DebugDto.GeneratedPrompt = newPrompt;
 
@@ -130,32 +147,6 @@ internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config, 
 
 
     /// <summary>
-    /// 使用 Tuum 上下文中的变量替换模板中的占位符，支持点符号访问。
-    /// </summary>
-    private string SubstitutePlaceholders(string template, TuumProcessorContent tuumContent)
-    {
-        return PromptGenerationRuneConfig.PlaceholderRegex().Replace(template, match =>
-        {
-            // 例如: 'player.name'
-            string path = match.Groups[1].Value;
-
-            // 使用 TuumContent 提供的路径解析方法
-            if (tuumContent.TryGetTuumVarByPath<object>(path, out object? value))
-            {
-                string stringValue = value.ToString() ?? string.Empty;
-                this.DebugDto.ResolvedPlaceholdersWithValue[path] = stringValue;
-                return stringValue;
-            }
-
-            // 未找到或值为 null
-            this.DebugDto.UnresolvedPlaceholders.Add(path);
-            this.DebugDto.AddResolutionAttemptLog($"占位符 '{{{{{path}}}}}' 未找到或其值为 null，将替换为空字符串。");
-            return string.Empty;
-        });
-    }
-
-
-    /// <summary>
     /// 提示词生成符文处理器的调试数据传输对象。
     /// </summary>
     internal record PromptGenerationRuneProcessorDebugDto : IRuneProcessorDebugDto
@@ -171,9 +162,14 @@ internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config, 
         public PromptRoleType ConfiguredRole { get; internal set; }
 
         /// <summary>
-        /// 符文配置中指定的AI模型中的提示词名称。
+        /// 符文配置中指定的AI模型中的角色名称。
         /// </summary>
         public string? ConfiguredPromptName { get; internal set; }
+
+        /// <summary>
+        /// 经过占位符替换后的最终角色名称。
+        /// </summary>
+        public string FinalPromptName { get; internal set; } = string.Empty;
 
         /// <summary>
         /// 计算出的目标操作索引。仅当列表不为空时有效。
@@ -230,101 +226,14 @@ internal class PromptGenerationRuneProcessor(PromptGenerationRuneConfig config, 
 
 internal partial record PromptGenerationRuneConfig
 {
-    // 使用 Regex.Matches 获取所有唯一的占位符名称
-    // 使用 lookahead 和 lookbehind 来确保我们只匹配 {{}} 包裹的内容，并且不能处理嵌套 {{}} 的情况
-    // TODO 实现嵌套等操作
-    [GeneratedRegex(@"\{\{([^}]+?)\}\}")]
-    internal static partial Regex PlaceholderRegex();
-
     /// <inheritdoc />
     public override List<ConsumedSpec> GetConsumedSpec()
     {
-        // 用于存储根变量及其推断出的结构
-        var rootSpecs = new Dictionary<string, VarSpecDef>();
+        // 提取占位符
+        var placeholders = Helpers.StringTemplateHelper.ExtractPlaceholders(this.Template);
 
-        var allPlaceholders = PlaceholderRegex().Matches(this.Template)
-            .Select(m => m.Groups[1].Value.Trim());
-
-        foreach (string path in allPlaceholders)
-        {
-            string[] parts = path.Split('.');
-            if (parts.Length == 0) continue;
-
-            string rootVarName = parts[0];
-
-            // --- 顶层变量处理 ---
-            if (parts.Length == 1)
-            {
-                // 如果是顶层变量 (e.g., {{game_mode}}), 且尚未定义，则将其定义为 Any
-                if (!rootSpecs.ContainsKey(rootVarName))
-                {
-                    rootSpecs[rootVarName] = CoreVarDefs.Any with
-                    {
-                        Description = "可被ToString的任意类型。"
-                    };
-                }
-
-                // 如果已存在且是 Record, 则不作处理，因为 Record 可以被 ToString()
-                continue;
-            }
-
-            // --- 嵌套变量处理 (核心逻辑) ---
-
-            // 确保根变量是 Record 类型
-            if (!rootSpecs.TryGetValue(rootVarName, out var currentDef) || currentDef is not RecordVarSpecDef)
-            {
-                currentDef = CoreVarDefs.RecordStringAny with
-                {
-                    Description = $"根据模板为变量'{rootVarName}'推断出的数据结构。",
-                    Properties = new Dictionary<string, VarSpecDef>()
-                };
-                rootSpecs[rootVarName] = currentDef;
-            }
-
-            var currentRecord = (RecordVarSpecDef)currentDef;
-
-            // 递归地构建/遍历属性路径
-            for (int i = 1; i < parts.Length; i++)
-            {
-                string propName = parts[i];
-
-                // 如果是路径的最后一部分 (叶子节点)
-                if (i == parts.Length - 1)
-                {
-                    if (!currentRecord.Properties.ContainsKey(propName))
-                    {
-                        // 叶子节点默认为 Any，因为它可以是任何能被 ToString() 的类型
-                        currentRecord.Properties[propName] = CoreVarDefs.Any with
-                        {
-                            Description = "可被ToString的任意类型。"
-                        };
-                    }
-
-                    break;
-                }
-
-                // 如果是路径的中间部分 (非叶子节点)
-                if (!currentRecord.Properties.TryGetValue(propName, out var nextDef) || nextDef is not RecordVarSpecDef)
-                {
-                    nextDef = CoreVarDefs.RecordStringAny with
-                    {
-                        Description = $"为'{propName}'推断出的嵌套数据结构。",
-                        Properties = new Dictionary<string, VarSpecDef>()
-                    };
-                    currentRecord.Properties[propName] = nextDef;
-                }
-
-                currentRecord = (RecordVarSpecDef)nextDef;
-            }
-        }
-
-        // 将推断出的结构转换为 ConsumedSpec 列表
-        var finalSpecs = rootSpecs.Select(kvp => new ConsumedSpec(kvp.Key, kvp.Value)).ToList();
-
-        // 添加对 Prompts 列表本身的消费
-        finalSpecs.Add(new ConsumedSpec(PromptsName, CoreVarDefs.PromptList) { IsOptional = true });
-
-        return finalSpecs;
+        // 使用通用逻辑推断变量结构
+        return Helpers.StringTemplateHelper.InferConsumedSpecs(placeholders);
     }
 
     public override List<ProducedSpec> GetProducedSpec() => [new(PromptsName, CoreVarDefs.PromptList)];
@@ -372,11 +281,12 @@ internal partial record PromptGenerationRuneConfig : AbstractRuneConfig<PromptGe
 
     /// <summary>
     /// 在某些AI模型中，可以为提示词角色指定一个名称 (例如，Claude中的User/Assistant名称)。
+    /// 支持模板解析，例如：'{{char_name}}'。
     /// </summary>
     [Display(
         Name = "角色名",
-        Description = "为提示词角色指定一个具体名称，可以让某些模型更好的区分不同的用户或助手，对于部分高级模型有用。",
-        Prompt = "例如：'DeepSeek' 或 'はちみ'"
+        Description = "为提示词角色指定一个具体名称，可以让某些模型更好的区分不同的用户或助手，对于部分高级模型有用。\n支持模板解析，例如 '{{char.name}}'。",
+        Prompt = "例如：'はちみ' 或 '{{char.name}}'"
     )]
     [InlineGroup(RoleGroupName)]
     public string? PromptNameInAiModel { get; init; }
