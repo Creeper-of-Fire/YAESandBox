@@ -1,7 +1,6 @@
-﻿using System.Collections.Concurrent;
-using System.Text.Json;
+﻿using System.Text.Json;
 using System.Text.Json.Nodes;
-using Nito.AsyncEx;
+using AsyncKeyedLock;
 using YAESandBox.Depend.Results;
 
 namespace YAESandBox.Depend.Storage;
@@ -19,14 +18,14 @@ public partial class JsonFileJsonStorage(string? dataRootPath) : IGeneralJsonRoo
         dataRootPath ?? throw new ArgumentNullException($"{nameof(JsonFileJsonStorage)}的{nameof(dataRootPath)}为空");
 
     /// <summary> 并发控制 </summary>
-    private ConcurrentDictionary<string, AsyncLock> FilesLocks { get; } = new();
+    private AsyncKeyedLocker<string> FilesLocks { get; } = new();
 
     /// <summary>
     /// 用于控制对单个 Block 的并发访问。
     /// </summary>
     /// <param name="filesPath">文件地址。</param>
     /// <returns></returns>
-    private AsyncLock GetLockForFile(FilePath filesPath) => this.FilesLocks.GetOrAdd(filesPath.TotalPath, _ => new AsyncLock());
+    private ValueTask<IDisposable> GetLockForFile(FilePath filesPath) => this.FilesLocks.LockAsync(filesPath.TotalPath);
 
     private Result<FilePath> GetValidatedFilePath(string fileName, params string[] subDirectories)
     {

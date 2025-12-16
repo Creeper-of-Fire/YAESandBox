@@ -1,0 +1,75 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="DebugGen" />
+    <BuildType Name="Release" />
+  </Configurations>
+  <Folder Name="/Analyzers/">
+    <Project Path="YAESandBox.Analyzers/YAESandBox.Analyzers.Sample/YAESandBox.Analyzers.Sample.csproj">
+      <BuildType Solution="DebugGen|*" Project="Debug" />
+    </Project>
+    <Project Path="YAESandBox.Analyzers/YAESandBox.Analyzers/YAESandBox.Analyzers.csproj">
+      <BuildType Solution="DebugGen|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Plugins/">
+    <Project Path="../Plugins/YAESandBox.Plugin.FileSystemConfigProvider/YAESandBox.Plugin.FileSystemConfigProvider.csproj">
+      <BuildType Solution="DebugGen|*" Project="Debug" />
+    </Project>
+    <Project Path="../Plugins/YAESandBox.Plugin.LuaScript/YAESandBox.Plugin.LuaScript.csproj">
+      <BuildType Solution="DebugGen|*" Project="Debug" />
+    </Project>
+    <Project Path="../Plugins/YAESandBox.Plugin.Rune.JavaScript/YAESandBox.Plugin.Rune.JavaScript.csproj">
+      <BuildType Solution="DebugGen|*" Project="Debug" />
+    </Project>
+    <Project Path="../Plugins/YAESandBox.Plugin.TextParser/YAESandBox.Plugin.TextParser.csproj">
+      <BuildType Solution="DebugGen|*" Project="Debug" />
+    </Project>
+  </Folder>
+  <Folder Name="/Solution Items/">
+    <File Path="Directory.Packages.props" />
+  </Folder>
+  <Project Path="YAESandBox.AppWeb/YAESandBox.AppWeb.csproj" />
+  <Project Path="YAESandBox.Authentication.API/YAESandBox.Authentication.API.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.Authentication/YAESandBox.Authentication.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.Depend.AspNetCore/YAESandBox.Depend.AspNetCore.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.Depend.Results/YAESandBox.Depend.Results.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.Depend/YAESandBox.Depend.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.ModuleSystem.Abstractions/YAESandBox.ModuleSystem.Abstractions.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.ModuleSystem.AspNet/YAESandBox.ModuleSystem.AspNet.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.PlayerServices.Save/YAESandBox.PlayerServices.Save.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.Workflow.AIService.API/YAESandBox.Workflow.AIService.API.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.Workflow.AIService/YAESandBox.Workflow.AIService.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.Workflow.API/YAESandBox.Workflow.API.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.Workflow.Core/YAESandBox.Workflow.Core.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.Workflow.Test/YAESandBox.Workflow.Test.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+  <Project Path="YAESandBox.Workflow/YAESandBox.Workflow.csproj">
+    <BuildType Solution="DebugGen|*" Project="Debug" />
+  </Project>
+</Solution>

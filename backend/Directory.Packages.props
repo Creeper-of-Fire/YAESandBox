@@ -6,10 +6,10 @@
   </PropertyGroup>
   <!-- 在这里集中定义所有包的版本 -->
   <ItemGroup>
+    <PackageVersion Include="AsyncKeyedLock" Version="7.1.8" />
     <PackageVersion Include="JetBrains.Annotations" Version="2025.2.2" />
     <PackageVersion Include="Microsoft.Extensions.AI" Version="10.0.0" />
-    <PackageVersion Include="Nito.AsyncEx" Version="5.1.2" />
-    <PackageVersion Include="Nito.AsyncEx.Coordination" Version="5.1.2" />
+    <PackageVersion Include="Nito.Disposables" Version="2.5.0" />
     <PackageVersion Include="Swashbuckle.AspNetCore" Version="10.0.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerGen" Version="10.0.1" />
     <PackageVersion Include="Swashbuckle.AspNetCore.SwaggerUI" Version="10.0.1" />

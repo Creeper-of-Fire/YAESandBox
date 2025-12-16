@@ -16,8 +16,6 @@
     <ItemGroup>
         <InternalsVisibleTo Include="YAESandBox.Tests"/>
         <PackageReference Include="DotNetEnv" />
-        <PackageReference Include="Nito.AsyncEx"/>
-        <PackageReference Include="Nito.AsyncEx.Coordination" />
         <PackageReference Include="Swashbuckle.AspNetCore"/>
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerGen"/>
         <PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI"/>

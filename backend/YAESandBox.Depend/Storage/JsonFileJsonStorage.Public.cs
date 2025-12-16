@@ -16,7 +16,7 @@ public partial class JsonFileJsonStorage
         if (filePathResult.TryGetError(out var filePathError, out var filePath))
             return filePathError;
 
-        using (await this.GetLockForFile(filePath).LockAsync())
+        using (await this.GetLockForFile(filePath))
         {
             return await this.SaveFileContentAsync(jsonContent, filePath);
         }
@@ -29,7 +29,7 @@ public partial class JsonFileJsonStorage
         if (filePathResult.TryGetError(out var filePathError, out var filePath))
             return filePathError;
 
-        using (await this.GetLockForFile(filePath).LockAsync())
+        using (await this.GetLockForFile(filePath))
         {
             return await this.SaveFileContentAsync(rawString, filePath);
         }
@@ -44,7 +44,7 @@ public partial class JsonFileJsonStorage
 
         string? jsonContent;
 
-        using (await this.GetLockForFile(filePath).LockAsync())
+        using (await this.GetLockForFile(filePath))
         {
             var loadResult = await this.LoadFileContentAsync(filePath);
             if (loadResult.TryGetError(out var error, out string? content))
@@ -75,7 +75,7 @@ public partial class JsonFileJsonStorage
 
         string? jsonContent;
 
-        using (await this.GetLockForFile(filePath).LockAsync())
+        using (await this.GetLockForFile(filePath))
         {
             var loadResult = await this.LoadFileContentAsync(filePath);
             if (loadResult.TryGetError(out var error, out string? content))
@@ -178,7 +178,7 @@ public partial class JsonFileJsonStorage
 
         // 2. 获取文件锁，确保删除操作的原子性和避免竞争条件
         //    即使是删除，也最好获取与读写相同的锁，以防其他操作正在访问该文件。
-        using (await this.GetLockForFile(filePath).LockAsync())
+        using (await this.GetLockForFile(filePath))
         {
             try
             {
