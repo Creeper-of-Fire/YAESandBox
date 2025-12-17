@@ -1,15 +1,15 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <ItemGroup>
-        <InternalsVisibleTo Include="YAESandBox.Depend.Tests"/>
+        <InternalsVisibleTo Include="YAESandBox.Depend.Tests" />
     </ItemGroup>
     
     <ItemGroup>
-        <PackageReference Include="JetBrains.Annotations"/>
+        <PackageReference Include="AsyncKeyedLock" />
+        <PackageReference Include="JetBrains.Annotations" />
         <PackageReference Include="Microsoft.Extensions.Logging" />
-        <PackageReference Include="Microsoft.Extensions.Logging.Console"/>
-        <PackageReference Include="Nito.AsyncEx" PrivateAssets="all"/>
-        <PackageReference Include="Nito.AsyncEx.Coordination" />
+        <PackageReference Include="Microsoft.Extensions.Logging.Console" />
+        <PackageReference Include="Nito.Disposables" />
     </ItemGroup>
 
     <ItemGroup>
@@ -25,7 +25,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <ProjectReference Include="..\YAESandBox.Depend.Results\YAESandBox.Depend.Results.csproj"/>
+        <ProjectReference Include="..\YAESandBox.Depend.Results\YAESandBox.Depend.Results.csproj" />
     </ItemGroup>
 
 </Project>

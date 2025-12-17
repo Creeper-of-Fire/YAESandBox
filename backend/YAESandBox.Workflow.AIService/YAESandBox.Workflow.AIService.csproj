@@ -9,7 +9,6 @@
 
     <ItemGroup>
         <PackageReference Include="Microsoft.Extensions.AI" />
-        <PackageReference Include="Nito.AsyncEx.Coordination" />
     </ItemGroup>
 
     <ItemGroup>

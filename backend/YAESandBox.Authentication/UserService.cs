@@ -1,4 +1,5 @@
-﻿using YAESandBox.Depend.Results;
+﻿using AsyncKeyedLock;
+using YAESandBox.Depend.Results;
 using YAESandBox.Depend.Storage;
 
 namespace YAESandBox.Authentication;
@@ -12,7 +13,7 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
     private const string UserFileName = "users.json";
 
     // 使用 SemaphoreSlim 来防止并发写入同一个用户文件时发生冲突
-    private static SemaphoreSlim FileLock { get; } = new(1, 1);
+    private static AsyncNonKeyedLocker FileLock { get; } = new(1);
 
     /// <summary>
     /// 内部方法，从存储中异步加载所有用户。
@@ -34,36 +35,29 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
     /// <returns>成功时返回新创建的用户对象，失败时返回错误信息。</returns>
     public async Task<Result<User>> RegisterAsync(string username, string password)
     {
-        await FileLock.WaitAsync();
-        try
+        using var _ = await FileLock.LockAsync();
+        var loadResult = await this.LoadUsersAsync();
+        if (loadResult.TryGetError(out var loadError, out var users))
+            return loadError;
+
+        if (users.Values.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)))
         {
-            var loadResult = await this.LoadUsersAsync();
-            if (loadResult.TryGetError(out var loadError, out var users))
-                return loadError;
-
-            if (users.Values.Any(u => u.Username.Equals(username, StringComparison.OrdinalIgnoreCase)))
-            {
-                return Result.Fail($"用户名 '{username}' 已存在。");
-            }
-
-            var newUser = new User
-            {
-                Id = Guid.NewGuid().ToString("N"),
-                Username = username,
-                PasswordHash = passwordService.HashPassword(password)
-            };
-
-            users[newUser.Id] = newUser;
-
-            var saveResult = await storage.SaveAllAsync(users, UserFileName);
-            if (saveResult.TryGetError(out var saveError))
-                return saveError;
-            return newUser;
+            return Result.Fail($"用户名 '{username}' 已存在。");
         }
-        finally
+
+        var newUser = new User
         {
-            FileLock.Release();
-        }
+            Id = Guid.NewGuid().ToString("N"),
+            Username = username,
+            PasswordHash = passwordService.HashPassword(password)
+        };
+
+        users[newUser.Id] = newUser;
+
+        var saveResult = await storage.SaveAllAsync(users, UserFileName);
+        if (saveResult.TryGetError(out var saveError))
+            return saveError;
+        return newUser;
     }
 
     /// <summary>
@@ -88,7 +82,7 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
 
         return Result.Ok(user);
     }
-    
+
     /// <summary>
     /// 根据用户ID异步查找用户。
     /// </summary>
@@ -106,7 +100,7 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
 
         return Result.Fail($"用户ID '{userId}' 未能找到。");
     }
-    
+
     /// <summary>
     /// 为指定用户保存刷新令牌及其过期时间。
     /// </summary>
@@ -116,34 +110,27 @@ public class UserService(IGeneralJsonRootStorage storage, IPasswordService passw
     /// <returns>操作成功或失败的结果。</returns>
     public async Task<Result> SaveRefreshTokenAsync(string userId, string refreshToken, DateTime expiryTime)
     {
-        await FileLock.WaitAsync();
-        try
+        using var _ = await FileLock.LockAsync();
+        var loadResult = await this.LoadUsersAsync();
+        if (loadResult.TryGetError(out var loadError, out var users))
+            return loadError;
+
+        if (!users.TryGetValue(userId, out var user))
         {
-            var loadResult = await this.LoadUsersAsync();
-            if (loadResult.TryGetError(out var loadError, out var users))
-                return loadError;
-
-            if (!users.TryGetValue(userId, out var user))
-            {
-                return Result.Fail($"用户ID '{userId}' 未能找到。");
-            }
-
-            // 更新用户信息
-            user.RefreshToken = refreshToken;
-            user.RefreshTokenExpiryTime = expiryTime;
-
-            var saveResult = await storage.SaveAllAsync(users, UserFileName);
-            if (saveResult.TryGetError(out var saveError))
-                return saveError;
-            
-            return Result.Ok();
+            return Result.Fail($"用户ID '{userId}' 未能找到。");
         }
-        finally
-        {
-            FileLock.Release();
-        }
+
+        // 更新用户信息
+        user.RefreshToken = refreshToken;
+        user.RefreshTokenExpiryTime = expiryTime;
+
+        var saveResult = await storage.SaveAllAsync(users, UserFileName);
+        if (saveResult.TryGetError(out var saveError))
+            return saveError;
+
+        return Result.Ok();
     }
-    
+
     /// <summary>
     /// 根据刷新令牌异步查找用户。
     /// 这个方法封装了查找用户的具体实现（当前是遍历 JSON 文件）。

@@ -97,7 +97,8 @@ public class AppRootPathProvider : IRootPathProvider
         while (currentDirectory is not null && maxDepth-- > 0)
         {
             // 检查当前目录是否包含解决方案文件
-            if (Directory.GetFiles(currentDirectory.FullName, "*.sln").Length > 0)
+            if (Directory.EnumerateFiles(currentDirectory.FullName, "*.sln").Any() ||
+                Directory.EnumerateFiles(currentDirectory.FullName, "*.slnx").Any())
             {
                 return currentDirectory.FullName;
             }
